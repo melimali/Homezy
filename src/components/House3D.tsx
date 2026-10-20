@@ -2,9 +2,9 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Polygon } from 'react-native-svg';
 
+import { ROOM_EMOJI } from '@/domain/constants';
 import { roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
-import { ROOM_ICON } from '@/domain/messages';
 import type { AppState, RoomType } from '@/domain/types';
 import { fonts, useColors, useIsDark, type Colors } from '@/theme';
 
@@ -287,7 +287,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp }: Props) {
             pressed && { transform: [{ translateY: 1 }] },
           ]}
         >
-          <Text style={styles.icon}>{ROOM_ICON[room.type]}</Text>
+          <Text style={styles.icon}>{ROOM_EMOJI[room.type]}</Text>
           <Text style={[styles.name, { color: c.ink }]} numberOfLines={1}>{room.name}</Text>
           {nTask > 0 && (
             <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>

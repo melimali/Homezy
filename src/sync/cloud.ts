@@ -27,6 +27,14 @@ export async function pushHome(userId: string, S: AppState) {
   if (error) throw error;
 }
 
+/**
+ * Evi siler: buluttaki satır boş bir evle (setup: false) değiştirilir. Kullanıcı başına tek satır
+ * olduğu için yeni çizilen ev aynı satıra yazılır; başka telefonda girişte eski ev geri gelmez.
+ */
+export async function deleteHome(userId: string | undefined, fresh: AppState) {
+  if (userId && prefs.get('cloudUser') === userId) await pushHome(userId, fresh);
+}
+
 /** Telefona özel alanları (fotoğraf yolları) yedekten çıkarır. */
 function forCloud(S: AppState): AppState {
   const mod = Object.fromEntries(

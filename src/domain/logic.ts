@@ -1,5 +1,5 @@
-import { DAY, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, STOCK_DEF, TYPES } from './constants';
-import { laundryLine, photoLine, ROOM_ICON, statusTail, stockLine, stockTitle, taskLine } from './messages';
+import { DAY, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES } from './constants';
+import { laundryLine, photoLine, statusTail, stockLine, stockTitle, taskLine } from './messages';
 import type { AppState, Notice, RoomType, StockItem, Task, TaskRef, TaskStatus } from './types';
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
@@ -87,7 +87,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
         ns.push({
           k: s.k,
           rid,
-          title: `${plant ? '🪴' : ROOM_ICON[r.type]} ${r.name} · ${t.name}`,
+          title: `${plant ? '🪴' : ROOM_EMOJI[r.type]} ${r.name} · ${t.name}`,
           text: `${taskLine({ name: t.name, type: r.type, plant, k: s.k, key: t.id, now })} ${statusTail(s.k, s.diff, t.last == null)}`,
         });
       });

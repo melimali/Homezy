@@ -13,11 +13,6 @@ function pick<T>(pool: readonly T[], key: string, now: number): T {
   return pool[Math.abs(h) % pool.length];
 }
 
-export const ROOM_ICON: Record<RoomType, string> = {
-  yatak: '🛏️', mutfak: '🍳', banyo: '🛁', salon: '🛋️', calisma: '💻',
-  cocuk: '🧸', antre: '🚪', balkon: '🌿', camasir: '🧺',
-};
-
 /** İş adında geçen kelimeye göre mesajlar. İlk eşleşen kullanılır. */
 const TASK_LINES: [RegExp, string[]][] = [
   [/bulaşık/i, ['Tabaklar köpük partisi bekliyor 🫧🍽️', 'Lavabo biraz kalabalık, bulaşıklar sırada 🧽', 'Bulaşıklar parıl parıl olmak istiyor ✨']],

@@ -52,7 +52,7 @@
 
 ### 3. Uygulama
 
-`.env.example` dosyasını `.env.local` olarak kopyala ve dört değeri doldur. Bunlar uygulamaya gömülen, herkese açık anahtarlar; gizli anahtarlar sadece Supabase'de durur.
+Supabase adresi ve anon anahtarı repodaki `.env` dosyasında. RevenueCat anahtarlarını `.env.local` dosyasına ekle (bkz. `.env.example`). Bunlar uygulamaya gömülen, herkese açık anahtarlar; gizli anahtarlar sadece Supabase'de durur.
 
 Anahtarlar girilmemişse uygulama yine açılır: tanıtım ve giriş ekranları görünür, "Hesapsız devam et" çalışır, veriler sadece telefonda kalır.
 

@@ -41,7 +41,7 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 | **RevenueCat** (`react-native-purchases` + `react-native-purchases-ui`) | App Store ve Google Play aboneliklerini tek yerden yönetir. Ödeme ekranı, satın alma, geri yükleme, yenileme, iptal. | `premium` adında tek bir yetki (entitlement). İki ürün: aylık ve yıllık. |
 | **Supabase anonim oturum** | Her kuruluma bir kullanıcı kimliği verir, kayıt ekranı gerekmez. Bu kimlik RevenueCat'e de `appUserID` olarak verilir. | v2'de aile paylaşımı geldiğinde aynı kimlik e-posta ile kalıcı hesaba bağlanır. |
 | **Supabase Edge Function `scan`** | Anthropic API anahtarını tutar. Yetkiyi ve kotayı kontrol eder, Claude'u çağırır. | "İlk sürüm sunucusuz" kuralının tek istisnası. Ev verileri yine sadece telefonda. |
-| **`scan_usage` tablosu** | `user_id, gün, tür, sayı`. Sadece fonksiyon yazar. | Fotoğraf saklanmaz, sadece sayaç tutulur. |
+| **`scan_usage` tablosu** | `user_id, dönem (gün ya da hafta), sayı`. Sadece fonksiyon yazar. | Fotoğraf saklanmaz, sadece sayaç tutulur. |
 | **RevenueCat webhook** (isteğe bağlı) | Abonelik başlayınca/bitince Supabase'e haber verir, her taramada RevenueCat'e sormaya gerek kalmaz. | İlk sürümde her taramada RevenueCat REST API'ye sormak da yeter. |
 
 ### Ücretsiz ve Premium
@@ -52,23 +52,23 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 | Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
 | Kombin önerisi (telefondaki kurallar) | ✓ | ✓ |
 | Buzdolabı fotoğrafı saklama (taramasız) | ✓ | ✓ |
-| Yapay zekâ ile buzdolabı taraması | Ayda toplam 3 tarama (iki tür ortak) | **Her gün 1** |
-| Yapay zekâ ile kıyafet taraması | ↑ aynı 3 hak | **Her gün 1** |
+| Yapay zekâ ile buzdolabı ya da kıyafet taraması | **Haftada 2** (iki tür ortak) | **Günde 2** (iki tür ortak) |
 
-- Ücretsiz üyelikteki ayda 3 tarama kullanıcının özelliği tanıması için. Ayın 1'inde yenilenir. Maliyeti kullanıcı başına ayda en fazla ≈ 0,04 $.
-- Premium hakları gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
+- Ücretsiz üyelikte haftada 2 tarama var, pazartesi yenilenir. Özelliği tanıtır ve haftalık buzdolabı kontrolüne yeter. Maliyeti kullanıcı başına ayda en fazla ≈ 9 tarama ≈ 0,10 $ (Sonnet).
+- Premium'da günde 2 tarama var; buzdolabı ya da kıyafet, kullanıcı istediği gibi dağıtır (ör. iki buzdolabı).
+- Premium hakkı gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
 - **Sadece başarılı tarama hak yer.** Hata, iptal ya da "fotoğraf okunamadı" sonucu sayılmaz.
 
 ### Günlük sınır nasıl uygulanır?
 
 Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göstermek için. Uygulama silinip kurulsa da, saat ileri alınsa da sunucu sayacı değişmez.
 
-1. `scan_usage` tablosu: `user_id`, `day` (Türkiye saatine göre tarih), `kind` (`fridge` / `look`), `n`. Birincil anahtar `(user_id, day, kind)`. Ücretsiz hak için aynı tablo `day` yerine ayın ilk günüyle ve `kind = 'free'` ile kullanılır.
-2. `scan` fonksiyonu Claude'u çağırmadan önce veritabanında tek bir işlemle hak **ayırır**: satır yoksa `n = 1` ile ekler, varsa `n < sınır` ise `n`'yi bir artırır; artıramazsa 429 döner ve uygulama "Bugünkü buzdolabı taramanı yaptın, gece yarısı yenilenir" der. Tek işlem olduğu için iki kere hızlı dokunma iki hak kullandırmaz ve sınırı da aşamaz.
+1. `scan_usage` tablosu: `user_id`, `period` (Premium için Türkiye saatine göre o günün tarihi, ücretsiz için o haftanın pazartesisi), `n`. Birincil anahtar `(user_id, period)`. Taramanın türü (buzdolabı / kıyafet) sadece istatistik için ayrı bir sütunda tutulur, sınıra etki etmez.
+2. `scan` fonksiyonu Claude'u çağırmadan önce veritabanında tek bir işlemle hak **ayırır**: satır yoksa `n = 1` ile ekler, varsa `n < sınır` ise `n`'yi bir artırır; artıramazsa 429 döner ve uygulama "Bugünkü 2 taramanı yaptın, gece yarısı yenilenir" (ücretsizde "pazartesi yenilenir") der. Tek işlem olduğu için iki kere hızlı dokunma iki hak kullandırmaz ve sınırı da aşamaz.
 3. Claude hata verirse ya da sonuç boşsa ayrılan hak geri verilir (`n - 1`).
 4. Premium mi değil mi sorusu RevenueCat'ten gelir (`premium` yetkisi). Abonelik bittiği an ücretsiz kurallara düşer.
 5. Ek korumalar: aynı kullanıcıdan dakikada en fazla 5 istek; fotoğraf en fazla 1600 px ve 1,5 MB; Anthropic Console'da aylık harcama tavanı. Tavan dolarsa taramalar "şu an kullanılamıyor" der, uygulamanın geri kalanı çalışır.
-6. Uygulamayı silip yeniden kurarak yeni anonim kimlikle 3 ücretsiz tarama daha almak mümkün. Kaybı küçük (≈ 0,04 $), ileride gerekirse Apple DeviceCheck ve Google Play Integrity ile cihaz başına sınırlanır.
+6. Uygulamayı silip yeniden kurarak yeni anonim kimlikle 2 ücretsiz tarama daha almak mümkün. Kaybı küçük (≈ 0,02 $), ileride gerekirse Apple DeviceCheck ve Google Play Integrity ile cihaz başına sınırlanır.
 
 ### Mağaza kuralları
 
@@ -89,7 +89,7 @@ Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göster
 
 ## Gelir ve gider hesabı
 
-Senaryo: **aylık 9,99 $** (yıllık 79,99 $), Premium kullanıcı her gün 1 buzdolabı + 1 kombin taraması yapabiliyor, yani ayda en fazla **60 tarama**. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
+Senaryo: **aylık 9,99 $** (yıllık 79,99 $), Premium kullanıcı günde 2 tarama (buzdolabı ya da kıyafet) yapabiliyor, yani ayda en fazla **60 tarama**; ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
 
 ### Kullanıcı başına
 
@@ -123,7 +123,7 @@ En pahalı modelle ve herkes her gün iki tarama yapsa bile yapay zekâ gideri e
 
 ### Aylık tablo (Sonnet 5.5)
 
-Her Premium kullanıcıya 5 ücretsiz kullanıcı düştüğü ve ücretsizlerin ayda ortalama 1,5 tarama yaptığı varsayıldı.
+Her Premium kullanıcıya 5 ücretsiz kullanıcı düştüğü ve ücretsizlerin ayda ortalama 3 tarama yaptığı varsayıldı (hakkın tamamını kullanan ücretsiz kullanıcı ayda ≈ 9 tarama yapar).
 
 | | 100 Premium | 1.000 Premium | 10.000 Premium |
 |---|---|---|---|
@@ -131,13 +131,13 @@ Her Premium kullanıcıya 5 ücretsiz kullanıcı düştüğü ve ücretsizlerin
 | KDV + mağaza komisyonu | −291 $ | −2.910 $ | −29.100 $ |
 | **Elimize geçen** | **708 $** | **7.080 $** | **70.800 $** |
 | Yapay zekâ, Premium (normal / en kötü) | 30 / 72 $ | 300 / 720 $ | 3.000 / 7.200 $ |
-| Yapay zekâ, ücretsiz kullanıcılar | 9 $ | 90 $ | 900 $ |
+| Yapay zekâ, ücretsiz kullanıcılar | 18 $ | 180 $ | 1.800 $ |
 | Supabase + Apple | 33 $ | 33 $ | 33 $ |
 | RevenueCat (%1) | 0 | 100 $ | 1.000 $ |
-| **Kalan, normal kullanım** | **≈ 636 $ ≈ 26.700 TL** | **≈ 6.560 $ ≈ 275.000 TL** | **≈ 65.900 $ ≈ 2,77 milyon TL** |
-| **Kalan, herkes sınırı doldurursa** | **≈ 594 $ ≈ 25.000 TL** | **≈ 6.140 $ ≈ 258.000 TL** | **≈ 61.700 $ ≈ 2,59 milyon TL** |
+| **Kalan, normal kullanım** | **≈ 627 $ ≈ 26.300 TL** | **≈ 6.470 $ ≈ 272.000 TL** | **≈ 65.000 $ ≈ 2,73 milyon TL** |
+| **Kalan, Premium'lar sınırı doldurursa** | **≈ 585 $ ≈ 24.600 TL** | **≈ 6.050 $ ≈ 254.000 TL** | **≈ 60.800 $ ≈ 2,55 milyon TL** |
 
-Haiku 5.5 yeterli çıkarsa yapay zekâ satırları neredeyse sıfırlanır ve kalan normal kullanımda 100 kullanıcıda ≈ 665 $, 10.000 kullanıcıda ≈ 69.000 $ olur.
+Haiku 5.5 yeterli çıkarsa yapay zekâ satırları neredeyse sıfırlanır ve kalan normal kullanımda 100 kullanıcıda ≈ 673 $, 10.000 kullanıcıda ≈ 69.500 $ olur.
 
 Notlar:
 

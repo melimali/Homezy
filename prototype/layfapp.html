@@ -633,7 +633,7 @@ function wardrobeHTML(rid, m){
     ${mine ? lookScanHTML(rid, m) : ''}
     ${mine && scan.st === 'busy' ? '' : `<label class="btn primary block" for="lookfile-${rid}">Kıyafet fotoğrafı çek</label>`}
     <input type="file" id="lookfile-${rid}" data-look="${rid}" accept="image/*" capture="environment" hidden>
-    ${mine ? '' : `<p class="tiny muted">${on ? 'Kombinini aynada çek ya da parçaları yatağa serip çek. Yapay zekâ her parçanın türünü, rengini ve kumaşını çıkarır, onaylarsan gardıroba ekler ve onlarla kombin önerir.' : 'Yapay zekâ ile kıyafet tanıma burada kullanılamıyor. Parçaları aşağıdan elle ekleyebilirsin; renk ve kumaşı adından anlarım.'}</p>${on ? lockHTML('look') : ''}`}
+    ${mine ? '' : `<p class="tiny muted">${on ? 'Kombinini aynada çek ya da parçaları yatağa serip çek. Yapay zekâ her parçanın türünü, rengini ve kumaşını çıkarır, onaylarsan gardıroba ekler ve onlarla kombin önerir.' : 'Yapay zekâ ile kıyafet tanıma burada kullanılamıyor. Parçaları aşağıdan elle ekleyebilirsin; renk ve kumaşı adından anlarım.'}</p>${on ? lockHTML() : ''}`}
     ${dirty >= 3 ? `<div class="callout">${dirty} parça kirli. Bir makine dolusu birikti.</div>` : ''}
     <div class="filters">${[['all','Tümü',list.length],['temiz','Temiz',cnt('temiz')],['kirli','Kirli',dirty],['utu','Ütülenecek',cnt('utu')]].map(([k, l, c]) => `<button class="filt${f === k ? ' on' : ''}" data-act="filter" data-rid="${rid}" data-f="${k}">${l} <span class="mono">${c}</span></button>`).join('')}</div>
     <ul class="clothes">${items.map(c => { const a = att(c); return `<li><button class="c-main${anchors.has(c.id) ? ' on' : ''}" data-act="anchor" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} ile kombin öner">${dotHTML(a)}<span><span class="c-name">${esc(c.name)}</span><span class="c-cat">${esc(a.kind ? attLine(a) : c.cat)}</span></span></button><button class="state s-${c.state}" data-act="cycle" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)}: ${CSTATE[c.state]}. Değiştirmek için dokun">${CSTATE[c.state]}</button><button class="x" data-act="delcloth" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} sil">×</button></li>`; }).join('') || '<li><p class="empty-msg">Bu filtrede kıyafet yok.</p></li>'}</ul>
@@ -652,7 +652,7 @@ function fridgeHTML(rid, m){
     ${busy ? '' : `<label class="btn primary block" for="fridgefile-${rid}">${m.photo ? 'Yeni fotoğraf çek' : 'Fotoğraf çek ya da yükle'}</label>`}
     <input type="file" id="fridgefile-${rid}" data-photo="${rid}" accept="image/*" capture="environment" hidden>
     ${on && m.photo && !scan ? `<button class="btn ghost small" data-act="rescan" data-rid="${rid}">Bu fotoğrafı yeniden tara</button>` : ''}
-    ${on && !scan ? '<p class="tiny muted">Fotoğrafı çekince yapay zekâ içindekileri ve kalan miktarları tahmin eder. Sen onaylamadan liste değişmez.</p>' + lockHTML('fridge') : ''}
+    ${on && !scan ? '<p class="tiny muted">Fotoğrafı çekince yapay zekâ içindekileri ve kalan miktarları tahmin eder. Sen onaylamadan liste değişmez.</p>' + lockHTML() : ''}
     ${aiState === 'off' ? '<p class="tiny muted">Yapay zekâ taraması burada kullanılamıyor. Listeyi aşağıdan elle güncelleyebilirsin.</p>' : ''}
     ${scanLogHTML(m)}</section>`;
 }
@@ -934,49 +934,48 @@ function onLookPhoto(file, rid){
 
 /* ---------- premium ---------- */
 // The AI photo scans are the paid part; everything else stays free. In the app the server decides (store entitlement + monthly quota), the page only mocks the flow.
-const PREMIUM = {free: 3, daily: {fridge: 1, look: 1}, plans: {
+const PREMIUM = {weekly: 2, daily: 2, plans: {
   ay: {label: 'Aylık', price: '9,99 $', per: 'ay', sub: 'İstediğin zaman iptal'},
   yil: {label: 'Yıllık', price: '79,99 $', per: 'yıl', sub: 'Ayda 6,67 $ gibi', tag: '%33 indirim'}
 }};
-const KIND_NAME = {fridge: 'buzdolabı', look: 'kombin'};
 let pwPlan = 'ay', pending = null;
 const LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const proTag = () => `<span class="pro">${LOCK}Premium</span>`;
-const monthKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1); };
+const weekKey = () => { const d = new Date(); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.toDateString(); };
 const dayKey = () => new Date().toDateString();
 function pro(){ const p = S.premium ||= {plan: null}; p.days ||= {}; p.freeUsed ||= {}; return p; }
-// Free users get a few scans a month; Premium gets one scan of each kind a day. Both reset on their own, nothing carries over.
-const usedToday = kind => (pro().days[dayKey()] || {})[kind] || 0;
-const freeLeft = () => Math.max(0, PREMIUM.free - (pro().freeUsed[monthKey()] || 0));
-function canScan(kind){ return pro().plan ? usedToday(kind) < PREMIUM.daily[kind] : freeLeft() > 0; }
+// Free users get 2 scans a week (from Monday), Premium 2 a day; fridge and outfit scans share the same rights. Nothing carries over.
+const usedToday = () => pro().days[dayKey()] || 0;
+const freeLeft = () => Math.max(0, PREMIUM.weekly - (pro().freeUsed[weekKey()] || 0));
+const canScan = () => pro().plan ? usedToday() < PREMIUM.daily : freeLeft() > 0;
 // Only a scan that returned a result uses up a right; errors and cancels are free.
-function countScan(kind){
+function countScan(){
   const p = pro();
-  if (p.plan){ const d = p.days[dayKey()] ||= {}; d[kind] = (d[kind] || 0) + 1; for (const k in p.days) if (k !== dayKey()) delete p.days[k]; }
-  else { const m = monthKey(); p.freeUsed = {[m]: (p.freeUsed[m] || 0) + 1}; }
+  if (p.plan){ const k = dayKey(); p.days = {[k]: usedToday() + 1}; }
+  else { const k = weekKey(); p.freeUsed = {[k]: (p.freeUsed[k] || 0) + 1}; }
   save();
 }
 function gateScan(kind, rid, blob){
-  if (canScan(kind)) return true;
-  if (pro().plan){ toast(`Bugünkü ${KIND_NAME[kind]} taramanı yaptın. Gece yarısı yenilenir.`); render(); }
+  if (canScan()) return true;
+  if (pro().plan){ toast(`Bugünkü ${PREMIUM.daily} taramanı yaptın. Gece yarısı yenilenir.`); render(); }
   else openPaywall({kind, rid, blob});
   return false;
 }
-function lockHTML(kind){
+function lockHTML(){
   const p = pro();
-  if (p.plan) return canScan(kind) ? `<p class="tiny muted">Premium: bugün ${PREMIUM.daily[kind]} ${KIND_NAME[kind]} taraması hakkın var.</p>`
-    : `<div class="callout">Bugünkü ${KIND_NAME[kind]} taramanı yaptın. Gece yarısı yenilenir, o zamana kadar listeyi elle güncelleyebilirsin.</div>`;
+  if (p.plan) return canScan() ? `<p class="tiny muted">Premium: bugün ${PREMIUM.daily - usedToday()} tarama hakkın kaldı.</p>`
+    : `<div class="callout">Bugünkü ${PREMIUM.daily} taramanı yaptın. Gece yarısı yenilenir, o zamana kadar listeyi elle güncelleyebilirsin.</div>`;
   const n = freeLeft();
-  return `<div class="lockrow"><p>${proTag()} ${n ? `Bu ay ${n} ücretsiz tarama hakkın kaldı.` : 'Bu ayki ücretsiz taramaların bitti.'}</p><button class="btn small primary" data-act="paywall">Premium'u gör</button></div>`;
+  return `<div class="lockrow"><p>${proTag()} ${n ? `Bu hafta ${n} ücretsiz tarama hakkın kaldı.` : 'Bu haftaki ücretsiz taramaların bitti.'}</p><button class="btn small primary" data-act="paywall">Premium'u gör</button></div>`;
 }
 function paywallHTML(){
   const x = PREMIUM.plans[pwPlan];
-  const why = pending ? `Bu ayki ${PREMIUM.free} ücretsiz taramanı kullandın. ${pending.kind === 'look' ? 'Kıyafet fotoğrafını' : 'Buzdolabı fotoğrafını'} taramak için Premium gerekiyor.` : '';
+  const why = pending ? `Bu haftaki ${PREMIUM.weekly} ücretsiz taramanı kullandın. Pazartesi yenilenir. ${pending.kind === 'look' ? 'Kıyafet fotoğrafını' : 'Buzdolabı fotoğrafını'} taramak için Premium gerekiyor.` : '';
   return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pw-h">
     <div><span class="mono small" style="color:var(--warm)">LAYFAPP PREMIUM</span><h2 class="h1" id="pw-h">Fotoğrafı çek, gerisini ben yapayım</h2>${why ? `<p class="lead">${why}</p>` : ''}</div>
     <ul class="perks">
-      <li><span>Her gün 1 buzdolabı taraması<small>İçindekileri ve ne kadar kaldığını listeye işler</small></span></li>
-      <li><span>Her gün 1 kombin taraması<small>Her parçanın türünü, rengini ve kumaşını çıkarıp gardıroba ekler</small></span></li>
+      <li><span>Her gün 2 tarama<small>Buzdolabı ya da kıyafet, istediğin gibi kullan</small></span></li>
+      <li><span>Buzdolabı ve kıyafet taraması<small>Ne kadar kaldığını listeye, parçaları gardıroba işler</small></span></li>
       <li><span>Fotoğraftan kombin<small>Fotoğraftaki parçaları dolabındakilerle eşleştirir</small></span></li>
       <li><span>Hak her gece yenilenir<small>Başarısız tarama hakkından düşmez</small></span></li>
     </ul>
@@ -996,14 +995,14 @@ function closePaywall(){ const el = document.getElementById('paywall'); el.hidde
 function premiumCardHTML(){
   const p = pro();
   if (!p.plan) return `<section class="card"><div class="sec-h"><h2 class="h2">Premium</h2>${proTag()}</div>
-    <p class="tiny muted">Her gün bir buzdolabı ve bir kombin fotoğrafını yapay zekâ ile tarar. Ücretsiz üyelikte ayda ${PREMIUM.free} tarama var, bu ay ${freeLeft()} hakkın kaldı.</p>
+    <p class="tiny muted">Her gün ${PREMIUM.daily} buzdolabı ya da kıyafet fotoğrafını yapay zekâ ile tarar. Ücretsiz üyelikte haftada ${PREMIUM.weekly} tarama var, bu hafta ${freeLeft()} hakkın kaldı.</p>
     <button class="btn primary block" data-act="paywall">Premium'u gör</button></section>`;
   const x = PREMIUM.plans[p.plan];
-  const row = k => { const n = usedToday(k), max = PREMIUM.daily[k]; return `<div class="sec-h"><span class="tiny">Bugün ${KIND_NAME[k]} taraması</span><span class="mono small">${n} / ${max}</span></div>
-    <div class="meter" role="progressbar" aria-label="Bugün ${KIND_NAME[k]} taraması" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${n}"><span style="width:${Math.min(100, n / max * 100)}%"></span></div>`; };
+  const n = usedToday(), max = PREMIUM.daily;
   return `<section class="card"><div class="sec-h"><h2 class="h2">Premium</h2><span class="pill ok">${x.label} · aktif</span></div>
-    ${row('fridge')}${row('look')}
-    <p class="tiny muted">Haklar her gece yarısı yenilenir. ${x.price}/${x.per}, App Store ya da Google Play'den yönetilir.</p>
+    <div class="sec-h"><span class="tiny">Bugünkü taramalar</span><span class="mono small">${n} / ${max}</span></div>
+    <div class="meter" role="progressbar" aria-label="Bugünkü taramalar" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${n}"><span style="width:${Math.min(100, n / max * 100)}%"></span></div>
+    <p class="tiny muted">Hak her gece yarısı yenilenir. ${x.price}/${x.per}, App Store ya da Google Play'den yönetilir.</p>
     <button class="btn ghost small" data-act="unsub">Premium'u kapat (prototip)</button></section>`;
 }
 document.getElementById('paywall').addEventListener('click', e => { if (e.target === e.currentTarget) closePaywall(); });
@@ -1078,7 +1077,7 @@ async function analyze(rid, blob){
     }
     const missing = (Array.isArray(r && r.missing) ? r.missing : []).map(n => byName.get(trLow(n)))
       .filter((x, i, a) => x && !used.has(x.id) && x.lvl !== 'yok' && a.indexOf(x) === i).map(x => ({id: x.id, name: x.name, on: false}));
-    countScan('fridge');
+    countScan();
     scan = {rid, st:'review', items, missing, note: String(r && r.note || '').trim().slice(0, 240)};
   } catch(e){
     if (scan !== me) return;
@@ -1339,7 +1338,7 @@ async function analyzeLook(rid, blob){
       if (match) used.add(match);
       items.push({name: match ? hit.name : name, kind, color, hex, fabric, pattern: it.pattern === 'desenli' ? 'desenli' : 'düz', match, on: true});
     }
-    countScan('look');
+    countScan();
     scan = {rid, kind:'look', st:'review', items, worn: !!(r && r.worn), note: String(r && r.note || '').trim().slice(0, 240)};
   } catch(e){
     if (scan !== me) return;

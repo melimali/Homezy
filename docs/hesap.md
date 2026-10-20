@@ -16,7 +16,8 @@
 1. **Tanıtım** (`src/app/tanitim.tsx`): aşağı kaydırılan 4 sayfa. Evini çiz → Rutinler → Odaya özel işler → Sabah özeti. Bir kere görülür.
 2. **Giriş** (`src/app/giris.tsx`): Hesap oluştur / Giriş yap / Şifremi unuttum, ya da **Hesapsız devam et**. Apple, uygulamanın temel işlevi hesap gerektirmiyorsa hesabı zorunlu tutmamızı istemiyor (5.1.1), bu yüzden misafir seçeneği var. Misafir için arka planda Supabase anonim oturumu açılır; tarama kotası ve satın alma bu kimliğe bağlanır.
 3. **Evini kur** → ana ekran.
-4. **Hesap ekranı** (`src/app/hesap.tsx`, Bildirimler sekmesindeki "Hesap ve üyelik" kartından): profil, Premium durumu, **Satın alımları geri yükle**, Aboneliği yönet, Çıkış yap, **Hesabımı sil** (Apple 5.1.1(v) uygulama içinden silmeyi zorunlu tutuyor).
+4. **Hesabım** (`src/app/hesap.tsx`; her sekmede sağ üstteki yuvarlak düğmeden ve Bildirimler sekmesindeki karttan): profil, Premium durumu, **Satın alımları geri yükle**, Aboneliği yönet, **Hesaptan çık**, **Hesabımı sil** (misafir dahil; Apple 5.1.1(v) uygulama içinden silmeyi zorunlu tutuyor). Çıkış ve silme telefondaki evi temizler ve uygulamayı ilk açılıştaki gibi tanıtımdan başlatır.
+   - RevenueCat'teki müşteri kaydı henüz silinmiyor; RevenueCat açılınca webhook fonksiyonuna eklenecek.
 
 ### Bulut yedeği nasıl çalışır (`src/sync/cloud.ts`)
 
@@ -34,12 +35,11 @@
 2. **Authentication > Sign In / Providers**: Email açık. **Allow anonymous sign-ins** açık. "Confirm email" açık kalsın (uygulama onay e-postasını bekliyor).
 3. **Authentication > URL Configuration > Site URL**: Meikai Digital sitesinde "E-postan onaylandı, uygulamaya dönebilirsin" yazan basit bir sayfa.
 4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir.
-5. Tabloları kur: `supabase/migrations/20261020210000_hesap.sql` dosyasını SQL Editor'de çalıştır (ya da Supabase CLI ile `supabase db push`).
-6. Fonksiyonları yükle (Windows'ta `npx supabase` ile):
+5. Tabloları kur: `supabase/migrations/` içindeki iki dosyayı sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, sonra `20261020230000_delete_me.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu.
+6. Abonelik webhook fonksiyonunu yükle (RevenueCat açılınca; Windows'ta `npx supabase` ile):
    ```
    npx supabase login
    npx supabase link --project-ref <proje-kodu>
-   npx supabase functions deploy delete-account
    npx supabase functions deploy revenuecat-webhook --no-verify-jwt
    npx supabase secrets set REVENUECAT_API_KEY=sk_... REVENUECAT_WEBHOOK_SECRET=<uzun-rastgele-metin>
    ```

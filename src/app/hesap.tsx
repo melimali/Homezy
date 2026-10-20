@@ -6,7 +6,6 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { Btn, Card, Pill, Screen, T, XBtn } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { seed } from '@/domain/logic';
-import { cloudEnabled } from '@/lib/supabase';
 import { LEGAL } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -50,17 +49,29 @@ export default function Hesap() {
   };
 
   const doSignOut = () =>
-    confirm('Çıkış yap', 'Evin hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.', 'Çıkış yap', async () => {
-      setBusy('out');
-      await flush(user?.id, state);
-      await signOut();
-      replace(seed());
-    });
+    confirm(
+      'Hesaptan çık',
+      account
+        ? 'Evin hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.'
+        : 'Misafir olduğun için evin sadece bu telefonda. Çıkarsan ev ve rutinlerin silinir, uygulama baştan başlar.',
+      'Çık',
+      async () => {
+        setBusy('out');
+        if (account) {
+          await flush(user?.id, state);
+          await signOut();
+        } else {
+          // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
+          await deleteAccount();
+        }
+        replace(seed());
+      },
+    );
 
   const doDelete = () =>
     confirm(
       'Hesabını sil',
-      'Hesabın, buluttaki evin ve üyelik kaydın kalıcı olarak silinir. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
+      'Hesabın, evin ve üyelik kaydın kalıcı olarak silinir, uygulama baştan başlar. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
       'Hesabı sil',
       async () => {
         setBusy('delete');
@@ -75,7 +86,7 @@ export default function Hesap() {
   return (
     <Screen header={false}>
       <View style={st.head}>
-        <T v="h1">Hesap</T>
+        <T v="h1">Hesabım</T>
         <XBtn label="Kapat" onPress={close} />
       </View>
 
@@ -136,14 +147,12 @@ export default function Hesap() {
       </Card>
 
       <View style={{ gap: 10 }}>
-        {account && <Btn kind="ghost" label={busy === 'out' ? 'Çıkılıyor…' : 'Çıkış yap'} onPress={doSignOut} disabled={!!busy} />}
-        {account && cloudEnabled && (
-          <Pressable onPress={doDelete} disabled={!!busy} accessibilityRole="button" style={{ alignSelf: 'center', padding: 8 }}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.late }}>
-              {busy === 'delete' ? 'Siliniyor…' : 'Hesabımı sil'}
-            </Text>
-          </Pressable>
-        )}
+        <Btn kind="ghost" label={busy === 'out' ? 'Çıkılıyor…' : 'Hesaptan çık'} onPress={doSignOut} disabled={!!busy} />
+        <Pressable onPress={doDelete} disabled={!!busy} accessibilityRole="button" style={{ alignSelf: 'center', padding: 8 }}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.late }}>
+            {busy === 'delete' ? 'Siliniyor…' : account ? 'Hesabımı sil' : 'Misafir hesabımı sil'}
+          </Text>
+        </Pressable>
       </View>
     </Screen>
   );

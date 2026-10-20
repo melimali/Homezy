@@ -108,21 +108,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (supabase) await supabase.auth.signInAnonymously().catch(() => {});
   }, []);
 
+  // Çıkış ve silme, uygulamayı ilk açılıştaki hâline döndürür: tanıtım yeniden görünür.
   const signOut = useCallback(async () => {
     setGuestFlag(false);
+    prefs.set('intro', null);
+    setIntroSeen(false);
     if (supabase) await supabase.auth.signOut().catch(() => {});
     setSession(null);
   }, []);
 
   const deleteAccount = useCallback(async (): Promise<Result> => {
-    if (!supabase) return offline;
-    // Hesap, ev yedeği ve abonelik kaydı sunucuda silinir. Mağaza aboneliğini kullanıcı
-    // App Store / Google Play'den kendisi iptal eder; ekranda bunu söylüyoruz.
-    const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
-    if (error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
+    // Oturum yoksa (sunucu bağlı değil ya da misafir hiç bağlanamadı) silinecek bir şey sadece telefonda.
+    if (supabase && session) {
+      // Kullanıcıyı, profilini, ev yedeğini ve abonelik kaydını siler (supabase/migrations: delete_me).
+      // Mağaza aboneliğini kullanıcı App Store / Google Play'den kendisi iptal eder; ekranda bunu söylüyoruz.
+      const { error } = await supabase.rpc('delete_me');
+      if (error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
+    }
     await signOut();
     return { ok: true };
-  }, [signOut]);
+  }, [session, signOut]);
 
   const value = useMemo<Auth>(
     () => ({ status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, continueAsGuest, signOut, deleteAccount }),

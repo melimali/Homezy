@@ -167,6 +167,27 @@ button,input,select{font:inherit;color:inherit}
 .s-kirli{background:var(--late-soft);color:var(--late)}
 .s-utu{background:var(--today-soft);color:var(--today)}
 .callout{padding:11px 14px;border-radius:16px;background:var(--today-soft);font-size:.86rem}
+.c-main{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;min-width:0;border:0;background:transparent;padding:0;text-align:left;cursor:pointer;border-radius:12px}
+.c-main .c-name,.c-main .c-cat{display:block;overflow-wrap:anywhere}
+.c-main.on .c-name{color:var(--ok)}
+.dot{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--c,transparent);box-shadow:inset 0 0 0 1.5px var(--hatch),0 0 0 1.5px var(--line);flex:0 0 auto}
+.dot.none{background:repeating-linear-gradient(45deg,transparent 0 3px,var(--line) 3px 5px)}
+.fridge.look-photo img{max-height:220px}
+.occ{align-self:flex-start;background:var(--surface2)}
+.occ button.on{background:var(--accent);color:var(--on-accent);font-weight:800}
+.anchor-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 6px 5px 14px;border-radius:16px;background:var(--accent-soft);font-size:.82rem;font-weight:700}
+.sug{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.look{padding:13px 14px;border-radius:18px;background:var(--bg);display:flex;flex-direction:column;gap:9px}
+.look-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pieces{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.pieces li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-weight:800;font-size:.88rem}
+.pieces small{display:block;font-size:.72rem;color:var(--muted);font-weight:600}
+.from{font-size:.68rem;font-weight:800;color:var(--warm);white-space:nowrap}
+.why{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:.8rem}
+.why li{position:relative;padding-left:16px}
+.why li::before{content:"";position:absolute;left:1px;top:.5em;width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.why li.minus::before{background:var(--late)}
+.scan-list.look-list label{grid-template-columns:auto auto 1fr}
 
 /* stock & fridge */
 .s-name{min-width:0;overflow-wrap:anywhere;font-weight:700}
@@ -267,9 +288,57 @@ const STOCK_DEF = {
   banyo:['Tuvalet kağıdı','Şampuan','Diş macunu','Sıvı sabun'],
   camasir:['Deterjan','Yumuşatıcı','Leke çıkarıcı']
 };
-const CATS = ['Üst','Alt','Elbise / Takım','Dış giyim','Ev / Pijama','İç giyim','Ayakkabı','Aksesuar'];
 const CSTATE = {temiz:'Temiz', kirli:'Kirli', utu:'Ütülenecek'};
 const LV = [['var','Var'],['az','Az'],['yok','Bitti']];
+
+/* ---------- clothing data ---------- */
+// f: formality range, 1 spor · 2 günlük · 3 şık · 4 resmi. fab: fabric assumed when the name doesn't say.
+const KINDS = {
+  'Tişört':{cat:'Üst', f:[1,2], fab:'Pamuk'},          'Polo':{cat:'Üst', f:[2,3], fab:'Pamuk'},
+  'Gömlek':{cat:'Üst', f:[2,4], fab:'Pamuk'},          'Bluz':{cat:'Üst', f:[2,3], fab:'Viskon'},
+  'Kazak':{cat:'Üst', f:[2,3], fab:'Triko'},           'Sweatshirt':{cat:'Üst', f:[1,2], fab:'Pamuk'},
+  'Kot pantolon':{cat:'Alt', f:[1,3], fab:'Kot'},      'Kumaş pantolon':{cat:'Alt', f:[3,4], fab:'Yün'},
+  'Chino':{cat:'Alt', f:[2,3], fab:'Pamuk'},           'Eşofman altı':{cat:'Alt', f:[1,1], fab:'Teknik / Spor'},
+  'Şort':{cat:'Alt', f:[1,2], fab:'Pamuk'},            'Etek':{cat:'Alt', f:[2,3], fab:'Viskon'},
+  'Elbise':{cat:'Elbise / Takım', f:[2,4], fab:'Viskon'}, 'Takım elbise':{cat:'Elbise / Takım', f:[4,4], fab:'Yün'},
+  'Ceket':{cat:'Dış giyim', f:[3,4], fab:'Yün'},       'Deri ceket':{cat:'Dış giyim', f:[2,3], fab:'Deri'},
+  'Kot ceket':{cat:'Dış giyim', f:[1,2], fab:'Kot'},   'Mont':{cat:'Dış giyim', f:[1,2], fab:'Polyester'},
+  'Kaban':{cat:'Dış giyim', f:[2,4], fab:'Yün'},       'Trençkot':{cat:'Dış giyim', f:[3,4], fab:'Pamuk'},
+  'Spor ayakkabı':{cat:'Ayakkabı', f:[1,3], fab:'Deri'}, 'Loafer':{cat:'Ayakkabı', f:[2,4], fab:'Süet'},
+  'Klasik ayakkabı':{cat:'Ayakkabı', f:[3,4], fab:'Deri'}, 'Bot':{cat:'Ayakkabı', f:[2,3], fab:'Deri'},
+  'Sandalet':{cat:'Ayakkabı', f:[1,2], fab:'Deri'},    'Topuklu ayakkabı':{cat:'Ayakkabı', f:[3,4], fab:'Deri'},
+  'Pijama':{cat:'Ev / Pijama', fab:'Pamuk'}, 'İç giyim':{cat:'İç giyim', fab:'Pamuk'}, 'Aksesuar':{cat:'Aksesuar', fab:null}
+};
+const SLOT = {'Üst':'top', 'Alt':'bottom', 'Elbise / Takım':'dress', 'Dış giyim':'outer', 'Ayakkabı':'shoes'};
+// s: season the fabric belongs to. w: weight, 1 ince … 4 kalın.
+const FABRICS = {
+  'Pamuk':{s:'her', w:2}, 'Keten':{s:'yaz', w:1}, 'Viskon':{s:'yaz', w:1}, 'İpek / Saten':{s:'her', w:1},
+  'Kot':{s:'her', w:3}, 'Yün':{s:'kış', w:4}, 'Triko':{s:'kış', w:3}, 'Kaşmir':{s:'kış', w:3},
+  'Kadife':{s:'kış', w:4}, 'Polar':{s:'kış', w:3}, 'Polyester':{s:'her', w:2}, 'Teknik / Spor':{s:'her', w:2},
+  'Deri':{s:'her', w:4}, 'Süet':{s:'geçiş', w:3}, 'Kanvas':{s:'her', w:2}
+};
+const COLORS = {
+  'siyah':'#1E1F22', 'antrasit':'#3A3D42', 'gri':'#8D8F93', 'beyaz':'#F4F4F0', 'krem':'#EEE5D0', 'bej':'#D6C4A4',
+  'camel':'#B88A55', 'taba':'#A0612F', 'kahverengi':'#6B4A32', 'lacivert':'#1F2A44', 'kot mavisi':'#4A6A8C',
+  'mavi':'#3D6FB0', 'açık mavi':'#9EC3E4', 'turkuaz':'#2FA4A8', 'yeşil':'#3F7D4E', 'mint':'#A9D9C2',
+  'haki':'#7C7A4F', 'zeytin yeşili':'#5F6236', 'sarı':'#E5C53C', 'hardal':'#C79C24', 'turuncu':'#E07B39',
+  'kırmızı':'#B5302F', 'bordo':'#6D1F2A', 'pembe':'#E7A1B0', 'pudra':'#E4C3BC', 'lila':'#B9A3D0', 'mor':'#6B4C8A'
+};
+// Colors that act as neutrals in an outfit: they go with almost anything.
+const NEUTRAL = new Set(['siyah','antrasit','gri','beyaz','krem','bej','camel','taba','kahverengi','lacivert','kot mavisi','haki']);
+const KIND_WORDS = [['pijama','Pijama'],['deri ceket','Deri ceket'],['kot ceket','Kot ceket'],['takım elbise','Takım elbise'],['kumaş pantolon','Kumaş pantolon'],
+  ['kot pantolon','Kot pantolon'],['eşofman','Eşofman altı'],['spor ayakkabı','Spor ayakkabı'],['sneaker','Spor ayakkabı'],['klasik ayakkabı','Klasik ayakkabı'],
+  ['topuklu','Topuklu ayakkabı'],['loafer','Loafer'],['makosen','Loafer'],['sandalet','Sandalet'],['terlik','Sandalet'],['bot','Bot'],['çizme','Bot'],
+  ['tişört','Tişört'],['t-shirt','Tişört'],['atlet','Tişört'],['polo','Polo'],['gömlek','Gömlek'],['bluz','Bluz'],['kazak','Kazak'],['süveter','Kazak'],
+  ['hırka','Kazak'],['sweat','Sweatshirt'],['hoodie','Sweatshirt'],['chino','Chino'],['jean','Kot pantolon'],['kot','Kot pantolon'],['pantolon','Kumaş pantolon'],
+  ['şort','Şort'],['etek','Etek'],['elbise','Elbise'],['takım','Takım elbise'],['blazer','Ceket'],['ceket','Ceket'],['mont','Mont'],['kaban','Kaban'],
+  ['palto','Kaban'],['trenç','Trençkot'],['ayakkabı','Spor ayakkabı'],['çorap','İç giyim'],['kemer','Aksesuar'],['şapka','Aksesuar'],['atkı','Aksesuar']];
+const FABRIC_WORDS = [['keten','Keten'],['denim','Kot'],['kot','Kot'],['jean','Kot'],['yün','Yün'],['kaşe','Yün'],['triko','Triko'],['örgü','Triko'],
+  ['kaşmir','Kaşmir'],['kadife','Kadife'],['ipek','İpek / Saten'],['saten','İpek / Saten'],['viskon','Viskon'],['polyester','Polyester'],['spor','Teknik / Spor'],
+  ['deri','Deri'],['süet','Süet'],['polar','Polar'],['pamuk','Pamuk'],['kanvas','Kanvas']];
+const COLOR_WORDS = [...Object.keys(COLORS).map(k => [k, k]), ['kahve','kahverengi'], ['ekru','krem'], ['füme','antrasit'], ['bordó','bordo']].sort((a, b) => b[0].length - a[0].length);
+const OCC = {gunluk:{label:'Günlük', f:[2,2]}, sik:{label:'Şık', f:[3,4]}, spor:{label:'Spor', f:[1,1]}};
+const SEASON_NAME = {yaz:'yaz', kış:'kış', geçiş:'bahar / sonbahar'};
 
 let S;
 let view, roomId = null, tool = null, pushShown = false, clearArm = false;
@@ -306,11 +375,16 @@ function seed(){
   S.cells = [...layout].map(ch => map[ch] || null);
   const agos = {Y:[5,9,7,0,12], M:[1,0,3,26,40,4], B:[2,5,9,4,3], A:[3,8], S:[3,7,6,31], L:[10,12]};
   for (const k in map) S.tasks[map[k]].forEach((t, i) => t.last = ago(agos[k][i]));
-  const w = (name, cat, state) => ({id: uid(), name, cat, state});
+  const w = (name, kind, color, fabric, state) => ({id: uid(), name, cat: KINDS[kind].cat, kind, color, hex: COLORS[color], fabric, pattern: 'düz', state});
   S.mod[map.Y].wardrobe = [
-    w('Beyaz gömlek','Üst','temiz'), w('Kot pantolon','Alt','temiz'), w('Siyah kazak','Üst','kirli'),
-    w('Spor tişört','Üst','kirli'), w('Lacivert takım','Elbise / Takım','utu'), w('Kaban','Dış giyim','temiz'),
-    w('Pijama takımı','Ev / Pijama','kirli'), w('Keten gömlek','Üst','utu')
+    w('Beyaz gömlek','Gömlek','beyaz','Pamuk','temiz'), w('Kot pantolon','Kot pantolon','kot mavisi','Kot','temiz'),
+    w('Bej chino','Chino','bej','Pamuk','temiz'), w('Bordo kazak','Kazak','bordo','Triko','temiz'),
+    w('Lacivert tişört','Tişört','lacivert','Pamuk','temiz'), w('Hardal sweatshirt','Sweatshirt','hardal','Pamuk','temiz'),
+    w('Siyah kazak','Kazak','siyah','Yün','kirli'), w('Spor tişört','Tişört','gri','Teknik / Spor','kirli'),
+    w('Lacivert takım','Takım elbise','lacivert','Yün','utu'), w('Kaban','Kaban','camel','Yün','temiz'),
+    w('Siyah deri ceket','Deri ceket','siyah','Deri','temiz'), w('Beyaz spor ayakkabı','Spor ayakkabı','beyaz','Deri','temiz'),
+    w('Kahverengi loafer','Loafer','kahverengi','Süet','temiz'), w('Pijama takımı','Pijama','açık mavi','Pamuk','kirli'),
+    w('Keten gömlek','Gömlek','krem','Keten','utu')
   ];
   const st = (name, lvl) => ({id: uid(), name, lvl});
   S.mod[map.M].stock = [st('Süt','az'), st('Yumurta','var'), st('Beyaz peynir','var'), st('Domates','yok'), st('Yoğurt','var'), st('Tereyağı','az'), st('Biber','yok'), st('Ekmek','var')];
@@ -327,7 +401,7 @@ function save(){
   catch(e){
     try {
       const copy = JSON.parse(JSON.stringify(S));
-      for (const k in copy.mod) if (copy.mod[k].photo) { copy.mod[k].photo = null; }
+      for (const k in copy.mod){ if (copy.mod[k].photo) copy.mod[k].photo = null; if (copy.mod[k].lookPhoto) copy.mod[k].lookPhoto = null; }
       localStorage.setItem(KEY, JSON.stringify(copy));
     } catch(e2){}
     return false;
@@ -527,12 +601,21 @@ function wardrobeHTML(rid, m){
   const cnt = k => list.filter(c => c.state === k).length;
   const items = f === 'all' ? list : list.filter(c => c.state === f);
   const dirty = cnt('kirli');
+  const on = aiState === 'on';
+  const mine = scan && scan.rid === rid && scan.kind === 'look';
+  const anchors = new Set(m.anchor || []);
   return `<section class="card"><div class="sec-h"><h2 class="h2">Gardırop</h2><span class="mono small">${list.length} parça</span></div>
+    ${m.lookPhoto ? `<div class="fridge look-photo"><img src="${m.lookPhoto}" alt="Son kıyafet fotoğrafı"></div>` : ''}
+    ${mine ? lookScanHTML(rid, m) : ''}
+    ${mine && scan.st === 'busy' ? '' : `<label class="btn primary block" for="lookfile-${rid}">Kıyafet fotoğrafı çek</label>`}
+    <input type="file" id="lookfile-${rid}" data-look="${rid}" accept="image/*" capture="environment" hidden>
+    ${mine ? '' : `<p class="tiny muted">${on ? 'Kombinini aynada çek ya da parçaları yatağa serip çek. Yapay zekâ her parçanın türünü, rengini ve kumaşını çıkarır, onaylarsan gardıroba ekler ve onlarla kombin önerir.' : 'Yapay zekâ ile kıyafet tanıma burada kullanılamıyor. Parçaları aşağıdan elle ekleyebilirsin; renk ve kumaşı adından anlarım.'}</p>`}
     ${dirty >= 3 ? `<div class="callout">${dirty} parça kirli. Bir makine dolusu birikti.</div>` : ''}
     <div class="filters">${[['all','Tümü',list.length],['temiz','Temiz',cnt('temiz')],['kirli','Kirli',dirty],['utu','Ütülenecek',cnt('utu')]].map(([k, l, c]) => `<button class="filt${f === k ? ' on' : ''}" data-act="filter" data-rid="${rid}" data-f="${k}">${l} <span class="mono">${c}</span></button>`).join('')}</div>
-    <ul class="clothes">${items.map(c => `<li><div><div class="c-name">${esc(c.name)}</div><div class="c-cat">${esc(c.cat)}</div></div><button class="state s-${c.state}" data-act="cycle" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)}: ${CSTATE[c.state]}. Değiştirmek için dokun">${CSTATE[c.state]}</button><button class="x" data-act="delcloth" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} sil">×</button></li>`).join('') || '<li><p class="empty-msg">Bu filtrede kıyafet yok.</p></li>'}</ul>
-    <p class="tiny muted">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek.</p>
-    <form class="addrow" data-form="addcloth" data-rid="${rid}"><input id="cl-${rid}" name="n" placeholder="Kıyafet, ör. Lacivert gömlek" required autocomplete="off"><select name="c" aria-label="Kategori">${CATS.map(c => `<option>${c}</option>`).join('')}</select><button class="btn small primary">Ekle</button></form></section>`;
+    <ul class="clothes">${items.map(c => { const a = att(c); return `<li><button class="c-main${anchors.has(c.id) ? ' on' : ''}" data-act="anchor" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} ile kombin öner">${dotHTML(a)}<span><span class="c-name">${esc(c.name)}</span><span class="c-cat">${esc(a.kind ? attLine(a) : c.cat)}</span></span></button><button class="state s-${c.state}" data-act="cycle" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)}: ${CSTATE[c.state]}. Değiştirmek için dokun">${CSTATE[c.state]}</button><button class="x" data-act="delcloth" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} sil">×</button></li>`; }).join('') || '<li><p class="empty-msg">Bu filtrede kıyafet yok.</p></li>'}</ul>
+    <p class="tiny muted">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek. Ada dokunursan o parçayla kombin öneririm.</p>
+    <form class="addrow" data-form="addcloth" data-rid="${rid}"><input id="cl-${rid}" name="n" placeholder="Kıyafet, ör. Lacivert keten gömlek" required autocomplete="off"><select name="k" aria-label="Tür"><option value="">Tür: addan anla</option>${Object.keys(KINDS).map(k => `<option>${k}</option>`).join('')}</select><button class="btn small primary">Ekle</button></form></section>
+  ${kombinHTML(rid, m)}`;
 }
 function fridgeHTML(rid, m){
   const old = m.photoAt && daysSince(m.photoAt) > 7;
@@ -723,13 +806,19 @@ document.addEventListener('click', e => {
     case 'deltask': { const arr = listOf(d.rid, d.list); const i = arr.findIndex(x => x.id === d.tid); if (i > -1){ const [t] = arr.splice(i, 1); save(); render(); toast(`${t.name} silindi.`); } break; }
     case 'filter': S.mod[d.rid].filter = d.f; save(); render(); break;
     case 'cycle': { const c = S.mod[d.rid].wardrobe.find(x => x.id === d.id); if (!c) break; c.state = {temiz:'kirli', kirli:'utu', utu:'temiz'}[c.state]; save(); render(); break; }
-    case 'delcloth': S.mod[d.rid].wardrobe = S.mod[d.rid].wardrobe.filter(x => x.id !== d.id); save(); render(); break;
+    case 'delcloth': { const m = S.mod[d.rid]; m.wardrobe = m.wardrobe.filter(x => x.id !== d.id); m.anchor = (m.anchor || []).filter(x => x !== d.id); save(); render(); break; }
     case 'lvl': { const x = S.mod[d.rid].stock.find(y => y.id === d.id); if (x){ x.lvl = d.lvl; x.qty = ''; save(); render(); } break; }
     case 'delstock': S.mod[d.rid].stock = S.mod[d.rid].stock.filter(x => x.id !== d.id); save(); render(); break;
     case 'rescan': { const m = S.mod[d.rid]; if (m && m.photo) analyze(d.rid, dataBlob(m.photo)); break; }
     case 'scanstop': if (scan && scan.ctl) scan.ctl.abort(); break;
     case 'scanclose': scan = null; render(); break;
-    case 'scanapply': applyScan(); break;
+    case 'scanapply': if (scan && scan.kind === 'look') applyLook(); else applyScan(); break;
+    case 'lookretry': if (scan && scan.blob) analyzeLook(scan.rid, scan.blob); break;
+    case 'anchor': { const m = S.mod[d.rid]; m.anchor = (m.anchor || []).length === 1 && m.anchor[0] === d.id ? [] : [d.id]; sugPage[d.rid] = 0; save(); render();
+      const el = document.getElementById('kombin-' + d.rid); if (el && m.anchor.length) el.scrollIntoView({behavior: 'smooth', block: 'start'}); break; }
+    case 'anchorclear': S.mod[d.rid].anchor = []; sugPage[d.rid] = 0; save(); render(); break;
+    case 'occ': S.mod[d.rid].occ = d.occ; sugPage[d.rid] = 0; save(); render(); break;
+    case 'moresug': sugPage[d.rid] = (sugPage[d.rid] || 0) + 1; render(); document.getElementById('kombin-' + d.rid).scrollIntoView({block: 'start'}); break;
     case 'copyshop': {
       const items = d.rid === 'all' ? shopItems().map(s => s.x) : S.mod[d.rid].stock.filter(x => x.lvl !== 'var');
       copyText(items.map(x => '- ' + x.name + (x.lvl === 'az' ? ' (azaldı)' : '')).join('\n'), document.getElementById('shop-' + d.rid)); break;
@@ -746,7 +835,9 @@ document.addEventListener('submit', e => {
     listOf(rid, f.dataset.list).push({id: uid(), name, every, last: null});
     toast(`${name} eklendi.`);
   } else if (f.dataset.form === 'addcloth'){
-    S.mod[rid].wardrobe.push({id: uid(), name, cat: f.c.value, state: 'temiz'});
+    const kind = f.k.value || guessKind(name); const color = guessColor(name);
+    S.mod[rid].wardrobe.push({id: uid(), name, cat: kind ? KINDS[kind].cat : 'Aksesuar', kind, color, hex: color ? COLORS[color] : null, fabric: guessFabric(name, kind), pattern: 'düz', state: 'temiz', addedAt: Date.now()});
+    if (!kind) toast(`${name} eklendi. Türünü anlayamadım, kombinlere girmesi için listeden tür seç.`);
     if (S.mod[rid].filter !== 'all' && S.mod[rid].filter !== 'temiz') S.mod[rid].filter = 'all';
   } else if (f.dataset.form === 'addstock'){
     S.mod[rid].stock.push({id: uid(), name, lvl: 'yok'});
@@ -763,32 +854,44 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.dataset.photo && el.files && el.files[0]) onPhoto(el.files[0], el.dataset.photo);
+  if (el.dataset.look && el.files && el.files[0]) onLookPhoto(el.files[0], el.dataset.look);
   if (el.dataset.scan && scan && scan.st === 'review'){ const [k, i] = el.dataset.scan.split(':'); const x = (k === 'm' ? scan.missing : scan.items)[+i]; if (x) x.on = el.checked; }
   if (el.id === 'set-time' && el.value){ S.settings.time = el.value; save(); render(); }
   if (el.dataset.set){ S.settings[el.dataset.set] = el.checked; save(); render(); }
 });
-function onPhoto(file, rid){
+function readImage(file, done){
   const rd = new FileReader();
   rd.onload = () => {
     const img = new Image();
-    img.onload = () => {
-      const max = 900, sc = Math.min(1, max / Math.max(img.width, img.height));
-      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * sc); cv.height = Math.round(img.height * sc);
-      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-      S.mod[rid].photo = cv.toDataURL('image/jpeg', 0.72); S.mod[rid].photoAt = Date.now();
-      const ok = save();
-      if (aiState === 'on'){
-        const big = Math.min(1, 1600 / Math.max(img.width, img.height));
-        const cv2 = document.createElement('canvas'); cv2.width = Math.round(img.width * big); cv2.height = Math.round(img.height * big);
-        cv2.getContext('2d').drawImage(img, 0, 0, cv2.width, cv2.height);
-        cv2.toBlob(b => b ? analyze(rid, b) : render(), 'image/jpeg', 0.85);
-      } else render();
-      toast(ok ? 'Buzdolabı fotoğrafı güncellendi.' : 'Fotoğraf eklendi. Cihazda yer olmadığı için yalnızca bu oturumda kalacak.');
-    };
+    img.onload = () => done(img);
     img.onerror = () => toast('Bu dosya açılamadı. JPG ya da PNG bir fotoğraf seç.');
     img.src = rd.result;
   };
   rd.readAsDataURL(file);
+}
+function scaled(img, max){
+  const sc = Math.min(1, max / Math.max(img.width, img.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(img.width * sc); cv.height = Math.round(img.height * sc);
+  cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+  return cv;
+}
+function onPhoto(file, rid){
+  readImage(file, img => {
+    S.mod[rid].photo = scaled(img, 900).toDataURL('image/jpeg', 0.72); S.mod[rid].photoAt = Date.now();
+    const ok = save();
+    if (aiState === 'on') scaled(img, 1600).toBlob(b => b ? analyze(rid, b) : render(), 'image/jpeg', 0.85);
+    else render();
+    toast(ok ? 'Buzdolabı fotoğrafı güncellendi.' : 'Fotoğraf eklendi. Cihazda yer olmadığı için yalnızca bu oturumda kalacak.');
+  });
+}
+function onLookPhoto(file, rid){
+  readImage(file, img => {
+    S.mod[rid].lookPhoto = scaled(img, 600).toDataURL('image/jpeg', 0.7); S.mod[rid].lookAt = Date.now();
+    const ok = save();
+    if (aiState === 'on') scaled(img, 1600).toBlob(b => b ? analyzeLook(rid, b) : render(), 'image/jpeg', 0.85);
+    else { render(); toast('Fotoğraf kaydedildi. Parçaları aşağıdan elle ekleyebilirsin.'); return; }
+    if (!ok) toast('Cihazda yer olmadığı için fotoğraf yalnızca bu oturumda kalacak.');
+  });
 }
 
 /* ---------- fridge AI ---------- */
@@ -890,6 +993,276 @@ function applyScan(){
   m.scans = m.scans.slice(0, 10);
   scan = null; save(); render();
   toast(`Liste güncellendi${add ? `, ${add} yeni ürün eklendi` : ''}.`);
+}
+
+/* ---------- wardrobe: attributes ---------- */
+const cap = s => s ? s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1) : '';
+const findWord = (list, name) => { const n = trLow(name); const hit = list.find(([w]) => n.includes(w)); return hit ? hit[1] : null; };
+const guessKind = name => findWord(KIND_WORDS, name);
+const guessColor = name => findWord(COLOR_WORDS, name);
+function guessFabric(name, kind){
+  const f = findWord(FABRIC_WORDS.filter(([w]) => !(w === 'spor' && kind && KINDS[kind].cat === 'Ayakkabı')), name);
+  return f || (kind && KINDS[kind].fab) || null;
+}
+function hsl(hex){
+  const n = parseInt(hex.slice(1), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0, s = 0;
+  if (d){ s = d / (1 - Math.abs(2 * l - 1)); h = 60 * (mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4); if (h < 0) h += 360; }
+  return {h, s, l};
+}
+const hueGap = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+// Fills in what an older or hand-typed item doesn't store, from its name.
+function att(c){
+  const kind = KINDS[c.kind] ? c.kind : guessKind(c.name);
+  const cat = kind ? KINDS[kind].cat : c.cat;
+  const color = c.color || guessColor(c.name);
+  const hex = c.hex || (color && COLORS[color]) || null;
+  const fabric = FABRICS[c.fabric] ? c.fabric : guessFabric(c.name, kind);
+  const k = kind && KINDS[kind];
+  return {id: c.id, name: c.name, state: c.state, kind, cat, slot: k && k.f ? SLOT[cat] : null, f: k && k.f, color, hex,
+    neutral: color ? NEUTRAL.has(color) : hex ? hsl(hex).s < .18 : true, l: hex ? hsl(hex).l : .5, h: hex ? hsl(hex).h : 0,
+    fabric, fab: FABRICS[fabric] || {s:'her', w:2}, pattern: c.pattern === 'desenli' ? 'desenli' : 'düz'};
+}
+const attLine = a => [a.kind || 'Tür belirsiz', a.color ? cap(a.color) : '', a.fabric || ''].filter(Boolean).join(' · ');
+const dotHTML = a => a.hex ? `<i class="dot" style="--c:${a.hex}" aria-hidden="true"></i>` : '<i class="dot none" aria-hidden="true"></i>';
+function season(){ const m = new Date().getMonth(); return m >= 5 && m <= 8 ? 'yaz' : (m === 11 || m <= 1) ? 'kış' : 'geçiş'; }
+
+/* ---------- wardrobe: outfit rules ---------- */
+// Fabric pairing rules: each looks at the outfit's slots and returns [points, reason] when it applies.
+const isK = (p, ...k) => !!p && k.includes(p.kind);
+const isF = (p, ...f) => !!p && f.includes(p.fabric);
+const FABRIC_RULES = [
+  ({top, bottom}) => isF(top, 'Keten') && (isK(bottom, 'Chino', 'Şort') || isF(bottom, 'Keten')) && [2, 'Keten üst, chino ya da şort gibi hafif bir altla nefes alır.'],
+  ({top, bottom}) => isK(top, 'Kazak') && isF(top, 'Yün', 'Triko', 'Kaşmir') && isK(bottom, 'Kot pantolon', 'Chino', 'Kumaş pantolon') && [2, 'Kalın örgü kazak, sağlam dokulu bir pantolonla dengeli durur.'],
+  ({top, bottom}) => isK(top, 'Kazak') && (isK(bottom, 'Şort') || isF(bottom, 'Keten', 'Viskon')) && [-2, 'Kalın kazak ince ya da kısa bir altla dengesiz kalır.'],
+  ({top, bottom}) => isF(top, 'İpek / Saten') && isK(bottom, 'Kumaş pantolon', 'Etek', 'Kot pantolon') && [2, 'Saten üstün parlaklığı mat bir altla dengelenir.'],
+  ({top, bottom}) => isF(top, 'İpek / Saten') && isK(bottom, 'Eşofman altı') && [-3, 'Saten üst eşofmanla bir arada durmaz.'],
+  ({top, bottom, shoes}) => (isF(top, 'Teknik / Spor') || isK(bottom, 'Eşofman altı')) && isK(shoes, 'Klasik ayakkabı', 'Loafer', 'Topuklu ayakkabı') && [-3, 'Spor kumaşla klasik ayakkabı çatışır, spor ayakkabı seç.'],
+  ({top, outer, bottom}) => { const up = [top, outer].find(p => isF(p, 'Kot')); if (!up || !isF(bottom, 'Kot')) return null;
+    return up.color === bottom.color ? [-1, 'Üstte ve altta aynı ton kot tek parça gibi durur, tonlar ayrışsın.'] : [1, 'Farklı tonlarda kot üstüne kot bilinçli bir seçim gibi durur.']; },
+  ({outer, top, bottom}) => isK(outer, 'Deri ceket') && isK(top, 'Tişört', 'Sweatshirt') && isK(bottom, 'Kot pantolon', 'Chino') && [2, 'Deri ceket, rahat bir üst ve kot: zamansız bir üçlü.'],
+  ({outer, top, bottom}) => isK(outer, 'Ceket') && isK(top, 'Tişört', 'Polo') && isK(bottom, 'Kot pantolon', 'Chino') && [1, 'Ceketin altına tişört, şık ama rahat bir denge kurar.'],
+  ({outer, top}) => outer && top && outer.fab.w < top.fab.w && [-1, `${outer.name} alttaki ${top.name.toLocaleLowerCase('tr-TR')} parçadan ince, kalın olanı dışa al.`],
+  ({dress, top}) => isK(dress, 'Takım elbise') && isK(top, 'Gömlek') && [2, 'Takımın altına gömlek, klasik ve derli toplu.'],
+  ({dress, top}) => isK(dress, 'Takım elbise') && isK(top, 'Tişört', 'Kazak', 'Polo') && [0, 'Takımın altına tişört ya da ince kazak, daha rahat bir yorum.']
+];
+function judge(ps, occ){
+  const why = []; const add = (d, t) => why.push({d, t});
+  const s = {}; for (const p of ps) s[p.slot] = p;
+  const {top, bottom, dress, outer, shoes} = s;
+  const sea = season();
+  // Color harmony: count distinct non-neutral hues.
+  const loud = []; for (const p of ps) if (!p.neutral && p.hex && !loud.some(q => hueGap(q.h, p.h) < 25)) loud.push(p);
+  if (!loud.length) add(1, 'Nötr renkler: kolay ve dengeli. Canlı bir aksesuar iyi gider.');
+  else if (loud.length === 1) add(2, `${cap(loud[0].color || 'renkli parça')} tek vurgu rengi, gerisi nötr: dengeli.`);
+  else if (loud.length === 2){
+    const g = hueGap(loud[0].h, loud[1].h), a = cap(loud[0].color), b = loud[1].color;
+    if (g < 40) add(2, `${a} ve ${b} komşu tonlar, birbirini yumuşakça tamamlıyor.`);
+    else if (g >= 140) add(2, `${a} ile ${b} karşıt renkler: cesur ama uyumlu bir kontrast.`);
+    else add(-1, `${a} ile ${b} arasında uyum zayıf, birini nötr bir parçayla değiştir.`);
+  } else add(-2, 'Üç canlı renk kalabalık durur, birini nötre çevir.');
+  // Light and dark contrast between the top half and the bottom half.
+  const up = top || dress, low = dress && !top ? null : bottom;
+  if (up && low){
+    const dl = up.l - low.l;
+    if (Math.abs(dl) >= .35) add(1, dl > 0 ? 'Açık üst, koyu alt: net bir kontrast.' : 'Koyu üst, açık alt: dikkat çeken bir kontrast.');
+    else if (up.color && up.color === low.color) add(-1, 'Üst ve alt aynı ton, arada kontrast olmadığı için tek parça gibi durur.');
+  }
+  const names = new Set(ps.map(p => p.color));
+  if (names.has('siyah') && names.has('lacivert')) add(-1, 'Siyah ile lacivert yan yana birbirine karışır, arada açık bir parça iyi olur.');
+  if (shoes && shoes.color && ps.some(p => p !== shoes && p.color === shoes.color)) add(1, `Ayakkabı, kombindeki ${shoes.color} parçayla bağ kuruyor.`);
+  if (ps.filter(p => p.pattern === 'desenli').length > 1) add(-2, 'İki desenli parça birbiriyle yarışır, birini düz seç.');
+  // Style level: every piece's formality range has to overlap.
+  const lo = Math.max(...ps.map(p => p.f[0])), hi = Math.min(...ps.map(p => p.f[1]));
+  if (lo > hi){
+    const casual = ps.reduce((a, b) => b.f[1] < a.f[1] ? b : a), formal = ps.reduce((a, b) => b.f[0] > a.f[0] ? b : a);
+    add(-2 * (lo - hi), `${casual.name} fazla rahat, ${formal.name.toLocaleLowerCase('tr-TR')} fazla resmi; stilleri tutmuyor.`);
+  } else {
+    const [a, b] = OCC[occ].f;
+    if (Math.max(lo, a) <= Math.min(hi, b)) add(2, {gunluk:'Günlük bir gün için rahat ve derli toplu.', sik:'Şık bir ortama uygun.', spor:'Hareketli bir gün için rahat.'}[occ]);
+    else if (hi < a) add(-3, `${OCC[occ].label} bir ortam için fazla rahat.`);
+    else add(-3, `${OCC[occ].label} bir gün için fazla resmi.`);
+  }
+  // Fabric pairings and season.
+  for (const rule of FABRIC_RULES){ const r = rule(s); if (r && r[0]) add(r[0], r[1]); }
+  const summer = ps.filter(p => p.fab.s === 'yaz' && p.slot !== 'shoes');
+  const winter = ps.filter(p => ['Kadife', 'Polar', 'Triko', 'Kaşmir'].includes(p.fabric) || (p.fabric === 'Yün' && ['top', 'outer'].includes(p.slot)));
+  if (summer.length && winter.length) add(-2, `${summer[0].fabric} yazlık, ${winter[0].fabric.toLocaleLowerCase('tr-TR')} kışlık; aynı kombinde mevsim karışıyor.`);
+  if (sea === 'yaz'){ const w = ps.find(p => p.fab.s === 'kış' && !isK(p, 'Kumaş pantolon', 'Takım elbise')); if (w) add(-2, `${w.name} yaz için kalın kalır.`); }
+  if (sea === 'kış'){
+    if (!outer) add(-1, 'Kışın üstüne bir kaban ya da mont al.');
+    if (summer.length && !outer) add(-1, `${summer[0].fabric} kışın serin kalır.`);
+  }
+  const score = why.reduce((n, x) => n + x.d, 0);
+  return {ps, score, why: why.sort((a, b) => b.d - a.d)};
+}
+const fitLabel = n => n >= 6 ? ['ok', 'Çok uyumlu'] : n >= 3 ? ['ok', 'Uyumlu'] : n >= 0 ? ['today', 'Denenebilir'] : ['late', 'Uyumsuz'];
+
+/* ---------- wardrobe: suggestions ---------- */
+let sugPage = {}, sugMemo = {key: null, list: []};
+// Builds every clean top + bottom (or dress) + shoes (+ outer) outfit, scores it, and keeps a varied best few.
+// With anchors, each outfit must use at least one anchored piece and fills the rest from the wardrobe.
+function suggest(m, occ, anchors, skipAllAnchored){
+  const an = new Set(anchors);
+  const pool = (m.wardrobe || []).map(att).filter(p => p.slot && (p.state === 'temiz' || an.has(p.id)));
+  const key = JSON.stringify([pool.map(p => [p.id, p.name, p.kind, p.color, p.fabric, p.state]), occ, anchors, skipAllAnchored, season()]);
+  if (sugMemo.key === key) return sugMemo.list;
+  const of = (slot, n) => { const a = pool.filter(p => p.slot === slot); return [...a.filter(p => an.has(p.id)), ...a.filter(p => !an.has(p.id))].slice(0, n); };
+  const tops = of('top', 20), bottoms = of('bottom', 16), dresses = of('dress', 10), shoes = of('shoes', 10);
+  const outers = season() === 'yaz' ? [] : of('outer', 8);
+  const bases = [];
+  for (const t of tops) for (const b of bottoms) bases.push([t, b]);
+  for (const d of dresses){
+    if (d.kind === 'Takım elbise') tops.filter(t => isK(t, 'Gömlek', 'Tişört', 'Kazak', 'Polo')).forEach(t => bases.push([d, t]));
+    else bases.push([d]);
+  }
+  const all = [];
+  for (const base of bases) for (const sh of shoes) for (const o of [null, ...outers]){
+    const ps = o ? [...base, o, sh] : [...base, sh];
+    if (an.size){ const k = ps.filter(p => an.has(p.id)).length; if (!k || (skipAllAnchored && k === ps.length)) continue; }
+    all.push(judge(ps, occ));
+  }
+  all.sort((a, b) => b.score - a.score);
+  // Greedy pick: a piece already used in an earlier suggestion costs points, so the list doesn't repeat one sweater.
+  const picked = [], uses = new Map();
+  const overlap = (a, b) => a.ps.filter(p => !an.has(p.id) && b.ps.some(q => q.id === p.id)).length;
+  let cand = all.filter(o => o.score >= 0).slice(0, 600);
+  while (picked.length < 9 && cand.length){
+    let best = null, bv = -Infinity;
+    for (const o of cand){ const v = o.score - 1.5 * o.ps.reduce((n, p) => n + (an.has(p.id) ? 0 : uses.get(p.id) || 0), 0); if (v > bv){ bv = v; best = o; } }
+    picked.push(best); best.ps.forEach(p => uses.set(p.id, (uses.get(p.id) || 0) + 1));
+    cand = cand.filter(o => o !== best && !picked.some(q => overlap(o, q) >= Math.max(1, o.ps.filter(p => !an.has(p.id)).length - 1)));
+  }
+  sugMemo = {key, list: picked};
+  return picked;
+}
+function lookHTML(o, an, tag){
+  const [k, label] = fitLabel(o.score);
+  const plus = o.why.filter(x => x.d > 0).slice(0, 3), minus = o.why.filter(x => x.d < 0).slice(0, 2);
+  return `<li class="look"><div class="look-h"><span class="pill ${k}">${label}</span></div>
+    <ul class="pieces">${o.ps.map(p => `<li>${dotHTML(p)}<span>${esc(p.name)}<small>${esc(attLine(p))}</small></span>${an.size ? `<span class="from">${an.has(p.id) ? tag : 'dolabından'}</span>` : ''}</li>`).join('')}</ul>
+    <ul class="why">${plus.map(x => `<li>${esc(x.t)}</li>`).join('')}${minus.map(x => `<li class="minus">${esc(x.t)}</li>`).join('')}</ul></li>`;
+}
+function kombinHTML(rid, m){
+  const occ = OCC[m.occ] ? m.occ : 'gunluk';
+  const ids = new Set((m.wardrobe || []).map(c => c.id));
+  const anchors = (m.anchor || []).filter(id => ids.has(id));
+  const look = m.lastLook;
+  const fromPhoto = !!(look && anchors.length && anchors.join() === look.ids.join());
+  const list = suggest(m, occ, anchors, fromPhoto && look.worn);
+  const pages = Math.max(1, Math.ceil(list.length / 3)); const page = (sugPage[rid] || 0) % pages;
+  const an = new Set(anchors);
+  const anNames = anchors.map(id => m.wardrobe.find(c => c.id === id).name);
+  let worn = '';
+  if (fromPhoto && look.worn){
+    const ps = look.ids.map(id => m.wardrobe.find(c => c.id === id)).filter(Boolean).map(att).filter(p => p.slot);
+    if (ps.length >= 2){
+      // The photo is judged for the setting it suits best, not the one picked below.
+      const j = Object.keys(OCC).map(o => judge(ps, o)).sort((a, b) => b.score - a.score)[0]; const [k, label] = fitLabel(j.score);
+      worn = `<div class="scan"><div class="sec-h"><h3 class="h3">Fotoğraftaki kombin</h3><span class="pill ${k}">${label}</span></div>
+        ${look.note ? `<p>${esc(look.note)}</p>` : ''}
+        <ul class="why">${j.why.slice(0, 2).map(x => `<li>${esc(x.t)}</li>`).join('')}${j.why.filter(x => x.d < 0).slice(0, 2).map(x => `<li class="minus">${esc(x.t)}</li>`).join('')}</ul>
+        <p class="tiny muted">Aşağıda bu parçaları dolabındaki başka parçalarla eşleştirdim.</p></div>`;
+    }
+  }
+  const empty = anchors.length ? 'Bu parçayla iyi duran bir kombin bulamadım. Başka bir ortam seç ya da dolabına parça ekle.' : 'Öneri için en az bir temiz üst, alt ve ayakkabı gerek.';
+  return `<section class="card" id="kombin-${rid}"><div class="sec-h"><h2 class="h2">Kombin önerileri</h2><span class="mono small">${SEASON_NAME[season()]}</span></div>
+    <div class="seg occ" role="group" aria-label="Nereye giyeceksin?">${Object.entries(OCC).map(([k, o]) => `<button class="${k === occ ? 'on' : ''}" aria-pressed="${k === occ}" data-act="occ" data-rid="${rid}" data-occ="${k}">${o.label}</button>`).join('')}</div>
+    ${anchors.length ? `<div class="anchor-chip"><span>${fromPhoto ? 'Fotoğraftaki parçalarla' : 'Şu parçayla'}: ${esc(anNames.join(', '))}</span><button class="x" data-act="anchorclear" data-rid="${rid}" aria-label="Seçimi kaldır">×</button></div>` : '<p class="tiny muted">Gardıroptaki bir parçanın adına dokun, o parçayla kombin önereyim.</p>'}
+    ${worn}
+    ${list.length ? `<ul class="sug">${list.slice(page * 3, page * 3 + 3).map(o => lookHTML(o, an, fromPhoto ? 'fotoğraftan' : 'seçtiğin')).join('')}</ul>` : `<p class="empty-msg">${empty}</p>`}
+    ${pages > 1 ? `<button class="btn ghost small" data-act="moresug" data-rid="${rid}">Başka öneriler <span class="mono">${page + 1}/${pages}</span></button>` : ''}
+    <p class="tiny muted">Sadece temiz parçalardan öneririm. Renk uyumuna, açık-koyu kontrastına, kumaşların birbirine ve mevsime uyumuna bakarım.</p></section>`;
+}
+
+/* ---------- wardrobe AI ---------- */
+// Same pattern as the fridge scan: Claude reads the photo, the page matches pieces to the wardrobe, the user confirms.
+function lookPrompt(list){
+  return `Bu fotoğrafta kıyafetler var: ya bir kişinin üzerinde giyilmiş bir kombin ya da yan yana serilmiş parçalar. Görünen her kıyafet parçasını ve ayakkabıyı ayrı ayrı çıkar.
+
+Dolaptaki mevcut parçalar:
+${list.length ? list.slice(0, 80).map(c => { const a = att(c); return `- ${c.name} (${attLine(a)})`; }).join('\n') : '(boş)'}
+
+Kurallar:
+- kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}.
+- color: parçanın baskın rengi, şu listeden en yakını: ${Object.keys(COLORS).join(', ')}.
+- hex: baskın rengin "#RRGGBB" kodu.
+- fabric: en olası kumaş, şu listeden biri: ${Object.keys(FABRICS).join(', ')}.
+- pattern: "düz" ya da "desenli" (çizgili, kareli, çiçekli, baskılı vb.).
+- name: kısa Türkçe ad, renk + tür, ör. "Lacivert keten gömlek". Marka yazma.
+- match: parça dolaptaki bir parçayla büyük olasılıkla aynıysa dolaptaki adı aynen yaz, değilse null.
+- worn: kıyafetler bir kişinin üzerinde giyiliyse true, serilmiş ya da askıdaysa false.
+- note: Türkçe, en fazla iki kısa cümle. Fotoğraftaki parçaların renk ve kumaş uyumu hakkında yorum yap.
+- Kişinin yüzü, bedeni ya da ortam hakkında yorum yapma. Fotoğrafta kıyafet yoksa pieces boş olsun, note bunu söylesin.
+
+Sadece şu biçimde JSON döndür, başka metin yazma:
+{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","match":"Beyaz gömlek"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
+}
+async function analyzeLook(rid, blob){
+  if (!ai || !S.mod[rid]) return;
+  if (scan && scan.ctl) scan.ctl.abort();
+  const ctl = new AbortController(); const me = {rid, kind:'look', st:'busy', ctl};
+  scan = me; render();
+  const w = S.mod[rid].wardrobe ||= [];
+  try {
+    const r = await ai.json(lookPrompt(w), {images: blob, signal: ctl.signal, cache: false});
+    if (scan !== me) return;
+    const byName = new Map(w.map(x => [trLow(x.name), x]));
+    const used = new Set(); const items = [];
+    for (const it of (Array.isArray(r && r.pieces) ? r.pieces : []).slice(0, 20)){
+      if (!it) continue;
+      const kind = KINDS[it.kind] ? it.kind : guessKind(it.name);
+      const color = COLORS[trLow(it.color)] ? trLow(it.color) : guessColor(it.name);
+      const name = String(it.name || '').trim().slice(0, 40) || [cap(color), kind && kind.toLocaleLowerCase('tr-TR')].filter(Boolean).join(' ');
+      if (!name) continue;
+      const hex = /^#[0-9a-f]{6}$/i.test(it.hex || '') ? it.hex : (color ? COLORS[color] : null);
+      const fabric = FABRICS[it.fabric] ? it.fabric : guessFabric(name, kind);
+      const hit = byName.get(trLow(it.match)) || byName.get(trLow(name));
+      const match = hit && !used.has(hit.id) ? hit.id : null;
+      if (match) used.add(match);
+      items.push({name: match ? hit.name : name, kind, color, hex, fabric, pattern: it.pattern === 'desenli' ? 'desenli' : 'düz', match, on: true});
+    }
+    scan = {rid, kind:'look', st:'review', items, worn: !!(r && r.worn), note: String(r && r.note || '').trim().slice(0, 240)};
+  } catch(e){
+    if (scan !== me) return;
+    if (e && e.code === 'cancelled') scan = null;
+    else {
+      const er = aiErr(e && e.code);
+      if (er.off){ ai = null; aiState = 'off'; scan = null; toast(er.msg); }
+      else scan = {rid, kind:'look', st:'err', msg: er.msg.replace('Fotoğraftan bir liste', 'Fotoğraftan kıyafetleri'), retry: !!er.retry, blob};
+    }
+  }
+  render();
+}
+function lookScanHTML(rid, m){
+  if (scan.st === 'busy') return `<div class="scan" role="status"><div class="scan-busy"><span class="scan-dot" aria-hidden="true"></span><p>Fotoğrafa bakıyorum. Her parçanın türünü, rengini ve kumaşını çıkarıyorum.</p></div><button class="btn ghost small" data-act="scanstop">Durdur</button></div>`;
+  if (scan.st === 'err') return `<div class="scan" role="alert"><p>${esc(scan.msg)}</p><div class="btnrow">${scan.retry ? `<button class="btn primary small" data-act="lookretry">Tekrar dene</button>` : ''}<button class="btn ghost small" data-act="scanclose">Kapat</button></div></div>`;
+  const rows = scan.items.map((x, i) => `<li><label><input type="checkbox" data-scan="i:${i}" ${x.on ? 'checked' : ''}>${dotHTML(x)}<span><span class="s-name">${esc(x.name)}</span><span class="s-qty">${esc(attLine(x))}${x.pattern === 'desenli' ? ' · desenli' : ''} · ${x.match ? 'dolabında var' : 'dolaba eklenecek'}</span></span></label></li>`).join('');
+  return `<div class="scan"><div class="sec-h"><h3 class="h3">Fotoğrafta gördüklerim</h3><span class="mono small">${scan.items.length} parça</span></div>
+    ${scan.note ? `<p>${esc(scan.note)}</p>` : ''}
+    ${rows ? `<ul class="scan-list look-list">${rows}</ul>` : '<p class="empty-msg">Fotoğrafta tanıyabildiğim bir kıyafet olmadı.</p>'}
+    <p class="tiny muted">Renk ve kumaş tahmini. İşaretli parçalar gardıroba eklenir, sonra onlarla kombin öneririm.</p>
+    <div class="btnrow">${rows ? '<button class="btn primary small" data-act="scanapply">Gardıroba ekle</button>' : ''}<button class="btn ghost small" data-act="scanclose">Vazgeç</button></div></div>`;
+}
+function applyLook(){
+  const m = S.mod[scan.rid]; if (!m){ scan = null; render(); return; }
+  const rid = scan.rid, now = Date.now(), ids = []; let add = 0;
+  m.wardrobe ||= [];
+  for (const x of scan.items){
+    if (!x.on) continue;
+    let c = x.match && m.wardrobe.find(y => y.id === x.match);
+    if (!c){ c = {id: uid(), name: x.name, state: 'temiz', addedAt: now}; m.wardrobe.push(c); add++; }
+    for (const k of ['kind', 'color', 'hex', 'fabric', 'pattern']) if (x[k] && !c[k]) c[k] = x[k];
+    c.cat = c.kind && KINDS[c.kind] ? KINDS[c.kind].cat : c.cat || 'Aksesuar';
+    c.seenAt = now;
+    if (!ids.includes(c.id)) ids.push(c.id);
+  }
+  if (ids.length){ m.lastLook = {at: now, ids, worn: scan.worn, note: scan.note}; m.anchor = ids; }
+  m.filter = 'all'; sugPage[rid] = 0;
+  scan = null; save(); render();
+  toast(ids.length ? `${add ? `${add} yeni parça gardıroba eklendi. ` : ''}Kombin önerileri hazır.` : 'Hiçbir parça seçilmedi.');
+  const el = document.getElementById('kombin-' + rid); if (el && ids.length) el.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 /* ---------- boot ---------- */

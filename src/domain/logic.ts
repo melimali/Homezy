@@ -1,4 +1,5 @@
 import { DAY, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, STOCK_DEF, TYPES } from './constants';
+import { laundryLine, photoLine, ROOM_ICON, statusTail, stockLine, stockTitle, taskLine } from './messages';
 import type { AppState, Notice, RoomType, StockItem, Task, TaskRef, TaskStatus } from './types';
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
@@ -16,13 +17,7 @@ export const fmtShort = (ts: number) => new Date(ts).toLocaleDateString('tr-TR',
 export const fmtLong = (ts: number) =>
   new Date(ts).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-export function greet(now = new Date()) {
-  const h = now.getHours();
-  if (h >= 5 && h < 12) return 'Günaydın';
-  if (h >= 12 && h < 18) return 'İyi günler';
-  if (h >= 18 && h < 23) return 'İyi akşamlar';
-  return 'İyi geceler';
-}
+export { greet, greeting } from './greeting';
 
 export function status(t: Task, now = Date.now()): TaskStatus {
   if (t.last == null) return { k: 'today', diff: 0, label: 'Başlanmadı' };
@@ -75,7 +70,10 @@ export function shopItems(S: AppState) {
 
 export const shopLine = (x: StockItem) => x.name + (x.lvl === 'az' ? ' (azaldı)' : '');
 
-/** Prototipteki `notifs()` kuralları. `now` ile ileri bir günün bildirimleri de hesaplanabilir. */
+/**
+ * Prototipteki `notifs()` kuralları, tatlı emojili metinlerle (`messages.ts`).
+ * `now` ile ileri bir günün bildirimleri de hesaplanabilir.
+ */
 export function notifs(S: AppState, now = Date.now()): Notice[] {
   const ns: Notice[] = [];
   const set = S.settings;
@@ -84,45 +82,35 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
       .filter(x => x.s.k !== 'ok')
       .sort((a, b) => a.s.diff - b.s.diff)
       .forEach(({ t, rid, list, s }) => {
-        const room = S.rooms[rid].name;
+        const r = S.rooms[rid];
         const plant = list === 'plants';
         ns.push({
           k: s.k,
           rid,
-          title: `${room} · ${t.name}`,
-          text:
-            s.k === 'late'
-              ? `${-s.diff} gün gecikti. En son ${agoText(t.last, now)}.`
-              : plant
-                ? 'Bugün sulama günü.'
-                : t.last == null
-                  ? 'Henüz hiç işaretlenmedi.'
-                  : 'Bugün yapılacak.',
+          title: `${plant ? '🪴' : ROOM_ICON[r.type]} ${r.name} · ${t.name}`,
+          text: `${taskLine({ name: t.name, type: r.type, plant, k: s.k, key: t.id, now })} ${statusTail(s.k, s.diff, t.last == null)}`,
         });
       });
   }
   for (const rid of S.order) {
     const m = S.mod[rid] || {};
     const room = S.rooms[rid].name;
-    const mod = TYPES[S.rooms[rid].type].mod;
+    const fridge = TYPES[S.rooms[rid].type].mod === 'buzdolabi';
     if (set.stock && m.stock) {
       const out = m.stock.filter(x => x.lvl === 'yok');
-      if (out.length)
-        ns.push({ k: 'today', rid, title: `${room} · ${out.length} ürün bitti`, text: out.map(x => x.name).join(', ') });
+      if (out.length) ns.push({ k: 'today', rid, title: stockTitle(room, out.length, fridge), text: stockLine(out, fridge, rid, now) });
     }
-    if (set.stock && mod === 'buzdolabi' && (!m.photoAt || daysSince(m.photoAt, now) > PHOTO_MAX_AGE))
+    if (set.stock && fridge && (!m.photoAt || daysSince(m.photoAt, now) > PHOTO_MAX_AGE))
       ns.push({
         k: 'ok',
         rid,
-        title: `${room} · Buzdolabı fotoğrafı`,
-        text: m.photoAt
-          ? `Son fotoğraf ${agoText(m.photoAt, now)} çekildi. Yenisini çek.`
-          : 'Henüz fotoğraf yok. Markete gitmeden önce bir tane çek.',
+        title: `📸 ${room} · Buzdolabı fotoğrafı`,
+        text: photoLine(m.photoAt ? daysSince(m.photoAt, now) : null, rid, now),
       });
     if (set.laundry && m.wardrobe) {
       const d = m.wardrobe.filter(c => c.state === 'kirli').length;
       if (d >= LAUNDRY_THRESHOLD)
-        ns.push({ k: 'today', rid, title: `${room} · ${d} parça kirli kıyafet`, text: 'Bir makine dolusu birikti, çamaşır zamanı.' });
+        ns.push({ k: 'today', rid, title: `🧺 ${room} · ${d} parça kirli kıyafet`, text: laundryLine(d, rid, now) });
     }
   }
   const order = { late: 0, today: 1, ok: 2 };

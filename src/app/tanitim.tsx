@@ -155,9 +155,10 @@ export default function Tanitim() {
         <View pointerEvents="none" style={st.dots}>
           {PAGES.map((_, i) => {
             const r = [(i - 1) * h, i * h, (i + 1) * h];
-            const height = y.interpolate({ inputRange: r, outputRange: [8, 26, 8], extrapolate: 'clamp' });
+            // Yerel animasyon sürücüsü yükseklik animasyonunu desteklemiyor; büyütme (scale) kullanıyoruz.
+            const scale = y.interpolate({ inputRange: r, outputRange: [1, 1.6, 1], extrapolate: 'clamp' });
             const opacity = y.interpolate({ inputRange: r, outputRange: [0.35, 1, 0.35], extrapolate: 'clamp' });
-            return <Animated.View key={i} style={[st.dot, { backgroundColor: c.accent, height, opacity }]} />;
+            return <Animated.View key={i} style={[st.dot, { backgroundColor: c.accent, opacity, transform: [{ scale }] }]} />;
           })}
         </View>
       )}
@@ -218,8 +219,8 @@ const st = StyleSheet.create({
   logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 96, height: 32 },
   skip: { paddingHorizontal: 12, paddingVertical: 6 },
-  dots: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', gap: 7 },
-  dot: { width: 8, borderRadius: 4 },
+  dots: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', gap: 10 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
   bottom: { position: 'absolute', left: 24, right: 24, bottom: 0, gap: 12, alignItems: 'center', maxWidth: 440, alignSelf: 'center' },
   artArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   blob: { position: 'absolute', width: 300, height: 290, borderRadius: 140, borderTopLeftRadius: 170, borderBottomRightRadius: 120 },

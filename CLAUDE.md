@@ -63,8 +63,7 @@ Logodaki tarz: tombul, yuvarlak hatlı, hafif kabarık, yumuşak gölgeli.
 | Kahve | `#8B786D` | "Bugün" durumu, başlık üstü etiketler, "app" kelimesi. |
 
 - Gecikmiş işler için paletin dışında yumuşak bir kırmızı kullanılıyor: açık temada `#B8584C`, koyu temada `#E58C7E`.
-- Yazı tipleri: başlıklar Fredoka, metinler Nunito.
-  - Dikkat: Fredoka'da Türkçe "ş", "ğ" ve "İ" harfleri yok (Google'ın güncel dosyası dahil). Bu harfler başlıklarda telefonun sistem yazı tipine düşüyor, web önizlemesinde bozuk görünüyor. Başlık yazı tipi için karar bekliyor (ör. Baloo 2, Varela Round ya da başlıklarda da Nunito; üçü de Türkçe harfleri içeriyor).
+- Yazı tipleri: başlıklar Baloo 2, metinler Nunito. İlk karar Fredoka idi ama Fredoka'da Türkçe "ş", "ğ" ve "İ" harfleri yok; bu yüzden Baloo 2 seçildi (Türkçe harflerin hepsi var). Yeni bir yazı tipi düşünürsen önce Türkçe harfleri içerdiğini kontrol et.
 - Hem açık hem koyu tema desteklenecek.
 - Formlar: butonlar hap şeklinde ve kabarık, kartların köşeleri büyük ve yuvarlak (yaklaşık 22px), ev planında odaların dış köşeleri yuvarlatılmış.
 

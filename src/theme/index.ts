@@ -44,8 +44,8 @@ export function useColors(): Colors {
 export const useIsDark = () => useColorScheme() === 'dark';
 
 export const fonts = {
-  display: 'Fredoka_600SemiBold',
-  displayBold: 'Fredoka_700Bold',
+  display: 'Baloo2_600SemiBold',
+  displayBold: 'Baloo2_700Bold',
   body: 'Nunito_600SemiBold',
   bodyBold: 'Nunito_700Bold',
   bodyBlack: 'Nunito_800ExtraBold',

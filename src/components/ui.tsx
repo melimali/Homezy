@@ -31,7 +31,7 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.display, fontSize: 27, lineHeight: 31, color: c.ink, letterSpacing: -0.2 };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 27, lineHeight: 31, color: c.ink, letterSpacing: -0.2 };
     case 'h2': return { fontFamily: fonts.display, fontSize: 17, color: c.ink };
     case 'h3': return { fontFamily: fonts.display, fontSize: 15, color: c.ink };
     case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink };

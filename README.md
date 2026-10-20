@@ -172,7 +172,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 | Kahve | `#8B786D` | "Bugün" durumu, başlık üstü etiketler. |
 
 - **Gecikmiş işler:** Paletin dışında yumuşak bir kırmızı kullanılıyor, açık temada `#B8584C`, koyu temada `#E58C7E`.
-- **Yazı tipleri:** Başlıklarda Fredoka, metinlerde Nunito.
+- **Yazı tipleri:** Başlıklarda Baloo 2, metinlerde Nunito. (Fredoka denendi ama Türkçe ş, ğ ve İ harflerini içermiyor.)
 - **Temalar:** Açık ve koyu tema desteklenecek.
 - **Formlar:** Hap şeklinde butonlar, büyük köşe yuvarlaklıkları, ev planında yuvarlatılmış oda köşeleri.
 

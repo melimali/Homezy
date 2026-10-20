@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
@@ -9,11 +9,31 @@ import type { AppState, Notice } from '@/domain/types';
 const DAYS_AHEAD = 7;
 const CHANNEL = 'sabah-ozeti';
 
-export const notificationsSupported = Platform.OS !== 'web';
+type NotificationsModule = typeof NotificationsTypes;
+let loaded: NotificationsModule | null | undefined;
+
+/**
+ * expo-notifications'ı ilk kullanımda yükler. Expo Go'nun bazı sürümlerinde paketin istediği
+ * yerel modül bulunmuyor ve içe aktarma hata veriyor; o durumda uygulama bildirimsiz çalışır.
+ */
+export function getNotifications(): NotificationsModule | null {
+  if (loaded !== undefined) return loaded;
+  if (Platform.OS === 'web') return (loaded = null);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    loaded = require('expo-notifications') as NotificationsModule;
+  } catch (e) {
+    console.warn('Layfapp: bildirim modülü yüklenemedi, bildirimler kapalı', e);
+    loaded = null;
+  }
+  return loaded;
+}
+
+/** Bu cihazda bildirim zamanlanabiliyor mu (web önizlemesinde ve modül yüklenemezse hayır). */
+export const notificationsAvailable = () => getNotifications() != null;
 
 export function configureNotifications() {
-  if (!notificationsSupported) return;
-  Notifications.setNotificationHandler({
+  getNotifications()?.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
       shouldShowList: true,
@@ -23,25 +43,26 @@ export function configureNotifications() {
   });
 }
 
-async function ensureChannel() {
+async function ensureChannel(N: NotificationsModule) {
   if (Platform.OS === 'android')
-    await Notifications.setNotificationChannelAsync(CHANNEL, {
+    await N.setNotificationChannelAsync(CHANNEL, {
       name: 'Sabah özeti',
-      // eslint-disable-next-line import/namespace -- export * ile geliyor, eslint-plugin-import göremiyor
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: N.AndroidImportance.DEFAULT,
     });
 }
 
 export async function getPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
-  if (!notificationsSupported) return 'denied';
-  const { status } = await Notifications.getPermissionsAsync();
+  const N = getNotifications();
+  if (!N) return 'denied';
+  const { status } = await N.getPermissionsAsync();
   return status;
 }
 
 export async function requestPermission(): Promise<boolean> {
-  if (!notificationsSupported) return false;
-  await ensureChannel();
-  const { status } = await Notifications.requestPermissionsAsync({
+  const N = getNotifications();
+  if (!N) return false;
+  await ensureChannel(N);
+  const { status } = await N.requestPermissionsAsync({
     ios: { allowAlert: true, allowBadge: false, allowSound: true },
   });
   return status === 'granted';
@@ -66,10 +87,11 @@ export function summaryFor(ns: Notice[]): { title: string; body: string; url: st
  * bildirim yerine o sabaha uygun özet gelir.
  */
 export async function rescheduleMorningSummaries(S: AppState) {
-  if (!notificationsSupported || !S.setup) return;
+  const N = getNotifications();
+  if (!N || !S.setup) return;
   if ((await getPermission()) !== 'granted') return;
-  await ensureChannel();
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await ensureChannel(N);
+  await N.cancelAllScheduledNotificationsAsync();
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
   const now = Date.now();
@@ -79,9 +101,9 @@ export async function rescheduleMorningSummaries(S: AppState) {
     if (at.getTime() <= now) continue;
     const msg = summaryFor(notifs(S, at.getTime()));
     if (!msg) continue;
-    await Notifications.scheduleNotificationAsync({
+    await N.scheduleNotificationAsync({
       content: { title: msg.title, body: msg.body, data: { url: msg.url } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
 }

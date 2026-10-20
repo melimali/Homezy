@@ -1,10 +1,10 @@
-import * as Notifications from 'expo-notifications';
+import type { NotificationResponse } from 'expo-notifications';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect } from 'react';
 
 import { useStore } from '@/store/AppStore';
 
-import { notificationsSupported, rescheduleMorningSummaries } from './schedule';
+import { getNotifications, rescheduleMorningSummaries } from './schedule';
 
 /** Veri değiştikçe sabah özetlerini yeniler ve bildirime dokununca ilgili ekranı açar. */
 export function useNotificationSync() {
@@ -12,7 +12,7 @@ export function useNotificationSync() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!notificationsSupported) return;
+    if (!getNotifications()) return;
     const t = setTimeout(() => {
       rescheduleMorningSummaries(state).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
     }, 1500);
@@ -20,17 +20,18 @@ export function useNotificationSync() {
   }, [state]);
 
   useEffect(() => {
-    if (!notificationsSupported) return;
-    const open = (response: Notifications.NotificationResponse) => {
+    const N = getNotifications();
+    if (!N) return;
+    const open = (response: NotificationResponse) => {
       const url = response.notification.request.content.data?.url;
-      if (typeof url === 'string' && response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+      if (typeof url === 'string' && response.actionIdentifier === N.DEFAULT_ACTION_IDENTIFIER) {
         router.push(url as Href);
-        Notifications.clearLastNotificationResponse();
+        N.clearLastNotificationResponse();
       }
     };
-    const last = Notifications.getLastNotificationResponse();
+    const last = N.getLastNotificationResponse();
     if (last) open(last);
-    const sub = Notifications.addNotificationResponseReceivedListener(open);
+    const sub = N.addNotificationResponseReceivedListener(open);
     return () => sub.remove();
   }, [router]);
 }

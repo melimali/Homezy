@@ -5,7 +5,7 @@ import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 're
 import { Btn, Card, EmptyMsg, Screen, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
 import type { Settings } from '@/domain/types';
-import { getPermission, notificationsSupported, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
+import { getPermission, notificationsAvailable, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -57,7 +57,7 @@ export default function Bildirimler() {
         </T>
       </View>
 
-      {notificationsSupported && perm !== 'granted' && (
+      {notificationsAvailable() && perm !== 'granted' && (
         <Card style={{ backgroundColor: c.accentSoft }}>
           <T v="bold">Bildirimler kapalı</T>
           <T style={{ fontSize: 14 }}>
@@ -108,8 +108,8 @@ export default function Bildirimler() {
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
         <Toggle label="Çamaşır" sub="3 ve daha fazla kirli parça birikince" value={s.laundry} onChange={v => set('laundry', v)} />
       </Card>
-      {!notificationsSupported && (
-        <T v="small" style={{ textAlign: 'center' }}>Web önizlemesinde bildirim gönderilmez. Telefonda aynı kurallar bildirim merkezine düşer.</T>
+      {!notificationsAvailable() && (
+        <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>
       )}
     </Screen>
   );

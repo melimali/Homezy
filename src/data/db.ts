@@ -1,7 +1,8 @@
 import * as SQLite from 'expo-sqlite';
 
 import { TYPES } from '@/domain/constants';
-import type { AppState, ClothState, RoomType, Settings, StockLevel, TaskList, WardrobeFilter } from '@/domain/types';
+import { emptyPlay, normalize } from '@/domain/play';
+import type { AppState, ClothState, Play, RoomType, Settings, StockLevel, TaskList, WardrobeFilter } from '@/domain/types';
 
 /**
  * Bütün veriler telefondaki `layfapp.db` dosyasında. Veri küçük olduğu için her kayıtta
@@ -69,6 +70,7 @@ export async function loadState(): Promise<AppState | null> {
     tasks: {},
     mod: {},
     settings: JSON.parse(m.settings) as Settings,
+    play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
@@ -96,7 +98,7 @@ export async function loadState(): Promise<AppState | null> {
   for (const s of await db.getAllAsync<StockRow>('SELECT * FROM stock ORDER BY ord'))
     if (S.mod[s.room_id]) (S.mod[s.room_id].stock ||= []).push({ id: s.id, name: s.name, lvl: s.lvl });
 
-  return S;
+  return normalize(S);
 }
 
 export async function saveState(S: AppState): Promise<void> {
@@ -109,6 +111,7 @@ export async function saveState(S: AppState): Promise<void> {
       ['cols', String(S.cols)],
       ['rows', String(S.rows)],
       ['settings', JSON.stringify(S.settings)],
+      ['play', JSON.stringify(S.play)],
     ];
     for (const [k, v] of meta) await tx.runAsync('INSERT INTO meta (key, value) VALUES (?, ?)', k, v);
 

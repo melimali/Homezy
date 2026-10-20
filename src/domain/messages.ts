@@ -123,3 +123,38 @@ export function summaryTail(urgent: number) {
   if (urgent <= 4) return `Bugün ${urgent} iş seni bekliyor 💪`;
   return `Bugün ${urgent} iş var, adım adım halledelim 🐢✨`;
 }
+
+/** Akşam seri hatırlatması (o gün hiçbir şey yapılmadıysa). */
+export function streakLine(streak: number, built: boolean, key: string, now: number) {
+  if (streak > 0)
+    return pick(
+      [
+        `🔥 ${streak} günlük serin bozulmasın! Minik bir iş yeter 💪`,
+        `Evin seni bekliyor 🏡 ${streak} günlük seriyi sürdürelim mi?`,
+        `Bugün daha bir şey yapmadın 🥺 Tek bir iş, ev tozlanmasın 🧹`,
+      ],
+      key,
+      now,
+    );
+  if (built)
+    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, tozlanmasın 🧹', 'Bugün daha bir şey yapmadın 🥺 Yeni bir seri başlatalım mı? 🔥'], key, now);
+  return pick(
+    ['Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️', 'Minik bir adım, büyük bir ev 🪵✨ Bugün bir iş yapalım mı?'],
+    key,
+    now,
+  );
+}
+
+/** Spor hatırlatması. */
+export function sportLine(key: string, now: number) {
+  return pick(
+    [
+      'Spor zamanı! Ayakkabılar seni bekliyor 👟💨',
+      'Biraz hareket iyi gelir 🧘 Hazır mısın?',
+      '15 dakikalık bir yürüyüş bile seriyi sürdürür 🚶✨',
+      'Kaslar uyanmak istiyor 💪😄',
+    ],
+    key,
+    now,
+  );
+}

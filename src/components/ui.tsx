@@ -183,6 +183,25 @@ export function XBtn({ onPress, label }: { onPress: () => void; label: string })
   );
 }
 
+/** Seçilebilir hap (spor türü, dakika, gün). */
+export function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+      style={({ pressed }) => [
+        styles.chip,
+        on ? { backgroundColor: c.accent, borderColor: c.accent } : { backgroundColor: c.surface, borderColor: c.line },
+        pressed && { transform: [{ translateY: 1 }] },
+      ]}
+    >
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 /* ---------- rozetler ---------- */
 
 export function Pill({ k, label }: { k: StatusKind | 'neutral'; label: string }) {
@@ -244,6 +263,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12, paddingHorizontal: 18, borderWidth: 1.5,
   },
   btnSmall: { paddingVertical: 7, paddingHorizontal: 14 },
+  chip: { borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 12 },
   x: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
   field: {

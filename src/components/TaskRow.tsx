@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { DAY } from '@/domain/constants';
-import { agoText, everyText, fmtShort, status, uid } from '@/domain/logic';
+import { ROOM_EMOJI } from '@/domain/constants';
+import { agoText, daysSince, everyText, status, uid } from '@/domain/logic';
 import type { AppState, Task, TaskList } from '@/domain/types';
+import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -20,18 +21,22 @@ export function TaskRow({
 }: { t: Task; rid: string; list: TaskList; showRoom?: boolean; first?: boolean }) {
   const c = useColors();
   const { state, update } = useStore();
+  const { award } = usePlay();
   const toast = useToast();
   const s = status(t);
   const room = state.rooms[rid];
   const plant = list === 'plants';
-  const urgent = s.k !== 'ok';
+  // Her iş günde bir kez tamamlanır (ve puan verir).
+  const doneToday = t.last != null && daysSince(t.last) === 0;
+  const urgent = s.k !== 'ok' && !doneToday;
 
   const done = () => {
-    update(S => {
+    if (doneToday) return;
+    const label = `${plant ? '🪴' : room ? ROOM_EMOJI[room.type] : '✅'} ${room?.name ?? ''} · ${t.name}`;
+    award('gorev', t.id, label, t.name, S => {
       const x = findList(S, rid, list).find(y => y.id === t.id);
       if (x) x.last = Date.now();
     });
-    toast(`${t.name} tamam. Sıradaki: ${fmtShort(Date.now() + t.every * DAY)}`);
   };
   const remove = () => {
     update(S => {
@@ -59,16 +64,22 @@ export function TaskRow({
       </View>
       <Pressable
         onPress={done}
+        disabled={doneToday}
         accessibilityRole="button"
+        accessibilityLabel={doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${plant ? 'Suladım' : 'Tamamladım'}`}
         style={({ pressed }) => [
           styles.done,
-          urgent
+          doneToday
+            ? { backgroundColor: c.okSoft, borderColor: c.okSoft }
+            : urgent
             ? { backgroundColor: c.accent, borderColor: c.accent, boxShadow: pressed ? undefined : `0 3px 0 ${c.shadow}` }
             : { borderColor: c.hi },
           pressed && { transform: [{ translateY: 2 }] },
         ]}
       >
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: urgent ? c.onAccent : c.ink }}>{plant ? 'Sulandı' : 'Yaptım'}</Text>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: doneToday ? c.ok : urgent ? c.onAccent : c.ink }}>
+          {doneToday ? '✓ Bugün' : plant ? 'Suladım' : 'Tamamladım'}
+        </Text>
       </Pressable>
       {!showRoom && <XBtn onPress={remove} label={`${t.name} sil`} />}
     </View>

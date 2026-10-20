@@ -1,3 +1,4 @@
+import { normalize } from '@/domain/play';
 import type { AppState } from '@/domain/types';
 
 /**
@@ -9,7 +10,7 @@ const KEY = 'layfapp.v1';
 export async function loadState(): Promise<AppState | null> {
   try {
     const raw = globalThis.localStorage?.getItem(KEY);
-    return raw ? (JSON.parse(raw) as AppState) : null;
+    return raw ? normalize(JSON.parse(raw) as AppState) : null;
   } catch {
     return null;
   }

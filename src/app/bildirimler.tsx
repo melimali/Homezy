@@ -108,6 +108,9 @@ export default function Bildirimler() {
         <Toggle label="Rutin hatırlatmaları" sub="Geciken ve bugün yapılacak işler, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
         <Toggle label="Çamaşır" sub="3 ve daha fazla kirli parça birikince" value={s.laundry} onChange={v => set('laundry', v)} />
+        <Toggle label="Seri hatırlatması 🔥" sub="Akşam 20:30'da, o gün hiçbir şey yapmadıysan" value={s.streak} onChange={v => set('streak', v)} />
+        <Toggle label="Spor hatırlatması 🏃" sub={`${s.sportTime}, seçtiğin günlerde`} value={s.sport} onChange={v => set('sport', v)} />
+        <Btn label="Spor günlerini ve saatini seç" small onPress={() => router.push('/spor')} />
       </Card>
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>

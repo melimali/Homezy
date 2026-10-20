@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 
 import { loadState, saveState } from '@/data/db';
 import { seed } from '@/domain/logic';
+import { normalize } from '@/domain/play';
 import type { AppState } from '@/domain/types';
 
 type Store = {
@@ -9,6 +10,8 @@ type Store = {
   /** Taslak üzerinde değişiklik yapar, ekranı yeniler ve veritabanına yazar. */
   update: (fn: (draft: AppState) => void) => AppState;
   replace: (next: AppState) => void;
+  /** En güncel state (async işlerde, ekran yenilenmeden önce de doğru değer). */
+  get: () => AppState;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -83,7 +86,8 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
   );
 
   const replace = useCallback(
-    (next: AppState) => {
+    (raw: AppState) => {
+      const next = normalize(raw);
       current.current = next;
       saver(next);
       setState(next);
@@ -91,8 +95,10 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
     [saver],
   );
 
+  const get = useCallback(() => current.current!, []);
+
   if (!state) return <>{fallback ?? null}</>;
-  return <StoreContext.Provider value={{ state, update, replace }}>{children}</StoreContext.Provider>;
+  return <StoreContext.Provider value={{ state, update, replace, get }}>{children}</StoreContext.Provider>;
 }
 
 export function useStore() {

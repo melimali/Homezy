@@ -35,7 +35,7 @@
 2. **Authentication > Sign In / Providers**: Email açık. **Allow anonymous sign-ins** açık. "Confirm email" açık kalsın (uygulama onay e-postasını bekliyor).
 3. **Authentication > URL Configuration > Site URL**: Meikai Digital sitesinde "E-postan onaylandı, uygulamaya dönebilirsin" yazan basit bir sayfa.
 4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir.
-5. Tabloları kur: `supabase/migrations/` içindeki iki dosyayı sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, sonra `20261020230000_delete_me.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu.
+5. Tabloları kur: `supabase/migrations/` içindeki dosyaları sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, `20261020230000_delete_me.sql`, `20261021000000_puan.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu, üçüncüsü puan, seri ve eşya mağazası (`play_award`, `play_buy`, `play_summary`). Üçüncüsü çalıştırılmadan puanlar sadece telefonda kalır, mağaza "Satın alınamadı" der.
 6. Abonelik webhook fonksiyonunu yükle (RevenueCat açılınca; Windows'ta `npx supabase` ile):
    ```
    npx supabase login

@@ -43,7 +43,7 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Rutinler',
     title: 'Ne zaman ne yapılacak, sen düşünme',
-    text: 'Her iş kendi aralığıyla tekrar eder. "Yaptım"a bas, Layfapp saymaya yeniden başlasın.',
+    text: 'Her iş kendi aralığıyla tekrar eder. "Tamamladım"a bas, puanı kap ve Layfapp saymaya yeniden başlasın.',
     Art: RoutineArt,
     blob: c => c.todaySoft,
   },

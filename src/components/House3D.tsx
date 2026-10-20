@@ -25,6 +25,8 @@ const FRONT_H = 8;
 const T = 0.12;
 /** Etiketin ekrandaki yüksekliği (çakışma kontrolü için). */
 const LABEL_H = 27;
+/** Etiket çapasının genişliği; etiket bunun ortasına oturur. */
+const ANCHOR_W = 150;
 const LABEL_Z = 4;
 
 type Pt = [number, number];
@@ -275,7 +277,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp }: Props) {
     const nTask = rc.late + rc.today;
     const room = S.rooms[id];
     return (
-      <View key={id} style={[styles.anchor, { left: x, top: y }]}>
+      <View key={id} pointerEvents="box-none" style={[styles.anchor, { left: x - ANCHOR_W / 2, top: y - LABEL_H / 2 }]}>
         <Pressable
           onPress={() => onOpenRoom?.(id)}
           accessibilityRole="button"
@@ -321,11 +323,11 @@ export function House3D({ state: S, onOpenRoom, now: nowProp }: Props) {
 }
 
 const styles = StyleSheet.create({
-  // Genişliği sıfır bir çapa; içindeki etiket noktanın tam ortasına gelir.
-  anchor: { position: 'absolute', width: 0, height: 0, alignItems: 'center', justifyContent: 'center' },
+  // Noktayı ortalayan sabit boyutlu çapa. Sıfır boyutlu çapa Android'de etiketin içini eziyor.
+  anchor: { position: 'absolute', width: ANCHOR_W, height: LABEL_H, alignItems: 'center', justifyContent: 'center' },
   tag: {
     flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingLeft: 6, paddingRight: 8,
-    borderRadius: 999, borderWidth: 1.5, maxWidth: 140,
+    borderRadius: 999, borderWidth: 1.5, maxWidth: ANCHOR_W,
   },
   icon: { fontSize: 12 },
   name: { fontFamily: fonts.display, fontSize: 12, lineHeight: 16, flexShrink: 1 },

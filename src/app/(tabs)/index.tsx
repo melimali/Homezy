@@ -2,11 +2,11 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Plan } from '@/components/Plan';
-import { Pill, Screen, Swatch, T } from '@/components/ui';
-import { allTasks, greet, roomCounts, shopItems } from '@/domain/logic';
+import { Screen, T } from '@/components/ui';
+import { allTasks, greet, shopItems } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, useColors } from '@/theme';
+import { fonts, radius, useColors } from '@/theme';
 
 export default function Home() {
   const c = useColors();
@@ -18,59 +18,43 @@ export default function Home() {
   const today = all.filter(x => x.s.k === 'today').length;
   const shop = shopItems(S).length;
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
+  const toToday = () => router.navigate('/bugun');
 
   return (
     <Screen>
       <View>
         <T v="eyebrow">{greet(new Date(now))}</T>
-        <T v="h1">{late + today ? `Bugün ${late + today} iş seni bekliyor` : 'Bugün her şey yolunda'}</T>
-        <View style={styles.sumRow}>
-          <Pill k="late" label={`${late} gecikmiş`} />
-          <Pill k="today" label={`${today} bugün`} />
-          {shop > 0 && <Pill k="neutral" label={`${shop} alınacak`} />}
-        </View>
+        <T v="h1">{late + today ? `Bugün ${late + today} iş var` : 'Bugün her şey yolunda ✨'}</T>
+      </View>
+
+      <View style={styles.tiles}>
+        <Tile emoji="⏰" n={late} label="gecikti" bg={c.lateSoft} fg={c.late} onPress={toToday} />
+        <Tile emoji="☀️" n={today} label="bugün" bg={c.todaySoft} fg={c.today} onPress={toToday} />
+        <Tile emoji="🛒" n={shop} label="alınacak" bg={c.okSoft} fg={c.ok} onPress={toToday} />
       </View>
 
       <Plan state={S} onOpenRoom={open} />
-      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 13 }}>Plandaki bir odaya dokun, o odanın işlerini aç.</T>
-
-      <T v="h2">Odalar</T>
-      <View style={{ gap: 8 }}>
-        {S.order.map(id => {
-          const r = S.rooms[id];
-          const rc = roomCounts(S, id, now);
-          let sub: string;
-          if (rc.late || rc.today) sub = [rc.late ? `${rc.late} gecikmiş` : '', rc.today ? `${rc.today} bugün` : ''].filter(Boolean).join(' · ');
-          else {
-            const next = [...rc.all].sort((a, b) => a.s.diff - b.s.diff)[0];
-            sub = next ? `Sıradaki: ${next.t.name}, ${next.s.label.toLocaleLowerCase('tr-TR')}` : 'Bu odada rutin yok';
-          }
-          return (
-            <Pressable
-              key={id}
-              onPress={() => open(id)}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.row,
-                { backgroundColor: c.surface, borderColor: c.line },
-                pressed && { transform: [{ translateY: 1 }] },
-              ]}
-            >
-              <Swatch color={c.room[r.type]} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <T v="bold">{r.name}</T>
-                <T v="small" style={rc.late ? { color: c.late, fontFamily: fonts.bodyBold } : undefined}>{sub}</T>
-              </View>
-              <Text style={{ color: c.muted, fontSize: 22 }}>›</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
     </Screen>
   );
 }
 
+function Tile({ emoji, n, label, bg, fg, onPress }: { emoji: string; n: number; label: string; bg: string; fg: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${n} ${label}`}
+      style={({ pressed }) => [styles.tile, { backgroundColor: bg }, pressed && { transform: [{ translateY: 2 }] }]}
+    >
+      <Text style={{ fontSize: 22 }}>{emoji}</Text>
+      <Text style={{ fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 30, color: fg }}>{n}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: fg }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  sumRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 18, borderWidth: 1.5 },
+  tiles: { flexDirection: 'row', gap: 10 },
+  tile: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
 });

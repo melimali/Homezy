@@ -33,3 +33,9 @@ export const LV: [StockLevel, string][] = [['var', 'Var'], ['az', 'Az'], ['yok',
 export const LAUNDRY_THRESHOLD = 3;
 /** Buzdolabı fotoğrafı bu kadar günden eskiyse yenisi istenir. */
 export const PHOTO_MAX_AGE = 7;
+
+/** Odaları bir bakışta tanımak için; çocuk bile anlasın diye yazının yanında durur. */
+export const ROOM_EMOJI: Record<RoomType, string> = {
+  yatak: '🛏️', mutfak: '🍳', banyo: '🛁', salon: '🛋️', calisma: '💻',
+  cocuk: '🧸', antre: '🚪', balkon: '🌿', camasir: '🧺',
+};

@@ -10,7 +10,7 @@ export default function PlanTab() {
   return (
     <PlanEditor
       onSaved={() => {
-        router.navigate('/');
+        router.navigate('/odalar');
         toast('Plan kaydedildi.');
       }}
     />

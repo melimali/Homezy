@@ -6,13 +6,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { IntroSplash } from '@/components/IntroSplash';
+import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { configureNotifications } from '@/notifications/schedule';
-import { PurchasesProvider } from '@/purchases/PurchasesProvider';
+import { prefs } from '@/lib/supabase';
+import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
 import { useColors } from '@/theme';
@@ -41,6 +44,7 @@ export default function RootLayout() {
             <ToastProvider>
               <StatusBar style="auto" />
               <RootStack />
+              <LaunchChoice />
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
               {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
             </ToastProvider>
@@ -63,7 +67,7 @@ function RootStack() {
   }, [loading]);
 
   if (loading) return null;
-  // Açılış sırası: tanıtım → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → ana ekran.
+  // Açılış sırası: açılış animasyonu → Ücretsiz / Premium seçimi (LaunchChoice) → tanıtım → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → ana ekran.
   const inside = introSeen && (status === 'guest' || status === 'account');
 
   return (
@@ -74,7 +78,9 @@ function RootStack() {
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="oda/[id]" />
-        <Stack.Screen name="hesap" />
+        <Stack.Screen name="plan" />
+        <Stack.Screen name="bildirimler" />
+        <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>
         <Stack.Screen name="kurulum" />
@@ -84,5 +90,25 @@ function RootStack() {
         <Stack.Screen name="giris" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
     </Stack>
+  );
+}
+
+/**
+ * İlk açılışta, açılış animasyonunun hemen arkasında Ücretsiz / Premium seçimi.
+ * Bir kere seçilince bir daha çıkmaz; sonra Hesabım'dan açılır. Premium olana hiç çıkmaz.
+ */
+function LaunchChoice() {
+  const { premium } = usePurchases();
+  const [done, setDone] = useState(() => prefs.get('planChoice') != null);
+  if (done || premium.active) return null;
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <PremiumChoice
+        onDone={() => {
+          prefs.set('planChoice', '1');
+          setDone(true);
+        }}
+      />
+    </View>
   );
 }

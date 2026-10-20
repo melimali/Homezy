@@ -10,7 +10,7 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - **Rutinler:** Her odanın "her N günde bir" tekrarlanan rutinleri var. Her rutin için son yapılma tarihi tutulur. Durumlar: gecikti / bugün / yarın / N gün kaldı. "Yaptım" butonu son yapılma tarihini bugüne çeker.
 - **Odaya özel işlevler:**
   - Yatak odası ve çocuk odası: gardırop. Her kıyafet Temiz, Kirli ya da Ütülenecek olarak işaretlenir. 3 ve üzeri kirli parça olunca çamaşır uyarısı verilir.
-  - Mutfak: buzdolabı fotoğrafı, ürünlerin Var / Az / Bitti takibi, otomatik alışveriş listesi.
+  - Mutfak: buzdolabı fotoğrafı, ürünlerin Var / Az / Bitti takibi, otomatik alışveriş listesi. Fotoğraf yapay zekâ ile taranır: ürünler ve kalan miktar tahmini çıkarılır, kullanıcı onaylayınca listeye işlenir, her taramanın notu tarihiyle saklanır.
   - Banyo ve çamaşır odası: sarf malzemesi stoğu (Var / Az / Bitti).
   - Salon ve balkon: bitkiler ve sulama aralıkları.
   - Antre ve çalışma odası: sadece rutinler.
@@ -25,6 +25,7 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - **İlk sürüm sunucusuz.** Veriler sadece telefonda tutulur (expo-sqlite).
 - **Bildirimler** telefonda yerel olarak zamanlanır (expo-notifications), sunucu yok.
 - **Buzdolabı fotoğrafı** için kamera ya da galeri (expo-image-picker).
+- **Buzdolabı taraması (yapay zekâ):** Prototipte sayfa Claude'a doğrudan soruyor (`fridgePrompt()`, `analyze()`, `applyScan()`). Expo uygulamasında API anahtarı uygulamaya konamaz, bu yüzden tek bir sunucu fonksiyonu gerekir (ör. Supabase Edge Function): fotoğrafı alır, aynı istemle Claude API'ye görsel olarak gönderir, `{items:[{name, qty, lvl, match}], missing, note}` JSON'unu döner. Geri kalan her şey (eşleştirme, onay ekranı, tarama geçmişi) telefonda kalır. Bu, "ilk sürüm sunucusuz" kuralının tek istisnası. Fotoğrafın yapay zekâ servisine gönderildiği gizlilik politikasında yazmalı.
 - **Test:** Geliştirirken telefonda Expo Go ile. Yayın için EAS Build ve EAS Submit.
 - **İleride (v2):** Aile üyelerinin aynı evi paylaşması. Bunun için sunucu gerekecek (ör. Supabase).
 

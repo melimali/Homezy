@@ -95,7 +95,8 @@ Rutinlerin yanında her oda türünün kendi işlevi var.
 #### Mutfak: buzdolabı
 
 - **Buzdolabı fotoğrafı:** Kullanıcı buzdolabını açıp fotoğrafını çeker. Marketteyken evde ne olduğunu uygulamadan görür. Fotoğraf bir haftadan eskiyse yenisini çekmesi hatırlatılır.
-- **Ürün takibi:** Her ürün **Var**, **Az** ya da **Bitti** olarak işaretlenir.
+- **Yapay zekâ ile tarama:** Fotoğraf çekilince yapay zekâ içindeki ürünleri ve her birinden yaklaşık ne kadar kaldığını çıkarır (ör. "Süt · yarım şişe · Az"). Sonuç önce bir onay listesinde görünür: listede olanların durumu güncellenir, yeni ürünler eklenir, fotoğrafta görünmeyenler istenirse **Bitti** yapılır. Kullanıcı onaylamadan liste değişmez. Her taramanın kısa notu ("Süt azalmış, domates yok") tarihiyle saklanır, böylece buzdolabının zaman içindeki durumu izlenir.
+- **Ürün takibi:** Her ürün **Var**, **Az** ya da **Bitti** olarak işaretlenir. Tarama ile gelen miktar tahmini ve son görülme tarihi ürünün altında görünür.
 - **Alışveriş listesi:** Az kalan ve biten ürünler otomatik olarak listeye düşer. Liste tek dokunuşla kopyalanabilir.
 
 #### Banyo ve çamaşır odası: malzeme stoğu
@@ -187,6 +188,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 | Veri | Telefonda yerel veritabanı (expo-sqlite). İlk sürümde sunucu yok. |
 | Bildirimler | Telefonda yerel olarak zamanlanır (expo-notifications) |
 | Kamera | Buzdolabı fotoğrafı için kamera ya da galeri (expo-image-picker) |
+| Buzdolabı taraması | Fotoğraf, API anahtarını tutan küçük bir sunucu fonksiyonuna (ör. Supabase Edge Function) gider, o da Claude API'ye görsel olarak gönderir ve JSON ürün listesi döner. Anahtar uygulamanın içine konmaz. |
 | Derleme ve yayın | EAS Build, EAS Submit. iOS derlemesi bulutta yapılır, Mac gerekmez. |
 | Geliştirme sırasında test | Telefonda Expo Go |
 

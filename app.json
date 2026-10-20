@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Layfapp",
+    "slug": "layfapp",
+    "scheme": "layfapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo-kare.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.meikaidigital.layfapp"
+    },
+    "android": {
+      "package": "com.meikaidigital.layfapp",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/logo-kare.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo-kare.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#EBF5EE",
+          "dark": {
+            "image": "./assets/logo-kare.png",
+            "backgroundColor": "#283044"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#283044",
+          "defaultChannel": "sabah-ozeti"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Buzdolabı fotoğrafını galeriden seçebilmen için Layfapp fotoğraflarına erişmek istiyor.",
+          "cameraPermission": "Buzdolabının fotoğrafını çekebilmen için Layfapp kameraya erişmek istiyor.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

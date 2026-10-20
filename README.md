@@ -10,7 +10,7 @@ Layfapp, evini bloklarla çizdiğin ve her odanın kendi işlerini takip ettiği
 
 Hedef: App Store ve Google Play'de yayınlamak.
 
-> **Durum:** Fikir ve tasarım çalışan bir HTML prototipiyle netleşti. Sıradaki adım, prototipi Expo (React Native) ile gerçek bir mobil uygulamaya dönüştürmek.
+> **Durum:** Expo (React Native) uygulaması kuruldu ve prototipteki akışın tamamı taşındı: ev planı editörü, odalar, rutinler, gardırop, buzdolabı, stok, bitkiler, Bugün ve Bildirimler sekmeleri. Veriler telefonda SQLite'ta, sabah özeti telefonda yerel bildirim olarak zamanlanıyor. Sıradaki adım telefonda Expo Go ile denemek.
 
 ---
 
@@ -197,9 +197,9 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 ## Yol planı
 
 - [x] **Aşama 0: Fikir ve prototip.** HTML prototip, renk paleti, logo.
-- [ ] **Aşama 1: Proje iskeleti.** Expo + TypeScript kurulumu, sekmeler ve ekran iskeletleri, Expo Go ile telefonda açılış.
-- [ ] **Aşama 2: Prototipi taşıma.** Ev planı editörü, odalar, rutinler, gardırop, buzdolabı ve stok takibi, yerel veritabanı.
-- [ ] **Aşama 3: Telefona özel özellikler.** Gerçek bildirimler, sabah özeti, kamera.
+- [x] **Aşama 1: Proje iskeleti.** Expo + TypeScript kurulumu, sekmeler ve ekran iskeletleri, Expo Go ile telefonda açılış.
+- [x] **Aşama 2: Prototipi taşıma.** Ev planı editörü, odalar, rutinler, gardırop, buzdolabı ve stok takibi, yerel veritabanı.
+- [ ] **Aşama 3: Telefona özel özellikler.** Gerçek bildirimler, sabah özeti, kamera. (Kodu yazıldı, telefonda denenmesi gerekiyor.)
 - [ ] **Aşama 4: Kimlik.** Uygulama ikonu, açılış ekranı, mağaza ekran görüntüleri ve tanıtım metni.
 - [ ] **Aşama 5: Test.** Google Play kapalı testi ve iOS için TestFlight.
 - [ ] **Aşama 6: Yayın.** Gizlilik politikası, mağaza kayıtları, inceleme.
@@ -220,14 +220,47 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 layfapp/
 ├── README.md              Bu dosya
 ├── CLAUDE.md              Claude Code için proje notları ve alınan kararlar
+├── AGENTS.md              Expo'nun yapay zekâ ajanları için notları
+├── app.json               Expo ayarları (ad, ikon, izin metinleri, eklentiler)
 ├── prototype/
 │   └── layfapp.html       Çalışan HTML prototipi
-└── assets/
-    ├── logo-kare.png      Kare logo
-    └── logo-yatay.png     Yatay logo
+├── assets/
+│   ├── logo-kare.png      Kare logo (şimdilik uygulama ikonu ve açılış ekranı)
+│   └── logo-yatay.png     Yatay logo
+└── src/
+    ├── app/               Ekranlar (Expo Router: her dosya bir ekran)
+    │   ├── _layout.tsx    Fontlar, veri, ilk açılışta kurulum ekranına yönlendirme
+    │   ├── kurulum.tsx    Evini bloklarla kur
+    │   ├── oda/[id].tsx   Oda ekranı
+    │   └── (tabs)/        Ev, Bugün, Bildirimler, Plan sekmeleri
+    ├── components/        Plan, plan editörü, rutin satırı, oda modülleri, ortak parçalar
+    ├── domain/            Prototipteki kurallar: varsayılan rutinler, durum hesabı, bildirim kuralları
+    ├── data/              SQLite kaydı (web önizlemesinde localStorage)
+    ├── notifications/     Sabah özetinin zamanlanması
+    ├── store/             Uygulama verisinin tutulduğu yer
+    └── theme/             Renkler (açık / koyu tema) ve yazı tipleri
 ```
 
-Expo projesi Aşama 1'de bu repoya eklenecek.
+---
+
+## Geliştirme
+
+Gerekenler: Node.js ve telefonda **Expo Go** uygulaması.
+
+```bash
+npm install
+npx expo start
+```
+
+Terminalde çıkan QR kodu telefonda Expo Go ile (iPhone'da kamerayla) okut, uygulama telefonda açılır. Bilgisayarla telefon aynı Wi-Fi ağında olmalı; olmuyorsa `npx expo start --tunnel` dene.
+
+- `npm run web`: Tarayıcıda önizleme. Veriler tarayıcıda tutulur, bildirim gönderilmez.
+- `npm run typecheck` ve `npm run lint`: Değişikliklerden sonra çalıştır.
+- Paket eklerken `npm install` yerine `npx expo install <paket>` kullan; Expo sürümüne uygun sürümü seçer.
+
+Nasıl çalışıyor:
+- **Veri:** Bütün veriler telefondaki `layfapp.db` SQLite dosyasında (odalar, plan hücreleri, rutinler, kıyafetler, stok). Buzdolabı fotoğrafı uygulamanın kendi klasörüne kopyalanır, veritabanında yalnızca yolu tutulur.
+- **Bildirimler:** Sunucu yok. Uygulama her açıldığında ve veri değiştiğinde önümüzdeki 7 sabahın özetini o güne göre hesaplayıp telefona zamanlar. Bildirime dokununca ilgili oda ya da Bugün sekmesi açılır.
 
 ---
 

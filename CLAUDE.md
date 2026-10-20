@@ -28,6 +28,16 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - **Test:** Geliştirirken telefonda Expo Go ile. Yayın için EAS Build ve EAS Submit.
 - **İleride (v2):** Aile üyelerinin aynı evi paylaşması. Bunun için sunucu gerekecek (ör. Supabase).
 
+## Kod yapısı
+
+- Expo SDK 58, Expo Router, ekranlar `src/app/` altında. Expo API'leri sürümden sürüme değişiyor; yeni bir API kullanmadan önce `AGENTS.md`'deki gibi o sürümün belgesine bak. Paket eklerken `npx expo install`.
+- Prototipin kuralları `src/domain/` altında (`constants.ts`: `TYPES`, `STOCK_DEF`; `logic.ts`: `status()`, `notifs()`, `seed()`). Fonksiyonlar `now` parametresi alır, böylece ileri bir günün durumu da hesaplanabilir.
+- Uygulama verisi tek bir `AppState` nesnesi (prototipteki `S` ile aynı şekil). `useStore().update(draft => ...)` ile değiştirilir; her değişiklik `src/data/db.ts` ile SQLite tablolarına baştan yazılır. Web önizlemesinde `db.web.ts` localStorage kullanır. Şemayı değiştirirsen `SCHEMA_VERSION`'ı artır ve okuma tarafına geçiş ekle.
+- Sabah özeti: `src/notifications/schedule.ts` önümüzdeki 7 sabahı o günün tarihine göre hesaplayıp tek seferlik bildirim olarak zamanlar; veri değiştikçe yeniden zamanlanır.
+- Renkler `src/theme/index.ts`'te açık ve koyu tema için. Bileşenlerde renk kodu yazma, `useColors()` kullan.
+- Değişiklikten sonra: `npm run typecheck` ve `npm run lint`.
+- Paket kimliği şimdilik `com.meikaidigital.layfapp`. Hesap kararı (bireysel / şirket) netleşince gerekirse değişecek; mağazaya ilk yüklemeden sonra değiştirilemez.
+
 ## Yayın sırası
 
 1. Uygulamayı iki platform için birlikte geliştir.
@@ -54,6 +64,7 @@ Logodaki tarz: tombul, yuvarlak hatlı, hafif kabarık, yumuşak gölgeli.
 
 - Gecikmiş işler için paletin dışında yumuşak bir kırmızı kullanılıyor: açık temada `#B8584C`, koyu temada `#E58C7E`.
 - Yazı tipleri: başlıklar Fredoka, metinler Nunito.
+  - Dikkat: Fredoka'da Türkçe "ş", "ğ" ve "İ" harfleri yok (Google'ın güncel dosyası dahil). Bu harfler başlıklarda telefonun sistem yazı tipine düşüyor, web önizlemesinde bozuk görünüyor. Başlık yazı tipi için karar bekliyor (ör. Baloo 2, Varela Round ya da başlıklarda da Nunito; üçü de Türkçe harfleri içeriyor).
 - Hem açık hem koyu tema desteklenecek.
 - Formlar: butonlar hap şeklinde ve kabarık, kartların köşeleri büyük ve yuvarlak (yaklaşık 22px), ev planında odaların dış köşeleri yuvarlatılmış.
 

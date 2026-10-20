@@ -935,8 +935,8 @@ function onLookPhoto(file, rid){
 /* ---------- premium ---------- */
 // The AI photo scans are the paid part; everything else stays free. In the app the server decides (store entitlement + monthly quota), the page only mocks the flow.
 const PREMIUM = {weekly: 2, daily: 2, plans: {
-  ay: {label: 'Aylık', price: '9,99 $', per: 'ay', sub: 'İstediğin zaman iptal'},
-  yil: {label: 'Yıllık', price: '79,99 $', per: 'yıl', sub: 'Ayda 6,67 $ gibi', tag: '%33 indirim'}
+  ay: {label: 'Aylık', price: '6,99 $', per: 'ay', sub: 'İstediğin zaman iptal'},
+  yil: {label: 'Yıllık', price: '59,99 $', per: 'yıl', sub: 'Ayda 5 $ gibi', tag: '%28 indirim'}
 }};
 let pwPlan = 'ay', pending = null;
 const LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';

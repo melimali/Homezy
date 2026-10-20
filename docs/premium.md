@@ -46,7 +46,7 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 
 ### Ücretsiz ve Premium
 
-| | Ücretsiz | Premium (9,99 $/ay ya da 79,99 $/yıl) |
+| | Ücretsiz | Premium (7 $/ay ya da 59,99 $/yıl) |
 |---|---|---|
 | Ev planı, rutinler, bildirimler | ✓ | ✓ |
 | Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
@@ -89,18 +89,18 @@ Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göster
 
 ## Gelir ve gider hesabı
 
-Senaryo: **aylık 9,99 $** (yıllık 79,99 $), Premium kullanıcı günde 2 tarama (buzdolabı ya da kıyafet) yapabiliyor, yani ayda en fazla **60 tarama**; ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
+Senaryo: **aylık 6,99 $** (yıllık 59,99 $; mağazalar fiyatı ,99 ile bitirir), Premium kullanıcı günde 2 tarama (buzdolabı ya da kıyafet) yapabiliyor, yani ayda en fazla **60 tarama**; ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
 
 ### Kullanıcı başına
 
 | | Türkiye'den satış | ABD'den satış |
 |---|---|---|
-| Mağaza fiyatı | 9,99 $ (KDV dahil) | 9,99 $ (satış vergisi ayrıca eklenir) |
-| KDV | −1,67 $ | 0 |
-| Mağaza komisyonu %15 | −1,25 $ | −1,50 $ |
-| **Elimize geçen** | **≈ 7,08 $ (≈ 297 TL)** | **≈ 8,49 $** |
+| Mağaza fiyatı | 6,99 $ (KDV dahil) | 6,99 $ (satış vergisi ayrıca eklenir) |
+| KDV | −1,17 $ | 0 |
+| Mağaza komisyonu %15 | −0,87 $ | −1,05 $ |
+| **Elimize geçen** | **≈ 4,95 $ (≈ 208 TL)** | **≈ 5,94 $** |
 
-Aşağıdaki tablolarda temkinli olsun diye Türkiye rakamı (7,08 $) kullanıldı.
+Aşağıdaki tablolarda temkinli olsun diye Türkiye rakamı (4,95 $) kullanıldı.
 
 Bir tarama ≈ 2.600 giriş + 700 çıkış token'ı:
 
@@ -110,7 +110,7 @@ Bir tarama ≈ 2.600 giriş + 700 çıkış token'ı:
 | Claude Sonnet 5.5 | ≈ 0,012 $ | ≈ 0,30 $ | ≈ 0,72 $ |
 | Claude Opus 5.5 | ≈ 0,024 $ | ≈ 0,60 $ | ≈ 1,44 $ |
 
-En pahalı modelle ve herkes her gün iki tarama yapsa bile yapay zekâ gideri elimize geçen 7,08 $'ın %20'sini geçmiyor. Günlük sınır bu fiyatta zararı imkânsız kılıyor.
+En pahalı modelle ve herkes her gün iki tarama yapsa bile yapay zekâ gideri elimize geçen 4,95 $'ın %30'unu geçmiyor (Sonnet ile %15). Günlük sınır bu fiyatta zararı imkânsız kılıyor.
 
 ### Sabit giderler (aylık)
 
@@ -127,27 +127,27 @@ Her Premium kullanıcıya 5 ücretsiz kullanıcı düştüğü ve ücretsizlerin
 
 | | 100 Premium | 1.000 Premium | 10.000 Premium |
 |---|---|---|---|
-| Brüt satış | 999 $ | 9.990 $ | 99.900 $ |
-| KDV + mağaza komisyonu | −291 $ | −2.910 $ | −29.100 $ |
-| **Elimize geçen** | **708 $** | **7.080 $** | **70.800 $** |
+| Brüt satış | 699 $ | 6.990 $ | 69.900 $ |
+| KDV + mağaza komisyonu | −204 $ | −2.040 $ | −20.400 $ |
+| **Elimize geçen** | **495 $** | **4.950 $** | **49.500 $** |
 | Yapay zekâ, Premium (normal / en kötü) | 30 / 72 $ | 300 / 720 $ | 3.000 / 7.200 $ |
 | Yapay zekâ, ücretsiz kullanıcılar | 18 $ | 180 $ | 1.800 $ |
 | Supabase + Apple | 33 $ | 33 $ | 33 $ |
-| RevenueCat (%1) | 0 | 100 $ | 1.000 $ |
-| **Kalan, normal kullanım** | **≈ 627 $ ≈ 26.300 TL** | **≈ 6.470 $ ≈ 272.000 TL** | **≈ 65.000 $ ≈ 2,73 milyon TL** |
-| **Kalan, Premium'lar sınırı doldurursa** | **≈ 585 $ ≈ 24.600 TL** | **≈ 6.050 $ ≈ 254.000 TL** | **≈ 60.800 $ ≈ 2,55 milyon TL** |
+| RevenueCat (%1) | 0 | 70 $ | 700 $ |
+| **Kalan, normal kullanım** | **≈ 414 $ ≈ 17.400 TL** | **≈ 4.370 $ ≈ 183.000 TL** | **≈ 44.000 $ ≈ 1,85 milyon TL** |
+| **Kalan, Premium'lar sınırı doldurursa** | **≈ 372 $ ≈ 15.600 TL** | **≈ 3.950 $ ≈ 166.000 TL** | **≈ 39.800 $ ≈ 1,67 milyon TL** |
 
-Haiku 5.5 yeterli çıkarsa yapay zekâ satırları neredeyse sıfırlanır ve kalan normal kullanımda 100 kullanıcıda ≈ 673 $, 10.000 kullanıcıda ≈ 69.500 $ olur.
+Haiku 5.5 yeterli çıkarsa yapay zekâ satırları neredeyse sıfırlanır ve kalan normal kullanımda 100 kullanıcıda ≈ 460 $, 10.000 kullanıcıda ≈ 48.500 $ olur.
 
 Notlar:
 
 - **Vergi dahil değil.** Kalan tutar bireysel hesapta gelir vergisine, şirket hesabında kurumlar vergisine tabi.
-- **Apple %15'i yıllık 1 milyon $ gelire kadar.** 10.000 Premium kullanıcı yılda ≈ 1,2 milyon $ eder; sınır aşılınca Apple yılın geri kalanında yeni aboneliklerin ilk yılından %30 alır (bir yılı geçen aboneliklerde yine %15). Google'da abonelik her zaman %15.
-- **9,99 $ Türkiye için yüksek** (≈ 420 TL/ay). İki mağaza da ülkeye göre ayrı fiyat koymaya izin veriyor; örneğin ABD ve Avrupa'da 9,99 $, Türkiye'de 149,99 TL olabilir. Türkiye fiyatında da yapay zekâ gideri en kötü durumda elimize geçenin %15'i civarında kalır.
+- **Apple %15'i yıllık 1 milyon $ gelire kadar.** 10.000 Premium kullanıcı yılda ≈ 840 bin $ eder, sınırın altında kalır; 12.000 kullanıcıyı geçince Apple yılın geri kalanında yeni aboneliklerin ilk yılından %30 alır (bir yılı geçen aboneliklerde yine %15). Google'da abonelik her zaman %15.
+- **6,99 $ Türkiye'de ≈ 294 TL/ay.** İki mağaza da ülkeye göre ayrı fiyat koymaya izin veriyor; örneğin ABD ve Avrupa'da 6,99 $, Türkiye'de 149,99 TL olabilir. 149,99 TL'de elimize ≈ 106 TL geçer; Sonnet ile yapay zekâ gideri en kötü durumda bunun ≈ %30'u, normal kullanımda ≈ %12'si.
 
 ### Model önerisi
 
-1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın; 9,99 $ fiyatta en kötü durumda bile gelirin %10'u.
+1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın; 6,99 $ fiyatta en kötü durumda bile elimize geçenin %15'i.
 2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5, Sonnet 5.5 ve Opus 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku yeterince iyiyse maliyet 20'de birine iner.
 3. Opus 5.5 da günlük sınırla zarar ettirmez (en kötü durumda kullanıcı başına 1,44 $); kalite farkı açıksa tercih edilebilir.
 
@@ -158,7 +158,7 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 ## Yapılacaklar sırası
 
 1. Apple Small Business Program başvurusu, Paid Apps sözleşmesi, iki mağazada banka ve vergi bilgisi.
-2. App Store Connect ve Play Console'da iki abonelik ürünü: `layfapp_premium_aylik` (9,99 $), `layfapp_premium_yillik` (79,99 $), tek abonelik grubu, ülkeye göre fiyat.
+2. App Store Connect ve Play Console'da iki abonelik ürünü: `layfapp_premium_aylik` (6,99 $), `layfapp_premium_yillik` (59,99 $), tek abonelik grubu, ülkeye göre fiyat.
 3. RevenueCat projesi, `premium` yetkisi, iki ürün, bir "offering".
 4. Supabase projesi: anonim oturum, `scan_usage` tablosu ve hak ayırma / geri verme fonksiyonları, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
 5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.

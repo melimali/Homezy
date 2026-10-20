@@ -198,7 +198,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 | Kamera | Buzdolabı fotoğrafı için kamera ya da galeri (expo-image-picker) |
 | Buzdolabı taraması | Fotoğraf, API anahtarını tutan küçük bir sunucu fonksiyonuna (ör. Supabase Edge Function) gider, o da Claude API'ye görsel olarak gönderir ve JSON ürün listesi döner. Anahtar uygulamanın içine konmaz. |
 | Kıyafet taraması | Buzdolabıyla aynı sunucu fonksiyonu. Kombin önerisi ise kurallarla telefonda hesaplanır, sunucu ve internet gerekmez. |
-| Premium üyelik | Yapay zekâ taramaları ücretli abonelikte. App Store / Google Play aboneliği RevenueCat ile; sunucu fonksiyonu yetkiyi ve aylık kotayı kontrol eder. Plan, mağaza kuralları ve maliyet: [docs/premium.md](docs/premium.md) |
+| Premium üyelik | Yapay zekâ taramaları ücretli abonelikte. App Store / Google Play aboneliği RevenueCat ile; sunucu fonksiyonu yetkiyi ve günlük tarama hakkını kontrol eder. Plan, mağaza kuralları ve gelir-gider hesabı: [docs/premium.md](docs/premium.md) |
 | Derleme ve yayın | EAS Build, EAS Submit. iOS derlemesi bulutta yapılır, Mac gerekmez. |
 | Geliştirme sırasında test | Telefonda Expo Go |
 

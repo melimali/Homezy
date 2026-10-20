@@ -633,7 +633,7 @@ function wardrobeHTML(rid, m){
     ${mine ? lookScanHTML(rid, m) : ''}
     ${mine && scan.st === 'busy' ? '' : `<label class="btn primary block" for="lookfile-${rid}">Kıyafet fotoğrafı çek</label>`}
     <input type="file" id="lookfile-${rid}" data-look="${rid}" accept="image/*" capture="environment" hidden>
-    ${mine ? '' : `<p class="tiny muted">${on ? 'Kombinini aynada çek ya da parçaları yatağa serip çek. Yapay zekâ her parçanın türünü, rengini ve kumaşını çıkarır, onaylarsan gardıroba ekler ve onlarla kombin önerir.' : 'Yapay zekâ ile kıyafet tanıma burada kullanılamıyor. Parçaları aşağıdan elle ekleyebilirsin; renk ve kumaşı adından anlarım.'}</p>${on ? lockHTML() : ''}`}
+    ${mine ? '' : `<p class="tiny muted">${on ? 'Kombinini aynada çek ya da parçaları yatağa serip çek. Yapay zekâ her parçanın türünü, rengini ve kumaşını çıkarır, onaylarsan gardıroba ekler ve onlarla kombin önerir.' : 'Yapay zekâ ile kıyafet tanıma burada kullanılamıyor. Parçaları aşağıdan elle ekleyebilirsin; renk ve kumaşı adından anlarım.'}</p>${on ? lockHTML('look') : ''}`}
     ${dirty >= 3 ? `<div class="callout">${dirty} parça kirli. Bir makine dolusu birikti.</div>` : ''}
     <div class="filters">${[['all','Tümü',list.length],['temiz','Temiz',cnt('temiz')],['kirli','Kirli',dirty],['utu','Ütülenecek',cnt('utu')]].map(([k, l, c]) => `<button class="filt${f === k ? ' on' : ''}" data-act="filter" data-rid="${rid}" data-f="${k}">${l} <span class="mono">${c}</span></button>`).join('')}</div>
     <ul class="clothes">${items.map(c => { const a = att(c); return `<li><button class="c-main${anchors.has(c.id) ? ' on' : ''}" data-act="anchor" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} ile kombin öner">${dotHTML(a)}<span><span class="c-name">${esc(c.name)}</span><span class="c-cat">${esc(a.kind ? attLine(a) : c.cat)}</span></span></button><button class="state s-${c.state}" data-act="cycle" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)}: ${CSTATE[c.state]}. Değiştirmek için dokun">${CSTATE[c.state]}</button><button class="x" data-act="delcloth" data-rid="${rid}" data-id="${c.id}" aria-label="${esc(c.name)} sil">×</button></li>`; }).join('') || '<li><p class="empty-msg">Bu filtrede kıyafet yok.</p></li>'}</ul>
@@ -652,7 +652,7 @@ function fridgeHTML(rid, m){
     ${busy ? '' : `<label class="btn primary block" for="fridgefile-${rid}">${m.photo ? 'Yeni fotoğraf çek' : 'Fotoğraf çek ya da yükle'}</label>`}
     <input type="file" id="fridgefile-${rid}" data-photo="${rid}" accept="image/*" capture="environment" hidden>
     ${on && m.photo && !scan ? `<button class="btn ghost small" data-act="rescan" data-rid="${rid}">Bu fotoğrafı yeniden tara</button>` : ''}
-    ${on && !scan ? '<p class="tiny muted">Fotoğrafı çekince yapay zekâ içindekileri ve kalan miktarları tahmin eder. Sen onaylamadan liste değişmez.</p>' + lockHTML() : ''}
+    ${on && !scan ? '<p class="tiny muted">Fotoğrafı çekince yapay zekâ içindekileri ve kalan miktarları tahmin eder. Sen onaylamadan liste değişmez.</p>' + lockHTML('fridge') : ''}
     ${aiState === 'off' ? '<p class="tiny muted">Yapay zekâ taraması burada kullanılamıyor. Listeyi aşağıdan elle güncelleyebilirsin.</p>' : ''}
     ${scanLogHTML(m)}</section>`;
 }
@@ -934,40 +934,51 @@ function onLookPhoto(file, rid){
 
 /* ---------- premium ---------- */
 // The AI photo scans are the paid part; everything else stays free. In the app the server decides (store entitlement + monthly quota), the page only mocks the flow.
-const PREMIUM = {free: 3, month: 100, plans: {
-  yil: {label: 'Yıllık', price: '599,99 ₺', per: 'yıl', sub: 'Ayda 50 ₺ gibi', tag: '%37 indirim'},
-  ay: {label: 'Aylık', price: '79,99 ₺', per: 'ay', sub: 'İstediğin zaman iptal'}
+const PREMIUM = {free: 3, daily: {fridge: 1, look: 1}, plans: {
+  ay: {label: 'Aylık', price: '9,99 $', per: 'ay', sub: 'İstediğin zaman iptal'},
+  yil: {label: 'Yıllık', price: '79,99 $', per: 'yıl', sub: 'Ayda 6,67 $ gibi', tag: '%33 indirim'}
 }};
-let pwPlan = 'yil', pending = null;
+const KIND_NAME = {fridge: 'buzdolabı', look: 'kombin'};
+let pwPlan = 'ay', pending = null;
 const LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const proTag = () => `<span class="pro">${LOCK}Premium</span>`;
 const monthKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1); };
-const pro = () => S.premium ||= {plan: null, free: PREMIUM.free, used: {}};
-const usedThisMonth = () => pro().used[monthKey()] || 0;
-function canScan(){ const p = pro(); return p.plan ? usedThisMonth() < PREMIUM.month : p.free > 0; }
+const dayKey = () => new Date().toDateString();
+function pro(){ const p = S.premium ||= {plan: null}; p.days ||= {}; p.freeUsed ||= {}; return p; }
+// Free users get a few scans a month; Premium gets one scan of each kind a day. Both reset on their own, nothing carries over.
+const usedToday = kind => (pro().days[dayKey()] || {})[kind] || 0;
+const freeLeft = () => Math.max(0, PREMIUM.free - (pro().freeUsed[monthKey()] || 0));
+function canScan(kind){ return pro().plan ? usedToday(kind) < PREMIUM.daily[kind] : freeLeft() > 0; }
 // Only a scan that returned a result uses up a right; errors and cancels are free.
-function countScan(){ const p = pro(); if (p.plan){ const k = monthKey(); p.used[k] = usedThisMonth() + 1; } else p.free = Math.max(0, p.free - 1); save(); }
+function countScan(kind){
+  const p = pro();
+  if (p.plan){ const d = p.days[dayKey()] ||= {}; d[kind] = (d[kind] || 0) + 1; for (const k in p.days) if (k !== dayKey()) delete p.days[k]; }
+  else { const m = monthKey(); p.freeUsed = {[m]: (p.freeUsed[m] || 0) + 1}; }
+  save();
+}
 function gateScan(kind, rid, blob){
-  if (canScan()) return true;
-  if (pro().plan){ toast(`Bu ayki ${PREMIUM.month} tarama hakkın doldu. Ayın 1'inde yenilenir.`); render(); }
+  if (canScan(kind)) return true;
+  if (pro().plan){ toast(`Bugünkü ${KIND_NAME[kind]} taramanı yaptın. Gece yarısı yenilenir.`); render(); }
   else openPaywall({kind, rid, blob});
   return false;
 }
-function lockHTML(){
+function lockHTML(kind){
   const p = pro();
-  if (p.plan) return canScan() ? '' : `<div class="callout">Bu ayki ${PREMIUM.month} tarama hakkın doldu. Ayın 1'inde yenilenir, o zamana kadar listeyi elle güncelleyebilirsin.</div>`;
-  return `<div class="lockrow"><p>${proTag()} ${p.free ? `${p.free} ücretsiz tarama hakkın kaldı.` : 'Ücretsiz taramaların bitti.'}</p><button class="btn small primary" data-act="paywall">Premium'u gör</button></div>`;
+  if (p.plan) return canScan(kind) ? `<p class="tiny muted">Premium: bugün ${PREMIUM.daily[kind]} ${KIND_NAME[kind]} taraması hakkın var.</p>`
+    : `<div class="callout">Bugünkü ${KIND_NAME[kind]} taramanı yaptın. Gece yarısı yenilenir, o zamana kadar listeyi elle güncelleyebilirsin.</div>`;
+  const n = freeLeft();
+  return `<div class="lockrow"><p>${proTag()} ${n ? `Bu ay ${n} ücretsiz tarama hakkın kaldı.` : 'Bu ayki ücretsiz taramaların bitti.'}</p><button class="btn small primary" data-act="paywall">Premium'u gör</button></div>`;
 }
 function paywallHTML(){
-  const p = pro(); const x = PREMIUM.plans[pwPlan];
-  const why = pending ? `${pending.kind === 'look' ? 'Kıyafet fotoğrafını' : 'Buzdolabı fotoğrafını'} taramak için Premium gerekiyor.${p.free ? '' : ` ${PREMIUM.free} ücretsiz taramanı kullandın.`}` : '';
+  const x = PREMIUM.plans[pwPlan];
+  const why = pending ? `Bu ayki ${PREMIUM.free} ücretsiz taramanı kullandın. ${pending.kind === 'look' ? 'Kıyafet fotoğrafını' : 'Buzdolabı fotoğrafını'} taramak için Premium gerekiyor.` : '';
   return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pw-h">
     <div><span class="mono small" style="color:var(--warm)">LAYFAPP PREMIUM</span><h2 class="h1" id="pw-h">Fotoğrafı çek, gerisini ben yapayım</h2>${why ? `<p class="lead">${why}</p>` : ''}</div>
     <ul class="perks">
-      <li><span>Buzdolabı taraması<small>İçindekileri ve ne kadar kaldığını listeye işler</small></span></li>
-      <li><span>Kıyafet taraması<small>Her parçanın türünü, rengini ve kumaşını çıkarıp gardıroba ekler</small></span></li>
+      <li><span>Her gün 1 buzdolabı taraması<small>İçindekileri ve ne kadar kaldığını listeye işler</small></span></li>
+      <li><span>Her gün 1 kombin taraması<small>Her parçanın türünü, rengini ve kumaşını çıkarıp gardıroba ekler</small></span></li>
       <li><span>Fotoğraftan kombin<small>Fotoğraftaki parçaları dolabındakilerle eşleştirir</small></span></li>
-      <li><span>Ayda ${PREMIUM.month} tarama<small>Günde üç tarama bile ay sonuna yeter</small></span></li>
+      <li><span>Hak her gece yenilenir<small>Başarısız tarama hakkından düşmez</small></span></li>
     </ul>
     <div class="plans" role="radiogroup" aria-label="Plan">${Object.entries(PREMIUM.plans).map(([k, o]) => `<button class="plan${pwPlan === k ? ' on' : ''}" role="radio" aria-checked="${pwPlan === k}" data-act="pwplan" data-plan="${k}">${o.tag ? `<span class="pro">${o.tag}</span>` : ''}<span class="pl-n">${o.label}</span><b>${o.price}</b><span class="pl-s">${o.sub}</span></button>`).join('')}</div>
     <button class="btn primary block" data-act="subscribe">Abone ol · ${x.price}/${x.per}</button>
@@ -985,13 +996,14 @@ function closePaywall(){ const el = document.getElementById('paywall'); el.hidde
 function premiumCardHTML(){
   const p = pro();
   if (!p.plan) return `<section class="card"><div class="sec-h"><h2 class="h2">Premium</h2>${proTag()}</div>
-    <p class="tiny muted">Buzdolabı ve kıyafet fotoğraflarını yapay zekâ ile tarar. ${p.free ? `${p.free} ücretsiz tarama hakkın var.` : 'Ücretsiz taramaların bitti.'}</p>
+    <p class="tiny muted">Her gün bir buzdolabı ve bir kombin fotoğrafını yapay zekâ ile tarar. Ücretsiz üyelikte ayda ${PREMIUM.free} tarama var, bu ay ${freeLeft()} hakkın kaldı.</p>
     <button class="btn primary block" data-act="paywall">Premium'u gör</button></section>`;
-  const n = usedThisMonth(), x = PREMIUM.plans[p.plan];
+  const x = PREMIUM.plans[p.plan];
+  const row = k => { const n = usedToday(k), max = PREMIUM.daily[k]; return `<div class="sec-h"><span class="tiny">Bugün ${KIND_NAME[k]} taraması</span><span class="mono small">${n} / ${max}</span></div>
+    <div class="meter" role="progressbar" aria-label="Bugün ${KIND_NAME[k]} taraması" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${n}"><span style="width:${Math.min(100, n / max * 100)}%"></span></div>`; };
   return `<section class="card"><div class="sec-h"><h2 class="h2">Premium</h2><span class="pill ok">${x.label} · aktif</span></div>
-    <div class="sec-h"><span class="tiny">Bu ayki taramalar</span><span class="mono small">${n} / ${PREMIUM.month}</span></div>
-    <div class="meter" role="progressbar" aria-label="Bu ayki taramalar" aria-valuemin="0" aria-valuemax="${PREMIUM.month}" aria-valuenow="${n}"><span style="width:${Math.min(100, n / PREMIUM.month * 100)}%"></span></div>
-    <p class="tiny muted">Hak her ayın 1'inde yenilenir. ${x.price}/${x.per}, App Store ya da Google Play'den yönetilir.</p>
+    ${row('fridge')}${row('look')}
+    <p class="tiny muted">Haklar her gece yarısı yenilenir. ${x.price}/${x.per}, App Store ya da Google Play'den yönetilir.</p>
     <button class="btn ghost small" data-act="unsub">Premium'u kapat (prototip)</button></section>`;
 }
 document.getElementById('paywall').addEventListener('click', e => { if (e.target === e.currentTarget) closePaywall(); });
@@ -1066,7 +1078,7 @@ async function analyze(rid, blob){
     }
     const missing = (Array.isArray(r && r.missing) ? r.missing : []).map(n => byName.get(trLow(n)))
       .filter((x, i, a) => x && !used.has(x.id) && x.lvl !== 'yok' && a.indexOf(x) === i).map(x => ({id: x.id, name: x.name, on: false}));
-    countScan();
+    countScan('fridge');
     scan = {rid, st:'review', items, missing, note: String(r && r.note || '').trim().slice(0, 240)};
   } catch(e){
     if (scan !== me) return;
@@ -1327,7 +1339,7 @@ async function analyzeLook(rid, blob){
       if (match) used.add(match);
       items.push({name: match ? hit.name : name, kind, color, hex, fabric, pattern: it.pattern === 'desenli' ? 'desenli' : 'düz', match, on: true});
     }
-    countScan();
+    countScan('look');
     scan = {rid, kind:'look', st:'review', items, worn: !!(r && r.worn), note: String(r && r.note || '').trim().slice(0, 240)};
   } catch(e){
     if (scan !== me) return;

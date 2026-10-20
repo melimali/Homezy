@@ -28,9 +28,9 @@ Telefon (Expo)                      Sunucu fonksiyonu (Supabase Edge Function)  
 Fotoğrafı çek, 1280 px'e küçült
 Supabase anonim oturum jetonu  ──►  1. Jetonu doğrula (kullanıcı kim?)
 + fotoğraf + istem türü             2. Premium mi? (RevenueCat'e sor)
-                                    3. Bu ayki hakkı kaldı mı? (scan_usage tablosu)
+                                    3. Bugünkü hakkı var mı? Varsa ayır (scan_usage)
                                     4. Fotoğrafı istemle birlikte gönder  ─────────►  JSON döner
-                                    5. Başarılıysa sayacı 1 artır          ◄─────────
+                                    5. Hata olursa ayrılan hakkı geri ver  ◄─────────
 Onay listesini göster  ◄──────────  6. JSON'u telefona döndür
 ```
 
@@ -41,17 +41,34 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 | **RevenueCat** (`react-native-purchases` + `react-native-purchases-ui`) | App Store ve Google Play aboneliklerini tek yerden yönetir. Ödeme ekranı, satın alma, geri yükleme, yenileme, iptal. | `premium` adında tek bir yetki (entitlement). İki ürün: aylık ve yıllık. |
 | **Supabase anonim oturum** | Her kuruluma bir kullanıcı kimliği verir, kayıt ekranı gerekmez. Bu kimlik RevenueCat'e de `appUserID` olarak verilir. | v2'de aile paylaşımı geldiğinde aynı kimlik e-posta ile kalıcı hesaba bağlanır. |
 | **Supabase Edge Function `scan`** | Anthropic API anahtarını tutar. Yetkiyi ve kotayı kontrol eder, Claude'u çağırır. | "İlk sürüm sunucusuz" kuralının tek istisnası. Ev verileri yine sadece telefonda. |
-| **`scan_usage` tablosu** | `user_id, ay, sayı`. Sadece fonksiyon yazar. | Fotoğraf saklanmaz, sadece sayaç tutulur. |
+| **`scan_usage` tablosu** | `user_id, gün, tür, sayı`. Sadece fonksiyon yazar. | Fotoğraf saklanmaz, sadece sayaç tutulur. |
 | **RevenueCat webhook** (isteğe bağlı) | Abonelik başlayınca/bitince Supabase'e haber verir, her taramada RevenueCat'e sormaya gerek kalmaz. | İlk sürümde her taramada RevenueCat REST API'ye sormak da yeter. |
 
-### Kurallar ve sınırlar
+### Ücretsiz ve Premium
 
-- **Ücretsiz deneme:** Her kullanıcıya ömür boyu **3 ücretsiz tarama**. Sayaç sunucuda tutulur, uygulamayı silip kurmak sıfırlamaz (aynı cihazda anonim kimlik korunamazsa sıfırlanabilir; kabul edilebilir bir kayıp).
-- **Premium kotası:** Ayda **100 tarama**, günde en fazla **15**. Normal kullanım ayda 15–30 tarama; sınır sadece kötüye kullanımı keser.
-- **Sadece başarılı tarama sayılır.** Hata, iptal ya da "fotoğraf okunamadı" sonucu hak yemez.
-- **Hız sınırı:** Aynı kullanıcıdan dakikada en fazla 5 istek. Fotoğraf en fazla 1600 px ve 1,5 MB, daha büyüğü sunucuda reddedilir.
-- **Harcama tavanı:** Anthropic Console'da aylık harcama limiti konur. Limit dolarsa taramalar "şu an kullanılamıyor" mesajına düşer, uygulamanın geri kalanı etkilenmez.
-- **Model sunucuda seçilir.** Uygulama güncellemesi beklemeden model değiştirilebilir.
+| | Ücretsiz | Premium (9,99 $/ay ya da 79,99 $/yıl) |
+|---|---|---|
+| Ev planı, rutinler, bildirimler | ✓ | ✓ |
+| Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
+| Kombin önerisi (telefondaki kurallar) | ✓ | ✓ |
+| Buzdolabı fotoğrafı saklama (taramasız) | ✓ | ✓ |
+| Yapay zekâ ile buzdolabı taraması | Ayda toplam 3 tarama (iki tür ortak) | **Her gün 1** |
+| Yapay zekâ ile kıyafet taraması | ↑ aynı 3 hak | **Her gün 1** |
+
+- Ücretsiz üyelikteki ayda 3 tarama kullanıcının özelliği tanıması için. Ayın 1'inde yenilenir. Maliyeti kullanıcı başına ayda en fazla ≈ 0,04 $.
+- Premium hakları gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
+- **Sadece başarılı tarama hak yer.** Hata, iptal ya da "fotoğraf okunamadı" sonucu sayılmaz.
+
+### Günlük sınır nasıl uygulanır?
+
+Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göstermek için. Uygulama silinip kurulsa da, saat ileri alınsa da sunucu sayacı değişmez.
+
+1. `scan_usage` tablosu: `user_id`, `day` (Türkiye saatine göre tarih), `kind` (`fridge` / `look`), `n`. Birincil anahtar `(user_id, day, kind)`. Ücretsiz hak için aynı tablo `day` yerine ayın ilk günüyle ve `kind = 'free'` ile kullanılır.
+2. `scan` fonksiyonu Claude'u çağırmadan önce veritabanında tek bir işlemle hak **ayırır**: satır yoksa `n = 1` ile ekler, varsa `n < sınır` ise `n`'yi bir artırır; artıramazsa 429 döner ve uygulama "Bugünkü buzdolabı taramanı yaptın, gece yarısı yenilenir" der. Tek işlem olduğu için iki kere hızlı dokunma iki hak kullandırmaz ve sınırı da aşamaz.
+3. Claude hata verirse ya da sonuç boşsa ayrılan hak geri verilir (`n - 1`).
+4. Premium mi değil mi sorusu RevenueCat'ten gelir (`premium` yetkisi). Abonelik bittiği an ücretsiz kurallara düşer.
+5. Ek korumalar: aynı kullanıcıdan dakikada en fazla 5 istek; fotoğraf en fazla 1600 px ve 1,5 MB; Anthropic Console'da aylık harcama tavanı. Tavan dolarsa taramalar "şu an kullanılamıyor" der, uygulamanın geri kalanı çalışır.
+6. Uygulamayı silip yeniden kurarak yeni anonim kimlikle 3 ücretsiz tarama daha almak mümkün. Kaybı küçük (≈ 0,04 $), ileride gerekirse Apple DeviceCheck ve Google Play Integrity ile cihaz başına sınırlanır.
 
 ### Mağaza kuralları
 
@@ -70,68 +87,69 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 
 ---
 
-## Ne kadar ödeyeceğim?
+## Gelir ve gider hesabı
 
-Fiyatlar 20 Ekim 2026 itibarıyla. Kur varsayımı **1 $ ≈ 42 TL**; güncel kurla değiştir.
+Senaryo: **aylık 9,99 $** (yıllık 79,99 $), Premium kullanıcı her gün 1 buzdolabı + 1 kombin taraması yapabiliyor, yani ayda en fazla **60 tarama**. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
 
-### Sabit giderler
+### Kullanıcı başına
 
-| Kalem | Ücret | Ne zaman |
+| | Türkiye'den satış | ABD'den satış |
 |---|---|---|
-| Apple Developer Program | 99 $/yıl (≈ 4.160 TL) | Her yıl |
-| Google Play geliştirici hesabı | 25 $ bir kere (≈ 1.050 TL) | Bir kere |
-| Supabase | **0 $** başlangıçta (ücretsiz plan: ayda 500 bin fonksiyon çağrısı). Büyüyünce Pro 25 $/ay (≈ 1.050 TL) | Ücretsiz plan, 1 hafta hareketsiz kalan projeyi durdurur; yayından sonra Pro'ya geçmek mantıklı |
-| RevenueCat | **0 $**, aylık mağaza gelirin 2.500 $'a kadar. Üstünde gelirin %1'i | Gelir gelince |
-| Gizlilik politikası sayfası | 0 (Meikai Digital sitesinde) | |
-| EAS Build | 0 (ücretsiz planda ayda sınırlı bulut derlemesi yetiyor) | |
+| Mağaza fiyatı | 9,99 $ (KDV dahil) | 9,99 $ (satış vergisi ayrıca eklenir) |
+| KDV | −1,67 $ | 0 |
+| Mağaza komisyonu %15 | −1,25 $ | −1,50 $ |
+| **Elimize geçen** | **≈ 7,08 $ (≈ 297 TL)** | **≈ 8,49 $** |
 
-**İlk yıl sabit gider:** yaklaşık **125 $ ≈ 5.200 TL** (Supabase ücretsiz kalırsa). Supabase Pro'ya geçilirse yılda +300 $ ≈ 12.600 TL.
+Aşağıdaki tablolarda temkinli olsun diye Türkiye rakamı (7,08 $) kullanıldı.
 
-### Değişken gider: tarama başına yapay zekâ
+Bir tarama ≈ 2.600 giriş + 700 çıkış token'ı:
 
-Bir tarama ≈ 2.600 giriş token'ı (1280 px fotoğraf ≈ 1.650 + istem ve dolap listesi ≈ 950) ve ≈ 700 çıkış token'ı (düşük düşünme seviyesi + JSON).
-
-| Model | Fiyat (giriş / çıkış, 1 milyon token) | Tarama başına | 1.000 tarama |
+| Model | Tarama başına | Normal kullanım: ayda 25 tarama | En kötü: ayda 60 tarama |
 |---|---|---|---|
-| Claude Haiku 5.5 | 0,10 $ / 0,50 $ | ≈ 0,0006 $ (≈ 0,03 TL) | ≈ 0,60 $ (≈ 25 TL) |
-| Claude Sonnet 5.5 | 2 $ / 10 $ | ≈ 0,012 $ (≈ 0,50 TL) | ≈ 12 $ (≈ 500 TL) |
-| Claude Opus 5.5 | 4 $ / 20 $ | ≈ 0,024 $ (≈ 1 TL) | ≈ 24 $ (≈ 1.000 TL) |
+| Claude Haiku 5.5 | ≈ 0,0006 $ | ≈ 0,02 $ | ≈ 0,04 $ |
+| Claude Sonnet 5.5 | ≈ 0,012 $ | ≈ 0,30 $ | ≈ 0,72 $ |
+| Claude Opus 5.5 | ≈ 0,024 $ | ≈ 0,60 $ | ≈ 1,44 $ |
 
-Gerçek token sayısı ilk testlerde Claude API'nin `usage` alanından ölçülüp bu tablo güncellenmeli.
+En pahalı modelle ve herkes her gün iki tarama yapsa bile yapay zekâ gideri elimize geçen 7,08 $'ın %20'sini geçmiyor. Günlük sınır bu fiyatta zararı imkânsız kılıyor.
 
-### Önerilen fiyat ve kullanıcı başına kâr
+### Sabit giderler (aylık)
 
-| | Aylık | Yıllık |
-|---|---|---|
-| Mağaza fiyatı (KDV dahil) | 79,99 TL | 599,99 TL (aylığa göre %37 indirim) |
-| KDV'siz | 66,66 TL | 500 TL |
-| Mağaza %15 sonrası elimize geçen | **≈ 56,70 TL/ay** | **≈ 425 TL/yıl ≈ 35,40 TL/ay** |
+| Kalem | Ücret |
+|---|---|
+| Apple Developer Program | 99 $/yıl → ≈ 8,25 $/ay |
+| Google Play hesabı | 25 $, bir kere |
+| Supabase Pro | 25 $/ay (ücretsiz plan bir hafta hareketsiz kalan projeyi durdurduğu için yayında Pro önerilir; 10.000 kullanıcıya kadar yeter) |
+| RevenueCat | Aylık 2.500 $ gelire kadar 0; üstünde gelirin %1'i |
 
-Bir Premium kullanıcının aylık yapay zekâ maliyeti:
+### Aylık tablo (Sonnet 5.5)
 
-| Kullanım | Haiku 5.5 | Sonnet 5.5 | Opus 5.5 |
+Her Premium kullanıcıya 5 ücretsiz kullanıcı düştüğü ve ücretsizlerin ayda ortalama 1,5 tarama yaptığı varsayıldı.
+
+| | 100 Premium | 1.000 Premium | 10.000 Premium |
 |---|---|---|---|
-| Normal: ayda 20 tarama | ≈ 0,50 TL | ≈ 10 TL | ≈ 20 TL |
-| En kötü: kotanın tamamı, ayda 100 tarama | ≈ 2,50 TL | ≈ 50 TL | ≈ 100 TL ⚠️ |
+| Brüt satış | 999 $ | 9.990 $ | 99.900 $ |
+| KDV + mağaza komisyonu | −291 $ | −2.910 $ | −29.100 $ |
+| **Elimize geçen** | **708 $** | **7.080 $** | **70.800 $** |
+| Yapay zekâ, Premium (normal / en kötü) | 30 / 72 $ | 300 / 720 $ | 3.000 / 7.200 $ |
+| Yapay zekâ, ücretsiz kullanıcılar | 9 $ | 90 $ | 900 $ |
+| Supabase + Apple | 33 $ | 33 $ | 33 $ |
+| RevenueCat (%1) | 0 | 100 $ | 1.000 $ |
+| **Kalan, normal kullanım** | **≈ 636 $ ≈ 26.700 TL** | **≈ 6.560 $ ≈ 275.000 TL** | **≈ 65.900 $ ≈ 2,77 milyon TL** |
+| **Kalan, herkes sınırı doldurursa** | **≈ 594 $ ≈ 25.000 TL** | **≈ 6.140 $ ≈ 258.000 TL** | **≈ 61.700 $ ≈ 2,59 milyon TL** |
 
-Opus ile kotayı dolduran bir kullanıcı zarar ettirir. Sonnet ile yıllık abonede en kötü durumda da maliyet gelire yakın kalır (50 TL'ye karşı 35 TL); normal kullanımda rahat kârlı.
+Haiku 5.5 yeterli çıkarsa yapay zekâ satırları neredeyse sıfırlanır ve kalan normal kullanımda 100 kullanıcıda ≈ 665 $, 10.000 kullanıcıda ≈ 69.000 $ olur.
 
-### Örnek aylık tablo (Sonnet 5.5, ayda kişi başı 20 tarama, yarısı yıllık abone)
+Notlar:
 
-| Premium kullanıcı | Taramalar | Yapay zekâ | Elimize geçen gelir | Supabase + RevenueCat | Kalan (vergi öncesi) |
-|---|---|---|---|---|---|
-| 100 | 2.000 | ≈ 24 $ ≈ 1.000 TL | ≈ 4.600 TL | 0 TL | ≈ **3.600 TL/ay** |
-| 1.000 | 20.000 | ≈ 240 $ ≈ 10.000 TL | ≈ 46.000 TL | ≈ 1.050 TL Supabase + ≈ 0 RevenueCat (gelir 2.500 $ altında) | ≈ **35.000 TL/ay** |
-
-Ücretsiz kullanıcılar: her biri en fazla 3 tarama ≈ 1,50 TL (Sonnet). 10.000 indirmede en fazla ≈ 15.000 TL; çoğu üç hakkı da kullanmayacağı için gerçekte bunun altında. Ücretsiz denemeleri Haiku ile yapmak bu kalemi neredeyse sıfırlar.
-
-Vergi: elimize geçen gelir bireysel hesapta gelir vergisine, şirket hesabında kurumlar vergisine tabi. Bu tablo vergiyi içermiyor.
+- **Vergi dahil değil.** Kalan tutar bireysel hesapta gelir vergisine, şirket hesabında kurumlar vergisine tabi.
+- **Apple %15'i yıllık 1 milyon $ gelire kadar.** 10.000 Premium kullanıcı yılda ≈ 1,2 milyon $ eder; sınır aşılınca Apple yılın geri kalanında yeni aboneliklerin ilk yılından %30 alır (bir yılı geçen aboneliklerde yine %15). Google'da abonelik her zaman %15.
+- **9,99 $ Türkiye için yüksek** (≈ 420 TL/ay). İki mağaza da ülkeye göre ayrı fiyat koymaya izin veriyor; örneğin ABD ve Avrupa'da 9,99 $, Türkiye'de 149,99 TL olabilir. Türkiye fiyatında da yapay zekâ gideri en kötü durumda elimize geçenin %15'i civarında kalır.
 
 ### Model önerisi
 
-1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın, maliyeti fiyatın içinde kalıyor.
+1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın; 9,99 $ fiyatta en kötü durumda bile gelirin %10'u.
 2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5, Sonnet 5.5 ve Opus 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku yeterince iyiyse maliyet 20'de birine iner.
-3. Opus 5.5'i sadece kalite farkı açıksa ve kota ayda 50'ye düşürülürse kullan.
+3. Opus 5.5 da günlük sınırla zarar ettirmez (en kötü durumda kullanıcı başına 1,44 $); kalite farkı açıksa tercih edilebilir.
 
 Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 
@@ -140,9 +158,9 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 ## Yapılacaklar sırası
 
 1. Apple Small Business Program başvurusu, Paid Apps sözleşmesi, iki mağazada banka ve vergi bilgisi.
-2. App Store Connect ve Play Console'da iki abonelik ürünü: `layfapp_premium_aylik`, `layfapp_premium_yillik` (tek abonelik grubu).
+2. App Store Connect ve Play Console'da iki abonelik ürünü: `layfapp_premium_aylik` (9,99 $), `layfapp_premium_yillik` (79,99 $), tek abonelik grubu, ülkeye göre fiyat.
 3. RevenueCat projesi, `premium` yetkisi, iki ürün, bir "offering".
-4. Supabase projesi: anonim oturum, `scan_usage` tablosu, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
-5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve aylık sayaç.
+4. Supabase projesi: anonim oturum, `scan_usage` tablosu ve hak ayırma / geri verme fonksiyonları, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
+5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.
 6. Anthropic Console'da aylık harcama limiti.
 7. Gizlilik politikası ve mağaza gizlilik formlarına fotoğraf ve satın alma maddeleri.

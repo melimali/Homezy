@@ -5,10 +5,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
+import { IntroSplash } from '@/components/IntroSplash';
 import { ToastProvider } from '@/components/Toast';
 import { configureNotifications } from '@/notifications/schedule';
 import { PurchasesProvider } from '@/purchases/PurchasesProvider';
@@ -21,6 +22,7 @@ configureNotifications();
 
 export default function RootLayout() {
   const c = useColors();
+  const [introDone, setIntroDone] = useState(false);
   const [fontsLoaded, fontError] = useFonts({
     Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
   });
@@ -39,6 +41,8 @@ export default function RootLayout() {
             <ToastProvider>
               <StatusBar style="auto" />
               <RootStack />
+              {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
+              {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
             </ToastProvider>
           </AppStoreProvider>
         </PurchasesProvider>

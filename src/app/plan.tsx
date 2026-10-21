@@ -27,7 +27,7 @@ export default function PlanTab() {
 }
 
 /**
- * Evi tamamen siler: odalar, rutinler, gardırop, stoklar gider; bildirim ayarları kalır.
+ * Evi tamamen siler: odalar, rutinler, gardırop, stoklar gider; bildirim ayarları, puan, seri ve günlük kalır.
  * Ev kurulmamış sayıldığı için uygulama "Evini bloklarla kur" ekranına döner.
  */
 function DeleteHome() {
@@ -45,7 +45,7 @@ function DeleteHome() {
 
   const del = () => {
     if (!armed) return setArmed(true);
-    const fresh = { ...emptyState(), cols: S.cols, rows: S.rows, cells: Array(S.cols * S.rows).fill(null), settings: S.settings };
+    const fresh = { ...emptyState(), cols: S.cols, rows: S.rows, cells: Array(S.cols * S.rows).fill(null), settings: S.settings, play: { ...S.play, placed: {} } };
     deleteHome(status === 'account' ? user?.id : undefined, fresh).catch(e => console.warn('Layfapp: buluttaki ev silinemedi', e));
     rescheduleMorningSummaries(fresh).catch(() => {});
     replace(fresh);

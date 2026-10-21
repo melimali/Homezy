@@ -85,7 +85,7 @@ export function RoutineArt({ t }: Props) {
     { name: 'Çiçekleri sula', pill: 'Bugün', fg: c.today, bg: c.todaySoft },
     { name: 'Çarşafları değiştir', pill: '3 gün kaldı', fg: c.ok, bg: c.okSoft },
   ];
-  // İlk satır "Yaptım"a basılınca yeşerir: zil gibi kısa bir zıplama.
+  // İlk satır "Tamamladım"a basılınca yeşerir: zil gibi kısa bir zıplama.
   const press = t.interpolate({ inputRange: [0, 0.45, 0.5, 0.55, 1], outputRange: [1, 1, 0.82, 1.08, 1] });
   const done = t.interpolate({ inputRange: [0, 0.5, 0.52, 0.95, 1], outputRange: [0, 0, 1, 1, 0] });
   return (

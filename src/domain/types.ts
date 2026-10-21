@@ -39,6 +39,49 @@ export type Settings = {
   routine: boolean;
   stock: boolean;
   laundry: boolean;
+  /** Akşam, o gün hiçbir şey yapılmadıysa "serin bozulmasın" hatırlatması. */
+  streak: boolean;
+  /** Spor hatırlatması. */
+  sport: boolean;
+  /** "HH:MM" */
+  sportTime: string;
+  /** Spor günleri: 0 pazar … 6 cumartesi. */
+  sportDays: number[];
+};
+
+/* ---------- puan, seri, spor ve günlük ---------- */
+
+/** Puan getiren işler. `gorev`: bir rutin ya da bitki; her biri günde bir kez puan verir. */
+export type PlayKind = 'gorev' | 'spor' | 'gunluk';
+
+/** "YYYY-MM-DD", telefonun yerel günü. */
+export type DayKey = string;
+
+export type PlayEvent = { kind: PlayKind; ref: string; day: DayKey };
+
+export type SportEntry = { id: string; day: DayKey; type: string; min: number; at: number };
+
+export type JournalEntry = { text: string; mood: string | null; at: number };
+
+export type Play = {
+  /** Harcanabilir puan. Hesap varsa sunucudaki değer esas alınır. */
+  points: number;
+  /** Bir şey yapılan (puan kazanılan) günler, sıralı. Seri ve evin inşaatı bundan hesaplanır. */
+  days: DayKey[];
+  /** Mağazadan alınan eşyaların kimlikleri. */
+  owned: string[];
+  /** Eşya kimliği → konduğu oda (null: depoda). */
+  placed: Record<string, string | null>;
+  /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */
+  awarded: Record<string, DayKey>;
+  /** Gün → o gün tamamlananların kısa adları (günlükte "bugün neler yaptım"). */
+  log: Record<DayKey, string[]>;
+  sport: SportEntry[];
+  journal: Record<DayKey, JournalEntry>;
+  /** Sunucuya henüz yazılamamış puanlar (internet yokken). */
+  pending: PlayEvent[];
+  /** Kutlaması gösterilmiş en yüksek ev seviyesi. */
+  celebrated: number;
 };
 
 export type AppState = {
@@ -53,6 +96,7 @@ export type AppState = {
   tasks: Record<string, Task[]>;
   mod: Record<string, RoomExtras>;
   settings: Settings;
+  play: Play;
 };
 
 export type TaskList = 'tasks' | 'plants';

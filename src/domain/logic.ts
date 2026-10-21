@@ -1,4 +1,5 @@
 import { DAY, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES } from './constants';
+import { defaultSettings, emptyPlay } from './play';
 import { laundryLine, photoLine, statusTail, stockLine, stockTitle, taskLine } from './messages';
 import type { AppState, Notice, RoomType, StockItem, Task, TaskRef, TaskStatus } from './types';
 
@@ -166,7 +167,8 @@ export function emptyState(): AppState {
     order: [],
     tasks: {},
     mod: {},
-    settings: { time: '09:00', routine: true, stock: true, laundry: true },
+    settings: defaultSettings(),
+    play: emptyPlay(),
   };
 }
 

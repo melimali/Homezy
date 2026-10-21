@@ -3,12 +3,16 @@ import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { greet, notifs } from '@/domain/logic';
-import { summaryTail } from '@/domain/messages';
+import { sportLine, streakLine, summaryTail } from '@/domain/messages';
+import { awardedToday, dayKey, houseProgress } from '@/domain/play';
 import type { AppState, Notice } from '@/domain/types';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
 const DAYS_AHEAD = 7;
 const CHANNEL = 'sabah-ozeti';
+const NUDGE = 'hatirlatma';
+/** Akşam seri hatırlatmasının saati. */
+const STREAK_TIME: [number, number] = [20, 30];
 
 type NotificationsModule = typeof NotificationsTypes;
 let loaded: NotificationsModule | null | undefined;
@@ -45,11 +49,16 @@ export function configureNotifications() {
 }
 
 async function ensureChannel(N: NotificationsModule) {
-  if (Platform.OS === 'android')
+  if (Platform.OS === 'android') {
     await N.setNotificationChannelAsync(CHANNEL, {
       name: 'Sabah özeti',
       importance: N.AndroidImportance.DEFAULT,
     });
+    await N.setNotificationChannelAsync(NUDGE, {
+      name: 'Spor ve seri hatırlatmaları',
+      importance: N.AndroidImportance.DEFAULT,
+    });
+  }
 }
 
 export async function getPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
@@ -111,4 +120,44 @@ export async function rescheduleMorningSummaries(S: AppState) {
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
+  for (const n of nudges(S, now))
+    await N.scheduleNotificationAsync({
+      content: { title: n.title, body: n.body, data: { url: n.url } },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
+    });
+}
+
+/**
+ * Önümüzdeki günlerin spor ve seri hatırlatmaları. Bugün spor ya da bir iş yapıldıysa
+ * bugünkü hatırlatma atlanır; veri değişince hepsi yeniden zamanlanır.
+ */
+export function nudges(S: AppState, now = Date.now()) {
+  const out: { at: Date; title: string; body: string; url: string }[] = [];
+  const set = S.settings;
+  const today = dayKey(now);
+  const hp = houseProgress(S.play.days, now);
+  const [sh, sm] = set.sportTime.split(':').map(n => parseInt(n, 10));
+  for (let d = 0; d < DAYS_AHEAD; d++) {
+    const base = new Date(now + d * DAY);
+    const key = dayKey(base.getTime());
+    if (set.sport && set.sportDays.includes(base.getDay()) && !(key === today && awardedToday(S.play, 'spor', 'spor', now))) {
+      const at = new Date(base);
+      at.setHours(sh || 0, sm || 0, 0, 0);
+      if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor' });
+    }
+    if (set.streak && !(key === today && hp.today)) {
+      const at = new Date(base);
+      at.setHours(STREAK_TIME[0], STREAK_TIME[1], 0, 0);
+      // Bugünkü seriyi biliyoruz; yarın için bugün yapıldıysa aynı seri sürüyor. Daha ilerisi bilinmez.
+      const streak = d === 0 ? hp.streak : d === 1 && hp.today ? hp.streak : 0;
+      if (at.getTime() > now)
+        out.push({
+          at,
+          title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor',
+          body: streakLine(streak, hp.level > 0, 'seri', at.getTime()),
+          url: '/bugun',
+        });
+    }
+  }
+  return out;
 }

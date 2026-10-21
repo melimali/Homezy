@@ -15,6 +15,7 @@ import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { configureNotifications } from '@/notifications/schedule';
 import { prefs } from '@/lib/supabase';
+import { usePlaySync } from '@/play/usePlay';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
@@ -60,6 +61,7 @@ function RootStack() {
   const { status, introSeen } = useAuth();
   const c = useColors();
   useCloudSync();
+  usePlaySync();
 
   const loading = status === 'loading';
   useEffect(() => {
@@ -80,6 +82,9 @@ function RootStack() {
         <Stack.Screen name="oda/[id]" />
         <Stack.Screen name="plan" />
         <Stack.Screen name="bildirimler" />
+        <Stack.Screen name="magaza" />
+        <Stack.Screen name="spor" />
+        <Stack.Screen name="gunluk" />
         <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>

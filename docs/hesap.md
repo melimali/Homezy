@@ -36,19 +36,11 @@
 3. **Authentication > URL Configuration > Site URL**: Meikai Digital sitesinde "E-postan onaylandı, uygulamaya dönebilirsin" yazan basit bir sayfa.
 4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir.
 5. Tabloları kur: `supabase/migrations/` içindeki dosyaları sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, `20261020230000_delete_me.sql`, `20261021000000_puan.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu, üçüncüsü puan, seri ve eşya mağazası (`play_award`, `play_buy`, `play_summary`). Üçüncüsü çalıştırılmadan puanlar sadece telefonda kalır, mağaza "Satın alınamadı" der.
-6. Abonelik webhook fonksiyonunu yükle (RevenueCat açılınca; Windows'ta `npx supabase` ile):
-   ```
-   npx supabase login
-   npx supabase link --project-ref <proje-kodu>
-   npx supabase functions deploy revenuecat-webhook --no-verify-jwt
-   npx supabase secrets set REVENUECAT_API_KEY=sk_... REVENUECAT_WEBHOOK_SECRET=<uzun-rastgele-metin>
-   ```
+6. Abonelik fonksiyonları (`revenuecat-webhook`, `subscription-sync`): bkz. [odeme-kurulumu.md](odeme-kurulumu.md), 5. adım.
 
-### 2. RevenueCat
+### 2. RevenueCat ve mağazalar
 
-1. Proje aç, App Store ve Google Play uygulamalarını bağla.
-2. `premium` adında bir **entitlement**, iki ürün (`layfapp_premium_aylik`, `layfapp_premium_yillik`) ve bir **offering**.
-3. **Integrations > Webhooks**: adres `https://<proje-kodu>.supabase.co/functions/v1/revenuecat-webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_SECRET ile aynı metin>`.
+Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlement'ı, Google Play'de tek abonelik `layfapp_premium` (temel planlar `aylik`, `yillik`; aylığa ilk ay 4,99 $ teklifi), App Store'da iki ürün, `default` offering'de Monthly ve Annual paketleri, webhook Supabase'e.
 
 ### 3. Uygulama
 

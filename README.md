@@ -198,6 +198,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 | Kamera | Buzdolabı fotoğrafı için kamera ya da galeri (expo-image-picker) |
 | Buzdolabı taraması | Fotoğraf, API anahtarını tutan küçük bir sunucu fonksiyonuna (ör. Supabase Edge Function) gider, o da Claude API'ye görsel olarak gönderir ve JSON ürün listesi döner. Anahtar uygulamanın içine konmaz. |
 | Kıyafet taraması | Buzdolabıyla aynı sunucu fonksiyonu. Kombin önerisi ise kurallarla telefonda hesaplanır, sunucu ve internet gerekmez. |
+| Premium üyelik | Yapay zekâ taramaları ücretli abonelikte. App Store / Google Play aboneliği RevenueCat ile; sunucu fonksiyonu yetkiyi ve günlük tarama hakkını kontrol eder. Plan, mağaza kuralları ve gelir-gider hesabı: [docs/premium.md](docs/premium.md) |
 | Derleme ve yayın | EAS Build, EAS Submit. iOS derlemesi bulutta yapılır, Mac gerekmez. |
 | Geliştirme sırasında test | Telefonda Expo Go |
 
@@ -219,6 +220,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 **Yayın sırası:** Önce Google Play süreci başlatılacak. Yeni kişisel geliştirici hesaplarında, yayına çıkmadan önce 12 test kullanıcısının 14 gün kesintisiz kapalı teste kayıtlı kalması gerekiyor. Bu süre içinde iOS sürümü TestFlight'ta hazırlanacak ve iki mağazaya aynı hafta başvurulacak.
 
 **Açık kararlar:**
+- Yapay zekâ modeli: Sonnet 5.5 ile başla, kapalı testte Haiku 5.5 ve Opus 5.5 ile karşılaştır ([docs/premium.md](docs/premium.md)).
 - Geliştirici hesapları bireysel mi olacak, Meikai Digital adına mı?
 - Mağaza ikonu için logonun sadeleştirilmiş bir versiyonu.
 - Yatay logonun açık zemin versiyonu ("layf" harfleri açık zeminde kayboluyor).
@@ -231,6 +233,8 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 layfapp/
 ├── README.md              Bu dosya
 ├── CLAUDE.md              Claude Code için proje notları ve alınan kararlar
+├── docs/
+│   └── premium.md         Premium üyelik, mağaza kuralları ve yapay zekâ maliyeti
 ├── prototype/
 │   └── layfapp.html       Çalışan HTML prototipi
 └── assets/

@@ -22,14 +22,25 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 ## Teknik kararlar
 
 - **Expo (React Native) + TypeScript.** Tek kodla iOS ve Android. iOS derlemesi EAS Build ile bulutta yapılır, Mac gerekmez.
-- **İlk sürüm sunucusuz.** Veriler sadece telefonda tutulur (expo-sqlite).
+- **Veriler önce telefonda** (expo-sqlite). Hesap açan kullanıcının evi Supabase'e yedeklenir; hesapsız (misafir) kullanım da var. Hesap: Supabase Auth (e-posta + şifre, anonim misafir).
+- **Abonelik:** RevenueCat (App Store / Google Play ödeme sistemi, satın alımları geri yükleme). Kart bilgisi bizde tutulmaz. Ayrıntılar ve kurulum: `docs/hesap.md`.
 - **Bildirimler** telefonda yerel olarak zamanlanır (expo-notifications), sunucu yok.
 - **Buzdolabı fotoğrafı** için kamera ya da galeri (expo-image-picker).
 - **Buzdolabı taraması (yapay zekâ):** Prototipte sayfa Claude'a doğrudan soruyor (`fridgePrompt()`, `analyze()`, `applyScan()`). Expo uygulamasında API anahtarı uygulamaya konamaz, bu yüzden tek bir sunucu fonksiyonu gerekir (ör. Supabase Edge Function): fotoğrafı alır, aynı istemle Claude API'ye görsel olarak gönderir, `{items:[{name, qty, lvl, match}], missing, note}` JSON'unu döner. Geri kalan her şey (eşleştirme, onay ekranı, tarama geçmişi) telefonda kalır. Bu, "ilk sürüm sunucusuz" kuralının tek istisnası. Fotoğrafın yapay zekâ servisine gönderildiği gizlilik politikasında yazmalı.
 - **Kıyafet taraması ve kombin önerisi:** Tarama aynı sunucu fonksiyonunu kullanır (`lookPrompt()`, `analyzeLook()`, `applyLook()`), dönen JSON `{pieces:[{name, kind, color, hex, fabric, pattern, match}], worn, note}`. Kombin önerisi yapay zekâ kullanmaz, internetsiz çalışır: türler `KINDS`, kumaşlar `FABRICS`, renkler `COLORS` / `NEUTRAL`, kumaş kuralları `FABRIC_RULES`, puanlama `judge()`, seçim `suggest()`. Kişinin üzerindeki kombin fotoğrafı da sunucuya gider; gizlilik politikasında yüz ve beden bilgisinin saklanmadığı, fotoğrafın sadece kıyafet tanıma için kullanıldığı yazmalı.
 - **Premium üyelik:** Yapay zekâ fotoğraf taramaları (buzdolabı, kıyafet) ücretli; geri kalan her şey ücretsiz. Abonelik App Store / Google Play ödeme sistemiyle, RevenueCat üzerinden (`premium` yetkisi, aylık 6,99 $ ve yıllık 59,99 $, ülkeye göre fiyat). Ücretsiz üyelikte haftada 2 tarama (pazartesi yenilenir); Premium'da günde 2 tarama (gece yarısı yenilenir). İki tür (buzdolabı, kıyafet) aynı hakkı paylaşır. Sınırı sunucu fonksiyonu tutar (`scan_usage` tablosunda tek işlemle hak ayırır, hata olursa geri verir), sadece başarılı tarama sayılır. Model sunucuda seçilir, Sonnet 5.5 ile başlanır. Ayrıntılar, gelir-gider hesabı: `docs/premium.md`. Prototipte kilit ve ödeme ekranı taklit ediliyor (`PREMIUM`, `gateScan()`, `paywallHTML()`).
 - **Test:** Geliştirirken telefonda Expo Go ile. Yayın için EAS Build ve EAS Submit.
-- **İleride (v2):** Aile üyelerinin aynı evi paylaşması. Bunun için sunucu gerekecek (ör. Supabase).
+- **İleride (v2):** Aile üyelerinin aynı evi paylaşması (aynı Supabase projesi üzerinde).
+
+## Kod yapısı
+
+- Expo SDK 58, Expo Router, ekranlar `src/app/` altında. Expo API'leri sürümden sürüme değişiyor; yeni bir API kullanmadan önce `AGENTS.md`'deki gibi o sürümün belgesine bak. Paket eklerken `npx expo install`.
+- Prototipin kuralları `src/domain/` altında (`constants.ts`: `TYPES`, `STOCK_DEF`; `logic.ts`: `status()`, `notifs()`, `seed()`). Fonksiyonlar `now` parametresi alır, böylece ileri bir günün durumu da hesaplanabilir.
+- Uygulama verisi tek bir `AppState` nesnesi (prototipteki `S` ile aynı şekil). `useStore().update(draft => ...)` ile değiştirilir; her değişiklik `src/data/db.ts` ile SQLite tablolarına baştan yazılır. Web önizlemesinde `db.web.ts` localStorage kullanır. Şemayı değiştirirsen `SCHEMA_VERSION`'ı artır ve okuma tarafına geçiş ekle.
+- Sabah özeti: `src/notifications/schedule.ts` önümüzdeki 7 sabahı o günün tarihine göre hesaplayıp tek seferlik bildirim olarak zamanlar; veri değiştikçe yeniden zamanlanır.
+- Renkler `src/theme/index.ts`'te açık ve koyu tema için. Bileşenlerde renk kodu yazma, `useColors()` kullan.
+- Değişiklikten sonra: `npm run typecheck` ve `npm run lint`.
+- Paket kimliği şimdilik `com.meikaidigital.layfapp`. Hesap kararı (bireysel / şirket) netleşince gerekirse değişecek; mağazaya ilk yüklemeden sonra değiştirilemez.
 
 ## Yayın sırası
 
@@ -56,7 +67,7 @@ Logodaki tarz: tombul, yuvarlak hatlı, hafif kabarık, yumuşak gölgeli.
 | Kahve | `#8B786D` | "Bugün" durumu, başlık üstü etiketler, "app" kelimesi. |
 
 - Gecikmiş işler için paletin dışında yumuşak bir kırmızı kullanılıyor: açık temada `#B8584C`, koyu temada `#E58C7E`.
-- Yazı tipleri: başlıklar Fredoka, metinler Nunito.
+- Yazı tipleri: başlıklar Baloo 2, metinler Nunito. İlk karar Fredoka idi ama Fredoka'da Türkçe "ş", "ğ" ve "İ" harfleri yok; bu yüzden Baloo 2 seçildi (Türkçe harflerin hepsi var). Yeni bir yazı tipi düşünürsen önce Türkçe harfleri içerdiğini kontrol et.
 - Hem açık hem koyu tema desteklenecek.
 - Formlar: butonlar hap şeklinde ve kabarık, kartların köşeleri büyük ve yuvarlak (yaklaşık 22px), ev planında odaların dış köşeleri yuvarlatılmış.
 

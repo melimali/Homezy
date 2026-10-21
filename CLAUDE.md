@@ -22,11 +22,12 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 ## Teknik kararlar
 
 - **Expo (React Native) + TypeScript.** Tek kodla iOS ve Android. iOS derlemesi EAS Build ile bulutta yapılır, Mac gerekmez.
-- **İlk sürüm sunucusuz.** Veriler sadece telefonda tutulur (expo-sqlite).
+- **Veriler önce telefonda** (expo-sqlite). Hesap açan kullanıcının evi Supabase'e yedeklenir; hesapsız (misafir) kullanım da var. Hesap: Supabase Auth (e-posta + şifre, anonim misafir).
+- **Abonelik:** RevenueCat (App Store / Google Play ödeme sistemi, satın alımları geri yükleme). Kart bilgisi bizde tutulmaz. Ayrıntılar ve kurulum: `docs/hesap.md`.
 - **Bildirimler** telefonda yerel olarak zamanlanır (expo-notifications), sunucu yok.
 - **Buzdolabı fotoğrafı** için kamera ya da galeri (expo-image-picker).
 - **Test:** Geliştirirken telefonda Expo Go ile. Yayın için EAS Build ve EAS Submit.
-- **İleride (v2):** Aile üyelerinin aynı evi paylaşması. Bunun için sunucu gerekecek (ör. Supabase).
+- **İleride (v2):** Aile üyelerinin aynı evi paylaşması (aynı Supabase projesi üzerinde).
 
 ## Kod yapısı
 

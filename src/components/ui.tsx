@@ -13,10 +13,13 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { displayName, useAuth } from '@/auth/AuthProvider';
 import { fmtShort } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
+import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
 
@@ -65,13 +68,32 @@ export function Screen({ children, scrollEnabled = true, header = true }: { chil
 export function AppHeader() {
   const now = useNow();
   const c = useColors();
+  const router = useRouter();
+  const { status, user } = useAuth();
+  // Hesabım ekranı ev kurulduktan sonra açılır; kurulum ekranında düğme görünmez.
+  const setup = useStore().state.setup;
   return (
     <View style={styles.header}>
       <View style={[styles.brandPill, { backgroundColor: brand.navy }]}>
         <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
       </View>
-      <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>
-        <T v="small" style={{ fontFamily: fonts.bodyBold }}>{fmtShort(now)}</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>
+          <T v="small" style={{ fontFamily: fonts.bodyBold }}>{fmtShort(now)}</T>
+        </View>
+        {setup && (
+          <Pressable
+            onPress={() => router.push('/hesap')}
+            accessibilityRole="button"
+            accessibilityLabel="Hesabım"
+            hitSlop={6}
+            style={({ pressed }) => [styles.avatar, { backgroundColor: c.accent, boxShadow: `0 2px 0 ${c.shadow}` }, pressed && { transform: [{ translateY: 1 }] }]}
+          >
+            <Text style={{ fontFamily: fonts.displayBold, fontSize: 15, color: c.onAccent }}>
+              {(status === 'account' ? displayName(user) : 'M').slice(0, 1).toLocaleUpperCase('tr-TR')}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -192,6 +214,7 @@ export const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6 },
   brandPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 102, height: 34 },
+  avatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   dateChip: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   card: { borderRadius: radius.card, padding: 16, gap: 12 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },

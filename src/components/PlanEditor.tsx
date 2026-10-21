@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,7 +15,8 @@ import { AppHeader, BackLink, Btn, styles as ui, Swatch, T, XBtn } from './ui';
 type Tool = string | 'erase' | null;
 
 /** Evini bloklarla kur / Ev planını düzenle. İlk açılışta ve Plan sekmesinde kullanılır. */
-export function PlanEditor({ onSaved }: { onSaved: (first: boolean, next: AppState) => void }) {
+/** `footer`: planın altında gösterilir (Plan ekranında "Evi sil ve baştan kur"). */
+export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next: AppState) => void; footer?: ReactNode }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { state: S, update } = useStore();
@@ -102,7 +103,7 @@ export function PlanEditor({ onSaved }: { onSaved: (first: boolean, next: AppSta
       <View>
         <T v="h1">{editing ? 'Ev planını düzenle' : 'Evini bloklarla kur'}</T>
         <T v="lead">Bir oda türü seç, sonra bloklara dokunup sürükleyerek odayı çiz. Her blok yaklaşık 2 m².</T>
-        {!editing && (
+        {!editing && S.order.length > 0 && (
           <View style={[styles.note, { backgroundColor: c.accentSoft }]}>
             <T style={{ fontSize: 14 }}>Başlaman için örnek bir ev çizili. İstersen düzenle, istersen temizleyip baştan çiz.</T>
           </View>
@@ -197,6 +198,7 @@ export function PlanEditor({ onSaved }: { onSaved: (first: boolean, next: AppSta
         />
         <Btn label={editing ? 'Kaydet' : 'Evimi kaydet'} kind="primary" onPress={save} style={{ flex: 1.4 }} />
       </View>
+      {footer}
     </ScrollView>
   );
 }

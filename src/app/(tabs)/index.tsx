@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Plan } from '@/components/Plan';
+import { displayName, useAuth } from '@/auth/AuthProvider';
+import { House3D } from '@/components/House3D';
 import { Screen, T } from '@/components/ui';
-import { allTasks, greet, shopItems } from '@/domain/logic';
+import { allTasks, greet, greeting, shopItems } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -13,6 +14,8 @@ export default function Home() {
   const router = useRouter();
   const { state: S } = useStore();
   const now = useNow();
+  const { status, user } = useAuth();
+  const name = status === 'account' ? displayName(user) : null;
   const all = allTasks(S, now);
   const late = all.filter(x => x.s.k === 'late').length;
   const today = all.filter(x => x.s.k === 'today').length;
@@ -23,8 +26,10 @@ export default function Home() {
   return (
     <Screen>
       <View>
-        <T v="eyebrow">{greet(new Date(now))}</T>
-        <T v="h1">{late + today ? `Bugün ${late + today} iş var` : 'Bugün her şey yolunda ✨'}</T>
+        <T v="h1">{greet(new Date(now), name)}</T>
+        <T v="lead">
+          {late + today ? `Bugün ${late + today} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda ✨ ${greeting(new Date(now)).line}`}
+        </T>
       </View>
 
       <View style={styles.tiles}>
@@ -33,7 +38,7 @@ export default function Home() {
         <Tile emoji="🛒" n={shop} label="alınacak" bg={c.okSoft} fg={c.ok} onPress={toToday} />
       </View>
 
-      <Plan state={S} onOpenRoom={open} />
+      <House3D state={S} onOpenRoom={open} now={now} />
       <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
     </Screen>
   );

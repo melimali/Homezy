@@ -2,7 +2,8 @@ import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
-import { notifs } from '@/domain/logic';
+import { greet, notifs } from '@/domain/logic';
+import { summaryTail } from '@/domain/messages';
 import type { AppState, Notice } from '@/domain/types';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
@@ -69,11 +70,13 @@ export async function requestPermission(): Promise<boolean> {
 }
 
 /** O sabahın bildirim metni. Gösterilecek bir şey yoksa null. */
-export function summaryFor(ns: Notice[]): { title: string; body: string; url: string } | null {
+export function summaryFor(ns: Notice[], at = new Date()): { title: string; body: string; url: string } | null {
   if (!ns.length) return null;
   const urgent = ns.filter(n => n.k !== 'ok').length;
-  const title = urgent ? `Günaydın! Bugün ${urgent} iş seni bekliyor` : 'Günaydın! Evde birkaç hatırlatma var';
-  const shown = ns.slice(0, 3).map(n => n.title);
+  // Özet saati kullanıcının seçimi; akşama kurduysa "İyi akşamlar" der.
+  const title = `${greet(at)} ${summaryTail(urgent)}`;
+  // İlk hatırlatmanın tatlı cümlesi de görünsün, diğerleri kısa başlık olarak.
+  const shown = ns.slice(0, 3).map((n, i) => (i ? n.title : `${n.title}\n${n.text}`));
   const more = ns.length - shown.length;
   const body = shown.join('\n') + (more > 0 ? `\nve ${more} hatırlatma daha` : '');
   const rooms = new Set(ns.map(n => n.rid));
@@ -88,8 +91,10 @@ export function summaryFor(ns: Notice[]): { title: string; body: string; url: st
  */
 export async function rescheduleMorningSummaries(S: AppState) {
   const N = getNotifications();
-  if (!N || !S.setup) return;
+  if (!N) return;
   if ((await getPermission()) !== 'granted') return;
+  // Ev silindiyse eski evin hatırlatmaları gelmesin.
+  if (!S.setup) return void (await N.cancelAllScheduledNotificationsAsync());
   await ensureChannel(N);
   await N.cancelAllScheduledNotificationsAsync();
 
@@ -99,7 +104,7 @@ export async function rescheduleMorningSummaries(S: AppState) {
     const at = new Date(now + d * DAY);
     at.setHours(hh || 0, mm || 0, 0, 0);
     if (at.getTime() <= now) continue;
-    const msg = summaryFor(notifs(S, at.getTime()));
+    const msg = summaryFor(notifs(S, at.getTime()), at);
     if (!msg) continue;
     await N.scheduleNotificationAsync({
       content: { title: msg.title, body: msg.body, data: { url: msg.url } },

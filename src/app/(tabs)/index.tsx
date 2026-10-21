@@ -5,7 +5,10 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { House3D } from '@/components/House3D';
 import { Btn, Screen, T } from '@/components/ui';
 import { allTasks, greet, greeting, shopItems } from '@/domain/logic';
-import { BUILT, houseLine, houseProgress, type HouseProgress } from '@/domain/play';
+import { AdBanner } from '@/ads/AdBanner';
+import { BUILT, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
+import { limits, themeFor } from '@/domain/premium';
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -23,7 +26,10 @@ export default function Home() {
   const shop = shopItems(S).length;
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
-  const hp = houseProgress(S.play.days, now);
+  const hp = progressOf(S.play, now);
+  const { premium } = usePurchases();
+  const lim = limits(premium.active);
+  const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
 
   return (
     <Screen>
@@ -40,9 +46,14 @@ export default function Home() {
         <Tile emoji="🛒" n={shop} label="alınacak" bg={c.okSoft} fg={c.ok} onPress={toToday} />
       </View>
 
-      <StreakCard progress={hp} points={S.play.points} />
+      <StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} />
 
-      <House3D state={S} onOpenRoom={open} now={now} build={hp} />
+      {S.others.length > 0 && (
+        <Pressable onPress={() => router.push('/evler')} accessibilityRole="button" style={{ alignSelf: 'center' }}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
+        </Pressable>
+      )}
+      <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
       <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
 
       <View style={styles.quick}>
@@ -51,13 +62,15 @@ export default function Home() {
         <Quick emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
       </View>
 
+      <AdBanner />
+
       <Celebrate level={hp.level} />
     </Screen>
   );
 }
 
 /** Seri, puan ve evin inşaat durumu. */
-function StreakCard({ progress: p, points }: { progress: HouseProgress; points: number }) {
+function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: HouseProgress; points: number; freezeLeft: number; freezeMax: number }) {
   const c = useColors();
   const built = Math.min(p.level, BUILT);
   const warn = p.idle > 0 || (!p.today && p.level > 0);
@@ -92,6 +105,11 @@ function StreakCard({ progress: p, points }: { progress: HouseProgress; points: 
         </View>
       )}
       <Text style={[styles.streakLine, { color: warn ? c.late : c.ink }]}>{houseLine(p)}</Text>
+      {p.level > 0 && (
+        <Text style={[styles.freeze, { color: c.muted }]}>
+          ❄️ Bu ay {freezeLeft}/{freezeMax} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.
+        </Text>
+      )}
     </View>
   );
 }
@@ -157,6 +175,7 @@ const styles = StyleSheet.create({
   bar: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
   streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },
+  freeze: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center', marginTop: -4 },
   quick: { flexDirection: 'row', gap: 10 },
   q: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },

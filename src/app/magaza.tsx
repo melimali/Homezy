@@ -7,6 +7,7 @@ import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEMS, type Item } from '@/domain/items';
 import { POINTS } from '@/domain/play';
+import { LIMITS } from '@/domain/premium';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -21,6 +22,7 @@ export default function Magaza() {
   const { state: S } = useStore();
   const P = S.play;
   const [open, setOpen] = useState<string | null>(null);
+  const { premium } = usePurchases();
 
   return (
     <Screen header={false}>
@@ -29,6 +31,11 @@ export default function Magaza() {
         <T v="eyebrow">Mağaza</T>
         <T v="h1">Evine eşya al 🛍️</T>
         <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
+        <T v="small" style={{ marginTop: 4 }}>
+          {premium.active
+            ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString('tr-TR')} kat geliyor, 👑 eşyalar senin için açık.`
+            : `👑 Premium'da puanlar ${LIMITS.premium.mult.toLocaleString('tr-TR')} kat gelir ve 👑 işaretli eşyalar açılır.`}
+        </T>
       </View>
 
       <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>

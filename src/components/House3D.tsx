@@ -1,12 +1,12 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
-import type { AppState, RoomType } from '@/domain/types';
+import type { AppState, HouseTheme, RoomType } from '@/domain/types';
 import { fonts, useColors, useIsDark, type Colors } from '@/theme';
 
 /**
@@ -209,7 +209,7 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
  * Evin çevresi: ev bitince bayrak, sonraki günlerde çim, çiçek, çalı, ağaç, çit, taş yol, kelebek, yıldız.
  * `back` evden önce, `front` evden sonra çizilir.
  */
-function gardenParts(S: AppState, L: number, dark: boolean) {
+function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   const back: ReactElement[] = [];
   const front: ReactElement[] = [];
   const out: Pt[] = [];
@@ -225,7 +225,7 @@ function gardenParts(S: AppState, L: number, dark: boolean) {
   });
   if (r1 < 0 || L < 7) return { ground, back, front, pts: out };
   const m = 0.8;
-  const grass = dark ? '#3E5A45' : '#BBD9AE';
+  const grass = GRASS[theme]?.[dark ? 1 : 0] ?? (dark ? '#3E5A45' : '#BBD9AE');
 
   if (L >= 9) {
     const g = [P(r0 - m, c0 - m, -SLAB), P(r0 - m, c1 + m, -SLAB), P(r1 + m, c1 + m, -SLAB), P(r1 + m, c0 - m, -SLAB)];
@@ -328,6 +328,56 @@ function gardenParts(S: AppState, L: number, dark: boolean) {
   return { ground, back, front, pts: out };
 }
 
+/** Temalara göre çim rengi [açık, koyu]. Gündüz varsayılan renktir. */
+const GRASS: Partial<Record<HouseTheme, [string, string]>> = {
+  gece: ['#6F9A7C', '#2F4A3A'],
+  kis: ['#F3F7FA', '#C9D3DE'],
+  sonbahar: ['#D9B36C', '#7A6236'],
+};
+/** Gökyüzü [açık, koyu]. */
+const SKY: Partial<Record<HouseTheme, [string, string]>> = {
+  gece: ['#2B3556', '#1A2033'],
+  kis: ['#DCE8F2', '#2E3A52'],
+  sonbahar: ['#F6E6D3', '#4A3B36'],
+};
+
+/** Aynı ev için hep aynı yerlere düşen "rastgele" noktalar. */
+function scatter(n: number, seed: number) {
+  let x = seed;
+  const r = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
+  return Array.from({ length: n }, () => [r(), r(), r()] as const);
+}
+
+/** Temanın gökyüzü (arkada) ve süsleri (önde): yıldızlar ve ay, kar taneleri ya da düşen yapraklar. */
+function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }) {
+  const sky = SKY[theme];
+  if (!sky) return { back: null, front: null };
+  const { x, y, w, h } = box;
+  const back: ReactElement[] = [<Rect key="sky" x={x} y={y} width={w} height={h} rx={22} fill={sky[dark ? 1 : 0]} />];
+  const front: ReactElement[] = [];
+  if (theme === 'gece') {
+    scatter(26, 7).forEach(([u, v, k], i) =>
+      back.push(<Circle key={'st' + i} cx={x + u * w} cy={y + v * h * 0.45} r={0.8 + k * 1.2} fill="#FFF6D8" opacity={0.5 + k * 0.5} />),
+    );
+    const mx = x + w * 0.84, my = y + h * 0.13, mr = Math.min(w, h) * 0.06;
+    back.push(
+      <Circle key="moon" cx={mx} cy={my} r={mr} fill="#FFF1B8" />,
+      <Circle key="moonCut" cx={mx + mr * 0.45} cy={my - mr * 0.3} r={mr * 0.85} fill={sky[dark ? 1 : 0]} />,
+    );
+  } else if (theme === 'kis') {
+    scatter(40, 3).forEach(([u, v, k], i) =>
+      front.push(<Circle key={'sn' + i} cx={x + u * w} cy={y + v * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.65 + k * 0.35} />),
+    );
+  } else if (theme === 'sonbahar') {
+    const leaf = ['#D9813F', '#C2543A', '#E3A64B', '#A86B3C'];
+    scatter(18, 11).forEach(([u, v, k], i) => {
+      const cx = x + u * w, cy = y + v * h;
+      front.push(<Ellipse key={'lf' + i} cx={cx} cy={cy} rx={4.6} ry={2.2} fill={leaf[i % 4]} opacity={0.9} transform={`rotate(${Math.round(k * 180)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
+    });
+  }
+  return { back, front };
+}
+
 type Props = {
   state: AppState;
   onOpenRoom?: (id: string) => void;
@@ -338,9 +388,11 @@ type Props = {
    * 7 bitti (bayrak), sonrası bahçe süsleri. `idle` 1 toz, 2 çatlak, 3+ moloz. Verilmezse ev tamamdır.
    */
   build?: { level: number; idle: number };
+  /** Evin teması (gündüz, gece, kış, sonbahar). Premium kontrolü çağıran tarafta (`themeFor`). */
+  theme?: HouseTheme;
 };
 
-export function House3D({ state: S, onOpenRoom, now: nowProp, build }: Props) {
+export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz' }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -523,7 +575,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build }: Props) {
   }
 
   // Bahçe ve süsler (evin çevresinde, ev bitince açılır).
-  const garden = gardenParts(S, L, dark);
+  const garden = gardenParts(S, L, dark, theme);
   garden.pts.forEach(grow);
 
   if (!els.length) return null;
@@ -532,6 +584,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build }: Props) {
   minX -= PAD; maxX += PAD; minY -= PAD; maxY += PAD + 6;
   const vbW = maxX - minX, vbH = maxY - minY;
   const scale = width ? width / vbW : 0;
+
+  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH });
 
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
@@ -592,10 +646,12 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build }: Props) {
       }}
     >
       <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
+        {scene.back}
         {garden.ground ?? shadow}
         {garden.back}
         {els}
         {garden.front}
+        {scene.front}
       </Svg>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         {labels}

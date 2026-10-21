@@ -2,6 +2,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { prefs, supabase } from '@/lib/supabase';
+import { removeAllPhotos } from '@/sync/photos';
 
 import { authErrorText } from './errors';
 
@@ -122,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (supabase && session) {
       // Kullanıcıyı, profilini, ev yedeğini ve abonelik kaydını siler (supabase/migrations: delete_me).
       // Mağaza aboneliğini kullanıcı App Store / Google Play'den kendisi iptal eder; ekranda bunu söylüyoruz.
+      await removeAllPhotos(session.user.id);
       const { error } = await supabase.rpc('delete_me');
       if (error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
     }

@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AdBanner } from '@/ads/AdBanner';
 import { ShopList } from '@/components/ShopList';
 import { TaskRow } from '@/components/TaskRow';
 import { Card, EmptyMsg, Screen, SecHead, T } from '@/components/ui';
 import { allTasks, fmtLong, shopItems } from '@/domain/logic';
-import { awardedToday, dayKey, houseProgress, POINTS } from '@/domain/play';
+import { awardedToday, dayKey, progressOf, POINTS } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, useColors } from '@/theme';
@@ -51,6 +52,7 @@ export default function Bugun() {
           <ShopList items={shop} title="Alınacaklar" h="h2" />
         </Card>
       )}
+      <AdBanner />
     </Screen>
   );
 }
@@ -63,7 +65,7 @@ function DailyGoals({ now }: { now: number }) {
   const P = S.play;
   const today = dayKey(now);
   const tasks = Object.keys(P.awarded).filter(k => k.startsWith('gorev:') && P.awarded[k] === today).length;
-  const hp = houseProgress(P.days, now);
+  const hp = progressOf(P, now);
   const goals = [
     { done: tasks > 0, emoji: '🧹', label: tasks ? `${tasks} iş tamamladın` : 'Bir iş tamamla', pts: `+${POINTS.gorev}`, go: undefined },
     { done: awardedToday(P, 'spor', 'spor', now), emoji: '🏃', label: 'Spor yap', pts: `+${POINTS.spor}`, go: '/spor' as const },

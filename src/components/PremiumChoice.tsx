@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
-import { OLD_MONTHLY_PRICE, type Plan, usePurchases } from '@/purchases/PurchasesProvider';
+import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
 
 /** Ücretsiz ile Premium arasındaki farklar. Tek fark yapay zekâ taraması; gerisi herkese açık. */
@@ -71,7 +71,6 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>⭐ PREMIUM</Text>
           </View>
-          {plan === 'monthly' && <Text style={styles.old}>{OLD_MONTHLY_PRICE}</Text>}
           <Text style={[styles.price, { color: brand.mint }]}>{intro ?? prices[plan]}</Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>
             {intro ? 'ilk ay' : plan === 'annual' ? 'yıllık' : 'aylık'}
@@ -93,7 +92,6 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
             selected={plan === 'monthly'}
             onPress={() => setPlan('monthly')}
             title="Aylık"
-            old={OLD_MONTHLY_PRICE}
             price={`${prices.monthly}/ay`}
             note={introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
             badge={introPrice ? 'İlk aya özel' : undefined}
@@ -137,12 +135,10 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   );
 }
 
-function PlanRow({ selected, onPress, title, old, price, note, badge }: {
+function PlanRow({ selected, onPress, title, price, note, badge }: {
   selected: boolean;
   onPress: () => void;
   title: string;
-  /** Üstü çizili eski fiyat. */
-  old?: string;
   price: string;
   note?: string;
   badge?: string;
@@ -167,10 +163,7 @@ function PlanRow({ selected, onPress, title, old, price, note, badge }: {
           <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>{badge}</Text>
         </View>
       )}
-      <View style={{ alignItems: 'flex-end' }}>
-        {old && <Text style={[styles.oldSmall, { color: c.muted }]}>{old}</Text>}
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{price}</Text>
-      </View>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{price}</Text>
     </Pressable>
   );
 }
@@ -185,8 +178,6 @@ const styles = StyleSheet.create({
   planName: { fontFamily: fonts.bodyBlack, fontSize: 13, paddingVertical: 3 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   price: { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40 },
-  old: { fontFamily: fonts.bodyBlack, fontSize: 15, color: 'rgba(235,245,238,0.6)', textDecorationLine: 'line-through' },
-  oldSmall: { fontFamily: fonts.body, fontSize: 12, textDecorationLine: 'line-through' },
   table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 70, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },

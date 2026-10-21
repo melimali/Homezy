@@ -26,8 +26,6 @@ export type Plan = 'monthly' | 'annual';
 
 /** Mağaza fiyatı henüz okunamadıysa gösterilen fiyatlar. Gerçek fiyat mağaza panelinde girilir. */
 export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
-/** Aylık planın eski fiyatı; ödeme ekranında üstü çizili gösterilir. */
-export const OLD_MONTHLY_PRICE = '$10';
 /** İlk aya özel fiyat. Gerçek teklif Google Play'de aylık plana "giriş teklifi" olarak tanımlanır. */
 export const INTRO_PRICE = '$4.99';
 

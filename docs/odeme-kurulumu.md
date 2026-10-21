@@ -8,13 +8,11 @@ Kod tarafı hazır: ödeme ekranı (`src/components/PremiumChoice.tsx`), satın 
 
 | Plan | Fiyat | Not |
 |---|---|---|
-| Aylık | **6,99 $** | Ödeme ekranında eski fiyat **10 $** üstü çizili görünür. |
+| Aylık | **6,99 $** | |
 | Aylık, ilk ay | **4,99 $** | Sadece daha önce abone olmamış kişiye. Google Play'de "giriş teklifi" olarak tanımlanır. |
 | Yıllık | **59,99 $** | Aylığa göre ≈ %28 ucuz, ekranda otomatik hesaplanır. |
 
-Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı Google'ın TL fiyatını görür. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir. Eski fiyat (10 $) koda yazılı (`OLD_MONTHLY_PRICE`).
-
-> Not: Üstü çizili fiyat "indirim" anlamına gelir. Tüketici kuralları ve mağaza politikaları, bu fiyattan gerçekten satılmamış bir ürün için üstü çizili fiyat göstermeye karşı hassas. Yayından önce bir kez daha düşünmekte fayda var; kaldırmak tek satır.
+Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı Google'ın TL fiyatını görür. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
 
 ## Adımlar
 

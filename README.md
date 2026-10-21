@@ -91,11 +91,20 @@ Rutinlerin yanında her oda türünün kendi işlevi var.
 - Her kıyafetin bir durumu var: **Temiz**, **Kirli** ya da **Ütülenecek**. Durum etikete dokunarak değiştirilir.
 - Kıyafetler duruma göre filtrelenebilir.
 - 3 ve daha fazla kirli parça birikince "çamaşır zamanı" uyarısı çıkar.
+- **Fotoğraftan dolaba ekleme:** Kullanıcı kombinini aynada çeker ya da parçaları yatağa serip çeker. Yapay zekâ her parçayı ayrı ayrı çıkarır: türü (tişört, gömlek, kot pantolon, ceket, spor ayakkabı…), rengi ve kumaşı (pamuk, keten, yün, kot, deri…). Sonuç önce onay listesinde görünür; dolapta olan parçalar eşleşir, yeniler eklenir. Elle eklenen parçalarda renk ve kumaş addan anlaşılır ("Lacivert keten gömlek").
+- **Kombin önerisi:** Temiz parçalardan üst + alt (ya da elbise / takım) + ayakkabı, mevsime göre bir de dış giyim seçilir. Her kombin şu kurallarla puanlanır ve neden uyduğu yazılır:
+  - Renk: nötrler (siyah, beyaz, gri, lacivert, bej, kahve, kot mavisi…) her şeyle gider; tek canlı renk dengeli durur; komşu tonlar ve karşıt renkler uyumludur; üç canlı renk kalabalık; siyah ile lacivert yan yana karışır.
+  - Kontrast: açık üst ile koyu alt (ya da tersi) net durur; üst ve alt aynı tonsa tek parça gibi görünür.
+  - Kumaş: keten üst chino ya da şortla; kalın örgü kazak kot, chino ya da kumaş pantolonla; saten üst mat bir altla; spor kumaş klasik ayakkabıyla olmaz; dış katman alttakinden ince olmamalı; yazlık ve kışlık kumaşlar karışmamalı.
+  - Stil seviyesi: her parçanın spor / günlük / şık / resmi aralığı örtüşmeli. Kullanıcı Günlük, Şık ya da Spor seçer.
+  - Mevsim: yazın kalın kumaş, kışın dış giyimsiz kombin puan kaybeder.
+- **Sonraki fotoğraflar:** Yeni bir kombin fotoğrafı çekilince fotoğraftaki kombin değerlendirilir ve aynı parçalar dolaptaki diğer parçalarla yeniden eşleştirilir ("bu gömlek dolabındaki bej chinoyla da olur"). Herhangi bir parçanın adına dokununca da o parçayla kombin önerilir.
 
 #### Mutfak: buzdolabı
 
 - **Buzdolabı fotoğrafı:** Kullanıcı buzdolabını açıp fotoğrafını çeker. Marketteyken evde ne olduğunu uygulamadan görür. Fotoğraf bir haftadan eskiyse yenisini çekmesi hatırlatılır.
-- **Ürün takibi:** Her ürün **Var**, **Az** ya da **Bitti** olarak işaretlenir.
+- **Yapay zekâ ile tarama:** Fotoğraf çekilince yapay zekâ içindeki ürünleri ve her birinden yaklaşık ne kadar kaldığını çıkarır (ör. "Süt · yarım şişe · Az"). Sonuç önce bir onay listesinde görünür: listede olanların durumu güncellenir, yeni ürünler eklenir, fotoğrafta görünmeyenler istenirse **Bitti** yapılır. Kullanıcı onaylamadan liste değişmez. Her taramanın kısa notu ("Süt azalmış, domates yok") tarihiyle saklanır, böylece buzdolabının zaman içindeki durumu izlenir.
+- **Ürün takibi:** Her ürün **Var**, **Az** ya da **Bitti** olarak işaretlenir. Tarama ile gelen miktar tahmini ve son görülme tarihi ürünün altında görünür.
 - **Alışveriş listesi:** Az kalan ve biten ürünler otomatik olarak listeye düşer. Liste tek dokunuşla kopyalanabilir.
 
 #### Banyo ve çamaşır odası: malzeme stoğu
@@ -187,6 +196,9 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 | Veri | Telefonda yerel veritabanı (expo-sqlite). İlk sürümde sunucu yok. |
 | Bildirimler | Telefonda yerel olarak zamanlanır (expo-notifications) |
 | Kamera | Buzdolabı fotoğrafı için kamera ya da galeri (expo-image-picker) |
+| Buzdolabı taraması | Fotoğraf, API anahtarını tutan küçük bir sunucu fonksiyonuna (ör. Supabase Edge Function) gider, o da Claude API'ye görsel olarak gönderir ve JSON ürün listesi döner. Anahtar uygulamanın içine konmaz. |
+| Kıyafet taraması | Buzdolabıyla aynı sunucu fonksiyonu. Kombin önerisi ise kurallarla telefonda hesaplanır, sunucu ve internet gerekmez. |
+| Premium üyelik | Yapay zekâ taramaları ücretli abonelikte. App Store / Google Play aboneliği RevenueCat ile; sunucu fonksiyonu yetkiyi ve günlük tarama hakkını kontrol eder. Plan, mağaza kuralları ve gelir-gider hesabı: [docs/premium.md](docs/premium.md) |
 | Derleme ve yayın | EAS Build, EAS Submit. iOS derlemesi bulutta yapılır, Mac gerekmez. |
 | Geliştirme sırasında test | Telefonda Expo Go |
 
@@ -208,6 +220,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 **Yayın sırası:** Önce Google Play süreci başlatılacak. Yeni kişisel geliştirici hesaplarında, yayına çıkmadan önce 12 test kullanıcısının 14 gün kesintisiz kapalı teste kayıtlı kalması gerekiyor. Bu süre içinde iOS sürümü TestFlight'ta hazırlanacak ve iki mağazaya aynı hafta başvurulacak.
 
 **Açık kararlar:**
+- Yapay zekâ modeli: Sonnet 5.5 ile başla, kapalı testte Haiku 5.5 ve Opus 5.5 ile karşılaştır ([docs/premium.md](docs/premium.md)).
 - Geliştirici hesapları bireysel mi olacak, Meikai Digital adına mı?
 - Mağaza ikonu için logonun sadeleştirilmiş bir versiyonu.
 - Yatay logonun açık zemin versiyonu ("layf" harfleri açık zeminde kayboluyor).
@@ -222,6 +235,9 @@ layfapp/
 ├── CLAUDE.md              Claude Code için proje notları ve alınan kararlar
 ├── AGENTS.md              Expo'nun yapay zekâ ajanları için notları
 ├── app.json               Expo ayarları (ad, ikon, izin metinleri, eklentiler)
+├── docs/
+│   ├── hesap.md           Hesap, Supabase ve RevenueCat kurulumu
+│   └── premium.md         Premium üyelik, mağaza kuralları ve yapay zekâ maliyeti
 ├── prototype/
 │   └── layfapp.html       Çalışan HTML prototipi
 ├── assets/

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ROOM_TYPES, TYPES } from '@/domain/constants';
+import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
 import { cellCount, emptyState, makeRoom, removeRoom } from '@/domain/logic';
 import type { AppState } from '@/domain/types';
 import { useStore } from '@/store/AppStore';
@@ -10,7 +10,7 @@ import { fonts, radius, useColors } from '@/theme';
 
 import { Plan } from './Plan';
 import { useToast } from './Toast';
-import { AppHeader, Btn, styles as ui, Swatch, T, XBtn } from './ui';
+import { AppHeader, BackLink, Btn, styles as ui, Swatch, T, XBtn } from './ui';
 
 type Tool = string | 'erase' | null;
 
@@ -96,9 +96,9 @@ export function PlanEditor({ onSaved }: { onSaved: (first: boolean, next: AppSta
       style={{ flex: 1, backgroundColor: c.bg }}
       scrollEnabled={!painting}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[ui.screen, { paddingTop: insets.top + 8, paddingBottom: 32 }]}
+      contentContainerStyle={[ui.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }]}
     >
-      <AppHeader />
+      {editing ? <BackLink /> : <AppHeader />}
       <View>
         <T v="h1">{editing ? 'Ev planını düzenle' : 'Evini bloklarla kur'}</T>
         <T v="lead">Bir oda türü seç, sonra bloklara dokunup sürükleyerek odayı çiz. Her blok yaklaşık 2 m².</T>
@@ -113,7 +113,7 @@ export function PlanEditor({ onSaved }: { onSaved: (first: boolean, next: AppSta
         {ROOM_TYPES.map(k => (
           <Chip
             key={k}
-            label={TYPES[k].label}
+            label={`${ROOM_EMOJI[k]} ${TYPES[k].label}`}
             color={c.room[k]}
             onPress={() => {
               let id = '';

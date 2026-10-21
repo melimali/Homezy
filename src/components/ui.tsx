@@ -16,8 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { displayName, useAuth } from '@/auth/AuthProvider';
-import { fmtShort } from '@/domain/logic';
+import { fmtShort, notifs } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
@@ -34,15 +33,15 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 27, lineHeight: 31, color: c.ink, letterSpacing: -0.2 };
-    case 'h2': return { fontFamily: fonts.display, fontSize: 17, color: c.ink };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 35, color: c.ink, letterSpacing: -0.2 };
+    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 19, color: c.ink };
     case 'h3': return { fontFamily: fonts.display, fontSize: 15, color: c.ink };
-    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink };
-    case 'small': return { fontFamily: fonts.body, fontSize: 12, color: c.muted };
+    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink };
+    case 'small': return { fontFamily: fonts.body, fontSize: 13, color: c.muted };
     case 'tiny': return { fontFamily: fonts.body, fontSize: 12, color: c.muted };
     case 'eyebrow':
       return { fontFamily: fonts.bodyBlack, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: c.warm, marginBottom: 6 };
-    case 'lead': return { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: c.muted, marginTop: 8 };
+    case 'lead': return { fontFamily: fonts.body, fontSize: 16, lineHeight: 23, color: c.muted, marginTop: 8 };
     default: return { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: c.ink };
   }
 }
@@ -57,7 +56,7 @@ export function Screen({ children, scrollEnabled = true, header = true }: { chil
       style={{ flex: 1, backgroundColor: c.bg }}
       scrollEnabled={scrollEnabled}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: 32 }]}
+      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: header ? 32 : insets.bottom + 32 }]}
     >
       {header && <AppHeader />}
       {children}
@@ -69,9 +68,9 @@ export function AppHeader() {
   const now = useNow();
   const c = useColors();
   const router = useRouter();
-  const { status, user } = useAuth();
-  // Hesabım ekranı ev kurulduktan sonra açılır; kurulum ekranında düğme görünmez.
-  const setup = useStore().state.setup;
+  const { state } = useStore();
+  // Zil ev kurulduktan sonra görünür; kurulum ekranında yok.
+  const n = state.setup ? notifs(state, now).length : 0;
   return (
     <View style={styles.header}>
       <View style={[styles.brandPill, { backgroundColor: brand.navy }]}>
@@ -79,23 +78,43 @@ export function AppHeader() {
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <T v="small" style={{ fontFamily: fonts.bodyBold }}>{fmtShort(now)}</T>
+          <T v="small" style={{ fontFamily: fonts.bodyBold, fontSize: 13 }}>{fmtShort(now)}</T>
         </View>
-        {setup && (
+        {state.setup && (
           <Pressable
-            onPress={() => router.push('/hesap')}
+            onPress={() => router.push('/bildirimler')}
             accessibilityRole="button"
-            accessibilityLabel="Hesabım"
+            accessibilityLabel={n ? `Bildirimler, ${n} yeni` : 'Bildirimler'}
             hitSlop={6}
-            style={({ pressed }) => [styles.avatar, { backgroundColor: c.accent, boxShadow: `0 2px 0 ${c.shadow}` }, pressed && { transform: [{ translateY: 1 }] }]}
+            style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }, pressed && { transform: [{ translateY: 1 }] }]}
           >
-            <Text style={{ fontFamily: fonts.displayBold, fontSize: 15, color: c.onAccent }}>
-              {(status === 'account' ? displayName(user) : 'M').slice(0, 1).toLocaleUpperCase('tr-TR')}
-            </Text>
+            <Text style={{ fontSize: 18 }}>🔔</Text>
+            {n > 0 && (
+              <View style={[styles.badge, { backgroundColor: c.late }]}>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{n}</Text>
+              </View>
+            )}
           </Pressable>
         )}
       </View>
     </View>
+  );
+}
+
+/** Alt ekranlardaki "geri" bağlantısı. */
+export function BackLink({ label = 'Geri' }: { label?: string }) {
+  const c = useColors();
+  const router = useRouter();
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  return (
+    <Pressable
+      onPress={back}
+      accessibilityRole="button"
+      hitSlop={8}
+      style={({ pressed }) => [styles.back, { backgroundColor: c.surface }, pressed && { opacity: 0.7 }]}
+    >
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>‹  {label}</Text>
+    </Pressable>
   );
 }
 
@@ -214,7 +233,9 @@ export const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6 },
   brandPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 102, height: 34 },
-  avatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 },
   dateChip: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   card: { borderRadius: radius.card, padding: 16, gap: 12 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Linking, Platform } from 'react-native';
-import Purchases, { type CustomerInfo } from 'react-native-purchases';
+import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
 
@@ -21,6 +21,9 @@ const apiKey = Platform.select({
 
 export const purchasesEnabled = Boolean(apiKey);
 
+/** Mağaza fiyatı henüz okunamadıysa gösterilen aylık fiyat. Gerçek fiyat mağaza panelinde girilir. */
+export const PREMIUM_PRICE = '$7';
+
 export type Premium = {
   active: boolean;
   /** Aboneliğin biteceği ya da yenileneceği zaman (ms). */
@@ -30,10 +33,14 @@ export type Premium = {
 };
 
 type RestoreResult = { ok: true; active: boolean } | { ok: false; error: string };
+type BuyResult = { ok: true; active: boolean } | { ok: false; cancelled?: boolean; error: string };
 
 type PurchasesCtx = {
   ready: boolean;
   premium: Premium;
+  /** Mağazanın gösterdiği aylık fiyat (ör. "$7.00"); okunamadıysa PREMIUM_PRICE. */
+  price: string;
+  buy: () => Promise<BuyResult>;
   restore: () => Promise<RestoreResult>;
   /** Mağazanın abonelik yönetim sayfasını açar (iptal etme, plan değiştirme). */
   manage: () => Promise<void>;
@@ -53,6 +60,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [ready, setReady] = useState(false);
   const [premium, setPremium] = useState<Premium>(none);
+  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
 
@@ -68,6 +76,9 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     Purchases.configure({ apiKey, appUserID: user?.id ?? null });
     Purchases.addCustomerInfoUpdateListener(apply);
     Purchases.getCustomerInfo().then(apply).catch(() => {}).finally(() => setReady(true));
+    Purchases.getOfferings()
+      .then(o => setPkg(o.current?.monthly ?? o.current?.availablePackages[0] ?? null))
+      .catch(() => {});
     return () => {
       Purchases.removeCustomerInfoUpdateListener(apply);
     };
@@ -96,6 +107,24 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     })();
   }, [user?.id, apply]);
 
+  const buy = useCallback(async (): Promise<BuyResult> => {
+    if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };
+    try {
+      let p = pkg;
+      if (!p) {
+        const o = await Purchases.getOfferings();
+        p = o.current?.monthly ?? o.current?.availablePackages[0] ?? null;
+      }
+      if (!p) return { ok: false, error: 'Premium paketi şu an bulunamadı. Biraz sonra tekrar dene.' };
+      const { customerInfo } = await Purchases.purchasePackage(p);
+      apply(customerInfo);
+      return { ok: true, active: !!customerInfo.entitlements.active[ENTITLEMENT] };
+    } catch (e) {
+      if ((e as { userCancelled?: boolean }).userCancelled) return { ok: false, cancelled: true, error: '' };
+      return { ok: false, error: 'Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.' };
+    }
+  }, [pkg, apply]);
+
   const restore = useCallback(async (): Promise<RestoreResult> => {
     if (!apiKey) return { ok: false, error: 'Satın almalar bu sürümde henüz açık değil.' };
     try {
@@ -114,7 +143,11 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     await Linking.openURL(managementURL.current ?? fallback).catch(() => {});
   }, []);
 
-  const value = useMemo(() => ({ ready: ready || !apiKey, premium, restore, manage }), [ready, premium, restore, manage]);
+  const price = pkg?.product.priceString ?? PREMIUM_PRICE;
+  const value = useMemo(
+    () => ({ ready: ready || !apiKey, premium, price, buy, restore, manage }),
+    [ready, premium, price, buy, restore, manage],
+  );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }
 

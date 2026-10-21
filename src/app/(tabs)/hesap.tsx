@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Btn, Card, Pill, Screen, T, XBtn } from '@/components/ui';
+import { Btn, Card, Pill, Screen, T } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { seed } from '@/domain/logic';
 import { LEGAL } from '@/lib/links';
@@ -37,8 +37,6 @@ export default function Hesap() {
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
   const account = status === 'account';
   const name = account ? displayName(user) : 'Misafir';
-
-  const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const doRestore = async () => {
     setBusy('restore');
@@ -84,11 +82,8 @@ export default function Hesap() {
     );
 
   return (
-    <Screen header={false}>
-      <View style={st.head}>
-        <T v="h1">Hesabım</T>
-        <XBtn label="Kapat" onPress={close} />
-      </View>
+    <Screen>
+      <T v="h1">Hesabım</T>
 
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -126,7 +121,12 @@ export default function Hesap() {
               : 'Üyeliğin etkin.'}
           </T>
         ) : (
-          <T style={{ fontSize: 14 }}>Yapay zekâ ile buzdolabı ve kıyafet taraması Premium ile açılır.</T>
+          <>
+            <T style={{ fontSize: 14 }}>
+              Ücretsiz planda fotoğrafla tarama haftada 2 kez. Premium ile günde 2 kez taratırsın.
+            </T>
+            <Btn kind="primary" label="Premium'a bak ⭐" onPress={() => router.push('/premium')} />
+          </>
         )}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <Btn label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} />
@@ -139,6 +139,11 @@ export default function Hesap() {
         {!purchasesEnabled && (
           <T v="small">Geliştirme sürümü: mağaza anahtarları henüz girilmedi.</T>
         )}
+      </Card>
+
+      <Card style={{ gap: 4 }}>
+        <LinkRow label="🔔  Bildirimler ve sabah özeti" onPress={() => router.push('/bildirimler')} />
+        <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
       </Card>
 
       <Card style={{ gap: 4 }}>
@@ -169,7 +174,6 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const st = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6 },
   avatar: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },

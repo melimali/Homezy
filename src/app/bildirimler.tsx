@@ -2,13 +2,11 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Btn, Card, EmptyMsg, Pill, Screen, T } from '@/components/ui';
+import { BackLink, Btn, Card, EmptyMsg, Screen, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
 import type { Settings } from '@/domain/types';
 import { getPermission, notificationsAvailable, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useNow } from '@/hooks/useNow';
-import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -21,8 +19,6 @@ export default function Bildirimler() {
   const now = useNow();
   const ns = notifs(S, now);
   const s = S.settings;
-  const { status, user } = useAuth();
-  const { premium } = usePurchases();
   const [perm, setPerm] = useState<'granted' | 'denied' | 'undetermined'>('granted');
 
   useFocusEffect(
@@ -53,7 +49,8 @@ export default function Bildirimler() {
   const color = { late: c.late, today: c.warm, ok: c.hi };
 
   return (
-    <Screen>
+    <Screen header={false}>
+      <BackLink />
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
@@ -112,27 +109,6 @@ export default function Bildirimler() {
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
         <Toggle label="Çamaşır" sub="3 ve daha fazla kirli parça birikince" value={s.laundry} onChange={v => set('laundry', v)} />
       </Card>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Hesap ve üyelik"
-        onPress={() => router.push('/hesap')}
-        style={({ pressed }) => [styles.notif, { backgroundColor: c.surface, borderColor: c.line, alignItems: 'center' }, pressed && { transform: [{ translateY: 1 }] }]}
-      >
-        <View style={[styles.avatar, { backgroundColor: c.accent }]}>
-          <Text style={{ fontFamily: fonts.displayBold, fontSize: 17, color: c.onAccent }}>
-            {(status === 'account' ? displayName(user) : 'M').slice(0, 1).toLocaleUpperCase('tr-TR')}
-          </Text>
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <T v="bold" style={{ fontSize: 14 }}>Hesap ve üyelik</T>
-          <T v="small" style={{ fontSize: 13 }} numberOfLines={1}>
-            {status === 'account' ? user?.email : 'Hesap oluştur, evin yedeklensin'}
-          </T>
-        </View>
-        {premium.active && <Pill k="ok" label="Premium" />}
-        <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
-      </Pressable>
-
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>
       )}
@@ -175,7 +151,6 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub: string; v
 const styles = StyleSheet.create({
   notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: 18, borderWidth: 1.5 },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
-  avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 1.5 },
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },

@@ -144,6 +144,28 @@ export default function Hesap() {
       <Card style={{ gap: 4 }}>
         <LinkRow label="🔔  Bildirimler ve sabah özeti" onPress={() => router.push('/bildirimler')} />
         <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
+        <LinkRow label="🐾  Evim hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
+        <LinkRow label="🔧  Ev bakımı, faturalar, garantiler" onPress={() => router.push('/bakim')} />
+      </Card>
+
+      <Card>
+        <T v="h2">Yakında 🚀</T>
+        <View style={st.soon}>
+          <Text style={{ fontSize: 24 }}>🧊</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T v="bold" style={{ fontSize: 15 }}>Akıllı buzdolabı</T>
+            <T v="small">Fotoğraftan ürünleri tanır, ne kaldığını ve ne alınacağını kendisi yazar.</T>
+          </View>
+          <Pill k="today" label="Premium" />
+        </View>
+        <View style={st.soon}>
+          <Text style={{ fontSize: 24 }}>📱</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T v="bold" style={{ fontSize: 15 }}>Ana ekran widget{"'"}ı</T>
+            <T v="small">Bugünün işleri ve serin telefonunun ana ekranında.</T>
+          </View>
+          <Pill k="ok" label="Ücretsiz" />
+        </View>
       </Card>
 
       <Card style={{ gap: 4 }}>
@@ -177,4 +199,5 @@ const st = StyleSheet.create({
   avatar: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
+  soon: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

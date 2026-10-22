@@ -85,6 +85,8 @@ function RootStack() {
         <Stack.Screen name="magaza" />
         <Stack.Screen name="spor" />
         <Stack.Screen name="gunluk" />
+        <Stack.Screen name="bakim" />
+        <Stack.Screen name="evim" />
         <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>

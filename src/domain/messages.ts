@@ -39,6 +39,13 @@ const TASK_LINES: [RegExp, string[]][] = [
   [/ayakkabı/i, ['Ayakkabılar sıraya girmek istiyor 👟👞', 'Ayakkabılık bir düzene kavuşsun 👠✨']],
   [/masa/i, ['Masa ferahlasın, fikirler uçuşsun 💡🗂️', 'Çalışma masana minik bir düzen 📚✨']],
   [/kablo|şarj/i, ['Kablolar birbirine dolanmış olabilir 🔌🧶', 'Şarj köşesine bir düzen verelim 🔋']],
+  [/kombi|petek/i, ['Kombi kışa hazır mı? Küçük bir kontrol 🔥🔧', 'Petekler ısınsın, ev mis gibi sıcacık olsun ♨️']],
+  [/klima/i, ['Klima nefes alsın, filtresi temizlensin ❄️🧽', 'Temiz filtre, ferah hava 🌬️']],
+  [/arıtma/i, ['Su arıtmanın filtresi değişim istiyor 💧🔧']],
+  [/dedektör/i, ['Dedektörün düğmesine bir bas, bip desin 🔔🙂', 'Duman dedektörü hâlâ nöbette mi? Bir test edelim 🚨']],
+  [/sayaç/i, ['Sayaçların fotoğrafını çek, faturayı karşılaştır 📸🔌', 'Ay doldu, sayaç fotoğrafı zamanı 📸💧']],
+  [/mama|tüy|battaniye/i, ['Patili dostun teşekkür eder 🐾💛', 'Minik dostun için minik bir iş 🐶🐱']],
+  [/halı/i, ['Halı biraz ilgi istiyor 🧶🧹']],
 ];
 
 const ROOM_LINES: Record<RoomType, string[]> = {
@@ -59,10 +66,12 @@ const WATER_LINES = [
   'için sulama günü, büyümeye devam 🌱✨',
 ];
 
-/** Rutin ya da bitki bildirimi. */
-export function taskLine(o: { name: string; type: RoomType; plant: boolean; k: StatusKind; key: string; now: number }) {
+const CARE_LINES = ['Evin küçük bir bakım istiyor 🔧🏡', 'Minik bir bakım, uzun ömürlü bir ev 🛠️✨'];
+
+/** Rutin, bitki ya da ev bakımı bildirimi. `type` null ise ev bakımı. */
+export function taskLine(o: { name: string; type: RoomType | null; plant: boolean; k: StatusKind; key: string; now: number }) {
   if (o.plant) return `${o.name} ${pick(WATER_LINES, o.key, o.now)}`;
-  const pool = TASK_LINES.find(([re]) => re.test(o.name))?.[1] ?? ROOM_LINES[o.type];
+  const pool = TASK_LINES.find(([re]) => re.test(o.name))?.[1] ?? (o.type ? ROOM_LINES[o.type] : CARE_LINES);
   return pick(pool, o.key, o.now);
 }
 
@@ -157,4 +166,11 @@ export function sportLine(key: string, now: number) {
     key,
     now,
   );
+}
+
+/** Pazar akşamı haftalık özet. */
+export function weeklyLine(o: { done: number; days: number; score: number; best: string | null }) {
+  if (!o.done) return 'Bu hafta sakin geçti 🌙 Yeni haftaya minik bir işle başlayalım mı?';
+  const best = o.best ? ` En parlak oda: ${o.best} ✨` : '';
+  return `Bu hafta ${o.done} iş yaptın, ${o.days} gün evine vakit ayırdın 💪 Ev puanı %${o.score}.${best}`;
 }

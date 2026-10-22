@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RoomBody } from '@/components/RoomBody';
 import { Btn, Pill, Screen, T } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
-import { roomCounts } from '@/domain/logic';
+import { cleanWord, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
@@ -51,6 +51,7 @@ export default function Odalar() {
                     {rc.late > 0 && <Pill k="late" label={`${rc.late} gecikti`} />}
                     {rc.today > 0 && <Pill k="today" label={`${rc.today} bugün`} />}
                     {!rc.late && !rc.today && <Pill k="ok" label="Her şey yolunda ✓" />}
+                    <Pill k="neutral" label={`%${roomClean(S, id, now)} · ${cleanWord(roomClean(S, id, now))}`} />
                   </View>
                 </View>
                 <Text style={{ color: c.ink, fontSize: 26, transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}>›</Text>

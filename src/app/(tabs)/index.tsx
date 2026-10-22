@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { House3D } from '@/components/House3D';
 import { Btn, Screen, T } from '@/components/ui';
-import { allTasks, greet, greeting, shopItems } from '@/domain/logic';
+import { allTasks, cleanWord, greet, greeting, homeScore, shopItems, weekSummary } from '@/domain/logic';
 import { BUILT, houseLine, houseProgress, type HouseProgress } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
@@ -43,11 +43,14 @@ export default function Home() {
       <StreakCard progress={hp} points={S.play.points} />
 
       <House3D state={S} onOpenRoom={open} now={now} build={hp} />
-      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
+      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Odalar kirlendikçe solar ve tozlanır, iş yapınca parlar. Bir odaya dokun.</T>
+
+      <CleanCard now={now} />
 
       <View style={styles.quick}>
         <Quick emoji="🏃" label="Spor" onPress={() => router.push('/spor')} />
         <Quick emoji="📔" label="Günlük" onPress={() => router.push('/gunluk')} />
+        <Quick emoji="🔧" label="Bakım" onPress={() => router.push('/bakim')} />
         <Quick emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
       </View>
 
@@ -92,6 +95,39 @@ function StreakCard({ progress: p, points }: { progress: HouseProgress; points: 
         </View>
       )}
       <Text style={[styles.streakLine, { color: warn ? c.late : c.ink }]}>{houseLine(p)}</Text>
+    </View>
+  );
+}
+
+/** Ev puanı (odaların temizlik yüzdesi) ve son 7 günün özeti. */
+function CleanCard({ now }: { now: number }) {
+  const c = useColors();
+  const { state: S } = useStore();
+  const score = homeScore(S, now);
+  const w = weekSummary(S, now);
+  const color = score >= 80 ? c.ok : score >= 55 ? c.warm : c.late;
+  return (
+    <View style={[styles.streak, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` }]}>
+      <View style={styles.streakTop}>
+        <View style={styles.stat}>
+          <Text style={{ fontSize: 22 }}>🧽</Text>
+          <View>
+            <Text style={[styles.statN, { color }]}>%{score}</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>ev puanı · {cleanWord(score)}</Text>
+          </View>
+        </View>
+        <View style={styles.stat}>
+          <Text style={{ fontSize: 22 }}>📅</Text>
+          <View>
+            <Text style={[styles.statN, { color: c.ink }]}>{w.done} iş</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>son 7 günde · {w.days} gün aktif</Text>
+          </View>
+        </View>
+      </View>
+      <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
+        <View style={[styles.barFill, { width: `${score}%`, backgroundColor: color }]} />
+      </View>
+      {w.best && <Text style={[styles.streakLine, { color: c.ink }]}>Bu haftanın en parlak odası: {w.best} ✨</Text>}
     </View>
   );
 }

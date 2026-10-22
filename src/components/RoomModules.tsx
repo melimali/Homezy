@@ -1,12 +1,14 @@
-import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
-import { CATS, CSTATE, LAUNDRY_THRESHOLD, LV, NEXT_CSTATE, PHOTO_MAX_AGE } from '@/domain/constants';
-import { agoText, daysSince, sortByDue, uid } from '@/domain/logic';
-import type { ClothState, WardrobeFilter } from '@/domain/types';
+import { CATS, CSTATE, LAUNDRY_THRESHOLD, LV, NEXT_CSTATE, PHOTO_MAX_AGE, TYPES, WASH, WASH_TYPES } from '@/domain/constants';
+import { fmtDate, inDays, parseDate, seasonalNow } from '@/domain/home';
+import { agoText, daysSince, donateList, expiryText, laundryPlan, sortByDue, uid } from '@/domain/logic';
+import type { ClothState, WardrobeFilter, WashType } from '@/domain/types';
+import { useNow } from '@/hooks/useNow';
+import { persistPhoto } from '@/lib/persistPhoto';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -28,6 +30,11 @@ export function Wardrobe({ rid }: { rid: string }) {
   const dirty = cnt('kirli');
   const [name, setName] = useState('');
   const [cat, setCat] = useState(CATS[0]);
+  const [wash, setWash] = useState<WashType>('renkli');
+  const now = useNow();
+  const plan = laundryPlan(list);
+  const old = donateList(list, now);
+  const season = seasonalNow(state, now).filter(x => x.wardrobe);
 
   const stateColor: Record<ClothState, [string, string]> = {
     temiz: [c.okSoft, c.ok],
@@ -40,7 +47,7 @@ export function Wardrobe({ rid }: { rid: string }) {
     if (!n) return;
     update(D => {
       const w = D.mod[rid];
-      (w.wardrobe ||= []).push({ id: uid(), name: n, cat, state: 'temiz' });
+      (w.wardrobe ||= []).push({ id: uid(), name: n, cat, state: 'temiz', wash, added: Date.now(), worn: null });
       if (w.filter !== 'all' && w.filter !== 'temiz') w.filter = 'all';
     });
     setName('');
@@ -53,7 +60,38 @@ export function Wardrobe({ rid }: { rid: string }) {
   return (
     <Card>
       <SecHead title="Gardırop" right={`${list.length} parça`} />
-      {dirty >= LAUNDRY_THRESHOLD && <Callout>{dirty} parça kirli. Bir makine dolusu birikti.</Callout>}
+      {plan.length > 0 && (
+        <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
+          <T v="bold" style={{ fontSize: 14 }}>🧺 Çamaşır planı</T>
+          {plan.map(g => (
+            <T key={g.w} style={{ fontSize: 14 }}>
+              {WASH[g.w].emoji} {WASH[g.w].label}: {g.items.length} parça{' '}
+              {g.full ? `· makine dolusu, yıkayabilirsin (${WASH[g.w].hint})` : `· ${LAUNDRY_THRESHOLD - g.items.length} parça daha birikince`}
+            </T>
+          ))}
+        </View>
+      )}
+      {season.map(x => (
+        <Callout key={x.id}>
+          {x.emoji} Mevsim değişimi zamanı: {x.name.replace('Dolap değişimi: ', '')}. Bitince Ev bakımı ekranından işaretle.
+        </Callout>
+      ))}
+      {old.length > 0 && (
+        <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
+          <T v="bold" style={{ fontSize: 14 }}>💝 Bağış önerisi</T>
+          <T v="small">Bunları bir yıldır giymedin. İhtiyacı olan birine verebilirsin.</T>
+          {old.map(x => (
+            <View key={x.id} style={styles.addRow}>
+              <T style={{ flex: 1, fontSize: 14 }}>{x.name}</T>
+              <Btn small label="Giyiyorum" onPress={() => update(D => {
+                const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
+                if (y) y.worn = Date.now();
+              })} />
+              <Btn small kind="primary" label="Bağışladım" onPress={() => update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== x.id)))} />
+            </View>
+          ))}
+        </View>
+      )}
       <View style={styles.wrapRow}>
         {filters.map(([k, l, n]) => (
           <Chip key={k} on={f === k} label={`${l} ${n}`} onPress={() => update(D => void (D.mod[rid].filter = k))} />
@@ -66,14 +104,27 @@ export function Wardrobe({ rid }: { rid: string }) {
             <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold">{x.name}</T>
-                <T v="small">{x.cat}</T>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${x.name} yıkama türü: ${WASH[x.wash ?? 'renkli'].label}. Değiştir`}
+                  onPress={() => update(D => {
+                    const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
+                    if (y) y.wash = WASH_TYPES[(WASH_TYPES.indexOf(y.wash ?? 'renkli') + 1) % WASH_TYPES.length];
+                  })}
+                  hitSlop={4}
+                >
+                  <T v="small">{x.cat} · {WASH[x.wash ?? 'renkli'].emoji} {WASH[x.wash ?? 'renkli'].label}</T>
+                </Pressable>
               </View>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştir`}
                 onPress={() => update(D => {
                   const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
-                  if (y) y.state = NEXT_CSTATE[y.state];
+                  if (!y) return;
+                  y.state = NEXT_CSTATE[y.state];
+                  // Kirliye geçtiyse giyildi demektir (bağış önerisi için).
+                  if (y.state === 'kirli') y.worn = Date.now();
                 })}
                 style={[styles.state, { backgroundColor: bg }]}
               >
@@ -85,9 +136,12 @@ export function Wardrobe({ rid }: { rid: string }) {
         })}
         {!items.length && <EmptyMsg>{list.length ? 'Bu durumda kıyafet yok.' : 'Dolabın boş. Aşağıdan kıyafet ekle.'}</EmptyMsg>}
       </View>
-      <T v="tiny">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek.</T>
+      <T v="tiny">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek. Yıkama türüne dokunarak onu değiştir.</T>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
         {CATS.map(k => <Chip key={k} small on={cat === k} label={k} onPress={() => setCat(k)} />)}
+      </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+        {WASH_TYPES.map(k => <Chip key={k} small on={wash === k} label={`${WASH[k].emoji} ${WASH[k].label}`} onPress={() => setWash(k)} />)}
       </ScrollView>
       <View style={styles.addRow}>
         <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" />
@@ -98,24 +152,6 @@ export function Wardrobe({ rid }: { rid: string }) {
 }
 
 /* ---------- buzdolabı fotoğrafı ---------- */
-
-/** Seçilen fotoğrafı uygulamanın kalıcı klasörüne kopyalar (önbellek temizlenince kaybolmasın). */
-function persistPhoto(uri: string, previous?: string | null): string {
-  if (Platform.OS === 'web') return uri;
-  const dir = new Directory(Paths.document, 'buzdolabi');
-  if (!dir.exists) dir.create({ intermediates: true });
-  const dest = new File(dir, `buzdolabi-${Date.now()}.jpg`);
-  new File(uri).copy(dest);
-  if (previous) {
-    try {
-      const old = new File(previous);
-      if (old.exists) old.delete();
-    } catch {
-      // Eski dosya silinemezse sorun değil.
-    }
-  }
-  return dest.uri;
-}
 
 export function Fridge({ rid }: { rid: string }) {
   const c = useColors();
@@ -184,6 +220,17 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
   const st = state.mod[rid].stock || [];
   const need = st.filter(x => x.lvl !== 'var');
   const [name, setName] = useState('');
+  const fridge = TYPES[state.rooms[rid].type].mod === 'buzdolabi';
+  const now = useNow();
+  const [skt, setSkt] = useState<string | null>(null);
+  const [sktText, setSktText] = useState('');
+  const setExp = (id: string, exp: number | null) => {
+    update(D => {
+      const y = D.mod[rid].stock?.find(z => z.id === id);
+      if (y) y.exp = exp;
+    });
+    setSkt(null);
+  };
 
   const add = () => {
     const n = name.trim();
@@ -200,8 +247,30 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
       <SecHead title={title} right={`${need.length} eksik`} />
       <View>
         {st.map((x, i) => (
-          <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <T v="bold" style={[{ flex: 1, minWidth: 0 }, x.lvl === 'yok' && { color: c.muted, textDecorationLine: 'line-through' }]}>{x.name}</T>
+          <View key={x.id} style={i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }}>
+          <View style={styles.line}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <T v="bold" style={x.lvl === 'yok' && { color: c.muted, textDecorationLine: 'line-through' }}>{x.name}</T>
+              {fridge && x.lvl !== 'yok' && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${x.name} son kullanma tarihi`}
+                  hitSlop={4}
+                  onPress={() => {
+                    setSkt(skt === x.id ? null : x.id);
+                    setSktText(x.exp ? fmtDate(x.exp) : '');
+                  }}
+                >
+                  {x.exp != null ? (
+                    <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: { late: c.late, today: c.today, ok: c.muted }[expiryText(x.exp, now).k] }}>
+                      ⏳ {expiryText(x.exp, now).label}
+                    </Text>
+                  ) : (
+                    <T v="tiny">+ son kullanma tarihi</T>
+                  )}
+                </Pressable>
+              )}
+            </View>
             <View style={[styles.seg, { backgroundColor: c.surface2 }]} accessibilityRole="radiogroup" accessibilityLabel={`${x.name} durumu`}>
               {LV.map(([k, l]) => {
                 const on = x.lvl === k;
@@ -212,7 +281,10 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
                     accessibilityState={{ selected: on }}
                     onPress={() => update(D => {
                       const y = D.mod[rid].stock?.find(z => z.id === x.id);
-                      if (y) y.lvl = k;
+                      if (!y) return;
+                      y.lvl = k;
+                      // Biten ürünün tarihi yenisi alınınca geçersiz.
+                      if (k === 'yok') y.exp = null;
                     })}
                     style={[styles.segBtn, on && { backgroundColor: lvColor[k] }]}
                   >
@@ -222,6 +294,25 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
               })}
             </View>
             <XBtn label={`${x.name} sil`} onPress={() => update(D => void (D.mod[rid].stock = D.mod[rid].stock?.filter(z => z.id !== x.id)))} />
+          </View>
+          {skt === x.id && (
+            <View style={[styles.shop, { backgroundColor: c.surface2, marginBottom: 10 }]}>
+              <View style={styles.wrapRow}>
+                {([['Yarın', 1], ['2 gün', 2], ['1 hafta', 7], ['2 hafta', 14], ['1 ay', 30]] as [string, number][]).map(([l, d]) => (
+                  <Chip key={l} small on={false} label={l} onPress={() => setExp(x.id, inDays(d))} />
+                ))}
+              </View>
+              <View style={styles.addRow}>
+                <Field value={sktText} onChangeText={setSktText} placeholder="GG.AA.YYYY" keyboardType="numbers-and-punctuation" />
+                <Btn small kind="primary" label="Kaydet" onPress={() => {
+                  const d = parseDate(sktText);
+                  if (d == null) return toast('Tarihi 12.05.2027 gibi yaz.');
+                  setExp(x.id, d);
+                }} />
+                {x.exp != null && <Btn small label="Kaldır" onPress={() => setExp(x.id, null)} />}
+              </View>
+            </View>
+          )}
           </View>
         ))}
         {!st.length && <EmptyMsg>Henüz bir şey eklenmedi.</EmptyMsg>}

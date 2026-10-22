@@ -40,7 +40,7 @@ function forCloud(S: AppState): AppState {
   const mod = Object.fromEntries(
     Object.entries(S.mod).map(([k, m]) => [k, { ...m, photo: null, photoAt: null }]),
   );
-  return { ...S, mod };
+  return { ...S, mod, care: (S.care || []).map(t => ({ ...t, photo: null })) };
 }
 
 /** Bulut yedeğini telefondaki veriyle birleştirirken fotoğrafları korur. */
@@ -49,6 +49,10 @@ export function mergeFromCloud(remote: AppState, local: AppState): AppState {
   for (const [k, m] of Object.entries(S.mod)) {
     const l = local.mod[k];
     if (l?.photo) S.mod[k] = { ...m, photo: l.photo, photoAt: l.photoAt ?? null };
+  }
+  for (const t of S.care || []) {
+    const l = local.care?.find(x => x.id === t.id);
+    if (l?.photo) t.photo = l.photo;
   }
   return S;
 }

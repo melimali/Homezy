@@ -15,7 +15,8 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
   - Salon ve balkon: bitkiler ve sulama aralıkları.
   - Antre ve çalışma odası: sadece rutinler.
 - **Sekmeler:** Ev, Bugün (gecikenler / bugün / bu hafta + alınacaklar), Bildirimler, Plan (ev planını düzenleme).
-- **Bildirimler:** Günlük sabah özeti, saati kullanıcı seçer. Türler: rutin hatırlatmaları, eksik ürünler, kirli çamaşır. Her tür ayrı ayrı açılıp kapatılabilir.
+- **Bildirimler:** Günlük sabah özeti, saati kullanıcı seçer. Türler: rutin hatırlatmaları, eksik ürünler, çamaşır ve dolap, faturalar ve bakım, son kullanma tarihleri, haftalık özet (pazar 19:00), seri ve spor hatırlatmaları. Her tür ayrı ayrı açılıp kapatılabilir.
+- **Evin düzeni:** Plandan sonra 7 kurulum sorusu (evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, bitki; cevaba göre etiketli rutinler eklenir / kalkar). Canlı ev haritası (oda temizlik yüzdesi, ev puanı). Ertele / bu sefer atla. Esnek zamanlama (sıklığın yarısı kadar gün tolerans). Her rutinde tahmini süre; "Ne kadar vaktin var?" (10/20/30/60 dk). Modlar: misafir, tatil (rutinler donar), yoğun/hasta (sadece günlük işler), bayram temizliği. Ev bakımı ekranı: bakım işleri, faturalar, garanti belgeleri, mevsimlik işler. Gardırop: yıkama türüne göre çamaşır planı, mevsim değişimi, bağış önerisi. Buzdolabı: son kullanma tarihi. "Yakında" kartı: akıllı buzdolabı (Premium), ana ekran widget'ı (ücretsiz).
 
 Çalışan HTML prototipi: `prototype/layfapp.html`. Bütün akış, varsayılan rutinler (`TYPES`) ve bildirim kuralları (`notifs()`) orada. Gerçek uygulamaya taşırken referans olarak kullan.
 
@@ -35,7 +36,8 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 ## Kod yapısı
 
 - Expo SDK 58, Expo Router, ekranlar `src/app/` altında. Expo API'leri sürümden sürüme değişiyor; yeni bir API kullanmadan önce `AGENTS.md`'deki gibi o sürümün belgesine bak. Paket eklerken `npx expo install`.
-- Prototipin kuralları `src/domain/` altında (`constants.ts`: `TYPES`, `STOCK_DEF`; `logic.ts`: `status()`, `notifs()`, `seed()`). Fonksiyonlar `now` parametresi alır, böylece ileri bir günün durumu da hesaplanabilir.
+- Prototipin kuralları `src/domain/` altında (`constants.ts`: `TYPES`, `STOCK_DEF`, `WASH`; `logic.ts`: `status()`, `statusIn()`, `notifs()`, `seed()`, `roomClean()`, `quickPick()`; `home.ts`: kurulum soruları `PROFILE` / `applyProfile()`, modlar, faturalar, garantiler, mevsimlik işler). Fonksiyonlar `now` parametresi alır, böylece ileri bir günün durumu da hesaplanabilir. Ekranlar ve bildirimler `statusIn()` kullanır (esnek zamanlama ayarı ve etkin mod uygulanır).
+- Ev bakımı işleri bir odaya bağlı değil: `AppState.care`, oda kimliği yerine `CARE` (`'_ev'`), liste adı `'care'`.
 - Uygulama verisi tek bir `AppState` nesnesi (prototipteki `S` ile aynı şekil). `useStore().update(draft => ...)` ile değiştirilir; her değişiklik `src/data/db.ts` ile SQLite tablolarına baştan yazılır. Web önizlemesinde `db.web.ts` localStorage kullanır. Şemayı değiştirirsen `SCHEMA_VERSION`'ı artır ve okuma tarafına geçiş ekle.
 - Sabah özeti: `src/notifications/schedule.ts` önümüzdeki 7 sabahı o günün tarihine göre hesaplayıp tek seferlik bildirim olarak zamanlar; veri değiştikçe yeniden zamanlanır.
 - Renkler `src/theme/index.ts`'te açık ve koyu tema için. Bileşenlerde renk kodu yazma, `useColors()` kullan.

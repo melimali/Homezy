@@ -10,9 +10,9 @@ Kod tarafı hazır: ödeme ekranı (`src/components/PremiumChoice.tsx`), satın 
 |---|---|---|
 | Aylık | **6,99 $** | |
 | Aylık, ilk ay | **4,99 $** | Sadece daha önce abone olmamış kişiye. Google Play'de "giriş teklifi" olarak tanımlanır. |
-| Yıllık | **59,99 $** | Ekranda "N ay bedava" yazar; mağaza fiyatından hesaplanır (yarım aya aşağı yuvarlanır). |
+| Yıllık | **59,99 $** | Ekranda 12 aylık fiyata göre indirim oranı yazar (≈ %28), mağaza fiyatından hesaplanır. |
 
-**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL**: 1,5 ay bedava (10,5 × 149 TL). İlk ay teklifinin TL fiyatı henüz kararlaştırılmadı.
+**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim). İlk ay teklifinin TL fiyatı henüz kararlaştırılmadı.
 
 Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı mağazaya girilen TL fiyatını görür, kodda TL yazılı değil. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
 

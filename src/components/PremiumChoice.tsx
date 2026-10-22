@@ -23,7 +23,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { premium, prices, annualPerMonth, annualFreeMonths, introPrice, buy, restore } = usePurchases();
+  const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   const [plan, setPlan] = useState<Plan>('monthly');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
@@ -86,7 +86,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
             title="Yıllık"
             price={`${prices.annual}/yıl`}
             note={annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
-            badge={annualFreeMonths > 0 ? `${String(annualFreeMonths).replace('.', ',')} ay bedava` : undefined}
+            badge={annualSave > 0 ? `%${annualSave} indirim` : undefined}
           />
           <PlanRow
             selected={plan === 'monthly'}

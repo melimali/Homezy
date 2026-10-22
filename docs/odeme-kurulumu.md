@@ -41,7 +41,7 @@ Play Console → **Para kazanma → Ürünler → Abonelikler → Abonelik oluş
 
 1. Ürün kimliği: `layfapp_premium`, ad: Layfapp Premium.
 2. İki **temel plan**:
-   - `aylik`: otomatik yenilenen, 1 ay, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, sonra listede **Türkiye**'yi bul ve fiyatı elle **149,99 TRY** yap.
+   - `aylik`: otomatik yenilenen, 1 ay, **geriye dönük uyumlu (backwards compatible)** olarak işaretli, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, sonra listede **Türkiye**'yi bul ve fiyatı elle **149,99 TRY** yap.
    - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**; Türkiye için elle **1.564,99 TRY**.
 3. `aylik` planına **teklif** ekle: kimlik `ilk-ay`, uygunluk "Yeni müşteri edinme" (daha önce bu aboneliği almamış olanlar), aşama "Tek ödeme" ya da "Sabit fiyat", **1 ay, 4,99 USD**; Türkiye için elle **119,99 TRY**. Etkinleştir.
 4. Temel planları ve teklifi **etkinleştir**.

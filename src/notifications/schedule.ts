@@ -2,8 +2,8 @@ import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
-import { greet, notifs } from '@/domain/logic';
-import { sportLine, streakLine, summaryTail } from '@/domain/messages';
+import { greet, notifs, weekSummary } from '@/domain/logic';
+import { sportLine, streakLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { awardedToday, dayKey, progressOf } from '@/domain/play';
 import type { AppState, Notice } from '@/domain/types';
 
@@ -13,6 +13,8 @@ const CHANNEL = 'sabah-ozeti';
 const NUDGE = 'hatirlatma';
 /** Akşam seri hatırlatmasının saati. */
 const STREAK_TIME: [number, number] = [20, 30];
+/** Haftalık özet: pazar akşamı. */
+const WEEKLY_TIME: [number, number] = [19, 0];
 
 type NotificationsModule = typeof NotificationsTypes;
 let loaded: NotificationsModule | null | undefined;
@@ -89,7 +91,7 @@ export function summaryFor(ns: Notice[], at = new Date()): { title: string; body
   const more = ns.length - shown.length;
   const body = shown.join('\n') + (more > 0 ? `\nve ${more} hatırlatma daha` : '');
   const rooms = new Set(ns.map(n => n.rid));
-  const url = rooms.size === 1 ? `/oda/${ns[0].rid}` : '/bugun';
+  const url = rooms.size === 1 ? ns[0].url ?? `/oda/${ns[0].rid}` : '/bugun';
   return { title, body, url };
 }
 
@@ -150,6 +152,12 @@ export function nudges(S: AppState, now = Date.now(), smart = false) {
       const at = new Date(base);
       at.setHours(sh || 0, sm || 0, 0, 0);
       if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor' });
+    }
+    if (set.weekly && base.getDay() === 0) {
+      const at = new Date(base);
+      at.setHours(WEEKLY_TIME[0], WEEKLY_TIME[1], 0, 0);
+      // Özet, zamanlandığı andaki veriyle yazılır; veri değiştikçe yeniden zamanlanır.
+      if (at.getTime() > now) out.push({ at, title: '📅 Haftan nasıl geçti?', body: weeklyLine(weekSummary(S, now)), url: '/' });
     }
     if (set.streak && !(key === today && hp.today)) {
       const at = new Date(base);

@@ -7,7 +7,7 @@ import { cancelNewHome } from '@/domain/homes';
 import { requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
 
-/** İlk açılış: evini bloklarla kur. Premium'da yeni bir ev eklerken de burası açılır. */
+/** İlk açılış: evini bloklarla kur, sonra evle ilgili soruları cevapla (`/evim`). */
 export default function Kurulum() {
   const router = useRouter();
   const toast = useToast();
@@ -16,8 +16,9 @@ export default function Kurulum() {
   return (
     <PlanEditor
       onSaved={(_first, next) => {
-        router.replace('/');
-        toast(extra ? `${next.homeName} hazır 🏡 Evler arasında Hesabım > Evlerim'den geçebilirsin.` : 'Evin hazır. Odalara dokunarak işleri gör.');
+        // Plandan sonra evle ilgili birkaç soru; cevaplara göre rutinler gelir. Yeni bir ek evde de aynı sorular sorulur.
+        router.replace({ pathname: '/evim', params: { ilk: '1' } });
+        if (extra) toast(`${next.homeName} hazır 🏡 Evler arasında Hesabım > Evlerim'den geçebilirsin.`);
         // Sabah özeti için izni ev kurulduktan hemen sonra istiyoruz.
         requestPermission()
           .then(ok => (ok ? rescheduleMorningSummaries(next) : undefined))

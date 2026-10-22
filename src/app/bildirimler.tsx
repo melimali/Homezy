@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -80,7 +80,7 @@ export default function Bildirimler() {
           <Pressable
             key={i}
             accessibilityRole="button"
-            onPress={() => router.push({ pathname: '/oda/[id]', params: { id: n.rid } })}
+            onPress={() => (n.url ? router.push(n.url as Href) : router.push({ pathname: '/oda/[id]', params: { id: n.rid } }))}
             style={({ pressed }) => [styles.notif, { backgroundColor: c.surface, borderColor: c.line }, pressed && { transform: [{ translateY: 1 }] }]}
           >
             <View style={[styles.dot, { backgroundColor: color[n.k] }]} />
@@ -112,7 +112,10 @@ export default function Bildirimler() {
         </View>
         <Toggle label="Rutin hatırlatmaları" sub="Geciken ve bugün yapılacak işler, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
-        <Toggle label="Çamaşır" sub="3 ve daha fazla kirli parça birikince" value={s.laundry} onChange={v => set('laundry', v)} />
+        <Toggle label="Çamaşır ve dolap" sub="Aynı yıkama türünden 3 kirli parça, mevsim değişimi, bağış önerisi" value={s.laundry} onChange={v => set('laundry', v)} />
+        <Toggle label="Faturalar ve bakım 🧾" sub="Son ödeme gününe 2 gün kala, garanti bitişine 30 gün kala, kombi ve klima bakımı, mevsimlik işler" value={s.bills} onChange={v => set('bills', v)} />
+        <Toggle label="Son kullanma tarihleri ⏳" sub="Buzdolabındaki ürünlere 2 gün kala" value={s.expiry} onChange={v => set('expiry', v)} />
+        <Toggle label="Haftalık özet 📅" sub="Pazar akşamı 19:00'da haftanın özeti" value={s.weekly} onChange={v => set('weekly', v)} />
         <Toggle
           label="Seri hatırlatması 🔥"
           sub={`Akşam ${smart && learned.streak ? fmtMinute(learned.streak) : '20:30'}'da, o gün hiçbir şey yapmadıysan`}
@@ -147,6 +150,11 @@ export default function Bildirimler() {
       ) : (
         <PremiumLock emoji="🧠" title="Akıllı bildirimler" text="Hatırlatmalar sabit saatte değil, işlerini genelde yaptığın saate göre gelsin; boş yere rahatsız etmesin." />
       )}
+      <Card>
+        <T v="h2">Düzen ve motivasyon</T>
+        <Toggle label="Esnek zamanlama" sub="Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık iş 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
+        <Toggle label="Tertemiz oda kutlaması 🎉" sub="Bir odanın bütün işleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
+      </Card>
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>
       )}

@@ -146,6 +146,8 @@ export default function Hesap() {
         <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
         <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
         <LinkRow label="👨‍👩‍👧  Aile paylaşımı" onPress={() => router.push('/aile')} />
+        <LinkRow label="🐾  Evim hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
+        <LinkRow label="🔧  Ev bakımı, faturalar, garantiler" onPress={() => router.push('/bakim')} />
       </Card>
 
       <Card style={{ gap: 4 }}>
@@ -179,4 +181,5 @@ const st = StyleSheet.create({
   avatar: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
+  soon: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

@@ -1,4 +1,5 @@
 import { DAY } from './constants';
+import { baseCare, emptyProfile } from './home';
 import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
 
 /**
@@ -37,6 +38,7 @@ export const defaultSettings = (): Settings => ({
   time: '09:00', routine: true, stock: true, laundry: true,
   streak: true, sport: true, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
+  bills: true, expiry: true, weekly: true, flex: true, celebrate: true,
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */
@@ -46,6 +48,16 @@ export function normalize(S: AppState): AppState {
   S.homeId ||= 'ev1';
   S.homeName ||= 'Evim';
   S.others ||= [];
+  S.home = { ...emptyProfile(), ...(S.home || {}) };
+  S.mode ??= null;
+  // Ev bakımı bu sürümde geldi; eski evlere temel bakım işleri bir kere eklenir.
+  S.care ??= baseCare();
+  S.bills ??= [];
+  S.warranties ??= [];
+  S.seasonal ??= {};
+  // Eski kıyafetlerin eklenme tarihi bilinmiyor; bağış önerisi hemen çıkmasın diye bugünden say.
+  const now = Date.now();
+  for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;
   return S;
 }
 

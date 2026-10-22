@@ -52,7 +52,9 @@ function Bills() {
   const add = () => {
     const n = name.trim();
     if (!n) return;
-    update(D => void D.bills.push({ id: uid(), name: n, day, paid: null }));
+    // Bu ayın son günü geçmişse bu ayki fatura büyük ihtimalle ödendi; ilk hatırlatma gelecek aya kalır.
+    const passed = billStatus({ id: '', name: n, day, paid: null }, now).diff < 0;
+    update(D => void D.bills.push({ id: uid(), name: n, day, paid: passed ? monthKey(now) : null }));
     setName('');
     toast(`${n} faturası eklendi. Son günden 2 gün önce hatırlatırım.`);
   };
@@ -169,7 +171,8 @@ function Seasonal() {
     <Card>
       <SecHead title="Mevsimlik işler 🍂" right={String(year)} />
       <View>
-        {SEASONAL.map((x, i) => {
+        {/* Zamanı gelenler üstte, sonra en yakın aydan başlayanlar. */}
+        {[...SEASONAL].sort((a, b) => monthsAway(a.months, now) - monthsAway(b.months, now)).map((x, i) => {
           const done = S.seasonal[x.id] === year;
           return (
             <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
@@ -196,6 +199,12 @@ function Seasonal() {
       </View>
     </Card>
   );
+}
+
+/** Ay listesindeki en yakın aya kaç ay var (bu ay 0). */
+function monthsAway(months: number[], now: number) {
+  const cur = new Date(now).getMonth() + 1;
+  return Math.min(...months.map(m => (m - cur + 12) % 12));
 }
 
 const styles = StyleSheet.create({

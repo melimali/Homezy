@@ -215,7 +215,7 @@ export default function Giris() {
             </View>
             <Btn kind="ghost" label="Hesapsız devam et" onPress={guest} disabled={busy} />
             <T v="small" style={{ textAlign: 'center' }}>
-              Verilerin sadece bu telefonda kalır. İstediğin zaman Bildirimler sekmesinden hesap açabilirsin.
+              Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım sekmesinden hesap açabilirsin.
             </T>
           </View>
         )}

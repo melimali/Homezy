@@ -47,8 +47,8 @@ type PurchasesCtx = {
   prices: Record<Plan, string>;
   /** Yıllık planın aylığa düşen fiyatı (ör. "$5.00"); okunamadıysa null. */
   annualPerMonth: string | null;
-  /** Yıllık planın 12 aylığa göre yüzde kaç ucuz olduğu. */
-  annualSave: number;
+  /** Yıllık planda kaç ay bedavaya geldiği (12 aylığa göre, yarım aya aşağı yuvarlanmış; ör. 1.5). */
+  annualFreeMonths: number;
   /**
    * Aylık planın ilk ay fiyatı (ör. "$4.99"). Mağaza teklifi sadece hak kazanan (daha önce abone
    * olmamış) kullanıcıya gösterir; mağaza okunduysa ve teklif yoksa null.
@@ -178,11 +178,11 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const annualPerMonth = pkgs.annual?.product.pricePerMonthString ?? null;
   const m = pkgs.monthly?.product.price ?? 6.99;
   const y = pkgs.annual?.product.price ?? 59.99;
-  const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
+  const annualFreeMonths = Math.max(0, Math.floor((12 - y / m) * 2) / 2);
   const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
-    [ready, premium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium, prices: { monthly, annual }, annualPerMonth, annualFreeMonths, introPrice, buy, restore, manage }),
+    [ready, premium, monthly, annual, annualPerMonth, annualFreeMonths, introPrice, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

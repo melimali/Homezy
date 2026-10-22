@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 
+import { OutfitPlan, Recipes } from '@/components/PremiumExtras';
 import { Fridge, Plants, Stock, Wardrobe } from '@/components/RoomModules';
 import { AddTaskForm, TaskRow } from '@/components/TaskRow';
 import { Card, EmptyMsg, SecHead } from '@/components/ui';
@@ -26,11 +27,17 @@ export function RoomBody({ rid }: { rid: string }) {
         <AddTaskForm rid={r.id} list="tasks" placeholder="Yeni rutin, ör. Perde yıkama" />
       </Card>
 
-      {type.mod === 'gardirop' && <Wardrobe rid={r.id} />}
+      {type.mod === 'gardirop' && (
+        <>
+          <Wardrobe rid={r.id} />
+          <OutfitPlan rid={r.id} />
+        </>
+      )}
       {type.mod === 'buzdolabi' && (
         <>
           <Fridge rid={r.id} />
           <Stock rid={r.id} title="Ne var, ne eksik?" placeholder="Ürün ekle, ör. Zeytin" />
+          <Recipes rid={r.id} />
         </>
       )}
       {type.mod === 'stok' && (

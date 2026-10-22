@@ -123,7 +123,7 @@ export default function Hesap() {
         ) : (
           <>
             <T style={{ fontSize: 14 }}>
-              Ücretsiz planda fotoğrafla tarama haftada 2 kez. Premium ile günde 2 kez taratırsın.
+              Premium ile günde 2 fotoğraf taraması, ayda 3 seri dondurma, 1,5 kat puan, birden fazla ev, temalar, aile paylaşımı ve reklamsız kullanım.
             </T>
             <Btn kind="primary" label="Premium'a bak ⭐" onPress={() => router.push('/premium')} />
           </>
@@ -144,6 +144,8 @@ export default function Hesap() {
       <Card style={{ gap: 4 }}>
         <LinkRow label="🔔  Bildirimler ve sabah özeti" onPress={() => router.push('/bildirimler')} />
         <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
+        <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
+        <LinkRow label="👨‍👩‍👧  Aile paylaşımı" onPress={() => router.push('/aile')} />
       </Card>
 
       <Card style={{ gap: 4 }}>

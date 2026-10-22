@@ -1,6 +1,40 @@
 # Premium üyelik ve yapay zekâ maliyeti
 
-Yapay zekâ ile fotoğraf taraması (buzdolabı ve kıyafet) ücretli **Premium** üyeliğin içinde. Geri kalan her şey ücretsiz: ev planı, rutinler, gardırop, stok, bitkiler, bildirimler ve kombin önerisi (kombin önerisi telefondaki kurallarla çalışır, yapay zekâ kullanmaz).
+Evin temel işleri herkese ücretsiz: ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar, puan, seri, mağaza, spor ve günlük. **Premium** daha çok tarama, seriyi koruma, evi güzelleştirme, paylaşma ve reklamsızlık getirir. Ücretsiz planda Ev ve Bugün sayfalarının en altında küçük bir reklam afişi var (bkz. [reklam.md](reklam.md)).
+
+## Ücretsiz ve Premium: bütün farklar
+
+Uygulamadaki karşılaştırma tablosu ve kilitler tek yerden gelir: `src/domain/premium.ts` (`LIMITS`, `THEMES`, `FEATURES`). Sunucudaki sınırlar `supabase/migrations/20261021100000_premium.sql` içinde ve bunlarla aynı olmalı.
+
+| Özellik | Ücretsiz | Premium | Nerede, nasıl korunuyor |
+|---|---|---|---|
+| Ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar | ✓ | ✓ | |
+| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 2 | Sunucu (`scan_usage`, aşağıda) |
+| Seri dondurma: gün kaçırınca seri bozulmaz, ev tozlanmaz | Ayda 1 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
+| Görev puanı | 1 kat | 1,5 kat (seri bonusu dahil) | Sunucu `play_award` |
+| Premium eşyalar (akvaryum, şömine, piyano) | — | ✓ | Sunucu `play_buy` |
+| Birden fazla ev (yazlık, iş yeri) | 1 ev | 5 ev | Telefonda (ev verisi telefonda). Premium bitince diğer evler silinmez, sadece geçiş kilitlenir |
+| Ev temaları: gece, kış, sonbahar | Gündüz | ✓ | Telefonda (`themeFor`) |
+| Günlük: fotoğraf, ruh hali grafiği, "geçen yıl bugün" | Yazı | ✓ | Fotoğraf yedeği sunucuda (Storage kuralı) |
+| Spor: haftalık/aylık grafikler, kişisel antrenman planı | Kayıt | ✓ | Telefonda (`src/domain/workout.ts`) |
+| Buzdolabındakilerle tarif önerisi | — | ✓ | Telefonda, internetsiz (`src/domain/recipes.ts`) |
+| Haftalık kombin planı | — | ✓ | Telefonda (`src/domain/outfits.ts`) |
+| Akıllı bildirimler | Sabit saat | Alışkanlığa göre saat; acil iş yoksa sabah özeti gelmez | Telefonda (`smartTimes`) |
+| Aile paylaşımı: evi paylaş, işleri bölüş ("👤 kim yapacak") | — | ✓ (katılanların Premium olması gerekmez) | Sunucu: ev sahibinin Premium'u bitince `family_*` fonksiyonları paylaşımı durdurur |
+| Bulut yedeği | Ev verisi | + günlük fotoğrafları | Sunucu: `yedek` kovasına sadece Premium yazar |
+| Reklam | Az (2 afiş) | Reklamsız | Telefonda |
+
+Neden bazıları sadece telefonda korunuyor: o özellikler sunucuya bir şey yazmıyor ya da bize maliyeti yok (tema, grafik, tarif listesi). Para ya da puan değeri olanlar (tarama, puan, eşya, dondurma, paylaşım, fotoğraf deposu) sunucuda korunuyor.
+
+Notlar:
+
+- **Tarif önerisi** şimdilik yapay zekâsız: telefondaki 26 tarifle, "Var / Az" işaretli ürünler eşleştiriliyor. Buzdolabı taraması sunucu fonksiyonu (`scan`) kurulunca aynı fonksiyonla yapay zekâ tarifi de eklenebilir.
+- **Aile paylaşımında** iki kişi aynı anda değişiklik yaparsa sunucudaki ev esas alınır ama "Tamamladım"lar kaybolmaz (iki taraftaki son yapılma tarihinin yenisi alınır). Paylaşılan sadece ev; puan, seri, günlük, spor ve ayarlar herkesin kendine ait.
+- Premium bitince hiçbir veri silinmez: diğer evler, temalar, günlük fotoğrafları, antrenman planı yerinde durur; üyelik dönünce açılır.
+
+---
+
+Yapay zekâ ile fotoğraf taraması (buzdolabı ve kıyafet) Premium'un en pahalı kısmı; aşağıdaki maliyet hesabı onun için.
 
 Prototipte ödeme ekranı ve kilit taklit ediliyor: `PREMIUM`, `canScan()`, `countScan()`, `gateScan()`, `paywallHTML()`, `premiumCardHTML()`.
 

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { PremiumLock } from '@/components/PremiumLock';
 import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T, XBtn } from '@/components/ui';
 import { uid } from '@/domain/logic';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
-import type { AppState, Settings } from '@/domain/types';
+import type { AppState, Settings, SportEntry, WorkoutGoal, WorkoutLevel } from '@/domain/types';
+import { GOALS, LEVELS, monthByType, weeklyMinutes, weekPlan } from '@/domain/workout';
 import { useNow } from '@/hooks/useNow';
 import { usePlay } from '@/play/usePlay';
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -26,6 +29,7 @@ export default function Spor() {
   const now = useNow();
   const { state: S, update } = useStore();
   const { award } = usePlay();
+  const { premium } = usePurchases();
   const [type, setType] = useState('Yürüyüş');
   const [min, setMin] = useState(30);
   const today = dayKey(now);
@@ -118,6 +122,25 @@ export default function Spor() {
         {weekDays >= goal && <T v="small" style={{ color: c.ok, fontFamily: fonts.bodyBlack }}>Haftalık hedefe ulaştın! 🎉</T>}
       </Card>
 
+      {premium.active ? (
+        <>
+          <WorkoutPlan
+            now={now}
+            onPick={(t, m) => {
+              setType(t);
+              setMin(MINUTES.reduce((a, b) => (Math.abs(b - m) < Math.abs(a - m) ? b : a)));
+            }}
+          />
+          <Charts sport={P.sport} now={now} />
+        </>
+      ) : (
+        <PremiumLock
+          emoji="📊"
+          title="Spor grafikleri ve antrenman planı"
+          text="Haftalık ve aylık grafiklerinle ilerlemeni gör. Hedefine göre sana özel haftalık antrenman planı hazırlayayım."
+        />
+      )}
+
       <Card>
         <SecHead title="Son sporlar" />
         {history.map((x, i) => (
@@ -169,6 +192,102 @@ export default function Spor() {
   );
 }
 
+/** Premium: hedef ve seviyeye göre bu haftanın planı. Bir güne dokununca o antrenman seçilir. */
+function WorkoutPlan({ now, onPick }: { now: number; onPick: (type: string, min: number) => void }) {
+  const c = useColors();
+  const { state: S, update } = useStore();
+  const w = S.settings.workout;
+  const today = dayKey(now);
+  const setW = (goal: WorkoutGoal, level: WorkoutLevel) => update(D => void (D.settings.workout = { goal, level }));
+
+  if (!w)
+    return (
+      <Card>
+        <SecHead title="Antrenman planım 📋" />
+        <T v="small">Hedefini seç, spor günlerine göre haftalık plan hazırlayayım.</T>
+        <View style={styles.wrap}>
+          {GOALS.map(g => (
+            <Chip key={g.id} label={`${g.emoji} ${g.name}`} on={false} onPress={() => setW(g.id, 'yeni')} />
+          ))}
+        </View>
+      </Card>
+    );
+
+  const plan = weekPlan(w, S.settings.sportDays, now);
+  const done = new Set(S.play.sport.map(x => x.day));
+  return (
+    <Card>
+      <SecHead title="Antrenman planım 📋" right={GOALS.find(g => g.id === w.goal)?.emoji} />
+      <View style={styles.wrap}>
+        {GOALS.map(g => (
+          <Chip key={g.id} label={g.name} on={w.goal === g.id} onPress={() => setW(g.id, w.level)} />
+        ))}
+      </View>
+      <View style={styles.wrap}>
+        {LEVELS.map(l => (
+          <Chip key={l.id} label={l.name} on={w.level === l.id} onPress={() => setW(w.goal, l.id)} />
+        ))}
+      </View>
+      {plan.map((p, i) => (
+        <Pressable
+          key={p.day}
+          onPress={() => onPick(p.type, p.min)}
+          accessibilityRole="button"
+          accessibilityLabel={`${p.what}, ${p.min} dakika. Seç`}
+          style={[styles.row, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}
+        >
+          <Text style={{ fontSize: 20 }}>{done.has(p.day) ? '✅' : EMOJI[p.type] ?? '💪'}</Text>
+          <View style={{ flex: 1 }}>
+            <T v="bold" style={{ fontSize: 14, color: p.day === today ? c.ok : c.ink }}>
+              {new Date(dayTs(p.day)).toLocaleDateString('tr-TR', { weekday: 'long' })}{p.day === today ? ' · bugün' : ''}
+            </T>
+            <T v="small">{p.what} · {p.min} dk</T>
+          </View>
+          <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
+        </Pressable>
+      ))}
+      <T v="tiny">Spor günlerini aşağıdaki hatırlatma bölümünden değiştirebilirsin. Ağrın varsa zorlama, doktoruna danış.</T>
+    </Card>
+  );
+}
+
+/** Premium: son 8 haftanın dakikaları ve bu ayın türlere göre dağılımı. */
+function Charts({ sport, now }: { sport: SportEntry[]; now: number }) {
+  const c = useColors();
+  const weeks = weeklyMinutes(sport, 8, now);
+  const max = Math.max(60, ...weeks.map(w => w.min));
+  const month = monthByType(sport, now);
+  const monthTotal = month.reduce((a, [, m]) => a + m, 0);
+  return (
+    <Card>
+      <SecHead title="Grafiklerim 📊" right="son 8 hafta" />
+      <View style={styles.chart}>
+        {weeks.map((w, i) => (
+          <View key={w.start} style={styles.chartCol}>
+            <Text style={[styles.chartN, { color: c.muted }]}>{w.min || ''}</Text>
+            <View style={[styles.chartBar, { height: 4 + (w.min / max) * 86, backgroundColor: i === weeks.length - 1 ? c.hi : c.accentSoft }]} />
+            <Text style={[styles.chartL, { color: c.muted }]}>
+              {new Date(dayTs(w.start)).toLocaleDateString('tr-TR', { day: 'numeric', month: 'numeric' })}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <T v="h3">Bu ay · {monthTotal} dk</T>
+      {month.map(([t, m]) => (
+        <View key={t} style={styles.setRow}>
+          <Text style={{ fontSize: 16, width: 24 }}>{EMOJI[t] ?? '💪'}</Text>
+          <T v="small" style={{ width: 74 }}>{t}</T>
+          <View style={[styles.hbar, { backgroundColor: c.surface2 }]}>
+            <View style={{ width: `${(m / monthTotal) * 100}%`, height: '100%', borderRadius: radius.pill, backgroundColor: c.hi }} />
+          </View>
+          <T v="small" style={{ width: 52, textAlign: 'right' }}>{m} dk</T>
+        </View>
+      ))}
+      {!month.length && <EmptyMsg>Bu ay henüz spor yok.</EmptyMsg>}
+    </Card>
+  );
+}
+
 function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: () => void }) {
   const c = useColors();
   return (
@@ -187,5 +306,11 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },
+  chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 126 },
+  chartCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 3 },
+  chartBar: { width: '100%', borderRadius: 6 },
+  chartN: { fontFamily: fonts.bodyBold, fontSize: 10 },
+  chartL: { fontFamily: fonts.bodyBold, fontSize: 9.5 },
+  hbar: { flex: 1, height: 10, borderRadius: radius.pill, overflow: 'hidden' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
 });

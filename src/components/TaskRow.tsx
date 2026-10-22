@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { agoText, daysSince, everyText, status, uid } from '@/domain/logic';
 import type { AppState, Task, TaskList } from '@/domain/types';
+import { useFamily } from '@/family/FamilyProvider';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -29,6 +30,16 @@ export function TaskRow({
   // Her iş günde bir kez tamamlanır (ve puan verir).
   const doneToday = t.last != null && daysSince(t.last) === 0;
   const urgent = s.k !== 'ok' && !doneToday;
+  // Aile paylaşımında işi kimin yapacağı: dokundukça sıradaki kişi, sonra "herkes".
+  const { sharing, info } = useFamily();
+  const names = sharing && info ? info.members.map(m => m.name) : [];
+  const nextWho = () =>
+    update(S => {
+      const x = findList(S, rid, list).find(y => y.id === t.id);
+      if (!x) return;
+      const i = x.who ? names.indexOf(x.who) : -1;
+      x.who = i + 1 < names.length ? names[i + 1] : null;
+    });
 
   const done = () => {
     if (doneToday) return;
@@ -60,6 +71,12 @@ export function TaskRow({
         <View style={styles.meta}>
           <Pill k={s.k} label={s.label} />
           <T v="small">Son: {agoText(t.last)} · {everyText(t.every)}</T>
+          {names.length > 0 && (
+            <Pressable onPress={nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
+              style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
+              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
+            </Pressable>
+          )}
         </View>
       </View>
       <Pressable
@@ -130,6 +147,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
   roomTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
+  who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
   done: { borderWidth: 2, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 13 },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },

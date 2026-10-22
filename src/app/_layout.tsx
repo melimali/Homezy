@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { IntroSplash } from '@/components/IntroSplash';
 import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
+import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { prefs } from '@/lib/supabase';
 import { usePlaySync } from '@/play/usePlay';
@@ -43,9 +44,11 @@ export default function RootLayout() {
         <PurchasesProvider>
           <AppStoreProvider>
             <ToastProvider>
-              <StatusBar style="auto" />
-              <RootStack />
-              <LaunchChoice />
+              <FamilyProvider>
+                <StatusBar style="auto" />
+                <RootStack />
+                <LaunchChoice />
+              </FamilyProvider>
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
               {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
             </ToastProvider>
@@ -85,6 +88,8 @@ function RootStack() {
         <Stack.Screen name="magaza" />
         <Stack.Screen name="spor" />
         <Stack.Screen name="gunluk" />
+        <Stack.Screen name="evler" />
+        <Stack.Screen name="aile" />
         <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>

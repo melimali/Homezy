@@ -5,7 +5,9 @@ import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 're
 import { BackLink, Btn, Card, EmptyMsg, Screen, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
 import type { Settings } from '@/domain/types';
-import { getPermission, notificationsAvailable, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
+import { PremiumLock } from '@/components/PremiumLock';
+import { fmtMinute, getPermission, notificationsAvailable, requestPermission, rescheduleMorningSummaries, smartTimes } from '@/notifications/schedule';
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -20,6 +22,9 @@ export default function Bildirimler() {
   const ns = notifs(S, now);
   const s = S.settings;
   const [perm, setPerm] = useState<'granted' | 'denied' | 'undetermined'>('granted');
+  const { premium } = usePurchases();
+  const smart = premium.active && s.smart;
+  const learned = smartTimes(S);
 
   useFocusEffect(
     useCallback(() => {
@@ -43,7 +48,7 @@ export default function Bildirimler() {
     }
     const ok = await requestPermission();
     setPerm(ok ? 'granted' : 'denied');
-    if (ok) rescheduleMorningSummaries(S).catch(() => {});
+    if (ok) rescheduleMorningSummaries(S, premium.active).catch(() => {});
   };
 
   const color = { late: c.late, today: c.warm, ok: c.hi };
@@ -108,10 +113,40 @@ export default function Bildirimler() {
         <Toggle label="Rutin hatırlatmaları" sub="Geciken ve bugün yapılacak işler, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
         <Toggle label="Çamaşır" sub="3 ve daha fazla kirli parça birikince" value={s.laundry} onChange={v => set('laundry', v)} />
-        <Toggle label="Seri hatırlatması 🔥" sub="Akşam 20:30'da, o gün hiçbir şey yapmadıysan" value={s.streak} onChange={v => set('streak', v)} />
-        <Toggle label="Spor hatırlatması 🏃" sub={`${s.sportTime}, seçtiğin günlerde`} value={s.sport} onChange={v => set('sport', v)} />
+        <Toggle
+          label="Seri hatırlatması 🔥"
+          sub={`Akşam ${smart && learned.streak ? fmtMinute(learned.streak) : '20:30'}'da, o gün hiçbir şey yapmadıysan`}
+          value={s.streak}
+          onChange={v => set('streak', v)}
+        />
+        <Toggle
+          label="Spor hatırlatması 🏃"
+          sub={`${smart && learned.sport ? fmtMinute(learned.sport) : s.sportTime}, seçtiğin günlerde`}
+          value={s.sport}
+          onChange={v => set('sport', v)}
+        />
         <Btn label="Spor günlerini ve saatini seç" small onPress={() => router.push('/spor')} />
       </Card>
+
+      {premium.active ? (
+        <Card>
+          <Toggle
+            label="Akıllı bildirimler 🧠"
+            sub="Hatırlatmalar işlerini genelde yaptığın saate göre gelir; acil bir şey yoksa sabah özeti gelmez."
+            value={s.smart}
+            onChange={v => set('smart', v)}
+          />
+          {s.smart && (
+            <T v="small">
+              {learned.streak || learned.sport
+                ? `Öğrendiğim saatler: seri ${learned.streak ? fmtMinute(learned.streak) : '20:30'}, spor ${learned.sport ? fmtMinute(learned.sport) : s.sportTime}.`
+                : 'Birkaç gün iş ve spor yaptıkça saatlerini öğreneceğim.'}
+            </T>
+          )}
+        </Card>
+      ) : (
+        <PremiumLock emoji="🧠" title="Akıllı bildirimler" text="Hatırlatmalar sabit saatte değil, işlerini genelde yaptığın saate göre gelsin; boş yere rahatsız etmesin." />
+      )}
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>
       )}

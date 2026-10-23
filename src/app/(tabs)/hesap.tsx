@@ -109,6 +109,15 @@ export default function Hesap() {
         )}
       </Card>
 
+      <Card style={{ gap: 4 }}>
+        <LinkRow label="🔔  Bildirimler ve sesler" onPress={() => router.push('/bildirimler')} />
+        <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
+        <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
+        <LinkRow label="👨‍👩‍👧  Aile paylaşımı" onPress={() => router.push('/aile')} />
+        <LinkRow label="🐾  Evim hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
+        <LinkRow label="🔧  Ev bakımı ve faturalar" onPress={() => router.push('/bakim')} />
+      </Card>
+
       <Card>
         <View style={st.row}>
           <T v="h2">Premium üyelik</T>
@@ -123,7 +132,7 @@ export default function Hesap() {
         ) : (
           <>
             <T style={{ fontSize: 14 }}>
-              Premium ile günde 2 fotoğraf taraması, ayda 3 seri dondurma, 1,5 kat puan, birden fazla ev, temalar, aile paylaşımı ve reklamsız kullanım.
+              Daha çok tarama, seri koruması, temalar, aile paylaşımı ve reklamsız kullanım.
             </T>
             <Btn kind="primary" label="Premium'a bak ⭐" onPress={() => router.push('/premium')} />
           </>
@@ -132,22 +141,10 @@ export default function Hesap() {
           <Btn label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} />
           {premium.active && <Btn kind="ghost" label="Aboneliği yönet" onPress={manage} />}
         </View>
-        <T v="small">
-          Ödemeyi App Store ya da Google Play alır. Kart bilgilerin Layfapp{"'"}a ya da sunucularımıza hiç gelmez.
-          Daha önce aldığın üyelik başka bir telefonda ya da yeniden kurulumda {'"'}Satın alımları geri yükle{'"'} ile döner.
-        </T>
+        <T v="small">Ödemeyi App Store ya da Google Play alır; kart bilgin bize gelmez.</T>
         {!purchasesEnabled && (
           <T v="small">Geliştirme sürümü: mağaza anahtarları henüz girilmedi.</T>
         )}
-      </Card>
-
-      <Card style={{ gap: 4 }}>
-        <LinkRow label="🔔  Bildirimler ve sabah özeti" onPress={() => router.push('/bildirimler')} />
-        <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
-        <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
-        <LinkRow label="👨‍👩‍👧  Aile paylaşımı" onPress={() => router.push('/aile')} />
-        <LinkRow label="🐾  Evim hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
-        <LinkRow label="🔧  Ev bakımı, faturalar, garantiler" onPress={() => router.push('/bakim')} />
       </Card>
 
       <Card style={{ gap: 4 }}>
@@ -171,7 +168,7 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   const c = useColors();
   return (
     <Pressable onPress={onPress} accessibilityRole="link" style={({ pressed }) => [st.link, pressed && { opacity: 0.6 }]}>
-      <T v="bold" style={{ fontSize: 14 }}>{label}</T>
+      <T v="bold" style={{ fontSize: 14, flex: 1 }}>{label}</T>
       <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
     </Pressable>
   );

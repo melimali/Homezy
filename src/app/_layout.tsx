@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { LogBox, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
@@ -24,6 +24,8 @@ import { useCloudSync } from '@/sync/cloud';
 import { useColors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+// Emülatörde Google Play hesabı olmadığı için RevenueCat her açılışta hata yazar; geliştirirken ekranı kaplamasın.
+if (__DEV__) LogBox.ignoreLogs(['[RevenueCat]']);
 configureNotifications();
 
 export default function RootLayout() {

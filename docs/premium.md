@@ -93,6 +93,12 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 - Premium hakkı gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
 - **Sadece başarılı tarama hak yer.** Hata, iptal ya da "fotoğraf okunamadı" sonucu sayılmaz.
 
+### Kod nerede?
+
+- Sunucu: `supabase/functions/scan/index.ts` (istemler, Claude çağrısı, sonucu temizleme) ve `supabase/migrations/20261023000000_scan.sql` (`scan_usage`, `scan_reserve`, `scan_release`).
+- Uygulama: `src/lib/scan.ts` (fotoğrafı fonksiyona gönderir, hata mesajları) ve `src/components/PhotoScan.tsx` (buzdolabı ve gardırop onay listeleri). Buzdolabında yeni fotoğraf çekilince tarama kendiliğinden başlar; gardıropta "Fotoğraftan ekle" kutusu var.
+- Kurulum: `supabase db push`, `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`, `supabase functions deploy scan`. Fonksiyon kurulmadan uygulamadaki tarama "şu an kullanılamıyor" der, geri kalan her şey çalışır.
+
 ### Günlük sınır nasıl uygulanır?
 
 Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göstermek için. Uygulama silinip kurulsa da, saat ileri alınsa da sunucu sayacı değişmez.

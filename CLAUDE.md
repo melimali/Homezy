@@ -42,19 +42,19 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - Sabah özeti: `src/notifications/schedule.ts` önümüzdeki 7 sabahı o günün tarihine göre hesaplayıp tek seferlik bildirim olarak zamanlar; veri değiştikçe yeniden zamanlanır.
 - Renkler `src/theme/index.ts`'te açık ve koyu tema için. Bileşenlerde renk kodu yazma, `useColors()` kullan.
 - Değişiklikten sonra: `npm run typecheck` ve `npm run lint`.
-- Paket kimliği şimdilik `com.meikaidigital.layfapp`. Hesap kararı (bireysel / şirket) netleşince gerekirse değişecek; mağazaya ilk yüklemeden sonra değiştirilemez.
+- Paket kimliği `com.meikaidigital.layfapp`; mağazaya ilk yüklemeden sonra değiştirilemez.
 
 ## Yayın sırası
 
 1. Uygulamayı iki platform için birlikte geliştir.
-2. Kullanılabilir ilk sürüm hazır olunca hemen Google Play kapalı testine gir. Yeni kişisel hesaplarda 12 test kullanıcısının 14 gün kesintisiz kayıtlı kalması gerekiyor. Takvimin en uzun kalemi bu.
+2. Kullanılabilir ilk sürüm hazır olunca Google Play'e yükle. Yayıncı Meikai Digital (kuruluş hesabı); kuruluş hesaplarında 12 test kullanıcılı 14 günlük kapalı test zorunlu değil.
 3. Bu sürede iOS'u TestFlight'a gönder.
 4. Google testi bitince iki mağazaya aynı hafta başvur.
 
 Ayrıca gerekenler:
 - Gizlilik politikası sayfası (Meikai Digital sitesinde yayınlanabilir).
 - Mağaza ekran görüntüleri ve tanıtım metni.
-- Açık karar: geliştirici hesapları bireysel mi olacak, Meikai Digital şirketi adına mı? Apple şirket hesabı D-U-N-S numarası istiyor.
+- Karar: geliştirici hesapları Meikai Digital adına (kuruluş). Google Play ve Apple kuruluş hesabı için D-U-N-S numarası gerekiyor.
 
 ## Görsel kimlik
 

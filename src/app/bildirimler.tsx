@@ -111,6 +111,14 @@ export default function Bildirimler() {
           </View>
         </View>
         <Toggle label="Rutin hatırlatmaları" sub="Geciken ve bugün yapılacak işler, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
+        {s.routine && (
+          <Toggle
+            label="Bildirimden cevapla ✅"
+            sub="Günün en acil 3 işi ayrı bildirimle gelir; uygulamayı açmadan “Yaptım” de, puanın ve serin işlensin. “Yapmadım” işi yarına erteler."
+            value={s.actions}
+            onChange={v => set('actions', v)}
+          />
+        )}
         <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
         <Toggle label="Çamaşır ve dolap" sub="Aynı yıkama türünden 3 kirli parça, mevsim değişimi, bağış önerisi" value={s.laundry} onChange={v => set('laundry', v)} />
         <Toggle label="Faturalar ve bakım 🧾" sub="Son ödeme gününe 2 gün kala, garanti bitişine 30 gün kala, kombi ve klima bakımı, mevsimlik işler" value={s.bills} onChange={v => set('bills', v)} />

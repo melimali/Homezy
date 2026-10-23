@@ -244,6 +244,8 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
         ns.push({
           k: s.k,
           rid,
+          tid: t.id,
+          list,
           url: care ? '/bakim' : undefined,
           title: `${plant ? '🪴' : p.emoji} ${p.name} · ${t.name}`,
           text: `${taskLine({ name: t.name, type: p.type, plant, k: s.k, key: t.id, now })} ${statusTail(s.k, s.diff, t.last == null)}`,

@@ -2,15 +2,25 @@ import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
-import { greet, notifs, weekSummary } from '@/domain/logic';
+import { isPhotoTask } from '@/domain/home';
+import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
 import { sportLine, streakLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { awardedToday, dayKey, progressOf } from '@/domain/play';
 import type { AppState, Notice } from '@/domain/types';
+
+import { ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, TASK_CATEGORY, taskDataOf, type TaskData } from './actions';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
 const DAYS_AHEAD = 7;
 const CHANNEL = 'sabah-ozeti';
 const NUDGE = 'hatirlatma';
+const TASKS = 'isler';
+/**
+ * Günde en çok bu kadar iş ayrı bildirimle ("Yaptım" / "Yapmadım" düğmeleriyle) gelir, en acilleri;
+ * gerisi sabah özetinde kalır. iOS aynı anda en çok 64 zamanlanmış bildirim tutuyor:
+ * 7 özet + 7×3 iş + en çok 15 spor/seri/haftalık hatırlatma = 43.
+ */
+const TASKS_PER_DAY = 3;
 /** Akşam seri hatırlatmasının saati. */
 const STREAK_TIME: [number, number] = [20, 30];
 /** Haftalık özet: pazar akşamı. */
@@ -60,6 +70,14 @@ async function ensureChannel(N: NotificationsModule) {
       name: 'Spor ve seri hatırlatmaları',
       importance: N.AndroidImportance.DEFAULT,
     });
+    await N.setNotificationChannelAsync(TASKS, {
+      name: 'İş hatırlatmaları (Yaptım / Yapmadım)',
+      importance: N.AndroidImportance.DEFAULT,
+    });
+    await N.setNotificationChannelAsync(FEEDBACK_CHANNEL, {
+      name: 'Bildirimden tamamlanan işler',
+      importance: N.AndroidImportance.LOW,
+    });
   }
 }
 
@@ -80,10 +98,12 @@ export async function requestPermission(): Promise<boolean> {
   return status === 'granted';
 }
 
-/** O sabahın bildirim metni. Gösterilecek bir şey yoksa null. */
-export function summaryFor(ns: Notice[], at = new Date()): { title: string; body: string; url: string } | null {
+/**
+ * O sabahın bildirim metni. Gösterilecek bir şey yoksa null. `urgent`: başlıktaki iş sayısı;
+ * ayrı bildirimle gelen işler özette yazmasa da sayılır.
+ */
+export function summaryFor(ns: Notice[], at = new Date(), urgent = ns.filter(n => n.k !== 'ok').length): { title: string; body: string; url: string } | null {
   if (!ns.length) return null;
-  const urgent = ns.filter(n => n.k !== 'ok').length;
   // Özet saati kullanıcının seçimi; akşama kurduysa "İyi akşamlar" der.
   const title = `${greet(at)} ${summaryTail(urgent)}`;
   // İlk hatırlatmanın tatlı cümlesi de görünsün, diğerleri kısa başlık olarak.
@@ -93,6 +113,28 @@ export function summaryFor(ns: Notice[], at = new Date()): { title: string; body
   const rooms = new Set(ns.map(n => n.rid));
   const url = rooms.size === 1 ? ns[0].url ?? `/oda/${ns[0].rid}` : '/bugun';
   return { title, body, url };
+}
+
+/**
+ * O sabah ayrı bildirimle gelecek işler: sırayla en acilleri, fotoğraf isteyenler hariç
+ * (onlar için uygulamayı açıp fotoğraf çekmek gerekiyor).
+ */
+export function ownNotices(S: AppState, ns: Notice[]): Notice[] {
+  if (!S.settings.actions) return [];
+  const photo = new Set(allTasks(S).filter(x => isPhotoTask(x.t)).map(x => x.t.id));
+  return ns.filter(n => n.tid && n.list && !photo.has(n.tid)).slice(0, TASKS_PER_DAY);
+}
+
+/** Bildirim çekmecesinde duran ama artık yapılmış ya da silinmiş işlerin bildirimlerini kaldırır. */
+async function dismissStale(N: NotificationsModule, S: AppState) {
+  const now = Date.now();
+  const tasks = new Map(allTasks(S, now).map(x => [x.t.id, x.t]));
+  for (const n of await N.getPresentedNotificationsAsync()) {
+    const data = taskDataOf(n.request.content);
+    if (!data) continue;
+    const t = tasks.get(data.tid);
+    if (!t || doneToday(t, now) || (t.snooze != null && t.snooze > now)) await N.dismissNotificationAsync(n.request.identifier);
+  }
 }
 
 /**
@@ -108,7 +150,9 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   // Ev silindiyse eski evin hatırlatmaları gelmesin.
   if (!S.setup) return void (await N.cancelAllScheduledNotificationsAsync());
   await ensureChannel(N);
+  await ensureCategories(N).catch(e => console.warn('Layfapp: bildirim düğmeleri kurulamadı', e));
   await N.cancelAllScheduledNotificationsAsync();
+  await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
   const now = Date.now();
@@ -119,7 +163,23 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
     const ns = notifs(S, at.getTime());
     // Akıllı bildirim: acil bir şey yoksa sabah özetiyle rahatsız etme.
     if (smart && !ns.some(n => n.k !== 'ok')) continue;
-    const msg = summaryFor(ns, at);
+    // En acil işler kendi bildirimiyle, düğmeleriyle gelir; özet geri kalanları toplar.
+    const own = ownNotices(S, ns);
+    for (const n of own) {
+      const data: TaskData = { url: n.url ?? `/oda/${n.rid}`, tid: n.tid!, list: n.list!, premium };
+      await N.scheduleNotificationAsync({
+        identifier: `gorev-${n.tid}-${dayKey(at.getTime())}`,
+        content: {
+          title: n.title,
+          body: n.text,
+          data,
+          categoryIdentifier: n.list === 'plants' ? PLANT_CATEGORY : TASK_CATEGORY,
+          threadIdentifier: 'isler',
+        },
+        trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: TASKS },
+      });
+    }
+    const msg = summaryFor(ns.filter(n => !own.includes(n)), at, ns.filter(n => n.k !== 'ok').length);
     if (!msg) continue;
     await N.scheduleNotificationAsync({
       content: { title: msg.title, body: msg.body, data: { url: msg.url } },

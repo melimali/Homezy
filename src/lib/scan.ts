@@ -63,6 +63,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
         : 'Fotoğraftan kıyafetleri çıkaramadım. Daha aydınlık ve yakından çekilmiş bir fotoğraf dene.',
     };
   }
+  if (status === 503 && body.error === 'not_configured') return { ok: false, message: 'Tarama henüz açılmadı (yapay zekâ anahtarı girilmemiş). Listeyi elle güncelleyebilirsin.' };
   if (status === 404) return { ok: false, message: 'Tarama şu an kullanılamıyor. Listeyi elle güncelleyebilirsin.' };
   return { ok: false, message: 'Şu an tarama yapılamıyor. Biraz sonra tekrar dene; hakkından düşmedi.', retry: true };
 }

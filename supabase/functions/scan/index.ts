@@ -113,6 +113,8 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  // Anahtar girilmeden hak ayrılmasın.
+  if (!Deno.env.get('ANTHROPIC_API_KEY')) return json({ error: 'not_configured' }, 503);
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);

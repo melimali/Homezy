@@ -11,6 +11,7 @@ import { persistPhoto, pickPhoto } from '@/lib/photos';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
+import { FridgeScanPanel, useFridgeScan, WardrobeScan } from './PhotoScan';
 import { ShopList } from './ShopList';
 import { AddTaskForm, TaskRow } from './TaskRow';
 import { useToast } from './Toast';
@@ -146,6 +147,7 @@ export function Wardrobe({ rid }: { rid: string }) {
         <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" />
         <Btn label="Ekle" kind="primary" small onPress={add} />
       </View>
+      <WardrobeScan rid={rid} />
     </Card>
   );
 }
@@ -158,6 +160,7 @@ export function Fridge({ rid }: { rid: string }) {
   const toast = useToast();
   const m = state.mod[rid];
   const old = m.photoAt != null && daysSince(m.photoAt) > PHOTO_MAX_AGE;
+  const scan = useFridgeScan(rid);
 
   const pick = async (source: 'camera' | 'library') => {
     try {
@@ -169,7 +172,8 @@ export function Fridge({ rid }: { rid: string }) {
         D.mod[rid].photo = uri;
         D.mod[rid].photoAt = Date.now();
       });
-      toast('Buzdolabı fotoğrafı güncellendi.');
+      // Yeni fotoğraf hemen taranır; sonuç onaylanmadan liste değişmez.
+      scan.start(uri);
     } catch (e) {
       console.warn(e);
       toast('Fotoğraf eklenemedi.');
@@ -193,12 +197,21 @@ export function Fridge({ rid }: { rid: string }) {
         )}
       </View>
       {old && <Callout>Bu fotoğraf bir haftadan eski. Yenisini çekmek iyi olur.</Callout>}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {Platform.OS !== 'web' && (
-          <Btn label={m.photo ? 'Yeni fotoğraf çek' : 'Fotoğraf çek'} kind="primary" onPress={() => pick('camera')} style={{ flex: 1 }} />
-        )}
-        <Btn label="Galeriden seç" kind={Platform.OS === 'web' ? 'primary' : 'soft'} onPress={() => pick('library')} style={{ flex: 1 }} />
-      </View>
+      <FridgeScanPanel s={scan} retry={() => m.photo && scan.start(m.photo)} />
+      {!scan.scan && (
+        <>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {Platform.OS !== 'web' && (
+              <Btn label={m.photo ? 'Yeni fotoğraf çek' : 'Fotoğraf çek'} kind="primary" onPress={() => pick('camera')} style={{ flex: 1 }} />
+            )}
+            <Btn label="Galeriden seç" kind={Platform.OS === 'web' ? 'primary' : 'soft'} onPress={() => pick('library')} style={{ flex: 1 }} />
+          </View>
+          {m.photo && (
+            <Btn small kind="ghost" label="📸 Bu fotoğrafı yapay zekâ ile tara" onPress={() => scan.start(m.photo!)} style={{ alignSelf: 'flex-start' }} />
+          )}
+          <T v="tiny">Fotoğrafı çekince yapay zekâ içindekileri ve kalan miktarları tahmin eder. Sen onaylamadan liste değişmez.</T>
+        </>
+      )}
     </Card>
   );
 }

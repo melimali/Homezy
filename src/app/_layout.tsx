@@ -16,6 +16,7 @@ import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { prefs } from '@/lib/supabase';
+import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
@@ -65,6 +66,8 @@ function RootStack() {
   const c = useColors();
   useCloudSync();
   usePlaySync();
+  const sound = state.settings.sound;
+  useEffect(() => setSfxEnabled(sound), [sound]);
 
   const loading = status === 'loading';
   useEffect(() => {

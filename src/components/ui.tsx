@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fmtShort, notifs } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
+import { sfx } from '@/lib/sfx';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
@@ -157,6 +158,10 @@ export function Btn({
     <Pressable
       accessibilityRole="button"
       {...rest}
+      onPressIn={e => {
+        sfx('tap');
+        rest.onPressIn?.(e);
+      }}
       style={({ pressed }) => [
         styles.btn,
         small && styles.btnSmall,
@@ -189,6 +194,7 @@ export function Chip({ label, on, onPress }: { label: string; on: boolean; onPre
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={() => sfx('tap')}
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
       style={({ pressed }) => [

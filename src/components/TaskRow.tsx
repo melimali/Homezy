@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -9,6 +9,7 @@ import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { useNow } from '@/hooks/useNow';
 import { persistPhoto } from '@/lib/photos';
+import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -35,6 +36,10 @@ export function TaskRow({
   const toast = useToast();
   const now = useNow();
   const [open, setOpen] = useState(false);
+  // Tamamlayınca düğme zıplar, üstünden '+10 ⭐' süzülür.
+  const [bounce] = useState(() => new Animated.Value(1));
+  const [rise] = useState(() => new Animated.Value(0));
+  const [gain, setGain] = useState(0);
   const s = statusIn(state, t, now);
   const room = state.rooms[rid];
   const place = placeOf(state, rid);
@@ -64,17 +69,27 @@ export function TaskRow({
     if (doneToday) return;
     const before = room ? roomClean(get(), rid) : 0;
     const label = `${plant ? '🪴' : place.emoji} ${place.name} · ${t.name}`;
-    award('gorev', t.id, label, t.name, S => {
+    const r = award('gorev', t.id, label, t.name, S => {
       const x = findList(S, rid, list).find(y => y.id === t.id);
       if (!x) return;
       x.last = Date.now();
       x.snooze = null;
       if (photo) x.photo = photo;
     });
+    bounce.setValue(0.85);
+    Animated.spring(bounce, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
+    if (r.awarded) {
+      setGain(r.points);
+      rise.setValue(0);
+      Animated.timing(rise, { toValue: 1, duration: 1100, useNativeDriver: true }).start(() => setGain(0));
+    }
     // Tertemiz oda kutlaması (ayarlardan kapatılabilir).
     const after = get();
     if (room && list === 'tasks' && after.settings.celebrate && before < 100 && roomClean(after, rid) >= 100)
-      setTimeout(() => toast(`✨ ${room.name} tertemiz! Harikasın 🎉`), 1800);
+      setTimeout(() => {
+        sfx('party');
+        toast(`✨ ${room.name} tertemiz! Harikasın 🎉`);
+      }, 1800);
   };
 
   const snooze = (days: number, msg: string) => {
@@ -122,7 +137,7 @@ export function TaskRow({
           <T v="bold">{t.name}</T>
           <View style={styles.meta}>
             <Pill k={s.k} label={s.label} />
-            <T v="small">⏱ {min} dk · {everyText(t.every)} · son: {agoText(t.last, now)}</T>
+            <T v="small">⏱ {min} dk</T>
             {names.length > 0 && (
               <Pressable onPress={nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
                 style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
@@ -131,6 +146,15 @@ export function TaskRow({
             )}
           </View>
         </View>
+        <Animated.View style={{ transform: [{ scale: bounce }] }}>
+        {gain > 0 && (
+          <Animated.Text
+            pointerEvents="none"
+            style={[styles.gain, { color: c.warm, opacity: rise.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [0, -34] }) }] }]}
+          >
+            +{gain} ⭐
+          </Animated.Text>
+        )}
         <Pressable
           onPress={() => (photoTask ? shoot() : done())}
           disabled={doneToday}
@@ -150,6 +174,7 @@ export function TaskRow({
             {doneToday ? '✓ Bugün' : action}
           </Text>
         </Pressable>
+        </Animated.View>
         <Pressable
           onPress={() => setOpen(o => !o)}
           accessibilityRole="button"
@@ -169,6 +194,7 @@ export function TaskRow({
               <Btn small label="Bu sefer atla" onPress={() => snooze(t.every, `${t.name} bu sefer atlandı, ${t.every === 1 ? 'yarın' : `${t.every} gün sonra`} görüşürüz.`)} />
             </View>
           )}
+          <T v="small">{everyText(t.every)} · son: {agoText(t.last, now)}</T>
           <Stepper
             label="Sıklık"
             value={t.every}
@@ -223,6 +249,8 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
   const toast = useToast();
   const [name, setName] = useState('');
   const [every, setEvery] = useState('7');
+  // Form kapalı başlar; ekranda sadece bir düğme durur.
+  const [open, setOpen] = useState(false);
 
   const submit = () => {
     const n = name.trim();
@@ -232,13 +260,16 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
       findList(S, rid, list).push({ id: uid(), name: n, every: e, last: null });
     });
     setName('');
+    setOpen(false);
     toast(`${n} eklendi.`);
   };
+
+  if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '+ Bitki ekle' : '+ Yeni iş ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
 
   return (
     <View style={{ gap: 8, marginTop: 4 }}>
       <View style={styles.addRow}>
-        <Field value={name} onChangeText={setName} placeholder={placeholder} onSubmitEditing={submit} returnKeyType="done" />
+        <Field value={name} onChangeText={setName} placeholder={placeholder} onSubmitEditing={submit} returnKeyType="done" autoFocus />
       </View>
       <View style={styles.addRow}>
         <Text style={[styles.everyText, { color: c.muted }]}>Her</Text>
@@ -252,6 +283,7 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
         <Text style={[styles.everyText, { color: c.muted, flex: 1 }]}>günde bir</Text>
         <Btn label="Ekle" kind="primary" small onPress={submit} />
       </View>
+      <Btn small kind="ghost" label="Vazgeç" onPress={() => setOpen(false)} style={{ alignSelf: 'flex-start' }} />
     </View>
   );
 }
@@ -266,6 +298,7 @@ const styles = StyleSheet.create({
   roomTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
+  gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, zIndex: 2 },
   done: { borderWidth: 2, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 13 },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },

@@ -91,6 +91,8 @@ export type Settings = {
   flex: boolean;
   /** Bir oda tertemiz olunca kutlama. */
   celebrate: boolean;
+  /** Dokunuş, iş tamamlama ve kutlama sesleri ile titreşim. */
+  sound: boolean;
 };
 
 /* ---------- ev profili, modlar, faturalar, garantiler ---------- */

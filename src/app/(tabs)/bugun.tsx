@@ -22,12 +22,13 @@ export default function Bugun() {
   // Misafir modunda misafirin göreceği odaların yakın işleri ayrı bir grupta, en üstte.
   const guest = S.mode?.k === 'misafir' ? sorted.filter(x => isGuestRoom(S, x.rid) && x.s.diff <= 2) : [];
   const all = sorted.filter(x => !guest.includes(x));
+  // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bu hafta kapalı başlar.
   const groups: [string, typeof all][] = [
     ['🫖 Misafir gelmeden', guest],
-    ['Gecikenler', all.filter(x => x.s.k === 'late')],
-    ['Bugün', all.filter(x => x.s.k === 'today')],
-    ['Bu hafta', all.filter(x => x.s.k === 'ok' && x.s.diff <= 7)],
+    ['Bugün yapılacaklar', all.filter(x => x.s.k !== 'ok')],
   ];
+  const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7);
+  const [showWeek, setShowWeek] = useState(false);
   const later = all.filter(x => x.s.k === 'ok' && x.s.diff > 7).length;
   const shop = shopItems(S).map(s => s.x);
   // Tatilde rutinler dondu; liste boş görünsün.
@@ -40,10 +41,7 @@ export default function Bugun() {
         <T v="h1">Yapılacaklar</T>
       </View>
       {!S.home.asked && <ProfilePrompt />}
-      <ModeCard now={now} />
       <DailyGoals now={now} />
-      <TimeBudget now={now} />
-      <HomeDue now={now} />
       {visible.map(([label, arr]) => (
         <Card key={label}>
           <SecHead title={label} right={String(arr.length)} />
@@ -56,15 +54,27 @@ export default function Bugun() {
       ))}
       {!visible.length && (
         <Card>
-          <EmptyMsg>{S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen 🏖️ Ev seni bekler.' : 'Önümüzdeki hafta için iş yok.'}</EmptyMsg>
+          <EmptyMsg>{S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen 🏖️ Ev seni bekler.' : 'Bugünlük her şey tamam 🎉'}</EmptyMsg>
+        </Card>
+      )}
+      {S.mode?.k !== 'tatil' && week.length > 0 && (
+        <Card>
+          <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
+            <T v="h2" style={{ flex: 1 }}>Bu hafta</T>
+            <T v="small">{showWeek ? 'Gizle' : `${week.length} iş ›`}</T>
+          </Pressable>
+          {showWeek && week.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </Card>
       )}
       {later > 0 && S.mode?.k !== 'tatil' && <T v="small" style={{ textAlign: 'center' }}>Bir haftadan sonra {later} iş daha var.</T>}
+      <HomeDue now={now} />
       {shop.length > 0 && (
         <Card>
           <ShopList items={shop} title="Alınacaklar" h="h2" />
         </Card>
       )}
+      <ModeCard now={now} />
+      <TimeBudget now={now} />
       <AdBanner />
     </Screen>
   );

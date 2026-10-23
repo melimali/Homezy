@@ -38,7 +38,7 @@ export const defaultSettings = (): Settings => ({
   time: '09:00', routine: true, stock: true, laundry: true,
   streak: true, sport: true, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
-  bills: true, expiry: true, weekly: true, flex: true, celebrate: true,
+  bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */

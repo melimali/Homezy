@@ -153,6 +153,7 @@ export default function Bildirimler() {
       <Card>
         <T v="h2">Düzen ve motivasyon</T>
         <Toggle label="Esnek zamanlama" sub="Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık iş 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
+        <Toggle label="Ses ve titreşim 🔔" sub="Dokunuşta, iş bitince ve kutlamada yumuşak bir ses" value={s.sound} onChange={v => set('sound', v)} />
         <Toggle label="Tertemiz oda kutlaması 🎉" sub="Bir odanın bütün işleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
       </Card>
       {!notificationsAvailable() && (

@@ -31,6 +31,7 @@ export function Wardrobe({ rid }: { rid: string }) {
   const [name, setName] = useState('');
   const [cat, setCat] = useState(CATS[0]);
   const [wash, setWash] = useState<WashType>('renkli');
+  const [adding, setAdding] = useState(false);
   const now = useNow();
   const plan = laundryPlan(list);
   const old = donateList(list, now);
@@ -51,6 +52,7 @@ export function Wardrobe({ rid }: { rid: string }) {
       if (w.filter !== 'all' && w.filter !== 'temiz') w.filter = 'all';
     });
     setName('');
+    setAdding(false);
   };
 
   const filters: [WardrobeFilter, string, number][] = [
@@ -137,16 +139,23 @@ export function Wardrobe({ rid }: { rid: string }) {
         {!items.length && <EmptyMsg>{list.length ? 'Bu durumda kıyafet yok.' : 'Dolabın boş. Aşağıdan kıyafet ekle.'}</EmptyMsg>}
       </View>
       <T v="tiny">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek. Yıkama türüne dokunarak onu değiştir.</T>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-        {CATS.map(k => <Chip key={k} small on={cat === k} label={k} onPress={() => setCat(k)} />)}
-      </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-        {WASH_TYPES.map(k => <Chip key={k} small on={wash === k} label={`${WASH[k].emoji} ${WASH[k].label}`} onPress={() => setWash(k)} />)}
-      </ScrollView>
-      <View style={styles.addRow}>
-        <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" />
-        <Btn label="Ekle" kind="primary" small onPress={add} />
-      </View>
+      {adding ? (
+        <View style={{ gap: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            {CATS.map(k => <Chip key={k} small on={cat === k} label={k} onPress={() => setCat(k)} />)}
+          </ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            {WASH_TYPES.map(k => <Chip key={k} small on={wash === k} label={`${WASH[k].emoji} ${WASH[k].label}`} onPress={() => setWash(k)} />)}
+          </ScrollView>
+          <View style={styles.addRow}>
+            <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" autoFocus />
+            <Btn label="Ekle" kind="primary" small onPress={add} />
+          </View>
+          <Btn small kind="ghost" label="Vazgeç" onPress={() => setAdding(false)} style={{ alignSelf: 'flex-start' }} />
+        </View>
+      ) : (
+        <Btn small kind="ghost" label="+ Kıyafet ekle" onPress={() => setAdding(true)} style={{ alignSelf: 'flex-start' }} />
+      )}
       <WardrobeScan rid={rid} />
     </Card>
   );

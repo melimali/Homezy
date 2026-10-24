@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Abonelikler RevenueCat üzerinden App Store ve Google Play'in kendi ödeme sistemiyle alınır.
@@ -21,8 +22,12 @@ const apiKey = Platform.select({
 
 export const purchasesEnabled = Boolean(apiKey);
 
-/** Mağaza fiyatı henüz okunamadıysa gösterilen aylık fiyat. Gerçek fiyat mağaza panelinde girilir. */
-export const PREMIUM_PRICE = '$7';
+export type Plan = 'monthly' | 'annual';
+
+/** Mağaza fiyatı henüz okunamadıysa gösterilen fiyatlar. Gerçek fiyat mağaza panelinde girilir. */
+export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
+/** İlk aya özel fiyat. Gerçek teklif Google Play'de aylık plana "giriş teklifi" olarak tanımlanır. */
+export const INTRO_PRICE = '$4.99';
 
 export type Premium = {
   active: boolean;
@@ -38,9 +43,18 @@ type BuyResult = { ok: true; active: boolean } | { ok: false; cancelled?: boolea
 type PurchasesCtx = {
   ready: boolean;
   premium: Premium;
-  /** Mağazanın gösterdiği aylık fiyat (ör. "$7.00"); okunamadıysa PREMIUM_PRICE. */
-  price: string;
-  buy: () => Promise<BuyResult>;
+  /** Mağazanın gösterdiği fiyatlar (ör. "₺299,99"); okunamadıysa PREMIUM_PRICE. */
+  prices: Record<Plan, string>;
+  /** Yıllık planın aylığa düşen fiyatı (ör. "$5.00"); okunamadıysa null. */
+  annualPerMonth: string | null;
+  /** Yıllık planın 12 aylık fiyata göre indirim oranı (yüzde, ör. 28). */
+  annualSave: number;
+  /**
+   * Aylık planın ilk ay fiyatı (ör. "$4.99"). Mağaza teklifi sadece hak kazanan (daha önce abone
+   * olmamış) kullanıcıya gösterir; mağaza okunduysa ve teklif yoksa null.
+   */
+  introPrice: string | null;
+  buy: (plan: Plan) => Promise<BuyResult>;
   restore: () => Promise<RestoreResult>;
   /** Mağazanın abonelik yönetim sayfasını açar (iptal etme, plan değiştirme). */
   manage: () => Promise<void>;
@@ -49,6 +63,21 @@ type PurchasesCtx = {
 const none: Premium = { active: false, until: null, willRenew: false, productId: null };
 
 const PurchasesContext = createContext<PurchasesCtx | null>(null);
+
+type Packages = Record<Plan, PurchasesPackage | null>;
+
+async function loadPackages(): Promise<Packages> {
+  const o = (await Purchases.getOfferings()).current;
+  return { monthly: o?.monthly ?? null, annual: o?.annual ?? null };
+}
+
+/**
+ * Sunucudaki `subscriptions` satırını hemen tazeler. Webhook zaten yazıyor; bu, satın almadan hemen
+ * sonra yapılan taramanın webhook'u beklemeden Premium hakkıyla sayılması için.
+ */
+function syncServer() {
+  supabase?.functions.invoke('subscription-sync', { method: 'POST' }).catch(() => {});
+}
 
 function readPremium(info: CustomerInfo): Premium {
   const e = info.entitlements.active[ENTITLEMENT];
@@ -60,7 +89,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [ready, setReady] = useState(false);
   const [premium, setPremium] = useState<Premium>(none);
-  const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+  const [pkgs, setPkgs] = useState<Packages>({ monthly: null, annual: null });
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
 
@@ -76,9 +105,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     Purchases.configure({ apiKey, appUserID: user?.id ?? null });
     Purchases.addCustomerInfoUpdateListener(apply);
     Purchases.getCustomerInfo().then(apply).catch(() => {}).finally(() => setReady(true));
-    Purchases.getOfferings()
-      .then(o => setPkg(o.current?.monthly ?? o.current?.availablePackages[0] ?? null))
-      .catch(() => {});
+    loadPackages().then(setPkgs).catch(() => {});
     return () => {
       Purchases.removeCustomerInfoUpdateListener(apply);
     };
@@ -107,29 +134,32 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     })();
   }, [user?.id, apply]);
 
-  const buy = useCallback(async (): Promise<BuyResult> => {
+  const buy = useCallback(async (plan: Plan): Promise<BuyResult> => {
     if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };
     try {
-      let p = pkg;
+      let p = pkgs[plan];
       if (!p) {
-        const o = await Purchases.getOfferings();
-        p = o.current?.monthly ?? o.current?.availablePackages[0] ?? null;
+        const fresh = await loadPackages();
+        setPkgs(fresh);
+        p = fresh[plan];
       }
       if (!p) return { ok: false, error: 'Premium paketi şu an bulunamadı. Biraz sonra tekrar dene.' };
       const { customerInfo } = await Purchases.purchasePackage(p);
       apply(customerInfo);
+      syncServer();
       return { ok: true, active: !!customerInfo.entitlements.active[ENTITLEMENT] };
     } catch (e) {
       if ((e as { userCancelled?: boolean }).userCancelled) return { ok: false, cancelled: true, error: '' };
       return { ok: false, error: 'Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.' };
     }
-  }, [pkg, apply]);
+  }, [pkgs, apply]);
 
   const restore = useCallback(async (): Promise<RestoreResult> => {
     if (!apiKey) return { ok: false, error: 'Satın almalar bu sürümde henüz açık değil.' };
     try {
       const info = await Purchases.restorePurchases();
       apply(info);
+      syncServer();
       return { ok: true, active: !!info.entitlements.active[ENTITLEMENT] };
     } catch {
       return { ok: false, error: 'Satın almalar geri yüklenemedi. İnternet bağlantını ve mağaza hesabını kontrol et.' };
@@ -143,10 +173,16 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     await Linking.openURL(managementURL.current ?? fallback).catch(() => {});
   }, []);
 
-  const price = pkg?.product.priceString ?? PREMIUM_PRICE;
+  const monthly = pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly;
+  const annual = pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual;
+  const annualPerMonth = pkgs.annual?.product.pricePerMonthString ?? null;
+  const m = pkgs.monthly?.product.price ?? 6.99;
+  const y = pkgs.annual?.product.price ?? 59.99;
+  const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
+  const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium, price, buy, restore, manage }),
-    [ready, premium, price, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
+    [ready, premium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

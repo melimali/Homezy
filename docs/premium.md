@@ -46,7 +46,7 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 
 ### Ücretsiz ve Premium
 
-| | Ücretsiz | Premium (7 $/ay ya da 59,99 $/yıl) |
+| | Ücretsiz | Premium (6,99 $/ay, ilk ay 4,99 $; ya da 59,99 $/yıl) |
 |---|---|---|
 | Ev planı, rutinler, bildirimler | ✓ | ✓ |
 | Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
@@ -158,7 +158,7 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 ## Yapılacaklar sırası
 
 1. Apple Small Business Program başvurusu, Paid Apps sözleşmesi, iki mağazada banka ve vergi bilgisi.
-2. App Store Connect ve Play Console'da iki abonelik ürünü: `layfapp_premium_aylik` (6,99 $), `layfapp_premium_yillik` (59,99 $), tek abonelik grubu, ülkeye göre fiyat.
+2. Abonelik ürünleri, ülkeye göre fiyat: Play Console'da tek abonelik `layfapp_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $); App Store Connect'te tek grupta `layfapp_premium_aylik` ve `layfapp_premium_yillik`. Aylık plana ilk ay 4,99 $ giriş teklifi. Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md).
 3. RevenueCat projesi, `premium` yetkisi, iki ürün, bir "offering".
 4. Supabase projesi: anonim oturum, `scan_usage` tablosu ve hak ayırma / geri verme fonksiyonları, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
 5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.

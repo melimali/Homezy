@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
-import { usePurchases } from '@/purchases/PurchasesProvider';
+import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
 
 /** Ücretsiz ile Premium arasındaki farklar. Tek fark yapay zekâ taraması; gerisi herkese açık. */
@@ -23,12 +23,15 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { premium, price, buy, restore } = usePurchases();
+  const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+  const [plan, setPlan] = useState<Plan>('monthly');
+  const unit = plan === 'annual' ? 'yıl' : 'ay';
+  const intro = plan === 'monthly' ? introPrice : null;
 
   const doBuy = async () => {
     setBusy('buy');
-    const r = await buy();
+    const r = await buy(plan);
     setBusy(null);
     if (r.ok) {
       if (r.active) toast('Premium açıldı. Hoş geldin! 🎉');
@@ -68,10 +71,33 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>⭐ PREMIUM</Text>
           </View>
-          <Text style={[styles.price, { color: brand.mint }]}>{price}</Text>
-          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>aylık</Text>
+          <Text style={[styles.price, { color: brand.mint }]}>{intro ?? prices[plan]}</Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>
+            {intro ? 'ilk ay' : plan === 'annual' ? 'yıllık' : 'aylık'}
+          </Text>
         </View>
       </View>
+
+      {!premium.active && (
+        <View style={{ gap: 10 }}>
+          <PlanRow
+            selected={plan === 'annual'}
+            onPress={() => setPlan('annual')}
+            title="Yıllık"
+            price={`${prices.annual}/yıl`}
+            note={annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
+            badge={annualSave > 0 ? `%${annualSave} indirim` : undefined}
+          />
+          <PlanRow
+            selected={plan === 'monthly'}
+            onPress={() => setPlan('monthly')}
+            title="Aylık"
+            price={`${prices.monthly}/ay`}
+            note={introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
+            badge={introPrice ? 'İlk aya özel' : undefined}
+          />
+        </View>
+      )}
 
       <View style={[styles.table, { backgroundColor: c.surface }]}>
         <View style={styles.row}>
@@ -93,13 +119,13 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
         {premium.active ? (
           <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
         ) : (
-          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : `Premium ile başla · ${price}/ay`} onPress={doBuy} disabled={!!busy} />
+          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : intro ? `Premium ile başla · ilk ay ${intro}` : `Premium ile başla · ${prices[plan]}/${unit}`} onPress={doBuy} disabled={!!busy} />
         )}
         <Btn kind="ghost" label={onClose ? 'Kapat' : 'Ücretsiz devam et'} onPress={onClose ?? onDone} disabled={!!busy} />
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
-        Premium her ay kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin.
+        {intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Premium her {unit} kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin.
         Ödemeyi mağaza alır, kart bilgilerin bize gelmez.
       </T>
       {!premium.active && (
@@ -109,7 +135,43 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   );
 }
 
+function PlanRow({ selected, onPress, title, price, note, badge }: {
+  selected: boolean;
+  onPress: () => void;
+  title: string;
+  price: string;
+  note?: string;
+  badge?: string;
+}) {
+  const c = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      style={[styles.planRow, { backgroundColor: c.surface, borderColor: selected ? c.accent : c.line }]}
+    >
+      <View style={[styles.radio, { borderColor: selected ? c.accent : c.line }]}>
+        {selected && <View style={[styles.radioDot, { backgroundColor: c.accent }]} />}
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="bold">{title}</T>
+        {note && <T v="small">{note}</T>}
+      </View>
+      {badge && (
+        <View style={[styles.tag, { backgroundColor: brand.clay }]}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>{badge}</Text>
+        </View>
+      )}
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{price}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 2 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 12, height: 12, borderRadius: 6 },
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
   plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 2, gap: 2 },

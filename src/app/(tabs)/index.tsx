@@ -6,11 +6,12 @@ import { useEffect } from 'react';
 
 import { House3D } from '@/components/House3D';
 import { TaskRow } from '@/components/TaskRow';
+import { WelcomeBack } from '@/components/WelcomeBack';
 import { Btn, Card, SecHead, Screen, T } from '@/components/ui';
 import { allTasks, greet, greeting } from '@/domain/logic';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
-import { BUILT, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
+import { addDays, BUILT, dayKey, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
@@ -33,6 +34,9 @@ export default function Home() {
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
+  // Pazar ve pazartesi "haftalık özetin hazır" şeridi; kart açılınca o hafta için kalkar.
+  const wd = new Date(now).getDay();
+  const weekReady = (wd === 0 || wd === 1) && !(S.play.weekSeen && S.play.weekSeen >= addDays(dayKey(now), wd === 0 ? 0 : -1));
 
   return (
     <Screen>
@@ -45,6 +49,21 @@ export default function Home() {
 
       <StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} />
 
+      {weekReady && (
+        <Pressable
+          onPress={() => router.push('/hafta')}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.week, { backgroundColor: c.accentSoft }, pressed && { transform: [{ translateY: 1 }] }]}
+        >
+          <Text style={{ fontSize: 24 }}>📅</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
+          </View>
+          <Text style={[styles.weekT, { color: c.ink }]}>›</Text>
+        </Pressable>
+      )}
+
       {S.others.length > 0 && (
         <Pressable onPress={() => router.push('/evler')} accessibilityRole="button" style={{ alignSelf: 'center' }}>
           <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
@@ -52,6 +71,9 @@ export default function Home() {
       )}
       <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
       <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
+      <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={6} style={{ alignSelf: 'center', marginTop: -6 }}>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ok }}>🎬 Evimin hikâyesi</Text>
+      </Pressable>
 
       <Card>
         <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3} iş daha` : undefined} />
@@ -64,11 +86,13 @@ export default function Home() {
         <Quick emoji="🏃" label="Spor" onPress={() => router.push('/spor')} />
         <Quick emoji="📔" label="Günlük" onPress={() => router.push('/gunluk')} />
         <Quick emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
+        <Quick emoji="📅" label="Haftam" onPress={() => router.push('/hafta')} />
       </View>
 
       <AdBanner />
 
       <Celebrate level={hp.level} />
+      <WelcomeBack />
     </Screen>
   );
 }
@@ -169,6 +193,8 @@ const styles = StyleSheet.create({
   streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },
   freeze: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center', marginTop: -4 },
   quick: { flexDirection: 'row', gap: 10 },
+  week: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 14 },
+  weekT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   q: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modal: { borderRadius: radius.card, padding: 24, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },

@@ -31,7 +31,7 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
-  frozen: [], times: [],
+  frozen: [], times: [], welcomed: null, weekSeen: null,
 });
 
 export const defaultSettings = (): Settings => ({
@@ -163,13 +163,52 @@ export function autoFreeze(P: Play, limit: number, now = Date.now()): DayKey[] {
   return out;
 }
 
+/* ---------- seri koruma ve geri dönüş ---------- */
+
+/**
+ * `d` gün sonraki akşam, o zamana kadar hiçbir şey yapılmazsa evin kaç gündür bekleyeceği
+ * (`HouseProgress.idle` ile aynı anlam: 1 toz, 2 çatlak, 3+ çöküyor). Kalan dondurma hakları,
+ * uygulama açılınca kaçırılan günleri koruyacağı için düşülür.
+ */
+export function idleAhead(p: HouseProgress, d: number, freezeLeft = 0) {
+  if (!p.level) return 0;
+  const missed = p.today ? Math.max(0, d - 1) : p.idle + d;
+  return Math.max(0, missed - freezeLeft);
+}
+
+/** `d` gün sonra, son bir şey yapılan günün üstünden kaç gün geçmiş olacak (hiç yapılmadıysa null). */
+export function awayAhead(P: Play, d: number, now = Date.now()) {
+  const today = dayKey(now);
+  const last = [...P.days].filter(x => x <= today).sort().pop();
+  if (!last) return null;
+  return Math.round((dayTs(today) - dayTs(last)) / DAY) + d;
+}
+
+/** Kaç gün uzak kalınca "tekrar hoş geldin" karşılaması ve geri dönüş bildirimi başlar. */
+export const AWAY_DAYS = 3;
+
+export type DayMark = { key: DayKey; mark: 'done' | 'ice' | 'miss' | 'today'; n: number };
+
+/** Son 7 günün her biri: iş yapıldı, dondurmayla korundu, kaçırıldı ya da bugün (henüz bir şey yok). */
+export function lastWeek(P: Play, now = Date.now()): DayMark[] {
+  const today = dayKey(now);
+  const done = new Set(P.days);
+  const ice = new Set(P.frozen);
+  return Array.from({ length: 7 }, (_, i) => {
+    const key = addDays(today, i - 6);
+    const n = P.log[key]?.length ?? 0;
+    const mark = done.has(key) ? 'done' : ice.has(key) ? 'ice' : key === today ? 'today' : 'miss';
+    return { key, mark, n };
+  });
+}
+
 export const stageFor = (level: number) => [...STAGES].reverse().find(s => s.level <= level) ?? null;
 export const nextStage = (level: number) => STAGES.find(s => s.level > level) ?? null;
 
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
-  if (p.idle >= 3) return 'Ev yıkılmaya başladı 😢 Bugün bir iş yap, tamire başlayalım 🔨';
-  if (p.idle === 2) return 'Duvarlarda çatlaklar var 😟 Bir iş yap, ev toparlansın.';
+  if (p.idle >= 3) return 'Evin biraz yıprandı 😢 Dert etme: bir iş yap, tamir hemen başlasın 🔨';
+  if (p.idle === 2) return 'Duvarlarda çatlaklar var 😟 Bugün bir iş yapmazsan yarın bir parçası çöker.';
   if (p.idle === 1) return 'Ev biraz tozlandı 🌫️ Bir iş yap, tozu alalım!';
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
   if (!p.today) return 'Bugün henüz bir şey yapmadın. Serin bozulmasın 🔥';

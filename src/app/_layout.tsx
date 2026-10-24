@@ -97,6 +97,8 @@ function RootStack() {
         <Stack.Screen name="aile" />
         <Stack.Screen name="bakim" />
         <Stack.Screen name="evim" />
+        <Stack.Screen name="hafta" />
+        <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
         <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>

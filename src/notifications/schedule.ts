@@ -4,8 +4,9 @@ import { Platform } from 'react-native';
 import { DAY } from '@/domain/constants';
 import { isPhotoTask } from '@/domain/home';
 import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
-import { sportLine, streakLine, summaryTail, weeklyLine } from '@/domain/messages';
-import { awardedToday, dayKey, progressOf } from '@/domain/play';
+import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
+import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
+import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
 import { ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, TASK_CATEGORY, taskDataOf, type TaskData } from './actions';
@@ -186,7 +187,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
-  for (const n of nudges(S, now, smart))
+  for (const n of nudges(S, now, smart, premium))
     await N.scheduleNotificationAsync({
       content: { title: n.title, body: n.body, data: { url: n.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
@@ -196,12 +197,15 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
 /**
  * Önümüzdeki günlerin spor ve seri hatırlatmaları. Bugün spor ya da bir iş yapıldıysa
  * bugünkü hatırlatma atlanır; veri değişince hepsi yeniden zamanlanır.
+ * Akşam hatırlatması evin durumuna göre değişir: toz, çatlak, "son şans". Birkaç gün gelmeyene
+ * her akşam değil, 3., 5. ve 7. gün nazik bir "kaldığın yerden devam" gider.
  */
-export function nudges(S: AppState, now = Date.now(), smart = false) {
+export function nudges(S: AppState, now = Date.now(), smart = false, premium = false) {
   const out: { at: Date; title: string; body: string; url: string }[] = [];
   const set = S.settings;
   const today = dayKey(now);
   const hp = progressOf(S.play, now);
+  const freezeLeft = Math.max(0, limits(premium).freezes - freezesUsed(S.play, now));
   const learned = smart ? smartTimes(S) : null;
   const [sh, sm] = learned?.sport ? [Math.floor(learned.sport / 60), learned.sport % 60] : set.sportTime.split(':').map(n => parseInt(n, 10));
   const streakAt = learned?.streak ? [Math.floor(learned.streak / 60), learned.streak % 60] : STREAK_TIME;
@@ -217,20 +221,17 @@ export function nudges(S: AppState, now = Date.now(), smart = false) {
       const at = new Date(base);
       at.setHours(WEEKLY_TIME[0], WEEKLY_TIME[1], 0, 0);
       // Özet, zamanlandığı andaki veriyle yazılır; veri değiştikçe yeniden zamanlanır.
-      if (at.getTime() > now) out.push({ at, title: '📅 Haftan nasıl geçti?', body: weeklyLine(weekSummary(S, now)), url: '/' });
+      if (at.getTime() > now) out.push({ at, title: '📅 Haftan nasıl geçti?', body: weeklyLine(weekSummary(S, now)), url: '/hafta' });
     }
-    if (set.streak && !(key === today && hp.today)) {
+    const away = awayAhead(S.play, d, now);
+    const quiet = away != null && away >= AWAY_DAYS && away % 2 === 0;
+    if (set.streak && !(key === today && hp.today) && !quiet) {
       const at = new Date(base);
       at.setHours(streakAt[0], streakAt[1], 0, 0);
       // Bugünkü seriyi biliyoruz; yarın için bugün yapıldıysa aynı seri sürüyor. Daha ilerisi bilinmez.
       const streak = d === 0 ? hp.streak : d === 1 && hp.today ? hp.streak : 0;
-      if (at.getTime() > now)
-        out.push({
-          at,
-          title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor',
-          body: streakLine(streak, hp.level > 0, 'seri', at.getTime()),
-          url: '/bugun',
-        });
+      const msg = eveningNudge({ streak, idle: idleAhead(hp, d, freezeLeft), away, built: hp.level > 0, key: 'seri', now: at.getTime() });
+      if (at.getTime() > now) out.push({ at, ...msg, url: '/bugun' });
     }
   }
   return out;

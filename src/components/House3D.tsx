@@ -397,9 +397,11 @@ type Props = {
   build?: { level: number; idle: number };
   /** Evin teması (gündüz, gece, kış, sonbahar). Premium kontrolü çağıran tarafta (`themeFor`). */
   theme?: HouseTheme;
+  /** Oda etiketleri görünsün mü (paylaşılan kartlarda ve hikâyede gizli). */
+  labels?: boolean;
 };
 
-export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz' }: Props) {
+export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -682,7 +684,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {scene.front}
       </Svg>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {labels}
+        {showLabels && labels}
       </View>
     </Animated.View>
   );

@@ -174,3 +174,34 @@ export function weeklyLine(o: { done: number; days: number; score: number; best:
   const best = o.best ? ` En parlak oda: ${o.best} ✨` : '';
   return `Bu hafta ${o.done} iş yaptın, ${o.days} gün evine vakit ayırdın 💪 Ev puanı %${o.score}.${best}`;
 }
+
+/**
+ * Akşam hatırlatmasının başlığı ve metni. `idle`: o akşam hiçbir şey yapılmazsa evin kaç gündür
+ * bekleyeceği (dondurma hakları düşülmüş). `away`: son bir şey yapılan günden beri geçen gün.
+ * Uzun süre gelmeyene ceza dili yerine "birlikte toparlayalım" denir.
+ */
+export function eveningNudge(o: { streak: number; idle: number; away: number | null; built: boolean; key: string; now: number }) {
+  const { streak, idle, away, built, key, now } = o;
+  if (away != null && away >= 3)
+    return {
+      title: pick(['🤗 Evin seni özledi', '🏡 Kaldığın yerden devam', '💛 Seni bekliyoruz'], key, now),
+      body: pick(
+        [
+          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, evini birlikte toparlayalım 🏡',
+          'Bir iş yap, tamir hemen başlasın 🔨 Yavaş yavaş, birlikte.',
+          '5 dakikalık tek bir iş yeter. Gerisini adım adım hallederiz 🐢✨',
+        ],
+        key,
+        now,
+      ),
+    };
+  if (idle >= 2) return { title: '🛟 Son şans: yarın evin çökmeye başlıyor', body: 'Bu akşam tek bir iş yap, evin kurtulsun. Minik bir iş bile yeter 💪' };
+  if (idle === 1) return { title: '🌫️ Evin tozlandı', body: 'Bu akşam bir iş yapmazsan yarın duvarlarda çatlaklar çıkar 😟 Bir dakikalık iş yeter.' };
+  return { title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
+}
+
+/** Haftalık özet kartı paylaşılırken (ya da görsel paylaşılamazsa) giden metin. */
+export function weekShareText(o: { done: number; days: number; streak: number }) {
+  const streak = o.streak > 1 ? ` 🔥 ${o.streak} günlük serim var.` : '';
+  return `Bu hafta Layfapp ile ${o.done} ev işi yaptım, ${o.days} gün evime vakit ayırdım 💪${streak} Evini topla, evin büyüsün 🏡`;
+}

@@ -166,6 +166,10 @@ export type Play = {
   frozen: DayKey[];
   /** Son tamamlanan işlerin günün kaçıncı dakikasında yapıldığı (akıllı bildirimler için, en fazla 40). */
   times: number[];
+  /** "Tekrar hoş geldin" karşılamasının en son kapatıldığı gün. */
+  welcomed: DayKey | null;
+  /** Haftalık özet kartının en son açıldığı gün (ana ekrandaki "özetin hazır" şeridi için). */
+  weekSeen: DayKey | null;
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */

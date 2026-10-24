@@ -47,7 +47,7 @@ type PurchasesCtx = {
   prices: Record<Plan, string>;
   /** Yıllık planın aylığa düşen fiyatı (ör. "$5.00"); okunamadıysa null. */
   annualPerMonth: string | null;
-  /** Yıllık planın 12 aylığa göre yüzde kaç ucuz olduğu. */
+  /** Yıllık planın 12 aylık fiyata göre indirim oranı (yüzde, ör. 28). */
   annualSave: number;
   /**
    * Aylık planın ilk ay fiyatı (ör. "$4.99"). Mağaza teklifi sadece hak kazanan (daha önce abone

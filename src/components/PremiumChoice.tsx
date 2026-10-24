@@ -83,7 +83,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
             title="Yıllık"
             price={`${prices.annual}/yıl`}
             note={annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
-            badge={annualSave > 0 ? `%${annualSave} daha ucuz` : undefined}
+            badge={annualSave > 0 ? `%${annualSave} indirim` : undefined}
           />
           <PlanRow
             selected={plan === 'monthly'}

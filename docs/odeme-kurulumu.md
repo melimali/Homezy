@@ -10,9 +10,11 @@ Kod tarafı hazır: ödeme ekranı (`src/components/PremiumChoice.tsx`), satın 
 |---|---|---|
 | Aylık | **6,99 $** | |
 | Aylık, ilk ay | **4,99 $** | Sadece daha önce abone olmamış kişiye. Google Play'de "giriş teklifi" olarak tanımlanır. |
-| Yıllık | **59,99 $** | Aylığa göre ≈ %28 ucuz, ekranda otomatik hesaplanır. |
+| Yıllık | **59,99 $** | Ekranda 12 aylık fiyata göre indirim oranı yazar (≈ %28), mağaza fiyatından hesaplanır. |
 
-Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı Google'ın TL fiyatını görür. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
+**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim). İlk ay teklifi **119,99 TL**.
+
+Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı mağazaya girilen TL fiyatını görür, kodda TL yazılı değil. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
 
 ## Adımlar
 
@@ -39,9 +41,9 @@ Play Console → **Para kazanma → Ürünler → Abonelikler → Abonelik oluş
 
 1. Ürün kimliği: `layfapp_premium`, ad: Layfapp Premium.
 2. İki **temel plan**:
-   - `aylik`: otomatik yenilenen, 1 ay, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, Türkiye fiyatını istersen elle düzelt.
-   - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**.
-3. `aylik` planına **teklif** ekle: kimlik `ilk-ay`, uygunluk "Yeni müşteri edinme" (daha önce bu aboneliği almamış olanlar), aşama "Tek ödeme" ya da "Sabit fiyat", **1 ay, 4,99 USD**. Etkinleştir.
+   - `aylik`: otomatik yenilenen, 1 ay, **geriye dönük uyumlu (backwards compatible)** olarak işaretli, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, sonra listede **Türkiye**'yi bul ve fiyatı elle **149,99 TRY** yap.
+   - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**; Türkiye için elle **1.564,99 TRY**.
+3. `aylik` planına **teklif** ekle: kimlik `ilk-ay`, uygunluk "Yeni müşteri edinme" (daha önce bu aboneliği almamış olanlar), aşama "Tek ödeme" ya da "Sabit fiyat", **1 ay, 4,99 USD**; Türkiye için elle **119,99 TRY**. Etkinleştir.
 4. Temel planları ve teklifi **etkinleştir**.
 
 ### 4. RevenueCat
@@ -104,6 +106,6 @@ RevenueCat → **Integrations → Webhooks → + New**:
 ## iOS (sonra)
 
 1. Apple Developer Program (99 $/yıl).
-2. App Store Connect → uygulama → **Abonelikler**: grup "Layfapp Premium", iki ürün `layfapp_premium_aylik` (6,99 $) ve `layfapp_premium_yillik` (59,99 $). Aylık ürüne **Giriş teklifi**: "Kullandıkça öde", 1 ay, 4,99 $.
+2. App Store Connect → uygulama → **Abonelikler**: grup "Layfapp Premium", iki ürün `layfapp_premium_aylik` (6,99 $; Türkiye için elle 149,99 TL) ve `layfapp_premium_yillik` (59,99 $; Türkiye için elle 1.564,99 TL). Aylık ürüne **Giriş teklifi**: "Kullandıkça öde", 1 ay, 4,99 $ (Türkiye 119,99 TL).
 3. RevenueCat → App Store uygulaması ekle (App Store Connect API anahtarı ve "In-App Purchase Key"), ürünleri içe aktar, aynı `premium` entitlement'ına ve aynı offering'deki Monthly / Annual paketlerine bağla.
 4. iOS public anahtarı (`appl_...`) `.env`'e eklenir.

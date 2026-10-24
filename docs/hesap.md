@@ -44,7 +44,7 @@ Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlemen
 
 ### 3. Uygulama
 
-Supabase adresi ve anon anahtarı repodaki `.env` dosyasında. RevenueCat anahtarlarını `.env.local` dosyasına ekle (bkz. `.env.example`). Bunlar uygulamaya gömülen, herkese açık anahtarlar; gizli anahtarlar sadece Supabase'de durur.
+Supabase adresi ve anon anahtarı repodaki `.env` dosyasında. RevenueCat Android anahtarı (`goog_...`) da `.env`'de; iOS anahtarı gelince oraya eklenecek (EAS bulut derlemesi `.env.local`'ı görmüyor). Bunlar uygulamaya gömülen, herkese açık anahtarlar; gizli anahtarlar sadece Supabase'de durur.
 
 Anahtarlar girilmemişse uygulama yine açılır: tanıtım ve giriş ekranları görünür, "Hesapsız devam et" çalışır, veriler sadece telefonda kalır.
 

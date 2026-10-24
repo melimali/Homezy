@@ -48,9 +48,17 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Buzdolabı fotoğrafını galeriden seçebilmen için Layfapp fotoğraflarına erişmek istiyor.",
-          "cameraPermission": "Buzdolabının fotoğrafını çekebilmen için Layfapp kameraya erişmek istiyor.",
+          "photosPermission": "Buzdolabı ve günlük fotoğraflarını galeriden seçebilmen için Layfapp fotoğraflarına erişmek istiyor.",
+          "cameraPermission": "Buzdolabının ve günün fotoğrafını çekebilmen için Layfapp kameraya erişmek istiyor.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delayAppMeasurementInit": true
         }
       ]
     ],

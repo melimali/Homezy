@@ -2,13 +2,13 @@ import * as SQLite from 'expo-sqlite';
 
 import { TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
-import type { AppState, ClothState, Play, RoomType, Settings, StockLevel, TaskList, WardrobeFilter } from '@/domain/types';
+import type { AppState, ClothState, Play, RoomType, SavedHome, Settings, StockLevel, TaskList, WardrobeFilter } from '@/domain/types';
 
 /**
  * Bütün veriler telefondaki `layfapp.db` dosyasında. Veri küçük olduğu için her kayıtta
  * tablolar tek bir işlemde baştan yazılır; böylece uygulama tarafı sade bir state ile çalışır.
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -26,7 +26,7 @@ function getDb() {
         CREATE TABLE IF NOT EXISTS cells (idx INTEGER PRIMARY KEY NOT NULL, room_id TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS tasks (
           id TEXT PRIMARY KEY NOT NULL, room_id TEXT NOT NULL, list TEXT NOT NULL,
-          name TEXT NOT NULL, every INTEGER NOT NULL, last INTEGER, ord INTEGER NOT NULL
+          name TEXT NOT NULL, every INTEGER NOT NULL, last INTEGER, ord INTEGER NOT NULL, who TEXT
         );
         CREATE TABLE IF NOT EXISTS clothes (
           id TEXT PRIMARY KEY NOT NULL, room_id TEXT NOT NULL, name TEXT NOT NULL,
@@ -37,6 +37,9 @@ function getDb() {
           lvl TEXT NOT NULL, ord INTEGER NOT NULL
         );
       `);
+      // Sürüm 2: işlere "kim yapacak" (aile paylaşımı) eklendi.
+      const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(tasks)');
+      if (!cols.some(c => c.name === 'who')) await db.execAsync('ALTER TABLE tasks ADD COLUMN who TEXT');
       return db;
     })();
   }
@@ -47,7 +50,7 @@ type RoomRow = {
   id: string; type: RoomType; name: string; ord: number;
   filter: WardrobeFilter | null; photo: string | null; photo_at: number | null;
 };
-type TaskRow = { id: string; room_id: string; list: TaskList; name: string; every: number; last: number | null };
+type TaskRow = { id: string; room_id: string; list: TaskList; name: string; every: number; last: number | null; who: string | null };
 type ClothRow = { id: string; room_id: string; name: string; cat: string; state: ClothState };
 type StockRow = { id: string; room_id: string; name: string; lvl: StockLevel };
 
@@ -71,6 +74,9 @@ export async function loadState(): Promise<AppState | null> {
     mod: {},
     settings: JSON.parse(m.settings) as Settings,
     play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
+    homeId: m.homeId || 'ev1',
+    homeName: m.homeName || 'Evim',
+    others: m.others ? (JSON.parse(m.others) as SavedHome[]) : [],
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
@@ -89,7 +95,7 @@ export async function loadState(): Promise<AppState | null> {
     if (c.idx < S.cells.length && S.rooms[c.room_id]) S.cells[c.idx] = c.room_id;
   for (const t of await db.getAllAsync<TaskRow>('SELECT * FROM tasks ORDER BY ord')) {
     if (!S.rooms[t.room_id]) continue;
-    const task = { id: t.id, name: t.name, every: t.every, last: t.last };
+    const task = { id: t.id, name: t.name, every: t.every, last: t.last, who: t.who ?? null };
     if (t.list === 'plants') (S.mod[t.room_id].plants ||= []).push(task);
     else S.tasks[t.room_id].push(task);
   }
@@ -112,6 +118,10 @@ export async function saveState(S: AppState): Promise<void> {
       ['rows', String(S.rows)],
       ['settings', JSON.stringify(S.settings)],
       ['play', JSON.stringify(S.play)],
+      ['homeId', S.homeId],
+      ['homeName', S.homeName],
+      // Diğer evler (Premium) küçük olduğu için tek JSON olarak.
+      ['others', JSON.stringify(S.others)],
     ];
     for (const [k, v] of meta) await tx.runAsync('INSERT INTO meta (key, value) VALUES (?, ?)', k, v);
 
@@ -123,11 +133,11 @@ export async function saveState(S: AppState): Promise<void> {
         id, r.type, r.name, ord, m.filter ?? null, m.photo ?? null, m.photoAt ?? null,
       );
       for (const [i, t] of (S.tasks[id] || []).entries())
-        await tx.runAsync('INSERT INTO tasks (id, room_id, list, name, every, last, ord) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          t.id, id, 'tasks', t.name, t.every, t.last, i);
+        await tx.runAsync('INSERT INTO tasks (id, room_id, list, name, every, last, ord, who) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          t.id, id, 'tasks', t.name, t.every, t.last, i, t.who ?? null);
       for (const [i, t] of (m.plants || []).entries())
-        await tx.runAsync('INSERT INTO tasks (id, room_id, list, name, every, last, ord) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          t.id, id, 'plants', t.name, t.every, t.last, i);
+        await tx.runAsync('INSERT INTO tasks (id, room_id, list, name, every, last, ord, who) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          t.id, id, 'plants', t.name, t.every, t.last, i, t.who ?? null);
       for (const [i, c] of (m.wardrobe || []).entries())
         await tx.runAsync('INSERT INTO clothes (id, room_id, name, cat, state, ord) VALUES (?, ?, ?, ?, ?, ?)',
           c.id, id, c.name, c.cat, c.state, i);

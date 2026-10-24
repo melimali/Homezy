@@ -169,6 +169,9 @@ export function emptyState(): AppState {
     mod: {},
     settings: defaultSettings(),
     play: emptyPlay(),
+    homeId: 'ev1',
+    homeName: 'Evim',
+    others: [],
   };
 }
 

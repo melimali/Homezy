@@ -1,11 +1,10 @@
-import { Directory, File, Paths } from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 import { CATS, CSTATE, LAUNDRY_THRESHOLD, LV, NEXT_CSTATE, PHOTO_MAX_AGE } from '@/domain/constants';
 import { agoText, daysSince, sortByDue, uid } from '@/domain/logic';
+import { persistPhoto, pickPhoto } from '@/lib/photos';
 import type { ClothState, WardrobeFilter } from '@/domain/types';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -99,24 +98,6 @@ export function Wardrobe({ rid }: { rid: string }) {
 
 /* ---------- buzdolabı fotoğrafı ---------- */
 
-/** Seçilen fotoğrafı uygulamanın kalıcı klasörüne kopyalar (önbellek temizlenince kaybolmasın). */
-function persistPhoto(uri: string, previous?: string | null): string {
-  if (Platform.OS === 'web') return uri;
-  const dir = new Directory(Paths.document, 'buzdolabi');
-  if (!dir.exists) dir.create({ intermediates: true });
-  const dest = new File(dir, `buzdolabi-${Date.now()}.jpg`);
-  new File(uri).copy(dest);
-  if (previous) {
-    try {
-      const old = new File(previous);
-      if (old.exists) old.delete();
-    } catch {
-      // Eski dosya silinemezse sorun değil.
-    }
-  }
-  return dest.uri;
-}
-
 export function Fridge({ rid }: { rid: string }) {
   const c = useColors();
   const { state, update } = useStore();
@@ -126,17 +107,10 @@ export function Fridge({ rid }: { rid: string }) {
 
   const pick = async (source: 'camera' | 'library') => {
     try {
-      const perm = source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        toast(source === 'camera' ? 'Kamera izni gerekli.' : 'Galeri izni gerekli.');
-        return;
-      }
-      const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.6 };
-      const res = source === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
-      if (res.canceled || !res.assets?.[0]) return;
-      const uri = persistPhoto(res.assets[0].uri, m.photo);
+      const res = await pickPhoto(source);
+      if (!res) return;
+      if ('error' in res) return toast(res.error);
+      const uri = persistPhoto(res.uri, 'buzdolabi', m.photo);
       update(D => {
         D.mod[rid].photo = uri;
         D.mod[rid].photoAt = Date.now();

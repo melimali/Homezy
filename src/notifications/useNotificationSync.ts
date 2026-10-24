@@ -2,6 +2,7 @@ import type { NotificationResponse } from 'expo-notifications';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect } from 'react';
 
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 
 import { getNotifications, rescheduleMorningSummaries } from './schedule';
@@ -9,15 +10,17 @@ import { getNotifications, rescheduleMorningSummaries } from './schedule';
 /** Veri değiştikçe sabah özetlerini yeniler ve bildirime dokununca ilgili ekranı açar. */
 export function useNotificationSync() {
   const { state } = useStore();
+  const { premium } = usePurchases();
   const router = useRouter();
+  const active = premium.active;
 
   useEffect(() => {
     if (!getNotifications()) return;
     const t = setTimeout(() => {
-      rescheduleMorningSummaries(state).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
+      rescheduleMorningSummaries(state, active).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
     }, 1500);
     return () => clearTimeout(t);
-  }, [state]);
+  }, [state, active]);
 
   useEffect(() => {
     const N = getNotifications();

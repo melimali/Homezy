@@ -45,7 +45,11 @@ function DeleteHome() {
 
   const del = () => {
     if (!armed) return setArmed(true);
-    const fresh = { ...emptyState(), cols: S.cols, rows: S.rows, cells: Array(S.cols * S.rows).fill(null), settings: S.settings, play: { ...S.play, placed: {} } };
+    // Diğer evler (Premium) ve açık evin adı yerinde kalır; sadece bu evin içi silinir.
+    const fresh = {
+      ...emptyState(), cols: S.cols, rows: S.rows, cells: Array(S.cols * S.rows).fill(null), settings: S.settings, play: { ...S.play, placed: {} },
+      homeId: S.homeId, homeName: S.homeName, others: S.others,
+    };
     deleteHome(status === 'account' ? user?.id : undefined, fresh).catch(e => console.warn('Layfapp: buluttaki ev silinemedi', e));
     rescheduleMorningSummaries(fresh).catch(() => {});
     replace(fresh);

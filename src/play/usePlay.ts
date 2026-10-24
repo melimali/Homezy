@@ -4,7 +4,8 @@ import { AppState as RNAppState } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { useToast } from '@/components/Toast';
 import { ITEM } from '@/domain/items';
-import { awardLocal, awardToast, pruneLog, type AwardResult } from '@/domain/play';
+import { autoFreeze, awardLocal, awardToast, pruneLog, type AwardResult } from '@/domain/play';
+import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -15,7 +16,7 @@ import { useStore } from '@/store/AppStore';
  * (`play_award`); sunucunun cevabı (puan, günler, eşyalar) esas alınır. İnternet yoksa sırada
  * bekler, bağlantı gelince gönderilir. Sunucu bağlı değilse (anahtar yoksa) her şey telefonda kalır.
  */
-type Summary = { points: number; days: DayKey[]; owned: string[]; awarded?: boolean };
+type Summary = { points: number; days: DayKey[]; owned: string[]; frozen?: DayKey[]; awarded?: boolean };
 
 type Update = (fn: (draft: AppState) => void) => AppState;
 
@@ -27,8 +28,9 @@ function apply(update: Update, s: Summary) {
     const P = D.play;
     P.points = s.points;
     // Henüz gönderilmemiş günler sunucuda yok; onları kaybetme.
-    P.days = [...new Set([...s.days, ...P.pending.map(e => e.day)])].sort();
+    P.days = [...new Set([...s.days, ...P.pending.filter(e => e.kind !== 'dondur').map(e => e.day)])].sort();
     P.owned = s.owned;
+    if (s.frozen) P.frozen = [...new Set([...s.frozen, ...P.pending.filter(e => e.kind === 'dondur').map(e => e.day)])].sort();
   });
 }
 
@@ -47,14 +49,21 @@ async function send(get: () => AppState, update: Update) {
   for (;;) {
     const ev = get().play.pending[0];
     if (!ev) break;
-    const { data, error } = await supabase.rpc('play_award', { p_kind: ev.kind, p_ref: ev.ref, p_day: ev.day });
+    const { data, error } = ev.kind === 'dondur'
+      ? await supabase.rpc('play_freeze', { p_day: ev.day })
+      : await supabase.rpc('play_award', { p_kind: ev.kind, p_ref: ev.ref, p_day: ev.day });
+    // Sunucuda dondurma fonksiyonu henüz yoksa (…_premium.sql çalıştırılmadı) dondurma telefonda kalsın,
+    // arkadaki puanları bekletmesin.
+    const missing = ev.kind === 'dondur' && error?.code === 'PGRST202';
     // Ağ hatası ya da sunucuda tablo henüz kurulmamış: sonra tekrar dene.
-    if (error && !rejected(error)) return;
+    if (error && !rejected(error) && !missing) return;
     update(D => {
       const i = D.play.pending.findIndex(e => e.kind === ev.kind && e.ref === ev.ref && e.day === ev.day);
       if (i > -1) D.play.pending.splice(i, 1);
     });
     if (!error) summary = data as Summary;
+    // Sunucu dondurmayı reddettiyse (ör. bu ayın hakkı dolmuş) telefondaki kaydı da geri al.
+    else if (ev.kind === 'dondur' && !missing) update(D => void (D.play.frozen = D.play.frozen.filter(d => d !== ev.day)));
   }
   if (!summary) {
     const { data, error } = await supabase.rpc('play_summary');
@@ -64,12 +73,45 @@ async function send(get: () => AppState, update: Update) {
   apply(update, summary);
 }
 
+/**
+ * Kaçırılan günleri ayın seri dondurma hakkıyla korur (ücretsiz ayda 1, Premium ayda 3).
+ * Sunucu da hakkı sayar; reddederse dondurma geri alınır.
+ */
+function freezeMissed(get: () => AppState, update: Update, premium: boolean): string[] {
+  const S = get();
+  // Önce kopyada dene; dondurulacak gün yoksa state'e hiç dokunma.
+  if (!S.setup || !autoFreeze({ ...S.play, frozen: [...S.play.frozen] }, limits(premium).freezes).length) return [];
+  let out: string[] = [];
+  update(D => {
+    if (!D.setup) return;
+    out = autoFreeze(D.play, limits(premium).freezes);
+    for (const day of out) D.play.pending.push({ kind: 'dondur', ref: 'dondur', day });
+  });
+  return out;
+}
+
 /** Kök layout'ta bir kere çağrılır: girişte, uygulama öne gelince ve yeni puan sıraya girince eşler. */
 export function usePlaySync() {
   const { state, update, get } = useStore();
   const { session } = useAuth();
+  const { ready, premium } = usePurchases();
+  const toast = useToast();
   const uid = session?.user.id;
   const pending = state.play.pending.length;
+  const active = premium.active;
+
+  // Açılışta ve uygulama öne gelince: dün (ya da daha önce) gün kaçırıldıysa seriyi dondur.
+  useEffect(() => {
+    if (!ready) return;
+    const run = () => {
+      const out = freezeMissed(get, update, active);
+      if (out.length)
+        toast(out.length === 1 ? '❄️ Kaçırdığın gün için seri dondurma kullandım. Evin güvende!' : `❄️ Kaçırdığın ${out.length} gün için seri dondurma kullandım.`);
+    };
+    run();
+    const sub = RNAppState.addEventListener('change', s => s === 'active' && run());
+    return () => sub.remove();
+  }, [ready, active, get, update, toast]);
 
   useEffect(() => {
     if (uid) flush(get, update).catch(() => {});
@@ -98,13 +140,13 @@ export function usePlay() {
       const out: { r?: AwardResult } = {};
       update(D => {
         extra?.(D);
-        out.r = awardLocal(D, kind, ref, label);
+        out.r = awardLocal(D, kind, ref, label, Date.now(), limits(premium.active).mult);
         pruneLog(D.play);
       });
       toast(awardToast(out.r!, what));
       return out.r!;
     },
-    [update, toast],
+    [update, toast, premium.active],
   );
 
   const buy = useCallback(

@@ -10,7 +10,7 @@ import { useStore } from '@/store/AppStore';
  * Ev verisinin bulut yedeği: Supabase'deki `homes` tablosunda kullanıcı başına tek satır (JSON).
  * Telefondaki veri asıl kaynak; değiştikçe birkaç saniye sonra buluta yazılır. Giriş yapınca
  * buluttaki ev geri yüklenir. Fotoğraflar (buzdolabı) telefonda kalır, yedeğe girmez.
- * Aynı anda iki telefonda düzenleme (aile paylaşımı) v2'nin işi.
+ * Aile paylaşımındaki ortak ev ayrıca `shared_homes` tablosunda eşlenir (bkz. family/FamilyProvider.tsx).
  */
 export type RemoteHome = { state: AppState; updatedAt: string };
 
@@ -35,12 +35,15 @@ export async function deleteHome(userId: string | undefined, fresh: AppState) {
   if (userId && prefs.get('cloudUser') === userId) await pushHome(userId, fresh);
 }
 
-/** Telefona özel alanları (fotoğraf yolları) yedekten çıkarır. */
+const noPhotos = (mod: AppState['mod']) =>
+  Object.fromEntries(Object.entries(mod).map(([k, m]) => [k, { ...m, photo: null, photoAt: null }]));
+
+/**
+ * Telefona özel alanları (buzdolabı fotoğraf yolları) yedekten çıkarır. Günlük fotoğrafları
+ * Premium'da ayrıca Supabase Storage'a yedeklenir (`photoKey`, bkz. sync/photos.ts).
+ */
 function forCloud(S: AppState): AppState {
-  const mod = Object.fromEntries(
-    Object.entries(S.mod).map(([k, m]) => [k, { ...m, photo: null, photoAt: null }]),
-  );
-  return { ...S, mod };
+  return { ...S, mod: noPhotos(S.mod), others: (S.others ?? []).map(h => ({ ...h, mod: noPhotos(h.mod) })) };
 }
 
 /** Bulut yedeğini telefondaki veriyle birleştirirken fotoğrafları korur. */

@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 import { DAY } from '@/domain/constants';
 import { greet, notifs } from '@/domain/logic';
 import { sportLine, streakLine, summaryTail } from '@/domain/messages';
-import { awardedToday, dayKey, houseProgress } from '@/domain/play';
+import { awardedToday, dayKey, progressOf } from '@/domain/play';
 import type { AppState, Notice } from '@/domain/types';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
@@ -98,7 +98,8 @@ export function summaryFor(ns: Notice[], at = new Date()): { title: string; body
  * tarihine göre hesaplanır (bugün yarın, yarın bugün olur), böylece günlük tek bir sabit
  * bildirim yerine o sabaha uygun özet gelir.
  */
-export async function rescheduleMorningSummaries(S: AppState) {
+export async function rescheduleMorningSummaries(S: AppState, premium = false) {
+  const smart = premium && S.settings.smart;
   const N = getNotifications();
   if (!N) return;
   if ((await getPermission()) !== 'granted') return;
@@ -113,14 +114,17 @@ export async function rescheduleMorningSummaries(S: AppState) {
     const at = new Date(now + d * DAY);
     at.setHours(hh || 0, mm || 0, 0, 0);
     if (at.getTime() <= now) continue;
-    const msg = summaryFor(notifs(S, at.getTime()), at);
+    const ns = notifs(S, at.getTime());
+    // Akıllı bildirim: acil bir şey yoksa sabah özetiyle rahatsız etme.
+    if (smart && !ns.some(n => n.k !== 'ok')) continue;
+    const msg = summaryFor(ns, at);
     if (!msg) continue;
     await N.scheduleNotificationAsync({
       content: { title: msg.title, body: msg.body, data: { url: msg.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
-  for (const n of nudges(S, now))
+  for (const n of nudges(S, now, smart))
     await N.scheduleNotificationAsync({
       content: { title: n.title, body: n.body, data: { url: n.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
@@ -131,12 +135,14 @@ export async function rescheduleMorningSummaries(S: AppState) {
  * Önümüzdeki günlerin spor ve seri hatırlatmaları. Bugün spor ya da bir iş yapıldıysa
  * bugünkü hatırlatma atlanır; veri değişince hepsi yeniden zamanlanır.
  */
-export function nudges(S: AppState, now = Date.now()) {
+export function nudges(S: AppState, now = Date.now(), smart = false) {
   const out: { at: Date; title: string; body: string; url: string }[] = [];
   const set = S.settings;
   const today = dayKey(now);
-  const hp = houseProgress(S.play.days, now);
-  const [sh, sm] = set.sportTime.split(':').map(n => parseInt(n, 10));
+  const hp = progressOf(S.play, now);
+  const learned = smart ? smartTimes(S) : null;
+  const [sh, sm] = learned?.sport ? [Math.floor(learned.sport / 60), learned.sport % 60] : set.sportTime.split(':').map(n => parseInt(n, 10));
+  const streakAt = learned?.streak ? [Math.floor(learned.streak / 60), learned.streak % 60] : STREAK_TIME;
   for (let d = 0; d < DAYS_AHEAD; d++) {
     const base = new Date(now + d * DAY);
     const key = dayKey(base.getTime());
@@ -147,7 +153,7 @@ export function nudges(S: AppState, now = Date.now()) {
     }
     if (set.streak && !(key === today && hp.today)) {
       const at = new Date(base);
-      at.setHours(STREAK_TIME[0], STREAK_TIME[1], 0, 0);
+      at.setHours(streakAt[0], streakAt[1], 0, 0);
       // Bugünkü seriyi biliyoruz; yarın için bugün yapıldıysa aynı seri sürüyor. Daha ilerisi bilinmez.
       const streak = d === 0 ? hp.streak : d === 1 && hp.today ? hp.streak : 0;
       if (at.getTime() > now)
@@ -161,3 +167,30 @@ export function nudges(S: AppState, now = Date.now()) {
   }
   return out;
 }
+
+const median = (xs: number[]) => {
+  const a = [...xs].sort((x, y) => x - y);
+  return a[Math.floor(a.length / 2)];
+};
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+const q15 = (n: number) => Math.round(n / 15) * 15;
+
+/**
+ * Premium akıllı bildirimler: kişinin alışkanlığından öğrenilen saatler (günün dakikası).
+ * - Seri hatırlatması: işleri genelde yaptığı saatten bir saat önce (17:00–21:30 arası).
+ * - Spor hatırlatması: sporu genelde kaydettiği saatten yarım saat önce.
+ * Yeterli kayıt yoksa (5 iş, 3 spor) null; o zaman sabit saatler kullanılır.
+ */
+export function smartTimes(S: AppState): { streak: number | null; sport: number | null } {
+  const t = S.play.times ?? [];
+  const sp = S.play.sport.slice(0, 20).map(x => {
+    const d = new Date(x.at);
+    return d.getHours() * 60 + d.getMinutes();
+  });
+  return {
+    streak: t.length >= 5 ? clamp(q15(median(t) - 60), 17 * 60, 21 * 60 + 30) : null,
+    sport: sp.length >= 3 ? clamp(q15(median(sp) - 30), 6 * 60, 22 * 60) : null,
+  };
+}
+
+export const fmtMinute = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;

@@ -30,17 +30,22 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
+  frozen: [], times: [],
 });
 
 export const defaultSettings = (): Settings => ({
   time: '09:00', routine: true, stock: true, laundry: true,
   streak: true, sport: true, sportTime: '18:00', sportDays: [1, 3, 5],
+  smart: true, theme: 'gunduz', workout: null,
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */
 export function normalize(S: AppState): AppState {
   S.settings = { ...defaultSettings(), ...(S.settings || {}) };
   S.play = { ...emptyPlay(), ...(S.play || {}) };
+  S.homeId ||= 'ev1';
+  S.homeName ||= 'Evim';
+  S.others ||= [];
   return S;
 }
 
@@ -83,9 +88,11 @@ export type HouseProgress = {
  * Seri ve ev seviyesi, yapılan günlerin listesinden her seferinde baştan hesaplanır.
  * Bugün henüz bir şey yapılmadıysa bugün ceza sayılmaz; gün bitince sayılır.
  */
-export function houseProgress(days: DayKey[], now = Date.now()): HouseProgress {
+export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[] = []): HouseProgress {
   const today = dayKey(now);
   const set = new Set(days);
+  // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır.
+  const ice = new Set(frozen);
   const sorted = [...set].filter(d => d <= today).sort();
   const active = set.has(today);
   let level = 0;
@@ -95,6 +102,8 @@ export function houseProgress(days: DayKey[], now = Date.now()): HouseProgress {
       if (set.has(d)) {
         level = Math.min(MAX_LEVEL, level + 1);
         miss = 0;
+      } else if (ice.has(d)) {
+        miss = 0;
       } else if (d !== today) {
         miss++;
         if (miss >= 3) level = Math.max(0, level - 1);
@@ -102,8 +111,43 @@ export function houseProgress(days: DayKey[], now = Date.now()): HouseProgress {
     }
   }
   let streak = 0;
-  for (let d = active ? today : addDays(today, -1); set.has(d); d = addDays(d, -1)) streak++;
+  for (let d = active ? today : addDays(today, -1); set.has(d) || ice.has(d); d = addDays(d, -1)) if (set.has(d)) streak++;
   return { level, streak, today: active, idle: active || !sorted.length ? 0 : miss };
+}
+
+/** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
+export const progressOf = (P: Play, now = Date.now()) => houseProgress(P.days, now, P.frozen);
+
+/* ---------- seri dondurma ---------- */
+
+/** Bu ay kullanılmış dondurma sayısı. */
+export const freezesUsed = (P: Play, now = Date.now()) => {
+  const month = dayKey(now).slice(0, 7);
+  return P.frozen.filter(d => d.startsWith(month)).length;
+};
+
+/**
+ * Kaçırılan günleri (en fazla son 7 gün) ayın dondurma hakkıyla korur. Uygulama açılınca çağrılır.
+ * Sadece korunacak bir ev ya da seri varsa kullanılır; en eski kaçırılan günden başlar.
+ * Dondurulan günleri döner. Hak `limit` (ücretsiz 1, Premium 3) ile sınırlı; sunucu da aynısını sayar.
+ */
+export function autoFreeze(P: Play, limit: number, now = Date.now()): DayKey[] {
+  const today = dayKey(now);
+  const done = new Set(P.days);
+  const ice = new Set(P.frozen);
+  const last = [...P.days].filter(d => d < today).sort().pop();
+  if (!last || done.has(today)) return [];
+  const out: DayKey[] = [];
+  for (let d = addDays(last, 1); d < today; d = addDays(d, 1)) {
+    if (d < addDays(today, -7) || done.has(d) || ice.has(d)) continue;
+    const month = d.slice(0, 7);
+    const used = [...ice].filter(x => x.startsWith(month)).length;
+    if (used >= limit) continue;
+    ice.add(d);
+    out.push(d);
+  }
+  if (out.length) P.frozen = [...ice].sort();
+  return out;
 }
 
 export const stageFor = (level: number) => [...STAGES].reverse().find(s => s.level <= level) ?? null;
@@ -131,10 +175,10 @@ export type AwardResult = { awarded: boolean; points: number; before: HouseProgr
  * Taslak state üzerinde puanı telefonda hemen verir ve sunucuya gönderilmek üzere sıraya koyar.
  * Sunucu cevap verince puan, günler ve eşyalar sunucudaki değerle değiştirilir.
  */
-export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: string, now = Date.now()): AwardResult {
+export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: string, now = Date.now(), mult = 1): AwardResult {
   const P = S.play;
   const day = dayKey(now);
-  const before = houseProgress(P.days, now);
+  const before = progressOf(P, now);
   const key = awardKey(kind, ref);
   if (P.awarded[key] === day) return { awarded: false, points: 0, before, after: before };
 
@@ -147,10 +191,13 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
     pts += streakBonus(before.streak);
     P.days = [...P.days, day].sort();
   }
+  pts = Math.round(pts * mult);
   P.points += pts;
   (P.log[day] ||= []).push(label);
   P.pending.push({ kind, ref: kind === 'gorev' ? ref : kind, day });
-  return { awarded: true, points: pts, before, after: houseProgress(P.days, now) };
+  const d = new Date(now);
+  P.times = [...P.times, d.getHours() * 60 + d.getMinutes()].slice(-40);
+  return { awarded: true, points: pts, before, after: progressOf(P, now) };
 }
 
 /** Puan alındıktan sonraki kısa mesaj; ev bir seviye atladıysa onu söyler. */

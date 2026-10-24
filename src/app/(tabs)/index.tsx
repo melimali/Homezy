@@ -8,6 +8,7 @@ import { allTasks, greet, greeting, shopItems } from '@/domain/logic';
 import { AdBanner } from '@/ads/AdBanner';
 import { BUILT, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
+import { tipOfDay } from '@/domain/tips';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
@@ -45,6 +46,8 @@ export default function Home() {
         <Tile emoji="☀️" n={today} label="bugün" bg={c.todaySoft} fg={c.today} onPress={toToday} />
         <Tile emoji="🛒" n={shop} label="alınacak" bg={c.okSoft} fg={c.ok} onPress={toToday} />
       </View>
+
+      <DailyTip now={now} />
 
       <StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} />
 
@@ -114,6 +117,21 @@ function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: 
   );
 }
 
+/** Günün cümlesi: ev ya da spor üzerine, her gün değişen bir cümle. */
+function DailyTip({ now }: { now: number }) {
+  const c = useColors();
+  const tip = tipOfDay(now);
+  return (
+    <View style={[styles.tip, { backgroundColor: c.todaySoft }]} accessible accessibilityLabel={`Günün cümlesi: ${tip.text}`}>
+      <Text style={{ fontSize: 26 }}>{tip.emoji}</Text>
+      <View style={{ flex: 1 }}>
+        <T v="eyebrow" style={{ marginBottom: 2, color: c.today }}>Günün cümlesi</T>
+        <Text style={[styles.tipText, { color: c.ink }]}>{tip.text}</Text>
+      </View>
+    </View>
+  );
+}
+
 /** Ev ilk kez bitince (7. gün) bir kere kutlama. */
 function Celebrate({ level }: { level: number }) {
   const c = useColors();
@@ -176,6 +194,8 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: radius.pill },
   streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },
   freeze: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center', marginTop: -4 },
+  tip: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 16 },
+  tipText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21 },
   quick: { flexDirection: 'row', gap: 10 },
   q: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },

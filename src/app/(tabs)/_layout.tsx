@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { useNotificationSync } from '@/notifications/useNotificationSync';
+import { useWidgetSync } from '@/widget/useWidgetSync';
 import { brand, fonts, useColors } from '@/theme';
 
 type IconName = 'home' | 'rooms' | 'today' | 'me';
@@ -42,6 +43,7 @@ export default function TabLayout() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   useNotificationSync();
+  useWidgetSync();
 
   // Alt menü iki temada da lacivert/koyu kalır (logodaki zemin).
   const barBg = c.bg === brand.navy ? '#1C2232' : brand.navy;

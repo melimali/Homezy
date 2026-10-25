@@ -37,6 +37,9 @@ const dark: Colors = {
   },
 };
 
+/** İki tema birden; React dışında (ör. ana ekran widget'ı) tema seçmek için. */
+export const palettes = { light, dark };
+
 export function useColors(): Colors {
   return useColorScheme() === 'dark' ? dark : light;
 }

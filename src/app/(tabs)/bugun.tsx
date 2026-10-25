@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { ShopList } from '@/components/ShopList';
+import { Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { Btn, Card, Chip, EmptyMsg, Pill, Screen, SecHead, T } from '@/components/ui';
@@ -25,7 +26,7 @@ export default function Bugun() {
   // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bu hafta kapalı başlar.
   const groups: [string, typeof all][] = [
     ['🫖 Misafir gelmeden', guest],
-    ['Bugün yapılacaklar', all.filter(x => x.s.k !== 'ok')],
+    ['🧹 Bugün yapılacaklar', all.filter(x => x.s.k !== 'ok')],
   ];
   const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7);
   const [showWeek, setShowWeek] = useState(false);
@@ -42,8 +43,8 @@ export default function Bugun() {
       </View>
       {!S.home.asked && <ProfilePrompt />}
       <DailyGoals now={now} />
-      {visible.map(([label, arr]) => (
-        <Card key={label}>
+      {visible.map(([label, arr], gi) => (
+        <Card key={label} index={gi + 1}>
           <SecHead title={label} right={String(arr.length)} />
           <View>
             {arr.map((x, i) => (
@@ -60,7 +61,7 @@ export default function Bugun() {
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card>
           <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
-            <T v="h2" style={{ flex: 1 }}>Bu hafta</T>
+            <T v="h2" style={{ flex: 1 }}>📅 Bu hafta</T>
             <T v="small">{showWeek ? 'Gizle' : `${week.length} iş ›`}</T>
           </Pressable>
           {showWeek && week.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
@@ -115,7 +116,7 @@ function ModeCard({ now }: { now: number }) {
     return (
       <Card>
         <Pressable onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.modeHead}>
-          <T v="h2" style={{ flex: 1 }}>Bugün nasılsın?</T>
+          <T v="h2" style={{ flex: 1 }}>💭 Bugün nasılsın?</T>
           <T v="small">{open ? 'Kapat' : 'Mod seç ›'}</T>
         </Pressable>
         {open && (
@@ -252,21 +253,23 @@ function DailyGoals({ now }: { now: number }) {
   ];
   return (
     <Card>
-      <SecHead title="Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
+      <SecHead title="🎯 Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
       <View style={{ gap: 8 }}>
         {goals.map(g => (
-          <Pressable
+          <Squish
             key={g.label}
             disabled={!g.go}
+            scaleTo={0.97}
+            dim={false}
             onPress={() => g.go && router.push(g.go)}
             accessibilityRole={g.go ? 'button' : undefined}
-            style={({ pressed }) => [goalStyle.row, { backgroundColor: g.done ? c.okSoft : c.surface2 }, pressed && { transform: [{ translateY: 1 }] }]}
+            style={[goalStyle.row, { backgroundColor: g.done ? c.okSoft : c.surface2 }]}
           >
             <Text style={{ fontSize: 20 }}>{g.done ? '✅' : g.emoji}</Text>
             <Text style={[goalStyle.label, { color: g.done ? c.ok : c.ink }]}>{g.label}</Text>
             <Text style={[goalStyle.pts, { color: g.done ? c.ok : c.warm }]}>{g.done ? 'tamam' : `${g.pts} ⭐`}</Text>
             {g.go && !g.done && <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>}
-          </Pressable>
+          </Squish>
         ))}
       </View>
       <T v="small">Her gün en az birini yap, evin inşaatı ilerlesin 🏗️</T>

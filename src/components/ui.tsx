@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 import {
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,10 +19,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fmtShort, notifs } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
-import { sfx } from '@/lib/sfx';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
+
+import { Appear, Squish } from './motion';
 
 /* ---------- metin ---------- */
 
@@ -108,25 +110,21 @@ export function BackLink({ label = 'Geri' }: { label?: string }) {
   const router = useRouter();
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
-    <Pressable
-      onPress={back}
-      accessibilityRole="button"
-      hitSlop={8}
-      style={({ pressed }) => [styles.back, { backgroundColor: c.surface }, pressed && { opacity: 0.7 }]}
-    >
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>‹  {label}</Text>
-    </Pressable>
+    <Squish onPress={back} hitSlop={8} style={[styles.back, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` }]}>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }} accessibilityLabel={label || 'Geri'}>‹{label ? `  ${label}` : ''}</Text>
+    </Squish>
   );
 }
 
 /* ---------- kart ---------- */
 
-export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+/** Krem, yastık gibi kabarık kart. İlk göründüğünde yaylanarak gelir (`index` ile sırayla). */
+export function Card({ children, style, index }: { children: ReactNode; style?: StyleProp<ViewStyle>; index?: number }) {
   const c = useColors();
   return (
-    <View style={[styles.card, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}, 0 10px 24px ${c.lift}` }, style]}>
+    <Appear index={index} style={[styles.card, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}, 0 12px 28px ${c.lift}` }, style]}>
       {children}
-    </View>
+    </Appear>
   );
 }
 
@@ -149,32 +147,25 @@ type BtnKind = 'primary' | 'ghost' | 'soft' | 'danger';
 
 export function Btn({
   label, kind = 'soft', small, block, style, ...rest
-}: PressableProps & { label: string; kind?: BtnKind; small?: boolean; block?: boolean; style?: StyleProp<ViewStyle> }) {
+}: Omit<PressableProps, 'style' | 'children'> & { label: string; kind?: BtnKind; small?: boolean; block?: boolean; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
   const bg = kind === 'primary' ? c.accent : kind === 'danger' ? c.late : kind === 'ghost' ? 'transparent' : c.surface2;
   const fg = kind === 'primary' ? c.onAccent : kind === 'danger' ? c.onBadge : c.ink;
   const lift = kind === 'ghost' ? undefined : `0 3px 0 ${kind === 'primary' ? c.shadow : c.lift}`;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Squish
       {...rest}
-      onPressIn={e => {
-        sfx('tap');
-        rest.onPressIn?.(e);
-      }}
-      style={({ pressed }) => [
+      style={[
         styles.btn,
         small && styles.btnSmall,
         block && { alignSelf: 'stretch' },
         { backgroundColor: bg, borderColor: kind === 'ghost' ? c.line : bg },
-        lift && !pressed ? { boxShadow: lift } : null,
-        pressed && { transform: [{ translateY: 2 }] },
-        rest.disabled && { opacity: 0.5 },
+        lift ? { boxShadow: lift } : null,
         style,
       ]}
     >
       <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13 : 15 }}>{label}</Text>
-    </Pressable>
+    </Squish>
   );
 }
 
@@ -192,19 +183,53 @@ export function XBtn({ onPress, label }: { onPress: () => void; label: string })
 export function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const c = useColors();
   return (
-    <Pressable
+    <Squish
       onPress={onPress}
-      onPressIn={() => sfx('tap')}
-      accessibilityRole="button"
       accessibilityState={{ selected: on }}
-      style={({ pressed }) => [
-        styles.chip,
-        on ? { backgroundColor: c.accent, borderColor: c.accent } : { backgroundColor: c.surface, borderColor: c.line },
-        pressed && { transform: [{ translateY: 1 }] },
-      ]}
+      style={[styles.chip, on ? { backgroundColor: c.accent, borderColor: c.accent } : { backgroundColor: c.surface, borderColor: c.line }]}
     >
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{label}</Text>
-    </Pressable>
+    </Squish>
+  );
+}
+
+/**
+ * Oda içi sekmeler: emoji + kısa ad, yatay kaydırılır. Seçili sekme dolgun ve hafif büyük durur.
+ * Her şeyi alt alta dizmek yerine bir anda tek bölüm görünür, böylece aşağı kaydırma azalır.
+ */
+export function Tabs<K extends string>({
+  items, value, onChange,
+}: { items: { k: K; emoji: string; label: string; badge?: number }[]; value: K; onChange: (k: K) => void }) {
+  const c = useColors();
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs} accessibilityRole="tablist">
+      {items.map(it => {
+        const on = it.k === value;
+        return (
+          <Squish
+            key={it.k}
+            onPress={() => onChange(it.k)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={it.badge ? `${it.label}, ${it.badge}` : it.label}
+            style={[
+              styles.tab,
+              on
+                ? { backgroundColor: c.accent, boxShadow: `0 4px 0 ${c.shadow}` }
+                : { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` },
+            ]}
+          >
+            <Text style={{ fontSize: 22 }}>{it.emoji}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
+            {!!it.badge && (
+              <View style={[styles.tabBadge, { backgroundColor: c.late }]}>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{it.badge}</Text>
+              </View>
+            )}
+          </Squish>
+        );
+      })}
+    </ScrollView>
   );
 }
 
@@ -240,6 +265,21 @@ export function Callout({ children }: { children: ReactNode }) {
   );
 }
 
+/** Alttan kayarak açılan yumuşak sayfa. */
+export function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityLabel="Kapat" />
+      <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }]}>
+        <View style={[styles.grab, { backgroundColor: c.line }]} />
+        {children}
+      </View>
+    </Modal>
+  );
+}
+
 /* ---------- formlar ---------- */
 
 export function Field(props: ComponentProps<typeof TextInput>) {
@@ -270,8 +310,14 @@ export const styles = StyleSheet.create({
   },
   btnSmall: { paddingVertical: 7, paddingHorizontal: 14 },
   chip: { borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 12 },
+  tabs: { gap: 8, paddingVertical: 6, paddingHorizontal: 2 },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minWidth: 78, paddingVertical: 9, paddingHorizontal: 12, borderRadius: radius.tile },
+  tabBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   x: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
+  sheetBg: { flex: 1 },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingTop: 10, gap: 12, maxWidth: 520, alignSelf: 'center', width: '100%' },
+  grab: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 4 },
   field: {
     flex: 1, minWidth: 0, borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9,
     fontFamily: fonts.body, fontSize: 15,

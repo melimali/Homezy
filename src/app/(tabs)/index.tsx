@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { House3D } from '@/components/House3D';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
+import { Appear, Float, Squish } from '@/components/motion';
 import { Btn, Card, SecHead, Screen, T } from '@/components/ui';
 import { allTasks, greet, greeting } from '@/domain/logic';
 import { sfx } from '@/lib/sfx';
@@ -48,9 +49,9 @@ export default function Home() {
         </T>
       </View>
 
-      <DailyTip now={now} />
+      <Appear index={1}><DailyTip now={now} /></Appear>
 
-      <StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} />
+      <Appear index={2}><StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} /></Appear>
 
       {weekReady && (
         <Pressable
@@ -78,19 +79,19 @@ export default function Home() {
         <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ok }}>🎬 Evimin hikâyesi</Text>
       </Pressable>
 
-      <Card>
-        <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3} iş daha` : undefined} />
+      <Card index={3}>
+        <SecHead title="🧹 Sıradaki işler" right={due.length > 3 ? `+${due.length - 3} iş daha` : undefined} />
         {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         {!due.length && <T style={{ fontSize: 15 }}>Bugünlük her şey tamam 🎉 Biraz dinlen.</T>}
         {due.length > 3 && <Btn small label="Hepsini gör" onPress={toToday} style={{ alignSelf: 'flex-start' }} />}
       </Card>
 
-      <View style={styles.quick}>
-        <Quick emoji="🏃" label="Spor" onPress={() => router.push('/spor')} />
-        <Quick emoji="📔" label="Günlük" onPress={() => router.push('/gunluk')} />
-        <Quick emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
-        <Quick emoji="📅" label="Haftam" onPress={() => router.push('/hafta')} />
-      </View>
+      <Appear index={4} style={styles.quick}>
+        <Quick i={0} emoji="🏃" label="Spor" onPress={() => router.push('/spor')} />
+        <Quick i={1} emoji="📔" label="Günlük" onPress={() => router.push('/gunluk')} />
+        <Quick i={2} emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
+        <Quick i={3} emoji="📅" label="Haftam" onPress={() => router.push('/hafta')} />
+      </Appear>
 
       <AdBanner />
 
@@ -151,7 +152,7 @@ function DailyTip({ now }: { now: number }) {
   const tip = tipOfDay(now);
   return (
     <View style={[styles.tip, { backgroundColor: c.todaySoft }]} accessible accessibilityLabel={`Günün cümlesi: ${tip.text}`}>
-      <Text style={{ fontSize: 26 }}>{tip.emoji}</Text>
+      <Float amp={3}><Text style={{ fontSize: 28 }}>{tip.emoji}</Text></Float>
       <View style={{ flex: 1 }}>
         <T v="eyebrow" style={{ marginBottom: 2, color: c.today }}>Günün cümlesi</T>
         <Text style={[styles.tipText, { color: c.ink }]}>{tip.text}</Text>
@@ -174,7 +175,7 @@ function Celebrate({ level }: { level: number }) {
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
-          <Text style={{ fontSize: 56 }}>🎉🏡</Text>
+          <Float amp={6} dur={1400}><Text style={{ fontSize: 56 }}>🎉🏡</Text></Float>
           <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
@@ -186,17 +187,15 @@ function Celebrate({ level }: { level: number }) {
   );
 }
 
-function Quick({ emoji, label, onPress }: { emoji: string; label: string; onPress: () => void }) {
+function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onPress: () => void; i: number }) {
   const c = useColors();
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.q, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` }, pressed && { transform: [{ translateY: 2 }] }]}
-    >
-      <Text style={{ fontSize: 26 }}>{emoji}</Text>
+    <Squish onPress={onPress} style={[styles.q, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}` }]}>
+      <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
+        <Text style={{ fontSize: 28 }}>{emoji}</Text>
+      </Float>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
-    </Pressable>
+    </Squish>
   );
 }
 

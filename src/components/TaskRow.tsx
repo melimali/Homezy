@@ -4,6 +4,7 @@ import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-nat
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
+import { taskEmoji } from '@/domain/icons';
 import { agoText, doneToday as isDoneToday, everyText, placeOf, roomClean, sod, statusIn, uid } from '@/domain/logic';
 import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
@@ -14,8 +15,9 @@ import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
+import { Appear, Burst, Float, Squish } from './motion';
 import { useToast } from './Toast';
-import { Btn, Field, Pill, T } from './ui';
+import { Btn, Field, Pill, Sheet, T } from './ui';
 
 export function findList(S: AppState, rid: string, list: TaskList): Task[] {
   if (list === 'care') return (S.care ||= []);
@@ -23,23 +25,17 @@ export function findList(S: AppState, rid: string, list: TaskList): Task[] {
   return (S.tasks[rid] ||= []);
 }
 
-/**
- * Bir iş satırı: durum, "Tamamladım" ve "⋯" ile açılan ayarlar (yarına ertele, bu sefer atla,
- * sıklık, süre, sil). `showRoom`: Bugün gibi karışık listelerde odanın adı da yazar.
- */
-export function TaskRow({
-  t, rid, list, showRoom, first,
-}: { t: Task; rid: string; list: TaskList; showRoom?: boolean; first?: boolean }) {
-  const c = useColors();
+/** Bir işin durumu ve eylemleri; satır (TaskRow) ve kare (TaskTile) aynı mantığı kullanır. */
+function useTask(t: Task, rid: string, list: TaskList) {
   const { state, update, get } = useStore();
   const { award } = usePlay();
   const toast = useToast();
   const now = useNow();
-  const [open, setOpen] = useState(false);
-  // Tamamlayınca düğme zıplar, üstünden '+10 ⭐' süzülür.
+  // Tamamlayınca düğme zıplar, üstünden '+10 ⭐' süzülür, etrafa yıldız saçılır.
   const [bounce] = useState(() => new Animated.Value(1));
   const [rise] = useState(() => new Animated.Value(0));
   const [gain, setGain] = useState(0);
+  const [burst, setBurst] = useState(0);
   const s = statusIn(state, t, now);
   const room = state.rooms[rid];
   const place = placeOf(state, rid);
@@ -76,8 +72,9 @@ export function TaskRow({
       x.snooze = null;
       if (photo) x.photo = photo;
     });
-    bounce.setValue(0.85);
+    bounce.setValue(0.8);
     Animated.spring(bounce, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
+    setBurst(b => b + 1);
     if (r.awarded) {
       setGain(r.points);
       rise.setValue(0);
@@ -94,7 +91,6 @@ export function TaskRow({
 
   const snooze = (days: number, msg: string) => {
     edit(x => void (x.snooze = sod(sod(Date.now()) + days * DAY + DAY / 2)));
-    setOpen(false);
     toast(msg);
   };
 
@@ -121,59 +117,82 @@ export function TaskRow({
     }
   };
 
-  const min = taskMin(t);
-  const action = photoTask ? '📸 Çek' : plant ? 'Suladım' : 'Tamamladım';
+  const act = () => (photoTask ? shoot() : done());
+  const action = photoTask ? '📸 Çek' : plant ? '💧 Suladım' : 'Tamamladım';
+  const emoji = photoTask ? '📸' : taskEmoji(t.name, plant);
+
+  return { s, now, room, place, plant, photoTask, doneToday, urgent, names, nextWho, edit, snooze, remove, act, action, emoji, bounce, rise, gain, burst, min: taskMin(t) };
+}
+
+type TaskApi = ReturnType<typeof useTask>;
+
+/** '+10 ⭐' yazısı: düğmenin üstünden süzülüp kaybolur. */
+function Gain({ k }: { k: TaskApi }) {
+  const c = useColors();
+  if (!k.gain) return null;
+  return (
+    <Animated.Text
+      pointerEvents="none"
+      style={[styles.gain, { color: c.warm, opacity: k.rise.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: k.rise.interpolate({ inputRange: [0, 1], outputRange: [0, -34] }) }] }]}
+    >
+      +{k.gain} ⭐
+    </Animated.Text>
+  );
+}
+
+/**
+ * Bir iş satırı: solda işin resmi, adı, durumu ve "Tamamladım". "⋯" ile ayarlar açılır (yarına ertele,
+ * bu sefer atla, sıklık, süre, sil). `showRoom`: Bugün gibi karışık listelerde odanın adı da yazar.
+ */
+export function TaskRow({
+  t, rid, list, showRoom, first,
+}: { t: Task; rid: string; list: TaskList; showRoom?: boolean; first?: boolean }) {
+  const c = useColors();
+  const k = useTask(t, rid, list);
+  const [open, setOpen] = useState(false);
+  const tone = k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface2;
 
   return (
     <View style={[!first && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
       <View style={styles.row}>
+        <View style={[styles.bubble, { backgroundColor: tone }]}>
+          <Text style={{ fontSize: 22 }}>{k.doneToday ? '✅' : k.emoji}</Text>
+        </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           {showRoom && (
-            <View style={styles.roomTag}>
-              <View style={{ width: 10, height: 10, borderRadius: 4, borderWidth: 1.5, borderColor: c.wall, backgroundColor: room ? c.room[room.type] : c.surface2 }} />
-              <T v="small" style={{ fontFamily: fonts.bodyBold }}>{place.name}{plant ? ' · bitki' : ''}</T>
-            </View>
+            <T v="small" style={{ fontFamily: fonts.bodyBold, fontSize: 12.5 }} numberOfLines={1}>
+              {k.plant ? '🪴' : k.place.emoji} {k.place.name}
+            </T>
           )}
-          <T v="bold">{t.name}</T>
+          <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted }}>{t.name}</T>
           <View style={styles.meta}>
-            <Pill k={s.k} label={s.label} />
-            <T v="small">⏱ {min} dk</T>
-            {names.length > 0 && (
-              <Pressable onPress={nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
-                style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
-              </Pressable>
-            )}
+            <Pill k={k.doneToday ? 'ok' : k.s.k} label={k.doneToday ? 'Bugün yapıldı' : k.s.label} />
+            <T v="small">⏱ {k.min} dk</T>
+            <Who k={k} t={t} />
           </View>
         </View>
-        <Animated.View style={{ transform: [{ scale: bounce }] }}>
-        {gain > 0 && (
-          <Animated.Text
-            pointerEvents="none"
-            style={[styles.gain, { color: c.warm, opacity: rise.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }), transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [0, -34] }) }] }]}
+        <Animated.View style={{ transform: [{ scale: k.bounce }] }}>
+          <Gain k={k} />
+          <Burst fire={k.burst} />
+          <Squish
+            onPress={k.act}
+            disabled={k.doneToday}
+            quiet
+            dim={false}
+            accessibilityLabel={k.doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${k.action}`}
+            style={[
+              styles.done,
+              k.doneToday
+                ? { backgroundColor: c.okSoft, borderColor: c.okSoft }
+                : k.urgent
+                ? { backgroundColor: c.accent, borderColor: c.accent, boxShadow: `0 3px 0 ${c.shadow}` }
+                : { borderColor: c.hi },
+            ]}
           >
-            +{gain} ⭐
-          </Animated.Text>
-        )}
-        <Pressable
-          onPress={() => (photoTask ? shoot() : done())}
-          disabled={doneToday}
-          accessibilityRole="button"
-          accessibilityLabel={doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${action}`}
-          style={({ pressed }) => [
-            styles.done,
-            doneToday
-              ? { backgroundColor: c.okSoft, borderColor: c.okSoft }
-              : urgent
-              ? { backgroundColor: c.accent, borderColor: c.accent, boxShadow: pressed ? undefined : `0 3px 0 ${c.shadow}` }
-              : { borderColor: c.hi },
-            pressed && { transform: [{ translateY: 2 }] },
-          ]}
-        >
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: doneToday ? c.ok : urgent ? c.onAccent : c.ink }}>
-            {doneToday ? '✓ Bugün' : action}
-          </Text>
-        </Pressable>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: k.photoTask || k.plant ? 20 : 22, color: k.doneToday ? c.ok : k.urgent ? c.onAccent : c.ink }}>
+              {k.photoTask ? '📸' : k.plant ? '💧' : '✓'}
+            </Text>
+          </Squish>
         </Animated.View>
         <Pressable
           onPress={() => setOpen(o => !o)}
@@ -188,46 +207,143 @@ export function TaskRow({
       </View>
       {open && (
         <View style={[styles.panel, { backgroundColor: c.surface2 }]}>
-          {!doneToday && (
-            <View style={styles.wrap}>
-              <Btn small label="Yarına ertele" onPress={() => snooze(1, `${t.name} yarına ertelendi.`)} />
-              <Btn small label="Bu sefer atla" onPress={() => snooze(t.every, `${t.name} bu sefer atlandı, ${t.every === 1 ? 'yarın' : `${t.every} gün sonra`} görüşürüz.`)} />
-            </View>
-          )}
-          <T v="small">{everyText(t.every)} · son: {agoText(t.last, now)}</T>
-          <Stepper
-            label="Sıklık"
-            value={t.every}
-            text={everyText(t.every)}
-            steps={[1, 2, 3, 4, 5, 7, 10, 14, 21, 30, 45, 60, 90, 180, 365]}
-            onChange={v => edit(x => void (x.every = v))}
-          />
-          <Stepper
-            label="Süre"
-            value={min}
-            text={`${min} dakika`}
-            steps={[2, 5, 10, 15, 20, 30, 45, 60, 90, 120]}
-            onChange={v => edit(x => void (x.min = v))}
-          />
-          {photoTask && t.photo && <T v="small">Son sayaç fotoğrafı telefonunda saklı ({agoText(t.last, now)}).</T>}
-          {!showRoom && <Btn small kind="ghost" label="Bu işi sil" onPress={remove} style={{ alignSelf: 'flex-start' }} />}
+          <TaskSettings t={t} k={k} canDelete={!showRoom} onDone={() => setOpen(false)} />
         </View>
       )}
     </View>
   );
 }
 
+function Who({ k, t }: { k: TaskApi; t: Task }) {
+  const c = useColors();
+  if (!k.names.length) return null;
+  return (
+    <Pressable onPress={k.nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
+      style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
+    </Pressable>
+  );
+}
+
+/** Ertele, atla, sıklık, süre, sil. Satırın altında ya da karenin alt sayfasında açılır. */
+function TaskSettings({ t, k, canDelete, onDone }: { t: Task; k: TaskApi; canDelete: boolean; onDone: () => void }) {
+  return (
+    <>
+      {!k.doneToday && (
+        <View style={styles.wrap}>
+          <Btn small label="😴 Yarına ertele" onPress={() => { k.snooze(1, `${t.name} yarına ertelendi.`); onDone(); }} />
+          <Btn small label="⏭️ Bu sefer atla" onPress={() => { k.snooze(t.every, `${t.name} bu sefer atlandı, ${t.every === 1 ? 'yarın' : `${t.every} gün sonra`} görüşürüz.`); onDone(); }} />
+        </View>
+      )}
+      <T v="small">🔁 {everyText(t.every)} · son: {agoText(t.last, k.now)}</T>
+      <Stepper
+        label="🔁"
+        a11y="Sıklık"
+        value={t.every}
+        text={everyText(t.every)}
+        steps={[1, 2, 3, 4, 5, 7, 10, 14, 21, 30, 45, 60, 90, 180, 365]}
+        onChange={v => k.edit(x => void (x.every = v))}
+      />
+      <Stepper
+        label="⏱"
+        a11y="Süre"
+        value={k.min}
+        text={`${k.min} dakika`}
+        steps={[2, 5, 10, 15, 20, 30, 45, 60, 90, 120]}
+        onChange={v => k.edit(x => void (x.min = v))}
+      />
+      {k.photoTask && t.photo && <T v="small">Son sayaç fotoğrafı telefonunda saklı ({agoText(t.last, k.now)}).</T>}
+      {canDelete && <Btn small kind="ghost" label="🗑️ Bu işi sil" onPress={() => { onDone(); k.remove(); }} style={{ alignSelf: 'flex-start' }} />}
+    </>
+  );
+}
+
+/**
+ * Bir iş, büyük ve dokunulabilir bir kare olarak. Ortada işin resmi, altında kısa adı ve durum rengi.
+ * Kareye dokununca iş biter (yıldızlar saçılır); basılı tutunca ya da "⋯" ile ayarlar alttan açılır.
+ * Oda ekranında ızgara hâlinde durur, böylece uzun yazı okumadan işler bir bakışta görülür.
+ */
+export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; list: TaskList; index?: number }) {
+  const c = useColors();
+  const k = useTask(t, rid, list);
+  const [open, setOpen] = useState(false);
+  const tone = k.doneToday
+    ? { bg: c.okSoft, fg: c.ok, ring: c.okSoft }
+    : k.s.k === 'late'
+    ? { bg: c.lateSoft, fg: c.late, ring: c.late }
+    : k.s.k === 'today'
+    ? { bg: c.todaySoft, fg: c.today, ring: c.today }
+    : { bg: c.surface, fg: c.muted, ring: c.line };
+  const label = k.doneToday ? 'Yapıldı ✓' : k.s.label;
+
+  return (
+    <Appear index={index} style={styles.tileWrap}>
+      <Animated.View style={{ transform: [{ scale: k.bounce }] }}>
+        <Squish
+          onPress={() => (k.doneToday ? setOpen(true) : k.act())}
+          onLongPress={() => setOpen(true)}
+          delayLongPress={350}
+          quiet
+          accessibilityLabel={`${t.name}, ${label}. ${k.doneToday ? 'Ayarlar için dokun' : `${k.action} için dokun, ayarlar için basılı tut`}`}
+          style={[
+            styles.tile,
+            { backgroundColor: tone.bg, borderColor: tone.ring, boxShadow: `0 4px 0 ${k.urgent ? tone.ring : c.line}` },
+          ]}
+        >
+          <Float amp={k.urgent ? 3 : 0} dur={1600 + (index % 4) * 200}>
+            <Text style={[styles.tileEmoji, k.doneToday && { opacity: 0.55 }]}>{k.emoji}</Text>
+          </Float>
+          <Text numberOfLines={2} style={[styles.tileName, { color: k.doneToday ? c.muted : c.ink }]}>{t.name}</Text>
+          <View style={[styles.tileTag, { backgroundColor: k.doneToday || k.s.k !== 'ok' ? c.surface : c.surface2 }]}>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: tone.fg }}>{label}</Text>
+          </View>
+          {k.doneToday && <Text style={styles.tileCheck}>✅</Text>}
+        </Squish>
+        <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={`${t.name} ayarları`} hitSlop={8} style={styles.tileMore}>
+          <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 16 }}>⋯</Text>
+        </Pressable>
+        <Gain k={k} />
+        <Burst fire={k.burst} />
+      </Animated.View>
+      <Sheet open={open} onClose={() => setOpen(false)}>
+        <View style={styles.sheetHead}>
+          <Text style={{ fontSize: 40 }}>{k.emoji}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T v="h2">{t.name}</T>
+            <View style={styles.meta}>
+              <Pill k={k.doneToday ? 'ok' : k.s.k} label={label} />
+              <T v="small">⏱ {k.min} dk</T>
+              <Who k={k} t={t} />
+            </View>
+          </View>
+        </View>
+        {!k.doneToday && <Btn kind="primary" label={k.action} onPress={() => { setOpen(false); k.act(); }} block />}
+        <TaskSettings t={t} k={k} canDelete onDone={() => setOpen(false)} />
+      </Sheet>
+    </Appear>
+  );
+}
+
+/** Kareler için iki sütunlu ızgara. */
+export function TaskGrid({ tasks, rid, list }: { tasks: Task[]; rid: string; list: TaskList }) {
+  return (
+    <View style={styles.grid}>
+      {tasks.map((t, i) => <TaskTile key={t.id} t={t} rid={rid} list={list} index={i} />)}
+    </View>
+  );
+}
+
 /** Hazır adımlar arasında − / + ile değer seçer (klavye açmadan). */
-function Stepper({ label, value, text, steps, onChange }: { label: string; value: number; text: string; steps: number[]; onChange: (v: number) => void }) {
+function Stepper({ label, a11y = label, value, text, steps, onChange }: { label: string; a11y?: string; value: number; text: string; steps: number[]; onChange: (v: number) => void }) {
   const c = useColors();
   const prev = [...steps].reverse().find(x => x < value);
   const next = steps.find(x => x > value);
   return (
     <View style={styles.stepRow}>
-      <T v="bold" style={{ fontSize: 14, width: 52 }}>{label}</T>
-      <StepBtn label="−" a11y={`${label} azalt`} disabled={prev == null} onPress={() => prev != null && onChange(prev)} />
+      <T v="bold" style={{ fontSize: 18, width: 30 }} accessibilityLabel={a11y}>{label}</T>
+      <StepBtn label="−" a11y={`${a11y} azalt`} disabled={prev == null} onPress={() => prev != null && onChange(prev)} />
       <Text style={{ flex: 1, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{text}</Text>
-      <StepBtn label="+" a11y={`${label} artır`} disabled={next == null} onPress={() => next != null && onChange(next)} />
+      <StepBtn label="+" a11y={`${a11y} artır`} disabled={next == null} onPress={() => next != null && onChange(next)} />
     </View>
   );
 }
@@ -236,7 +352,7 @@ export function StepBtn({ label, a11y, onPress, disabled }: { label: string; a11
   const c = useColors();
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
-      style={({ pressed }) => [styles.step, { backgroundColor: c.surface }, (pressed || disabled) && { opacity: 0.5 }]}>
+      style={({ pressed }) => [styles.step, { backgroundColor: c.accentSoft }, (pressed || disabled) && { opacity: 0.5 }]}>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
     </Pressable>
   );
@@ -264,7 +380,7 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
     toast(`${n} eklendi.`);
   };
 
-  if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '+ Bitki ekle' : '+ Yeni iş ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
+  if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '🌱 Bitki ekle' : '➕ Yeni iş ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
 
   return (
     <View style={{ gap: 8, marginTop: 4 }}>
@@ -289,17 +405,26 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
+  bubble: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
+  tileWrap: { width: '48.5%' },
+  tile: { minHeight: 124, borderRadius: radius.tile, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 8 },
+  tileEmoji: { fontSize: 38, lineHeight: 46 },
+  tileName: { fontFamily: fonts.bodyBlack, fontSize: 14, lineHeight: 18, textAlign: 'center' },
+  tileTag: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 9, marginTop: 2 },
+  tileCheck: { position: 'absolute', top: 8, left: 10, fontSize: 16 },
+  tileMore: { position: 'absolute', top: 4, right: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   more: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   panel: { borderRadius: 16, padding: 12, gap: 10, marginBottom: 10 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  roomTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
   gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, zIndex: 2 },
-  done: { borderWidth: 2, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 13 },
+  done: { width: 46, height: 46, borderWidth: 2.5, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },
 });

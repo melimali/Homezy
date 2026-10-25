@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -9,7 +10,22 @@ import { brand, fonts, useColors } from '@/theme';
 
 type IconName = 'home' | 'rooms' | 'today' | 'me';
 
-function TabIcon({ name, color }: { name: IconName; color: ColorValue }) {
+/** Sekme seçilince simgesi küçük bir zıplama yapar. */
+function TabIcon({ name, color, focused }: { name: IconName; color: ColorValue; focused: boolean }) {
+  const [v] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (!focused) return;
+    v.setValue(0.7);
+    Animated.spring(v, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }).start();
+  }, [focused, v]);
+  return (
+    <Animated.View style={{ transform: [{ scale: v }, { translateY: focused ? -2 : 0 }] }}>
+      <TabGlyph name={name} color={color} />
+    </Animated.View>
+  );
+}
+
+function TabGlyph({ name, color }: { name: IconName; color: ColorValue }) {
   const p = { stroke: color, strokeWidth: 2.2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
     <Svg width={26} height={26} viewBox="0 0 24 24">
@@ -71,10 +87,10 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: c.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Ev', tabBarIcon: ({ color }) => <TabIcon name="home" color={color} /> }} />
-      <Tabs.Screen name="odalar" options={{ title: 'Odalar', tabBarIcon: ({ color }) => <TabIcon name="rooms" color={color} /> }} />
-      <Tabs.Screen name="bugun" options={{ title: 'Bugün', tabBarIcon: ({ color }) => <TabIcon name="today" color={color} /> }} />
-      <Tabs.Screen name="hesap" options={{ title: 'Hesabım', tabBarIcon: ({ color }) => <TabIcon name="me" color={color} /> }} />
+      <Tabs.Screen name="index" options={{ title: 'Ev', tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="odalar" options={{ title: 'Odalar', tabBarIcon: ({ color, focused }) => <TabIcon name="rooms" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="bugun" options={{ title: 'Bugün', tabBarIcon: ({ color, focused }) => <TabIcon name="today" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="hesap" options={{ title: 'Hesabım', tabBarIcon: ({ color, focused }) => <TabIcon name="me" color={color} focused={focused} /> }} />
     </Tabs>
   );
 }

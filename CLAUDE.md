@@ -72,6 +72,7 @@ Logodaki tarz: tombul, yuvarlak hatlı, hafif kabarık, yumuşak gölgeli.
 - Gecikmiş işler için paletin dışında yumuşak bir kırmızı kullanılıyor: açık temada `#B8584C`, koyu temada `#E58C7E`.
 - Yazı tipleri: başlıklar Baloo 2, metinler Nunito. İlk karar Fredoka idi ama Fredoka'da Türkçe "ş", "ğ" ve "İ" harfleri yok; bu yüzden Baloo 2 seçildi (Türkçe harflerin hepsi var). Yeni bir yazı tipi düşünürsen önce Türkçe harfleri içerdiğini kontrol et.
 - Hem açık hem koyu tema desteklenecek.
+- **Her zaman "Cozy" tema** (Melih, 2026-10-25): krem kartlar, sıcak kil tonları, yumuşak hareket. Hareketler `src/components/motion.tsx`'te (`Appear` yaylanarak beliriş, `Squish` basınca esneme, `Float` süzülen emoji, `Burst` iş bitince yıldız saçılması); ek animasyon paketi yok, "hareketi azalt" açıksa döngüler durur. Yazı okutmak yerine resim: iş, ürün ve kıyafet emojileri `src/domain/icons.ts`. Odalar sekmesi gruplu kareler (Seni bekleyenler / Keyfi yerinde); oda ekranı sekmeli (İşler, Dolap, Kombin, Buzdolabı, Eksikler, Tarif, Malzeme, Bitkiler), işler kare kare: dokun = tamamla, basılı tut = ayarlar.
 - Formlar: butonlar hap şeklinde ve kabarık, kartların köşeleri büyük ve yuvarlak (yaklaşık 22px), ev planında odaların dış köşeleri yuvarlatılmış.
 
 Logolar `assets/` klasöründe: kare logo ve yatay logo.

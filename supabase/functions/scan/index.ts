@@ -39,6 +39,64 @@ const COLORS = ['siyah', 'antrasit', 'gri', 'beyaz', 'krem', 'bej', 'camel', 'ta
   'turkuaz', 'yeşil', 'mint', 'haki', 'zeytin yeşili', 'sarı', 'hardal', 'turuncu', 'kırmızı', 'bordo', 'pembe', 'pudra', 'lila', 'mor'];
 const FABRICS = ['Pamuk', 'Keten', 'Viskon', 'İpek / Saten', 'Kot', 'Yün', 'Triko', 'Kaşmir', 'Kadife', 'Polar', 'Polyester', 'Teknik / Spor', 'Deri', 'Süet', 'Kanvas'];
 
+/**
+ * Cevabın JSON şeması (structured outputs). Model sadece bu biçimde yazabilir: tür, renk, kumaş ve seviye
+ * listelerin dışına çıkamaz, cevap yarım ya da açıklamalı gelmez.
+ */
+const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
+const SCHEMA = {
+  fridge: {
+    type: 'object',
+    properties: {
+      items: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            qty: { type: 'string' },
+            lvl: { type: 'string', enum: ['var', 'az', 'yok'] },
+            match: nullable({ type: 'string' }),
+          },
+          required: ['name', 'qty', 'lvl', 'match'],
+          additionalProperties: false,
+        },
+      },
+      missing: { type: 'array', items: { type: 'string' } },
+      note: { type: 'string' },
+    },
+    required: ['items', 'missing', 'note'],
+    additionalProperties: false,
+  },
+  look: {
+    type: 'object',
+    properties: {
+      pieces: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            kind: { type: 'string', enum: Object.keys(KINDS) },
+            color: { type: 'string', enum: COLORS },
+            hex: { type: 'string' },
+            fabric: { type: 'string', enum: FABRICS },
+            pattern: { type: 'string', enum: ['düz', 'desenli'] },
+            wash: { type: 'string', enum: WASH },
+            match: nullable({ type: 'string' }),
+          },
+          required: ['name', 'kind', 'color', 'hex', 'fabric', 'pattern', 'wash', 'match'],
+          additionalProperties: false,
+        },
+      },
+      worn: { type: 'boolean' },
+      note: { type: 'string' },
+    },
+    required: ['pieces', 'worn', 'note'],
+    additionalProperties: false,
+  },
+} as const;
+
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 
 function fridgePrompt(known: string[]) {
@@ -48,11 +106,12 @@ Evdeki mevcut takip listesi:
 ${list(known)}
 
 Kurallar:
-- Sadece fotoğrafta gerçekten görünenleri yaz. Kapalı bir kutu ya da poşetin içi anlaşılmıyorsa tahmin etme, atla.
+- Rafları, kapak raflarını ve sebzeliği tek tek tara. Sadece fotoğrafta gerçekten görünenleri yaz.
+- Etiketinden, renginden ya da şeklinden anlaşılan kapalı ambalajları da yaz (ör. süt kutusu, yoğurt kabı, yumurta kolisi). İçi hiç anlaşılmayan poşet ve kutuları atla.
 - name: kısa, genel Türkçe ad, marka yazma (ör. "Süt", "Beyaz peynir", "Domates"). Aynı üründen birden fazla varsa tek satırda topla.
 - qty: kısa Türkçe miktar tahmini, ör. "6 adet", "yarım şişe", "1 paket", "dibinde biraz".
 - lvl: "var" yeterince var, "az" bitmek üzere ya da üçte birden az kalmış, "yok" ambalaj boş görünüyor.
-- match: ürün takip listesindeki bir ürünle aynıysa listedeki adı aynen yaz, değilse null.
+- match: ürün takip listesindeki bir ürünle aynıysa (farklı yazılmış olsa da, ör. "Kaşar" ile "Kaşar peyniri") listedeki adı aynen yaz, değilse null.
 - missing: takip listesinde olup fotoğrafta hiç göremediğin ürünlerin adları, listedeki yazımla.
 - note: Türkçe, en fazla iki kısa cümle. Neyin azaldığını ve markette nelere bakmak gerektiğini söyle.
 - Fotoğraf buzdolabı değilse items ve missing boş olsun, note bunu söylesin.
@@ -68,9 +127,9 @@ Dolaptaki mevcut parçalar:
 ${list(known)}
 
 Kurallar:
-- kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}.
+- kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}. Listede tam karşılığı yoksa en yakınını seç (hırka ve süveter: Kazak, yelek: Ceket, çanta, şapka, kemer, atkı: Aksesuar).
 - color: parçanın baskın rengi, şu listeden en yakını: ${COLORS.join(', ')}.
-- hex: baskın rengin "#RRGGBB" kodu.
+- hex: baskın rengin "#RRGGBB" kodu; seçtiğin color ile uyumlu olsun. Işık ve gölgeye değil kumaşın asıl rengine bak.
 - fabric: en olası kumaş, şu listeden biri: ${FABRICS.join(', ')}.
 - pattern: "düz" ya da "desenli" (çizgili, kareli, çiçekli, baskılı vb.).
 - name: kısa Türkçe ad, renk + tür, ör. "Lacivert keten gömlek". Marka yazma.
@@ -164,8 +223,10 @@ Deno.serve(async req => {
   try {
     const res = await anthropic.beta.messages.create({
       model: MODEL,
-      max_tokens: 4000,
-      output_config: { effort: 'low' },
+      // Düşünme payı dahil; JSON yarıda kesilmesin.
+      max_tokens: 16000,
+      // 'low' ürünleri ve kumaşları sık atlıyordu; tarama başına birkaç saniye daha uzun ama daha isabetli.
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA[kind] } },
       // Güvenlik sınıflandırıcısı reddederse istek aynı çağrıda başka bir modelle tekrarlanır.
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
@@ -178,8 +239,9 @@ Deno.serve(async req => {
       }],
     });
     const text = res.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join('');
-    const parsed = res.stop_reason === 'refusal' ? null : parseJson(text);
+    const parsed = res.stop_reason === 'refusal' || res.stop_reason === 'max_tokens' ? null : parseJson(text);
     if (!parsed) {
+      console.error('scan unreadable', res.stop_reason, text.slice(0, 200));
       await release();
       return json({ error: 'unreadable' }, 422);
     }

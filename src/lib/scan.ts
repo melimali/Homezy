@@ -1,13 +1,14 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
+import { LIMITS } from '@/domain/premium';
 import { supabase } from '@/lib/supabase';
 import type { StockLevel, WashType } from '@/domain/types';
 
 /**
  * Yapay zekâ ile fotoğraf taraması. Fotoğraf `scan` sunucu fonksiyonuna gider (supabase/functions/scan);
  * fonksiyon hakkı kontrol eder, Claude'a sorar ve listeyi döner. Fotoğraf sunucuda saklanmaz.
- * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 2 (bkz. docs/premium.md).
+ * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 50 (bkz. docs/premium.md).
  */
 export type ScanKind = 'fridge' | 'look';
 
@@ -57,7 +58,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
       limit: true,
       message: body.premium
         ? `Bugünkü ${body.limit} taramanı yaptın. Gece yarısı yenilenir, o zamana kadar listeyi elle güncelleyebilirsin.`
-        : `Bu haftaki ${body.limit} ücretsiz taramanı kullandın. Pazartesi yenilenir; Premium'da her gün 2 tarama var.`,
+        : `Bu haftaki ${body.limit} ücretsiz taramanı kullandın. Pazartesi yenilenir; Premium'da her gün ${LIMITS.premium.scans} tarama var.`,
     };
   }
   if (status === 401) return { ok: false, message: 'Oturumun kapanmış. Uygulamayı kapatıp açtıktan sonra tekrar dene.', retry: true };

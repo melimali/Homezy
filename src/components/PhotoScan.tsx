@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from '
 
 import { LV, WASH } from '@/domain/constants';
 import { uid } from '@/domain/logic';
+import { LIMITS } from '@/domain/premium';
 import { attLine, COLORS, guessColor, guessFabric, guessKind, KINDS, toColor, toFabric, toHex, toKind } from '@/domain/style';
 import type { StockLevel, WashType } from '@/domain/types';
 import { pickPhoto } from '@/lib/photos';
@@ -227,7 +228,7 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
             {Platform.OS !== 'web' && <Btn small kind="primary" label="Fotoğraf çek" onPress={() => pick('camera')} />}
             <Btn small label="Galeriden seç" onPress={() => pick('library')} />
           </View>
-          <T v="tiny">{premium.active ? 'Premium: her gün 2 tarama.' : 'Ücretsiz: haftada 2 tarama. Premium\'da her gün 2.'} Buzdolabı ve kıyafet aynı hakkı kullanır.</T>
+          <T v="tiny">{premium.active ? `Premium: her gün ${LIMITS.premium.scans} tarama.` : `Ücretsiz: haftada ${LIMITS.free.scans} tarama. Premium'da her gün ${LIMITS.premium.scans}.`} Buzdolabı ve kıyafet aynı hakkı kullanır.</T>
         </>
       )}
       {scan?.st === 'busy' && <Working text="Fotoğrafa bakıyorum. Her parçanın türünü, rengini ve kumaşını çıkarıyorum." onStop={stop} />}

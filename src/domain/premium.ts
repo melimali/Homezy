@@ -6,8 +6,9 @@ import type { HouseTheme } from './types';
  * (supabase/migrations/…_premium.sql) bunlarla aynı olmalı.
  */
 export const LIMITS = {
-  free: { freezes: 1, homes: 1, mult: 1 },
-  premium: { freezes: 3, homes: 5, mult: 1.5 },
+  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_scan_premium_50.sql). */
+  free: { freezes: 1, homes: 1, mult: 1, scans: 2 },
+  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 50 },
 } as const;
 
 export const limits = (premium: boolean) => (premium ? LIMITS.premium : LIMITS.free);
@@ -27,7 +28,7 @@ export const themeFor = (theme: HouseTheme | undefined, premium: boolean): House
 export const FEATURES: { emoji: string; label: string; free: string; premium: string }[] = [
   { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
   { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
-  { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: 'Haftada 2', premium: 'Günde 2' },
+  { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
   { emoji: '❄️', label: 'Seri dondurma (gün kaçırınca ev yıkılmaz)', free: 'Ayda 1', premium: 'Ayda 3' },
   { emoji: '⭐', label: 'Görevlerden kazanılan puan', free: '1 kat', premium: '1,5 kat' },
   { emoji: '🎹', label: 'Premium eşyalar (akvaryum, şömine, piyano)', free: '—', premium: '✓' },

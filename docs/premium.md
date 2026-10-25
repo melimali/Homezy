@@ -187,8 +187,8 @@ Notlar:
 
 ### Model önerisi
 
-1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın; 6,99 $ fiyatta en kötü durumda bile elimize geçenin %15'i.
-2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5, Sonnet 5.5 ve Opus 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku yeterince iyiyse maliyet 20'de birine iner.
+1. **Haiku 5.5 ile başla** (Melih'in kararı, 2026-10-25). Sonnet'in yaklaşık 20'de biri maliyet; tablolardaki yapay zekâ satırları neredeyse sıfıra iner.
+2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5 ve Sonnet 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku ürün ya da kumaş atlıyorsa `npx supabase secrets set SCAN_MODEL=claude-sonnet-5-5` ile Sonnet'e dön.
 3. Opus 5.5 da günlük sınırla zarar ettirmez (en kötü durumda kullanıcı başına 1,44 $); kalite farkı açıksa tercih edilebilir.
 
 Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.

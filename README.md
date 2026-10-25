@@ -240,7 +240,7 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 **Yayın sırası:** Önce Google Play süreci başlatılacak. Yeni kişisel geliştirici hesaplarında, yayına çıkmadan önce 12 test kullanıcısının 14 gün kesintisiz kapalı teste kayıtlı kalması gerekiyor. Bu süre içinde iOS sürümü TestFlight'ta hazırlanacak ve iki mağazaya aynı hafta başvurulacak.
 
 **Açık kararlar:**
-- Yapay zekâ modeli: Sonnet 5.5 ile başla, kapalı testte Haiku 5.5 ve Opus 5.5 ile karşılaştır ([docs/premium.md](docs/premium.md)).
+- Yapay zekâ modeli: Haiku 5.5 (maliyet için). Kapalı testte Sonnet 5.5 ile karşılaştır; gerekirse `SCAN_MODEL` gizli değişkeniyle değiştir ([docs/premium.md](docs/premium.md)).
 - Geliştirici hesapları bireysel mi olacak, Meikai Digital adına mı?
 - Mağaza ikonu için logonun sadeleştirilmiş bir versiyonu.
 - Yatay logonun açık zemin versiyonu ("layf" harfleri açık zeminde kayboluyor).

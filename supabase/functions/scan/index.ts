@@ -3,7 +3,7 @@
 // sorar, JSON sonucu döner. Fotoğraf saklanmaz. Hata ya da boş sonuçta hak geri verilir.
 // Ayrıntılar ve sınırlar: docs/premium.md. Kullanıcı oturumuyla çağrılır (JWT doğrulaması açık).
 //
-// Gizli değişken: ANTHROPIC_API_KEY. İsteğe bağlı: SCAN_MODEL (varsayılan claude-sonnet-5-5).
+// Gizli değişken: ANTHROPIC_API_KEY. İsteğe bağlı: SCAN_MODEL (varsayılan claude-haiku-5-5; kalite yetmezse claude-sonnet-5-5).
 // SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik verilir.
 
 import Anthropic from 'npm:@anthropic-ai/sdk';
@@ -16,7 +16,11 @@ const cors = {
 };
 
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
-const MODEL = Deno.env.get('SCAN_MODEL') ?? 'claude-sonnet-5-5';
+const MODEL = Deno.env.get('SCAN_MODEL') ?? 'claude-haiku-5-5';
+// Güvenlik sınıflandırıcısı reddederse istek aynı çağrıda başka bir modelle tekrarlanır. Haiku bunu desteklemiyor.
+const FALLBACK = MODEL.startsWith('claude-haiku')
+  ? {}
+  : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const };
 /** Base64 olarak en fazla ~4,5 MB fotoğraf (Claude'un görsel sınırı 5 MB). */
 const MAX_IMAGE = 6_000_000;
 const MEDIA = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -227,9 +231,7 @@ Deno.serve(async req => {
       max_tokens: 16000,
       // 'low' ürünleri ve kumaşları sık atlıyordu; tarama başına birkaç saniye daha uzun ama daha isabetli.
       output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA[kind] } },
-      // Güvenlik sınıflandırıcısı reddederse istek aynı çağrıda başka bir modelle tekrarlanır.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
+      ...FALLBACK,
       messages: [{
         role: 'user',
         content: [

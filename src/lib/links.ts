@@ -1,5 +1,5 @@
-/** Mağazaların istediği yasal sayfalar (Meikai Digital sitesinde yayınlanacak). */
+/** Mağazaların istediği yasal sayfalar (themeikai.com sitesinde yayınlanacak). */
 export const LEGAL = {
-  privacy: 'https://meikaidigital.com/layfapp/gizlilik',
-  terms: 'https://meikaidigital.com/layfapp/kosullar',
+  privacy: 'https://themeikai.com/layfapp/gizlilik',
+  terms: 'https://themeikai.com/layfapp/kosullar',
 };

@@ -50,7 +50,7 @@ Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart
 
 ## Premium açıklaması (abonelik ekranı için, App Store inceleme notu)
 
-Layfapp Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 50 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://meikaidigital.com/layfapp/gizlilik · Kullanım koşulları: https://meikaidigital.com/layfapp/kosullar
+Layfapp Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 50 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/layfapp/gizlilik · Kullanım koşulları: https://themeikai.com/layfapp/kosullar
 
 ## İnceleme ekibine not
 

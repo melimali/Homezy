@@ -23,6 +23,7 @@ Hedef: App Store ve Google Play'de yayınlamak.
   - [4. Odaya özel işlevler](#4-odaya-özel-işlevler)
   - [5. Bugün sekmesi](#5-bugün-sekmesi)
   - [6. Bildirimler](#6-bildirimler)
+  - [7. Evin düzeni](#7-evin-düzeni)
 - [Varsayılan rutinler](#varsayılan-rutinler)
 - [Görsel kimlik](#görsel-kimlik)
 - [Teknik yapı](#teknik-yapı)
@@ -140,9 +141,27 @@ Her işin yanında hangi odaya ait olduğu yazar ve iş doğrudan buradan "yapı
 |---|---|
 | **Rutin hatırlatmaları** | Geciken ve bugün yapılacak işler, sulama zamanı gelen bitkiler |
 | **Eksik ürünler** | Biten ürünler, eski ya da hiç çekilmemiş buzdolabı fotoğrafı |
-| **Çamaşır** | 3 ve daha fazla kirli kıyafet biriktiğinde |
+| **Çamaşır ve dolap** | Aynı yıkama türünden 3 kirli parça (bir makine dolusu), mevsim değişimi, bir yıldır giyilmeyenler için bağış önerisi |
+| **Faturalar ve bakım** | Faturanın son gününe 2 gün kala, garantinin bitişine 30 gün kala, kombi / klima / dedektör gibi bakım işleri, mevsimlik işler (ayın 1'i ve 15'i) |
+| **Son kullanma tarihleri** | Buzdolabındaki ürünün tarihine 2 gün kala ve tarihi geçince |
+| **Haftalık özet** | Pazar akşamı 19:00'da haftanın özeti |
 
-- Bildirimler sekmesinde bekleyen bütün bildirimler aciliyete göre sıralanır. Bir bildirime dokununca ilgili oda açılır.
+- Bildirimler sekmesinde bekleyen bütün bildirimler aciliyete göre sıralanır. Bir bildirime dokununca ilgili oda (ya da Ev bakımı) açılır.
+
+### 7. Evin düzeni
+
+- **Kurulum soruları:** Ev çizildikten sonra 7 soru gelir: evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, saksı bitkileri. "Evet" denen soruların rutinleri ilgili odaya (ya da Ev bakımına) eklenir, "hayır" denince kalkar. Cevaplar Plan ekranındaki "Evim hakkında" kartından değiştirilir. Yeni eklenen işler hepsi aynı gün çıkmasın diye birkaç güne yayılır.
+- **Canlı ev haritası:** Her odanın bir temizlik yüzdesi var. İş yapıldıktan sonra sıklığın yarısı kadar gün oda tam temiz sayılır, sonra azalır, sıklığın iki katında sıfıra iner. Ana ekrandaki evde kirlenen odanın zemini solar ve tozlanır, tertemiz oda parlar. Odaların ağırlıklı ortalaması **ev puanı**.
+- **Ertele ve atla:** Her işin "⋯" menüsünde "Yarına ertele" ve "Bu sefer atla" var. Atlanan iş bir sonraki döneme kayar; oda temizliği değişmez.
+- **Esnek zamanlama:** Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığın yarısı kadar gün (haftalık işte 3 gün) "N gün geçti" olarak bekler, sonra gecikir. Ayarlardan kapatılabilir.
+- **Süre:** Her işin tahmini süresi var (dakika). Sıklık ve süre "⋯" menüsünden değiştirilir.
+- **Ne kadar vaktin var?:** Bugün sekmesinde 10 / 20 / 30 / 60 dakika seçilince o süreye sığan en acil işler listelenir.
+- **Modlar:** Misafir geliyor (misafirin göreceği odalar öne çıkar), Tatile gidiyorum (rutinler donar, dönünce kaldığı yerden devam eder), Yoğun / hasta (sadece her gün yapılan işler), Bayram temizliği (adım adım liste).
+- **Ev bakımı:** Kombi, klima, su arıtma, duman dedektörü, sayaç fotoğrafı gibi odasız işler; faturalar (ayın günü, "Ödendi" işareti); garanti belgeleri; mevsimlik işler (bahar temizliği, dolap değişimi, sineklik, salça, turşu, kışlık hazırlık).
+- **Gardırop:** Her kıyafetin yıkama türü var (beyaz, renkli, koyu, hassas). Çamaşır planı türlere göre gruplar; aynı türden 3 parça bir makine dolusudur. Mevsim değişimi kartı ve bir yıldır giyilmeyenler için bağış önerisi.
+- **Buzdolabı:** Ürünlere son kullanma tarihi girilir, 2 gün kala hatırlatılır.
+- **Motivasyon:** Seri sayacı, ev puanı ve son 7 günün özeti ana ekranda; bir oda tertemiz olunca kısa kutlama (kapatılabilir).
+- **Yakında:** Akıllı buzdolabı (fotoğraftan ürün tanıma, Premium) ve ana ekran widget'ı (ücretsiz, geliştirme derlemesi gerekir).
 
 ---
 
@@ -211,7 +230,8 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 - [x] **Aşama 0: Fikir ve prototip.** HTML prototip, renk paleti, logo.
 - [x] **Aşama 1: Proje iskeleti.** Expo + TypeScript kurulumu, sekmeler ve ekran iskeletleri, Expo Go ile telefonda açılış.
 - [x] **Aşama 2: Prototipi taşıma.** Ev planı editörü, odalar, rutinler, gardırop, buzdolabı ve stok takibi, yerel veritabanı.
-- [ ] **Aşama 3: Telefona özel özellikler.** Gerçek bildirimler, sabah özeti, kamera. (Kodu yazıldı, telefonda denenmesi gerekiyor.)
+- [x] **Aşama 2b: Evin düzeni.** Kurulum soruları, canlı ev haritası, ertele / atla, esnek zamanlama, süre ve zaman bütçesi, modlar, ev bakımı, faturalar, garantiler, mevsimlik işler, çamaşır planı, son kullanma tarihi, haftalık özet.
+- [x] **Aşama 3: Telefona özel özellikler.** Gerçek bildirimler, sabah özeti, kamera.
 - [ ] **Aşama 4: Kimlik.** Uygulama ikonu, açılış ekranı, mağaza ekran görüntüleri ve tanıtım metni.
 - [ ] **Aşama 5: Test.** Google Play kapalı testi ve iOS için TestFlight.
 - [ ] **Aşama 6: Yayın.** Gizlilik politikası, mağaza kayıtları, inceleme.

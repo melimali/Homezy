@@ -62,6 +62,13 @@ type PurchasesCtx = {
 
 const none: Premium = { active: false, until: null, willRenew: false, productId: null };
 
+/**
+ * Sadece geliştirme sürümünde: `.env.local` içine `EXPO_PUBLIC_DEV_PREMIUM=1` yazılırsa Premium açık sayılır
+ * (emülatörde mağaza hesabı olmadan Premium ekranlarını denemek için). Mağaza sürümünde etkisi yok.
+ */
+const devPremium = __DEV__ && process.env.EXPO_PUBLIC_DEV_PREMIUM === '1';
+const DEV_PREMIUM: Premium = { active: true, until: null, willRenew: true, productId: 'dev' };
+
 const PurchasesContext = createContext<PurchasesCtx | null>(null);
 
 type Packages = Record<Plan, PurchasesPackage | null>;
@@ -181,7 +188,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
   const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
     [ready, premium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;

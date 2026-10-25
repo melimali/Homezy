@@ -3,7 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
-import { roomCounts } from '@/domain/logic';
+import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
@@ -42,6 +42,13 @@ function shade(hex: string, amt: number) {
   const ch = (v: number) => Math.round(v + (to - v) * k);
   const [r, g, b] = [ch((n >> 16) & 255), ch((n >> 8) & 255), ch(n & 255)];
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+/** İki rengi karıştırır (t = 0 ilk renk, 1 ikinci renk). */
+function mix(a: string, b: string, t: number) {
+  const x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);
+  const ch = (s: number) => Math.round(((x >> s) & 255) + (((y >> s) & 255) - ((x >> s) & 255)) * t);
+  return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
 }
 
 type Face = { key: string; points: string; fill: string; onPress?: () => void };
@@ -390,9 +397,11 @@ type Props = {
   build?: { level: number; idle: number };
   /** Evin teması (gündüz, gece, kış, sonbahar). Premium kontrolü çağıran tarafta (`themeFor`). */
   theme?: HouseTheme;
+  /** Oda etiketleri görünsün mü (paylaşılan kartlarda ve hikâyede gizli). */
+  labels?: boolean;
 };
 
-export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz' }: Props) {
+export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -433,6 +442,11 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     const rest = mine.filter(i => i !== a);
     props[id] = behind.length ? nearest(behind) : rest.length ? nearest(rest) : a;
   }
+
+  // Canlı ev haritası: her odanın temizlik yüzdesi. Kirlendikçe zemin solar ve tozlanır, iş yapılınca parlar.
+  const clean: Record<string, number> = {};
+  for (const id of S.order) clean[id] = roomClean(S, id, now);
+  const DUSTY = dark ? '#5E5A57' : '#BDB3A6';
 
   // Mağazadan alınan eşyalar: odanın etiket ve eşya dışındaki bloklarına sırayla.
   const itemAt: Record<number, string[]> = {};
@@ -509,8 +523,24 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
       add({ key: k + 'br', fill: shade(slab, -0.2), points: pts([P(r, col + 1, -SLAB), P(r + 1, col + 1, -SLAB), P(r + 1, col + 1, 0), P(r, col + 1, 0)]) });
 
     // Taban. Damalı olsun diye her ikinci blok çok hafif koyu. 4. seviyeye kadar çıplak kalas.
-    const base = painted ? floor : WOOD;
+    const p = clean[id] ?? 100;
+    const base = painted ? mix(floor, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
     add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open });
+    // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
+    if (p < 80) {
+      const n = p < 40 ? 3 : p < 60 ? 2 : (r + col) % 2 === 0 ? 1 : 0;
+      for (let j = 0; j < n; j++) {
+        const [x, y] = P(r + 0.25 + ((j * 0.31 + r * 0.17) % 0.5), col + 0.2 + ((j * 0.43 + col * 0.13) % 0.6));
+        els.push(<Ellipse key={k + 'dd' + j} cx={x} cy={y} rx={3.5} ry={1.6} fill="#9C8C7A" fillOpacity={0.55} />);
+      }
+    }
+    // Tertemiz oda: zeminde minik parıltılar.
+    if (painted && p >= 100 && (r * 3 + col) % 3 === 0) {
+      const [x, y] = P(r + 0.4, col + 0.6, 2);
+      els.push(
+        <Polygon key={k + 'sp'} points={pts([[x, y - 5], [x + 1.3, y - 1.3], [x + 5, y], [x + 1.3, y + 1.3], [x, y + 5], [x - 1.3, y + 1.3], [x - 5, y], [x - 1.3, y - 1.3]])} fill={GOLD} />,
+      );
+    }
     if (!painted)
       for (const u of [1 / 3, 2 / 3])
         els.push(<Line key={k + 'pl' + u} x1={P(r + u, col)[0]} y1={P(r + u, col)[1]} x2={P(r + u, col + 1)[0]} y2={P(r + u, col + 1)[1]} stroke={shade(WOOD, -0.22)} strokeWidth={0.8} />);
@@ -615,7 +645,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         <Pressable
           onPress={() => onOpenRoom?.(id)}
           accessibilityRole="button"
-          accessibilityLabel={`${room.name} odasını aç${nTask ? `, ${nTask} iş bekliyor` : ''}`}
+          accessibilityLabel={`${room.name} odasını aç, yüzde ${clean[id]} temiz${nTask ? `, ${nTask} iş bekliyor` : ''}`}
           hitSlop={4}
           style={({ pressed }) => [
             styles.tag,
@@ -623,7 +653,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
             pressed && { transform: [{ translateY: 1 }] },
           ]}
         >
-          <Text style={styles.icon}>{ROOM_EMOJI[room.type]}</Text>
+          <Text style={styles.icon}>{clean[id] >= 100 ? '✨' : ROOM_EMOJI[room.type]}</Text>
           <Text style={[styles.name, { color: c.ink }]} numberOfLines={1}>{room.name}</Text>
           {nTask > 0 && (
             <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>
@@ -654,7 +684,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {scene.front}
       </Svg>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {labels}
+        {showLabels && labels}
       </View>
     </Animated.View>
   );

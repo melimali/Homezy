@@ -7,6 +7,7 @@ import { ITEM } from '@/domain/items';
 import { autoFreeze, awardLocal, awardToast, pruneLog, type AwardResult } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
+import { sfx } from '@/lib/sfx';
 import { supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -143,7 +144,9 @@ export function usePlay() {
         out.r = awardLocal(D, kind, ref, label, Date.now(), limits(premium.active).mult);
         pruneLog(D.play);
       });
-      toast(awardToast(out.r!, what));
+      const r = out.r!;
+      if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
+      toast(awardToast(r, what));
       return out.r!;
     },
     [update, toast, premium.active],

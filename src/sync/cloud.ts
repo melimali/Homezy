@@ -43,7 +43,11 @@ const noPhotos = (mod: AppState['mod']) =>
  * Premium'da ayrıca Supabase Storage'a yedeklenir (`photoKey`, bkz. sync/photos.ts).
  */
 function forCloud(S: AppState): AppState {
-  return { ...S, mod: noPhotos(S.mod), others: (S.others ?? []).map(h => ({ ...h, mod: noPhotos(h.mod) })) };
+  const noCarePhotos = (care: AppState['care']) => (care || []).map(t => ({ ...t, photo: null }));
+  return {
+    ...S, mod: noPhotos(S.mod), care: noCarePhotos(S.care),
+    others: (S.others ?? []).map(h => ({ ...h, mod: noPhotos(h.mod), care: noCarePhotos(h.care) })),
+  };
 }
 
 /** Bulut yedeğini telefondaki veriyle birleştirirken fotoğrafları korur. */
@@ -52,6 +56,10 @@ export function mergeFromCloud(remote: AppState, local: AppState): AppState {
   for (const [k, m] of Object.entries(S.mod)) {
     const l = local.mod[k];
     if (l?.photo) S.mod[k] = { ...m, photo: l.photo, photoAt: l.photoAt ?? null };
+  }
+  for (const t of S.care || []) {
+    const l = local.care?.find(x => x.id === t.id);
+    if (l?.photo) t.photo = l.photo;
   }
   return S;
 }

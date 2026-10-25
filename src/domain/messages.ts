@@ -39,6 +39,13 @@ const TASK_LINES: [RegExp, string[]][] = [
   [/ayakkabı/i, ['Ayakkabılar sıraya girmek istiyor 👟👞', 'Ayakkabılık bir düzene kavuşsun 👠✨']],
   [/masa/i, ['Masa ferahlasın, fikirler uçuşsun 💡🗂️', 'Çalışma masana minik bir düzen 📚✨']],
   [/kablo|şarj/i, ['Kablolar birbirine dolanmış olabilir 🔌🧶', 'Şarj köşesine bir düzen verelim 🔋']],
+  [/kombi|petek/i, ['Kombi kışa hazır mı? Küçük bir kontrol 🔥🔧', 'Petekler ısınsın, ev mis gibi sıcacık olsun ♨️']],
+  [/klima/i, ['Klima nefes alsın, filtresi temizlensin ❄️🧽', 'Temiz filtre, ferah hava 🌬️']],
+  [/arıtma/i, ['Su arıtmanın filtresi değişim istiyor 💧🔧']],
+  [/dedektör/i, ['Dedektörün düğmesine bir bas, bip desin 🔔🙂', 'Duman dedektörü hâlâ nöbette mi? Bir test edelim 🚨']],
+  [/sayaç/i, ['Sayaçların fotoğrafını çek, faturayı karşılaştır 📸🔌', 'Ay doldu, sayaç fotoğrafı zamanı 📸💧']],
+  [/mama|tüy|battaniye/i, ['Patili dostun teşekkür eder 🐾💛', 'Minik dostun için minik bir iş 🐶🐱']],
+  [/halı/i, ['Halı biraz ilgi istiyor 🧶🧹']],
 ];
 
 const ROOM_LINES: Record<RoomType, string[]> = {
@@ -59,10 +66,12 @@ const WATER_LINES = [
   'için sulama günü, büyümeye devam 🌱✨',
 ];
 
-/** Rutin ya da bitki bildirimi. */
-export function taskLine(o: { name: string; type: RoomType; plant: boolean; k: StatusKind; key: string; now: number }) {
+const CARE_LINES = ['Evin küçük bir bakım istiyor 🔧🏡', 'Minik bir bakım, uzun ömürlü bir ev 🛠️✨'];
+
+/** Rutin, bitki ya da ev bakımı bildirimi. `type` null ise ev bakımı. */
+export function taskLine(o: { name: string; type: RoomType | null; plant: boolean; k: StatusKind; key: string; now: number }) {
   if (o.plant) return `${o.name} ${pick(WATER_LINES, o.key, o.now)}`;
-  const pool = TASK_LINES.find(([re]) => re.test(o.name))?.[1] ?? ROOM_LINES[o.type];
+  const pool = TASK_LINES.find(([re]) => re.test(o.name))?.[1] ?? (o.type ? ROOM_LINES[o.type] : CARE_LINES);
   return pick(pool, o.key, o.now);
 }
 
@@ -157,4 +166,42 @@ export function sportLine(key: string, now: number) {
     key,
     now,
   );
+}
+
+/** Pazar akşamı haftalık özet. */
+export function weeklyLine(o: { done: number; days: number; score: number; best: string | null }) {
+  if (!o.done) return 'Bu hafta sakin geçti 🌙 Yeni haftaya minik bir işle başlayalım mı?';
+  const best = o.best ? ` En parlak oda: ${o.best} ✨` : '';
+  return `Bu hafta ${o.done} iş yaptın, ${o.days} gün evine vakit ayırdın 💪 Ev puanı %${o.score}.${best}`;
+}
+
+/**
+ * Akşam hatırlatmasının başlığı ve metni. `idle`: o akşam hiçbir şey yapılmazsa evin kaç gündür
+ * bekleyeceği (dondurma hakları düşülmüş). `away`: son bir şey yapılan günden beri geçen gün.
+ * Uzun süre gelmeyene ceza dili yerine "birlikte toparlayalım" denir.
+ */
+export function eveningNudge(o: { streak: number; idle: number; away: number | null; built: boolean; key: string; now: number }) {
+  const { streak, idle, away, built, key, now } = o;
+  if (away != null && away >= 3)
+    return {
+      title: pick(['🤗 Evin seni özledi', '🏡 Kaldığın yerden devam', '💛 Seni bekliyoruz'], key, now),
+      body: pick(
+        [
+          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, evini birlikte toparlayalım 🏡',
+          'Bir iş yap, tamir hemen başlasın 🔨 Yavaş yavaş, birlikte.',
+          '5 dakikalık tek bir iş yeter. Gerisini adım adım hallederiz 🐢✨',
+        ],
+        key,
+        now,
+      ),
+    };
+  if (idle >= 2) return { title: '🛟 Son şans: yarın evin çökmeye başlıyor', body: 'Bu akşam tek bir iş yap, evin kurtulsun. Minik bir iş bile yeter 💪' };
+  if (idle === 1) return { title: '🌫️ Evin tozlandı', body: 'Bu akşam bir iş yapmazsan yarın duvarlarda çatlaklar çıkar 😟 Bir dakikalık iş yeter.' };
+  return { title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
+}
+
+/** Haftalık özet kartı paylaşılırken (ya da görsel paylaşılamazsa) giden metin. */
+export function weekShareText(o: { done: number; days: number; streak: number }) {
+  const streak = o.streak > 1 ? ` 🔥 ${o.streak} günlük serim var.` : '';
+  return `Bu hafta Layfapp ile ${o.done} ev işi yaptım, ${o.days} gün evime vakit ayırdım 💪${streak} Evini topla, evin büyüsün 🏡`;
 }

@@ -39,6 +39,7 @@ export const defaultSettings = (): Settings => ({
   streak: true, sport: true, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
+  actions: true,
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */

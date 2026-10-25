@@ -93,6 +93,8 @@ export type Settings = {
   celebrate: boolean;
   /** Dokunuş, iş tamamlama ve kutlama sesleri ile titreşim. */
   sound: boolean;
+  /** Bugünün işleri için ayrı bildirim; bildirimden "Yaptım" / "Yapmadım" diye cevaplanır. */
+  actions: boolean;
 };
 
 /* ---------- ev profili, modlar, faturalar, garantiler ---------- */
@@ -221,4 +223,8 @@ export type TaskStatus = { k: StatusKind; diff: number; label: string };
 export type TaskRef = { t: Task; rid: string; list: TaskList; s: TaskStatus };
 
 /** `url` verilirse dokununca oraya gidilir; yoksa `rid` odasına. */
-export type Notice = { k: StatusKind; rid: string; title: string; text: string; url?: string };
+export type Notice = {
+  k: StatusKind; rid: string; title: string; text: string; url?: string;
+  /** Rutin ya da bitki hatırlatmasıysa işin kimliği ve listesi (bildirimden "Yaptım" için). */
+  tid?: string; list?: TaskList;
+};

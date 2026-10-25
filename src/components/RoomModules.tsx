@@ -98,7 +98,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştirmek için dokun, ayarlar için basılı tut`}
                   style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : bg, boxShadow: `0 3px 0 ${c.line}` }]}
                 >
-                  <Text style={{ fontSize: 30 }}>{clothEmoji(x.cat)}</Text>
+                  <Text style={{ fontSize: 30 }}>{clothEmoji(x.cat, x.name)}</Text>
                   <Text numberOfLines={2} style={[styles.clothName, { color: c.ink }]}>{x.name}</Text>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: fg }}>{CSTATE_EMOJI[x.state]} {CSTATE[x.state]}</Text>
                 </Squish>
@@ -147,7 +147,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
           {sel && (
             <>
               <View style={styles.sheetHead}>
-                <Text style={{ fontSize: 40 }}>{clothEmoji(sel.cat)}</Text>
+                <Text style={{ fontSize: 40 }}>{clothEmoji(sel.cat, sel.name)}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <T v="h2">{sel.name}</T>
                   <T v="small">{sel.cat} · {CSTATE_EMOJI[sel.state]} {CSTATE[sel.state]}</T>

@@ -142,6 +142,7 @@ export default function Bildirimler() {
       {premium.active ? (
         <Card>
           <Toggle
+            first
             label="Akıllı bildirimler 🧠"
             sub="Hatırlatmalar işlerini genelde yaptığın saate göre gelir; acil bir şey yoksa sabah özeti gelmez."
             value={s.smart}
@@ -181,10 +182,10 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   );
 }
 
-function Toggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, sub, value, onChange, first }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void; first?: boolean }) {
   const c = useColors();
   return (
-    <View style={[styles.setRow, { borderTopColor: c.line }]}>
+    <View style={[styles.setRow, { borderTopColor: c.line }, first && { borderTopWidth: 0 }]}>
       <View style={{ flex: 1 }}>
         <T v="bold" style={{ fontSize: 14 }}>{label}</T>
         <T v="small">{sub}</T>

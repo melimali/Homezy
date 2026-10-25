@@ -59,4 +59,11 @@ const find = (rules: [RegExp, string][], name: string, fallback: string) => {
 
 export const taskEmoji = (name: string, plant = false) => (plant ? '🪴' : find(TASK_RULES, name, '✨'));
 export const itemEmoji = (name: string) => find(ITEM_RULES, name, '📦');
-export const clothEmoji = (cat: string) => CAT_EMOJI[cat] ?? '👚';
+/** Aksesuar ve ayakkabıda ad daha belirleyici (çanta şapka gibi görünmesin). */
+const CLOTH_RULES: [RegExp, string][] = [
+  [/çanta|sırt çantası/, '👜'], [/şapka|bere|kasket/, '🧢'], [/atkı|şal|eşarp/, '🧣'], [/eldiven/, '🧤'],
+  [/gözlük/, '🕶️'], [/kemer|saat|kolye|küpe|bileklik|yüzük/, '💍'], [/çorap/, '🧦'],
+  [/bot|çizme/, '🥾'], [/topuklu/, '👠'], [/sandalet|terlik/, '🩴'], [/klasik ayakkabı|loafer|makosen/, '👞'],
+  [/elbise/, '👗'], [/etek/, '👗'], [/şort/, '🩳'], [/mont|kaban|ceket|palto|trenç/, '🧥'],
+];
+export const clothEmoji = (cat: string, name = '') => find(CLOTH_RULES, name, CAT_EMOJI[cat] ?? '👚');

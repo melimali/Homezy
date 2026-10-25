@@ -88,6 +88,9 @@ export function Squish({
       : Animated.timing(s, { toValue, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true })
     ).start();
   const [outer, inner] = split(style);
+  // İç kutu sadece dış kutu esniyorsa onu doldurur. Her zaman flexGrow verilince Android'de kaydırılan
+  // sayfada düğmeler ekran boyu uzuyor, yatay sekme şeridi de görünmez oluyordu.
+  const grow = outer.flex != null || outer.flexGrow != null || outer.flexBasis != null;
   return (
     <Pressable
       accessibilityRole="button"
@@ -103,7 +106,7 @@ export function Squish({
       }}
       style={outer}
     >
-      <Animated.View style={[{ flexGrow: 1 }, inner, { transform: [{ scale: s }] }, dim && rest.disabled && { opacity: 0.55 }]}>{children}</Animated.View>
+      <Animated.View style={[grow && { flexGrow: 1 }, inner, { transform: [{ scale: s }] }, dim && rest.disabled && { opacity: 0.55 }]}>{children}</Animated.View>
     </Pressable>
   );
 }

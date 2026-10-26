@@ -15,7 +15,7 @@ import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
-import { tipOfDay } from '@/domain/tips';
+import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -36,6 +36,9 @@ export default function Home() {
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
   const moka = useMokaState();
+  // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
+  const tip = mokaTip(now);
+  const pose = CALM_POSES.includes(moka.pose) ? tip.pose : moka.pose;
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -52,9 +55,7 @@ export default function Home() {
         </T>
       </View>
 
-      <Appear index={1}><MokaMascot pose={moka.pose} title={moka.title} message={moka.message} onPress={moka.next} /></Appear>
-
-      <Appear index={1}><DailyTip now={now} /></Appear>
+      <Appear index={1}><MokaMascot pose={pose} title={moka.title} message={moka.message} tip={tip.text} onPress={moka.next} /></Appear>
 
       <Appear index={2}><StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} /></Appear>
 
@@ -151,21 +152,6 @@ function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: 
   );
 }
 
-/** Günün cümlesi: ev ya da spor üzerine, her gün değişen bir cümle. */
-function DailyTip({ now }: { now: number }) {
-  const c = useColors();
-  const tip = tipOfDay(now);
-  return (
-    <View style={[styles.tip, { backgroundColor: c.todaySoft }]} accessible accessibilityLabel={`Günün cümlesi: ${tip.text}`}>
-      <Float amp={3}><Text style={{ fontSize: 28 }}>{tip.emoji}</Text></Float>
-      <View style={{ flex: 1 }}>
-        <T v="eyebrow" style={{ marginBottom: 2, color: c.today }}>Günün cümlesi</T>
-        <Text style={[styles.tipText, { color: c.ink }]}>{tip.text}</Text>
-      </View>
-    </View>
-  );
-}
-
 /** Ev ilk kez bitince (7. gün) bir kere kutlama. */
 function Celebrate({ level }: { level: number }) {
   const c = useColors();
@@ -214,8 +200,6 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: radius.pill },
   streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },
   freeze: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center', marginTop: -4 },
-  tip: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 16 },
-  tipText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21 },
   quick: { flexDirection: 'row', gap: 10 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 14 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 15 },

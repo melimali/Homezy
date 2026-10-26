@@ -12,6 +12,8 @@ type Props = {
   pose: MokaPose;
   title?: string;
   message?: string;
+  /** Günün cümlesi: balonun altında ayrı satır. */
+  tip?: string;
   size?: keyof typeof SIZE;
   /** Konuşma balonu (başlık ya da mesaj varsa). Varsayılan açık. */
   showBubble?: boolean;
@@ -20,12 +22,12 @@ type Props = {
 };
 
 /** Maskot Moka ve yanında konuşma balonu. Dokununca zıplayıp sallanır. */
-export function MokaMascot({ pose, title, message, size = 'md', showBubble = true, onPress, style }: Props) {
+export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble = true, onPress, style }: Props) {
   const c = useColors();
   const reduce = useReduceMotion();
   const [hop] = useState(() => new Animated.Value(0));
   const px = SIZE[size];
-  const bubble = showBubble && !!(title || message);
+  const bubble = showBubble && !!(title || message || tip);
 
   const bounce = () => {
     sfx('tap');
@@ -48,7 +50,7 @@ export function MokaMascot({ pose, title, message, size = 'md', showBubble = tru
     <Pressable
       onPress={bounce}
       accessibilityRole="button"
-      accessibilityLabel={['Moka', title, message].filter(Boolean).join('. ')}
+      accessibilityLabel={['Moka', title, message, tip && `Günün cümlesi: ${tip}`].filter(Boolean).join('. ')}
       style={[styles.row, size === 'lg' && styles.col, style]}
     >
       <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
@@ -67,6 +69,12 @@ export function MokaMascot({ pose, title, message, size = 'md', showBubble = tru
           />
           {!!title && <Text style={[styles.title, size === 'sm' && styles.titleSm, { color: c.ink }]}>{title}</Text>}
           {!!message && <Text style={[styles.msg, size === 'sm' && styles.msgSm, { color: c.muted }]}>{message}</Text>}
+          {!!tip && (
+            <View style={[styles.tip, !!(title || message) && { borderTopWidth: 1.5, borderTopColor: c.line, marginTop: 6, paddingTop: 8 }]}>
+              <Text style={[styles.tipHead, { color: c.today }]}>💬 Günün cümlesi</Text>
+              <Text style={[styles.tipText, size === 'sm' && styles.msgSm, { color: c.ink }]}>{tip}</Text>
+            </View>
+          )}
         </View>
       )}
     </Pressable>
@@ -85,4 +93,7 @@ const styles = StyleSheet.create({
   titleSm: { fontSize: 15, lineHeight: 19 },
   msg: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
   msgSm: { fontSize: 13, lineHeight: 18 },
+  tip: { gap: 2 },
+  tipHead: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.4, textTransform: 'uppercase' },
+  tipText: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 20 },
 });

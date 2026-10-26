@@ -1,7 +1,7 @@
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -77,7 +77,7 @@ function RootStack() {
   }, [loading]);
 
   if (loading) return null;
-  // Açılış sırası: açılış animasyonu → Ücretsiz / Premium seçimi (LaunchChoice) → tanıtım → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → ana ekran.
+  // Açılış sırası: açılış animasyonu → tanıtım (Moka) → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → evle ilgili sorular → Ücretsiz / Premium seçimi (LaunchChoice) → ana ekran.
   const inside = introSeen && (status === 'guest' || status === 'account');
 
   return (
@@ -112,14 +112,21 @@ function RootStack() {
   );
 }
 
+// Evi kurarken ve tanıtımda satın alma ekranı çıkmasın diye bu sayfalarda gizlenir.
+const CHOICE_WAIT = ['/tanitim', '/giris', '/kurulum', '/evim'];
+
 /**
- * İlk açılışta, açılış animasyonunun hemen arkasında Ücretsiz / Premium seçimi.
- * Bir kere seçilince bir daha çıkmaz; sonra Hesabım'dan açılır. Premium olana hiç çıkmaz.
+ * Tanıtım ve ev kurulumundan sonra Ücretsiz / Premium seçimi. Bir kere seçilince bir daha çıkmaz;
+ * sonra Hesabım'dan açılır. Premium olana hiç çıkmaz.
  */
 function LaunchChoice() {
   const { premium } = usePurchases();
+  const { state } = useStore();
+  const { status, introSeen } = useAuth();
+  const path = usePathname();
   const [done, setDone] = useState(() => prefs.get('planChoice') != null);
-  if (done || premium.active) return null;
+  const ready = introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
+  if (done || premium.active || !ready) return null;
   return (
     <View style={StyleSheet.absoluteFill}>
       <PremiumChoice

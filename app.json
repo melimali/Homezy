@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Layfapp",
+    "name": "Safehouse: Daily Ops",
     "slug": "layfapp",
     "scheme": "layfapp",
     "version": "1.0.0",
@@ -31,25 +31,25 @@
           "image": "./assets/logo-kare.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#EBF5EE",
+          "backgroundColor": "#E7E3D8",
           "dark": {
             "image": "./assets/logo-kare.png",
-            "backgroundColor": "#283044"
+            "backgroundColor": "#1E2022"
           }
         }
       ],
       [
         "expo-notifications",
         {
-          "color": "#283044",
+          "color": "#F3B553",
           "defaultChannel": "sabah-ozeti"
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Buzdolabı ve günlük fotoğraflarını galeriden seçebilmen için Layfapp fotoğraflarına erişmek istiyor.",
-          "cameraPermission": "Buzdolabının ve günün fotoğrafını çekebilmen için Layfapp kameraya erişmek istiyor.",
+          "photosPermission": "Erzak taraması ve günlük fotoğraflarını galeriden seçebilmen için Safehouse: Daily Ops fotoğraflarına erişmek istiyor.",
+          "cameraPermission": "Erzak deposunu ve keşif teçhizatını tarayabilmen için Safehouse: Daily Ops kameraya erişmek istiyor.",
           "microphonePermission": false
         }
       ],
@@ -82,8 +82,8 @@
           "widgets": [
             {
               "name": "Bugun",
-              "label": "Layfapp · Bugün",
-              "description": "Bugünün işleri, serin ve günün cümlesi. İşi widget'tan tamamlayabilirsin.",
+              "label": "Safehouse · Seferler",
+              "description": "Bugünün tahkimat görevleri, hayatta kalma serin ve günün telsiz notu. Görevi widget'tan tahkim edebilirsin.",
               "minWidth": "250dp",
               "minHeight": "110dp",
               "targetCellWidth": 4,

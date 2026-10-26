@@ -69,7 +69,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>⭐ PREMIUM</Text>
           </View>
           <Text style={[styles.price, { color: brand.mint }]}>{intro ?? prices[plan]}</Text>
-          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>
+          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(236,231,220,0.75)' }}>
             {intro ? 'ilk ay' : plan === 'annual' ? 'yıllık' : 'aylık'}
           </Text>
         </View>

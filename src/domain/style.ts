@@ -62,7 +62,7 @@ const COLOR_WORDS = ([...Object.keys(COLORS).map(k => [k, k]), ['kahve', 'kahver
 
 export type Occasion = 'gunluk' | 'sik' | 'spor';
 export const OCC: Record<Occasion, { label: string; f: [number, number] }> = {
-  gunluk: { label: 'Günlük', f: [2, 2] }, sik: { label: 'Şık', f: [3, 4] }, spor: { label: 'Spor', f: [1, 1] },
+  gunluk: { label: 'Devriye', f: [2, 2] }, sik: { label: 'Müzakere', f: [3, 4] }, spor: { label: 'Kaçış', f: [1, 1] },
 };
 export const OCCASIONS = Object.keys(OCC) as Occasion[];
 export const SEASON_NAME: Record<Season, string> = { yaz: 'yaz', kış: 'kış', geçiş: 'bahar / sonbahar' };
@@ -127,7 +127,7 @@ export function att(c: Cloth): Att {
     fabric, fab: (fabric && FABRICS[fabric]) || { s: 'her', w: 2 }, pattern: c.pattern === 'desenli' ? 'desenli' : 'düz',
   };
 }
-export const attLine = (a: Pick<Att, 'kind' | 'color' | 'fabric'>) => [a.kind || 'Tür belirsiz', cap(a.color), a.fabric || ''].filter(Boolean).join(' · ');
+export const attLine = (a: Pick<Att, 'kind' | 'color' | 'fabric'>) => [a.kind || 'Teçhizat belirsiz', cap(a.color), a.fabric || ''].filter(Boolean).join(' · ');
 
 type Slots = Partial<Record<Slot, Att>>;
 const isK = (p: Att | undefined, ...k: string[]) => !!p && !!p.kind && k.includes(p.kind);
@@ -135,21 +135,21 @@ const isF = (p: Att | undefined, ...f: string[]) => !!p && !!p.fabric && f.inclu
 type Rule = (s: Slots) => [number, string] | null | false;
 /** Kumaş eşleşmeleri: her kural kombinin yuvalarına bakar, uyuyorsa [puan, gerekçe] döner. */
 const FABRIC_RULES: Rule[] = [
-  ({ top, bottom }) => isF(top, 'Keten') && (isK(bottom, 'Chino', 'Şort') || isF(bottom, 'Keten')) && [2, 'Keten üst, chino ya da şort gibi hafif bir altla nefes alır.'],
-  ({ top, bottom }) => isK(top, 'Kazak') && isF(top, 'Yün', 'Triko', 'Kaşmir') && isK(bottom, 'Kot pantolon', 'Chino', 'Kumaş pantolon') && [2, 'Kalın örgü kazak, sağlam dokulu bir pantolonla dengeli durur.'],
-  ({ top, bottom }) => isK(top, 'Kazak') && (isK(bottom, 'Şort') || isF(bottom, 'Keten', 'Viskon')) && [-2, 'Kalın kazak ince ya da kısa bir altla dengesiz kalır.'],
-  ({ top, bottom }) => isF(top, 'İpek / Saten') && isK(bottom, 'Kumaş pantolon', 'Etek', 'Kot pantolon') && [2, 'Saten üstün parlaklığı mat bir altla dengelenir.'],
-  ({ top, bottom }) => isF(top, 'İpek / Saten') && isK(bottom, 'Eşofman altı') && [-3, 'Saten üst eşofmanla bir arada durmaz.'],
-  ({ top, bottom, shoes }) => (isF(top, 'Teknik / Spor') || isK(bottom, 'Eşofman altı')) && isK(shoes, 'Klasik ayakkabı', 'Loafer', 'Topuklu ayakkabı') && [-3, 'Spor kumaşla klasik ayakkabı çatışır, spor ayakkabı seç.'],
+  ({ top, bottom }) => isF(top, 'Keten') && (isK(bottom, 'Chino', 'Şort') || isF(bottom, 'Keten')) && [2, 'Keten üst ve hafif alt: sıcak bölgede terlemeden kaçarsın, koku izi bırakmazsın.'],
+  ({ top, bottom }) => isK(top, 'Kazak') && isF(top, 'Yün', 'Triko', 'Kaşmir') && isK(bottom, 'Kot pantolon', 'Chino', 'Kumaş pantolon') && [2, 'Kalın örgü kazak ve sağlam pantolon: ısırığa karşı ilk savunma hattı.'],
+  ({ top, bottom }) => isK(top, 'Kazak') && (isK(bottom, 'Şort') || isF(bottom, 'Keten', 'Viskon')) && [-2, 'Üstün tank, bacakların savunmasız. Zombiler önce dizden ısırır.'],
+  ({ top, bottom }) => isF(top, 'İpek / Saten') && isK(bottom, 'Kumaş pantolon', 'Etek', 'Kot pantolon') && [2, 'Saten üst, mat alt: kıyametin en şık hayatta kalanı sensin.'],
+  ({ top, bottom }) => isF(top, 'İpek / Saten') && isK(bottom, 'Eşofman altı') && [-3, 'Saten ve eşofman? Zombiler bile kafası karışıp duraksar.'],
+  ({ top, bottom, shoes }) => (isF(top, 'Teknik / Spor') || isK(bottom, 'Eşofman altı')) && isK(shoes, 'Klasik ayakkabı', 'Loafer', 'Topuklu ayakkabı') && [-3, 'Eşofmanla klasik ayakkabı: sürüden kaçarken ilk düşen sen olursun. Spor ayakkabı giy.'],
   ({ top, outer, bottom }) => {
     const up = [top, outer].find(p => isF(p, 'Kot'));
     if (!up || !bottom || !isF(bottom, 'Kot')) return null;
-    return up.color === bottom.color ? [-1, 'Üstte ve altta aynı ton kot tek parça gibi durur, tonlar ayrışsın.'] : [1, 'Farklı tonlarda kot üstüne kot bilinçli bir seçim gibi durur.'];
+    return up.color === bottom.color ? [-1, 'Tepeden tırnağa aynı kot: kamuflaj sanıp yanından geçebilirler, ama bence tonları ayır.'] : [1, 'Kot üstüne kot, farklı tonlar: dayanıklı ve bilinçli bir keşif üniforması.'];
   },
-  ({ outer, top, bottom }) => isK(outer, 'Deri ceket') && isK(top, 'Tişört', 'Sweatshirt') && isK(bottom, 'Kot pantolon', 'Chino') && [2, 'Deri ceket, rahat bir üst ve kot: zamansız bir üçlü.'],
-  ({ outer, top, bottom }) => isK(outer, 'Ceket') && isK(top, 'Tişört', 'Polo') && isK(bottom, 'Kot pantolon', 'Chino') && [1, 'Ceketin altına tişört, şık ama rahat bir denge kurar.'],
-  ({ outer, top }) => !!outer && !!top && outer.fab.w < top.fab.w && [-1, `${outer.name} alttaki ${low(top.name)} parçadan ince, kalın olanı dışa al.`],
-  ({ dress, top }) => isK(dress, 'Takım elbise') && isK(top, 'Gömlek') && [2, 'Takımın altına gömlek, klasik ve derli toplu.'],
+  ({ outer, top, bottom }) => isK(outer, 'Deri ceket') && isK(top, 'Tişört', 'Sweatshirt') && isK(bottom, 'Kot pantolon', 'Chino') && [2, 'Deri ceket, rahat üst ve kot: ısırık geçirmez, kıyamet klasiği.'],
+  ({ outer, top, bottom }) => isK(outer, 'Ceket') && isK(top, 'Tişört', 'Polo') && isK(bottom, 'Kot pantolon', 'Chino') && [1, 'Ceket ve tişört: hem müzakereye hem kaçışa hazırsın.'],
+  ({ outer, top }) => !!outer && !!top && outer.fab.w < top.fab.w && [-1, `${outer.name} alttaki ${low(top.name)} parçadan ince. Zırh dışta olur, kalın olanı dışa al.`],
+  ({ dress, top }) => isK(dress, 'Takım elbise') && isK(top, 'Gömlek') && [2, 'Takım ve gömlek: sığınaklar arası barış görüşmesine hazırsın.'],
 ];
 
 export type Why = { d: number; t: string };
@@ -166,35 +166,35 @@ export function judge(ps: Att[], occ: Occasion, now = Date.now()): Look {
   // Renk uyumu: nötr olmayan ayrı tonları say.
   const loud: Att[] = [];
   for (const p of ps) if (!p.neutral && p.hex && !loud.some(q => hueGap(q.h, p.h) < 25)) loud.push(p);
-  if (!loud.length) add(1, 'Nötr renkler: kolay ve dengeli. Canlı bir aksesuar iyi gider.');
-  else if (loud.length === 1) add(2, `${cap(loud[0].color || 'renkli parça')} tek vurgu rengi, gerisi nötr: dengeli.`);
+  if (!loud.length) add(1, 'Nötr renkler: mükemmel kamuflaj, sürü seni fark etmez.');
+  else if (loud.length === 1) add(2, `${cap(loud[0].color || 'renkli parça')} tek vurgu, gerisi nötr. Zombiler bu şıklığa saygı duyup yol verebilir.`);
   else if (loud.length === 2) {
     const g = hueGap(loud[0].h, loud[1].h), a = cap(loud[0].color || 'bir renk'), b = loud[1].color || 'diğer renk';
-    if (g < 40) add(2, `${a} ve ${b} komşu tonlar, birbirini yumuşakça tamamlıyor.`);
-    else if (g >= 140) add(2, `${a} ile ${b} karşıt renkler: cesur ama uyumlu bir kontrast.`);
-    else add(-1, `${a} ile ${b} arasında uyum zayıf, birini nötr bir parçayla değiştir.`);
-  } else add(-2, 'Üç canlı renk kalabalık durur, birini nötre çevir.');
+    if (g < 40) add(2, `${a} ve ${b} komşu tonlar: göz yormuyor, keşif ekibi seni takip etmekten mutlu.`);
+    else if (g >= 140) add(2, `${a} ile ${b} karşıt renkler: cesur. Kıyamette bile tarzından ödün vermiyorsun.`);
+    else add(-1, `${a} ile ${b} kavga ediyor. Birini nötrle değiştir, yoksa zombiler bile gülecek.`);
+  } else add(-2, 'Üç canlı renk: 3 km\'den işaret fişeği gibi görünüyorsun. Birini nötre çevir.');
   // Üst yarı ile alt yarı arasında açık-koyu kontrastı.
   const up = top || dress, down = dress && !top ? null : bottom;
   if (up && down) {
     const dl = up.l - down.l;
-    if (Math.abs(dl) >= 0.35) add(1, dl > 0 ? 'Açık üst, koyu alt: net bir kontrast.' : 'Koyu üst, açık alt: dikkat çeken bir kontrast.');
-    else if (up.color && up.color === down.color) add(-1, 'Üst ve alt aynı ton, arada kontrast olmadığı için tek parça gibi durur.');
+    if (Math.abs(dl) >= 0.35) add(1, dl > 0 ? 'Açık üst, koyu alt: telsizde tarif etmesi kolay, kaybolursan buluruz.' : 'Koyu üst, açık alt: dikkat çekiyor. Hayatta kalanlar kıskanır.');
+    else if (up.color && up.color === down.color) add(-1, 'Üst ve alt aynı ton: koruyucu tulum gibi duruyor. Arada kontrast iyi olur.');
   }
   const names = new Set(ps.map(p => p.color));
-  if (names.has('siyah') && names.has('lacivert')) add(-1, 'Siyah ile lacivert yan yana birbirine karışır, arada açık bir parça iyi olur.');
-  if (shoes?.color && ps.some(p => p !== shoes && p.color === shoes.color)) add(1, `Ayakkabı, kombindeki ${shoes.color} parçayla bağ kuruyor.`);
-  if (ps.filter(p => p.pattern === 'desenli').length > 1) add(-2, 'İki desenli parça birbiriyle yarışır, birini düz seç.');
+  if (names.has('siyah') && names.has('lacivert')) add(-1, 'Siyah ve lacivert: gece devriyesinde görünmezsin, gündüz ise yorgun. Arada açık bir parça ekle.');
+  if (shoes?.color && ps.some(p => p !== shoes && p.color === shoes.color)) add(1, `Botlar, kombindeki ${shoes.color} parçayla bağ kuruyor. Taktik uyum.`);
+  if (ps.filter(p => p.pattern === 'desenli').length > 1) add(-2, 'İki desen birbirine savaş açtı. Sığınakta tek savaş yeter, birini düz seç.');
   // Stil seviyesi: bütün parçaların aralığı kesişmeli.
   const lo = Math.max(...ps.map(p => p.f[0])), hi = Math.min(...ps.map(p => p.f[1]));
   if (lo > hi) {
     const casual = ps.reduce((a, b) => (b.f[1] < a.f[1] ? b : a)), formal = ps.reduce((a, b) => (b.f[0] > a.f[0] ? b : a));
-    add(-2 * (lo - hi), `${casual.name} fazla rahat, ${low(formal.name)} fazla resmi; stilleri tutmuyor.`);
+    add(-2 * (lo - hi), `${casual.name} kaçışa, ${low(formal.name)} müzakereye hazır. Kararını ver, sürü bekliyor.`);
   } else {
     const [a, b] = OCC[occ].f;
-    if (Math.max(lo, a) <= Math.min(hi, b)) add(2, { gunluk: 'Günlük bir gün için rahat ve derli toplu.', sik: 'Şık bir ortama uygun.', spor: 'Hareketli bir gün için rahat.' }[occ]);
-    else if (hi < a) add(-3, `${OCC[occ].label} bir ortam için fazla rahat.`);
-    else add(-3, `${OCC[occ].label} bir gün için fazla resmi.`);
+    if (Math.max(lo, a) <= Math.min(hi, b)) add(2, { gunluk: 'Devriyeye hazır: rahat ve derli toplu.', sik: 'Müzakereye hazır: Zombiler bu şıklığa saygı duyup yol verebilir.', spor: 'Kaçışa hazır: sürüden hızlısın.' }[occ]);
+    else if (hi < a) add(-3, `${OCC[occ].label} görevi için fazla rahat. Ciddiye alınmayabilirsin.`);
+    else add(-3, `${OCC[occ].label} görevi için fazla resmi. Kravatla koşmak zor.`);
   }
   // Kumaş eşleşmeleri ve mevsim.
   for (const rule of FABRIC_RULES) {
@@ -203,14 +203,14 @@ export function judge(ps: Att[], occ: Occasion, now = Date.now()): Look {
   }
   const summer = ps.filter(p => p.fab.s === 'yaz' && p.slot !== 'shoes');
   const winter = ps.filter(p => ['Kadife', 'Polar', 'Triko', 'Kaşmir'].includes(p.fabric ?? '') || (p.fabric === 'Yün' && (p.slot === 'top' || p.slot === 'outer')));
-  if (summer.length && winter.length) add(-2, `${summer[0].fabric} yazlık, ${low(winter[0].fabric)} kışlık; aynı kombinde mevsim karışıyor.`);
+  if (summer.length && winter.length) add(-2, `${summer[0].fabric} yazlık, ${low(winter[0].fabric)} kışlık: kıyamette bile mevsim karıştırma.`);
   if (sea === 'yaz') {
     const w = ps.find(p => p.fab.s === 'kış' && !isK(p, 'Kumaş pantolon', 'Takım elbise'));
-    if (w) add(-2, `${w.name} yaz için kalın kalır.`);
+    if (w) add(-2, `${w.name} yazın kalın kalır. Sıcak çarpması zombiden önce gelir.`);
   }
   if (sea === 'kış') {
-    if (!outer) add(-1, 'Kışın üstüne bir kaban ya da mont al.');
-    if (summer.length && !outer) add(-1, `${summer[0].fabric} kışın serin kalır.`);
+    if (!outer) add(-1, 'Kışın mont şart. Donan hayatta kalan, kolay av.');
+    if (summer.length && !outer) add(-1, `${summer[0].fabric} kışın ince kalır. Titrerken nişan alamazsın.`);
   }
   const score = why.reduce((n, x) => n + x.d, 0);
   return { ps, score, why: why.sort((a, b) => b.d - a.d) };
@@ -222,7 +222,7 @@ export function judgeBest(ps: Att[], now = Date.now()): Look & { occ: Occasion }
 }
 
 export type Fit = 'ok' | 'today' | 'late';
-export const fitLabel = (n: number): [Fit, string] => (n >= 6 ? ['ok', 'Çok uyumlu'] : n >= 3 ? ['ok', 'Uyumlu'] : n >= 0 ? ['today', 'Denenebilir'] : ['late', 'Uyumsuz']);
+export const fitLabel = (n: number): [Fit, string] => (n >= 6 ? ['ok', 'Kıyamete hazır'] : n >= 3 ? ['ok', 'Göreve uygun'] : n >= 0 ? ['today', 'İdare eder'] : ['late', 'Zombi yemi']);
 
 /**
  * Temiz parçalardan üst + alt (ya da elbise / takım) + ayakkabı (+ dış giyim) kombinlerini kurar,

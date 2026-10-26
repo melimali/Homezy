@@ -13,7 +13,7 @@ export function ShopList({ items, title, h = 'h3' }: { items: StockItem[]; title
   const copy = async () => {
     try {
       await Clipboard.setStringAsync(items.map(x => '- ' + shopLine(x)).join('\n'));
-      toast('Alışveriş listesi kopyalandı.');
+      toast('Tedarik listesi kopyalandı.');
     } catch {
       toast('Liste kopyalanamadı.');
     }

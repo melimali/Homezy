@@ -107,7 +107,7 @@ export function usePlaySync() {
     const run = () => {
       const out = freezeMissed(get, update, active);
       if (out.length)
-        toast(out.length === 1 ? '❄️ Kaçırdığın gün için seri dondurma kullandım. Evin güvende!' : `❄️ Kaçırdığın ${out.length} gün için seri dondurma kullandım.`);
+        toast(out.length === 1 ? '❄️ Kaçırdığın gün için seri dondurma kullandım. Sığınak güvende!' : `❄️ Kaçırdığın ${out.length} gün için seri dondurma kullandım.`);
     };
     run();
     const sub = RNAppState.addEventListener('change', s => s === 'active' && run());
@@ -157,7 +157,7 @@ export function usePlay() {
       const item = ITEM[id];
       if (!item) return { ok: false, error: 'Bu eşya bulunamadı.' };
       if (item.premium && !premium.active) return { ok: false, error: `${item.name} Premium üyelere özel ⭐` };
-      if (state.play.points < item.price) return { ok: false, error: `${item.price - state.play.points} puan daha lazım. Bir iş tamamla! 💪` };
+      if (state.play.points < item.price) return { ok: false, error: `${item.price - state.play.points} puan daha lazım. Bir görev tamamla! 💪` };
       const place = (D: AppState) => void (D.play.placed[id] = room);
       if (supabase) {
         if (!session) return { ok: false, error: 'Mağaza için internet bağlantısı gerekiyor.' };

@@ -41,7 +41,7 @@ export default function Aile() {
   };
 
   const shareCode = async (k: string) => {
-    const msg = `Layfapp'te evimizi paylaşalım 🏡 Hesabım > Aile paylaşımı'na gir ve bu kodu yaz: ${k}`;
+    const msg = `Safehouse: Daily Ops'ta sığınağımızı paylaşalım 🛡️ Hesabım > Hayatta kalan ekibi'ne gir ve bu kodu yaz: ${k}`;
     try {
       await Share.share({ message: msg });
     } catch {
@@ -54,7 +54,7 @@ export default function Aile() {
     return (
       <Screen header={false}>
         <BackLink />
-        <T v="h1">Aile paylaşımı 👨‍👩‍👧</T>
+        <T v="h1">Hayatta kalan ekibi 👨‍👩‍👧</T>
         <Card>
           <T>Aile paylaşımı için önce hesap oluştur ya da giriş yap.</T>
           <Btn kind="primary" label="Hesap oluştur ya da giriş yap" onPress={() => router.push('/giris')} />
@@ -66,8 +66,8 @@ export default function Aile() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="eyebrow">Aile paylaşımı</T>
-        <T v="h1">Evi birlikte çekip çevirin 👨‍👩‍👧</T>
+        <T v="eyebrow">Hayatta kalan ekibi</T>
+        <T v="h1">Sığınağı birlikte savunun 👨‍👩‍👧</T>
         <T v="lead">Odalar, rutinler, gardırop ve alışveriş listesi ortak olur. Puanın, serin ve günlüğün sende kalır.</T>
       </View>
 
@@ -87,7 +87,7 @@ export default function Aile() {
             <Card>
               <SecHead title="Davet kodu" />
               <Text style={[styles.code, { color: c.ink, backgroundColor: c.surface2 }]} selectable>{info.code}</Text>
-              <T v="small">Bu kodu evdekilere gönder. Layfapp{"'"}te Hesabım {'>'} Aile paylaşımı{"'"}ndan katılsınlar.</T>
+              <T v="small">Bu kodu ekibine gönder. Safehouse{"'"}ta Hesabım {'>'} Hayatta kalan ekibi{"'"}nden katılsınlar.</T>
               <Btn kind="primary" label="Kodu gönder" onPress={() => shareCode(info.code!)} />
             </Card>
           )}
@@ -99,7 +99,7 @@ export default function Aile() {
                   <Text style={{ fontFamily: fonts.displayBold, color: c.onAccent }}>{m.name.slice(0, 1).toLocaleUpperCase('tr-TR')}</Text>
                 </View>
                 <T v="bold" style={{ flex: 1 }}>{m.name}{m.id === session.user.id ? ' (sen)' : ''}</T>
-                {m.owner && <T v="small">ev sahibi</T>}
+                {m.owner && <T v="small">sığınak lideri</T>}
                 {info.role === 'owner' && !m.owner && (
                   <XBtn label={`${m.name} kişisini çıkar`} onPress={() => run(() => kick(m.id), `${m.name} aileden çıkarıldı.`)} />
                 )}
@@ -131,12 +131,12 @@ export default function Aile() {
                 <Btn kind="primary" label={busy ? 'Hazırlanıyor…' : 'Davet kodu oluştur'} disabled={busy || loading || !S.setup} onPress={() => run(create, 'Ailen hazır! Kodu evdekilere gönder.')} />
               </>
             ) : (
-              <PremiumLock emoji="👨‍👩‍👧" title="Evini ailenle paylaş" text="Premium ile evini eşin, ev arkadaşın ya da çocuklarınla paylaş; kimin hangi işi yapacağını seç. Katılanların Premium olması gerekmez." />
+              <PremiumLock emoji="👨‍👩‍👧" title="Sığınağını ekibinle paylaş" text="Premium ile sığınağını eşin, ev arkadaşın ya da çocuklarınla paylaş; kimin hangi görevi yapacağını seç. Katılanların Premium olması gerekmez." />
             )}
           </Card>
           <Card>
             <SecHead title="Bir aileye katıl" />
-            <T style={{ fontSize: 14 }}>Biri seni davet ettiyse kodu yaz. Paylaşılan ev açılır; kendi evin Evlerim{"'"}de saklı kalır.</T>
+            <T style={{ fontSize: 14 }}>Biri seni davet ettiyse kodu yaz. Paylaşılan sığınak açılır; kendi sığınağın Sığınaklarım{"'"}da saklı kalır.</T>
             <Field value={code} onChangeText={v => setCode(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))} placeholder="Davet kodu, ör. K7M2QX" autoCapitalize="characters" />
             <Field value={name} onChangeText={setName} placeholder="Adın" maxLength={30} />
             <Btn label={busy ? 'Katılıyor…' : 'Katıl'} kind="primary" disabled={busy || code.length < 6} onPress={() => run(() => join(code, name), 'Aileye katıldın 🎉')} />

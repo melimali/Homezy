@@ -66,7 +66,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
   };
 
   const filters: [WardrobeFilter, string, number][] = [
-    ['all', '👚 Tümü', list.length], ['temiz', '🧼 Temiz', cnt('temiz')], ['kirli', '🧺 Kirli', dirty], ['utu', '💨 Ütü', cnt('utu')],
+    ['all', '🎒 Tümü', list.length], ['temiz', '🧼 Hazır', cnt('temiz')], ['kirli', '🧟 Kontamine', dirty], ['utu', '💨 Ütü', cnt('utu')],
   ];
   const cycle = (id: string) =>
     update(D => {
@@ -80,7 +80,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
   return (
     <>
       <Card>
-        <SecHead title="👕 Gardırop" right={`${list.length} parça`} />
+        <SecHead title="🎒 Keşif Teçhizatı & Zırh" right={`${list.length} parça`} />
         <View style={styles.wrapRow}>
           {filters.map(([k, l, n]) => (
             <Chip key={k} on={f === k} label={`${l} ${n}`} onPress={() => update(D => void (D.mod[rid].filter = k))} />
@@ -109,11 +109,11 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
             );
           })}
         </View>
-        {!items.length && <EmptyMsg>{list.length ? 'Bu durumda kıyafet yok.' : 'Dolabın boş. Fotoğrafla tara ya da elle ekle 👇'}</EmptyMsg>}
-        {list.length > 0 && <T v="tiny">Kıyafete dokun: 🧼 Temiz → 🧺 Kirli → 💨 Ütülenecek. Basılı tut: ayarlar.</T>}
+        {!items.length && <EmptyMsg>{list.length ? 'Bu durumda teçhizat yok.' : 'Teçhizat dolabın boş. Fotoğrafla tara ya da elle ekle 👇'}</EmptyMsg>}
+        {list.length > 0 && <T v="tiny">Teçhizata dokun: 🧼 Hazır → 🧟 Kontamine → 💨 Ütülenecek. Basılı tut: ayarlar.</T>}
         {plan.length > 0 && (
           <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
-            <T v="bold" style={{ fontSize: 14 }}>🧺 Çamaşır zamanı</T>
+            <T v="bold" style={{ fontSize: 14 }}>🧟 Çamaşır birikti, 2 km&apos;den kokuyorsun</T>
             {plan.map(g => (
               <T key={g.w} style={{ fontSize: 14 }}>
                 {WASH[g.w].emoji} {WASH[g.w].label}: {g.items.length} parça{' '}
@@ -124,13 +124,13 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
         )}
         {season.map(x => (
           <Callout key={x.id}>
-            {x.emoji} Mevsim değişimi zamanı: {x.name.replace('Dolap değişimi: ', '')}. Bitince Ev bakımı ekranından işaretle.
+            {x.emoji} Mevsim değişimi zamanı: {x.name.replace('Dolap değişimi: ', '')}. Bitince Sığınak bakımı ekranından işaretle.
           </Callout>
         ))}
         {old.length > 0 && (
           <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
-            <T v="bold" style={{ fontSize: 14 }}>💝 Bağış önerisi</T>
-            <T v="small">Bunları bir yıldır giymedin. İhtiyacı olan birine verebilirsin.</T>
+            <T v="bold" style={{ fontSize: 14 }}>💝 Teçhizat bağışı</T>
+            <T v="small">Bunlar bir yıldır keşfe çıkmadı. Başka bir hayatta kalana verebilirsin.</T>
             {old.map(x => (
               <View key={x.id} style={styles.addRow}>
                 <T style={{ flex: 1, fontSize: 14 }}>{x.name}</T>
@@ -162,7 +162,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   })} />
                 ))}
               </View>
-              <Btn kind="primary" label="✨ Bununla kombin öner" onPress={() => { onAnchor([sel.id]); setSheet(null); }} block />
+              <Btn kind="primary" label="🪖 Bununla zırh kombini öner" onPress={() => { onAnchor([sel.id]); setSheet(null); }} block />
               <Btn small kind="ghost" label="🗑️ Sil" onPress={() => { update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== sel.id))); setSheet(null); }} style={{ alignSelf: 'flex-start' }} />
             </>
           )}
@@ -182,7 +182,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
             <Btn small kind="ghost" label="Vazgeç" onPress={() => setAdding(false)} style={{ alignSelf: 'flex-start' }} />
           </View>
         ) : (
-          <Btn small kind="ghost" label="➕ Kıyafet ekle" onPress={() => setAdding(true)} style={{ alignSelf: 'flex-start' }} />
+          <Btn small kind="ghost" label="➕ Teçhizat ekle" onPress={() => setAdding(true)} style={{ alignSelf: 'flex-start' }} />
         )}
         <WardrobeScan rid={rid} onLook={onLook} />
       </Card>
@@ -220,7 +220,7 @@ export function Fridge({ rid }: { rid: string }) {
 
   return (
     <Card>
-      <SecHead title="Buzdolabı" right={m.photoAt ? 'çekildi: ' + agoText(m.photoAt) : 'fotoğraf yok'} />
+      <SecHead title="Erzak & Ambar Taraması" right={m.photoAt ? 'çekildi: ' + agoText(m.photoAt) : 'fotoğraf yok'} />
       <View style={[styles.fridge, { backgroundColor: c.surface2 }]}>
         {m.photo ? (
           <Image source={{ uri: m.photo }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel="Buzdolabının son fotoğrafı" />
@@ -230,11 +230,11 @@ export function Fridge({ rid }: { rid: string }) {
               <Rect x={3} y={3} width={34} height={50} rx={7} stroke={c.muted} strokeWidth={3} />
               <Path d="M3 21h34M10 10v5M10 28v8" stroke={c.muted} strokeWidth={3} strokeLinecap="round" />
             </Svg>
-            <T v="small">Markete gitmeden önce buzdolabının fotoğrafını çek.</T>
+            <T v="small">Keşfe çıkmadan önce erzak deposunun fotoğrafını çek.</T>
           </View>
         )}
       </View>
-      {old && <Callout>Bu fotoğraf bir haftadan eski. Yenisini çekmek iyi olur.</Callout>}
+      {old && <Callout>Bu tarama bir haftadan eski. Erzak bozulmuş olabilir, yeniden tara.</Callout>}
       <FridgeScanPanel s={scan} retry={() => m.photo && scan.start(m.photo)} />
       {!scan.scan && (
         <>
@@ -280,7 +280,7 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
     if (!n) return;
     update(D => void (D.mod[rid].stock ||= []).push({ id: uid(), name: n, lvl: 'yok' }));
     setName('');
-    toast(`${n} alışveriş listesine eklendi.`);
+    toast(`${n} tedarik listesine eklendi.`);
   };
 
   const lvColor = { var: c.ok, az: c.today, yok: c.late } as const;
@@ -299,7 +299,7 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
 
   return (
     <Card>
-      <SecHead title={title} right={need.length ? `${need.length} eksik` : 'hepsi var ✓'} />
+      <SecHead title={title} right={need.length ? `${need.length} kritik` : 'ambar dolu ✓'} />
       <View style={styles.grid}>
         {st.map((x, i) => {
           const exp = fridge && x.exp != null && x.lvl !== 'yok' ? expiryText(x.exp, now) : null;
@@ -336,14 +336,14 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
         })}
       </View>
       {!st.length && <EmptyMsg>Henüz bir şey eklenmedi.</EmptyMsg>}
-      {st.length > 0 && <T v="tiny">Dokun: 🟢 Var → 🟡 Az → 🔴 Bitti. Biten ve azalan alışveriş listesine düşer.</T>}
+      {st.length > 0 && <T v="tiny">Dokun: 🟢 Bol → 🟡 Kritik → 🔴 Tükendi. Tükenen ve kritik olan tedarik listesine düşer.</T>}
       <View style={styles.addRow}>
         <Field value={name} onChangeText={setName} placeholder={placeholder} onSubmitEditing={add} returnKeyType="done" />
         <Btn label="Ekle" kind="primary" small onPress={add} />
       </View>
       {need.length > 0 && (
         <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
-          <ShopList items={need} title="🛒 Alışveriş listesi" />
+          <ShopList items={need} title="🗺️ Keşif / Tedarik Listesi" />
         </View>
       )}
       <Sheet open={!!sel} onClose={() => setSkt(null)}>
@@ -398,9 +398,9 @@ export function Plants({ rid }: { rid: string }) {
   const plants = sortByDue(state.mod[rid].plants || []);
   return (
     <Card>
-      <SecHead title="🪴 Bitkiler" right={`${plants.length} bitki`} />
+      <SecHead title="🪴 Sera" right={`${plants.length} bitki`} />
       <TaskGrid tasks={plants} rid={rid} list="plants" />
-      {!plants.length && <EmptyMsg>Bu odada bitki yok. Eklediğin bitkilerin sulama gününü takip ederim.</EmptyMsg>}
+      {!plants.length && <EmptyMsg>Bu sektörde bitki yok. Eklediğin bitkilerin sulama gününü takip ederim.</EmptyMsg>}
       {plants.length > 0 && <T v="tiny">Bitkiye dokun: suladım 💧. Basılı tut: ayarlar.</T>}
       <AddTaskForm rid={rid} list="plants" placeholder="Bitki adı, ör. Kaktüs" />
     </Card>

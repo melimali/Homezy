@@ -45,7 +45,7 @@ export default function Home() {
       <View>
         <T v="h1">{greet(new Date(now), name)}</T>
         <T v="lead">
-          {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda ✨ ${greeting(new Date(now)).line}`}
+          {due.length ? `Bugün ${due.length} tahkimat görevi var. ${greeting(new Date(now)).line}` : `Sığınak güvende 🛡️ ${greeting(new Date(now)).line}`}
         </T>
       </View>
 
@@ -61,8 +61,8 @@ export default function Home() {
         >
           <Text style={{ fontSize: 24 }}>📅</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
+            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık durum raporun hazır</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta sığınağı nasıl savundun? Bak ve paylaş</Text>
           </View>
           <Text style={[styles.weekT, { color: c.ink }]}>›</Text>
         </Pressable>
@@ -74,15 +74,15 @@ export default function Home() {
         </Pressable>
       )}
       <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
-      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
+      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir sektöre dokun, görevlerini gör.</T>
       <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={6} style={{ alignSelf: 'center', marginTop: -6 }}>
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ok }}>🎬 Evimin hikâyesi</Text>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ok }}>🎬 Sığınağımın hikâyesi</Text>
       </Pressable>
 
       <Card index={3}>
-        <SecHead title="🧹 Sıradaki işler" right={due.length > 3 ? `+${due.length - 3} iş daha` : undefined} />
+        <SecHead title="🛡️ Sıradaki görevler" right={due.length > 3 ? `+${due.length - 3} görev daha` : undefined} />
         {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
-        {!due.length && <T style={{ fontSize: 15 }}>Bugünlük her şey tamam 🎉 Biraz dinlen.</T>}
+        {!due.length && <T style={{ fontSize: 15 }}>Bugünlük bütün barikatlar sağlam 🎉 Nöbeti devret, dinlen.</T>}
         {due.length > 3 && <Btn small label="Hepsini gör" onPress={toToday} style={{ alignSelf: 'flex-start' }} />}
       </Card>
 
@@ -127,7 +127,7 @@ function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: 
           <Text style={{ fontSize: 22 }}>🏠</Text>
           <View>
             <Text style={[styles.statN, { color: c.ink }]}>{p.level >= BUILT ? `Sv. ${p.level}` : `${built}/${BUILT}`}</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>{p.level >= BUILT ? 'ev' : 'inşaat'}</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>{p.level >= BUILT ? 'sığınak' : 'inşaat'}</Text>
           </View>
         </View>
       </View>
@@ -151,10 +151,10 @@ function DailyTip({ now }: { now: number }) {
   const c = useColors();
   const tip = tipOfDay(now);
   return (
-    <View style={[styles.tip, { backgroundColor: c.todaySoft }]} accessible accessibilityLabel={`Günün cümlesi: ${tip.text}`}>
+    <View style={[styles.tip, { backgroundColor: c.todaySoft }]} accessible accessibilityLabel={`Günün telsiz notu: ${tip.text}`}>
       <Float amp={3}><Text style={{ fontSize: 28 }}>{tip.emoji}</Text></Float>
       <View style={{ flex: 1 }}>
-        <T v="eyebrow" style={{ marginBottom: 2, color: c.today }}>Günün cümlesi</T>
+        <T v="eyebrow" style={{ marginBottom: 2, color: c.today }}>Günün telsiz notu</T>
         <Text style={[styles.tipText, { color: c.ink }]}>{tip.text}</Text>
       </View>
     </View>
@@ -176,7 +176,7 @@ function Celebrate({ level }: { level: number }) {
       <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
           <Float amp={6} dur={1400}><Text style={{ fontSize: 56 }}>🎉🏡</Text></Float>
-          <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
+          <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, sığınağın inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
           </T>

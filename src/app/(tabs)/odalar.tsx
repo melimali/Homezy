@@ -25,8 +25,8 @@ export default function Odalar() {
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
 
   const groups: [string, string, typeof rooms][] = [
-    ['🧹', 'Seni bekleyenler', busy],
-    ['✨', 'Keyfi yerinde', calm],
+    ['🧟', 'Saldırı altında', busy],
+    ['🛡️', 'Güvenli sektörler', calm],
   ];
   let n = 0;
 
@@ -34,8 +34,8 @@ export default function Odalar() {
     <Screen>
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
-          <T v="h1">Odalar</T>
-          <T v="lead" style={{ marginTop: 2 }}>Bir odaya dokun, içine gir.</T>
+          <T v="h1">Tahkimat Sektörleri</T>
+          <T v="lead" style={{ marginTop: 2 }}>Bir sektöre dokun, içine gir.</T>
         </View>
         <Float amp={4}>
           <View style={[styles.score, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}` }]}>
@@ -63,7 +63,7 @@ export default function Odalar() {
                   <Appear key={id} index={i} style={styles.cell}>
                     <Squish
                       onPress={() => open(id)}
-                      accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
+                      accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} savunma`}
                       style={[styles.tile, { backgroundColor: c.room[r.type], boxShadow: `0 5px 0 ${c.line}` }]}
                     >
                       <Float amp={rc.late || rc.today ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
@@ -92,7 +92,7 @@ export default function Odalar() {
         ) : null,
       )}
 
-      <Btn label="🏗️ Evimin planını düzenle" onPress={() => router.push('/plan')} />
+      <Btn label="🏗️ Sığınak planını düzenle" onPress={() => router.push('/plan')} />
     </Screen>
   );
 }

@@ -25,8 +25,8 @@ export default function Bugun() {
   const all = sorted.filter(x => !guest.includes(x));
   // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bu hafta kapalı başlar.
   const groups: [string, typeof all][] = [
-    ['🫖 Misafir gelmeden', guest],
-    ['🧹 Bugün yapılacaklar', all.filter(x => x.s.k !== 'ok')],
+    ['🫖 Kafile gelmeden', guest],
+    ['🧭 Bugünkü seferler', all.filter(x => x.s.k !== 'ok')],
   ];
   const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7);
   const [showWeek, setShowWeek] = useState(false);
@@ -39,7 +39,7 @@ export default function Bugun() {
     <Screen>
       <View>
         <T v="eyebrow">{fmtLong(now)}</T>
-        <T v="h1">Yapılacaklar</T>
+        <T v="h1">Seferler / Keşif Görevleri</T>
       </View>
       {!S.home.asked && <ProfilePrompt />}
       <DailyGoals now={now} />
@@ -55,19 +55,19 @@ export default function Bugun() {
       ))}
       {!visible.length && (
         <Card>
-          <EmptyMsg>{S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen 🏖️ Ev seni bekler.' : 'Bugünlük her şey tamam 🎉'}</EmptyMsg>
+          <EmptyMsg>{S.mode?.k === 'tatil' ? 'Sığınak kilitli, iyi dinlen 🏖️ Barikatlar seni bekler.' : 'Bugünkü bütün seferler tamam 🎉'}</EmptyMsg>
         </Card>
       )}
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card>
           <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
             <T v="h2" style={{ flex: 1 }}>📅 Bu hafta</T>
-            <T v="small">{showWeek ? 'Gizle' : `${week.length} iş ›`}</T>
+            <T v="small">{showWeek ? 'Gizle' : `${week.length} görev ›`}</T>
           </Pressable>
           {showWeek && week.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </Card>
       )}
-      {later > 0 && S.mode?.k !== 'tatil' && <T v="small" style={{ textAlign: 'center' }}>Bir haftadan sonra {later} iş daha var.</T>}
+      {later > 0 && S.mode?.k !== 'tatil' && <T v="small" style={{ textAlign: 'center' }}>Bir haftadan sonra {later} görev daha var.</T>}
       <HomeDue now={now} />
       {shop.length > 0 && (
         <Card>
@@ -87,8 +87,8 @@ function ProfilePrompt() {
   const c = useColors();
   return (
     <Card style={{ backgroundColor: c.accentSoft }}>
-      <T v="bold">Evini biraz tanıyalım 🏡</T>
-      <T style={{ fontSize: 14 }}>Evcil hayvan, bulaşık makinesi, kombi, klima… 7 kısa soru, rutinlerin evine göre gelsin.</T>
+      <T v="bold">Sığınağını biraz tanıyalım 🛡️</T>
+      <T style={{ fontSize: 14 }}>Evcil hayvan, bulaşık makinesi, kombi, klima… 7 kısa soru, görevlerin sığınağına göre gelsin.</T>
       <Btn kind="primary" small label="Soruları cevapla" onPress={() => router.push('/evim')} style={{ alignSelf: 'flex-start' }} />
     </Card>
   );
@@ -109,14 +109,14 @@ function ModeCard({ now }: { now: number }) {
       D.mode = k ? { k, since: Date.now(), list: k === 'bayram' ? bayramList() : undefined } : null;
     });
     setOpen(false);
-    toast(k ? `${MODES[k].emoji} ${MODES[k].label} modu açık.` : 'Normal düzene döndük 🙂');
+    toast(k ? `${MODES[k].emoji} ${MODES[k].label} modu açık.` : 'Normal nöbet düzenine döndük 📻');
   };
 
   if (!mode)
     return (
       <Card>
         <Pressable onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.modeHead}>
-          <T v="h2" style={{ flex: 1 }}>💭 Bugün nasılsın?</T>
+          <T v="h2" style={{ flex: 1 }}>💭 Bugün durum ne?</T>
           <T v="small">{open ? 'Kapat' : 'Mod seç ›'}</T>
         </Pressable>
         {open && (
@@ -150,7 +150,7 @@ function ModeCard({ now }: { now: number }) {
         <Text style={{ fontSize: 28 }}>{m.emoji}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T v="h2">{m.label}</T>
-          <T v="small">{mode.k === 'tatil' ? `${days} gündür tatildesin. Rutinler dondu, hatırlatma yok.` : m.text}</T>
+          <T v="small">{mode.k === 'tatil' ? `${days} gündür sığınak kilitli. Görevler dondu, anons yok.` : m.text}</T>
         </View>
       </View>
       {mode.k === 'bayram' && (
@@ -176,7 +176,7 @@ function ModeCard({ now }: { now: number }) {
           ))}
         </View>
       )}
-      <Btn small label={mode.k === 'tatil' ? 'Tatilden döndüm' : 'Modu kapat'} onPress={() => set(null)} style={{ alignSelf: 'flex-start' }} />
+      <Btn small label={mode.k === 'tatil' ? 'Kilidi aç, döndüm' : 'Modu kapat'} onPress={() => set(null)} style={{ alignSelf: 'flex-start' }} />
     </Card>
   );
 }
@@ -199,7 +199,7 @@ function TimeBudget({ now }: { now: number }) {
       {min != null && (
         <View>
           {picks.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
-          {!picks.length && <EmptyMsg>Bu süreye sığan acil iş yok. Keyfine bak ☕</EmptyMsg>}
+          {!picks.length && <EmptyMsg>Bu süreye sığan acil görev yok. Telsizi dinle, kahveni iç ☕</EmptyMsg>}
         </View>
       )}
     </Card>
@@ -223,7 +223,7 @@ function HomeDue({ now }: { now: number }) {
   if (!rows.length) return null;
   return (
     <Card>
-      <SecHead title="Faturalar ve bakım" right={String(rows.length)} />
+      <SecHead title="Kaynaklar ve bakım" right={String(rows.length)} />
       <View style={{ gap: 8 }}>
         {rows.map(r => (
           <View key={r.key} style={styles.dueRow}>
@@ -232,7 +232,7 @@ function HomeDue({ now }: { now: number }) {
           </View>
         ))}
       </View>
-      <Btn small label="Ev bakımını aç" onPress={() => router.push('/bakim')} style={{ alignSelf: 'flex-start' }} />
+      <Btn small label="Sığınak bakımını aç" onPress={() => router.push('/bakim')} style={{ alignSelf: 'flex-start' }} />
     </Card>
   );
 }
@@ -247,13 +247,13 @@ function DailyGoals({ now }: { now: number }) {
   const tasks = Object.keys(P.awarded).filter(k => k.startsWith('gorev:') && P.awarded[k] === today).length;
   const hp = progressOf(P, now);
   const goals = [
-    { done: tasks > 0, emoji: '🧹', label: tasks ? `${tasks} iş tamamladın` : 'Bir iş tamamla', pts: `+${POINTS.gorev}`, go: undefined },
-    { done: awardedToday(P, 'spor', 'spor', now), emoji: '🏃', label: 'Spor yap', pts: `+${POINTS.spor}`, go: '/spor' as const },
-    { done: awardedToday(P, 'gunluk', 'gunluk', now), emoji: '📔', label: 'Günlüğe yaz', pts: `+${POINTS.gunluk}`, go: '/gunluk' as const },
+    { done: tasks > 0, emoji: '🧹', label: tasks ? `${tasks} görev tamamladın` : 'Bir görev tamamla', pts: `+${POINTS.gorev}`, go: undefined },
+    { done: awardedToday(P, 'spor', 'spor', now), emoji: '🏃', label: 'Kaçış antrenmanı yap', pts: `+${POINTS.spor}`, go: '/spor' as const },
+    { done: awardedToday(P, 'gunluk', 'gunluk', now), emoji: '📔', label: 'Seyir defterine yaz', pts: `+${POINTS.gunluk}`, go: '/gunluk' as const },
   ];
   return (
     <Card>
-      <SecHead title="🎯 Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
+      <SecHead title="🎯 Günün operasyon hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
       <View style={{ gap: 8 }}>
         {goals.map(g => (
           <Squish
@@ -272,7 +272,7 @@ function DailyGoals({ now }: { now: number }) {
           </Squish>
         ))}
       </View>
-      <T v="small">Her gün en az birini yap, evin inşaatı ilerlesin 🏗️</T>
+      <T v="small">Her gün en az birini yap, sığınağın inşaatı ilerlesin 🏗️</T>
     </Card>
   );
 }

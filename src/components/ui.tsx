@@ -77,7 +77,7 @@ export function AppHeader() {
   return (
     <View style={styles.header}>
       <View style={[styles.brandPill, { backgroundColor: brand.navy }]}>
-        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Safehouse: Daily Ops" />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>
@@ -87,11 +87,11 @@ export function AppHeader() {
           <Pressable
             onPress={() => router.push('/bildirimler')}
             accessibilityRole="button"
-            accessibilityLabel={n ? `Bildirimler, ${n} yeni` : 'Bildirimler'}
+            accessibilityLabel={n ? `Telsiz anonsları, ${n} yeni` : 'Telsiz anonsları'}
             hitSlop={6}
             style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }, pressed && { transform: [{ translateY: 1 }] }]}
           >
-            <Text style={{ fontSize: 18 }}>🔔</Text>
+            <Text style={{ fontSize: 18 }}>📻</Text>
             {n > 0 && (
               <View style={[styles.badge, { backgroundColor: c.late }]}>
                 <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{n}</Text>

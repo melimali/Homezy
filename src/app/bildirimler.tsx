@@ -57,7 +57,7 @@ export default function Bildirimler() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="h1">Bildirimler</T>
+        <T v="h1">Acil Durum Telsiz Anonsları</T>
         <T v="lead">
           Layfapp her sabah <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{"'"}da bunları telefonuna bildirim olarak gönderir.
         </T>
@@ -65,11 +65,11 @@ export default function Bildirimler() {
 
       {notificationsAvailable() && perm !== 'granted' && (
         <Card style={{ backgroundColor: c.accentSoft }}>
-          <T v="bold">Bildirimler kapalı</T>
+          <T v="bold">Telsiz kapalı</T>
           <T style={{ fontSize: 14 }}>
             {perm === 'denied'
-              ? 'Sabah özetini alabilmek için telefonun ayarlarından Layfapp bildirimlerini aç.'
-              : 'Sabah özetini alabilmek için bildirim izni ver.'}
+              ? 'Sabah anonsunu alabilmek için telefonun ayarlarından Safehouse: Daily Ops bildirimlerini aç.'
+              : 'Sabah anonsunu alabilmek için bildirim izni ver.'}
           </T>
           <Btn label={perm === 'denied' ? 'Ayarları aç' : 'İzin ver'} kind="primary" onPress={askPermission} />
         </Card>
@@ -92,17 +92,17 @@ export default function Bildirimler() {
         ))}
         {!ns.length && (
           <Card>
-            <EmptyMsg>Bildirim yok. Evde her şey yolunda.</EmptyMsg>
+            <EmptyMsg>Telsiz sessiz. Sığınakta her şey yolunda.</EmptyMsg>
           </Card>
         )}
       </View>
 
       <Card>
-        <T v="h2">Bildirim ayarları</T>
+        <T v="h2">Telsiz frekans ayarları</T>
         <View style={[styles.setRow, { borderTopWidth: 0 }]}>
           <View style={{ flex: 1 }}>
-            <T v="bold" style={{ fontSize: 14 }}>Günlük özet saati</T>
-            <T v="small">Sabah özeti bu saatte gelir</T>
+            <T v="bold" style={{ fontSize: 14 }}>Sabah anonsu saati</T>
+            <T v="small">Sabah telsiz anonsu bu saatte gelir</T>
           </View>
           <View style={styles.timeBox}>
             <Step label="−" a11y="Saati 15 dakika geri al" onPress={() => shift(0, -15)} />
@@ -110,7 +110,7 @@ export default function Bildirimler() {
             <Step label="+" a11y="Saati 15 dakika ileri al" onPress={() => shift(0, 15)} />
           </View>
         </View>
-        <Toggle label="Rutin hatırlatmaları" sub="Geciken ve bugün yapılacak işler, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
+        <Toggle label="Görev anonsları" sub="Geciken ve bugünkü tahkimat görevleri, bitki sulama" value={s.routine} onChange={v => set('routine', v)} />
         {s.routine && (
           <Toggle
             label="Bildirimden cevapla ✅"
@@ -119,11 +119,11 @@ export default function Bildirimler() {
             onChange={v => set('actions', v)}
           />
         )}
-        <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
-        <Toggle label="Çamaşır ve dolap" sub="Aynı yıkama türünden 3 kirli parça, mevsim değişimi, bağış önerisi" value={s.laundry} onChange={v => set('laundry', v)} />
-        <Toggle label="Faturalar ve bakım 🧾" sub="Son ödeme gününe 2 gün kala, garanti bitişine 30 gün kala, kombi ve klima bakımı, mevsimlik işler" value={s.bills} onChange={v => set('bills', v)} />
-        <Toggle label="Son kullanma tarihleri ⏳" sub="Buzdolabındaki ürünlere 2 gün kala" value={s.expiry} onChange={v => set('expiry', v)} />
-        <Toggle label="Haftalık özet 📅" sub="Pazar akşamı 19:00'da haftanın özeti" value={s.weekly} onChange={v => set('weekly', v)} />
+        <Toggle label="Tükenen erzak" sub="Tükenen erzak ve eskiyen ambar taraması" value={s.stock} onChange={v => set('stock', v)} />
+        <Toggle label="Teçhizat ve dekontaminasyon" sub="Aynı yıkama türünden 3 kontamine parça, mevsim değişimi, bağış önerisi" value={s.laundry} onChange={v => set('laundry', v)} />
+        <Toggle label="Kaynaklar ve bakım 🧾" sub="Son ödeme gününe 2 gün kala, garanti bitişine 30 gün kala, ısıtma ve hava filtresi bakımı, mevsimlik görevler" value={s.bills} onChange={v => set('bills', v)} />
+        <Toggle label="Son kullanma tarihleri ⏳" sub="Erzak deposundaki ürünlere 2 gün kala" value={s.expiry} onChange={v => set('expiry', v)} />
+        <Toggle label="Haftalık durum raporu 📅" sub="Pazar akşamı 19:00'da haftanın raporu" value={s.weekly} onChange={v => set('weekly', v)} />
         <Toggle
           label="Seri hatırlatması 🔥"
           sub={`Akşam ${smart && learned.streak ? fmtMinute(learned.streak) : '20:30'}'da, o gün hiçbir şey yapmadıysan`}
@@ -131,7 +131,7 @@ export default function Bildirimler() {
           onChange={v => set('streak', v)}
         />
         <Toggle
-          label="Spor hatırlatması 🏃"
+          label="Kaçış antrenmanı 🏃"
           sub={`${smart && learned.sport ? fmtMinute(learned.sport) : s.sportTime}, seçtiğin günlerde`}
           value={s.sport}
           onChange={v => set('sport', v)}
@@ -152,18 +152,18 @@ export default function Bildirimler() {
             <T v="small">
               {learned.streak || learned.sport
                 ? `Öğrendiğim saatler: seri ${learned.streak ? fmtMinute(learned.streak) : '20:30'}, spor ${learned.sport ? fmtMinute(learned.sport) : s.sportTime}.`
-                : 'Birkaç gün iş ve spor yaptıkça saatlerini öğreneceğim.'}
+                : 'Birkaç gün görev ve antrenman yaptıkça saatlerini öğreneceğim.'}
             </T>
           )}
         </Card>
       ) : (
-        <PremiumLock emoji="🧠" title="Akıllı bildirimler" text="Hatırlatmalar sabit saatte değil, işlerini genelde yaptığın saate göre gelsin; boş yere rahatsız etmesin." />
+        <PremiumLock emoji="🧠" title="Akıllı bildirimler" text="Anonslar sabit saatte değil, görevlerini genelde yaptığın saate göre gelsin; boş yere telsizi meşgul etmesin." />
       )}
       <Card>
-        <T v="h2">Düzen ve motivasyon</T>
-        <Toggle label="Esnek zamanlama" sub="Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık iş 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
-        <Toggle label="Ses ve titreşim 🔔" sub="Dokunuşta, iş bitince ve kutlamada yumuşak bir ses" value={s.sound} onChange={v => set('sound', v)} />
-        <Toggle label="Tertemiz oda kutlaması 🎉" sub="Bir odanın bütün işleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
+        <T v="h2">Nöbet düzeni ve moral</T>
+        <Toggle label="Esnek zamanlama" sub="Zamanı geçen görev hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık görev 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
+        <Toggle label="Ses ve titreşim 🔔" sub="Dokunuşta, görev bitince ve kutlamada kısa bir ses" value={s.sound} onChange={v => set('sound', v)} />
+        <Toggle label="Tam tahkimat kutlaması 🎉" sub="Bir sektörün bütün görevleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
       </Card>
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>

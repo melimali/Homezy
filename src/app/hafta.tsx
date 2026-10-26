@@ -36,11 +36,11 @@ export default function Hafta() {
   return (
     <Screen header={false}>
       <BackLink />
-      <T v="h1">Haftan 📅</T>
+      <T v="h1">Haftalık durum raporu 📅</T>
       <WeekCard ref={card} state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} />
       <Btn kind="primary" label="📤 Paylaş" onPress={share} block />
-      <Btn label="🎬 Evimin hikâyesi" onPress={() => router.push('/hikaye')} block />
-      <T v="small" style={{ textAlign: 'center' }}>Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da evini toplasın 🏡</T>
+      <Btn label="🎬 Sığınağımın hikâyesi" onPress={() => router.push('/hikaye')} block />
+      <T v="small" style={{ textAlign: 'center' }}>Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da sığınağını tahkim etsin 🛡️</T>
     </Screen>
   );
 }

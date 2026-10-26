@@ -19,16 +19,16 @@ export default function Bakim() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="eyebrow">Ev bakımı</T>
-        <T v="h1">Evin sağlığı 🔧</T>
-        <T v="lead">Arada bir yapılan ama unutulan işler, faturalar ve garantiler burada.</T>
+        <T v="eyebrow">Sığınak bakımı</T>
+        <T v="h1">Sığınağın altyapısı 🔧</T>
+        <T v="lead">Arada bir yapılan ama unutulan onarımlar, kaynak faturaları ve garantiler burada.</T>
       </View>
 
       <Card>
-        <SecHead title="Bakım işleri" right={`${care.length} iş`} />
+        <SecHead title="Onarım görevleri" right={`${care.length} görev`} />
         <View>
           {care.map((t, i) => <TaskRow key={t.id} t={t} rid={CARE} list="care" first={i === 0} />)}
-          {!care.length && <EmptyMsg>Bakım işi yok. Aşağıdan ekle.</EmptyMsg>}
+          {!care.length && <EmptyMsg>Onarım görevi yok. Aşağıdan ekle.</EmptyMsg>}
         </View>
         <AddTaskForm rid={CARE} list="care" placeholder="Yeni bakım işi, ör. Şofben bakımı" />
       </Card>
@@ -169,7 +169,7 @@ function Seasonal() {
   const active = new Set(seasonalNow(S, now).map(x => x.id));
   return (
     <Card>
-      <SecHead title="Mevsimlik işler 🍂" right={String(year)} />
+      <SecHead title="Mevsimlik görevler 🍂" right={String(year)} />
       <View>
         {/* Zamanı gelenler üstte, sonra en yakın aydan başlayanlar. */}
         {[...SEASONAL].sort((a, b) => monthsAway(a.months, now) - monthsAway(b.months, now)).map((x, i) => {
@@ -187,7 +187,7 @@ function Seasonal() {
               <Btn
                 small
                 kind={done ? 'soft' : active.has(x.id) ? 'primary' : 'ghost'}
-                label={done ? 'Geri al' : 'Yaptım'}
+                label={done ? 'Geri al' : 'Tahkim Et / Onar'}
                 onPress={() => update(D => {
                   if (done) delete D.seasonal[x.id];
                   else D.seasonal[x.id] = year;

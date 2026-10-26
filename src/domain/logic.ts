@@ -49,10 +49,10 @@ export function statusIn(S: AppState, t: Task, now = Date.now()): TaskStatus {
   const mode = S.mode?.k;
   if (mode === 'tatil') {
     const s = status(t, S.mode!.since, S.settings.flex);
-    return { k: 'ok', diff: Math.max(s.diff, 1), label: '🏖️ Tatilde, dondu' };
+    return { k: 'ok', diff: Math.max(s.diff, 1), label: '🏖️ Sığınak kilitli, dondu' };
   }
   const s = status(t, now, S.settings.flex);
-  if (mode === 'yogun' && t.every > 1 && s.k !== 'ok') return { k: 'ok', diff: Math.max(s.diff, 1), label: '🤒 Sonraya kaldı' };
+  if (mode === 'yogun' && t.every > 1 && s.k !== 'ok') return { k: 'ok', diff: Math.max(s.diff, 1), label: '🤒 Revirdesin, sonraya kaldı' };
   return s;
 }
 
@@ -80,7 +80,7 @@ export function allTasks(S: AppState, now = Date.now()): TaskRef[] {
 /** Görünen ad ve emoji: oda ya da "Ev bakımı". */
 export function placeOf(S: AppState, rid: string) {
   const r = S.rooms[rid];
-  return r ? { name: r.name, emoji: ROOM_EMOJI[r.type], type: r.type as RoomType | null } : { name: 'Ev bakımı', emoji: '🔧', type: null };
+  return r ? { name: r.name, emoji: ROOM_EMOJI[r.type], type: r.type as RoomType | null } : { name: 'Sığınak bakımı', emoji: '🔧', type: null };
 }
 
 /* ---------- canlı ev haritası: temizlik yüzdesi ---------- */
@@ -115,11 +115,11 @@ export function homeScore(S: AppState, now = Date.now()) {
 }
 
 export function cleanWord(p: number) {
-  if (p >= 100) return 'Tertemiz ✨';
-  if (p >= 80) return 'Temiz';
-  if (p >= 55) return 'Biraz dağınık';
-  if (p >= 30) return 'Tozlanıyor';
-  return 'İlgi bekliyor';
+  if (p >= 100) return 'Tam tahkimat 🛡️';
+  if (p >= 80) return 'Güvenli';
+  if (p >= 55) return 'Çatlaklar var';
+  if (p >= 30) return 'Barikat zayıflıyor';
+  return 'Sızıntı riski!';
 }
 
 /* ---------- "ne kadar vaktin var?" ---------- */
@@ -267,11 +267,11 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
     // Mevsimlik işler ayın 1'inde ve 15'inde hatırlatılır, her gün değil.
     if (d === 1 || d === 15)
       for (const x of seasonalNow(S, now))
-        ns.push({ k: 'ok', rid: CARE, url: '/bakim', title: `${x.emoji} Mevsimlik iş`, text: `${x.name} zamanı geldi. Bu ay bir gün ayıralım mı? 📆` });
+        ns.push({ k: 'ok', rid: CARE, url: '/bakim', title: `${x.emoji} Mevsimlik görev`, text: `${x.name} zamanı geldi. Bu ay bir gün ayıralım mı? 📆` });
   }
   if (S.mode?.k === 'bayram') {
     const left = (S.mode.list || []).filter(x => !x.done).length;
-    if (left) ns.push({ k: 'today', rid: CARE, url: '/bugun', title: '✨ Bayram temizliği', text: `${left} iş kaldı. Bugün birkaçını bitirelim mi? 💪` });
+    if (left) ns.push({ k: 'today', rid: CARE, url: '/bugun', title: '✨ Büyük tahkimat', text: `${left} görev kaldı. Bugün birkaç barikatı daha sağlamlaştıralım mı? 💪` });
   }
   for (const rid of S.order) {
     const m = S.mod[rid] || {};
@@ -285,7 +285,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
       ns.push({
         k: 'ok',
         rid,
-        title: `📸 ${room} · Buzdolabı fotoğrafı`,
+        title: `📸 ${room} · Erzak & ambar taraması`,
         text: photoLine(m.photoAt ? daysSince(m.photoAt, now) : null, rid, now),
       });
     if (set.expiry && fridge && m.stock) {
@@ -307,7 +307,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
       if (d === 1) {
         const old = donateList(m.wardrobe, now);
         if (old.length)
-          ns.push({ k: 'ok', rid, title: `💝 ${room} · Bağış önerisi`, text: `${old.length} parça bir yıldır giyilmedi. İhtiyacı olan birine verelim mi?` });
+          ns.push({ k: 'ok', rid, title: `💝 ${room} · Teçhizat bağışı`, text: `${old.length} parça bir yıldır keşfe çıkmadı. Başka bir hayatta kalana verelim mi?` });
       }
       if (d === 1 || d === 15)
         for (const x of seasonalNow(S, now).filter(x => x.wardrobe))

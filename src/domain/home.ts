@@ -159,10 +159,10 @@ export const taskMin = (t: Task) => t.min ?? MIN_GUESS.find(([re]) => re.test(t.
 /* ---------- modlar ---------- */
 
 export const MODES: Record<ModeKind, { label: string; emoji: string; text: string }> = {
-  misafir: { label: 'Misafir geliyor', emoji: '🫖', text: 'Misafirin göreceği yerler öne çıkar: salon, antre, banyo, mutfak.' },
-  tatil: { label: 'Tatile gidiyorum', emoji: '🏖️', text: 'Rutinler donar, hatırlatma gelmez. Dönünce kaldığın yerden devam eder.' },
-  yogun: { label: 'Yoğunum / hastayım', emoji: '🤒', text: 'Sadece her gün yapılan işler görünür. Gerisi seni beklesin.' },
-  bayram: { label: 'Bayram temizliği', emoji: '✨', text: 'Büyük temizlik için adım adım bir liste. Bitirdikçe işaretle.' },
+  misafir: { label: 'Kafile geliyor', emoji: '🫖', text: 'Gelen hayatta kalanların göreceği sektörler öne çıkar: komuta merkezi, giriş barikatı, arındırma, erzak deposu.' },
+  tatil: { label: 'Sığınağı kilitle (tatil)', emoji: '🏖️', text: 'Görevler donar, anons gelmez. Dönünce kaldığın yerden devam eder.' },
+  yogun: { label: 'Revirdeyim / yoğunum', emoji: '🤒', text: 'Sadece her gün yapılan görevler görünür. Gerisi seni beklesin.' },
+  bayram: { label: 'Büyük tahkimat', emoji: '✨', text: 'Kapsamlı tahkimat için adım adım bir liste. Bitirdikçe işaretle.' },
 };
 export const MODE_KINDS = Object.keys(MODES) as ModeKind[];
 

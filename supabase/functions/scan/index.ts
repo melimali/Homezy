@@ -26,6 +26,18 @@ type Kind = 'fridge' | 'look';
 /** Uygulamadaki gardırop kategorileri (src/domain/constants.ts, CATS) ve yıkama türleri (WASH). */
 const CATS = ['Üst', 'Alt', 'Elbise / Takım', 'Dış giyim', 'Ev / Pijama', 'İç giyim', 'Ayakkabı', 'Aksesuar'];
 const WASH = ['beyaz', 'renkli', 'koyu', 'hassas'];
+/** Kombin kurallarının bildiği türler (kategorisiyle), renkler ve kumaşlar: src/domain/style.ts (KINDS, COLORS, FABRICS) ile aynı olmalı. */
+const KINDS: Record<string, string> = {
+  'Tişört': 'Üst', 'Polo': 'Üst', 'Gömlek': 'Üst', 'Bluz': 'Üst', 'Kazak': 'Üst', 'Sweatshirt': 'Üst',
+  'Kot pantolon': 'Alt', 'Kumaş pantolon': 'Alt', 'Chino': 'Alt', 'Eşofman altı': 'Alt', 'Şort': 'Alt', 'Etek': 'Alt',
+  'Elbise': 'Elbise / Takım', 'Takım elbise': 'Elbise / Takım',
+  'Ceket': 'Dış giyim', 'Deri ceket': 'Dış giyim', 'Kot ceket': 'Dış giyim', 'Mont': 'Dış giyim', 'Kaban': 'Dış giyim', 'Trençkot': 'Dış giyim',
+  'Spor ayakkabı': 'Ayakkabı', 'Loafer': 'Ayakkabı', 'Klasik ayakkabı': 'Ayakkabı', 'Bot': 'Ayakkabı', 'Sandalet': 'Ayakkabı', 'Topuklu ayakkabı': 'Ayakkabı',
+  'Pijama': 'Ev / Pijama', 'İç giyim': 'İç giyim', 'Aksesuar': 'Aksesuar',
+};
+const COLORS = ['siyah', 'antrasit', 'gri', 'beyaz', 'krem', 'bej', 'camel', 'taba', 'kahverengi', 'lacivert', 'kot mavisi', 'mavi', 'açık mavi',
+  'turkuaz', 'yeşil', 'mint', 'haki', 'zeytin yeşili', 'sarı', 'hardal', 'turuncu', 'kırmızı', 'bordo', 'pembe', 'pudra', 'lila', 'mor'];
+const FABRICS = ['Pamuk', 'Keten', 'Viskon', 'İpek / Saten', 'Kot', 'Yün', 'Triko', 'Kaşmir', 'Kadife', 'Polar', 'Polyester', 'Teknik / Spor', 'Deri', 'Süet', 'Kanvas'];
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 
@@ -56,8 +68,12 @@ Dolaptaki mevcut parçalar:
 ${list(known)}
 
 Kurallar:
-- name: kısa Türkçe ad, renk + kumaş ya da tür, ör. "Lacivert keten gömlek". Marka yazma.
-- cat: şu listeden biri: ${CATS.join(', ')}.
+- kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}.
+- color: parçanın baskın rengi, şu listeden en yakını: ${COLORS.join(', ')}.
+- hex: baskın rengin "#RRGGBB" kodu.
+- fabric: en olası kumaş, şu listeden biri: ${FABRICS.join(', ')}.
+- pattern: "düz" ya da "desenli" (çizgili, kareli, çiçekli, baskılı vb.).
+- name: kısa Türkçe ad, renk + tür, ör. "Lacivert keten gömlek". Marka yazma.
 - wash: yıkama grubu, şu listeden biri: beyaz (beyaz ve krem), renkli, koyu (siyah, lacivert, koyu kot), hassas (yün, ipek, saten, kaşmir).
 - match: parça dolaptaki bir parçayla büyük olasılıkla aynıysa dolaptaki adı aynen yaz, değilse null.
 - worn: kıyafetler bir kişinin üzerinde giyiliyse true, serilmiş ya da askıdaysa false.
@@ -65,7 +81,7 @@ Kurallar:
 - Kişinin yüzü, bedeni ya da ortam hakkında yorum yapma. Fotoğrafta kıyafet yoksa pieces boş olsun, note bunu söylesin.
 
 Sadece şu biçimde JSON döndür, başka metin yazma:
-{"pieces":[{"name":"Beyaz pamuk gömlek","cat":"Üst","wash":"beyaz","match":"Beyaz gömlek"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
+{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","wash":"beyaz","match":"Beyaz gömlek"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
 }
 
 /** Cevaptaki ilk JSON nesnesini okur (kod bloğu ya da açıklama eklenmişse de). */
@@ -98,9 +114,16 @@ function clean(kind: Kind, r: Record<string, unknown>) {
   const pieces = (Array.isArray(r.pieces) ? r.pieces : []).slice(0, 20).flatMap(x => {
     const name = str(x?.name, 40);
     if (!name) return [];
+    const kind = typeof x?.kind === 'string' && KINDS[x.kind] ? x.kind : null;
+    const color = str(x?.color, 20).toLocaleLowerCase('tr-TR');
     return [{
       name,
-      cat: CATS.includes(x?.cat) ? x.cat : 'Aksesuar',
+      kind,
+      cat: kind ? KINDS[kind] : CATS.includes(x?.cat) ? x.cat : 'Aksesuar',
+      color: COLORS.includes(color) ? color : null,
+      hex: typeof x?.hex === 'string' && /^#[0-9a-f]{6}$/i.test(x.hex) ? x.hex : null,
+      fabric: FABRICS.includes(x?.fabric) ? x.fabric : null,
+      pattern: x?.pattern === 'desenli' ? 'desenli' : 'düz',
       wash: WASH.includes(x?.wash) ? x.wash : null,
       match: nameOrNull(x?.match),
     }];

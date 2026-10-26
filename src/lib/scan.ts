@@ -18,7 +18,11 @@ export type FridgeScan = {
 };
 
 export type LookScan = {
-  pieces: { name: string; cat: string; wash: WashType | null; match: string | null }[];
+  /** Tür, renk, kumaş ve desen sunucunun yeni sürümünde var; eski sürümde yoksa addan tahmin edilir. */
+  pieces: {
+    name: string; cat: string; wash: WashType | null; match: string | null;
+    kind?: string | null; color?: string | null; hex?: string | null; fabric?: string | null; pattern?: 'düz' | 'desenli';
+  }[];
   worn: boolean;
   note: string;
 };

@@ -44,6 +44,12 @@ export type Cloth = {
   worn?: number | null;
   /** Dolaba eklendiği an. */
   added?: number;
+  /** Kombin önerisi için (src/domain/style.ts). Fotoğraf taramasından gelir; yoksa addan tahmin edilir. */
+  kind?: string;
+  color?: string;
+  hex?: string;
+  fabric?: string;
+  pattern?: 'düz' | 'desenli';
 };
 
 export type StockLevel = 'var' | 'az' | 'yok';

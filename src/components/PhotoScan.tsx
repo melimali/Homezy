@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from '
 
 import { LV, WASH } from '@/domain/constants';
 import { uid } from '@/domain/logic';
+import { attLine, COLORS, guessColor, guessFabric, guessKind, KINDS, toColor, toFabric, toHex, toKind } from '@/domain/style';
 import type { StockLevel, WashType } from '@/domain/types';
 import { pickPhoto } from '@/lib/photos';
 import { scanPhoto, trLow } from '@/lib/scan';
@@ -11,12 +12,13 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
+import type { PhotoLook } from './Outfits';
 import { useToast } from './Toast';
 import { Btn, SecHead, T } from './ui';
 
 /**
  * Yapay zekâ ile fotoğraf taraması (buzdolabı ve kıyafet). Sonuç önce onay listesi olarak gösterilir;
- * kullanıcı "Listeye işle" / "Gardıroba ekle" demeden ev verisi değişmez. Hak sınırı sunucuda.
+ * kullanıcı "Listeye işle" / "Ekle ve değerlendir" demeden ev verisi değişmez. Hak sınırı sunucuda.
  */
 
 type Busy = { st: 'busy' };
@@ -126,11 +128,17 @@ export function FridgeScanPanel({ s, retry }: { s: ReturnType<typeof useFridgeSc
 
 /* ---------- gardırop ---------- */
 
-type LookItem = { name: string; cat: string; wash: WashType | null; matchId: string | null; on: boolean };
-type LookState = null | Busy | Err | { st: 'review'; items: LookItem[]; note: string; left: number };
+type LookItem = {
+  name: string; cat: string; wash: WashType | null; matchId: string | null; on: boolean;
+  kind: string | null; color: string | null; hex: string | null; fabric: string | null; pattern: 'düz' | 'desenli';
+};
+type LookState = null | Busy | Err | { st: 'review'; items: LookItem[]; worn: boolean; note: string; left: number };
 
-/** Gardırop kartının altında: kıyafet fotoğrafından parçaları tanıyıp dolaba ekler. */
-export function WardrobeScan({ rid }: { rid: string }) {
+/**
+ * Gardırop kartının altında: kıyafet fotoğrafından parçaları (türü, rengi, kumaşı) tanır, onaylanınca
+ * yenilerini dolaba ekler ve `onLook` ile kombin değerlendirmesine verir (bkz. Outfits).
+ */
+export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: PhotoLook) => void }) {
   const c = useColors();
   const { state, update } = useStore();
   const toast = useToast();
@@ -150,13 +158,20 @@ export function WardrobeScan({ rid }: { rid: string }) {
     // Model dolaptaki adı "Ad (Kategori)" biçiminde de yazabilir.
     const byName = new Map(w.flatMap(x => [[trLow(x.name), x], [trLow(`${x.name} (${x.cat})`), x]] as const));
     const used = new Set<string>();
-    const items = r.result.pieces.map(p => {
+    const items = r.result.pieces.map((p): LookItem => {
       const hit = byName.get(trLow(p.match)) || byName.get(trLow(p.name));
       const matchId = hit && !used.has(hit.id) ? hit.id : null;
       if (matchId) used.add(matchId);
-      return { name: hit && matchId ? hit.name : p.name, cat: p.cat, wash: p.wash, matchId, on: !matchId };
+      // Sunucunun eski sürümü tür, renk ve kumaş yazmıyorsa addan tahmin edilir.
+      const kind = toKind(p.kind) || guessKind(p.name);
+      const color = toColor(p.color) || guessColor(p.name);
+      return {
+        name: hit && matchId ? hit.name : p.name, cat: kind ? KINDS[kind].cat : p.cat, wash: p.wash, matchId, on: true,
+        kind, color, hex: toHex(p.hex) || (color ? COLORS[color] : null), fabric: toFabric(p.fabric) || guessFabric(p.name, kind),
+        pattern: p.pattern === 'desenli' ? 'desenli' : 'düz',
+      };
     });
-    setScan({ st: 'review', items, note: r.result.note, left: Math.max(0, r.limit - r.used) });
+    setScan({ st: 'review', items, worn: !!r.result.worn, note: r.result.note, left: Math.max(0, r.limit - r.used) });
   };
 
   const pick = async (source: 'camera' | 'library') => {
@@ -169,17 +184,30 @@ export function WardrobeScan({ rid }: { rid: string }) {
   const apply = () => {
     if (scan?.st !== 'review') return;
     let add = 0;
+    const ids: string[] = [];
     update(D => {
       const w = (D.mod[rid].wardrobe ||= []);
       for (const x of scan.items) {
-        if (!x.on || x.matchId) continue;
-        w.push({ id: uid(), name: x.name, cat: x.cat, state: 'temiz', wash: x.wash ?? 'renkli', added: Date.now(), worn: null });
-        add++;
+        if (!x.on) continue;
+        let c = x.matchId ? w.find(y => y.id === x.matchId) : undefined;
+        if (!c) {
+          c = { id: uid(), name: x.name, cat: x.cat, state: 'temiz', wash: x.wash ?? 'renkli', added: Date.now(), worn: null };
+          w.push(c);
+          add++;
+        }
+        // Dolapta olan parçanın eksik bilgisi fotoğraftan tamamlanır; kullanıcının seçtiği kategori korunur.
+        if (x.kind && !c.kind) c.kind = x.kind;
+        if (x.color && !c.color) c.color = x.color;
+        if (x.hex && !c.hex) c.hex = x.hex;
+        if (x.fabric && !c.fabric) c.fabric = x.fabric;
+        if (!c.pattern) c.pattern = x.pattern;
+        if (!ids.includes(c.id)) ids.push(c.id);
       }
       if (add) D.mod[rid].filter = 'all';
     });
+    if (ids.length) onLook({ ids, worn: scan.worn, note: scan.note });
     setScan(null);
-    toast(add ? `${add} yeni parça gardıroba eklendi.` : 'Yeni parça eklenmedi.');
+    toast(ids.length ? `${add ? `${add} yeni parça gardıroba eklendi. ` : ''}Kombin değerlendirmesi hazır, aşağıda.` : 'Hiçbir parça seçilmedi.');
   };
 
   const stop = () => {
@@ -194,7 +222,7 @@ export function WardrobeScan({ rid }: { rid: string }) {
       <T v="bold" style={{ fontSize: 15 }}>📸 Fotoğraftan ekle</T>
       {!scan && (
         <>
-          <T v="small">Üzerindeki kombinin ya da yatağa serdiğin kıyafetlerin fotoğrafını çek; parçaları, kategorilerini ve yıkama türlerini ben çıkarayım.</T>
+          <T v="small">Üzerindeki kombinin ya da yatağa serdiğin kıyafetlerin fotoğrafını çek. Parçaların türünü, rengini ve kumaşını çıkarayım, kombini değerlendirip dolabındakilerle eşleştireyim.</T>
           <View style={styles.row}>
             {Platform.OS !== 'web' && <Btn small kind="primary" label="Fotoğraf çek" onPress={() => pick('camera')} />}
             <Btn small label="Galeriden seç" onPress={() => pick('library')} />
@@ -202,18 +230,20 @@ export function WardrobeScan({ rid }: { rid: string }) {
           <T v="tiny">{premium.active ? 'Premium: her gün 2 tarama.' : 'Ücretsiz: haftada 2 tarama. Premium\'da her gün 2.'} Buzdolabı ve kıyafet aynı hakkı kullanır.</T>
         </>
       )}
-      {scan?.st === 'busy' && <Working text="Fotoğrafa bakıyorum. Her parçanın türünü ve yıkama türünü çıkarıyorum." onStop={stop} />}
+      {scan?.st === 'busy' && <Working text="Fotoğrafa bakıyorum. Her parçanın türünü, rengini ve kumaşını çıkarıyorum." onStop={stop} />}
       {scan?.st === 'err' && <Failed e={scan} onRetry={() => last.current && start(last.current)} onClose={stop} />}
       {scan?.st === 'review' && (
         <Review title="Fotoğrafta gördüklerim" count={`${scan.items.length} parça`} note={scan.note} left={scan.left}>
           {scan.items.map((x, i) => (
             <Check key={i} on={x.on} onPress={() => toggle(i)} title={x.name}
-              sub={`${x.cat}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'dolabında var' : 'dolaba eklenecek'}`} />
+              sub={`${attLine(x)}${x.pattern === 'desenli' ? ' · desenli' : ''}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'dolabında var' : 'dolaba eklenecek'}`} />
           ))}
           {!scan.items.length && <T v="small">Fotoğrafta tanıyabildiğim bir kıyafet olmadı. Bu tarama hakkından düşmedi.</T>}
-          <T v="tiny">Kategori ve yıkama türü tahmini; ekledikten sonra dokunarak değiştirebilirsin.</T>
+          <T v="tiny">Tür, renk ve kumaş tahmini. İşaretli parçalar gardıroba eklenir (dolabında olanlar tekrar eklenmez) ve kombin onlarla değerlendirilir.</T>
           <View style={styles.row}>
-            {scan.items.some(x => !x.matchId) && <Btn small kind="primary" label="Gardıroba ekle" onPress={apply} />}
+            {scan.items.length > 0 && (
+              <Btn small kind="primary" label={scan.items.some(x => x.on && !x.matchId) ? 'Ekle ve değerlendir' : 'Kombini değerlendir'} onPress={apply} />
+            )}
             <Btn small kind="ghost" label="Vazgeç" onPress={stop} />
           </View>
         </Review>

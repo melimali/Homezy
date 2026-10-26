@@ -11,6 +11,7 @@ import { persistPhoto, pickPhoto } from '@/lib/photos';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
+import { Outfits, type PhotoLook } from './Outfits';
 import { FridgeScanPanel, useFridgeScan, WardrobeScan } from './PhotoScan';
 import { ShopList } from './ShopList';
 import { AddTaskForm, TaskRow } from './TaskRow';
@@ -32,6 +33,9 @@ export function Wardrobe({ rid }: { rid: string }) {
   const [cat, setCat] = useState(CATS[0]);
   const [wash, setWash] = useState<WashType>('renkli');
   const [adding, setAdding] = useState(false);
+  // Kombin önerisi: son fotoğraftaki parçalar ya da adına dokunulan parça.
+  const [look, setLook] = useState<PhotoLook | null>(null);
+  const [anchor, setAnchor] = useState<string[]>([]);
   const now = useNow();
   const plan = laundryPlan(list);
   const old = donateList(list, now);
@@ -60,104 +64,115 @@ export function Wardrobe({ rid }: { rid: string }) {
   ];
 
   return (
-    <Card>
-      <SecHead title="Gardırop" right={`${list.length} parça`} />
-      {plan.length > 0 && (
-        <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
-          <T v="bold" style={{ fontSize: 14 }}>🧺 Çamaşır planı</T>
-          {plan.map(g => (
-            <T key={g.w} style={{ fontSize: 14 }}>
-              {WASH[g.w].emoji} {WASH[g.w].label}: {g.items.length} parça{' '}
-              {g.full ? `· makine dolusu, yıkayabilirsin (${WASH[g.w].hint})` : `· ${LAUNDRY_THRESHOLD - g.items.length} parça daha birikince`}
-            </T>
-          ))}
-        </View>
-      )}
-      {season.map(x => (
-        <Callout key={x.id}>
-          {x.emoji} Mevsim değişimi zamanı: {x.name.replace('Dolap değişimi: ', '')}. Bitince Ev bakımı ekranından işaretle.
-        </Callout>
-      ))}
-      {old.length > 0 && (
-        <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
-          <T v="bold" style={{ fontSize: 14 }}>💝 Bağış önerisi</T>
-          <T v="small">Bunları bir yıldır giymedin. İhtiyacı olan birine verebilirsin.</T>
-          {old.map(x => (
-            <View key={x.id} style={styles.addRow}>
-              <T style={{ flex: 1, fontSize: 14 }}>{x.name}</T>
-              <Btn small label="Giyiyorum" onPress={() => update(D => {
-                const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
-                if (y) y.worn = Date.now();
-              })} />
-              <Btn small kind="primary" label="Bağışladım" onPress={() => update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== x.id)))} />
-            </View>
-          ))}
-        </View>
-      )}
-      <View style={styles.wrapRow}>
-        {filters.map(([k, l, n]) => (
-          <Chip key={k} on={f === k} label={`${l} ${n}`} onPress={() => update(D => void (D.mod[rid].filter = k))} />
+    <>
+      <Card>
+        <SecHead title="Gardırop" right={`${list.length} parça`} />
+        {plan.length > 0 && (
+          <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
+            <T v="bold" style={{ fontSize: 14 }}>🧺 Çamaşır planı</T>
+            {plan.map(g => (
+              <T key={g.w} style={{ fontSize: 14 }}>
+                {WASH[g.w].emoji} {WASH[g.w].label}: {g.items.length} parça{' '}
+                {g.full ? `· makine dolusu, yıkayabilirsin (${WASH[g.w].hint})` : `· ${LAUNDRY_THRESHOLD - g.items.length} parça daha birikince`}
+              </T>
+            ))}
+          </View>
+        )}
+        {season.map(x => (
+          <Callout key={x.id}>
+            {x.emoji} Mevsim değişimi zamanı: {x.name.replace('Dolap değişimi: ', '')}. Bitince Ev bakımı ekranından işaretle.
+          </Callout>
         ))}
-      </View>
-      <View>
-        {items.map((x, i) => {
-          const [bg, fg] = stateColor[x.state];
-          return (
-            <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <T v="bold">{x.name}</T>
+        {old.length > 0 && (
+          <View style={[styles.shop, { backgroundColor: c.surface2 }]}>
+            <T v="bold" style={{ fontSize: 14 }}>💝 Bağış önerisi</T>
+            <T v="small">Bunları bir yıldır giymedin. İhtiyacı olan birine verebilirsin.</T>
+            {old.map(x => (
+              <View key={x.id} style={styles.addRow}>
+                <T style={{ flex: 1, fontSize: 14 }}>{x.name}</T>
+                <Btn small label="Giyiyorum" onPress={() => update(D => {
+                  const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
+                  if (y) y.worn = Date.now();
+                })} />
+                <Btn small kind="primary" label="Bağışladım" onPress={() => update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== x.id)))} />
+              </View>
+            ))}
+          </View>
+        )}
+        <View style={styles.wrapRow}>
+          {filters.map(([k, l, n]) => (
+            <Chip key={k} on={f === k} label={`${l} ${n}`} onPress={() => update(D => void (D.mod[rid].filter = k))} />
+          ))}
+        </View>
+        <View>
+          {items.map((x, i) => {
+            const [bg, fg] = stateColor[x.state];
+            return (
+              <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${x.name} ile kombin öner`}
+                    accessibilityState={{ selected: anchor.length === 1 && anchor[0] === x.id }}
+                    onPress={() => setAnchor(a => (a.length === 1 && a[0] === x.id ? [] : [x.id]))}
+                    hitSlop={4}
+                  >
+                    <T v="bold" style={anchor.includes(x.id) && { color: c.accent }}>{x.name}</T>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${x.name} yıkama türü: ${WASH[x.wash ?? 'renkli'].label}. Değiştir`}
+                    onPress={() => update(D => {
+                      const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
+                      if (y) y.wash = WASH_TYPES[(WASH_TYPES.indexOf(y.wash ?? 'renkli') + 1) % WASH_TYPES.length];
+                    })}
+                    hitSlop={4}
+                  >
+                    <T v="small">{x.cat} · {WASH[x.wash ?? 'renkli'].emoji} {WASH[x.wash ?? 'renkli'].label}</T>
+                  </Pressable>
+                </View>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${x.name} yıkama türü: ${WASH[x.wash ?? 'renkli'].label}. Değiştir`}
+                  accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştir`}
                   onPress={() => update(D => {
                     const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
-                    if (y) y.wash = WASH_TYPES[(WASH_TYPES.indexOf(y.wash ?? 'renkli') + 1) % WASH_TYPES.length];
+                    if (!y) return;
+                    y.state = NEXT_CSTATE[y.state];
+                    // Kirliye geçtiyse giyildi demektir (bağış önerisi için).
+                    if (y.state === 'kirli') y.worn = Date.now();
                   })}
-                  hitSlop={4}
+                  style={[styles.state, { backgroundColor: bg }]}
                 >
-                  <T v="small">{x.cat} · {WASH[x.wash ?? 'renkli'].emoji} {WASH[x.wash ?? 'renkli'].label}</T>
+                  <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: 12.5 }}>{CSTATE[x.state]}</Text>
                 </Pressable>
+                <XBtn label={`${x.name} sil`} onPress={() => update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== x.id)))} />
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştir`}
-                onPress={() => update(D => {
-                  const y = D.mod[rid].wardrobe?.find(z => z.id === x.id);
-                  if (!y) return;
-                  y.state = NEXT_CSTATE[y.state];
-                  // Kirliye geçtiyse giyildi demektir (bağış önerisi için).
-                  if (y.state === 'kirli') y.worn = Date.now();
-                })}
-                style={[styles.state, { backgroundColor: bg }]}
-              >
-                <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: 12.5 }}>{CSTATE[x.state]}</Text>
-              </Pressable>
-              <XBtn label={`${x.name} sil`} onPress={() => update(D => void (D.mod[rid].wardrobe = D.mod[rid].wardrobe?.filter(z => z.id !== x.id)))} />
-            </View>
-          );
-        })}
-        {!items.length && <EmptyMsg>{list.length ? 'Bu durumda kıyafet yok.' : 'Dolabın boş. Aşağıdan kıyafet ekle.'}</EmptyMsg>}
-      </View>
-      <T v="tiny">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek. Yıkama türüne dokunarak onu değiştir.</T>
-      {adding ? (
-        <View style={{ gap: 8 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-            {CATS.map(k => <Chip key={k} small on={cat === k} label={k} onPress={() => setCat(k)} />)}
-          </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-            {WASH_TYPES.map(k => <Chip key={k} small on={wash === k} label={`${WASH[k].emoji} ${WASH[k].label}`} onPress={() => setWash(k)} />)}
-          </ScrollView>
-          <View style={styles.addRow}>
-            <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" autoFocus />
-            <Btn label="Ekle" kind="primary" small onPress={add} />
-          </View>
-          <Btn small kind="ghost" label="Vazgeç" onPress={() => setAdding(false)} style={{ alignSelf: 'flex-start' }} />
+            );
+          })}
+          {!items.length && <EmptyMsg>{list.length ? 'Bu durumda kıyafet yok.' : 'Dolabın boş. Aşağıdan kıyafet ekle.'}</EmptyMsg>}
         </View>
-      ) : (
-        <Btn small kind="ghost" label="+ Kıyafet ekle" onPress={() => setAdding(true)} style={{ alignSelf: 'flex-start' }} />
-      )}
-      <WardrobeScan rid={rid} />
-    </Card>
+        <T v="tiny">Etikete dokunarak durumu değiştir: Temiz, Kirli, Ütülenecek. Yıkama türüne dokunarak onu değiştir.</T>
+        {adding ? (
+          <View style={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+              {CATS.map(k => <Chip key={k} small on={cat === k} label={k} onPress={() => setCat(k)} />)}
+            </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+              {WASH_TYPES.map(k => <Chip key={k} small on={wash === k} label={`${WASH[k].emoji} ${WASH[k].label}`} onPress={() => setWash(k)} />)}
+            </ScrollView>
+            <View style={styles.addRow}>
+              <Field value={name} onChangeText={setName} placeholder="Kıyafet, ör. Lacivert gömlek" onSubmitEditing={add} returnKeyType="done" autoFocus />
+              <Btn label="Ekle" kind="primary" small onPress={add} />
+            </View>
+            <Btn small kind="ghost" label="Vazgeç" onPress={() => setAdding(false)} style={{ alignSelf: 'flex-start' }} />
+          </View>
+        ) : (
+          <Btn small kind="ghost" label="+ Kıyafet ekle" onPress={() => setAdding(true)} style={{ alignSelf: 'flex-start' }} />
+        )}
+        <WardrobeScan rid={rid} onLook={l => { setLook(l); setAnchor(l.ids); }} />
+      </Card>
+      <Outfits rid={rid} look={look} anchor={anchor} onClear={() => { setAnchor([]); setLook(null); }} />
+    </>
   );
 }
 

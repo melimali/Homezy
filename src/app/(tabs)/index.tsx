@@ -5,6 +5,7 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { useEffect } from 'react';
 
 import { House3D } from '@/components/House3D';
+import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { Appear, Float, Squish } from '@/components/motion';
@@ -16,6 +17,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, progressOf, type HouseP
 import { limits, themeFor } from '@/domain/premium';
 import { tipOfDay } from '@/domain/tips';
 import { usePurchases } from '@/purchases/PurchasesProvider';
+import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -33,6 +35,7 @@ export default function Home() {
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
+  const moka = useMokaState();
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -48,6 +51,8 @@ export default function Home() {
           {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda ✨ ${greeting(new Date(now)).line}`}
         </T>
       </View>
+
+      <Appear index={1}><MokaMascot pose={moka.pose} title={moka.title} message={moka.message} onPress={moka.next} /></Appear>
 
       <Appear index={1}><DailyTip now={now} /></Appear>
 

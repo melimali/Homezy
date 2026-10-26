@@ -17,8 +17,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { MokaMascot } from '@/components/MokaMascot';
 import { MorningArt, PlanArt, RoomsArt, RoutineArt } from '@/components/onboarding/Illustrations';
 import { Btn } from '@/components/ui';
+import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
 
 // Web önizlemesinde yerel sürücü yok; orada döngüler JS ile döner.
@@ -30,40 +32,68 @@ type Page = {
   text: string;
   Art: ComponentType<{ t: Animated.Value }>;
   blob: (c: Colors) => string;
+  /** Metni konuşma balonunda anlatan Moka'nın pozu. İlk sayfada Moka zaten çizimin kendisi. */
+  pose?: MokaPose;
 };
 
+/** İlk sayfanın çizimi: kendini tanıtan Moka, hafifçe süzülür. */
+function MokaArt({ t }: { t: Animated.Value }) {
+  const bob = t.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, -8, 0, -8, 0] });
+  const tilt = t.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: ['0deg', '-3deg', '0deg', '3deg', '0deg'] });
+  return (
+    <Animated.Image
+      source={MOKA_ASSETS.happy}
+      style={{ width: 240, height: 240, transform: [{ translateY: bob }, { rotate: tilt }] }}
+      resizeMode="contain"
+      accessibilityIgnoresInvertColors
+    />
+  );
+}
+
+// Moka önce kendini tanıtır, sonraki sayfaları kendi ağzından anlatır.
 const PAGES: Page[] = [
   {
+    eyebrow: 'Tanışalım',
+    title: 'Merhaba, ben Moka!',
+    text: 'Kahveye bayılan, biraz tombul bir kakapoyum. Evinin işlerini seninle birlikte takip edeceğim. Hadi sana etrafı gezdireyim!',
+    Art: MokaArt,
+    blob: c => c.room.salon,
+  },
+  {
     eyebrow: 'Evini çiz',
-    title: 'Evin, bloklarla birkaç saniyede',
-    text: 'Oda türünü seç, bloklara dokunup parmağını sürükle. Her blok yaklaşık 2 m².',
+    title: 'Önce evini birlikte çizelim',
+    text: 'Oda türünü seç, bloklara dokunup parmağını sürükle. Her blok yaklaşık 2 m². Ben de her odayı tek tek öğreneyim.',
     Art: PlanArt,
     blob: c => c.accentSoft,
+    pose: 'analyzing',
   },
   {
     eyebrow: 'Rutinler',
-    title: 'Ne zaman ne yapılacak, sen düşünme',
-    text: 'Her iş kendi aralığıyla tekrar eder. "Tamamladım"a bas, puanı kap ve Homezy saymaya yeniden başlasın.',
+    title: 'Ne zaman ne yapılacak, ben hatırlarım',
+    text: 'Her iş kendi aralığıyla tekrar eder. Sen "Tamamladım"a bas, puanını kap; ben de saymaya yeniden başlarım.',
     Art: RoutineArt,
     blob: c => c.todaySoft,
+    pose: 'checklist',
   },
   {
     eyebrow: 'Her odanın kendi işi',
     title: 'Gardırop, buzdolabı, bitkiler',
-    text: 'Kirli çamaşırı, biten ürünü, sulanacak bitkiyi odası takip eder. Alışveriş listesi kendiliğinden çıkar.',
+    text: 'Kirli çamaşırı, biten ürünü, susayan bitkiyi ben takip ederim. Alışveriş listen de kendiliğinden çıkar.',
     Art: RoomsArt,
     blob: c => c.room.balkon,
+    pose: 'plants',
   },
   {
     eyebrow: 'Sabah özeti',
-    title: 'Her sabah tek bir bildirim',
-    text: 'Saatini sen seç. Geciken işler, eksik ürünler ve çamaşır tek mesajda gelir.',
+    title: 'Her sabah tek bir mesaj',
+    text: 'Saatini sen seç, kahvemi alıp gelirim. Geciken işleri, eksik ürünleri ve çamaşırı tek mesajda anlatırım.',
     Art: MorningArt,
     blob: c => c.room.salon,
+    pose: 'cozy_plant',
   },
 ];
 
-/** İlk açılış: aşağı kaydırılan, dört sayfalık tanıtım. */
+/** İlk açılış: aşağı kaydırılan, Moka'nın anlattığı tanıtım. */
 export default function Tanitim() {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -195,7 +225,7 @@ function PageView({ p, i, h, y, t, top, c }: { p: Page; i: number; h: number; y:
   const textOpacity = y.interpolate({ inputRange: [r[0] + h * 0.4, r[1], r[2] - h * 0.5], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   const blobRotate = y.interpolate({ inputRange: r, outputRange: ['-25deg', '0deg', '25deg'] });
   // Küçük ekranlarda çizim metne yer bıraksın diye küçülür.
-  const fit = Math.max(0.6, Math.min(1, (h - top - 64 - 150 - 180) / 290));
+  const fit = Math.max(0.55, Math.min(1, (h - top - 64 - 150 - (p.pose ? 210 : 180)) / 290));
 
   return (
     <View style={{ height: h, paddingTop: top + 64, paddingBottom: 150, paddingHorizontal: 28 }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
@@ -208,7 +238,11 @@ function PageView({ p, i, h, y, t, top, c }: { p: Page; i: number; h: number; y:
       <Animated.View style={{ opacity: textOpacity, transform: [{ translateY: textY }], maxWidth: 440, alignSelf: 'center', width: '100%' }}>
         <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase('tr-TR')}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
-        <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
+        {p.pose ? (
+          <MokaMascot pose={p.pose} message={p.text} size="sm" style={{ marginTop: 12 }} />
+        ) : (
+          <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
+        )}
       </Animated.View>
     </View>
   );

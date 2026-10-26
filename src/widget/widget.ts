@@ -79,7 +79,7 @@ async function complete(tid: string): Promise<{ S: AppState | null; note: string
   const o = applyTaskAction(S, tid, DONE, now, mult);
   if (o && !o.already) {
     await saveState(S);
-    if (getNotifications()) await rescheduleMorningSummaries(S, premium).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
+    if (getNotifications()) await rescheduleMorningSummaries(S, premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
   }
   return { S, note: o ? (feedbackFor(o)?.body ?? null) : null };
 }
@@ -98,7 +98,7 @@ if (lib) {
       if (!S) return;
       renderWidget(lib.UI.todayWidget(widgetData(S), widgetInfo.height, note));
     } catch (e) {
-      console.warn('Layfapp: widget çizilemedi', e);
+      console.warn('Homezy: widget çizilemedi', e);
     }
   });
 }

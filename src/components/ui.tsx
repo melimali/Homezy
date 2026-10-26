@@ -76,8 +76,8 @@ export function AppHeader() {
   const n = state.setup ? notifs(state, now).length : 0;
   return (
     <View style={styles.header}>
-      <View style={[styles.brandPill, { backgroundColor: brand.navy }]}>
-        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+      <View style={[styles.brandPill, { backgroundColor: brand.mint }]}>
+        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>

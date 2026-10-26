@@ -43,7 +43,7 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Rutinler',
     title: 'Ne zaman ne yapılacak, sen düşünme',
-    text: 'Her iş kendi aralığıyla tekrar eder. "Tamamladım"a bas, puanı kap ve Layfapp saymaya yeniden başlasın.',
+    text: 'Her iş kendi aralığıyla tekrar eder. "Tamamladım"a bas, puanı kap ve Homezy saymaya yeniden başlasın.',
     Art: RoutineArt,
     blob: c => c.todaySoft,
   },
@@ -140,8 +140,8 @@ export default function Tanitim() {
 
       {/* Üst: logo ve "Atla" */}
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
-        <View style={[st.logoPill, { backgroundColor: brand.navy }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+        <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+          <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
         </View>
         {!last && (
           <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={10} style={({ pressed }) => [st.skip, pressed && { opacity: 0.6 }]}>

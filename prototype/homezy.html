@@ -1,4 +1,4 @@
-<title>Layfapp</title>
+<title>Homezy</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -532,7 +532,7 @@ function miniShape(id){
 }
 
 /* ---------- views ---------- */
-const header = () => `<header class="top"><div class="logo"><span class="brandpill"><span class="wordmark" role="img" aria-label="Layfapp"></span></span></div><span class="datechip">${fmtShort(Date.now())}</span></header>`;
+const header = () => `<header class="top"><div class="logo"><span class="brandpill"><span class="wordmark" role="img" aria-label="Homezy"></span></span></div><span class="datechip">${fmtShort(Date.now())}</span></header>`;
 
 function toolText(){
   if (tool === 'erase') return 'Silgi açık. Boşaltmak istediğin bloklara dokun.';
@@ -704,7 +704,7 @@ function vToday(){
 function vNotif(){
   const ns = notifs(); const s = S.settings;
   const tog = (id, key, label, sub) => `<label class="setrow" for="${id}"><span>${label}<small>${sub}</small></span><input type="checkbox" class="tg" id="${id}" data-set="${key}" ${s[key] ? 'checked' : ''}></label>`;
-  return `<section><h1 class="h1">Bildirimler</h1><p class="lead">Layfapp her sabah <span class="mono">${esc(s.time)}</span>'da bunları telefonuna bildirim olarak gönderir.</p></section>
+  return `<section><h1 class="h1">Bildirimler</h1><p class="lead">Homezy her sabah <span class="mono">${esc(s.time)}</span>'da bunları telefonuna bildirim olarak gönderir.</p></section>
   <div class="nlist">${ns.map(n => `<button class="notif ${n.k}" data-act="open" data-id="${n.rid}"><span class="n-dot"></span><span><span class="n-title">${esc(n.title)}</span><span class="n-text">${esc(n.text)}</span></span></button>`).join('') || '<section class="card"><p class="empty-msg">Bildirim yok. Evde her şey yolunda.</p></section>'}</div>
   <section class="card"><h2 class="h2">Bildirim ayarları</h2><div>
     <label class="setrow" for="set-time"><span>Günlük özet saati<small>Sabah özeti bu saatte gelir</small></span><input type="time" id="set-time" value="${esc(s.time)}"></label>
@@ -746,7 +746,7 @@ function toast(msg){
 function showPush(){
   const n = notifs()[0]; if (!n) return;
   const p = document.getElementById('push');
-  p.innerHTML = `<span class="appicon" aria-hidden="true"></span><span class="p-app">layfapp · şimdi</span><span class="p-t">${esc(n.title)}</span><span class="p-x">${esc(n.text)}</span>`;
+  p.innerHTML = `<span class="appicon" aria-hidden="true"></span><span class="p-app">homezy · şimdi</span><span class="p-t">${esc(n.title)}</span><span class="p-x">${esc(n.text)}</span>`;
   p.dataset.id = n.rid; p.classList.add('show');
   setTimeout(() => p.classList.remove('show'), 6000);
 }
@@ -972,7 +972,7 @@ function paywallHTML(){
   const x = PREMIUM.plans[pwPlan];
   const why = pending ? `Bu haftaki ${PREMIUM.weekly} ücretsiz taramanı kullandın. Pazartesi yenilenir. ${pending.kind === 'look' ? 'Kıyafet fotoğrafını' : 'Buzdolabı fotoğrafını'} taramak için Premium gerekiyor.` : '';
   return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pw-h">
-    <div><span class="mono small" style="color:var(--warm)">LAYFAPP PREMIUM</span><h2 class="h1" id="pw-h">Fotoğrafı çek, gerisini ben yapayım</h2>${why ? `<p class="lead">${why}</p>` : ''}</div>
+    <div><span class="mono small" style="color:var(--warm)">HOMEZY PREMIUM</span><h2 class="h1" id="pw-h">Fotoğrafı çek, gerisini ben yapayım</h2>${why ? `<p class="lead">${why}</p>` : ''}</div>
     <ul class="perks">
       <li><span>Her gün 2 tarama<small>Buzdolabı ya da kıyafet, istediğin gibi kullan</small></span></li>
       <li><span>Buzdolabı ve kıyafet taraması<small>Ne kadar kaldığını listeye, parçaları gardıroba işler</small></span></li>

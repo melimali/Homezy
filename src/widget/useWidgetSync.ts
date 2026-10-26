@@ -18,7 +18,7 @@ export function useWidgetSync() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      refreshWidgets(state).catch(e => console.warn('Layfapp: widget yenilenemedi', e));
+      refreshWidgets(state).catch(e => console.warn('Homezy: widget yenilenemedi', e));
     }, 800);
     return () => clearTimeout(t);
   }, [state, day]);

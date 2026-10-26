@@ -1,4 +1,4 @@
-# Layfapp
+# Homezy
 
 Gündelik ev işlerini tek uygulamada toplayan mobil uygulama. Hedef: App Store ve Google Play'de yayınlamak.
 Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
@@ -18,7 +18,7 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - **Bildirimler:** Günlük sabah özeti, saati kullanıcı seçer. Türler: rutin hatırlatmaları, eksik ürünler, çamaşır ve dolap, faturalar ve bakım, son kullanma tarihleri, haftalık özet (pazar 19:00), seri ve spor hatırlatmaları. Her tür ayrı ayrı açılıp kapatılabilir.
 - **Evin düzeni:** Plandan sonra 7 kurulum sorusu (evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, bitki; cevaba göre etiketli rutinler eklenir / kalkar). Canlı ev haritası (oda temizlik yüzdesi, ev puanı). Ertele / bu sefer atla. Esnek zamanlama (sıklığın yarısı kadar gün tolerans). Her rutinde tahmini süre; "Ne kadar vaktin var?" (10/20/30/60 dk). Modlar: misafir, tatil (rutinler donar), yoğun/hasta (sadece günlük işler), bayram temizliği. Ev bakımı ekranı: bakım işleri, faturalar, garanti belgeleri, mevsimlik işler. Gardırop: yıkama türüne göre çamaşır planı, mevsim değişimi, bağış önerisi. Buzdolabı: son kullanma tarihi. "Yakında" kartı: akıllı buzdolabı (Premium), ana ekran widget'ı (ücretsiz).
 
-Çalışan HTML prototipi: `prototype/layfapp.html`. Bütün akış, varsayılan rutinler (`TYPES`) ve bildirim kuralları (`notifs()`) orada. Gerçek uygulamaya taşırken referans olarak kullan.
+Çalışan HTML prototipi: `prototype/homezy.html`. Bütün akış, varsayılan rutinler (`TYPES`) ve bildirim kuralları (`notifs()`) orada. Gerçek uygulamaya taşırken referans olarak kullan.
 
 ## Teknik kararlar
 
@@ -43,7 +43,7 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - Sabah özeti: `src/notifications/schedule.ts` önümüzdeki 7 sabahı o günün tarihine göre hesaplayıp tek seferlik bildirim olarak zamanlar; veri değiştikçe yeniden zamanlanır.
 - Renkler `src/theme/index.ts`'te açık ve koyu tema için. Bileşenlerde renk kodu yazma, `useColors()` kullan.
 - Değişiklikten sonra: `npm run typecheck` ve `npm run lint`.
-- Paket kimliği `com.meikaidigital.layfapp`; mağazaya ilk yüklemeden sonra değiştirilemez.
+- Paket kimliği `com.meikai.homezy` (iOS ve Android); mağazaya ilk yüklemeden sonra değiştirilemez.
 
 ## Yayın sırası
 
@@ -75,9 +75,7 @@ Logodaki tarz: tombul, yuvarlak hatlı, hafif kabarık, yumuşak gölgeli.
 - **Her zaman "Cozy" tema** (Melih, 2026-10-25): krem kartlar, sıcak kil tonları, yumuşak hareket. Hareketler `src/components/motion.tsx`'te (`Appear` yaylanarak beliriş, `Squish` basınca esneme, `Float` süzülen emoji, `Burst` iş bitince yıldız saçılması); ek animasyon paketi yok, "hareketi azalt" açıksa döngüler durur. Yazı okutmak yerine resim: iş, ürün ve kıyafet emojileri `src/domain/icons.ts`. Odalar sekmesi gruplu kareler (Seni bekleyenler / Keyfi yerinde); oda ekranı sekmeli (İşler, Dolap, Kombin, Buzdolabı, Eksikler, Tarif, Malzeme, Bitkiler), işler kare kare: dokun = tamamla, basılı tut = ayarlar.
 - Formlar: butonlar hap şeklinde ve kabarık, kartların köşeleri büyük ve yuvarlak (yaklaşık 22px), ev planında odaların dış köşeleri yuvarlatılmış.
 
-Logolar `assets/` klasöründe: kare logo ve yatay logo.
+Logolar `assets/` klasöründe: `logo-kare.png` (Moka koltukta, lacivert zemin, saydam kenar; açılış ve splash), `logo-yatay.png` (Homezy yazısı), `icon.png` (1024×1024, saydamlıksız mağaza ikonu), `adaptive-icon.png` (Android ön katman, zemin `#0A1A34`), `favicon.png`. Hepsi `scripts/make-icons.py` ile iki kaynak görselden üretilir.
 
 Logo notları:
-- Yatay logodaki "layf" harfleri mint renginde olduğu için açık zeminde kayboluyor. Prototipte açık temada logo lacivert bir zeminin içinde duruyor.
-- "p" harfinin içindeki evin pencereleri lacivert olduğu için lacivert zeminde görünmüyor.
-- Mağaza ikonu: Apple 1024×1024, saydamlık içermeyen kare bir ikon istiyor. Telefon ekranında küçük boyutta yazı okunmayabileceği için sadeleştirilmiş bir ikon düşünülüyor.
+- Yatay logodaki yazı lacivert, bu yüzden açık (mint) bir hap zeminin içinde durur; lacivert zeminde kaybolur.

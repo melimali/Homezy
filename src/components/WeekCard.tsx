@@ -22,8 +22,8 @@ export function WeekCard({ state: S, now, theme, ref }: { state: AppState; now: 
   return (
     <View ref={ref} collapsable={false} style={[styles.card, { backgroundColor: c.bg, borderColor: c.line }]}>
       <View style={styles.head}>
-        <View style={[styles.logo, { backgroundColor: brand.navy }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+        <View style={[styles.logo, { backgroundColor: brand.mint }]}>
+          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
         </View>
         <Text style={[styles.eyebrow, { color: c.warm }]}>Son 7 gün</Text>
       </View>

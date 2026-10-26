@@ -22,7 +22,7 @@ export function getAds(): AdsModule | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     mod = require('react-native-google-mobile-ads') as AdsModule;
   } catch (e) {
-    console.warn('Layfapp: reklam modülü yüklenemedi, reklamsız devam', e);
+    console.warn('Homezy: reklam modülü yüklenemedi, reklamsız devam', e);
     mod = null;
   }
   return mod;
@@ -51,7 +51,7 @@ export function startAds(): Promise<boolean> {
       await ads.default().initialize();
       return true;
     } catch (e) {
-      console.warn('Layfapp: reklamlar başlatılamadı', e);
+      console.warn('Homezy: reklamlar başlatılamadı', e);
       return false;
     }
   })();

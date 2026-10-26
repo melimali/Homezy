@@ -13,7 +13,7 @@ export const DONE_ACTION = 'YAPTIM';
 type WColors = { [K in keyof Colors]: Colors[K] extends string ? ColorProp : Colors[K] };
 const asWidget = (c: Colors) => c as unknown as WColors;
 
-const OPEN = { clickAction: 'OPEN_URI', clickActionData: { uri: 'layfapp://bugun' } } as const;
+const OPEN = { clickAction: 'OPEN_URI', clickActionData: { uri: 'homezy://bugun' } } as const;
 
 type Props = {
   data: WidgetData;
@@ -38,7 +38,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
   return (
     <FlexWidget
       {...OPEN}
-      accessibilityLabel="Layfapp, bugünün işleri"
+      accessibilityLabel="Homezy, bugünün işleri"
       style={{
         height: 'match_parent',
         width: 'match_parent',

@@ -200,7 +200,7 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 ## Yapılacaklar sırası
 
 1. Apple Small Business Program başvurusu, Paid Apps sözleşmesi, iki mağazada banka ve vergi bilgisi.
-2. Abonelik ürünleri, ülkeye göre fiyat: Play Console'da tek abonelik `layfapp_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $); App Store Connect'te tek grupta `layfapp_premium_aylik` ve `layfapp_premium_yillik`. Aylık plana ilk ay 4,99 $ giriş teklifi. Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md).
+2. Abonelik ürünleri, ülkeye göre fiyat: Play Console'da tek abonelik `homezy_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $); App Store Connect'te tek grupta `homezy_premium_aylik` ve `homezy_premium_yillik`. Aylık plana ilk ay 4,99 $ giriş teklifi. Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md).
 3. RevenueCat projesi, `premium` yetkisi, iki ürün, bir "offering".
 4. Supabase projesi: anonim oturum, `scan_usage` tablosu ve hak ayırma / geri verme fonksiyonları, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
 5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.

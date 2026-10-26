@@ -203,5 +203,5 @@ export function eveningNudge(o: { streak: number; idle: number; away: number | n
 /** Haftalık özet kartı paylaşılırken (ya da görsel paylaşılamazsa) giden metin. */
 export function weekShareText(o: { done: number; days: number; streak: number }) {
   const streak = o.streak > 1 ? ` 🔥 ${o.streak} günlük serim var.` : '';
-  return `Bu hafta Layfapp ile ${o.done} ev işi yaptım, ${o.days} gün evime vakit ayırdım 💪${streak} Evini topla, evin büyüsün 🏡`;
+  return `Bu hafta Homezy ile ${o.done} ev işi yaptım, ${o.days} gün evime vakit ayırdım 💪${streak} Evini topla, evin büyüsün 🏡`;
 }

@@ -130,7 +130,7 @@ export async function handleTaskAction(
     outcome = applyTaskAction(S, data.tid, action, now, mult);
     if (outcome) {
       await saveState(S);
-      await reschedule(S, data.premium).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
+      await reschedule(S, data.premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
     }
   }
 

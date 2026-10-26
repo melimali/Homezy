@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/logo-kare.png" alt="Layfapp logosu" width="160">
+  <img src="assets/logo-kare.png" alt="Homezy logosu" width="160">
 </p>
 
-# Layfapp
+# Homezy
 
 Evin bütün gündelik işleri tek uygulamada.
 
-Layfapp, evini bloklarla çizdiğin ve her odanın kendi işlerini takip ettiğin bir mobil uygulama. Çarşafı en son ne zaman değiştirdin, buzdolabında ne bitti, hangi kıyafetler kirli, bitkiler ne zaman sulanacak: hepsini odasında görürsün. Zamanı gelen işler için de telefonuna bildirim gelir.
+Homezy, evini bloklarla çizdiğin ve her odanın kendi işlerini takip ettiğin bir mobil uygulama. Çarşafı en son ne zaman değiştirdin, buzdolabında ne bitti, hangi kıyafetler kirli, bitkiler ne zaman sulanacak: hepsini odasında görürsün. Zamanı gelen işler için de telefonuna bildirim gelir.
 
 Hedef: App Store ve Google Play'de yayınlamak.
 
@@ -186,7 +186,7 @@ Bir oda eklendiğinde aşağıdaki rutinler otomatik gelir. Kullanıcı hepsini 
 ## Görsel kimlik
 
 <p align="center">
-  <img src="assets/logo-yatay.png" alt="Layfapp yatay logo" width="420">
+  <img src="assets/logo-yatay.png" alt="Homezy yatay logo" width="420">
 </p>
 
 Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölgeli.
@@ -242,15 +242,13 @@ Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölge
 **Açık kararlar:**
 - Yapay zekâ modeli: Haiku 5.5 (maliyet için). Kapalı testte Sonnet 5.5 ile karşılaştır; gerekirse `SCAN_MODEL` gizli değişkeniyle değiştir ([docs/premium.md](docs/premium.md)).
 - Geliştirici hesapları bireysel mi olacak, Meikai Digital adına mı?
-- Mağaza ikonu için logonun sadeleştirilmiş bir versiyonu.
-- Yatay logonun açık zemin versiyonu ("layf" harfleri açık zeminde kayboluyor).
 
 ---
 
 ## Repo yapısı
 
 ```
-layfapp/
+homezy/
 ├── README.md              Bu dosya
 ├── CLAUDE.md              Claude Code için proje notları ve alınan kararlar
 ├── AGENTS.md              Expo'nun yapay zekâ ajanları için notları
@@ -259,7 +257,7 @@ layfapp/
 │   ├── hesap.md           Hesap, Supabase ve RevenueCat kurulumu
 │   └── premium.md         Premium üyelik, mağaza kuralları ve yapay zekâ maliyeti
 ├── prototype/
-│   └── layfapp.html       Çalışan HTML prototipi
+│   └── homezy.html       Çalışan HTML prototipi
 ├── assets/
 │   ├── logo-kare.png      Kare logo (şimdilik uygulama ikonu ve açılış ekranı)
 │   └── logo-yatay.png     Yatay logo
@@ -295,13 +293,13 @@ Terminalde çıkan QR kodu telefonda Expo Go ile (iPhone'da kamerayla) okut, uyg
 - Paket eklerken `npm install` yerine `npx expo install <paket>` kullan; Expo sürümüne uygun sürümü seçer.
 
 Nasıl çalışıyor:
-- **Veri:** Bütün veriler telefondaki `layfapp.db` SQLite dosyasında (odalar, plan hücreleri, rutinler, kıyafetler, stok). Buzdolabı fotoğrafı uygulamanın kendi klasörüne kopyalanır, veritabanında yalnızca yolu tutulur.
+- **Veri:** Bütün veriler telefondaki `homezy.db` SQLite dosyasında (odalar, plan hücreleri, rutinler, kıyafetler, stok). Buzdolabı fotoğrafı uygulamanın kendi klasörüne kopyalanır, veritabanında yalnızca yolu tutulur.
 - **Bildirimler:** Sunucu yok. Uygulama her açıldığında ve veri değiştiğinde önümüzdeki 7 sabahın özetini o güne göre hesaplayıp telefona zamanlar. Bildirime dokununca ilgili oda ya da Bugün sekmesi açılır.
 
 ---
 
 ## Prototipi açmak
 
-`prototype/layfapp.html` tek bir dosya, kurulum gerektirmiyor. Bilgisayarda çift tıklayıp tarayıcıda açabilirsin. Telefon görünümü için tarayıcının geliştirici araçlarındaki mobil görünümü kullan.
+`prototype/homezy.html` tek bir dosya, kurulum gerektirmiyor. Bilgisayarda çift tıklayıp tarayıcıda açabilirsin. Telefon görünümü için tarayıcının geliştirici araçlarındaki mobil görünümü kullan.
 
-Prototip verileri tarayıcıda `layfapp.v1` anahtarıyla saklıyor. Varsayılan verilerde değişiklik yaptıysan ve uygulamayı sıfırdan görmek istiyorsan bu anahtarı değiştir ya da tarayıcının site verisini temizle.
+Prototip verileri tarayıcıda `homezy.v1` anahtarıyla saklıyor. Varsayılan verilerde değişiklik yaptıysan ve uygulamayı sıfırdan görmek istiyorsan bu anahtarı değiştir ya da tarayıcının site verisini temizle.

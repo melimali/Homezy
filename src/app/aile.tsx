@@ -41,7 +41,7 @@ export default function Aile() {
   };
 
   const shareCode = async (k: string) => {
-    const msg = `Layfapp'te evimizi paylaşalım 🏡 Hesabım > Aile paylaşımı'na gir ve bu kodu yaz: ${k}`;
+    const msg = `Homezy'de evimizi paylaşalım 🏡 Hesabım > Aile paylaşımı'na gir ve bu kodu yaz: ${k}`;
     try {
       await Share.share({ message: msg });
     } catch {
@@ -87,7 +87,7 @@ export default function Aile() {
             <Card>
               <SecHead title="Davet kodu" />
               <Text style={[styles.code, { color: c.ink, backgroundColor: c.surface2 }]} selectable>{info.code}</Text>
-              <T v="small">Bu kodu evdekilere gönder. Layfapp{"'"}te Hesabım {'>'} Aile paylaşımı{"'"}ndan katılsınlar.</T>
+              <T v="small">Bu kodu evdekilere gönder. Homezy{"'"}de Hesabım {'>'} Aile paylaşımı{"'"}ndan katılsınlar.</T>
               <Btn kind="primary" label="Kodu gönder" onPress={() => shareCode(info.code!)} />
             </Card>
           )}

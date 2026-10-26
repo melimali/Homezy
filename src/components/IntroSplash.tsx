@@ -8,7 +8,7 @@ import { fonts, useColors } from '@/theme';
 /**
  * Açılış animasyonu, iki bölüm:
  * 1. Meikai Digital introsu: themeikai.com'daki CSS introsunun aynısı (süreler ve eğriler oradan).
- * 2. Zıplayan Layfapp logosu.
+ * 2. Zıplayan Homezy logosu.
  * Her soğuk açılışta bir kez oynar (~3,3 sn), ekrana dokununca atlanır. Hareket azaltma açıksa
  * sitede olduğu gibi hiç oynamaz. Android'de takılmasın diye sadece opacity ve transform
  * canlandırılıyor (useNativeDriver); sitedeki blur efektleri bu yüzden yok.
@@ -61,9 +61,9 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(900, v.shine, 900, Easing.inOut(Easing.quad)),
       at(1100, v.line, 800, expo),
       at(1300, v.sub, 800, Easing.out(Easing.quad)),
-      // Sitede 0,9 sn süren çıkış burada Layfapp'e geçiş olarak kısaldı.
+      // Sitede 0,9 sn süren çıkış burada Homezy'ye geçiş olarak kısaldı.
       at(2100, v.meikai, 500, exitEase, 0),
-      // 2. Layfapp logosu
+      // 2. Homezy logosu
       Animated.sequence([
         Animated.delay(2300),
         Animated.spring(v.logo, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true }),
@@ -95,7 +95,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.bg, opacity: v.all }]}>
       <StatusBar style={dark ? 'light' : 'auto'} />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
-        {/* 2. Layfapp logosu (altta, Meikai katmanı kaybolunca görünür) */}
+        {/* 2. Homezy logosu (altta, Meikai katmanı kaybolunca görünür) */}
         <View style={st.center} pointerEvents="none">
           <Animated.View
             style={{

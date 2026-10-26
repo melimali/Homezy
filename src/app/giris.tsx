@@ -102,8 +102,8 @@ export default function Giris() {
         contentContainerStyle={[st.wrap, { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 }]}
       >
         <View style={st.head}>
-          <View style={[st.logoPill, { backgroundColor: brand.navy }]}>
-            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
           </View>
           {fromApp && <XBtn label="Kapat" onPress={() => (router.canGoBack() ? router.back() : router.replace(state.setup ? '/' : '/kurulum'))} />}
         </View>

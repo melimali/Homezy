@@ -77,7 +77,7 @@ function DeleteHome() {
       ...emptyState(), cols: S.cols, rows: S.rows, cells: Array(S.cols * S.rows).fill(null), settings: S.settings, play: { ...S.play, placed: {} },
       homeId: S.homeId, homeName: S.homeName, others: S.others,
     };
-    deleteHome(status === 'account' ? user?.id : undefined, fresh).catch(e => console.warn('Layfapp: buluttaki ev silinemedi', e));
+    deleteHome(status === 'account' ? user?.id : undefined, fresh).catch(e => console.warn('Homezy: buluttaki ev silinemedi', e));
     rescheduleMorningSummaries(fresh).catch(() => {});
     replace(fresh);
     // Ekranlar yeni duruma göre açılıp kapandıktan sonra kurulum ekranına geç.

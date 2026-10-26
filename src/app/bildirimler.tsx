@@ -59,7 +59,7 @@ export default function Bildirimler() {
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
-          Layfapp her sabah <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{"'"}da bunları telefonuna bildirim olarak gönderir.
+          Homezy her sabah <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{"'"}da bunları telefonuna bildirim olarak gönderir.
         </T>
       </View>
 
@@ -68,7 +68,7 @@ export default function Bildirimler() {
           <T v="bold">Bildirimler kapalı</T>
           <T style={{ fontSize: 14 }}>
             {perm === 'denied'
-              ? 'Sabah özetini alabilmek için telefonun ayarlarından Layfapp bildirimlerini aç.'
+              ? 'Sabah özetini alabilmek için telefonun ayarlarından Homezy bildirimlerini aç.'
               : 'Sabah özetini alabilmek için bildirim izni ver.'}
           </T>
           <Btn label={perm === 'denied' ? 'Ayarları aç' : 'İzin ver'} kind="primary" onPress={askPermission} />

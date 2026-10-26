@@ -4,7 +4,7 @@ Karakter sınırları parantez içinde. Hepsi Türkçe; ilk yayında sadece Tür
 
 ## Uygulama adı (30)
 
-Layfapp: Ev İşleri ve Rutinler
+Homezy: Ev İşleri ve Rutinler
 
 ## Kısa açıklama — Google Play (80)
 
@@ -20,7 +20,7 @@ ev işleri,temizlik,rutin,ev düzeni,alışveriş listesi,çamaşır,buzdolabı,
 
 ## Uzun açıklama (4000)
 
-Ev işleri bitmez, ama her gün biraz yapınca hiç birikmez. Layfapp evinin bütün işlerini tek bir yerde toplar ve sana sadece bugün ne yapman gerektiğini söyler.
+Ev işleri bitmez, ama her gün biraz yapınca hiç birikmez. Homezy evinin bütün işlerini tek bir yerde toplar ve sana sadece bugün ne yapman gerektiğini söyler.
 
 🏡 EVİNİ ÇİZ
 Evini bloklarla birkaç saniyede çiz: yatak odası, mutfak, banyo, salon, balkon... Her odaya göre rutinler kendiliğinden gelir. Evcil hayvanın, kombin ya da bulaşık makinen varsa birkaç kısa soruyla rutinlerin evine göre ayarlanır.
@@ -50,7 +50,7 @@ Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart
 
 ## Premium açıklaması (abonelik ekranı için, App Store inceleme notu)
 
-Layfapp Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 50 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/layfapp/gizlilik · Kullanım koşulları: https://themeikai.com/layfapp/kosullar
+Homezy Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 50 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/homezy/gizlilik · Kullanım koşulları: https://themeikai.com/homezy/kosullar
 
 ## İnceleme ekibine not
 

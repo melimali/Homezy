@@ -36,13 +36,13 @@ export function WelcomeBack() {
       <View style={[styles.bg, { backgroundColor: c.shadow }]}>
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <Text style={{ fontSize: 52, textAlign: 'center' }}>{hp.today ? '🔨🏡' : '🤗'}</Text>
-          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Onarım başladı!' : 'Hayattasın, hoş geldin!'}</T>
+          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
-              ? 'Harika bir dönüş 💛 Sığınak her gün bir parça daha onarılacak. Yarın da minik bir görevle devam edelim.'
+              ? 'Harika bir dönüş 💛 Evin her gün bir parça daha yenilenecek. Yarın da minik bir işle devam edelim.'
               : hurt
-                ? `${away} gündür telsizden ses yoktu, barikatlar biraz yıprandı. Dert etme, ceza yok: kaldığın yerden devam ediyoruz.`
-                : `${away} gündür yoktun, sığınak seni bekliyordu. Kaldığın yerden devam edelim.`}
+                ? `${away} gündür yoktun, evin biraz yıprandı. Dert etme, ceza yok: kaldığın yerden devam ediyoruz.`
+                : `${away} gündür yoktun, evin seni bekliyordu. Kaldığın yerden devam edelim.`}
           </T>
           {!hp.today && pick && (
             <View style={{ alignSelf: 'stretch', gap: 6 }}>
@@ -50,7 +50,7 @@ export function WelcomeBack() {
               <TaskRow t={pick.t} rid={pick.rid} list={pick.list} showRoom first />
             </View>
           )}
-          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Hayatta kalıyoruz!' : 'Sonra'} onPress={close} block />
+          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Yaşasın!' : 'Sonra'} onPress={close} block />
         </View>
       </View>
     </Modal>

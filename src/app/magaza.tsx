@@ -28,9 +28,9 @@ export default function Magaza() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="eyebrow">Karaborsa</T>
-        <T v="h1">Sığınağına teçhizat al 🛍️</T>
-        <T v="lead">Puanlarını her gün görev yaparak kazanırsın: bir görev +{POINTS.gorev}, antrenman +{POINTS.spor}, seyir defteri +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
+        <T v="eyebrow">Mağaza</T>
+        <T v="h1">Evine eşya al 🛍️</T>
+        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
         <T v="small" style={{ marginTop: 4 }}>
           {premium.active
             ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString('tr-TR')} kat geliyor, 👑 eşyalar senin için açık.`

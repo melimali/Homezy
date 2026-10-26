@@ -2,50 +2,42 @@ import { useColorScheme } from 'react-native';
 
 import type { RoomType } from '@/domain/types';
 
-/** Safehouse: Daily Ops paleti (sığınak / karantina teması). */
-export const safehouse = {
-  gray: '#1E2022', // koyu gri: zemin, alt menü
-  quarantine: '#F3B553', // Karantina Sarısı: vurgu, rozet, ana buton
-  rust: '#D9534F', // Pas / Uyarı Kırmızısı: gecikmiş görevler
-  radio: '#5CB85C', // Telsiz Yeşili: yolunda giden görevler
-  bone: '#ECE7DC', // kemik beyazı: koyu zeminde yazı
-};
-
-/** Eski anahtarlar korunuyor; değerler Safehouse paletine çekildi. */
+/** Marka paleti (CLAUDE.md, "Görsel kimlik"). */
 export const brand = {
-  navy: safehouse.gray,
-  mint: safehouse.bone,
-  blue: safehouse.radio,
-  clay: safehouse.quarantine,
-  cocoa: '#A8875A',
+  navy: '#283044',
+  mint: '#EBF5EE',
+  blue: '#78A1BB',
+  clay: '#BFA89E',
+  cocoa: '#8B786D',
 };
 
 const light = {
-  bg: '#E7E3D8', surface: '#F4F1EA', surface2: '#DCD7CA', ink: '#1E2022', muted: '#5C5F63', line: '#C9C3B4',
-  wall: '#1E2022', hatch: 'rgba(30,32,34,0.12)', shadow: 'rgba(30,32,34,0.18)', lift: 'rgba(30,32,34,0.12)',
-  accent: '#1E2022', onAccent: '#F3B553', accentSoft: '#E9DCC0', hi: '#F3B553', warm: '#A8875A',
-  onBadge: '#1E2022',
-  late: '#D9534F', lateSoft: '#F2D4D2', today: '#B7862F', todaySoft: '#F1E2C4', ok: '#3F8F3F', okSoft: '#D5EBD3',
-  /** Parlayan vurgu (kutlama, seçili sekme): karantina sarısı. */
-  glow: '#F7DDA8', glowInk: '#7A5410',
+  // Cozy: kartlar soğuk beyaz değil krem, ikinci zemin kil tonunda sıcak.
+  bg: '#EBF5EE', surface: '#FFFCF6', surface2: '#F2EBE3', ink: '#283044', muted: '#5F6878', line: '#DCD3C8',
+  wall: '#283044', hatch: 'rgba(40,48,68,0.12)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.10)',
+  accent: '#283044', onAccent: '#EBF5EE', accentSoft: '#D6E4EC', hi: '#78A1BB', warm: '#8B786D',
+  onBadge: '#FFFFFF',
+  late: '#B8584C', lateSoft: '#F3DCD6', today: '#7E6658', todaySoft: '#EADFD8', ok: '#4E7D98', okSoft: '#D6E4EC',
+  /** Yumuşak, parlayan vurgu (kutlama, seçili sekme). */
+  glow: '#F6E3C8', glowInk: '#8B5E3C',
   room: {
-    yatak: '#CFD3CC', mutfak: '#E2D3B4', banyo: '#C8D6CF', salon: '#D6CFC4', calisma: '#C4C9CF',
-    cocuk: '#E0CDBE', balkon: '#C9D8C2', antre: '#D9D6CE', camasir: '#C7CED6',
+    yatak: '#CBDCE8', mutfak: '#E9DAD2', banyo: '#D3EADD', salon: '#DDD3CD', calisma: '#BCD0DD',
+    cocuk: '#EED6CC', balkon: '#CDE4D3', antre: '#E0E3DE', camasir: '#C9D5E2',
   } as Record<RoomType, string>,
 };
 
 export type Colors = typeof light;
 
 const dark: Colors = {
-  bg: '#1E2022', surface: '#2A2D30', surface2: '#34383C', ink: '#ECE7DC', muted: '#9EA2A6', line: '#3E4246',
-  wall: '#ECE7DC', hatch: 'rgba(236,231,220,0.12)', shadow: 'rgba(0,0,0,0.5)', lift: 'rgba(0,0,0,0.4)',
-  accent: '#F3B553', onAccent: '#1E2022', accentSoft: '#4A3F2A', hi: '#F3B553', warm: '#F3B553',
-  onBadge: '#1E2022',
-  late: '#D9534F', lateSoft: '#4A2C2B', today: '#F3B553', todaySoft: '#4A3F2A', ok: '#5CB85C', okSoft: '#2C4A2C',
-  glow: '#4A3F2A', glowInk: '#F3B553',
+  bg: '#283044', surface: '#333A4F', surface2: '#40465C', ink: '#EBF5EE', muted: '#B3B8C4', line: '#4C5167',
+  wall: '#EBF5EE', hatch: 'rgba(235,245,238,0.14)', shadow: 'rgba(10,14,24,0.45)', lift: 'rgba(10,14,24,0.35)',
+  accent: '#78A1BB', onAccent: '#1C2232', accentSoft: '#3A5068', hi: '#78A1BB', warm: '#BFA89E',
+  onBadge: '#1C2232',
+  late: '#E58C7E', lateSoft: '#583A3C', today: '#D2BBAF', todaySoft: '#54484A', ok: '#9CC0D6', okSoft: '#36506A',
+  glow: '#5A4A3E', glowInk: '#F6D9B0',
   room: {
-    yatak: '#3A4046', mutfak: '#4A4232', banyo: '#33433D', salon: '#463F3A', calisma: '#363E47',
-    cocuk: '#4A3C36', balkon: '#34453A', antre: '#3B3D40', camasir: '#363C46',
+    yatak: '#3F5672', mutfak: '#5D4F4B', banyo: '#355349', salon: '#4F4655', calisma: '#365169',
+    cocuk: '#634E49', balkon: '#38533F', antre: '#434A5E', camasir: '#3C4C66',
   },
 };
 

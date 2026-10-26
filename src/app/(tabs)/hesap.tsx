@@ -50,8 +50,8 @@ export default function Hesap() {
     confirm(
       'Hesaptan çık',
       account
-        ? 'Sığınağın hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.'
-        : 'Misafir olduğun için sığınağın sadece bu telefonda. Çıkarsan sığınak ve görevlerin silinir, uygulama baştan başlar.',
+        ? 'Evin hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.'
+        : 'Misafir olduğun için evin sadece bu telefonda. Çıkarsan ev ve rutinlerin silinir, uygulama baştan başlar.',
       'Çık',
       async () => {
         setBusy('out');
@@ -69,7 +69,7 @@ export default function Hesap() {
   const doDelete = () =>
     confirm(
       'Hesabını sil',
-      'Hesabın, sığınağın ve üyelik kaydın kalıcı olarak silinir, uygulama baştan başlar. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
+      'Hesabın, evin ve üyelik kaydın kalıcı olarak silinir, uygulama baştan başlar. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
       'Hesabı sil',
       async () => {
         setBusy('delete');
@@ -110,12 +110,12 @@ export default function Hesap() {
       </Card>
 
       <Card style={{ gap: 4 }}>
-        <LinkRow label="📻  Acil Durum Telsiz Anonsları" onPress={() => router.push('/bildirimler')} />
-        <LinkRow label="🗺️  Sığınak planını düzenle" onPress={() => router.push('/plan')} />
-        <LinkRow label="🛡️  Sığınaklarım ve görünümü" onPress={() => router.push('/evler')} />
-        <LinkRow label="👨‍👩‍👧  Hayatta kalan ekibi (aile paylaşımı)" onPress={() => router.push('/aile')} />
-        <LinkRow label="🐾  Sığınağım hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
-        <LinkRow label="🔧  Sığınak bakımı ve kaynaklar" onPress={() => router.push('/bakim')} />
+        <LinkRow label="🔔  Bildirimler ve sesler" onPress={() => router.push('/bildirimler')} />
+        <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
+        <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
+        <LinkRow label="👨‍👩‍👧  Aile paylaşımı" onPress={() => router.push('/aile')} />
+        <LinkRow label="🐾  Evim hakkında (kurulum soruları)" onPress={() => router.push('/evim')} />
+        <LinkRow label="🔧  Ev bakımı ve faturalar" onPress={() => router.push('/bakim')} />
       </Card>
 
       <Card>

@@ -42,12 +42,12 @@ export default function Evler() {
   const go = (id: string) => {
     if (!premium.active && !free(id)) return router.push('/premium');
     update(D => switchHome(D, id));
-    toast('Sığınağa geçildi 🛡️');
+    toast('Eve geçildi 🏡');
     router.navigate('/');
   };
   const add = () => {
     if (!premium.active) return router.push('/premium');
-    if (!canAdd) return toast(`En fazla ${lim.homes} sığınak ekleyebilirsin.`);
+    if (!canAdd) return toast(`En fazla ${lim.homes} ev ekleyebilirsin.`);
     const n = name.trim() || `Ev ${homeCount(S) + 1}`;
     update(D => addHome(D, n));
     setName('');
@@ -66,13 +66,13 @@ export default function Evler() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="eyebrow">Sığınaklarım</T>
-        <T v="h1">Sığınakların ve görünüm 🛡️</T>
-        <T v="lead">Puanın, serin ve seyir defterin bütün sığınaklarında ortak. Anonslar açık olan sığınak için gelir.</T>
+        <T v="eyebrow">Evlerim</T>
+        <T v="h1">Evlerin ve görünüm 🏡</T>
+        <T v="lead">Puanın, serin ve günlüğün bütün evlerinde ortak. Bildirimler açık olan ev için gelir.</T>
       </View>
 
       <Card>
-        <SecHead title="Sığınaklarım" right={`${homes.length}/${lim.homes}`} />
+        <SecHead title="Evlerim" right={`${homes.length}/${lim.homes}`} />
         {homes.map((h, i) => (
           <View key={h.id} style={[styles.home, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
             <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
@@ -98,7 +98,7 @@ export default function Evler() {
                 {armed === h.id ? (
                   <Btn small kind="danger" label="Sil" onPress={() => { update(D => removeHome(D, h.id)); setArmed(null); toast(`${h.name} silindi.`); }} />
                 ) : (
-                  <XBtn label={`${h.name} sığınağını sil`} onPress={() => setArmed(h.id)} />
+                  <XBtn label={`${h.name} evini sil`} onPress={() => setArmed(h.id)} />
                 )}
               </>
             )}
@@ -108,7 +108,7 @@ export default function Evler() {
           canAdd ? (
             <View style={styles.row}>
               <Field value={name} onChangeText={setName} placeholder="Yeni ev, ör. Yazlık" maxLength={30} onSubmitEditing={add} returnKeyType="done" />
-              <Btn small kind="primary" label="Sığınak ekle" onPress={add} />
+              <Btn small kind="primary" label="Ev ekle" onPress={add} />
             </View>
           ) : (
             <T v="small">En fazla {lim.homes} ev ekleyebilirsin.</T>
@@ -116,14 +116,14 @@ export default function Evler() {
         ) : (
           <PremiumLock
             emoji="🏡"
-            title="Yedek sığınak, dağ evi, bunker…"
-            text={`Ücretsiz planda ${LIMITS.free.homes} sığınak var. Premium ile ${LIMITS.premium.homes} sığınağa kadar ekleyip aralarında geçebilirsin.${S.others.length ? ' Eklediğin sığınaklar silinmedi, Premium dönünce geri gelir.' : ''}`}
+            title="Yazlığın, iş yerin, annenin evi…"
+            text={`Ücretsiz planda ${LIMITS.free.homes} ev var. Premium ile ${LIMITS.premium.homes} eve kadar ekleyip aralarında geçebilirsin.${S.others.length ? ' Eklediğin evler silinmedi, Premium dönünce geri gelir.' : ''}`}
           />
         )}
       </Card>
 
       <Card>
-        <SecHead title="Sığınağın görünümü" />
+        <SecHead title="Evin görünümü" />
         <View style={styles.themes}>
           {THEMES.map(t => {
             const locked = t.premium && !premium.active;

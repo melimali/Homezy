@@ -34,30 +34,30 @@ type Page = {
 
 const PAGES: Page[] = [
   {
-    eyebrow: 'Güvenli bölgeni çiz',
-    title: 'Sığınağın, bloklarla birkaç saniyede',
-    text: 'Sektör türünü seç, bloklara dokunup parmağını sürükle. Her blok yaklaşık 2 m².',
+    eyebrow: 'Evini çiz',
+    title: 'Evin, bloklarla birkaç saniyede',
+    text: 'Oda türünü seç, bloklara dokunup parmağını sürükle. Her blok yaklaşık 2 m².',
     Art: PlanArt,
     blob: c => c.accentSoft,
   },
   {
-    eyebrow: 'Tahkimat & Yaşam Destek Görevleri',
-    title: 'Hangi barikat ne zaman, sen düşünme',
-    text: 'Her tahkimat görevi kendi aralığıyla tekrar eder. "Tahkim Et / Onar"a bas, puanı kap ve sayaç yeniden başlasın.',
+    eyebrow: 'Rutinler',
+    title: 'Ne zaman ne yapılacak, sen düşünme',
+    text: 'Her iş kendi aralığıyla tekrar eder. "Tamamladım"a bas, puanı kap ve Layfapp saymaya yeniden başlasın.',
     Art: RoutineArt,
     blob: c => c.todaySoft,
   },
   {
-    eyebrow: 'Her sektörün kendi görevi',
-    title: 'Teçhizat, erzak, sera',
-    text: 'Kontamine teçhizatı, tükenen erzakı, sulanacak bitkiyi sektörü takip eder. Keşif / tedarik listesi kendiliğinden çıkar.',
+    eyebrow: 'Her odanın kendi işi',
+    title: 'Gardırop, buzdolabı, bitkiler',
+    text: 'Kirli çamaşırı, biten ürünü, sulanacak bitkiyi odası takip eder. Alışveriş listesi kendiliğinden çıkar.',
     Art: RoomsArt,
     blob: c => c.room.balkon,
   },
   {
-    eyebrow: 'Acil durum telsizi',
-    title: 'Her sabah tek bir telsiz anonsu',
-    text: 'Saatini sen seç. Geciken görevler, tükenen erzak ve kontamine teçhizat tek anonsta gelir.',
+    eyebrow: 'Sabah özeti',
+    title: 'Her sabah tek bir bildirim',
+    text: 'Saatini sen seç. Geciken işler, eksik ürünler ve çamaşır tek mesajda gelir.',
     Art: MorningArt,
     blob: c => c.room.salon,
   },
@@ -141,7 +141,7 @@ export default function Tanitim() {
       {/* Üst: logo ve "Atla" */}
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
         <View style={[st.logoPill, { backgroundColor: brand.navy }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Safehouse: Daily Ops" />
+          <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
         </View>
         {!last && (
           <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={10} style={({ pressed }) => [st.skip, pressed && { opacity: 0.6 }]}>

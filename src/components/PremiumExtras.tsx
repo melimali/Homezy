@@ -22,7 +22,7 @@ export function Recipes({ rid }: { rid: string }) {
   const [open, setOpen] = useState<string | null>(null);
   if (!premium.active)
     return (
-      <PremiumLock emoji="🍳" title="Bugün tayın ne?" text="Erzak deposunda olanlara göre tarif önereyim, eksik malzemeleri tedarik listene ekleyeyim." />
+      <PremiumLock emoji="🍳" title="Bugün ne pişirsem?" text="Buzdolabında olanlara göre tarif önereyim, eksik malzemeleri alışveriş listene ekleyeyim." />
     );
   const stock = state.mod[rid]?.stock ?? [];
   const list = suggestRecipes(stock);
@@ -42,7 +42,7 @@ export function Recipes({ rid }: { rid: string }) {
 
   return (
     <Card>
-      <SecHead title="Bugün tayın ne? 🍳" />
+      <SecHead title="Bugün ne pişirsem? 🍳" />
       {list.map(({ r, missing }, i) => (
         <View key={r.name} style={[styles.item, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
           <Pressable onPress={() => setOpen(open === r.name ? null : r.name)} accessibilityRole="button" style={styles.head}>

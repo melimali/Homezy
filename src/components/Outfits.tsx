@@ -51,7 +51,7 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
 
   return (
     <Card>
-      <SecHead title="Zırh kombini önerileri" right={SEASON_NAME[sea]} />
+      <SecHead title="Kombin önerileri" right={SEASON_NAME[sea]} />
       <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel="Nereye giyeceksin?">
         {OCCASIONS.map(k => <Chip key={k} on={k === occ} label={OCC[k].label} onPress={() => { setOcc(k); setPage(0); }} />)}
       </View>
@@ -61,12 +61,12 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
           <XBtn label="Seçimi kaldır" onPress={() => { onClear(); setPage(0); }} />
         </View>
       ) : (
-        <T v="tiny">Teçhizattaki bir parçanın adına dokun, o parçayla zırh kombini önereyim.</T>
+        <T v="tiny">Gardıroptaki bir parçanın adına dokun, o parçayla kombin önereyim.</T>
       )}
 
       {worn && (
         <View style={[styles.box, { backgroundColor: c.surface2 }]}>
-          <SecHead h="h3" title="Fotoğraftaki zırh" right={<Pill k={fitLabel(worn.score)[0]} label={fitLabel(worn.score)[1]} />} />
+          <SecHead h="h3" title="Fotoğraftaki kombin" right={<Pill k={fitLabel(worn.score)[0]} label={fitLabel(worn.score)[1]} />} />
           {!!look?.note && <T style={{ fontSize: 14 }}>{look.note}</T>}
           <Reasons why={[...worn.why.filter(x => x.d > 0).slice(0, 2), ...worn.why.filter(x => x.d < 0).slice(0, 2)]} />
           <T v="tiny">{OCC[worn.occ].label} bir gün için en uygun. Aşağıda bu parçaları dolabındaki başka parçalarla eşleştirdim.</T>
@@ -83,12 +83,12 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
       ) : (
         <EmptyMsg>
           {anchors.length
-            ? 'Bu parçayla hayatta kalan bir kombin bulamadım. Başka bir görev seç ya da teçhizata parça ekle.'
-            : 'Öneri için en az bir hazır üst, alt ve bot gerek. Çıplak keşfe çıkılmaz.'}
+            ? 'Bu parçayla iyi duran bir kombin bulamadım. Başka bir ortam seç ya da dolabına parça ekle.'
+            : 'Öneri için dolapta en az bir temiz üst, alt ve ayakkabı gerek.'}
         </EmptyMsg>
       )}
       {pages > 1 && <Btn small kind="ghost" label={`Başka öneriler ${(page % pages) + 1}/${pages}`} onPress={() => setPage(p => p + 1)} style={{ alignSelf: 'flex-start' }} />}
-      <T v="tiny">Sadece kontamine olmayan parçalardan öneririm. Renk uyumuna, açık-koyu kontrastına, kumaşların birbirine ve mevsime uyumuna bakarım.</T>
+      <T v="tiny">Sadece temiz parçalardan öneririm. Renk uyumuna, açık-koyu kontrastına, kumaşların birbirine ve mevsime uyumuna bakarım.</T>
     </Card>
   );
 }

@@ -111,7 +111,7 @@ export function FridgeScanPanel({ s, retry }: { s: ReturnType<typeof useFridgeSc
     <Review title="Fotoğrafta gördüklerim" count={`${scan.items.length} ürün`} note={scan.note} left={scan.left}>
       {scan.items.map((x, i) => (
         <Check key={'i' + i} on={x.on} onPress={() => toggle('items', i)} title={x.name}
-          sub={[x.qty, x.matchId ? 'ambarda var' : 'ambara eklenecek'].filter(Boolean).join(' · ')} pill={lvName(x.lvl)} pillK={x.lvl} />
+          sub={[x.qty, x.matchId ? 'listede var' : 'listeye eklenecek'].filter(Boolean).join(' · ')} pill={lvName(x.lvl)} pillK={x.lvl} />
       ))}
       {!scan.items.length && <T v="small">Fotoğrafta tanıyabildiğim bir ürün olmadı. Bu tarama hakkından düşmedi.</T>}
       {scan.missing.length > 0 && <T v="bold" style={{ fontSize: 14, marginTop: 4 }}>Göremediklerim</T>}
@@ -208,7 +208,7 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
     });
     if (ids.length) onLook({ ids, worn: scan.worn, note: scan.note });
     setScan(null);
-    toast(ids.length ? `${add ? `${add} yeni parça teçhizata eklendi. ` : ''}Zırh değerlendirmesi hazır, aşağıda.` : 'Hiçbir parça seçilmedi.');
+    toast(ids.length ? `${add ? `${add} yeni parça gardıroba eklendi. ` : ''}Kombin değerlendirmesi hazır, aşağıda.` : 'Hiçbir parça seçilmedi.');
   };
 
   const stop = () => {
@@ -228,7 +228,7 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
             {Platform.OS !== 'web' && <Btn small kind="primary" label="Fotoğraf çek" onPress={() => pick('camera')} />}
             <Btn small label="Galeriden seç" onPress={() => pick('library')} />
           </View>
-          <T v="tiny">{premium.active ? `Premium: her gün ${LIMITS.premium.scans} tarama.` : `Ücretsiz: haftada ${LIMITS.free.scans} tarama. Premium'da her gün ${LIMITS.premium.scans}.`} Erzak ve teçhizat aynı hakkı kullanır.</T>
+          <T v="tiny">{premium.active ? `Premium: her gün ${LIMITS.premium.scans} tarama.` : `Ücretsiz: haftada ${LIMITS.free.scans} tarama. Premium'da her gün ${LIMITS.premium.scans}.`} Buzdolabı ve kıyafet aynı hakkı kullanır.</T>
         </>
       )}
       {scan?.st === 'busy' && <Working text="Fotoğrafa bakıyorum. Her parçanın türünü, rengini ve kumaşını çıkarıyorum." onStop={stop} />}
@@ -237,13 +237,13 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
         <Review title="Fotoğrafta gördüklerim" count={`${scan.items.length} parça`} note={scan.note} left={scan.left}>
           {scan.items.map((x, i) => (
             <Check key={i} on={x.on} onPress={() => toggle(i)} title={x.name}
-              sub={`${attLine(x)}${x.pattern === 'desenli' ? ' · desenli' : ''}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'teçhizatta var' : 'teçhizata eklenecek'}`} />
+              sub={`${attLine(x)}${x.pattern === 'desenli' ? ' · desenli' : ''}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'dolabında var' : 'dolaba eklenecek'}`} />
           ))}
           {!scan.items.length && <T v="small">Fotoğrafta tanıyabildiğim bir kıyafet olmadı. Bu tarama hakkından düşmedi.</T>}
-          <T v="tiny">Tür, renk ve kumaş tahmini. İşaretli parçalar teçhizata eklenir (olanlar tekrar eklenmez) ve zırh kombini onlarla değerlendirilir.</T>
+          <T v="tiny">Tür, renk ve kumaş tahmini. İşaretli parçalar gardıroba eklenir (dolabında olanlar tekrar eklenmez) ve kombin onlarla değerlendirilir.</T>
           <View style={styles.row}>
             {scan.items.length > 0 && (
-              <Btn small kind="primary" label={scan.items.some(x => x.on && !x.matchId) ? 'Ekle ve değerlendir' : 'Zırhı değerlendir'} onPress={apply} />
+              <Btn small kind="primary" label={scan.items.some(x => x.on && !x.matchId) ? 'Ekle ve değerlendir' : 'Kombini değerlendir'} onPress={apply} />
             )}
             <Btn small kind="ghost" label="Vazgeç" onPress={stop} />
           </View>

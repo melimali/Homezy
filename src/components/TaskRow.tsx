@@ -85,7 +85,7 @@ function useTask(t: Task, rid: string, list: TaskList) {
     if (room && list === 'tasks' && after.settings.celebrate && before < 100 && roomClean(after, rid) >= 100)
       setTimeout(() => {
         sfx('party');
-        toast(`🛡️ ${room.name} tam tahkimatta! Sürü bu kapıdan geçemez 🎉`);
+        toast(`✨ ${room.name} tertemiz! Harikasın 🎉`);
       }, 1800);
   };
 
@@ -118,7 +118,7 @@ function useTask(t: Task, rid: string, list: TaskList) {
   };
 
   const act = () => (photoTask ? shoot() : done());
-  const action = photoTask ? '📸 Çek' : plant ? '💧 Suladım' : 'Tahkim Et / Onar';
+  const action = photoTask ? '📸 Çek' : plant ? '💧 Suladım' : 'Tamamladım';
   const emoji = photoTask ? '📸' : taskEmoji(t.name, plant);
 
   return { s, now, room, place, plant, photoTask, doneToday, urgent, names, nextWho, edit, snooze, remove, act, action, emoji, bounce, rise, gain, burst, min: taskMin(t) };
@@ -166,7 +166,7 @@ export function TaskRow({
           )}
           <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted }}>{t.name}</T>
           <View style={styles.meta}>
-            <Pill k={k.doneToday ? 'ok' : k.s.k} label={k.doneToday ? 'Bugün tahkim edildi' : k.s.label} />
+            <Pill k={k.doneToday ? 'ok' : k.s.k} label={k.doneToday ? 'Bugün yapıldı' : k.s.label} />
             <T v="small">⏱ {k.min} dk</T>
             <Who k={k} t={t} />
           </View>
@@ -179,7 +179,7 @@ export function TaskRow({
             disabled={k.doneToday}
             quiet
             dim={false}
-            accessibilityLabel={k.doneToday ? `${t.name} bugün tahkim edildi` : `${t.name}: ${k.action}`}
+            accessibilityLabel={k.doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${k.action}`}
             style={[
               styles.done,
               k.doneToday
@@ -253,7 +253,7 @@ function TaskSettings({ t, k, canDelete, onDone }: { t: Task; k: TaskApi; canDel
         onChange={v => k.edit(x => void (x.min = v))}
       />
       {k.photoTask && t.photo && <T v="small">Son sayaç fotoğrafı telefonunda saklı ({agoText(t.last, k.now)}).</T>}
-      {canDelete && <Btn small kind="ghost" label="🗑️ Bu görevi sil" onPress={() => { onDone(); k.remove(); }} style={{ alignSelf: 'flex-start' }} />}
+      {canDelete && <Btn small kind="ghost" label="🗑️ Bu işi sil" onPress={() => { onDone(); k.remove(); }} style={{ alignSelf: 'flex-start' }} />}
     </>
   );
 }
@@ -274,7 +274,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
     : k.s.k === 'today'
     ? { bg: c.todaySoft, fg: c.today, ring: c.today }
     : { bg: c.surface, fg: c.muted, ring: c.line };
-  const label = k.doneToday ? 'Onarıldı ✓' : k.s.label;
+  const label = k.doneToday ? 'Yapıldı ✓' : k.s.label;
 
   return (
     <Appear index={index} style={styles.tileWrap}>
@@ -380,7 +380,7 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
     toast(`${n} eklendi.`);
   };
 
-  if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '🌱 Bitki ekle' : '➕ Yeni görev ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
+  if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '🌱 Bitki ekle' : '➕ Yeni iş ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
 
   return (
     <View style={{ gap: 8, marginTop: 4 }}>

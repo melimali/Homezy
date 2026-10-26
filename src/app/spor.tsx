@@ -81,8 +81,8 @@ export default function Spor() {
     <Screen header={false}>
       <BackLink />
       <View>
-        <T v="eyebrow">Kaçış antrenmanı</T>
-        <T v="h1">Bugün kaçış antrenmanı yaptın mı? 🏃</T>
+        <T v="eyebrow">Spor</T>
+        <T v="h1">Bugün hareket ettin mi? 🏃</T>
         <T v="lead">Spor da serini sürdürür. Günün ilk sporu +{POINTS.spor} puan ⭐</T>
       </View>
 

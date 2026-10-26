@@ -44,7 +44,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       if (!first) return;
       const id = S.cells[i];
       if (id) setTool(id);
-      else toast('Önce bir sektör türü seç.');
+      else toast('Önce bir oda türü seç.');
       return;
     }
     const val = cur === 'erase' ? null : cur;
@@ -58,7 +58,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       ? 'Silgi açık. Boşaltmak istediğin bloklara dokun.'
       : tool && S.rooms[tool]
         ? `Çiziyorsun: ${S.rooms[tool].name}. Bloklara dokun ya da parmağını sürükle.`
-        : 'Bir sektör türü seç ya da plandaki bir sektöre dokunup onu büyütmeye devam et.';
+        : 'Bir oda türü seç ya da plandaki bir odaya dokunup onu büyütmeye devam et.';
 
   const save = () => {
     const first = !S.setup;
@@ -67,7 +67,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       if (D.order.length) D.setup = true;
     });
     if (!next.order.length) {
-      toast('Kaydetmek için en az bir sektör çiz.');
+      toast('Kaydetmek için en az bir oda çiz.');
       return;
     }
     setTool(null);
@@ -89,7 +89,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       D.tasks = {};
       D.mod = {};
     });
-    toast('Plan temizlendi. İlk sektörünü seç.');
+    toast('Plan temizlendi. İlk odanı seç.');
   };
 
   return (
@@ -101,11 +101,11 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     >
       {editing ? <BackLink /> : <AppHeader />}
       <View>
-        <T v="h1">{editing ? 'Sığınak planını düzenle' : 'Güvenli bölgeni bloklarla kur'}</T>
-        <T v="lead">Bir sektör türü seç, sonra bloklara dokunup sürükleyerek sektörü çiz. Her blok yaklaşık 2 m².</T>
+        <T v="h1">{editing ? 'Ev planını düzenle' : 'Evini bloklarla kur'}</T>
+        <T v="lead">Bir oda türü seç, sonra bloklara dokunup sürükleyerek odayı çiz. Her blok yaklaşık 2 m².</T>
         {!editing && S.order.length > 0 && (
           <View style={[styles.note, { backgroundColor: c.accentSoft }]}>
-            <T style={{ fontSize: 14 }}>Başlaman için örnek bir sığınak çizili. İstersen düzenle, istersen temizleyip baştan çiz.</T>
+            <T style={{ fontSize: 14 }}>Başlaman için örnek bir ev çizili. İstersen düzenle, istersen temizleyip baştan çiz.</T>
           </View>
         )}
       </View>
@@ -145,9 +145,9 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         {S.cols} × {S.rows} blok · en fazla ~{S.cols * S.rows * 2} m²
       </T>
 
-      <T v="h2">Tahkimat Sektörleri</T>
+      <T v="h2">Odalar</T>
       <View style={{ gap: 8 }}>
-        {!S.order.length && <T v="small" style={{ fontSize: 14 }}>Henüz sektör yok. Yukarıdan bir sektör türü seç.</T>}
+        {!S.order.length && <T v="small" style={{ fontSize: 14 }}>Henüz oda yok. Yukarıdan bir oda türü seç.</T>}
         {S.order.map(id => {
           const r = S.rooms[id];
           const n = cellCount(S, id);
@@ -178,7 +178,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
               </View>
               <Btn label="Çiz" small kind={on ? 'primary' : 'ghost'} onPress={() => setTool(on ? null : id)} />
               <XBtn
-                label={`${r.name} sektörünü sil`}
+                label={`${r.name} odasını sil`}
                 onPress={() => {
                   if (tool === id) setTool(null);
                   update(D => removeRoom(D, id));
@@ -196,7 +196,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
           onPress={clear}
           style={{ flex: 1 }}
         />
-        <Btn label={editing ? 'Kaydet' : 'Sığınağı kaydet'} kind="primary" onPress={save} style={{ flex: 1.4 }} />
+        <Btn label={editing ? 'Kaydet' : 'Evimi kaydet'} kind="primary" onPress={save} style={{ flex: 1.4 }} />
       </View>
       {footer}
     </ScrollView>

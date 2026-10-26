@@ -39,15 +39,15 @@ function HomeInfo() {
   const yes = PROFILE.filter(p => S.home[p.k]);
   return (
     <Card>
-      <T v="bold">Sığınağım hakkında 🛡️</T>
+      <T v="bold">Evim hakkında 🏡</T>
       <T style={{ fontSize: 14 }}>
         {S.home.asked
           ? yes.length ? yes.map(p => `${p.emoji} ${p.short}`).join(' · ') : 'Hiçbirine "evet" demedin.'
-          : 'Evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, bitki: cevaplarına göre görevler gelir.'}
+          : 'Evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, bitki: cevaplarına göre rutinler gelir.'}
       </T>
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         <Btn small kind="primary" label={S.home.asked ? 'Cevapları değiştir' : 'Soruları cevapla'} onPress={() => router.push('/evim')} />
-        <Btn small label="Sığınak bakımı ve kaynaklar" onPress={() => router.push('/bakim')} />
+        <Btn small label="Ev bakımı ve faturalar" onPress={() => router.push('/bakim')} />
       </View>
     </Card>
   );
@@ -82,17 +82,17 @@ function DeleteHome() {
     replace(fresh);
     // Ekranlar yeni duruma göre açılıp kapandıktan sonra kurulum ekranına geç.
     setTimeout(() => router.replace('/kurulum'), 0);
-    toast('Sığınak terk edildi. Yenisini birlikte kuralım 🛡️');
+    toast('Evin silindi. Yenisini birlikte çizelim 🏡');
   };
 
   return (
     <Card>
-      <T v="bold">Sığınağı terk et ve baştan kur 🏚️</T>
+      <T v="bold">Evi sil ve baştan kur 🏚️</T>
       <T style={{ fontSize: 14 }}>
         Bütün odalar, rutinler, gardırop ve stoklar silinir. Hesabında tek bir ev durur; yenisini çizdiğinde onun yerine geçer.
       </T>
       <View>
-        <Btn label={armed ? 'Emin misin? Tekrar dokun' : 'Sığınağı terk et'} kind={armed ? 'danger' : 'soft'} onPress={del} />
+        <Btn label={armed ? 'Emin misin? Tekrar dokun' : 'Evi sil'} kind={armed ? 'danger' : 'soft'} onPress={del} />
       </View>
     </Card>
   );

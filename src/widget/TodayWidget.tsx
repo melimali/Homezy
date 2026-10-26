@@ -32,13 +32,13 @@ export function TodayWidget({ data, height, note, c }: Props) {
   const rows = rowsFor(height);
   const shown = data.tasks.slice(0, rows);
   const more = data.tasks.length - shown.length;
-  const title = data.vacation ? 'Sığınak kilitli 🏖️' : data.left ? `Bugün ${data.left} görev` : 'Seferler';
+  const title = data.vacation ? 'Tatildesin 🏖️' : data.left ? `Bugün ${data.left} iş` : 'Bugün';
   const streakText = data.streak ? `🔥 ${data.streak} gün` : '🔥 Seriyi başlat';
 
   return (
     <FlexWidget
       {...OPEN}
-      accessibilityLabel="Safehouse, bugünün görevleri"
+      accessibilityLabel="Layfapp, bugünün işleri"
       style={{
         height: 'match_parent',
         width: 'match_parent',
@@ -70,7 +70,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
           shown.map(t => <Row key={t.id} t={t} c={c} />)
         ) : (
           <TextWidget
-            text={data.vacation ? 'Görevler dondu, iyi dinlen.' : data.done ? `Barikatlar sağlam 🎉 ${data.done} görev bitti.` : 'Barikatlar sağlam 🎉'}
+            text={data.vacation ? 'Rutinler dondu, iyi dinlen.' : data.done ? `Bugünlük her şey tamam 🎉 ${data.done} iş bitti.` : 'Bugünlük her şey tamam 🎉'}
             style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }}
             maxLines={2}
           />
@@ -78,7 +78,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
       </FlexWidget>
 
       <TextWidget
-        text={note ?? (more > 0 ? `+${more} görev daha · ${data.tip.emoji} ${data.tip.text}` : `${data.tip.emoji} ${data.tip.text}`)}
+        text={note ?? (more > 0 ? `+${more} iş daha · ${data.tip.emoji} ${data.tip.text}` : `${data.tip.emoji} ${data.tip.text}`)}
         style={{ fontFamily: fonts.body, fontSize: 12, color: note ? c.ok : c.muted }}
         maxLines={height >= 200 ? 2 : 1}
         truncate="END"

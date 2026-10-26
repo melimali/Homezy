@@ -23,12 +23,12 @@ export function WeekCard({ state: S, now, theme, ref }: { state: AppState; now: 
     <View ref={ref} collapsable={false} style={[styles.card, { backgroundColor: c.bg, borderColor: c.line }]}>
       <View style={styles.head}>
         <View style={[styles.logo, { backgroundColor: brand.navy }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Safehouse: Daily Ops" />
+          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
         </View>
         <Text style={[styles.eyebrow, { color: c.warm }]}>Son 7 gün</Text>
       </View>
       <Text style={[styles.title, { color: c.ink }]}>
-        {sum.done ? `${sum.done} görev tamamladım 💪` : 'Telsiz sessiz bir hafta 🌙'}
+        {sum.done ? `${sum.done} iş yaptım 💪` : 'Sakin bir hafta 🌙'}
       </Text>
 
       <View style={styles.days}>
@@ -50,13 +50,13 @@ export function WeekCard({ state: S, now, theme, ref }: { state: AppState; now: 
       <View style={styles.stats}>
         <Stat c={c} n={`${sum.days}/7`} l="gün" />
         <Stat c={c} n={`🔥 ${hp.streak}`} l="günlük seri" />
-        <Stat c={c} n={hp.level >= BUILT ? `Sv. ${hp.level}` : `${hp.level}/${BUILT}`} l={hp.level >= BUILT ? 'sığınak' : 'inşaat'} />
+        <Stat c={c} n={hp.level >= BUILT ? `Sv. ${hp.level}` : `${hp.level}/${BUILT}`} l={hp.level >= BUILT ? 'ev' : 'inşaat'} />
       </View>
       {(stage || sum.best) && (
         <Text style={[styles.line, { color: c.ink }]}>
           {stage ? `${stage.emoji} ${stage.name}` : ''}
           {stage && sum.best ? ' · ' : ''}
-          {sum.best ? `En sağlam sektör: ${sum.best} 🛡️` : ''}
+          {sum.best ? `En parlak oda: ${sum.best} ✨` : ''}
         </Text>
       )}
       <Text style={[styles.slogan, { color: c.muted }]}>Evini topla, evin büyüsün 🏡</Text>

@@ -54,7 +54,7 @@ function TabGlyph({ name, color }: { name: IconName; color: ColorValue }) {
   );
 }
 
-/** Dört sekme: Sığınak, Sektörler, Seferler, Hesabım. Bildirimler ve plan düzenleme bunların içinden açılır. */
+/** Dört sekme: Ev, Odalar, Bugün, Hesabım. Bildirimler ve plan düzenleme bunların içinden açılır. */
 export default function TabLayout() {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -62,7 +62,7 @@ export default function TabLayout() {
   useWidgetSync();
 
   // Alt menü iki temada da lacivert/koyu kalır (logodaki zemin).
-  const barBg = c.bg === brand.navy ? '#141618' : brand.navy;
+  const barBg = c.bg === brand.navy ? '#1C2232' : brand.navy;
   // Yükseklik açıkça verilmeli: `height: undefined` verince Android'de çubuk içeriği
   // sistem gezinme çubuğunun altında eziliyor ve sekmelerin yarısı görünmüyordu.
   const bottom = Math.max(insets.bottom, 8);
@@ -72,8 +72,8 @@ export default function TabLayout() {
       safeAreaInsets={{ bottom }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: brand.clay,
-        tabBarInactiveTintColor: 'rgba(236,231,220,0.55)',
+        tabBarActiveTintColor: brand.mint,
+        tabBarInactiveTintColor: 'rgba(235,245,238,0.55)',
         tabBarStyle: {
           backgroundColor: barBg,
           borderTopWidth: 0,
@@ -87,9 +87,9 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: c.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Sığınak', tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} /> }} />
-      <Tabs.Screen name="odalar" options={{ title: 'Sektörler', tabBarIcon: ({ color, focused }) => <TabIcon name="rooms" color={color} focused={focused} /> }} />
-      <Tabs.Screen name="bugun" options={{ title: 'Seferler', tabBarIcon: ({ color, focused }) => <TabIcon name="today" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="index" options={{ title: 'Ev', tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="odalar" options={{ title: 'Odalar', tabBarIcon: ({ color, focused }) => <TabIcon name="rooms" color={color} focused={focused} /> }} />
+      <Tabs.Screen name="bugun" options={{ title: 'Bugün', tabBarIcon: ({ color, focused }) => <TabIcon name="today" color={color} focused={focused} /> }} />
       <Tabs.Screen name="hesap" options={{ title: 'Hesabım', tabBarIcon: ({ color, focused }) => <TabIcon name="me" color={color} focused={focused} /> }} />
     </Tabs>
   );

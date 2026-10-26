@@ -4,15 +4,15 @@ export const DAY = 864e5;
 
 /** Oda türleri ve varsayılan rutinleri: [ad, kaç günde bir, tahmini dakika]. */
 export const TYPES: Record<RoomType, { label: string; mod: RoomModule; tasks: [string, number, number][] }> = {
-  yatak: { label: 'Dinlenme Sektörü', mod: 'gardirop', tasks: [['Odayı süpür ve sil', 7, 20], ['Çarşaf değişimi', 7, 15], ['Toz alma', 7, 10], ['Havalandırma', 1, 5], ['Yastık ve yorgan havalandırma', 30, 10]] },
-  mutfak: { label: 'Erzak Deposu', mod: 'buzdolabi', tasks: [['Bulaşık', 1, 20], ['Tezgah silme', 1, 5], ['Çöpü çıkar', 2, 5], ['Buzdolabı temizliği', 30, 30], ['Fırın temizliği', 30, 30], ['Yer silme', 7, 15]] },
-  banyo: { label: 'Arındırma Sektörü', mod: 'stok', tasks: [['Lavabo ve ayna', 3, 10], ['Klozet', 3, 10], ['Duş / küvet', 7, 15], ['Havlu değişimi', 4, 5], ['Yer silme', 7, 10]] },
-  salon: { label: 'Komuta Merkezi', mod: 'bitki', tasks: [['Süpürme', 3, 15], ['Toz alma', 7, 15], ['Koltuk minderleri', 14, 10], ['Cam silme', 30, 40]] },
-  calisma: { label: 'Telsiz Odası', mod: null, tasks: [['Masa düzeni', 7, 10], ['Toz alma', 7, 10], ['Kablo ve şarj düzeni', 30, 15]] },
-  cocuk: { label: 'Çaylak Sektörü', mod: 'gardirop', tasks: [['Oyuncak toplama', 1, 10], ['Çarşaf değişimi', 7, 15], ['Süpürme', 3, 10]] },
-  antre: { label: 'Giriş Barikatı', mod: null, tasks: [['Ayakkabılık düzeni', 7, 10], ['Yer silme', 7, 10]] },
-  balkon: { label: 'Gözetleme Kulesi', mod: 'bitki', tasks: [['Süpürme', 7, 10], ['Cam ve korkuluk', 30, 30]] },
-  camasir: { label: 'Dekontaminasyon Ünitesi', mod: 'stok', tasks: [['Çamaşır yıkama', 3, 10], ['Makine filtresi', 30, 15], ['Ütü', 7, 30]] },
+  yatak: { label: 'Yatak odası', mod: 'gardirop', tasks: [['Odayı süpür ve sil', 7, 20], ['Çarşaf değişimi', 7, 15], ['Toz alma', 7, 10], ['Havalandırma', 1, 5], ['Yastık ve yorgan havalandırma', 30, 10]] },
+  mutfak: { label: 'Mutfak', mod: 'buzdolabi', tasks: [['Bulaşık', 1, 20], ['Tezgah silme', 1, 5], ['Çöpü çıkar', 2, 5], ['Buzdolabı temizliği', 30, 30], ['Fırın temizliği', 30, 30], ['Yer silme', 7, 15]] },
+  banyo: { label: 'Banyo', mod: 'stok', tasks: [['Lavabo ve ayna', 3, 10], ['Klozet', 3, 10], ['Duş / küvet', 7, 15], ['Havlu değişimi', 4, 5], ['Yer silme', 7, 10]] },
+  salon: { label: 'Salon', mod: 'bitki', tasks: [['Süpürme', 3, 15], ['Toz alma', 7, 15], ['Koltuk minderleri', 14, 10], ['Cam silme', 30, 40]] },
+  calisma: { label: 'Çalışma odası', mod: null, tasks: [['Masa düzeni', 7, 10], ['Toz alma', 7, 10], ['Kablo ve şarj düzeni', 30, 15]] },
+  cocuk: { label: 'Çocuk odası', mod: 'gardirop', tasks: [['Oyuncak toplama', 1, 10], ['Çarşaf değişimi', 7, 15], ['Süpürme', 3, 10]] },
+  antre: { label: 'Antre', mod: null, tasks: [['Ayakkabılık düzeni', 7, 10], ['Yer silme', 7, 10]] },
+  balkon: { label: 'Balkon', mod: 'bitki', tasks: [['Süpürme', 7, 10], ['Cam ve korkuluk', 30, 30]] },
+  camasir: { label: 'Çamaşır odası', mod: 'stok', tasks: [['Çamaşır yıkama', 3, 10], ['Makine filtresi', 30, 15], ['Ütü', 7, 30]] },
 };
 
 export const ROOM_TYPES = Object.keys(TYPES) as RoomType[];
@@ -25,11 +25,11 @@ export const STOCK_DEF: Partial<Record<RoomType, string[]>> = {
 
 export const CATS = ['Üst', 'Alt', 'Elbise / Takım', 'Dış giyim', 'Ev / Pijama', 'İç giyim', 'Ayakkabı', 'Aksesuar'];
 
-export const CSTATE: Record<ClothState, string> = { temiz: 'Göreve hazır', kirli: 'Kontamine', utu: 'Ütülenecek' };
+export const CSTATE: Record<ClothState, string> = { temiz: 'Temiz', kirli: 'Kirli', utu: 'Ütülenecek' };
 export const CSTATE_EMOJI: Record<ClothState, string> = { temiz: '🧼', kirli: '🧺', utu: '💨' };
 export const NEXT_CSTATE: Record<ClothState, ClothState> = { temiz: 'kirli', kirli: 'utu', utu: 'temiz' };
 
-export const LV: [StockLevel, string][] = [['var', 'Bol'], ['az', 'Kritik'], ['yok', 'Tükendi']];
+export const LV: [StockLevel, string][] = [['var', 'Var'], ['az', 'Az'], ['yok', 'Bitti']];
 
 /** Aynı yıkama türünden bu kadar kirli parça birikince bir makine dolusu sayılır ve çamaşır uyarısı verilir. */
 export const LAUNDRY_THRESHOLD = 3;

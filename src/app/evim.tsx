@@ -27,10 +27,10 @@ export default function Evim() {
     update(D => applyProfile(D, ans));
     if (first) {
       router.replace('/');
-      toast('Sığınak hazır. Görevlerini cevaplarına göre ayarladım 🛡️');
+      toast('Evin hazır. Rutinlerini cevaplarına göre ayarladım 🏡');
     } else {
       router.back();
-      toast('Cevapların kaydedildi, görevler güncellendi.');
+      toast('Cevapların kaydedildi, rutinler güncellendi.');
     }
   };
 
@@ -38,9 +38,9 @@ export default function Evim() {
     <Screen header={false}>
       {!first && <BackLink />}
       <View>
-        <T v="eyebrow">{first ? 'Son bir adım' : 'Sığınağım hakkında'}</T>
-        <T v="h1">Sığınağını biraz tanıyalım</T>
-        <T v="lead">Cevaplarına göre görevler eklerim. Sonra Plan ekranından istediğin zaman değiştirebilirsin.</T>
+        <T v="eyebrow">{first ? 'Son bir adım' : 'Evim hakkında'}</T>
+        <T v="h1">Evini biraz tanıyalım</T>
+        <T v="lead">Cevaplarına göre rutinler eklerim. Sonra Plan ekranından istediğin zaman değiştirebilirsin.</T>
       </View>
 
       <Card>
@@ -71,7 +71,7 @@ export default function Evim() {
         ))}
       </Card>
 
-      <Btn kind="primary" label={first ? 'Sığınağı aç' : 'Kaydet'} onPress={save} block />
+      <Btn kind="primary" label={first ? 'Evimi aç' : 'Kaydet'} onPress={save} block />
       {first && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { update(D => void (D.home.asked = true)); router.replace('/'); }} block />}
     </Screen>
   );

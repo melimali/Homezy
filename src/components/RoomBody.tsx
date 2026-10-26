@@ -37,11 +37,11 @@ export function RoomBody({ rid }: { rid: string }) {
 
   const tabs: { k: Tab; emoji: string; label: string; badge?: number }[] = [{ k: 'isler', emoji: '🧹', label: 'İşler', badge: waiting(tasks) }];
   if (mod === 'gardirop')
-    tabs.push({ k: 'dolap', emoji: '🎒', label: 'Teçhizat', badge: dirty >= 3 ? dirty : undefined }, { k: 'kombin', emoji: '🪖', label: 'Zırh Kombini' });
+    tabs.push({ k: 'dolap', emoji: '👕', label: 'Dolap', badge: dirty >= 3 ? dirty : undefined }, { k: 'kombin', emoji: '✨', label: 'Kombin' });
   if (mod === 'buzdolabi')
-    tabs.push({ k: 'buzdolabi', emoji: '🥫', label: 'Erzak Taraması' }, { k: 'eksik', emoji: '🗺️', label: 'Tedarik', badge: missing }, { k: 'tarif', emoji: '🍲', label: 'Tayın Tarifi' });
-  if (mod === 'stok') tabs.push({ k: 'malzeme', emoji: '📦', label: 'Ambar', badge: missing });
-  if (mod === 'bitki') tabs.push({ k: 'bitki', emoji: '🪴', label: 'Sera', badge: waiting(S.mod[r.id]?.plants ?? []) });
+    tabs.push({ k: 'buzdolabi', emoji: '🧊', label: 'Buzdolabı' }, { k: 'eksik', emoji: '🛒', label: 'Eksikler', badge: missing }, { k: 'tarif', emoji: '🍲', label: 'Tarif' });
+  if (mod === 'stok') tabs.push({ k: 'malzeme', emoji: '🧴', label: 'Malzeme', badge: missing });
+  if (mod === 'bitki') tabs.push({ k: 'bitki', emoji: '🪴', label: 'Bitkiler', badge: waiting(S.mod[r.id]?.plants ?? []) });
   const cur = tabs.some(t => t.k === tab) ? tab : 'isler';
   const toKombin = (ids: string[], l: PhotoLook | null = null) => {
     setAnchor(ids);
@@ -55,16 +55,16 @@ export function RoomBody({ rid }: { rid: string }) {
 
       {cur === 'isler' && (
         <Card key="isler">
-          <SecHead title="🛡️ Tahkimat & Yaşam Destek Görevleri" right={tasks.length ? `${tasks.length} görev` : undefined} />
+          <SecHead title="🧹 Odanın işleri" right={tasks.length ? `${tasks.length} iş` : undefined} />
           <TaskGrid tasks={tasks} rid={r.id} list="tasks" />
-          {!tasks.length && <EmptyMsg>Henüz görev yok. Aşağıdan ekle.</EmptyMsg>}
-          {tasks.length > 0 && <T v="tiny">Bir göreve dokun: tahkim edildi 🛡️ Basılı tut: ertele, sıklık, sil.</T>}
+          {!tasks.length && <EmptyMsg>Henüz iş yok. Aşağıdan ekle.</EmptyMsg>}
+          {tasks.length > 0 && <T v="tiny">Bir işe dokun: tamamlandı ✨ Basılı tut: ertele, sıklık, sil.</T>}
           <AddTaskForm rid={r.id} list="tasks" placeholder="Yeni iş, ör. Perde yıkama" />
         </Card>
       )}
       {cur === 'dolap' && (
         <View key="dolap" style={{ gap: 14 }}>
-          {anchor.length > 0 && <Btn kind="primary" label="🪖 Seçtiğin teçhizatla zırh kombinlerine bak" onPress={() => setTab('kombin')} block />}
+          {anchor.length > 0 && <Btn kind="primary" label="✨ Seçtiğin parçayla kombinlere bak" onPress={() => setTab('kombin')} block />}
           <Wardrobe rid={r.id} anchor={anchor} onAnchor={ids => toKombin(ids)} onLook={l => toKombin(l.ids, l)} />
         </View>
       )}
@@ -75,10 +75,10 @@ export function RoomBody({ rid }: { rid: string }) {
         </View>
       )}
       {cur === 'buzdolabi' && <Fridge key="buzdolabi" rid={r.id} />}
-      {cur === 'eksik' && <Stock key="eksik" rid={r.id} title="🥫 Erzak & Ambar Taraması" placeholder="Erzak ekle, ör. Konserve fasulye" />}
+      {cur === 'eksik' && <Stock key="eksik" rid={r.id} title="🛒 Ne var, ne eksik?" placeholder="Ürün ekle, ör. Zeytin" />}
       {cur === 'tarif' && <Recipes key="tarif" rid={r.id} />}
       {cur === 'malzeme' && (
-        <Stock key="malzeme" rid={r.id} title={r.type === 'banyo' ? '🧼 Arındırma ambarı' : '📦 Ambar'} placeholder="Malzeme ekle, ör. Diş fırçası" />
+        <Stock key="malzeme" rid={r.id} title={r.type === 'banyo' ? '🧴 Banyo malzemeleri' : '🧴 Malzemeler'} placeholder="Malzeme ekle, ör. Diş fırçası" />
       )}
       {cur === 'bitki' && <Plants key="bitki" rid={r.id} />}
     </View>

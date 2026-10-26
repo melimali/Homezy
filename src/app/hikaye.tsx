@@ -27,16 +27,16 @@ function story(top: number): Frame[] {
   // Çöküşte ev iskelete kadar iner (2: iskelet), sonra adım adım geri gelir.
   const low = 2;
   return [
-    { level: top, idle: 0, cap: 'Her gün minik bir tahkimat…\nsığınağım böyle oldu 🛡️', ms: 1800 },
-    { level: top, idle: 1, cap: 'Bir gün unuttum…\nsürü yaklaştı 🧟' },
-    { level: top, idle: 2, cap: 'İki gün…\nbarikatlar çatladı 😟' },
-    { level: Math.min(top - 1, 6), idle: 3, cap: 'Üçüncü gün sığınağım\nçökmeye başladı 😱', shake: true },
-    { level: 4, idle: 3, cap: 'Üçüncü gün sığınağım\nçökmeye başladı 😱', shake: true, ms: 800 },
-    { level: low, idle: 3, cap: 'Sığınak düştü! 🏚️', shake: true, ms: 1800 },
-    { level: low, idle: 0, cap: 'Tek bir görev yaptım…\nonarım başladı 🔨' },
+    { level: top, idle: 0, cap: 'Her gün minik bir iş…\nevim böyle oldu ✨', ms: 1800 },
+    { level: top, idle: 1, cap: 'Bir gün unuttum…\nev tozlandı 🌫️' },
+    { level: top, idle: 2, cap: 'İki gün…\nduvarlar çatladı 😟' },
+    { level: Math.min(top - 1, 6), idle: 3, cap: 'Üçüncü gün evim\nçökmeye başladı 😱', shake: true },
+    { level: 4, idle: 3, cap: 'Üçüncü gün evim\nçökmeye başladı 😱', shake: true, ms: 800 },
+    { level: low, idle: 3, cap: 'Evim çöktü! 🏚️', shake: true, ms: 1800 },
+    { level: low, idle: 0, cap: 'Tek bir iş yaptım…\ntamir başladı 🔨' },
     { level: 4, idle: 0, cap: 'Her gün bir parça daha 🧱', ms: 900 },
     { level: 6, idle: 0, cap: 'Her gün bir parça daha 🧱', ms: 900 },
-    { level: top, idle: 0, cap: 'Sığınak yeniden ayakta! 🛡️💪', ms: 1800 },
+    { level: top, idle: 0, cap: 'Evim geri geldi! 🏡💪', ms: 1800 },
   ];
 }
 
@@ -102,12 +102,12 @@ export default function Hikaye() {
   const frame = (
     <View ref={frameRef} collapsable={false} style={[styles.frame, { width: w, height: (w * 16) / 9, backgroundColor: c.bg, borderColor: c.line }]}>
       <View style={[styles.logo, { backgroundColor: brand.navy }]}>
-        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Safehouse: Daily Ops" />
+        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
       </View>
       {end ? (
         <View style={styles.endBox}>
           <Text style={[styles.cap, { color: c.ink }]}>Evini topla,{'\n'}evin büyüsün 🏡</Text>
-          <Text style={[styles.sub, { color: c.muted }]}>Her gün minik bir görev. Seri bozulursa sığınak düşer!</Text>
+          <Text style={[styles.sub, { color: c.muted }]}>Her gün minik bir iş. Seri bozulursa evin çöker!</Text>
         </View>
       ) : (
         <Animated.Text style={[styles.cap, { color: f.idle >= 3 ? c.late : c.ink, opacity: fade }]}>{f.cap}</Animated.Text>
@@ -115,7 +115,7 @@ export default function Hikaye() {
       <Animated.View style={{ width: '100%', transform: [{ translateX: shake }] }}>
         <House3D state={S} now={now} build={end ? { level: frames[0].level, idle: 0 } : f} theme={themeFor(S.settings.theme, premium.active)} labels={false} />
       </Animated.View>
-      <Text style={[styles.foot, { color: c.muted }]}>{end ? 'Safehouse: Daily Ops · App Store ve Google Play' : ' '}</Text>
+      <Text style={[styles.foot, { color: c.muted }]}>{end ? 'Layfapp · App Store ve Google Play' : ' '}</Text>
       {phase === 'count' && (
         <View style={[StyleSheet.absoluteFill, styles.countBox]}>
           <Text style={[styles.count, { color: c.ink }]}>{count}</Text>
@@ -138,7 +138,7 @@ export default function Hikaye() {
       <View style={{ alignSelf: 'stretch', paddingHorizontal: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Btn kind="primary" label={end ? '▶ Tekrar oynat' : '▶ Oynat'} onPress={start} style={{ flex: 1 }} />
-          {end && <Btn label="📤 Paylaş" onPress={() => void shareCard(frameRef, 'Seri bozulunca sığınağım düştü 😱 Safehouse: Daily Ops ile her gün bir tahkimat, hayatta kal 🛡️')} style={{ flex: 1 }} />}
+          {end && <Btn label="📤 Paylaş" onPress={() => void shareCard(frameRef, 'Seri bozulunca evim çöktü 😱 Layfapp ile her gün minik bir iş, evin büyüsün 🏡')} style={{ flex: 1 }} />}
         </View>
         <Callout>
           <T v="small">🎬 Video yapmak için: telefonunun ekran kaydını aç, sonra Oynat’a bas. 3 saniyelik geri sayım var, oynarken düğmeler gizlenir.</T>

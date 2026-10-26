@@ -33,7 +33,7 @@ export async function ensureCategories(N: NotificationsModule) {
   if (Platform.OS === 'web') return;
   const opts = { opensAppToForeground: false };
   await N.setNotificationCategoryAsync(TASK_CATEGORY, [
-    { identifier: DONE, buttonTitle: '🛡️ Tahkim Et / Onar', options: opts },
+    { identifier: DONE, buttonTitle: '✅ Yaptım', options: opts },
     { identifier: SKIP, buttonTitle: '⏰ Yapmadım, yarın', options: opts },
   ]);
   await N.setNotificationCategoryAsync(PLANT_CATEGORY, [

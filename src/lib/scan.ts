@@ -69,7 +69,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
       retry: true,
       message: kind === 'fridge'
         ? 'Fotoğraftan bir liste çıkaramadım. Daha aydınlık ve yakından çekilmiş bir fotoğraf dene.'
-        : 'Fotoğraftan teçhizatı çıkaramadım. Daha aydınlık ve yakından çekilmiş bir fotoğraf dene.',
+        : 'Fotoğraftan kıyafetleri çıkaramadım. Daha aydınlık ve yakından çekilmiş bir fotoğraf dene.',
     };
   }
   if (status === 502 && body.error === 'busy') return { ok: false, message: 'Yapay zekâ şu an çok yoğun. Bir dakika sonra tekrar dene; hakkından düşmedi.', retry: true };

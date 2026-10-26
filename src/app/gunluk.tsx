@@ -96,7 +96,7 @@ export default function Gunluk() {
       <BackLink />
       <View>
         <T v="eyebrow">{fmtDay(today)}</T>
-        <T v="h1">Seyir Defterim 📔</T>
+        <T v="h1">Günlüğüm 📔</T>
         <T v="lead">Bugün neler yaptın? Birkaç satır yeter. Günün ilk yazısı +{POINTS.gunluk} puan ⭐</T>
       </View>
 
@@ -118,7 +118,7 @@ export default function Gunluk() {
         <Field
           value={text}
           onChangeText={setText}
-          placeholder="Bugün erzak deposunu topladım, akşam devriyeye çıktım…"
+          placeholder="Bugün mutfağı topladım, akşam yürüyüşe çıktım…"
           multiline
           textAlignVertical="top"
           maxLength={2000}
@@ -146,7 +146,7 @@ export default function Gunluk() {
           disabled={!text.trim() || (done && !dirty)}
           onPress={save}
         />
-        <DoneList items={todayLog} title="Bugünkü operasyonlar" empty="Bugün tamamladığın görevler burada görünecek." />
+        <DoneList items={todayLog} title="Bugün yaptıkların" empty="Bugün tamamladığın işler burada görünecek." />
       </Card>
 
       {premium.active ? (

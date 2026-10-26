@@ -4,6 +4,7 @@ import { MOKA_ASSETS, MOKA_QUOTES, ROOM_POSE, type MokaPose } from '@/constants/
 
 import { allTasks, doneToday, homeScore, placeOf, shopItems } from './logic';
 import { dayKey, progressOf } from './play';
+import { tipOfDay } from './tips';
 import type { AppState, ModeKind, RoomType, TaskList } from './types';
 
 /**
@@ -115,3 +116,29 @@ export function getWidgetMokaPayload(houseStatus: MokaHouseStatus): MokaPayload 
   const m = pickMoka(houseStatus);
   return { ...m, image: MOKA_ASSETS[m.pose] };
 }
+
+/** Günün cümlesindeki kelimeye göre iş pozu; eşleşme yoksa spor cümlesinde neşeli, ev cümlesinde göz kırpan Moka. */
+const TIP_POSE: [RegExp, MokaPose][] = [
+  [/süpür|halı/i, 'vacuuming'],
+  [/toz/i, 'dusting'],
+  [/bulaşık|tezgâh/i, 'dishes'],
+  [/mutfak|buzdolab|yemek/i, 'chef'],
+  [/çamaşır|kıyafet|ütü|dolap|çarşaf/i, 'laundry'],
+  [/bitki|sula/i, 'plants'],
+  [/çöp|bağış/i, 'trash'],
+  [/banyo|lavabo|ayna|cam|havlu/i, 'mirror'],
+  [/uyku|dinlen|yatak/i, 'rest'],
+  [/liste|işaret|adım|küçük iş/i, 'checklist'],
+  [/havalandır|pencere|perde|çay/i, 'cozy_plant'],
+];
+
+/** Moka'nın söylediği günün cümlesi ve ona uyan poz. */
+export function mokaTip(now = Date.now()): { pose: MokaPose; text: string } {
+  const tip = tipOfDay(now);
+  const home = tip.emoji === '🏡';
+  const hit = home ? TIP_POSE.find(([re]) => re.test(tip.text)) : undefined;
+  return { pose: hit ? hit[1] : home ? 'wink' : 'happy', text: tip.text };
+}
+
+/** Durum pozları içinde "sakin" olanlar: bunlarda Moka günün cümlesine uyan pozu alır. */
+export const CALM_POSES: readonly MokaPose[] = ['happy', 'wink', 'cozy_plant'];

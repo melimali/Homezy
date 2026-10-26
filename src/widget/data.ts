@@ -42,6 +42,7 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
     streak: p.streak,
     active: p.today,
     vacation,
-    tip: tipOfDay(now),
+    // Günün cümlesini Moka (kakapo) söylüyor.
+    tip: { emoji: '🦜', text: tipOfDay(now).text },
   };
 }

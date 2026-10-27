@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '@/ads/AdBanner';
+import { DayPlanCard } from '@/components/MoodCheckin';
 import { ShopList } from '@/components/ShopList';
 import { Appear, Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
@@ -49,6 +50,7 @@ export default function Bugun() {
     <Screen header={false}>
       <TitleBar title="Bugün" right={<IconBtn icon="📅" label="Haftam" onPress={() => router.push('/hafta')} />} />
       <WeekStrip now={now} />
+      <DayPlanCard />
 
       {total > 0 && (
         <Appear index={1} style={[styles.progress, { backgroundColor: c.surface }]}>

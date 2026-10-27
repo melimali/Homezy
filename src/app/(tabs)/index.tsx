@@ -11,6 +11,8 @@ import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
+import { MoodCheckin } from '@/components/MoodCheckin';
+import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
@@ -42,6 +44,8 @@ export default function Home() {
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
+  // Günün mod cevabı varsa selamın altındaki cümle ona göre.
+  const line = dayPlan(checkinOf(S.play, now))?.hello ?? greeting(new Date(now)).line;
   const mood = houseMood(hp, S.play, S.mode, now);
   const moka = useMokaState();
   // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
@@ -74,7 +78,7 @@ export default function Home() {
               <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, opacity: 0.82 }]} />
               <T v="h1" style={{ fontSize: 30, lineHeight: 36 }}>{greet(new Date(now), name)}</T>
               <T v="bold" style={[styles.heroLead, { color: c.ink }]}>
-                {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda. ${greeting(new Date(now)).line}`}
+                {due.length ? `Bugün ${due.length} iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
               </T>
             </View>
             <IconBtn icon="🔔" label="Bildirimler" badge={bell} onPress={() => router.push('/bildirimler')} />
@@ -188,6 +192,7 @@ export default function Home() {
 
       <Celebrate level={hp.level} />
       <WelcomeBack />
+      <MoodCheckin />
     </Screen>
   );
 }

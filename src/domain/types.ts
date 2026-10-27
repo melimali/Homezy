@@ -1,5 +1,6 @@
 import type { Garden } from './garden';
 import type { PersonaId } from './items';
+import type { CheckIn } from './mood';
 export type RoomType =
   | 'yatak'
   | 'mutfak'
@@ -182,6 +183,8 @@ export type Play = {
   garden: Garden;
   /** Evin seçili kişiliği. Sıcak ücretsiz; diğerleri puanla bir kere alınır (`owned` içinde `kisilik_<id>`). */
   persona: PersonaId;
+  /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
+  checkins: Record<DayKey, CheckIn>;
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */

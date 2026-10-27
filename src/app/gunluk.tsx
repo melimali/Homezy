@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, EmptyMsg, Field, Screen, SecHead, T } from '@/components/ui';
+import { checkinOf, journalMood } from '@/domain/mood';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
 import type { JournalEntry } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
@@ -43,7 +44,7 @@ export default function Gunluk() {
   const P = S.play;
   const saved = P.journal[today];
   const [text, setText] = useState(saved?.text ?? '');
-  const [mood, setMood] = useState<string | null>(saved?.mood ?? null);
+  const [mood, setMood] = useState<string | null>(saved?.mood ?? journalMood(checkinOf(S.play)));
   const [photo, setPhoto] = useState<string | null>(saved?.photo ?? null);
   const done = awardedToday(P, 'gunluk', 'gunluk', now);
   const dirty = text.trim() !== (saved?.text ?? '') || mood !== (saved?.mood ?? null) || photo !== (saved?.photo ?? null);

@@ -1,0 +1,59 @@
+name: Gemini PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install google-generativeai requests
+
+      - name: Run Gemini Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          cat << 'EOF' > review.py
+          import os, requests
+          import google.generativeai as genai
+
+          genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+          repo = os.environ['REPO']
+          pr_number = os.environ['PR_NUMBER']
+          token = os.environ['GITHUB_TOKEN']
+
+          # GitHub üzerinden diff (değişiklik) dosyasını çekiyoruz
+          headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3.diff'}
+          diff_url = f'https://api.github.com/repos/{repo}/pulls/{pr_number}'
+          diff_response = requests.get(diff_url, headers=headers)
+          diff_text = diff_response.text
+
+          if not diff_text or len(diff_text) < 10:
+              print("İncelenecek anlamlı bir değişiklik bulunamadı.")
+              exit(0)
+
+          # Token tasarrufu ve bağlam optimizasyonu için ilk 30000 karakteri alıyoruz
+          prompt = f"Sen kıdemli bir yazılım geliştiricisin. Aşağıdaki PR diff kodunu incele. Mantık hatalarını, güvenlik risklerini, performans darboğazlarını ve kod kalitesini artıracak önerileri Türkçe olarak madde madde listele. Sadece gerekli kısımlara odaklan:\n\n{diff_text[:30000]}"
+
+          model = genai.GenerativeModel('gemini-1.5-flash')
+          review = model.generate_content(prompt).text
+
+          # Çıktıyı PR'a yorum olarak atıyoruz
+          comment_url = f'https://api.github.com/repos/{repo}/issues/{pr_number}/comments'
+          comment_headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+          requests.post(comment_url, headers=comment_headers, json={'body': f'### 🤖 Gemini Kod İncelemesi\n\n{review}'})
+          EOF
+          python review.py

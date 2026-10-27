@@ -1,6 +1,7 @@
-"""Moka sticker sayfalarını (4x3, soldan sağa, yukarıdan aşağı) tek tek saydam PNG'lere böler.
+"""Moka sticker sayfalarını (soldan sağa, yukarıdan aşağı) tek tek saydam PNG'lere böler.
+İlk iki sayfa 4x3, üçüncü sayfa (koleksiyon) 6x5. Atlanacak sayfa için `-` yaz.
 
-Kullanım: python3 scripts/slice-moka.py <ifadeler.png> <temizlik.png> assets/moka
+Kullanım: python3 scripts/slice-moka.py <ifadeler.png> <temizlik.png> [<koleksiyon.png>] assets/moka
 Gerekli: pip install pillow numpy scipy
 """
 import sys, numpy as np
@@ -9,12 +10,17 @@ from scipy import ndimage as nd
 
 EXPRESSIONS='happy sleepy shocked analyzing sassy party cozy_plant chef wink panicked begging blanket'
 CHORES='sweeping dusting laundry mirror dishes maintenance plants trash rest checklist vacuuming sparkling_complete'
-SHEETS={sys.argv[1]: EXPRESSIONS, sys.argv[2]: CHORES}
-out=sys.argv[3]; S=512; PAD=10
-for path,names in SHEETS.items():
+MOODS='cheers thumbs_up love nap amazed cookie music laptop reading sipping scarf unimpressed'
+HOME='baking scrubbing handyman watering laundry_basket dustpan spray_clean trash_bag'
+TREATS='plaid_coffee pizza bubble_bath blanket_coffee shower birthday todo iced_vacuum sunny_plant lazy_coffee'
+# (adlar, satır, sütun, yayma): koleksiyonda stickerlar sık, komşularla birleşmesin diye az yayılır.
+LAYOUT=[(EXPRESSIONS,3,4,4),(CHORES,3,4,4),(f'{MOODS} {HOME} {TREATS}',5,6,2)]
+out=sys.argv[-1]; S=512; PAD=10
+for path,(names,R,C,D) in zip(sys.argv[1:-1],LAYOUT):
+    if path=='-': continue
     names=names.split()
     a=np.asarray(Image.open(path).convert('RGB')).astype(np.int16)
-    H,W,_=a.shape; ch,cw=H/3,W/4
+    H,W,_=a.shape; ch,cw=H/R,W/C
     mn=a.min(2)
     white=mn>=238
     lab,n=nd.label(white)
@@ -24,14 +30,14 @@ for path,names in SHEETS.items():
     fg=nd.binary_opening(fg,iterations=1)
     alpha=np.where(fg,255,np.clip((250-mn)*10,0,255)).astype(np.uint8)
     alpha[~nd.binary_dilation(fg,iterations=2)]=0
-    grp,k=nd.label(nd.binary_dilation(fg,iterations=4))
-    cells={i:np.zeros_like(fg) for i in range(12)}
+    grp,k=nd.label(nd.binary_dilation(fg,iterations=D))
+    cells={i:np.zeros_like(fg) for i in range(R*C)}
     for j,sl in enumerate(nd.find_objects(grp),1):
         m=(grp[sl]==j)&fg[sl]
         if m.sum()<30: continue
         ys,xs=np.nonzero(m); cy=ys.mean()+sl[0].start; cx=xs.mean()+sl[1].start
-        i=int(cy//ch)*4+int(cx//cw)
-        assert (sl[0].stop-sl[0].start)<ch*1.1 and (sl[1].stop-sl[1].start)<cw*1.1
+        i=int(cy//ch)*C+int(cx//cw)
+        assert (sl[0].stop-sl[0].start)<ch*1.2 and (sl[1].stop-sl[1].start)<cw*1.2
         cells[i][sl]|= (grp[sl]==j)
     rgba=np.dstack([a.astype(np.uint8),alpha])
     for i,name in enumerate(names):

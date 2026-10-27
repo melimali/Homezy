@@ -3,8 +3,8 @@ import type { ImageSourcePropType } from 'react-native';
 import type { RoomType } from '@/domain/types';
 
 /**
- * Maskot: Kahveci Kakapo Moka. 24 sticker `assets/moka/moka_<poz>.png` (512×512, saydam zemin,
- * `scripts/slice-moka.py` ile iki sticker sayfasından kesildi). Hangi pozun ne zaman seçildiği
+ * Maskot: Kahveci Kakapo Moka. 54 sticker `assets/moka/moka_<poz>.png` (512×512, saydam zemin,
+ * `scripts/slice-moka.py` ile üç sticker sayfasından kesildi). Hangi pozun ne zaman seçildiği
  * `src/domain/moka.ts`'te.
  */
 
@@ -20,11 +20,25 @@ export const MOKA_CHORES = [
   'plants', 'trash', 'rest', 'checklist', 'vacuuming', 'sparkling_complete',
 ] as const;
 
-export type MokaExpression = (typeof MOKA_EXPRESSIONS)[number];
-export type MokaChore = (typeof MOKA_CHORES)[number];
+/** Koleksiyon sayfası: keyif ve duygu pozları. */
+export const MOKA_MOODS = [
+  'cheers', 'thumbs_up', 'love', 'nap', 'amazed', 'cookie',
+  'music', 'laptop', 'reading', 'sipping', 'scarf', 'unimpressed',
+  'plaid_coffee', 'pizza', 'bubble_bath', 'blanket_coffee', 'shower', 'birthday',
+  'sunny_plant', 'lazy_coffee',
+] as const;
+
+/** Koleksiyon sayfası: ev işi pozları. */
+export const MOKA_HOME = [
+  'baking', 'scrubbing', 'handyman', 'watering', 'laundry_basket', 'dustpan',
+  'spray_clean', 'trash_bag', 'todo', 'iced_vacuum',
+] as const;
+
+export type MokaExpression = (typeof MOKA_EXPRESSIONS)[number] | (typeof MOKA_MOODS)[number];
+export type MokaChore = (typeof MOKA_CHORES)[number] | (typeof MOKA_HOME)[number];
 export type MokaPose = MokaExpression | MokaChore;
 
-export const MOKA_POSES: readonly MokaPose[] = [...MOKA_EXPRESSIONS, ...MOKA_CHORES];
+export const MOKA_POSES: readonly MokaPose[] = [...MOKA_EXPRESSIONS, ...MOKA_CHORES, ...MOKA_MOODS, ...MOKA_HOME];
 
 export const MOKA_ASSETS: Record<MokaPose, ImageSourcePropType> = {
   happy: require('../../assets/moka/moka_happy.png'),
@@ -51,6 +65,36 @@ export const MOKA_ASSETS: Record<MokaPose, ImageSourcePropType> = {
   checklist: require('../../assets/moka/moka_checklist.png'),
   vacuuming: require('../../assets/moka/moka_vacuuming.png'),
   sparkling_complete: require('../../assets/moka/moka_sparkling_complete.png'),
+  cheers: require('../../assets/moka/moka_cheers.png'),
+  thumbs_up: require('../../assets/moka/moka_thumbs_up.png'),
+  love: require('../../assets/moka/moka_love.png'),
+  nap: require('../../assets/moka/moka_nap.png'),
+  amazed: require('../../assets/moka/moka_amazed.png'),
+  cookie: require('../../assets/moka/moka_cookie.png'),
+  music: require('../../assets/moka/moka_music.png'),
+  laptop: require('../../assets/moka/moka_laptop.png'),
+  reading: require('../../assets/moka/moka_reading.png'),
+  sipping: require('../../assets/moka/moka_sipping.png'),
+  scarf: require('../../assets/moka/moka_scarf.png'),
+  unimpressed: require('../../assets/moka/moka_unimpressed.png'),
+  plaid_coffee: require('../../assets/moka/moka_plaid_coffee.png'),
+  pizza: require('../../assets/moka/moka_pizza.png'),
+  bubble_bath: require('../../assets/moka/moka_bubble_bath.png'),
+  blanket_coffee: require('../../assets/moka/moka_blanket_coffee.png'),
+  shower: require('../../assets/moka/moka_shower.png'),
+  birthday: require('../../assets/moka/moka_birthday.png'),
+  sunny_plant: require('../../assets/moka/moka_sunny_plant.png'),
+  lazy_coffee: require('../../assets/moka/moka_lazy_coffee.png'),
+  baking: require('../../assets/moka/moka_baking.png'),
+  scrubbing: require('../../assets/moka/moka_scrubbing.png'),
+  handyman: require('../../assets/moka/moka_handyman.png'),
+  watering: require('../../assets/moka/moka_watering.png'),
+  laundry_basket: require('../../assets/moka/moka_laundry_basket.png'),
+  dustpan: require('../../assets/moka/moka_dustpan.png'),
+  spray_clean: require('../../assets/moka/moka_spray_clean.png'),
+  trash_bag: require('../../assets/moka/moka_trash_bag.png'),
+  todo: require('../../assets/moka/moka_todo.png'),
+  iced_vacuum: require('../../assets/moka/moka_iced_vacuum.png'),
 };
 
 export type MokaQuote = { title: string; message: string };
@@ -155,6 +199,96 @@ export const MOKA_QUOTES: Record<MokaPose, MokaQuote[]> = {
   sparkling_complete: [
     { title: '✨ Ev pırıl pırıl', message: 'Bugünün işleri bitti. Şimdi kahve ve keyif zamanı!' },
     { title: '🌟 Görev tamam', message: 'Her şey yerli yerinde. Seninle gurur duyuyorum!' },
+  ],
+  cheers: [
+    { title: '☕ Şerefe!', message: 'İlk yudum en güzeli. Hadi güne bir işle başlayalım!' },
+  ],
+  thumbs_up: [
+    { title: '👍 Süpersin', message: 'Böyle devam! Ev seninle çok daha güzel.' },
+  ],
+  love: [
+    { title: '❤️ Evini seviyorum', message: 'Biraz özen, çok sevgi. Bugün hangi odayı şımartalım?' },
+  ],
+  nap: [
+    { title: '💤 Kısa bir şekerleme', message: 'Biraz dinlenmek de iştir. Sonra taze başlarız.' },
+  ],
+  amazed: [
+    { title: '😮 Vay be!', message: 'Bu ev ne kadar güzelleşmiş! Bu emeğe bayıldım.' },
+  ],
+  cookie: [
+    { title: '🍪 Ödül zamanı', message: 'Bir iş bitir, bir kurabiye hak et. Anlaştık mı?' },
+  ],
+  music: [
+    { title: '🎧 Müzik aç, işe koyul', message: 'Sevdiğin bir şarkı bitene kadar bir işi halledelim mi?' },
+  ],
+  laptop: [
+    { title: '💻 Mola ver', message: 'Ekrandan kalk, 10 dakikalık bir iş hem eve hem sana iyi gelir.' },
+  ],
+  reading: [
+    { title: '📖 Kitap köşesi', message: 'İşler bitince en güzel ödül: kahve ve bir kitap.' },
+  ],
+  sipping: [
+    { title: '☕ Yudum yudum', message: 'Acele yok. Bir kahve, bir iş, sonra bir kahve daha.' },
+  ],
+  scarf: [
+    { title: '🧣 Hava serinledi', message: 'Mevsimlik işlere bakma zamanı. Atkılar çıktı mı?' },
+  ],
+  unimpressed: [
+    { title: '😑 Hıh…', message: 'Bugün hiç iş yapmadık gibi. Ben sadece söylüyorum.' },
+  ],
+  plaid_coffee: [
+    { title: '🍂 Battaniye ve kahve', message: 'Ev sıcacık. Bugün yumuşak bir gün olsun.' },
+  ],
+  pizza: [
+    { title: '🍕 Pizza molası', message: 'Karnın doydu mu? Şimdi küçük bir mutfak toparlaması.' },
+  ],
+  bubble_bath: [
+    { title: '🛁 Köpük keyfi', message: 'Banyo pırıl pırıl olunca köpük banyosu bir başka güzel!' },
+  ],
+  blanket_coffee: [
+    { title: '🫖 Yorganın altından', message: 'Biliyorum, kalkmak zor. Bir kahve iç, sonra bir iş.' },
+  ],
+  shower: [
+    { title: '🚿 Duş şarkısı', message: 'Banyo temizliği bitince şarkı söylemek serbest!' },
+  ],
+  birthday: [
+    { title: '🎂 Kutlama!', message: 'Bugün özel bir gün. Moka pastayı getirdi!' },
+  ],
+  sunny_plant: [
+    { title: '🌞 Güneşli bir sabah', message: 'Perdeleri aç, bitkiler de sen de ışığı hak ediyorsunuz.' },
+  ],
+  lazy_coffee: [
+    { title: '☕ Tembel mod', message: 'Bugün biraz yavaşız. Sorun değil, tek bir iş yeter.' },
+  ],
+  baking: [
+    { title: '🧁 Fırından taze', message: 'Mutfak temizse kek de güzel olur. Hadi başlayalım!' },
+  ],
+  scrubbing: [
+    { title: '🧽 Ovala ovala', message: 'Süngerler hazır, lekeler kaçacak yer arasın!' },
+  ],
+  handyman: [
+    { title: '🔧 Usta Moka', message: 'Küçük bir tamir bugün büyük bir dertten kurtarır.' },
+  ],
+  watering: [
+    { title: '🪴 Sulama vakti', message: 'Bitkiler susamış, bir bardak su lütfen!' },
+  ],
+  laundry_basket: [
+    { title: '🧺 Sepet doldu', message: 'Çamaşırlar katlanmayı bekliyor.' },
+  ],
+  dustpan: [
+    { title: '🧹 Süpür, topla', message: 'Küçük bir süpürme ile başlayalım, toz kalmasın.' },
+  ],
+  spray_clean: [
+    { title: '🧴 Fıs fıs', message: 'Camlar ve tezgâhlar parlasın!' },
+  ],
+  trash_bag: [
+    { title: '🗑️ Çöp günü', message: 'Torbayı kapıya bırakalım, ev hafiflesin.' },
+  ],
+  todo: [
+    { title: '📝 Bugünün listesi', message: 'Listeye bir göz at. Tik atmak çok keyifli!' },
+  ],
+  iced_vacuum: [
+    { title: '🧋 Buzlu kahveyle', message: 'Süpürgeyi aç, buzlu kahveni al. Hızlı bir tur!' },
   ],
 };
 

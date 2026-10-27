@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 
 import { House3D } from '@/components/House3D';
 import { MokaMascot } from '@/components/MokaMascot';
+import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
@@ -20,7 +21,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_SCENE } from '@/constants/curated-scenes';
+import { HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -63,9 +64,10 @@ export default function Home() {
     <Screen header={false}>
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <SceneImage source={HOME_MOKA_SCENE} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
+        <SceneImage source={HOME_SOFA_BACKGROUND} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
+          <HomeMokaAnimation />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Yazı resmin üstünde de okunsun: arkasında yarı saydam krem kart. */}
             <View style={styles.heroText}>

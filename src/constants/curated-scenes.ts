@@ -3,6 +3,8 @@ import type { RoomType } from '@/domain/types';
 
 /** Moka koltuğun minderinde oturur; ana ekranda ve salon kartında kullanılır. */
 export const HOME_MOKA_SCENE: ImageSourcePropType = require('../../assets/scenes/home_moka_sofa.jpg');
+export const HOME_SOFA_BACKGROUND: ImageSourcePropType = require('../../assets/arkaplan/salon_kanepe2.jpg');
+export const HOME_MOKA_SEATED: ImageSourcePropType = require('../../assets/moka/moka_home_seated.png');
 
 const ROOM_MOKA_SCENES: Partial<Record<RoomType, ImageSourcePropType>> = {
   salon: HOME_MOKA_SCENE,

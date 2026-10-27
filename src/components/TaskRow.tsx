@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -27,7 +28,7 @@ export function findList(S: AppState, rid: string, list: TaskList): Task[] {
 }
 
 /** Bir işin durumu ve eylemleri; satır (TaskRow) ve kare (TaskTile) aynı mantığı kullanır. */
-function useTask(t: Task, rid: string, list: TaskList) {
+export function useTask(t: Task, rid: string, list: TaskList) {
   const { state, update, get } = useStore();
   const { award } = usePlay();
   const toast = useToast();
@@ -62,8 +63,9 @@ function useTask(t: Task, rid: string, list: TaskList) {
       if (x) fn(x);
     });
 
+  /** İşi bitirir; puan verildiyse kaç puan olduğunu döner (kutlama ekranı için). */
   const done = (photo?: string) => {
-    if (doneToday) return;
+    if (doneToday) return 0;
     const before = room ? roomClean(get(), rid) : 0;
     const label = `${plant ? '🪴' : place.emoji} ${place.name} · ${t.name}`;
     const r = award('gorev', t.id, label, t.name, S => {
@@ -88,6 +90,7 @@ function useTask(t: Task, rid: string, list: TaskList) {
         sfx('party');
         toast(`✨ ${room.name} tertemiz! Harikasın 🎉`);
       }, 1800);
+    return r.awarded ? r.points : 0;
   };
 
   const snooze = (days: number, msg: string) => {
@@ -126,7 +129,7 @@ function useTask(t: Task, rid: string, list: TaskList) {
   return { s, now, room, place, plant, photoTask, doneToday, urgent, names, nextWho, edit, snooze, remove, act, action, emoji, pose, bounce, rise, gain, burst, min: taskMin(t) };
 }
 
-type TaskApi = ReturnType<typeof useTask>;
+export type TaskApi = ReturnType<typeof useTask>;
 
 /** '+10 ⭐' yazısı: düğmenin üstünden süzülüp kaybolur. */
 function Gain({ k }: { k: TaskApi }) {
@@ -150,34 +153,16 @@ export function TaskRow({
   t, rid, list, showRoom, first,
 }: { t: Task; rid: string; list: TaskList; showRoom?: boolean; first?: boolean }) {
   const c = useColors();
+  const router = useRouter();
   const k = useTask(t, rid, list);
   const [open, setOpen] = useState(false);
-  const tone = k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface2;
+  const tone = k.doneToday ? c.ok : k.s.k === 'late' ? c.late : k.s.k === 'today' ? c.today : c.muted;
+  const sub = [showRoom ? `${k.plant ? '🪴' : k.place.emoji} ${k.place.name}` : null, k.doneToday ? 'Bugün yapıldı' : k.s.label, `${k.min} dk`].filter(Boolean).join(' · ');
+  const detail = () => router.push({ pathname: '/is', params: { rid, list, id: t.id } });
 
   return (
     <View style={[styles.rowWrap, { backgroundColor: c.surface }, !first && { marginTop: 10 }]}>
       <View style={styles.row}>
-        <View style={[styles.bubble, { backgroundColor: tone }]}>
-          {k.pose ? (
-            <Image source={MOKA_ASSETS[k.pose]} style={[styles.sticker, k.doneToday && { opacity: 0.55 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
-          ) : (
-            <Text style={{ fontSize: 22 }}>{k.doneToday ? '✅' : k.emoji}</Text>
-          )}
-          {k.pose && k.doneToday && <Text style={styles.stickerDone}>✅</Text>}
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          {showRoom && (
-            <T v="small" style={{ fontFamily: fonts.bodyBold, fontSize: 12.5 }} numberOfLines={1}>
-              {k.plant ? '🪴' : k.place.emoji} {k.place.name}
-            </T>
-          )}
-          <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted }}>{t.name}</T>
-          <View style={styles.meta}>
-            <Pill k={k.doneToday ? 'ok' : k.s.k} label={k.doneToday ? 'Bugün yapıldı' : k.s.label} />
-            <T v="small">⏱ {k.min} dk</T>
-            <Who k={k} t={t} />
-          </View>
-        </View>
         <Animated.View style={{ transform: [{ scale: k.bounce }] }}>
           <Gain k={k} />
           <Burst fire={k.burst} />
@@ -189,23 +174,37 @@ export function TaskRow({
             accessibilityLabel={k.doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${k.action}`}
             style={[
               styles.done,
-              { backgroundColor: k.doneToday ? c.okSoft : k.urgent ? c.accent : c.surface2 },
+              k.doneToday ? { backgroundColor: c.ok, borderColor: c.ok } : { borderColor: k.urgent ? tone : c.line },
             ]}
           >
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: k.photoTask || k.plant ? 20 : 22, color: k.doneToday ? c.ok : k.urgent ? c.onAccent : c.ink }}>
-              {k.photoTask ? '📸' : k.plant ? '💧' : '✓'}
-            </Text>
+            {k.doneToday ? (
+              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.surface }}>✓</Text>
+            ) : k.photoTask || k.plant ? (
+              <Text style={{ fontSize: 14 }}>{k.photoTask ? '📸' : '💧'}</Text>
+            ) : null}
           </Squish>
         </Animated.View>
         <Pressable
-          onPress={() => setOpen(o => !o)}
+          onPress={detail}
+          onLongPress={() => setOpen(o => !o)}
+          delayLongPress={350}
           accessibilityRole="button"
-          accessibilityLabel={`${t.name} ayarları`}
+          accessibilityLabel={`${t.name}, ${sub}. Ayrıntı için dokun, ayarlar için basılı tut`}
           accessibilityState={{ expanded: open }}
-          hitSlop={6}
-          style={({ pressed }) => [styles.more, { backgroundColor: open ? c.surface2 : 'transparent' }, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [styles.rowMain, pressed && { opacity: 0.75 }]}
         >
-          <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 16, lineHeight: 18 }}>⋯</Text>
+          <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+            <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted, textDecorationLine: 'line-through' }}>{t.name}</T>
+            <T v="small" numberOfLines={1} style={{ fontSize: 12.5, color: k.urgent ? tone : c.muted }}>{sub}</T>
+            <Who k={k} t={t} />
+          </View>
+          {k.pose ? (
+            <Image source={MOKA_ASSETS[k.pose]} style={[styles.sticker, k.doneToday && { opacity: 0.5 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
+          ) : (
+            <View style={[styles.bubble, { backgroundColor: c.surface2 }]}>
+              <Text style={{ fontSize: 24 }}>{k.emoji}</Text>
+            </View>
+          )}
         </Pressable>
       </View>
       {open && (
@@ -229,7 +228,7 @@ function Who({ k, t }: { k: TaskApi; t: Task }) {
 }
 
 /** Ertele, atla, sıklık, süre, sil. Satırın altında ya da karenin alt sayfasında açılır. */
-function TaskSettings({ t, k, canDelete, onDone }: { t: Task; k: TaskApi; canDelete: boolean; onDone: () => void }) {
+export function TaskSettings({ t, k, canDelete, onDone }: { t: Task; k: TaskApi; canDelete: boolean; onDone: () => void }) {
   return (
     <>
       {!k.doneToday && (
@@ -362,14 +361,14 @@ export function StepBtn({ label, a11y, onPress, disabled }: { label: string; a11
 }
 
 /** "Yeni rutin" / "Yeni bitki" satırı. */
-export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: TaskList; placeholder: string }) {
+export function AddTaskForm({ rid, list, placeholder, autoOpen, onAdded }: { rid: string; list: TaskList; placeholder: string; autoOpen?: boolean; onAdded?: () => void }) {
   const c = useColors();
   const { update } = useStore();
   const toast = useToast();
   const [name, setName] = useState('');
   const [every, setEvery] = useState('7');
   // Form kapalı başlar; ekranda sadece bir düğme durur.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!autoOpen);
 
   const submit = () => {
     const n = name.trim();
@@ -381,6 +380,7 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
     setName('');
     setOpen(false);
     toast(`${n} eklendi.`);
+    onAdded?.();
   };
 
   if (!open) return <Btn small kind="ghost" label={list === 'plants' ? '🌱 Bitki ekle' : '➕ Yeni iş ekle'} onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />;
@@ -410,9 +410,9 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
 const styles = StyleSheet.create({
   rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  rowMain: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
-  sticker: { width: 58, height: 58, marginTop: -6 },
-  stickerDone: { position: 'absolute', right: -4, bottom: -4, fontSize: 16 },
+  sticker: { width: 66, height: 66, marginVertical: -8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   tileWrap: { width: '48%' },
   tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10 },
@@ -422,7 +422,6 @@ const styles = StyleSheet.create({
   tileCheck: { position: 'absolute', top: 8, left: 10, fontSize: 16 },
   tileMore: { position: 'absolute', top: 4, right: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  more: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   panel: { borderRadius: radius.tile, padding: 16, gap: 12, marginBottom: 14 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -430,7 +429,7 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
   gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, zIndex: 2 },
-  done: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
+  done: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },
 });

@@ -1,60 +1,98 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { ShopList } from '@/components/ShopList';
-import { Squish } from '@/components/motion';
+import { Appear, Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
-import { Btn, Card, Chip, EmptyMsg, MokaHero, Pill, Screen, SecHead, T } from '@/components/ui';
+import { Bar, Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
-import { allTasks, fmtLong, isGuestRoom, quickPick, shopItems } from '@/domain/logic';
+import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
 import type { ModeKind } from '@/domain/types';
 import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, useColors } from '@/theme';
+import { fonts, radius, useColors } from '@/theme';
 
 export default function Bugun() {
+  const c = useColors();
+  const router = useRouter();
   const { state: S } = useStore();
   const now = useNow();
   const sorted = allTasks(S, now).sort((a, b) => a.s.diff - b.s.diff);
   // Misafir modunda misafirin göreceği odaların yakın işleri ayrı bir grupta, en üstte.
   const guest = S.mode?.k === 'misafir' ? sorted.filter(x => isGuestRoom(S, x.rid) && x.s.diff <= 2) : [];
   const all = sorted.filter(x => !guest.includes(x));
-  // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bu hafta kapalı başlar.
+  const doneNow = all.filter(x => x.s.k === 'ok' && isDoneToday(x.t, now));
+  // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bugün bitenler altta, üstü çizili.
   const groups: [string, typeof all][] = [
     ['Misafir gelmeden', guest],
-    ['Bugün', all.filter(x => x.s.k !== 'ok')],
+    ['Bugün', [...all.filter(x => x.s.k !== 'ok'), ...doneNow]],
   ];
-  const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7);
+  const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7 && !isDoneToday(x.t, now));
   const [showWeek, setShowWeek] = useState(false);
   const later = all.filter(x => x.s.k === 'ok' && x.s.diff > 7).length;
   const shop = shopItems(S).map(s => s.x);
   // Tatilde rutinler dondu; liste boş görünsün.
   const visible = S.mode?.k === 'tatil' ? [] : groups.filter(g => g[1].length);
+  // Filtre hapları: Tümü ve iş olan yerler (oda / bitkiler / ev bakımı).
+  const today = visible.flatMap(g => g[1]);
+  const total = today.length;
+  const doneN = today.filter(x => isDoneToday(x.t, now)).length;
+  const places = [...new Map(today.map(x => [x.rid, placeOf(S, x.rid)])).entries()];
+  const [only, setOnly] = useState<string | null>(null);
+  const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
   return (
-    <Screen>
-      <MokaHero eyebrow={fmtLong(now)} title="Yapılacaklar" pose={visible.length ? 'checklist' : 'rest'} />
-      {!S.home.asked && <ProfilePrompt />}
-      <DailyGoals now={now} />
-      {visible.map(([label, arr], gi) => (
-        <Card bare key={label} index={gi + 1}>
-          <SecHead title={label} right={String(arr.length)} />
-          <View>
-            {arr.map((x, i) => (
-              <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />
-            ))}
+    <Screen header={false}>
+      <TitleBar title="Bugün" right={<IconBtn icon="📅" label="Haftam" onPress={() => router.push('/hafta')} />} />
+      <WeekStrip now={now} />
+
+      {total > 0 && (
+        <Appear index={1} style={[styles.progress, { backgroundColor: c.surface }]}>
+          <View style={styles.progHead}>
+            <View style={{ flex: 1 }}>
+              <T v="bold">Günlük İlerleme</T>
+              <T v="small">{doneN}/{total} tamamlandı</T>
+            </View>
+            <Text style={[styles.pct, { color: c.ink }]}>%{Math.round((doneN / total) * 100)}</Text>
           </View>
-        </Card>
-      ))}
+          <Bar value={doneN / total} height={10} />
+        </Appear>
+      )}
+
+      {places.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
+          <FilterPill label={`Tümü (${total})`} on={!filt} onPress={() => setOnly(null)} />
+          {places.map(([rid, p]) => (
+            <FilterPill key={rid} label={`${p.name} (${today.filter(x => x.rid === rid).length})`} on={filt === rid} onPress={() => setOnly(rid)} />
+          ))}
+        </ScrollView>
+      )}
+
+      {!S.home.asked && <ProfilePrompt />}
+      {visible.map(([label, arr], gi) => {
+        const rows = filt ? arr.filter(x => x.rid === filt) : arr;
+        if (!rows.length) return null;
+        return (
+          <Card bare key={label} index={gi + 2}>
+            {visible.length > 1 && <SecHead title={label} h="h3" right={String(rows.length)} />}
+            <View>
+              {rows.map((x, i) => (
+                <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom={!filt} first={i === 0} />
+              ))}
+            </View>
+          </Card>
+        );
+      })}
       {!visible.length && (
         <EmptyMsg pose={S.mode?.k === 'tatil' ? 'blanket' : 'party'}>
           {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
         </EmptyMsg>
       )}
+      <DailyGoals now={now} />
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>
           <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
@@ -75,6 +113,38 @@ export default function Bugun() {
       <TimeBudget now={now} />
       <AdBanner />
     </Screen>
+  );
+}
+
+const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+/** Haftanın günleri; bugün koyu hapın içinde. */
+function WeekStrip({ now }: { now: number }) {
+  const c = useColors();
+  const d = new Date(now);
+  const wd = (d.getDay() + 6) % 7;
+  return (
+    <Appear style={styles.week}>
+      {DAYS.map((name, i) => {
+        const day = new Date(d.getFullYear(), d.getMonth(), d.getDate() - wd + i);
+        const on = i === wd;
+        return (
+          <View key={name} style={[styles.day, on && { backgroundColor: c.accent }]} accessibilityLabel={on ? `Bugün, ${day.getDate()}` : undefined}>
+            <Text style={[styles.dayName, { color: on ? c.onAccent : c.muted }]}>{name}</Text>
+            <Text style={[styles.dayN, { color: on ? c.onAccent : c.ink }]}>{day.getDate()}</Text>
+          </View>
+        );
+      })}
+    </Appear>
+  );
+}
+
+function FilterPill({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Squish onPress={onPress} accessibilityState={{ selected: on }} style={[styles.fpill, { backgroundColor: on ? c.accent : c.surface2 }]}>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.muted }}>{label}</Text>
+    </Squish>
   );
 }
 
@@ -275,6 +345,15 @@ function DailyGoals({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
+  week: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -10 },
+  day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
+  dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  dayN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
+  progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6 },
+  progHead: { flexDirection: 'row', alignItems: 'flex-end' },
+  pct: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 24 },
+  pills: { gap: 8, paddingHorizontal: 24 },
+  fpill: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   modeHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   modeRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 24 },
   check: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },

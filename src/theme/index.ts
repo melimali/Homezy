@@ -20,6 +20,8 @@ const light = {
   late: '#B8584C', lateSoft: '#F3DCD6', today: '#7E6658', todaySoft: '#EADFD8', ok: '#4E7D98', okSoft: '#D6E4EC',
   /** Yumuşak, parlayan vurgu (kutlama, seçili sekme). */
   glow: '#F6E3C8', glowInk: '#8B5E3C',
+  /** Kutlama ekranının koyu zemini, üstündeki kart ve yazı. */
+  night: brand.navy, nightCard: '#3A4258', onNight: brand.mint, cream: '#FBF6EC',
   room: {
     yatak: '#CBDCE8', mutfak: '#E9DAD2', banyo: '#D3EADD', salon: '#DDD3CD', calisma: '#BCD0DD',
     cocuk: '#EED6CC', balkon: '#CDE4D3', antre: '#E0E3DE', camasir: '#C9D5E2',
@@ -35,6 +37,7 @@ const dark: Colors = {
   onBadge: '#1C2232',
   late: '#E58C7E', lateSoft: '#583A3C', today: '#D2BBAF', todaySoft: '#54484A', ok: '#9CC0D6', okSoft: '#36506A',
   glow: '#5A4A3E', glowInk: '#F6D9B0',
+  night: '#1C2232', nightCard: '#333A4F', onNight: brand.mint, cream: '#F3EDE1',
   room: {
     yatak: '#3F5672', mutfak: '#5D4F4B', banyo: '#355349', salon: '#4F4655', calisma: '#365169',
     cocuk: '#634E49', balkon: '#38533F', antre: '#434A5E', camasir: '#3C4C66',

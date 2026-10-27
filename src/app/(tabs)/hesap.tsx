@@ -1,16 +1,20 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Btn, Card, MokaHero, Pill, Screen, T } from '@/components/ui';
+import { Appear, Squish } from '@/components/motion';
+import { Bar, Btn, Card, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
+import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { useToast } from '@/components/Toast';
-import { seed } from '@/domain/logic';
+import { homeScore, seed } from '@/domain/logic';
+import { addDays, dayKey, nextStage, progressOf, STAGES } from '@/domain/play';
+import { useNow } from '@/hooks/useNow';
 import { LEGAL } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
-import { fonts, useColors } from '@/theme';
+import { fonts, radius, useColors } from '@/theme';
 
 const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -37,6 +41,21 @@ export default function Hesap() {
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
   const account = status === 'account';
   const name = account ? displayName(user) : 'Misafir';
+  const now = useNow();
+  const hp = progressOf(state.play, now);
+  const next = nextStage(hp.level);
+  const prev = [...STAGES].reverse().find(x => x.level <= hp.level);
+  // Bu hafta tamamlananlar (son 7 gün) ve başarımlar: sadece gösterim, mevcut kayıtlardan hesaplanır.
+  const today = dayKey(now);
+  const weekDone = [0, 1, 2, 3, 4, 5, 6].reduce((n, i) => n + (state.play.log[addDays(today, -i)]?.length ?? 0), 0);
+  const allDone = Object.values(state.play.log).reduce((n, a) => n + a.length, 0);
+  const plants = Object.values(state.play.log).flat().filter(x => x.startsWith('🪴')).length;
+  const badges: { label: string; pose: MokaPose; on: boolean; hint: string }[] = [
+    { label: 'Kahve Sever', pose: 'sipping', on: hp.streak >= 3, hint: '3 gün seri yap' },
+    { label: 'Temizlik Ustası', pose: 'sweeping', on: allDone >= 20, hint: '20 iş tamamla' },
+    { label: 'Düzen Canavarı', pose: 'checklist', on: homeScore(state, now) >= 80, hint: 'Ev puanını %80 yap' },
+    { label: 'Bitki Dostu', pose: 'watering', on: plants >= 3, hint: '3 kez bitki sula' },
+  ];
 
   const doRestore = async () => {
     setBusy('restore');
@@ -82,8 +101,59 @@ export default function Hesap() {
     );
 
   return (
-    <Screen>
-      <MokaHero title={name} sub={account ? user?.email ?? undefined : 'Hesapsız kullanıyorsun'} pose={account ? 'wink' : 'begging'} />
+    <Screen header={false}>
+      <TitleBar title="Profilim" right={<IconBtn icon="⚙️" label="Ayarlar" onPress={() => router.push('/bildirimler')} />} />
+
+      <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
+        <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
+          <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+        </View>
+        <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
+          <View>
+            <T v="h2" numberOfLines={1}>{name}</T>
+            <T v="tiny" numberOfLines={1}>{account ? user?.email : `${state.homeName} · hesapsız`}</T>
+          </View>
+          <View style={st.levelRow}>
+            <View style={[st.level, { backgroundColor: c.hi }]}>
+              <Text style={[st.levelT, { color: c.onBadge }]}>Seviye {hp.level}</Text>
+            </View>
+            <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} style={{ flex: 1 }} />
+          </View>
+          <T v="tiny" style={{ textAlign: 'right' }}>{next ? `${hp.level} / ${next.level} gün · ${next.emoji} ${next.name}` : 'Rüya evin tamam ⭐'}</T>
+        </View>
+      </Appear>
+
+      <View style={{ gap: 12 }}>
+        <SecHead title="İstatistiklerim" h="h3" right="Bu hafta" />
+        <Appear index={2} style={st.stats}>
+          <Stat emoji="🔥" n={hp.streak} label="gün seri" />
+          <Stat emoji="✅" n={weekDone} label="tamamlanan iş" />
+          <Stat emoji="⭐" n={state.play.points} label="puan" />
+        </Appear>
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <SecHead title="Başarımlar" h="h3" right={`${badges.filter(b => b.on).length}/${badges.length}`} />
+        <Appear index={3} style={st.badges}>
+          {badges.map(b => (
+            <View key={b.label} style={[st.badge, { backgroundColor: c.surface }]} accessibilityLabel={`${b.label}: ${b.on ? 'kazanıldı' : b.hint}`}>
+              <View style={[st.badgeIcon, { backgroundColor: c.surface2 }, !b.on && { opacity: 0.35 }]}>
+                <Image source={MOKA_ASSETS[b.pose]} style={st.badgeImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+              </View>
+              <Text numberOfLines={2} style={[st.badgeT, { color: b.on ? c.ink : c.muted }]}>{b.label}</Text>
+            </View>
+          ))}
+        </Appear>
+      </View>
+
+      <Squish onPress={() => router.push('/magaza')} accessibilityLabel="Evini geliştir: mağaza" style={[st.upgrade, { backgroundColor: c.surface }]}>
+        <Text style={{ fontSize: 26 }}>🏡</Text>
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <T v="bold">Evini Geliştir</T>
+          <T v="small">Tamamladığın işlerle yeni dekorasyonların kilidini aç!</T>
+        </View>
+        <Image source={MOKA_ASSETS.handyman} style={st.upgradeImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+      </Squish>
 
       <Card>
         {account ? (
@@ -155,6 +225,17 @@ export default function Hesap() {
   );
 }
 
+function Stat({ emoji, n, label }: { emoji: string; n: number; label: string }) {
+  const c = useColors();
+  return (
+    <View style={[st.stat, { backgroundColor: c.surface }]}>
+      <Text style={{ fontSize: 24 }}>{emoji}</Text>
+      <Text style={[st.statN, { color: c.ink }]}>{n}</Text>
+      <Text style={[st.statL, { color: c.muted }]}>{label}</Text>
+    </View>
+  );
+}
+
 function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   const c = useColors();
   return (
@@ -166,6 +247,23 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const st = StyleSheet.create({
+  profile: { flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: radius.tile, padding: 18, marginTop: -10 },
+  avatar: { width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: 84, height: 84, marginTop: 10 },
+  levelRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  level: { borderRadius: radius.pill, paddingVertical: 4, paddingHorizontal: 12 },
+  levelT: { fontFamily: fonts.bodyBlack, fontSize: 12.5 },
+  stats: { flexDirection: 'row', gap: 10 },
+  stat: { flex: 1, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 6 },
+  statN: { fontFamily: fonts.displayBold, fontSize: 24, lineHeight: 28 },
+  statL: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center' },
+  badges: { flexDirection: 'row', gap: 8 },
+  badge: { flex: 1, alignItems: 'center', gap: 8, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4 },
+  badgeIcon: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  badgeImg: { width: 58, height: 58, marginTop: 8 },
+  badgeT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, lineHeight: 14, textAlign: 'center' },
+  upgrade: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingLeft: 18, paddingRight: 8, overflow: 'hidden' },
+  upgradeImg: { width: 88, height: 88, marginVertical: -10 },
   list: { gap: 0, paddingVertical: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },

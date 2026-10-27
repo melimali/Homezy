@@ -93,3 +93,25 @@ export const taskPose = (name: string, plant = false): MokaPose | null => {
   const n = name.toLocaleLowerCase('tr-TR');
   return TASK_POSES.find(([re]) => re.test(n))?.[1] ?? null;
 };
+
+/** İş ekranındaki adımlar, Moka'nın cümlesi ve bitince söylediği söz; işin pozuna göre. Sadece görünüm için. */
+const TASK_ART: Partial<Record<MokaPose, { steps: string[]; line: string; cheer: string }>> = {
+  dishes: { steps: ['Kirli tabakları topla', 'Sıcak suyu hazırla', 'Bulaşıkları yıka', 'Tezgâhı temizle'], line: 'Köpük partisi! Bulaşıklar bitince kahve benden!', cheer: 'Köpükler gitti, kahve geldi. ☕ Bir adım daha güzel bir eve!' },
+  trash_bag: { steps: ['Çöpleri topla', 'Poşeti bağla', 'Dışarı çıkar', 'Yeni poşet tak'], line: 'Dışarısı seni bekliyor, hadi bir tur!', cheer: 'Ev hafifledi, sen de hafifledin. 🌿' },
+  laundry_basket: { steps: ['Çamaşırları ayır', 'Makineye yerleştir', 'As ya da kurut', 'Katla, yerleştir'], line: 'Mis gibi koksun!', cheer: 'Dolap mis kokuyor, ben de sarılmak istiyorum. 🧺' },
+  mirror: { steps: ['Bezi ve spreyi hazırla', 'Sıkıp sil', 'Kuru bezle parlat'], line: 'Parlasın ki kendimize gülümseyelim!', cheer: 'Pırıl pırıl! Aynadaki sen de çok mutlu. ✨' },
+  dusting: { steps: ['Yüzeyleri boşalt', 'Tozu al', 'Eşyaları yerine koy'], line: 'Toz tanesi kalmasın, hapşu!', cheer: 'Toz bulutu dağıldı, hava tertemiz. 🪶' },
+  vacuuming: { steps: ['Yerdekileri kaldır', 'Köşelerden başla', 'Halıları da süpür', 'Haznesini boşalt'], line: 'Vın vın! Yerler bizi bekliyor.', cheer: 'Yerler tertemiz, çıplak ayakla gezme vakti! 🧹' },
+  scrubbing: { steps: ['Temizleyiciyi sık', 'Biraz beklet', 'Fırçala', 'Durula ve kurula'], line: 'Biraz köpük, biraz kas gücü!', cheer: 'Parıl parıl oldu, köpük kahramanı sensin. 🫧' },
+  spray_clean: { steps: ['Yüzeyi boşalt', 'Sprey sık', 'Sil ve kurula'], line: 'Fıs fıs, sil sil, bitti!', cheer: 'Tezgâh ışıl ışıl, kahveyi buraya koyalım. ☕' },
+  watering: { steps: ['Toprağı yokla', 'Suyu hazırla', 'Yavaşça sula', 'Tabağı boşalt'], line: 'Yeşil dostlar mutlu olsun!', cheer: 'Yapraklar teşekkür ediyor, ben de! 🌱' },
+  handyman: { steps: ['Gerekenleri hazırla', 'Kontrol et', 'Temizle ya da değiştir'], line: 'Kask tamam, alet çantası tamam!', cheer: 'Usta işi oldu, ev sana minnettar. 🔧' },
+  todo: { steps: ['Fotoğrafını çek ya da not al', 'Kaydet'], line: 'Küçük bir not, büyük bir düzen.', cheer: 'Kayıtlar tamam, kafan rahat. 📋' },
+  checklist: { steps: ['Ortalıktakileri topla', 'Yerlerine yerleştir', 'Son bir göz at'], line: 'Daha ferah bir alan seni bekliyor ✨', cheer: 'Ferah ferah! Nefes almak bile güzel. 📦' },
+  baking: { steps: ['Malzemeleri hazırla', 'Pişir', 'Mutfağı topla'], line: 'Mutfaktan güzel kokular gelsin!', cheer: 'Ellerine sağlık, kokusu buraya geldi. 🍰' },
+  dustpan: { steps: ['Kirli kumu topla', 'Kabı temizle', 'Taze kum ekle'], line: 'Patili dostumuz teşekkür edecek!', cheer: 'Patiler mutlu, ev mis gibi. 🐾' },
+};
+
+const DEFAULT_ART = { steps: ['Gerekenleri hazırla', 'İşi yap', 'Ortalığı topla'], line: 'Küçük bir iş, kocaman bir rahatlama.', cheer: 'Bir adım daha güzel bir eve! ☕' };
+
+export const taskArt = (pose: MokaPose | null) => (pose && TASK_ART[pose]) || DEFAULT_ART;

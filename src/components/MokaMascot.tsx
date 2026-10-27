@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Float, useReduceMotion } from '@/components/motion';
+import { SceneImage } from '@/components/SceneImage';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
@@ -60,7 +61,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
     >
       {sceneSrc ? (
         <Animated.View style={[styles.scene, { backgroundColor: c.surface, transform: [{ scale: hop.interpolate({ inputRange: [-0.3, 0, 1], outputRange: [0.98, 1, 1.03] }) }] }]}>
-          <Image source={sceneSrc} style={styles.sceneImg} resizeMode="cover" accessibilityIgnoresInvertColors />
+          <SceneImage source={sceneSrc} />
         </Animated.View>
       ) : (
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
@@ -96,7 +97,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   col: { flexDirection: 'column', alignItems: 'center', gap: 18 },
   scene: { alignSelf: 'stretch', borderRadius: radius.card, overflow: 'hidden' },
-  sceneImg: { width: '100%', aspectRatio: 4 / 3 },
   bubble: { flex: 1, borderRadius: radius.card, paddingHorizontal: 20, paddingVertical: 16, gap: 4 },
   bubbleLg: { flex: 0, alignSelf: 'stretch' },
   bubbleScene: { marginTop: -28, marginHorizontal: 12 },

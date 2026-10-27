@@ -26,6 +26,7 @@ import { POSE_SCENES } from '@/constants/scenes';
 import { fonts, radius, space, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
+import { SceneImage } from './SceneImage';
 
 /* ---------- metin ---------- */
 
@@ -136,6 +137,48 @@ export function Card({ children, style, index, bare }: { children: ReactNode; st
   );
 }
 
+/** Sekme başlığı (tasarımdaki gibi): solda büyük başlık, sağda yuvarlak simge düğmesi. */
+export function TitleBar({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
+  return (
+    <Appear style={styles.titleBar}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <T v="h1">{title}</T>
+        {!!sub && <T v="small" style={{ marginTop: 2 }}>{sub}</T>}
+      </View>
+      {right}
+    </Appear>
+  );
+}
+
+/** Yuvarlak simge düğmesi (zil, takvim, ayar…). `badge` sayısı kırmızı rozet olarak durur. */
+export function IconBtn({
+  icon, label, onPress, badge, size = 46, style,
+}: { icon: ReactNode; label: string; onPress: () => void; badge?: number; size?: number; style?: StyleProp<ViewStyle> }) {
+  const c = useColors();
+  return (
+    <Squish onPress={onPress} accessibilityLabel={badge ? `${label}, ${badge}` : label} hitSlop={6}
+      style={[{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface }, style]}>
+      {typeof icon === 'string' ? <Text style={{ fontSize: size * 0.4 }}>{icon}</Text> : icon}
+      {!!badge && (
+        <View style={[styles.badge, { backgroundColor: c.late }]}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
+    </Squish>
+  );
+}
+
+/** İnce ilerleme çubuğu (0-1). */
+export function Bar({ value, color, track, height = 8, style }: { value: number; color?: string; track?: string; height?: number; style?: StyleProp<ViewStyle> }) {
+  const c = useColors();
+  const v = Math.max(0, Math.min(1, value || 0));
+  return (
+    <View style={[{ height, borderRadius: height / 2, overflow: 'hidden', backgroundColor: track ?? c.surface2 }, style]}>
+      <View style={{ width: `${v * 100}%`, height: '100%', borderRadius: height / 2, backgroundColor: color ?? c.hi }} />
+    </View>
+  );
+}
+
 /** Sekme başlığı: büyük başlık, kısa alt cümle ve yanında yüzen Moka. */
 export function MokaHero({
   title, sub, eyebrow, pose = 'happy', right,
@@ -178,7 +221,7 @@ export function EmptyMsg({ children, pose = 'wink' }: { children: ReactNode; pos
   return (
     <View style={styles.empty}>
       {POSE_SCENES[pose] ? (
-        <Image source={POSE_SCENES[pose]} style={styles.emptyScene} resizeMode="cover" accessibilityIgnoresInvertColors />
+        <SceneImage source={POSE_SCENES[pose]!} radius={radius.card} style={styles.emptyScene} />
       ) : (
         <Float amp={3} dur={2600}>
           <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
@@ -343,12 +386,13 @@ export const styles = StyleSheet.create({
   headMoka: { width: 50, height: 50, marginTop: 6 },
   brandWord: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 22, letterSpacing: -0.3 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  titleBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   heroRing: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
   heroMoka: { width: 104, height: 104 },
   heroScene: { width: 128, height: 112, borderRadius: radius.tile },
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   emptyMoka: { width: 132, height: 132 },
-  emptyScene: { width: '100%', maxWidth: 360, aspectRatio: 4 / 3, borderRadius: radius.card },
+  emptyScene: { alignSelf: 'center', width: '100%', maxWidth: 360 },
   sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
   bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },

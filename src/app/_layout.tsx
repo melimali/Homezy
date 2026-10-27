@@ -88,6 +88,7 @@ function RootStack() {
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="oda/[id]" />
+        <Stack.Screen name="is" />
         <Stack.Screen name="plan" />
         <Stack.Screen name="bildirimler" />
         <Stack.Screen name="magaza" />

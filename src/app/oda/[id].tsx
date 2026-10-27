@@ -1,9 +1,10 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { MiniShape } from '@/components/Plan';
 import { RoomBody } from '@/components/RoomBody';
+import { SceneImage } from '@/components/SceneImage';
 import { BackLink, Screen, T } from '@/components/ui';
 import { ROOM_SCENES } from '@/constants/scenes';
 import { ROOM_EMOJI, TYPES } from '@/domain/constants';
@@ -56,7 +57,7 @@ export default function RoomScreen() {
 
       {ROOM_SCENES[r.type] && (
         <Appear key={`scene-${r.id}`}>
-          <Image source={ROOM_SCENES[r.type]} style={styles.scene} resizeMode="cover" accessibilityIgnoresInvertColors />
+          <SceneImage source={ROOM_SCENES[r.type]!} ratio={16 / 10} radius={radius.card} />
         </Appear>
       )}
 
@@ -85,7 +86,6 @@ export default function RoomScreen() {
 }
 
 const styles = StyleSheet.create({
-  scene: { width: '100%', aspectRatio: 16 / 10, borderRadius: radius.card },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
   hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },

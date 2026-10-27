@@ -408,14 +408,14 @@ export function AddTaskForm({ rid, list, placeholder, autoOpen, onAdded }: { rid
 }
 
 const styles = StyleSheet.create({
-  rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14 },
+  rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14, borderWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   rowMain: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   sticker: { width: 66, height: 66, marginVertical: -8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   tileWrap: { width: '48%' },
-  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10 },
+  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0 },
   tileEmoji: { fontSize: 40, lineHeight: 48 },
   tileName: { fontFamily: fonts.bodyBlack, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
   tileTag: { borderRadius: radius.pill, paddingVertical: 3, paddingHorizontal: 10, marginTop: 2 },

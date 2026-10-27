@@ -74,7 +74,7 @@ export default function RoomScreen() {
           <View style={[styles.bar, { backgroundColor: c.surface }]}>
             <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
           </View>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: c.ink, opacity: 0.8 }}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: c.ink, opacity: 0.85 }}>
             {cleanWord(clean)} · %{clean} · ~{n * 2} m²
           </Text>
         </View>

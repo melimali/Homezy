@@ -86,11 +86,11 @@ function GridIcon({ color }: { color: string }) {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14, marginTop: -10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14, marginTop: -4 },
   cell: { width: '48%' },
-  card: { borderRadius: radius.tile, overflow: 'hidden' },
+  card: { borderRadius: radius.card, overflow: 'hidden', borderWidth: 0 },
   noScene: { height: 124, alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 14, gap: 8 },
+  body: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 8 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: { position: 'absolute', top: 10, right: 10, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },

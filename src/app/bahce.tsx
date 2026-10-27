@@ -6,10 +6,10 @@ import { PlantArt } from '@/components/GardenArt';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { Burst, Float } from '@/components/motion';
-import { BackLink, Btn, Card, EmptyMsg, Screen, Tabs, T } from '@/components/ui';
+import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
-  FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, growth, monthFlower, stageOf,
-  type Flower, type Plot,
+  FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, gardenRank, growth,
+  isPlotLovedToday, monthFlower, stageOf, type Flower, type Plot,
 } from '@/domain/garden';
 import { DECOR, PERSONAS, type Extra } from '@/domain/items';
 import { dayKey } from '@/domain/play';
@@ -37,6 +37,8 @@ export default function Bahce() {
   const { premium } = usePurchases();
   const [tab, setTab] = useState<Tab>('cicek');
   const [sel, setSel] = useState<string | null>(null);
+  const [detailFlower, setDetailFlower] = useState<Flower | null>(null);
+
   // Açan her çiçekte yıldız saçılsın: açılıştaki sayıdan fazlası (albüme almak sayıyı değiştirmez).
   const blooms = G.plots.filter(p => p.bloomed).length + Object.values(G.album).reduce((s, n) => s + n, 0);
   const [blooms0] = useState(blooms);
@@ -69,6 +71,9 @@ export default function Bahce() {
       ? `Her iş saksılara 1 büyüme verir (günde en fazla ${GROW_PER_DAY}). Gübre de hızlandırır.`
       : month.story ?? 'Bir tohum seç, birlikte büyütelim 🌱';
 
+  const rank = gardenRank(G.album);
+  const albumTypesCount = Object.keys(G.album).length;
+
   return (
     <Screen header={false}>
       <BackLink />
@@ -83,6 +88,23 @@ export default function Bahce() {
         <Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text>
         <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
       </View>
+
+      <Card style={[styles.statsCard, { backgroundColor: c.surface }]}>
+        <View style={styles.statsRow}>
+          <View style={{ flex: 1 }}>
+            <T v="tiny" style={{ color: c.muted }}>BAHÇE SEVİYESİ</T>
+
+            <T v="bold" style={{ color: c.ink, fontSize: 16 }}>{rank.title}</T>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <T v="tiny" style={{ color: c.muted }}>KOLEKSİYON</T>
+            <T v="bold" style={{ color: c.today, fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
+          </View>
+        </View>
+        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2, marginTop: 4 }]}>
+          <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: c.today }]} />
+        </View>
+      </Card>
 
       <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
         {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
@@ -105,12 +127,13 @@ export default function Bahce() {
           {P.owned.includes('sulama') && <Float amp={2} dur={2600}><Text style={styles.decorE}>🚿</Text></Float>}
           {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={300}><Text style={styles.decorE}>🐞</Text></Float>}
           {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
-          {Object.keys(G.album).length > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
+          {albumTypesCount > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
+          <Float amp={2.5} dur={1900} delay={500}><Text style={styles.decorE}>✨</Text></Float>
         </View>
         <Burst fire={fire} />
       </View>
 
-      {sel && <PlotActions id={sel} onDone={() => setSel(null)} />}
+      {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
 
       <Tabs
         value={tab}
@@ -128,7 +151,7 @@ export default function Bahce() {
         <View style={{ gap: 10 }}>
           <T v="small">Ucuzdan pahalıya. Pahalı çiçekler daha uzun sürede açar, daha gösterişli olur.</T>
           {[...FLOWERS].sort((a, b) => a.price - b.price).map(f => (
-            <SeedRow key={f.id} f={f} month={f.id === month.id} full={G.plots.length >= maxPlots} />
+            <SeedRow key={f.id} f={f} month={f.id === month.id} full={G.plots.length >= maxPlots} onSelect={setDetailFlower} />
           ))}
         </View>
       )}
@@ -148,7 +171,34 @@ export default function Bahce() {
         </View>
       )}
       {tab === 'kisilik' && <Personas />}
-      {tab === 'album' && <Album />}
+      {tab === 'album' && <Album onSelect={setDetailFlower} />}
+
+      {detailFlower && (
+        <Sheet open={!!detailFlower} onClose={() => setDetailFlower(null)} pose="plants">
+          <View style={{ alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+            <PlantArt flower={detailFlower} stage={5} size={110} />
+            <T v="h2">{detailFlower.emoji} {detailFlower.name}</T>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <Text style={[styles.tag, { color: c.muted }]}>{detailFlower.grow} büyüme hedefi</Text>
+              {detailFlower.premium && <Text style={[styles.tag, { color: c.warm }]}>👑 Premium</Text>}
+            </View>
+            <Card style={{ width: '100%', gap: 8, backgroundColor: c.surface2 }}>
+              <T v="bold">Moka&apos;nın Hikayesi 📖</T>
+
+              <T v="small">{detailFlower.story ?? `${detailFlower.name} bahçene neşe ve renk katan harika bir çiçek!`}</T>
+            </Card>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+                Albümdedeki Sayı: {G.album[detailFlower.id] ?? 0} adet
+              </Text>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+                Tohum Fiyatı: ⭐ {detailFlower.price}
+              </Text>
+            </View>
+            <Btn label="Kapat" onPress={() => setDetailFlower(null)} block style={{ marginTop: 10 }} />
+          </View>
+        </Sheet>
+      )}
     </Screen>
   );
 }
@@ -177,7 +227,7 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
 }
 
 /** Seçili saksı: açtıysa albüme al, büyüyorsa durumunu söyle. */
-function PlotActions({ id, onDone }: { id: string; onDone: () => void }) {
+function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => void; onOpenDetail: (f: Flower) => void }) {
   const now = useNow();
   const toast = useToast();
   const { state: S, update } = useStore();
@@ -187,6 +237,8 @@ function PlotActions({ id, onDone }: { id: string; onDone: () => void }) {
   const g = growth(S.play, plot, now);
   const left = f.grow - g;
   const fertLeft = Math.max(0, FERT_CAP(f) - plot.fert);
+  const lovedToday = isPlotLovedToday(S.play.garden, plot.id, now);
+
   const harvest = () => {
     update(D => {
       const G = D.play.garden;
@@ -197,25 +249,53 @@ function PlotActions({ id, onDone }: { id: string; onDone: () => void }) {
     toast(`${f.emoji} ${f.name} albümünde! Evinin bahçesinde de duruyor.`);
     onDone();
   };
+
+  const giveLove = () => {
+    const today = dayKey(now);
+    update(D => {
+      const G = D.play.garden;
+      if (!G.loved || G.loved.day !== today) {
+        G.loved = { day: today, plotIds: [] };
+      }
+      if (!G.loved.plotIds.includes(plot.id)) {
+        G.loved.plotIds.push(plot.id);
+      }
+      const p = G.plots.find(x => x.id === plot.id);
+      if (p) {
+        p.fert += 1;
+      }
+    });
+    sfx('party');
+    toast(`❤️ Moka ${f.name} saksısına sevgi verdi! (+1 Büyüme)`);
+  };
+
   return (
     <Card style={{ gap: 10 }}>
-      <T v="h3">{f.emoji} {f.name}</T>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <T v="h3">{f.emoji} {f.name}</T>
+        <Btn small kind="soft" label="Detay ℹ️" onPress={() => onOpenDetail(f)} />
+      </View>
       {plot.bloomed ? (
         <>
           <T v="small">Açtı! Albüme alınca saksı boşalır, çiçek evinin bahçesine geçer.</T>
           <Btn kind="primary" label="Albüme al 📖" onPress={harvest} block />
         </>
       ) : (
-        <T v="small">
-          {`Açmasına ${left} büyüme kaldı: iş yaparak en az ${Math.ceil(Math.max(0, left - fertLeft) / GROW_PER_DAY)} gün.`}
-          {fertLeft > 0 ? ` Gübreyle ${fertLeft} büyüme daha hızlanabilir.` : ' Gübre sınırı doldu, gerisi işlerle.'}
-        </T>
+        <>
+          <T v="small">
+            {`Açmasına ${left} büyüme kaldı: iş yaparak en az ${Math.ceil(Math.max(0, left - fertLeft) / GROW_PER_DAY)} gün.`}
+            {fertLeft > 0 ? ` Gübreyle ${fertLeft} büyüme daha hızlanabilir.` : ' Gübre sınırı doldu, gerisi işlerle.'}
+          </T>
+          {!lovedToday && (
+            <Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={giveLove} block />
+          )}
+        </>
       )}
     </Card>
   );
 }
 
-function SeedRow({ f, month, full }: { f: Flower; month: boolean; full: boolean }) {
+function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full: boolean; onSelect: (f: Flower) => void }) {
   const c = useColors();
   const router = useRouter();
   const toast = useToast();
@@ -241,13 +321,15 @@ function SeedRow({ f, month, full }: { f: Flower; month: boolean; full: boolean 
 
   return (
     <View style={[styles.row, { backgroundColor: month ? c.glow : c.surface }]}>
-      <PlantArt flower={f} stage={5} size={44} />
-      <View style={{ flex: 1, gap: 2 }}>
+      <Pressable onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} detaylarını gör`}>
+        <PlantArt flower={f} stage={5} size={44} />
+      </Pressable>
+      <Pressable onPress={() => onSelect(f)} style={{ flex: 1, gap: 2 }}>
         <Text style={[styles.rowT, { color: month ? c.glowInk : c.ink }]}>{f.name}{f.premium ? ' 👑' : ''}</Text>
         <Text style={[styles.rowS, { color: month ? c.glowInk : c.muted }]}>
           {month ? '🌟 Ayın çiçeği · ' : ''}{f.grow} büyümede açar
         </Text>
-      </View>
+      </Pressable>
       {locked ? (
         <Btn small label="👑 Premium" onPress={() => router.push('/premium')} />
       ) : (
@@ -372,7 +454,7 @@ function Personas() {
   );
 }
 
-function Album() {
+function Album({ onSelect }: { onSelect: (f: Flower) => void }) {
   const c = useColors();
   const { state: S } = useStore();
   const album = S.play.garden.album;
@@ -380,14 +462,20 @@ function Album() {
   if (!list.length) return <EmptyMsg pose="cozy_plant">Albüm boş. İlk çiçeğin açınca buraya gelecek 🌸</EmptyMsg>;
   return (
     <View style={{ gap: 10 }}>
-      <T v="small">{list.length}/{FLOWERS.length} çiçek türü topladın. Hepsi evinin bahçesinde.</T>
+      <T v="small">{list.length}/{FLOWERS.length} çiçek türü topladın. Detaylar ve hikaye için çiçeğe dokun.</T>
       <View style={styles.albumGrid}>
         {FLOWERS.map(f => (
-          <View key={f.id} style={[styles.albumCell, { backgroundColor: c.surface, opacity: album[f.id] ? 1 : 0.35 }]}>
+          <Pressable
+            key={f.id}
+            onPress={() => onSelect(f)}
+            accessibilityRole="button"
+            accessibilityLabel={`${f.name} detaylarını gör`}
+            style={[styles.albumCell, { backgroundColor: c.surface, opacity: album[f.id] ? 1 : 0.45 }]}
+          >
             <PlantArt flower={f} stage={album[f.id] ? 5 : 0} size={40} />
             <Text style={[styles.plotName, { color: c.ink }]} numberOfLines={1}>{album[f.id] ? f.name : '?'}</Text>
             {(album[f.id] ?? 0) > 1 && <Text style={[styles.plotStage, { color: c.muted }]}>×{album[f.id]}</Text>}
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
@@ -398,6 +486,8 @@ const styles = StyleSheet.create({
   wallet: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.card, justifyContent: 'center' },
   walletN: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 32 },
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
+  statsCard: { borderRadius: radius.card, padding: 12, gap: 6 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   bed: { borderRadius: radius.card, padding: 14, gap: 10, overflow: 'hidden' },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
   bedTop: { alignItems: 'flex-start' },

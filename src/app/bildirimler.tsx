@@ -205,9 +205,9 @@ function Toggle({ label, sub, value, onChange, first }: { label: string; sub: st
 }
 
 const styles = StyleSheet.create({
-  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: 18, borderWidth: 1.5 },
+  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
-  setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 1.5 },
+  setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 0 },
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

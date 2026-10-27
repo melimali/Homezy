@@ -87,9 +87,11 @@ export type Garden = {
   album: Record<string, number>;
   /** Bugün verilen gübreler (günlük sınır için). */
   fed: { day: DayKey; n: Record<string, number> };
+  /** Bugün sevgi/su verilen saksı kimlikleri. */
+  loved?: { day: DayKey; plotIds: string[] };
 };
 
-export const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {} } });
+export const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {} }, loved: { day: '', plotIds: [] } });
 
 /** Saksının büyümesi: ekildikten sonraki işler (günde en fazla 3) + gübre (hedefin en fazla yarısı). */
 export function growth(P: Play, plot: Plot, now = Date.now()) {
@@ -118,6 +120,20 @@ export function stageOf(g: number, target: number) {
 
 /** Bugün bu gübreden kaç tane verildi. */
 export const fedToday = (G: Garden, id: string, now = Date.now()) => (G.fed.day === dayKey(now) ? G.fed.n[id] ?? 0 : 0);
+
+/** Bugün bu saksıya sevgi/su verildi mi. */
+export const isPlotLovedToday = (G: Garden, plotId: string, now = Date.now()) =>
+  G.loved?.day === dayKey(now) && (G.loved.plotIds ?? []).includes(plotId);
+
+/** Bahçe seviyesi ve unvanı (albüme alınan farklı veya toplam çiçek sayısına göre). */
+export function gardenRank(album: Record<string, number>) {
+  const totalTypes = Object.keys(album).length;
+  if (totalTypes >= 14) return { title: '👑 Kraliyet Bahçıvanı', level: 5 };
+  if (totalTypes >= 10) return { title: '🌸 Usta Bahçıvan', level: 4 };
+  if (totalTypes >= 6) return { title: '🌷 Renkli Bahçıvan', level: 3 };
+  if (totalTypes >= 3) return { title: '🌿 Çiçek Sever', level: 2 };
+  return { title: '🌱 Çaylak Bahçıvan', level: 1 };
+}
 
 /* ---------- evin ruh hali ve kişiliği ---------- */
 

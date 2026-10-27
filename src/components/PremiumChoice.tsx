@@ -166,16 +166,16 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
 }
 
 const styles = StyleSheet.create({
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 2 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
-  plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 2, gap: 2 },
+  plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 0, gap: 2 },
   planName: { fontFamily: fonts.bodyBlack, fontSize: 13, paddingVertical: 3 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   price: { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40 },
-  table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6 },
+  table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
   cell: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12.5 },

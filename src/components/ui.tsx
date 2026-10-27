@@ -37,9 +37,9 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40, color: c.ink, letterSpacing: -0.6 };
-    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: c.ink, letterSpacing: -0.2 };
-    case 'h3': return { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 22, color: c.ink };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 42, color: c.ink, letterSpacing: -0.8 };
+    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 23, lineHeight: 29, color: c.ink, letterSpacing: -0.3 };
+    case 'h3': return { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 24, color: c.ink };
     case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink };
     case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
     case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted };
@@ -60,7 +60,7 @@ export function Screen({ children, scrollEnabled = true, header = true }: { chil
       style={{ flex: 1, backgroundColor: c.bg }}
       scrollEnabled={scrollEnabled}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: header ? 48 : insets.bottom + 48 }]}
+      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 10, paddingBottom: header ? 42 : insets.bottom + 42 }]}
     >
       {header && <AppHeader />}
       {children}
@@ -78,7 +78,7 @@ export function AppHeader() {
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
-        <View style={[styles.headMokaRing, { backgroundColor: c.surface }]}>
+        <View style={[styles.headMokaRing, { backgroundColor: c.surface, borderColor: c.line }]}>
           <Image source={MOKA_ASSETS.happy} style={styles.headMoka} resizeMode="contain" accessibilityLabel="Moka" />
         </View>
         <View>
@@ -93,7 +93,7 @@ export function AppHeader() {
             accessibilityRole="button"
             accessibilityLabel={n ? `Bildirimler, ${n} yeni` : 'Bildirimler'}
             hitSlop={6}
-            style={({ pressed }) => [styles.bell, { backgroundColor: c.surface }, pressed && { transform: [{ translateY: 1 }] }]}
+            style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, borderColor: c.line }, pressed && { transform: [{ scale: 0.96 }] }]}
           >
             <Text style={{ fontSize: 19 }}>🔔</Text>
             {n > 0 && (
@@ -263,7 +263,7 @@ export function Chip({ label, on, onPress }: { label: string; on: boolean; onPre
     <Squish
       onPress={onPress}
       accessibilityState={{ selected: on }}
-      style={[styles.chip, { backgroundColor: on ? c.accent : c.surface }]}
+      style={[styles.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: c.line }]}
     >
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{label}</Text>
     </Squish>
@@ -370,7 +370,7 @@ export const styles = StyleSheet.create({
   screen: { paddingHorizontal: space.screen, gap: space.section, width: '100%', maxWidth: 520, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headMokaRing: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  headMokaRing: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
   headMoka: { width: 50, height: 50, marginTop: 6 },
   brandWord: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 22, letterSpacing: -0.3 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
@@ -380,18 +380,21 @@ export const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   emptyMoka: { width: 132, height: 132 },
   sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
-  bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
-  card: { borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth },
-  cardBare: { paddingHorizontal: 0, paddingVertical: 0 },
+  card: {
+    borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: '#24352E', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.055, shadowRadius: 16, elevation: 2,
+  },
+  cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
     paddingVertical: 16, paddingHorizontal: 24,
   },
   btnSmall: { paddingVertical: 9, paddingHorizontal: 16 },
-  chip: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
+  chip: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },
   tabBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

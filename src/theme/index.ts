@@ -12,10 +12,10 @@ export const brand = {
 };
 
 const light = {
-  // Havadar yüzeyler: zemin mint, yüzeyler neredeyse beyaz, kenarlık yok denecek kadar yumuşak, gölge yok.
-  bg: brand.mint, surface: '#F9FDFA', surface2: '#E2EEE7', ink: brand.navy, muted: '#66758A', line: '#DCE8E0',
+  // Ferah adaçayı zemini ve sıcak porselen yüzeyler; Navy ve Moka mavisi ana marka vurgusu.
+  bg: '#F0F4EE', surface: '#FFFEFA', surface2: '#E7EEE6', ink: brand.navy, muted: '#69766F', line: '#DFE7DD',
   wall: '#283044', hatch: 'rgba(40,48,68,0.12)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.10)',
-  accent: brand.navy, onAccent: brand.mint, accentSoft: '#D6E4EC', hi: brand.blue, warm: brand.cocoa, clay: brand.clay,
+  accent: '#31473F', onAccent: '#F8F7EF', accentSoft: '#DDE8E1', hi: '#6D9AAF', warm: brand.cocoa, clay: brand.clay,
   onBadge: '#FFFFFF',
   fashion: '#F4EADF', fashionSurface: '#FBF7F1', fashionInk: '#604B43', fashionAccent: '#A66F5B', fashionLine: '#E8D9CA',
   late: '#B8584C', lateSoft: '#F3DCD6', today: '#7E6658', todaySoft: '#EADFD8', ok: '#4E7D98', okSoft: '#D6E4EC',
@@ -63,7 +63,7 @@ export const fonts = {
   bodyBlack: 'Nunito_800ExtraBold',
 };
 
-export const radius = { card: 28, tile: 24, plan: 12, pill: 999 };
+export const radius = { card: 26, tile: 22, plan: 14, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
-export const space = { screen: 24, section: 26, card: 22 };
+export const space = { screen: 22, section: 24, card: 20 };

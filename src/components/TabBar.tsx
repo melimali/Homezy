@@ -36,7 +36,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 10) }]}>
-      <View style={[st.bar, { backgroundColor: c.surface }]}>
+      <View style={[st.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
         {tabs.slice(0, half)}
         <Squish onPress={() => setAdd(true)} accessibilityLabel="Yeni iş ekle" style={[st.plus, { backgroundColor: c.accent }]}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -122,9 +122,12 @@ function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 const st = StyleSheet.create({
   wrap: { paddingHorizontal: 14, paddingTop: 6 },
-  bar: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 8, gap: 2 },
+  bar: {
+    flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 8, gap: 2,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(40,48,68,0.08)', shadowColor: '#24352E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.09, shadowRadius: 16, elevation: 5,
+  },
   tabOuter: { flex: 1 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 7, borderRadius: radius.pill },
   label: { fontSize: 11 },
-  plus: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', marginHorizontal: 6 },
+  plus: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginHorizontal: 6, shadowColor: '#24352E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
 });

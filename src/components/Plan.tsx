@@ -142,7 +142,7 @@ export function Plan({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd
       : null;
 
   return (
-    <View style={[styles.wrap, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}, 0 12px 28px ${c.lift}` }]}>
+    <View style={[styles.wrap, { backgroundColor: c.surface }]}>
       <View
         onLayout={e => setWidth(e.nativeEvent.layout.width)}
         style={{ width: '100%', aspectRatio: cols / rows }}

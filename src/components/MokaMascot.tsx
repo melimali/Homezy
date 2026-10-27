@@ -59,7 +59,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
         </Animated.View>
       </Float>
       {bubble && (
-        <View style={[styles.bubble, size === 'lg' && styles.bubbleLg, { backgroundColor: c.surface, borderColor: c.line, boxShadow: `0 3px 0 ${c.line}` }]}>
+        <View style={[styles.bubble, size === 'lg' && styles.bubbleLg, { backgroundColor: c.surface, borderColor: c.line }]}>
           <View
             style={[
               styles.tail,

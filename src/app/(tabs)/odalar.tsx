@@ -38,7 +38,7 @@ export default function Odalar() {
           <T v="lead" style={{ marginTop: 2 }}>Bir odaya dokun, içine gir.</T>
         </View>
         <Float amp={4}>
-          <View style={[styles.score, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}` }]}>
+          <View style={[styles.score, { backgroundColor: c.surface }]}>
             <Text style={{ fontSize: 22 }}>{score >= 90 ? '🌟' : score >= 60 ? '😊' : '🫧'}</Text>
             <Text style={[styles.scoreN, { color: c.ink }]}>%{score}</Text>
           </View>
@@ -64,7 +64,7 @@ export default function Odalar() {
                     <Squish
                       onPress={() => open(id)}
                       accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
-                      style={[styles.tile, { backgroundColor: c.room[r.type], boxShadow: `0 5px 0 ${c.line}` }]}
+                      style={[styles.tile, { backgroundColor: c.room[r.type] }]}
                     >
                       <Float amp={rc.late || rc.today ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
                         <View style={[styles.emoji, { backgroundColor: c.surface }]}>

@@ -12,10 +12,10 @@ export const brand = {
 };
 
 const light = {
-  // Cozy: kartlar soğuk beyaz değil krem, ikinci zemin kil tonunda sıcak.
-  bg: '#EBF5EE', surface: '#FFFCF6', surface2: '#F2EBE3', ink: '#283044', muted: '#5F6878', line: '#DCD3C8',
+  // Düz 2D: zemin mint, kartlar bir ton açık, gölge yok; ayrım boşlukla ve tek renk çizgiyle.
+  bg: brand.mint, surface: '#F8FCF9', surface2: '#DFEBE4', ink: brand.navy, muted: '#5C6B80', line: '#D3E1D8',
   wall: '#283044', hatch: 'rgba(40,48,68,0.12)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.10)',
-  accent: '#283044', onAccent: '#EBF5EE', accentSoft: '#D6E4EC', hi: '#78A1BB', warm: '#8B786D',
+  accent: brand.navy, onAccent: brand.mint, accentSoft: '#D6E4EC', hi: brand.blue, warm: brand.cocoa, clay: brand.clay,
   onBadge: '#FFFFFF',
   late: '#B8584C', lateSoft: '#F3DCD6', today: '#7E6658', todaySoft: '#EADFD8', ok: '#4E7D98', okSoft: '#D6E4EC',
   /** Yumuşak, parlayan vurgu (kutlama, seçili sekme). */
@@ -29,9 +29,9 @@ const light = {
 export type Colors = typeof light;
 
 const dark: Colors = {
-  bg: '#283044', surface: '#333A4F', surface2: '#40465C', ink: '#EBF5EE', muted: '#B3B8C4', line: '#4C5167',
+  bg: brand.navy, surface: '#333A4F', surface2: '#40465C', ink: brand.mint, muted: '#B3B8C4', line: '#4C5167',
   wall: '#EBF5EE', hatch: 'rgba(235,245,238,0.14)', shadow: 'rgba(10,14,24,0.45)', lift: 'rgba(10,14,24,0.35)',
-  accent: '#78A1BB', onAccent: '#1C2232', accentSoft: '#3A5068', hi: '#78A1BB', warm: '#BFA89E',
+  accent: brand.blue, onAccent: '#1C2232', accentSoft: '#3A5068', hi: brand.blue, warm: brand.clay, clay: brand.clay,
   onBadge: '#1C2232',
   late: '#E58C7E', lateSoft: '#583A3C', today: '#D2BBAF', todaySoft: '#54484A', ok: '#9CC0D6', okSoft: '#36506A',
   glow: '#5A4A3E', glowInk: '#F6D9B0',
@@ -59,3 +59,6 @@ export const fonts = {
 };
 
 export const radius = { card: 24, tile: 20, plan: 9, pill: 999 };
+
+/** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
+export const space = { screen: 20, section: 22, card: 20 };

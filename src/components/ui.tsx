@@ -21,7 +21,8 @@ import { fmtShort, notifs } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
-import { brand, fonts, radius, useColors, type Colors } from '@/theme';
+import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
+import { brand, fonts, radius, space, useColors, type Colors } from '@/theme';
 
 import { Appear, Squish } from './motion';
 
@@ -36,16 +37,16 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 35, color: c.ink, letterSpacing: -0.2 };
-    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 19, color: c.ink };
-    case 'h3': return { fontFamily: fonts.display, fontSize: 15, color: c.ink };
-    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink };
-    case 'small': return { fontFamily: fonts.body, fontSize: 13, color: c.muted };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, color: c.ink, letterSpacing: -0.3 };
+    case 'h2': return { fontFamily: fonts.display, fontSize: 20, lineHeight: 26, color: c.ink };
+    case 'h3': return { fontFamily: fonts.display, fontSize: 16, lineHeight: 21, color: c.ink };
+    case 'bold': return { fontFamily: fonts.bodyBold, fontSize: 16, color: c.ink };
+    case 'small': return { fontFamily: fonts.body, fontSize: 13.5, lineHeight: 19, color: c.muted };
     case 'tiny': return { fontFamily: fonts.body, fontSize: 12, color: c.muted };
     case 'eyebrow':
-      return { fontFamily: fonts.bodyBlack, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase', color: c.warm, marginBottom: 6 };
-    case 'lead': return { fontFamily: fonts.body, fontSize: 16, lineHeight: 23, color: c.muted, marginTop: 8 };
-    default: return { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: c.ink };
+      return { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: c.warm, marginBottom: 6 };
+    case 'lead': return { fontFamily: fonts.body, fontSize: 16, lineHeight: 24, color: c.muted, marginTop: 8 };
+    default: return { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: c.ink };
   }
 }
 
@@ -76,20 +77,21 @@ export function AppHeader() {
   const n = state.setup ? notifs(state, now).length : 0;
   return (
     <View style={styles.header}>
-      <View style={[styles.brandPill, { backgroundColor: brand.mint }]}>
-        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+      <View style={styles.brandRow}>
+        <Image source={MOKA_ASSETS.happy} style={styles.headMoka} resizeMode="contain" accessibilityLabel="Moka" />
+        <View style={[styles.brandPill, { backgroundColor: brand.mint }]}>
+          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+        </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={[styles.dateChip, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <T v="small" style={{ fontFamily: fonts.bodyBold, fontSize: 13 }}>{fmtShort(now)}</T>
-        </View>
+        <T v="small" style={{ fontFamily: fonts.bodyBold }}>{fmtShort(now)}</T>
         {state.setup && (
           <Pressable
             onPress={() => router.push('/bildirimler')}
             accessibilityRole="button"
             accessibilityLabel={n ? `Bildirimler, ${n} yeni` : 'Bildirimler'}
             hitSlop={6}
-            style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }, pressed && { transform: [{ translateY: 1 }] }]}
+            style={({ pressed }) => [styles.bell, { backgroundColor: c.surface }, pressed && { transform: [{ translateY: 1 }] }]}
           >
             <Text style={{ fontSize: 18 }}>🔔</Text>
             {n > 0 && (
@@ -110,7 +112,7 @@ export function BackLink({ label = 'Geri' }: { label?: string }) {
   const router = useRouter();
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
-    <Squish onPress={back} hitSlop={8} style={[styles.back, { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` }]}>
+    <Squish onPress={back} hitSlop={8} style={[styles.back, { backgroundColor: c.surface }]}>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }} accessibilityLabel={label || 'Geri'}>‹{label ? `  ${label}` : ''}</Text>
     </Squish>
   );
@@ -118,11 +120,11 @@ export function BackLink({ label = 'Geri' }: { label?: string }) {
 
 /* ---------- kart ---------- */
 
-/** Krem, yastık gibi kabarık kart. İlk göründüğünde yaylanarak gelir (`index` ile sırayla). */
+/** Düz, gölgesiz kart. İlk göründüğünde yaylanarak gelir (`index` ile sırayla). */
 export function Card({ children, style, index }: { children: ReactNode; style?: StyleProp<ViewStyle>; index?: number }) {
   const c = useColors();
   return (
-    <Appear index={index} style={[styles.card, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}, 0 12px 28px ${c.lift}` }, style]}>
+    <Appear index={index} style={[styles.card, { backgroundColor: c.surface }, style]}>
       {children}
     </Appear>
   );
@@ -137,8 +139,14 @@ export function SecHead({ title, right, h = 'h2' }: { title: string; right?: Rea
   );
 }
 
-export function EmptyMsg({ children }: { children: ReactNode }) {
-  return <T v="small" style={{ fontSize: 14, paddingVertical: 4 }}>{children}</T>;
+/** Boş durum: Moka ve kısa bir cümle. */
+export function EmptyMsg({ children, pose = 'wink' }: { children: ReactNode; pose?: MokaPose }) {
+  return (
+    <View style={styles.empty}>
+      <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+      <T v="small" style={{ fontSize: 14, lineHeight: 20, flex: 1 }}>{children}</T>
+    </View>
+  );
 }
 
 /* ---------- butonlar ---------- */
@@ -151,7 +159,6 @@ export function Btn({
   const c = useColors();
   const bg = kind === 'primary' ? c.accent : kind === 'danger' ? c.late : kind === 'ghost' ? 'transparent' : c.surface2;
   const fg = kind === 'primary' ? c.onAccent : kind === 'danger' ? c.onBadge : c.ink;
-  const lift = kind === 'ghost' ? undefined : `0 3px 0 ${kind === 'primary' ? c.shadow : c.lift}`;
   return (
     <Squish
       {...rest}
@@ -160,7 +167,6 @@ export function Btn({
         small && styles.btnSmall,
         block && { alignSelf: 'stretch' },
         { backgroundColor: bg, borderColor: kind === 'ghost' ? c.line : bg },
-        lift ? { boxShadow: lift } : null,
         style,
       ]}
     >
@@ -215,8 +221,8 @@ export function Tabs<K extends string>({
             style={[
               styles.tab,
               on
-                ? { backgroundColor: c.accent, boxShadow: `0 4px 0 ${c.shadow}` }
-                : { backgroundColor: c.surface, boxShadow: `0 3px 0 ${c.line}` },
+                ? { backgroundColor: c.accent }
+                : { backgroundColor: c.surface },
             ]}
           >
             <Text style={{ fontSize: 22 }}>{it.emoji}</Text>
@@ -259,20 +265,21 @@ export function Swatch({ color, size = 18 }: { color: string; size?: number }) {
 export function Callout({ children }: { children: ReactNode }) {
   const c = useColors();
   return (
-    <View style={{ backgroundColor: c.todaySoft, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14 }}>
+    <View style={{ backgroundColor: c.todaySoft, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 16 }}>
       <Text style={{ color: c.today, fontFamily: fonts.bodyBold, fontSize: 14 }}>{children}</Text>
     </View>
   );
 }
 
 /** Alttan kayarak açılan yumuşak sayfa. */
-export function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
+export function Sheet({ open, onClose, children, pose = 'happy' }: { open: boolean; onClose: () => void; children: ReactNode; pose?: MokaPose }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityLabel="Kapat" />
       <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }]}>
+        <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
         <View style={[styles.grab, { backgroundColor: c.line }]} />
         {children}
       </View>
@@ -294,19 +301,23 @@ export function Field(props: ComponentProps<typeof TextInput>) {
 }
 
 export const styles = StyleSheet.create({
-  screen: { paddingHorizontal: 16, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
+  screen: { paddingHorizontal: space.screen, gap: space.section, width: '100%', maxWidth: 520, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  headMoka: { width: 48, height: 48, marginVertical: -6 },
+  empty: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
+  emptyMoka: { width: 64, height: 64 },
+  sheetMoka: { position: 'absolute', top: -58, right: 24, width: 76, height: 76 },
   brandPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 102, height: 34 },
-  bell: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 },
-  dateChip: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
-  card: { borderRadius: radius.card, padding: 16, gap: 12 },
+  card: { borderRadius: radius.card, padding: space.card, gap: 14 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
-    paddingVertical: 12, paddingHorizontal: 18, borderWidth: 1.5,
+    paddingVertical: 13, paddingHorizontal: 20, borderWidth: 1.5,
   },
   btnSmall: { paddingVertical: 7, paddingHorizontal: 14 },
   chip: { borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 12 },
@@ -316,7 +327,7 @@ export const styles = StyleSheet.create({
   x: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
   sheetBg: { flex: 1 },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingTop: 10, gap: 12, maxWidth: 520, alignSelf: 'center', width: '100%' },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: space.card, paddingTop: 10, gap: 14, maxWidth: 520, alignSelf: 'center', width: '100%' },
   grab: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 4 },
   field: {
     flex: 1, minWidth: 0, borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9,

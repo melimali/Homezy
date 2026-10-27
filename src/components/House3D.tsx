@@ -649,7 +649,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
           hitSlop={4}
           style={({ pressed }) => [
             styles.tag,
-            { backgroundColor: c.surface, borderColor: c.line, boxShadow: `0 2px 0 ${c.line}` },
+            { backgroundColor: c.surface, borderColor: c.line },
             pressed && { transform: [{ translateY: 1 }] },
           ]}
         >

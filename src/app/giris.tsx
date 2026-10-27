@@ -124,7 +124,7 @@ export default function Giris() {
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   onPress={() => switchTo(m)}
-                  style={[st.segBtn, on && { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }]}
+                  style={[st.segBtn, on && { backgroundColor: c.surface }]}
                 >
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: on ? c.ink : c.muted }}>
                     {m === 'kayit' ? 'Hesap oluştur' : 'Giriş yap'}

@@ -53,7 +53,7 @@ export default function RoomScreen() {
         )}
       </View>
 
-      <Appear key={`hero-${r.id}`} style={[styles.hero, { backgroundColor: c.room[r.type], boxShadow: `0 5px 0 ${c.line}` }]}>
+      <Appear key={`hero-${r.id}`} style={[styles.hero, { backgroundColor: c.room[r.type] }]}>
         <Float amp={4}>
           <View style={[styles.emoji, { backgroundColor: c.surface }]}>
             <Text style={{ fontSize: 38 }}>{ROOM_EMOJI[r.type]}</Text>

@@ -185,7 +185,7 @@ export function TaskRow({
               k.doneToday
                 ? { backgroundColor: c.okSoft, borderColor: c.okSoft }
                 : k.urgent
-                ? { backgroundColor: c.accent, borderColor: c.accent, boxShadow: `0 3px 0 ${c.shadow}` }
+                ? { backgroundColor: c.accent, borderColor: c.accent }
                 : { borderColor: c.hi },
             ]}
           >
@@ -287,7 +287,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
           accessibilityLabel={`${t.name}, ${label}. ${k.doneToday ? 'Ayarlar için dokun' : `${k.action} için dokun, ayarlar için basılı tut`}`}
           style={[
             styles.tile,
-            { backgroundColor: tone.bg, borderColor: tone.ring, boxShadow: `0 4px 0 ${k.urgent ? tone.ring : c.line}` },
+            { backgroundColor: tone.bg, borderColor: tone.ring },
           ]}
         >
           <Float amp={k.urgent ? 3 : 0} dur={1600 + (index % 4) * 200}>

@@ -212,7 +212,6 @@ function Chip({ label, color, on, onPress }: { label: string; color?: string; on
       style={({ pressed }) => [
         styles.chip,
         { backgroundColor: on ? c.ink : c.surface, borderColor: on ? c.ink : c.line },
-        !pressed && { boxShadow: `0 2px 0 ${c.line}` },
         pressed && { transform: [{ translateY: 1 }] },
       ]}
     >

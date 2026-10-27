@@ -14,6 +14,7 @@ import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
 import type { PhotoLook } from './Outfits';
+import { MokaMascot } from './MokaMascot';
 import { useToast } from './Toast';
 import { Btn, SecHead, T } from './ui';
 
@@ -260,8 +261,11 @@ function Working({ text, onStop }: { text: string; onStop: () => void }) {
   return (
     <View style={{ gap: 8 }} accessibilityRole="progressbar" accessibilityLiveRegion="polite">
       <View style={styles.row}>
-        <ActivityIndicator color={c.hi} />
-        <T v="small" style={{ flex: 1 }}>{text}</T>
+        <MokaMascot pose="analyzing" size="sm" showBubble={false} />
+        <View style={{ flex: 1, gap: 6 }}>
+          <T v="small">{text}</T>
+          <ActivityIndicator color={c.hi} style={{ alignSelf: 'flex-start' }} />
+        </View>
       </View>
       <Btn small kind="ghost" label="Durdur" onPress={onStop} style={{ alignSelf: 'flex-start' }} />
     </View>

@@ -96,7 +96,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   onPress={() => cycle(x.id)}
                   onLongPress={() => setSheet(x.id)}
                   accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştirmek için dokun, ayarlar için basılı tut`}
-                  style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : bg, boxShadow: `0 3px 0 ${c.line}` }]}
+                  style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : bg }]}
                 >
                   <Text style={{ fontSize: 30 }}>{clothEmoji(x.cat, x.name)}</Text>
                   <Text numberOfLines={2} style={[styles.clothName, { color: c.ink }]}>{x.name}</Text>
@@ -309,7 +309,7 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
                 onPress={() => setLv(x.id, NEXT_LV[x.lvl])}
                 onLongPress={() => { setSkt(x.id); setSktText(x.exp ? fmtDate(x.exp) : ''); }}
                 accessibilityLabel={`${x.name}: ${LV.find(l => l[0] === x.lvl)?.[1]}. Değiştirmek için dokun, ayarlar için basılı tut`}
-                style={[styles.cloth, { backgroundColor: lvSoft[x.lvl], borderColor: lvSoft[x.lvl], boxShadow: `0 3px 0 ${c.line}` }]}
+                style={[styles.cloth, { backgroundColor: lvSoft[x.lvl], borderColor: lvSoft[x.lvl] }]}
               >
                 <Text style={[{ fontSize: 30 }, x.lvl === 'yok' && { opacity: 0.45 }]}>{itemEmoji(x.name)}</Text>
                 <Text numberOfLines={2} style={[styles.clothName, { color: x.lvl === 'yok' ? c.muted : c.ink }]}>{x.name}</Text>

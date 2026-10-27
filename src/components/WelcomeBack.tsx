@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 
+import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { Btn, T } from '@/components/ui';
 import { allTasks, quickPick } from '@/domain/logic';
@@ -35,7 +36,7 @@ export function WelcomeBack() {
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.bg, { backgroundColor: c.shadow }]}>
         <View style={[styles.box, { backgroundColor: c.surface }]}>
-          <Text style={{ fontSize: 52, textAlign: 'center' }}>{hp.today ? '🔨🏡' : '🤗'}</Text>
+          <MokaMascot pose={hp.today ? 'maintenance' : 'happy'} size="lg" showBubble={false} style={styles.moka} />
           <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
@@ -59,5 +60,6 @@ export function WelcomeBack() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  box: { borderRadius: radius.card, padding: 22, gap: 14, alignItems: 'center', maxWidth: 420, width: '100%' },
+  moka: { marginTop: -90 },
+  box: { borderRadius: radius.card, padding: 24, paddingTop: 0, marginTop: 80, gap: 14, alignItems: 'center', maxWidth: 420, width: '100%' },
 });

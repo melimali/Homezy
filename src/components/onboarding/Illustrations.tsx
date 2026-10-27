@@ -27,7 +27,7 @@ export function PlanArt({ t }: Props) {
   const gap = 6;
   return (
     <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={[s.board, { backgroundColor: c.surface, boxShadow: `0 5px 0 ${c.line}, 0 18px 36px ${c.lift}` }]}>
+      <View style={[s.board, { backgroundColor: c.surface }]}>
         <View style={{ width: cell * 4 + gap * 3, flexDirection: 'row', flexWrap: 'wrap', gap }}>
           {PLAN.map((type, i) => {
             const start = 0.03 + i * 0.035;
@@ -95,7 +95,7 @@ export function RoutineArt({ t }: Props) {
         return (
           <Animated.View
             key={r.name}
-            style={[s.row, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}, 0 12px 24px ${c.lift}`, transform: [{ translateY: bob }] }]}
+            style={[s.row, { backgroundColor: c.surface, transform: [{ translateY: bob }] }]}
           >
             <View style={{ flex: 1, gap: 6 }}>
               <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{r.name}</Text>
@@ -146,7 +146,6 @@ export function RoomsArt({ t }: Props) {
               s.tile,
               {
                 backgroundColor: tile.bg,
-                boxShadow: `0 5px 0 ${c.shadow}, 0 16px 30px ${c.lift}`,
                 transform: [{ translateX: tile.x }, { translateY: Animated.add(y, tile.y) }, { rotate }],
               },
             ]}
@@ -221,7 +220,7 @@ export function MorningArt({ t }: Props) {
   ];
   return (
     <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-      <Animated.View style={[s.bell, { backgroundColor: c.accent, boxShadow: `0 5px 0 ${c.shadow}`, transform: [{ rotate }] }]}>
+      <Animated.View style={[s.bell, { backgroundColor: c.accent, transform: [{ rotate }] }]}>
         <Svg width={40} height={40} viewBox="0 0 24 24">
           <Path d="M6 16v-5a6 6 0 1 1 12 0v5l2 2H4z" fill={c.onAccent} />
           <Path d="M10 20.5h4" stroke={c.onAccent} strokeWidth={2.4} strokeLinecap="round" />

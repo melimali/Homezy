@@ -113,7 +113,7 @@ function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: 
   const built = Math.min(p.level, BUILT);
   const warn = p.idle > 0 || (!p.today && p.level > 0);
   return (
-    <View style={[styles.streak, { backgroundColor: warn ? c.lateSoft : c.surface, boxShadow: `0 3px 0 ${c.line}` }]}>
+    <View style={[styles.streak, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
       <View style={styles.streakTop}>
         <View style={styles.stat}>
           <Text style={{ fontSize: 22 }}>{p.streak ? '🔥' : '🪵'}</Text>
@@ -166,7 +166,7 @@ function Celebrate({ level }: { level: number }) {
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
-          <Float amp={6} dur={1400}><Text style={{ fontSize: 56 }}>🎉🏡</Text></Float>
+          <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
           <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
@@ -181,7 +181,7 @@ function Celebrate({ level }: { level: number }) {
 function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onPress: () => void; i: number }) {
   const c = useColors();
   return (
-    <Squish onPress={onPress} style={[styles.q, { backgroundColor: c.surface, boxShadow: `0 4px 0 ${c.line}` }]}>
+    <Squish onPress={onPress} style={[styles.q, { backgroundColor: c.surface }]}>
       <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
         <Text style={{ fontSize: 28 }}>{emoji}</Text>
       </Float>
@@ -205,5 +205,6 @@ const styles = StyleSheet.create({
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   q: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  modal: { borderRadius: radius.card, padding: 24, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
+  modalMoka: { marginTop: -90 },
+  modal: { borderRadius: radius.card, padding: 24, paddingTop: 0, marginTop: 80, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
 });

@@ -18,7 +18,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { useAuth } from '@/auth/AuthProvider';
 import { MokaMascot } from '@/components/MokaMascot';
-import { MorningArt, PlanArt, RoomsArt, RoutineArt } from '@/components/onboarding/Illustrations';
+import { FridgeArt, MorningArt, PlanArt, RoutineArt, WardrobeArt } from '@/components/onboarding/Illustrations';
 import { Btn } from '@/components/ui';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
@@ -76,12 +76,20 @@ const PAGES: Page[] = [
     pose: 'checklist',
   },
   {
-    eyebrow: 'Her odanın kendi işi',
-    title: 'Gardırop, buzdolabı, bitkiler',
-    text: 'Kirli çamaşırı, biten ürünü, susayan bitkiyi ben takip ederim. Alışveriş listen de kendiliğinden çıkar.',
-    Art: RoomsArt,
-    blob: c => c.room.balkon,
-    pose: 'plants',
+    eyebrow: 'Akıllı gardırop',
+    title: 'Dolabındaki parçalarla harika kombinler',
+    text: 'Kıyafetlerini fotoğraftan yapay zekâyla tanıyıp dolabına eklerim. Temiz, kirli ve ütülenecekleri takip eder; mevsime ve ortama göre parçalarını eşleştiririm.',
+    Art: WardrobeArt,
+    blob: c => c.fashion,
+    pose: 'analyzing',
+  },
+  {
+    eyebrow: 'Buzdolabı takibi',
+    title: 'Eksikleri fark edelim',
+    text: 'Fotoğraftaki ürünleri ve kalan miktarları tahmin ederim. Sen onayla; azalanlarla bitenleri alışveriş listene ekleyelim.',
+    Art: FridgeArt,
+    blob: c => c.room.mutfak,
+    pose: 'checklist',
   },
   {
     eyebrow: 'Sabah özeti',

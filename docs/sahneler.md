@@ -1,12 +1,13 @@
 # Moka sahneleri
 
-Arka plan + Moka stickerı birleşik görseller (`assets/scenes/`, 640×480 JPEG). Eşleştirme `scripts/scenes.json`'da; bu tablo onun özeti.
+Arka plan + Moka stickerı birleşik görseller (`assets/scenes/`, 960×720 JPEG). Eşleştirme `scripts/scenes.json`'da; bu tablo onun özeti.
 
 ## Yeni arka plan ekleme
 
 1. Sayfa hâlinde geldiyse `scripts/scenes.json > sheets` altına satır, sütun ve kare adlarını yaz, sonra `python3 scripts/make-scenes.py slice <sayfa.png> <sayfa_adı>`. Tek görsel geldiyse `assets/arkaplan/<ad>.jpg` olarak koy.
-2. `poses` ya da `rooms` içinde istediğin pozu yeni arka plana bağla.
-3. `python3 scripts/make-scenes.py build`: sahneleri ve `src/constants/scenes.ts`'i yeniden üretir, eksik arka planları listeler.
+2. Sayfadan kesilen kareler küçük (~200 px). `python3 scripts/make-scenes.py upscale <model_klasörü>` ile Real-ESRGAN (x4plus-anime, `pip install ncnn`, model dosyaları Real-ESRGAN GitHub sürümündeki ncnn zip'inin `models` klasörü) 4 kat büyütülür. Model yoksa Lanczos'la büyütür. 1024 px ve üstü tek görsel gelirse gerekmez.
+3. `poses` ya da `rooms` içinde istediğin pozu yeni arka plana bağla.
+4. `python3 scripts/make-scenes.py build`: sahneleri ve `src/constants/scenes.ts`'i yeniden üretir, eksik arka planları listeler.
 
 İsteğe bağlı alanlar: `x` (Moka'nın yatay ortası, 0-1), `h` (boyu, sahne yüksekliğine oran, varsayılan 0,62), `flip` (aynala).
 

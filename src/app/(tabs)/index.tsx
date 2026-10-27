@@ -65,10 +65,12 @@ export default function Home() {
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
         <SceneImage source={scene ?? MOKA_ASSETS[pose]} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
-          <Fade edge="top" color={c.bg} size="42%" to={0.9} />
+          <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
-            <View style={{ flex: 1, minWidth: 0 }}>
+            {/* Yazı resmin üstünde de okunsun: arkasında yarı saydam krem kart. */}
+            <View style={styles.heroText}>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, opacity: 0.82 }]} />
               <T v="h1" style={{ fontSize: 30, lineHeight: 36 }}>{greet(new Date(now), name)}</T>
               <T v="bold" style={[styles.heroLead, { color: c.ink }]}>
                 {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda. ${greeting(new Date(now)).line}`}
@@ -275,8 +277,9 @@ function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onP
 
 const styles = StyleSheet.create({
   heroWrap: { marginHorizontal: -space.screen },
-  heroTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: space.screen },
-  heroLead: { fontSize: 15, lineHeight: 21, marginTop: 4, maxWidth: 250 },
+  heroTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: space.screen - 8 },
+  heroText: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.tile, paddingVertical: 10, paddingHorizontal: 16, overflow: 'hidden' },
+  heroLead: { fontSize: 15, lineHeight: 21, marginTop: 2, maxWidth: 250 },
   mokaCard: { marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10 },
   mokaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   mokaTap: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },

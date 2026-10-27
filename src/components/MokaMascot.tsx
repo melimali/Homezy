@@ -3,6 +3,7 @@ import { Animated, Easing, Image, Pressable, StyleSheet, Text, View, type StyleP
 
 import { Float, useReduceMotion } from '@/components/motion';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
+import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -17,17 +18,21 @@ type Props = {
   size?: keyof typeof SIZE;
   /** Konuşma balonu (başlık ya da mesaj varsa). Varsayılan açık. */
   showBubble?: boolean;
+  /** Pozun sahnesi varsa (arka plan + Moka) sticker yerine büyük sahne kartı. */
+  scene?: boolean;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 };
 
 /** Maskot Moka ve yanında konuşma balonu. Dokununca zıplayıp sallanır. */
-export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble = true, onPress, style }: Props) {
+export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble = true, scene, onPress, style }: Props) {
   const c = useColors();
   const reduce = useReduceMotion();
   const [hop] = useState(() => new Animated.Value(0));
   const px = SIZE[size];
   const bubble = showBubble && !!(title || message || tip);
+  const sceneSrc = scene ? POSE_SCENES[pose] : undefined;
+  const wide = !!sceneSrc;
 
   const bounce = () => {
     sfx('tap');
@@ -51,19 +56,25 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
       onPress={bounce}
       accessibilityRole="button"
       accessibilityLabel={['Moka', title, message, tip && `Günün cümlesi: ${tip}`].filter(Boolean).join('. ')}
-      style={[styles.row, size === 'lg' && styles.col, style]}
+      style={[styles.row, (size === 'lg' || wide) && styles.col, wide && { gap: 0 }, style]}
     >
-      <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
-        <Animated.View style={{ transform }}>
-          <Image source={MOKA_ASSETS[pose]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+      {sceneSrc ? (
+        <Animated.View style={[styles.scene, { backgroundColor: c.surface, transform: [{ scale: hop.interpolate({ inputRange: [-0.3, 0, 1], outputRange: [0.98, 1, 1.03] }) }] }]}>
+          <Image source={sceneSrc} style={styles.sceneImg} resizeMode="cover" accessibilityIgnoresInvertColors />
         </Animated.View>
-      </Float>
+      ) : (
+        <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
+          <Animated.View style={{ transform }}>
+            <Image source={MOKA_ASSETS[pose]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Animated.View>
+        </Float>
+      )}
       {bubble && (
-        <View style={[styles.bubble, size === 'lg' && styles.bubbleLg, { backgroundColor: c.surface }]}>
+        <View style={[styles.bubble, (size === 'lg' || wide) && styles.bubbleLg, wide && styles.bubbleScene, { backgroundColor: c.surface }]}>
           <View
             style={[
               styles.tail,
-              size === 'lg' ? styles.tailTop : styles.tailLeft,
+              size === 'lg' || wide ? styles.tailTop : styles.tailLeft,
               { backgroundColor: c.surface },
             ]}
           />
@@ -84,8 +95,11 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   col: { flexDirection: 'column', alignItems: 'center', gap: 18 },
+  scene: { alignSelf: 'stretch', borderRadius: radius.card, overflow: 'hidden' },
+  sceneImg: { width: '100%', aspectRatio: 4 / 3 },
   bubble: { flex: 1, borderRadius: radius.card, paddingHorizontal: 20, paddingVertical: 16, gap: 4 },
   bubbleLg: { flex: 0, alignSelf: 'stretch' },
+  bubbleScene: { marginTop: -28, marginHorizontal: 12 },
   tail: { position: 'absolute', width: 16, height: 16, borderRadius: 3, transform: [{ rotate: '45deg' }] },
   tailLeft: { left: -6, top: '50%', marginTop: -8 },
   tailTop: { top: -6, left: '50%', marginLeft: -8 },

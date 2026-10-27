@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { useEffect } from 'react';
@@ -17,6 +17,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, progressOf, type HouseP
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
+import { POSE_SCENES } from '@/constants/scenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -57,7 +58,7 @@ export default function Home() {
         </T>
       </Appear>
 
-      <Appear index={1}><MokaMascot pose={pose} size="lg" title={moka.title} message={moka.message} tip={tip.text} onPress={moka.next} /></Appear>
+      <Appear index={1}><MokaMascot pose={pose} size="lg" scene title={moka.title} message={moka.message} tip={tip.text} onPress={moka.next} /></Appear>
 
       <Appear index={2}><StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} /></Appear>
 
@@ -199,7 +200,11 @@ function Celebrate({ level }: { level: number }) {
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
-          <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
+          {POSE_SCENES.party ? (
+            <Image source={POSE_SCENES.party} style={styles.modalScene} resizeMode="cover" accessibilityIgnoresInvertColors />
+          ) : (
+            <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
+          )}
           <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
@@ -245,5 +250,6 @@ const styles = StyleSheet.create({
   qRing: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },
+  modalScene: { width: '100%', aspectRatio: 4 / 3, borderRadius: 28, marginTop: -70 },
   modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },
 });

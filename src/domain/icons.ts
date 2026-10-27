@@ -1,3 +1,5 @@
+import type { MokaPose } from '@/constants/moka';
+
 /**
  * İş, ürün ve kıyafet adlarından emoji tahmini. Uzun yazıyı okumak yerine işi resminden tanımak için.
  * Kural sırası önemli: ilk eşleşen kazanır. Ad küçük harfe (Türkçe kurallarıyla) çevrilip aranır.
@@ -67,3 +69,27 @@ const CLOTH_RULES: [RegExp, string][] = [
   [/elbise/, '👗'], [/etek/, '👗'], [/şort/, '🩳'], [/mont|kaban|ceket|palto|trenç/, '🧥'],
 ];
 export const clothEmoji = (cat: string, name = '') => find(CLOTH_RULES, name, CAT_EMOJI[cat] ?? '👚');
+
+/** İş adından o işi yapan Moka pozu (listelerde emoji yerine sticker). Eşleşmezse `null`. */
+const TASK_POSES: [RegExp, MokaPose][] = [
+  [/sula|bitki|çiçek/, 'watering'],
+  [/bulaşık/, 'dishes'],
+  [/çöp/, 'trash_bag'],
+  [/çarşaf|yatak|nevresim|yastık|yorgan|havlu|çamaşır|ütü|katla/, 'laundry_basket'],
+  [/cam|pencere|ayna/, 'mirror'],
+  [/toz/, 'dusting'],
+  [/süpür/, 'vacuuming'],
+  [/yer sil|paspas|lavabo|klozet|tuvalet|duş|küvet|fırçala|ovala/, 'scrubbing'],
+  [/tezgah|masa|sil|buzdolab|fırın|ocak/, 'spray_clean'],
+  [/yemek|pişir|kek/, 'baking'],
+  [/filtre|makine|kombi|petek|klima|tamir|ampul/, 'handyman'],
+  [/sayaç|fatura|liste|plan/, 'todo'],
+  [/düzen|topla|oyuncak|ayakkabı/, 'checklist'],
+  [/kum|mama/, 'dustpan'],
+];
+
+export const taskPose = (name: string, plant = false): MokaPose | null => {
+  if (plant) return 'watering';
+  const n = name.toLocaleLowerCase('tr-TR');
+  return TASK_POSES.find(([re]) => re.test(n))?.[1] ?? null;
+};

@@ -1,10 +1,11 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { MiniShape } from '@/components/Plan';
 import { RoomBody } from '@/components/RoomBody';
 import { BackLink, Screen, T } from '@/components/ui';
+import { ROOM_SCENES } from '@/constants/scenes';
 import { ROOM_EMOJI, TYPES } from '@/domain/constants';
 import { cellCount, cleanWord, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
@@ -53,6 +54,12 @@ export default function RoomScreen() {
         )}
       </View>
 
+      {ROOM_SCENES[r.type] && (
+        <Appear key={`scene-${r.id}`}>
+          <Image source={ROOM_SCENES[r.type]} style={styles.scene} resizeMode="cover" accessibilityIgnoresInvertColors />
+        </Appear>
+      )}
+
       <Appear key={`hero-${r.id}`} style={[styles.hero, { backgroundColor: c.room[r.type] }]}>
         <Float amp={4}>
           <View style={[styles.emoji, { backgroundColor: c.surface }]}>
@@ -78,6 +85,7 @@ export default function RoomScreen() {
 }
 
 const styles = StyleSheet.create({
+  scene: { width: '100%', aspectRatio: 16 / 10, borderRadius: radius.card },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
   hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },

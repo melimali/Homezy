@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { Btn, MokaHero, Screen, T } from '@/components/ui';
+import { ROOM_SCENES } from '@/constants/scenes';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { cleanWord, homeScore, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
@@ -54,28 +55,49 @@ export default function Odalar() {
               {arr.map(({ id, r, rc, clean }) => {
                 const i = n++;
                 const tag = rc.late ? { bg: c.late, fg: '#fff', text: `${rc.late + rc.today}` } : rc.today ? { bg: c.today, fg: c.onBadge, text: `${rc.today}` } : null;
+                const scene = ROOM_SCENES[r.type];
+                const label = `${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`;
+                const badge = tag ? (
+                  <View style={[styles.badge, { backgroundColor: tag.bg }]}>
+                    <Text style={[styles.badgeT, { color: tag.fg }]}>{tag.text}</Text>
+                  </View>
+                ) : null;
+                const bar = (
+                  <View style={[styles.bar, scene ? styles.barRow : null, { backgroundColor: scene ? c.surface2 : c.surface }]}>
+                    <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
+                  </View>
+                );
+                // Oda sahnesi (arka plan + Moka) varsa resimli kart; yoksa emojili kare.
+                if (scene)
+                  return (
+                    <Appear key={id} index={i} style={styles.cell}>
+                      <Squish onPress={() => open(id)} accessibilityLabel={label} style={[styles.card, { backgroundColor: c.surface }]}>
+                        <Image source={scene} style={styles.scene} resizeMode="cover" accessibilityIgnoresInvertColors />
+                        <View style={styles.cardBody}>
+                          <T v="h3" numberOfLines={1}>{r.name}</T>
+                          <View style={styles.cardFoot}>
+                            {bar}
+                            <T v="tiny">%{clean}</T>
+                          </View>
+                        </View>
+                        {badge ?? (
+                          <View style={[styles.okDot, { backgroundColor: c.surface }]}>
+                            <Text style={{ fontSize: 13, color: c.ok }}>✓</Text>
+                          </View>
+                        )}
+                      </Squish>
+                    </Appear>
+                  );
                 return (
                   <Appear key={id} index={i} style={styles.cell}>
-                    <Squish
-                      onPress={() => open(id)}
-                      accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
-                      style={[styles.tile, { backgroundColor: c.room[r.type] }]}
-                    >
+                    <Squish onPress={() => open(id)} accessibilityLabel={label} style={[styles.tile, { backgroundColor: c.room[r.type] }]}>
                       <Float amp={rc.late || rc.today ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
                         <Text style={{ fontSize: 42, lineHeight: 50 }}>{ROOM_EMOJI[r.type]}</Text>
                       </Float>
                       <T v="h3" numberOfLines={1}>{r.name}</T>
-                      <View style={[styles.bar, { backgroundColor: c.surface }]}>
-                        <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
-                      </View>
+                      {bar}
                       <T v="tiny" style={{ color: c.ink, opacity: 0.8 }}>{cleanWord(clean)}</T>
-                      {tag ? (
-                        <View style={[styles.badge, { backgroundColor: tag.bg }]}>
-                          <Text style={[styles.badgeT, { color: tag.fg }]}>{tag.text}</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.ok}>✓</Text>
-                      )}
+                      {badge ?? <Text style={styles.ok}>✓</Text>}
                     </Squish>
                   </Appear>
                 );
@@ -98,8 +120,14 @@ const styles = StyleSheet.create({
   cell: { width: '48%' },
   tile: { borderRadius: radius.card, alignItems: 'center', gap: 8, paddingTop: 22, paddingBottom: 18, paddingHorizontal: 14 },
   bar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', alignSelf: 'stretch', marginHorizontal: 12 },
+  barRow: { flex: 1, alignSelf: 'center', marginHorizontal: 0 },
   fill: { height: '100%', borderRadius: radius.pill },
   badge: { position: 'absolute', top: 12, right: 12, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },
   ok: { position: 'absolute', top: 12, right: 16, fontSize: 15, opacity: 0.5 },
+  card: { borderRadius: radius.tile, overflow: 'hidden' },
+  scene: { width: '100%', aspectRatio: 4 / 3 },
+  cardBody: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 14, gap: 8 },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  okDot: { position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', opacity: 0.9 },
 });

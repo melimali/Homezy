@@ -1,10 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
-import { taskEmoji } from '@/domain/icons';
+import { MOKA_ASSETS } from '@/constants/moka';
+import { taskEmoji, taskPose } from '@/domain/icons';
 import { agoText, doneToday as isDoneToday, everyText, placeOf, roomClean, sod, statusIn, uid } from '@/domain/logic';
 import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
@@ -120,8 +121,9 @@ function useTask(t: Task, rid: string, list: TaskList) {
   const act = () => (photoTask ? shoot() : done());
   const action = photoTask ? '📸 Çek' : plant ? '💧 Suladım' : 'Tamamladım';
   const emoji = photoTask ? '📸' : taskEmoji(t.name, plant);
+  const pose = photoTask ? null : taskPose(t.name, plant);
 
-  return { s, now, room, place, plant, photoTask, doneToday, urgent, names, nextWho, edit, snooze, remove, act, action, emoji, bounce, rise, gain, burst, min: taskMin(t) };
+  return { s, now, room, place, plant, photoTask, doneToday, urgent, names, nextWho, edit, snooze, remove, act, action, emoji, pose, bounce, rise, gain, burst, min: taskMin(t) };
 }
 
 type TaskApi = ReturnType<typeof useTask>;
@@ -156,7 +158,12 @@ export function TaskRow({
     <View style={[styles.rowWrap, { backgroundColor: c.surface }, !first && { marginTop: 10 }]}>
       <View style={styles.row}>
         <View style={[styles.bubble, { backgroundColor: tone }]}>
-          <Text style={{ fontSize: 22 }}>{k.doneToday ? '✅' : k.emoji}</Text>
+          {k.pose ? (
+            <Image source={MOKA_ASSETS[k.pose]} style={[styles.sticker, k.doneToday && { opacity: 0.55 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
+          ) : (
+            <Text style={{ fontSize: 22 }}>{k.doneToday ? '✅' : k.emoji}</Text>
+          )}
+          {k.pose && k.doneToday && <Text style={styles.stickerDone}>✅</Text>}
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           {showRoom && (
@@ -403,7 +410,9 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
 const styles = StyleSheet.create({
   rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  bubble: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  bubble: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  sticker: { width: 58, height: 58, marginTop: -6 },
+  stickerDone: { position: 'absolute', right: -4, bottom: -4, fontSize: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   tileWrap: { width: '48%' },
   tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10 },

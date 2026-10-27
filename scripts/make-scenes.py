@@ -31,7 +31,7 @@ BG_DIR = os.path.join(ROOT, 'assets/arkaplan')
 OUT_DIR = os.path.join(ROOT, 'assets/scenes')
 MOKA_DIR = os.path.join(ROOT, 'assets/moka')
 TS = os.path.join(ROOT, 'src/constants/scenes.ts')
-W, H = 960, 720  # 4:3
+W, H = 1280, 960  # 4:3 (Ev ekranında büyük gösterildiği için yüksek)
 UPSCALE_MIN = 600  # bundan küçük arka planlar upscale ile büyütülür
 ROOM_TYPES = ['yatak', 'mutfak', 'banyo', 'salon', 'calisma', 'cocuk', 'antre', 'balkon', 'camasir']
 
@@ -136,7 +136,7 @@ def cover(im, w, h):
     s = max(w / im.width, h / im.height)
     im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
     l, t = (im.width - w) // 2, (im.height - h) // 2
-    return im.crop((l, t, l + w, t + h))
+    return im.crop((l, t, l + w, t + h)).filter(ImageFilter.UnsharpMask(1.6, 45, 3))
 
 
 def compose(bg, pose, x=0.5, h=0.62, flip=False):
@@ -170,7 +170,7 @@ def build():
             continue
         pose = key if kind == 'pose' else v['pose']
         out = f"{'moka' if kind == 'pose' else 'oda'}_{key}.jpg"
-        compose(bg, pose, v.get('x', 0.5), v.get('h', 0.62), v.get('flip', False)).save(os.path.join(OUT_DIR, out), quality=82, optimize=True, progressive=True)
+        compose(bg, pose, v.get('x', 0.5), v.get('h', 0.62), v.get('flip', False)).save(os.path.join(OUT_DIR, out), quality=80, optimize=True, progressive=True)
         made[kind].append((key, out))
     req = lambda f: f"require('../../assets/scenes/{f}')"
     lines = [
@@ -180,7 +180,7 @@ def build():
         "import type { RoomType } from '@/domain/types';",
         '',
         '/**',
-        ' * Moka sahneleri: arka plan + Moka stickerı tek görselde (960×720). Bu dosya',
+        ' * Moka sahneleri: arka plan + Moka stickerı tek görselde (1280×960). Bu dosya',
         ' * `python3 scripts/make-scenes.py build` ile üretilir, elle değiştirme; eşleştirme scripts/scenes.json.',
         ' * Sahnesi olmayan poz ya da oda için ekranlar eski görünüme (sticker / emoji) döner.',
         ' */',

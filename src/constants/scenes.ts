@@ -4,7 +4,7 @@ import type { MokaPose } from '@/constants/moka';
 import type { RoomType } from '@/domain/types';
 
 /**
- * Moka sahneleri: arka plan + Moka stickerı tek görselde (960×720). Bu dosya
+ * Moka sahneleri: arka plan + Moka stickerı tek görselde (1280×960). Bu dosya
  * `python3 scripts/make-scenes.py build` ile üretilir, elle değiştirme; eşleştirme scripts/scenes.json.
  * Sahnesi olmayan poz ya da oda için ekranlar eski görünüme (sticker / emoji) döner.
  */

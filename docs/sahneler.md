@@ -1,6 +1,6 @@
 # Moka sahneleri
 
-Arka plan + Moka stickerı birleşik görseller (`assets/scenes/`, 960×720 JPEG). Eşleştirme `scripts/scenes.json`'da; bu tablo onun özeti.
+Arka plan + Moka stickerı birleşik görseller (`assets/scenes/`, 1280×960 JPEG). Eşleştirme `scripts/scenes.json`'da; bu tablo onun özeti.
 
 ## Yeni arka plan ekleme
 

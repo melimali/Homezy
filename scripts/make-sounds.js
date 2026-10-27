@@ -1,5 +1,6 @@
 // Uygulamanın ses efektlerini üretir (assets/sounds/*.wav). Sesler burada sentezlenir, dışarıdan
 // alınmış bir kayıt yok; lisans derdi olmasın diye. Değiştirmek için: node scripts/make-sounds.js
+/* global Buffer, __dirname */
 const fs = require('fs');
 const path = require('path');
 

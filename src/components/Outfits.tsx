@@ -50,13 +50,13 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
   const photoOnly = fromPhoto && !worn && look;
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: c.fashionSurface, borderColor: c.fashionLine }}>
       <SecHead title="Kombin önerileri" right={SEASON_NAME[sea]} />
       <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel="Nereye giyeceksin?">
         {OCCASIONS.map(k => <Chip key={k} on={k === occ} label={OCC[k].label} onPress={() => { setOcc(k); setPage(0); }} />)}
       </View>
       {anchors.length > 0 ? (
-        <View style={[styles.anchor, { backgroundColor: c.surface2 }]}>
+        <View style={[styles.anchor, { backgroundColor: c.fashion, borderColor: c.fashionLine }]}>
           <T v="small" style={{ flex: 1 }}>{fromPhoto ? 'Fotoğraftaki parçalarla' : 'Şu parçayla'}: {anNames.join(', ')}</T>
           <XBtn label="Seçimi kaldır" onPress={() => { onClear(); setPage(0); }} />
         </View>
@@ -65,7 +65,7 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
       )}
 
       {worn && (
-        <View style={[styles.box, { backgroundColor: c.surface2 }]}>
+        <View style={[styles.box, { backgroundColor: c.fashion, borderColor: c.fashionLine }]}>
           <SecHead h="h3" title="Fotoğraftaki kombin" right={<Pill k={fitLabel(worn.score)[0]} label={fitLabel(worn.score)[1]} />} />
           {!!look?.note && <T style={{ fontSize: 14 }}>{look.note}</T>}
           <Reasons why={[...worn.why.filter(x => x.d > 0).slice(0, 2), ...worn.why.filter(x => x.d < 0).slice(0, 2)]} />
@@ -73,7 +73,7 @@ export function Outfits({ rid, look, anchor, onClear }: { rid: string; look: Pho
         </View>
       )}
       {photoOnly && !!look.note && (
-        <View style={[styles.box, { backgroundColor: c.surface2 }]}>
+        <View style={[styles.box, { backgroundColor: c.fashion, borderColor: c.fashionLine }]}>
           <T style={{ fontSize: 14 }}>{look.note}</T>
         </View>
       )}
@@ -126,9 +126,9 @@ function Reasons({ why }: { why: { d: number; t: string }[] }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  anchor: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, paddingVertical: 6, paddingHorizontal: 12 },
-  box: { borderRadius: 16, padding: 12, gap: 6 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  anchor: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, paddingVertical: 8, paddingHorizontal: 12 },
+  box: { borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, padding: 14, gap: 8 },
   piece: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   noColor: { width: 18, height: 18, borderRadius: 6, borderWidth: 2, borderStyle: 'dashed' },
 });

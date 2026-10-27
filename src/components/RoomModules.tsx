@@ -96,7 +96,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   onPress={() => cycle(x.id)}
                   onLongPress={() => setSheet(x.id)}
                   accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştirmek için dokun, ayarlar için basılı tut`}
-                  style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : bg }]}
+                  style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : c.fashionLine }]}
                 >
                   <Text style={{ fontSize: 30 }}>{clothEmoji(x.cat, x.name)}</Text>
                   <Text numberOfLines={2} style={[styles.clothName, { color: c.ink }]}>{x.name}</Text>
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   shop: { borderRadius: 16, padding: 12, gap: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cell: { width: '31.6%' },
-  cloth: { minHeight: 112, borderRadius: 18, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 10, paddingHorizontal: 6 },
+  cloth: { minHeight: 112, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 12, paddingHorizontal: 7 },
   clothName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, lineHeight: 16, textAlign: 'center' },
   more: { position: 'absolute', top: 2, right: 4, width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
   bars: { flexDirection: 'row', gap: 3 },

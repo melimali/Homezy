@@ -129,7 +129,7 @@ export function BackLink({ label = 'Geri' }: { label?: string }) {
 export function Card({ children, style, index, bare }: { children: ReactNode; style?: StyleProp<ViewStyle>; index?: number; bare?: boolean }) {
   const c = useColors();
   return (
-    <Appear index={index} style={[styles.card, bare ? styles.cardBare : { backgroundColor: c.surface }, style]}>
+    <Appear index={index} style={[styles.card, { borderColor: c.line }, bare ? styles.cardBare : { backgroundColor: c.surface }, style]}>
       {children}
     </Appear>
   );
@@ -383,7 +383,7 @@ export const styles = StyleSheet.create({
   bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
-  card: { borderRadius: radius.card, padding: space.card, gap: 16 },
+  card: { borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {

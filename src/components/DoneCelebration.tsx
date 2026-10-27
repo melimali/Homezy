@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { POSE_SCENES } from '@/constants/scenes';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { sfx } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
-import { Fade, SceneImage } from './SceneImage';
 
 /**
  * İş bitince koyu kutlama ekranı: üstte gece sahnesinde neşeli Moka, "Harika iş!", kazanılan puan
@@ -19,23 +18,20 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
   useEffect(() => {
     if (open) sfx('party');
   }, [open]);
-  const scene = POSE_SCENES.party ?? POSE_SCENES.cheers;
   return (
     <Modal visible={open} animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <ScrollView style={{ backgroundColor: c.night }} contentContainerStyle={[st.page, { paddingBottom: insets.bottom + 28 }]} bounces={false}>
-        {scene && (
-          <SceneImage source={scene} ratio={4 / 3.6}>
-            {/* Sahnenin altı koyu zemine yumuşakça karışsın. */}
-            <Fade edge="top" color={c.night} size="30%" to={0.5} />
-            <Fade edge="bottom" color={c.night} size="45%" />
-            {[[0.18, 0.2, 0], [0.72, 0.12, 300], [0.86, 0.38, 600], [0.1, 0.5, 900]].map(([x, y, d], i) => (
-              <Float key={i} amp={5} dur={1800 + i * 300} delay={d} style={[st.star, { left: `${x * 100}%`, top: `${y * 100}%` }]}>
-                <Text style={{ fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
-              </Float>
-            ))}
-          </SceneImage>
-        )}
-        <View style={[st.body, { paddingTop: scene ? 0 : insets.top + 60 }]}>
+        <View style={[st.hero, { paddingTop: insets.top }]}>
+          <Float amp={5} dur={2200}>
+            <Image source={MOKA_ASSETS.party} style={st.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Float>
+          {[[0.18, 0.2, 0], [0.72, 0.12, 300], [0.86, 0.38, 600], [0.1, 0.5, 900]].map(([x, y, d], i) => (
+            <Float key={i} amp={5} dur={1800 + i * 300} delay={d} style={[st.star, { left: `${x * 100}%`, top: `${y * 100}%` }]}>
+              <Text style={{ fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
+            </Float>
+          ))}
+        </View>
+        <View style={st.body}>
           <Appear style={{ alignItems: 'center', gap: 6 }}>
             <Text style={[st.h1, { color: c.onNight }]}>Harika iş!</Text>
             <Text style={[st.sub, { color: c.onNight }]}>{text}</Text>
@@ -61,8 +57,10 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
 
 const st = StyleSheet.create({
   page: { flexGrow: 1, width: '100%', maxWidth: 520, alignSelf: 'center' },
+  hero: { height: 300, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  heroMoka: { width: 220, height: 220 },
   star: { position: 'absolute' },
-  body: { flex: 1, paddingHorizontal: 24, gap: 26, alignItems: 'center', marginTop: -24, paddingTop: 8 },
+  body: { flex: 1, paddingHorizontal: 24, gap: 26, alignItems: 'center', marginTop: -8, paddingTop: 8 },
   h1: { fontFamily: fonts.displayBold, fontSize: 40, lineHeight: 46, letterSpacing: -0.6, textAlign: 'center' },
   sub: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 24, textAlign: 'center', opacity: 0.9 },
   points: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.pill, paddingVertical: 14, paddingHorizontal: 40 },

@@ -20,7 +20,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { POSE_SCENES } from '@/constants/scenes';
+import { HOME_MOKA_SCENE } from '@/constants/curated-scenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -58,13 +58,12 @@ export default function Home() {
   const next = nextStage(hp.level);
   const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
   const built = Math.min(hp.level, BUILT);
-  const scene = POSE_SCENES[pose] ?? POSE_SCENES.happy;
 
   return (
     <Screen header={false}>
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <SceneImage source={scene ?? MOKA_ASSETS[pose]} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
+        <SceneImage source={HOME_MOKA_SCENE} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
@@ -245,11 +244,7 @@ function Celebrate({ level }: { level: number }) {
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
-          {POSE_SCENES.party ? (
-            <SceneImage source={POSE_SCENES.party} radius={28} style={styles.modalScene} />
-          ) : (
-            <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
-          )}
+          <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
           <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
@@ -303,6 +298,5 @@ const styles = StyleSheet.create({
   qRing: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },
-  modalScene: { marginTop: -70 },
   modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },
 });

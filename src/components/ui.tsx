@@ -22,11 +22,9 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
-import { POSE_SCENES } from '@/constants/scenes';
 import { fonts, radius, space, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
-import { SceneImage } from './SceneImage';
 
 /* ---------- metin ---------- */
 
@@ -192,17 +190,11 @@ export function MokaHero({
         {!!sub && <T v="lead">{sub}</T>}
         {right}
       </View>
-      {POSE_SCENES[pose] ? (
-        <Float amp={3} dur={2600}>
-          <Image source={POSE_SCENES[pose]} style={styles.heroScene} resizeMode="cover" accessibilityIgnoresInvertColors />
+      <View style={[styles.heroRing, { backgroundColor: c.surface }]}>
+        <Float amp={4} dur={2400}>
+          <Image source={MOKA_ASSETS[pose]} style={styles.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
         </Float>
-      ) : (
-        <View style={[styles.heroRing, { backgroundColor: c.surface }]}>
-          <Float amp={4} dur={2400}>
-            <Image source={MOKA_ASSETS[pose]} style={styles.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
-          </Float>
-        </View>
-      )}
+      </View>
     </Appear>
   );
 }
@@ -220,13 +212,9 @@ export function SecHead({ title, right, h = 'h2' }: { title: string; right?: Rea
 export function EmptyMsg({ children, pose = 'wink' }: { children: ReactNode; pose?: MokaPose }) {
   return (
     <View style={styles.empty}>
-      {POSE_SCENES[pose] ? (
-        <SceneImage source={POSE_SCENES[pose]!} radius={radius.card} style={styles.emptyScene} />
-      ) : (
-        <Float amp={3} dur={2600}>
-          <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
-        </Float>
-      )}
+      <Float amp={3} dur={2600}>
+        <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+      </Float>
       <T v="bold" style={{ fontSize: 16, lineHeight: 23, textAlign: 'center', maxWidth: 280 }}>{children}</T>
     </View>
   );
@@ -389,10 +377,8 @@ export const styles = StyleSheet.create({
   titleBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   heroRing: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
   heroMoka: { width: 104, height: 104 },
-  heroScene: { width: 128, height: 112, borderRadius: radius.tile },
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   emptyMoka: { width: 132, height: 132 },
-  emptyScene: { alignSelf: 'center', width: '100%', maxWidth: 360 },
   sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
   bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },

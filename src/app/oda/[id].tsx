@@ -7,6 +7,7 @@ import { RoomBody } from '@/components/RoomBody';
 import { SceneImage } from '@/components/SceneImage';
 import { BackLink, Screen, T } from '@/components/ui';
 import { ROOM_SCENES } from '@/constants/scenes';
+import { roomMokaScene } from '@/constants/curated-scenes';
 import { ROOM_EMOJI, TYPES } from '@/domain/constants';
 import { cellCount, cleanWord, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
@@ -57,7 +58,7 @@ export default function RoomScreen() {
 
       {ROOM_SCENES[r.type] && (
         <Appear key={`scene-${r.id}`}>
-          <SceneImage source={ROOM_SCENES[r.type]!} ratio={16 / 10} radius={radius.card} />
+          <SceneImage source={roomMokaScene(r.type, ROOM_SCENES[r.type])!} ratio={16 / 10} radius={radius.card} />
         </Appear>
       )}
 

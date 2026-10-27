@@ -10,7 +10,8 @@ import { SceneImage } from '@/components/SceneImage';
 import { TaskSettings, useTask } from '@/components/TaskRow';
 import { Bar, IconBtn, Pill, Sheet, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
-import { POSE_SCENES, ROOM_SCENES } from '@/constants/scenes';
+import { ROOM_SCENES } from '@/constants/scenes';
+import { HOME_MOKA_SCENE, roomMokaScene } from '@/constants/curated-scenes';
 import { taskArt, taskPose } from '@/domain/icons';
 import { everyText } from '@/domain/logic';
 import { POINTS } from '@/domain/play';
@@ -43,7 +44,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
   const k = useTask(t, rid, list);
   const pose = k.photoTask ? 'todo' : taskPose(t.name, k.plant);
   const art = taskArt(pose);
-  const scene = (pose && POSE_SCENES[pose]) || (k.room && ROOM_SCENES[k.room.type]) || POSE_SCENES.happy || MOKA_ASSETS.happy;
+  const scene = (k.room && roomMokaScene(k.room.type, ROOM_SCENES[k.room.type])) ?? HOME_MOKA_SCENE;
   const [checked, setChecked] = useState<boolean[]>(() => art.steps.map(() => false));
   const [started, setStarted] = useState(false);
   const [menu, setMenu] = useState(false);

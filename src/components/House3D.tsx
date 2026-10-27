@@ -3,6 +3,8 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
+import { FLOWER, MOOD_LIGHT, PERSONA_LIGHT, personaOf, type Mood } from '@/domain/garden';
+import { bloom } from '@/components/GardenArt';
 import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
@@ -73,9 +75,9 @@ const POT = '#C8826B';
 function furniture(type: RoomType, r: number, c: number, k: string, col: Colors): ReactElement[] {
   const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
     box(k + n, r + u, c + v, du, dv, z, h, color);
-  const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string) => {
+  const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string, op = 1) => {
     const [x, y] = P(r + u, c + v, z);
-    return <Circle key={k + n} cx={x} cy={y} r={rad} fill={fill} />;
+    return <Circle key={k + n} cx={x} cy={y} r={rad} fill={fill} fillOpacity={op} />;
   };
   let faces: Face[] = [];
   const extra: ReactElement[] = [];
@@ -86,7 +88,10 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('m', 0.17, 0.23, 0.66, 0.54, 7, 4, WHITE),
         ...b('y', 0.17, 0.27, 0.15, 0.46, 11, 3, WHITE),
         ...b('o', 0.42, 0.23, 0.41, 0.54, 11, 2, col.hi),
+        // Komodin ve üstünde gece lambası.
+        ...b('k', 0.14, 0.82, 0.14, 0.14, 0, 8, shade(WOOD, -0.08)),
       ];
+      extra.push(ball('l', 0.21, 0.89, 13, 2.6, GOLD), ball('lg', 0.21, 0.89, 12, 6, GOLD, 0.2));
       break;
     case 'cocuk':
       faces = [
@@ -95,6 +100,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('c', 0.3, 0.35, 0.22, 0.22, 9, 9, '#F2C46D'),
       ];
       extra.push(ball('t', 0.72, 0.62, 5, 5, '#E58C7E'));
+      // Oyuncak ayı.
+      extra.push(ball('ab', 0.7, 0.25, 4, 4.2, '#B07D56'), ball('ah', 0.7, 0.25, 10, 3.2, '#B07D56'), ball('ae', 0.67, 0.21, 12.5, 1.2, '#7A5236'), ball('af', 0.73, 0.29, 12.5, 1.2, '#7A5236'));
       break;
     case 'salon':
       faces = [
@@ -102,7 +109,11 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('k', 0.24, 0.14, 0.14, 0.72, 7, 9, shade('#BFA89E', -0.05)),
         ...b('m', 0.4, 0.2, 0.3, 0.28, 7, 3, WHITE),
         ...b('n', 0.4, 0.52, 0.3, 0.28, 7, 3, WHITE),
+        // Sehpa ve üstünde kupa.
+        ...b('t', 0.8, 0.3, 0.14, 0.4, 0, 5, WOOD),
+        ...b('c', 0.84, 0.46, 0.05, 0.05, 5, 3, '#E58C7E'),
       ];
+      extra.push(ball('y', 0.4, 0.3, 11, 2.4, GOLD));
       break;
     case 'mutfak':
       faces = [
@@ -110,28 +121,42 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('p', 0.18, 0.3, 0.16, 0.18, 15, 6, '#B8584C'),
         ...b('m', 0.58, 0.3, 0.28, 0.42, 0, 9, WOOD),
       ];
+      // Masada meyve kâsesi.
+      extra.push(ball('k', 0.72, 0.5, 10, 3.6, WHITE), ball('e', 0.7, 0.47, 12.5, 1.8, '#E0605A'), ball('p', 0.73, 0.53, 12.5, 1.8, '#E8A15A'), ball('y', 0.7, 0.53, 13.5, 1.6, '#A6D49B'));
       break;
     case 'banyo':
       faces = [...b('k', 0.2, 0.14, 0.62, 0.72, 0, 11, WHITE), ...b('s', 0.26, 0.2, 0.5, 0.6, 11, 0.5, WATER)];
       extra.push(ball('a', 0.4, 0.4, 14, 3, WHITE), ball('b', 0.5, 0.55, 14, 2.5, WHITE));
+      // Lastik ördek.
+      extra.push(ball('d', 0.55, 0.38, 13, 2.6, GOLD), ball('dh', 0.52, 0.36, 16, 1.7, GOLD), ball('db', 0.5, 0.35, 15.6, 0.8, '#E8A15A'));
       break;
     case 'camasir':
-      faces = b('w', 0.25, 0.25, 0.5, 0.5, 0, 18, WHITE);
-      extra.push(ball('d', 0.75, 0.5, 9, 4.5, WATER));
+      faces = [...b('w', 0.25, 0.25, 0.5, 0.5, 0, 18, WHITE), ...b('s', 0.74, 0.12, 0.18, 0.2, 0, 6, '#D8C2A8')];
+      extra.push(ball('d', 0.75, 0.5, 9, 4.5, WATER), ball('c1', 0.8, 0.2, 7, 2.2, '#E58C7E'), ball('c2', 0.84, 0.25, 7.5, 2, '#78A1BB'));
       break;
     case 'calisma':
       faces = [
         ...b('d', 0.18, 0.14, 0.34, 0.72, 0, 12, WOOD),
         ...b('l', 0.26, 0.34, 0.18, 0.3, 12, 1.5, '#283044'),
         ...b('c', 0.62, 0.4, 0.22, 0.22, 0, 7, col.hi),
+        // Ekran ve saksı.
+        ...b('e', 0.2, 0.62, 0.04, 0.2, 12, 9, '#283044'),
       ];
+      extra.push(ball('sa', 0.24, 0.24, 15, 3.6, LEAF), ball('ek', 0.22, 0.72, 17, 5, '#9CC9E0', 0.3));
       break;
     case 'balkon':
-      faces = [...b('p', 0.36, 0.36, 0.28, 0.28, 0, 8, POT)];
-      extra.push(ball('a', 0.5, 0.5, 18, 8, LEAF), ball('b', 0.42, 0.58, 24, 5.5, shade(LEAF, 0.15)));
+      faces = [...b('p', 0.36, 0.36, 0.28, 0.28, 0, 8, POT), ...b('s', 0.72, 0.16, 0.18, 0.18, 0, 6, WOOD)];
+      extra.push(ball('a', 0.5, 0.5, 18, 8, LEAF), ball('b', 0.42, 0.58, 24, 5.5, shade(LEAF, 0.15)), ball('f', 0.46, 0.44, 22, 2, '#F4A6C0'));
       break;
     case 'antre':
-      faces = [...b('h', 0.2, 0.22, 0.6, 0.56, 0, 1, '#BFA89E'), ...b('a', 0.14, 0.14, 0.18, 0.72, 0, 9, WOOD)];
+      faces = [
+        ...b('h', 0.2, 0.22, 0.6, 0.56, 0, 1, '#BFA89E'),
+        ...b('a', 0.14, 0.14, 0.18, 0.72, 0, 9, WOOD),
+        // Paspasın üstünde bir çift ayakkabı.
+        ...b('s1', 0.62, 0.38, 0.12, 0.07, 1, 2.5, '#5B4A40'),
+        ...b('s2', 0.62, 0.5, 0.12, 0.07, 1, 2.5, '#5B4A40'),
+      ];
+      extra.push(ball('sk', 0.2, 0.8, 12, 2.2, '#E58C7E'));
       break;
   }
   return [
@@ -335,6 +360,57 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   return { ground, back, front, pts: out };
 }
 
+/**
+ * Evin önü: köşede fener direği ve posta kutusu (ışığı kişiliğin renginde), tatildeyse kapıda bavul,
+ * Moka'nın bahçesinde açıp albüme alınan çiçekler sağ kenarda saksı olarak. Ev bitince (7) görünür.
+ */
+function yardParts(S: AppState, L: number, dark: boolean, mood: Mood, lamp: string) {
+  const els: ReactElement[] = [];
+  const out: Pt[] = [];
+  const { cols, cells } = S;
+  let r0 = Infinity, c0 = Infinity, r1 = -1, c1 = -1;
+  cells.forEach((x, i) => {
+    if (!x) return;
+    const r = Math.floor(i / cols), c = i % cols;
+    r0 = Math.min(r0, r); c0 = Math.min(c0, c); r1 = Math.max(r1, r + 1); c1 = Math.max(c1, c + 1);
+  });
+  if (r1 < 0 || L < 7) return { els, pts: out };
+  const face = (f: Face) => els.push(<Polygon key={f.key} points={f.points} fill={f.fill} stroke={f.fill} strokeWidth={0.6} strokeLinejoin="round" />);
+
+  // Albümdeki çiçekler: sağ kenar boyunca küçük saksılar (en fazla sığdığı kadar).
+  const album = Object.entries(S.play?.garden?.album ?? {}).flatMap(([id, n]) => Array(Math.min(n, 3)).fill(id) as string[]);
+  const slots = Math.max(0, Math.floor((r1 - r0 - 0.4) / 0.5));
+  album.slice(0, slots).forEach((id, j) => {
+    const f = FLOWER[id];
+    if (!f) return;
+    const r = r0 + 0.35 + j * 0.5, c = c1 + 0.16;
+    box('ap' + j, r - 0.06, c - 0.06, 0.12, 0.12, 0, 4, POT).forEach(face);
+    const [x, y] = P(r, c, 4);
+    els.push(<Line key={'as' + j} x1={x} y1={y} x2={x} y2={y - 7} stroke={shade(LEAF, -0.15)} strokeWidth={1.2} />);
+    els.push(<G key={'af' + j}>{bloom(f, x, y - 9, 0.42, 'ab' + j)}</G>);
+    out.push([x, y - 14]);
+  });
+
+  // Fener direği ve posta kutusu: ön sağ köşede.
+  const lr = r1 + 0.3, lc = c1 + 0.3;
+  box('lp', lr - 0.03, lc - 0.03, 0.06, 0.06, 0, 30, '#5B4A40').forEach(face);
+  box('lb', lr - 0.07, lc - 0.07, 0.14, 0.14, 30, 6, '#5B4A40').forEach(face);
+  const [lx, ly] = P(lr, lc, 33);
+  const on = mood !== 'sessiz' && mood !== 'tatil';
+  els.push(<Circle key="lg" cx={lx} cy={ly} r={3} fill={on ? lamp : dark ? '#6B6F7C' : '#D8D2C8'} />);
+  if (on) els.push(<Circle key="lh" cx={lx} cy={ly} r={10} fill={lamp} fillOpacity={0.25} />);
+  box('mb', lr - 0.16, lc - 0.25, 0.14, 0.1, 12, 7, '#78A1BB').forEach(face);
+  out.push([lx, ly - 12]);
+
+  // Tatil: kapının önünde bavul.
+  if (mood === 'tatil') {
+    const sr = r1 + 0.2, sc = c1 - 0.7;
+    box('bv', sr, sc, 0.12, 0.26, 0, 11, '#E8A15A').forEach(face);
+    box('bs', sr + 0.04, sc + 0.09, 0.04, 0.08, 11, 3, '#5B4A40').forEach(face);
+  }
+  return { els, pts: out };
+}
+
 /** Temalara göre çim rengi [açık, koyu]. Gündüz varsayılan renktir. */
 const GRASS: Partial<Record<HouseTheme, [string, string]>> = {
   gece: ['#6F9A7C', '#2F4A3A'],
@@ -399,9 +475,14 @@ type Props = {
   theme?: HouseTheme;
   /** Oda etiketleri görünsün mü (paylaşılan kartlarda ve hikâyede gizli). */
   labels?: boolean;
+  /**
+   * Evin ruh hali (src/domain/garden.ts, `houseMood`): kaç pencerenin yanacağı, perdeler, bacadan duman.
+   * Sadece görüntü; seviye ve bakımsızlık `build`'den gelir. Verilmezse "keyifli".
+   */
+  mood?: Mood;
 };
 
-export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true }: Props) {
+export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -463,6 +544,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   // Ressam sıralaması: arkadaki bloklar (satır + sütun küçük olan) önce çizilir.
   const order = cells.map((_, i) => i).filter(i => cells[i]);
   order.sort((a, b) => Math.floor(a / cols) + (a % cols) - (Math.floor(b / cols) + (b % cols)) || a - b);
+  // Bacanın durduğu blok: en arkadakilerden ikincisi (ilki bayrağın köşesi), yoksa ilki.
+  const topCell = order.find((i, j) => j > 0 && !at(Math.floor(i / cols) - 1, i % cols)) ?? order[0];
 
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   const grow = ([x, y]: Pt) => {
@@ -494,6 +577,48 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     box(key + 'p', r0, c0, T * 0.7, T * 0.7, 0, h, BEAM).forEach(add);
     box(key + 'k', r0, c0, Math.max(dr, T * 0.7), Math.max(dc, T * 0.7), h - 3, 3, shade(BEAM, 0.1)).forEach(add);
   };
+  // Kişilik ve ruh hali: pencere ışığının rengi ve kaç pencerenin yandığı.
+  const persona = personaOf(S.play);
+  const glow = PERSONA_LIGHT[persona];
+  const light = MOOD_LIGHT[mood];
+  const curtain = mood === 'tatil' ? 1 : mood === 'uykulu' || mood === 'sessiz' ? 0.5 : 0;
+  /**
+   * Dış duvardaki pencere. `at(u, z)` duvar düzlemindeki noktayı verir (u: duvar boyunca 0–1).
+   * Yanan pencere kişiliğin renginde parlar; ruh haline göre perdeler kapanır.
+   */
+  const windowAt = (key: string, seed: number, at: (u: number, z: number) => Pt) => {
+    const lit = ((seed * 7) % 10) / 10 < light;
+    const pane = lit ? glow[seed % glow.length] : dark ? shade(c.hi, -0.35) : c.hi;
+    const quad = (u0: number, u1: number, z0: number, z1: number) => pts([at(u0, z0), at(u1, z0), at(u1, z1), at(u0, z1)]);
+    els.push(<Polygon key={key} points={quad(0.32, 0.68, 13, 25)} fill={pane} stroke={capColor} strokeWidth={0.9} strokeLinejoin="round" />);
+    if (lit) {
+      const [gx, gy] = at(0.5, 19);
+      els.push(<Circle key={key + 'g'} cx={gx} cy={gy} r={11} fill={pane} fillOpacity={0.22} />);
+    }
+    const [ax, ay] = at(0.5, 13), [bx, by] = at(0.5, 25), [lx, ly] = at(0.32, 19), [rx, ry] = at(0.68, 19);
+    els.push(
+      <Line key={key + 'v'} x1={ax} y1={ay} x2={bx} y2={by} stroke={capColor} strokeWidth={0.8} />,
+      <Line key={key + 'h'} x1={lx} y1={ly} x2={rx} y2={ry} stroke={capColor} strokeWidth={0.8} />,
+    );
+    // Perdeler: yarı (uykulu, sessiz) ya da tam kapalı (tatil). Açıkken kenarlarda toplanmış.
+    const w = 0.04 + curtain * 0.14;
+    const cur = dark ? '#8C7E8A' : '#E8D5C4';
+    els.push(
+      <Polygon key={key + 'c1'} points={quad(0.32, 0.32 + w, 13, 25)} fill={cur} />,
+      <Polygon key={key + 'c2'} points={quad(0.68 - w, 0.68, 13, 25)} fill={cur} />,
+    );
+  };
+  /** Pencere olmayan dış duvarda küçük bir tablo. */
+  const PICS = ['#E58C7E', '#78A1BB', '#A6D49B', '#F2C46D'];
+  const pictureAt = (key: string, seed: number, at: (u: number, z: number) => Pt) => {
+    const q = (u0: number, u1: number, z0: number, z1: number) => pts([at(u0, z0), at(u1, z0), at(u1, z1), at(u0, z1)]);
+    els.push(
+      <Polygon key={key} points={q(0.36, 0.64, 15, 26)} fill={WOOD} />,
+      <Polygon key={key + 'i'} points={q(0.4, 0.6, 16.5, 24.5)} fill={PICS[seed % PICS.length]} />,
+      <Circle key={key + 's'} cx={at(0.47, 22)[0]} cy={at(0.47, 22)[1]} r={1.3} fill={WHITE} fillOpacity={0.8} />,
+    );
+  };
+
   const crack = (key: string, ps: Pt[]) =>
     els.push(<Polyline key={key} points={pts(ps)} fill="none" stroke="#5B4A40" strokeWidth={1.1} strokeLinejoin="round" strokeLinecap="round" />);
 
@@ -561,8 +686,13 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
       if (L === 2) frame(k + 'n', r, col, T * 0.7, 1, h);
       else {
         wall(k + 'n', r, col, T, 1, h);
-        if (!n && L >= 5 && (r + col) % 2 === 0)
-          add({ key: k + 'nw', fill: c.hi, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
+        if (!n && L >= 5 && (r + col) % 2 === 0) windowAt(k + 'nw', r * 3 + col * 5 + 1, (u, z) => P(r + T, col + u, z));
+        else if (!n && L >= 6) pictureAt(k + 'np', r + col * 3, (u, z) => P(r + T, col + u, z));
+        if (!n && L >= 5 && persona === 'neseli')
+          ['#E58C7E', GOLD, '#78A1BB', '#A6D49B'].forEach((col2, j) => {
+            const [x0, y0] = P(r + T, col + 0.12 + j * 0.22, WALL_H - 1), [x1, y1] = P(r + T, col + 0.3 + j * 0.22, WALL_H - 1);
+            els.push(<Polygon key={k + 'bu' + j} points={pts([[x0, y0], [x1, y1], [(x0 + x1) / 2, (y0 + y1) / 2 + 6]])} fill={col2} />);
+          });
         if (idle >= 2 && (r + col) % 2 === 1)
           crack(k + 'nc', [P(r + T, col + 0.5, h - 2), P(r + T, col + 0.6, h - 7), P(r + T, col + 0.47, h - 11), P(r + T, col + 0.58, h - 16)]);
         if (!n && L >= 26)
@@ -578,11 +708,22 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
       if (L === 2) frame(k + 'w', r, col, 1, T * 0.7, h);
       else {
         wall(k + 'w', r0, col, r + 1 - r0, T, h);
-        if (!w && L >= 5 && (r + col) % 2 === 1)
-          add({ key: k + 'ww', fill: c.hi, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
+        if (!w && L >= 5 && (r + col) % 2 === 1) windowAt(k + 'ww', r * 5 + col * 3 + 2, (u, z) => P(r + u, col + T, z));
+        else if (!w && L >= 6) pictureAt(k + 'wp', r * 3 + col + 1, (u, z) => P(r + u, col + T, z));
         if (idle >= 2 && (r + col) % 2 === 0)
           crack(k + 'wc', [P(r + 0.5, col + T, h - 3), P(r + 0.4, col + T, h - 8), P(r + 0.55, col + T, h - 12), P(r + 0.45, col + T, h - 17)]);
       }
+    }
+
+    // Baca: en arkadaki bloğun duvarında. Ev keyifliyse duman tüter.
+    if (i === topCell && L >= 4 && !at(r - 1, col)) {
+      box(k + 'ch', r, col + 0.52, 0.2, 0.2, WALL_H - 6, 16, shade(BRICK, -0.05)).forEach(add);
+      box(k + 'cc', r - 0.02, col + 0.5, 0.24, 0.24, WALL_H + 10, 2, shade(BRICK, -0.25)).forEach(add);
+      if (L >= 7 && (mood === 'isil' || mood === 'keyifli' || mood === 'uyaniyor'))
+        [[0, 6, 3.6], [0.08, 14, 4.6], [0.02, 23, 5.8]].forEach(([dv, dz, rad], j) => {
+          const [x, y] = P(r + 0.1, col + 0.62 + dv, WALL_H + 12 + dz);
+          els.push(<Circle key={k + 'sm' + j} cx={x} cy={y} r={rad} fill={dark ? '#C9CED8' : WHITE} fillOpacity={0.75 - j * 0.18} />);
+        });
     }
 
     if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c)}</G>);
@@ -607,6 +748,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   // Bahçe ve süsler (evin çevresinde, ev bitince açılır).
   const garden = gardenParts(S, L, dark, theme);
   garden.pts.forEach(grow);
+  const yard = yardParts(S, L, dark, mood, glow[0]);
+  yard.pts.forEach(grow);
 
   if (!els.length) return null;
 
@@ -680,6 +823,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {garden.ground ?? shadow}
         {garden.back}
         {els}
+        {yard.els}
         {garden.front}
         {scene.front}
       </Svg>

@@ -23,6 +23,7 @@ export default function Magaza() {
   const P = S.play;
   const [open, setOpen] = useState<string | null>(null);
   const { premium } = usePurchases();
+  const router = useRouter();
 
   return (
     <Screen header={false}>
@@ -43,6 +44,15 @@ export default function Magaza() {
         <Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text>
         <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
       </View>
+
+      <Pressable onPress={() => router.push('/bahce')} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
+        <Text style={{ fontSize: 30 }}>🌷</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
+          <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
+        </View>
+        <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
+      </Pressable>
 
       <View style={styles.grid}>
         {ITEMS.map(it => (
@@ -128,5 +138,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   item: { width: '47.5%', alignItems: 'center', padding: 14, gap: 10 },
   tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  garden: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18 },
+  gardenT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   rooms: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

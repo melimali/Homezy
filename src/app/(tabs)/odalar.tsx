@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
-import { Btn, Screen, T } from '@/components/ui';
+import { Btn, MokaHero, Screen, T } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { cleanWord, homeScore, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
@@ -32,28 +32,23 @@ export default function Odalar() {
 
   return (
     <Screen>
-      <View style={styles.top}>
-        <View style={{ flex: 1 }}>
-          <T v="h1">Odalar</T>
-          <T v="lead" style={{ marginTop: 2 }}>Bir odaya dokun, içine gir.</T>
-        </View>
-        <Float amp={4}>
+      <MokaHero
+        title="Odalar"
+        pose={score >= 90 ? 'sparkling_complete' : score >= 60 ? 'dusting' : 'sweeping'}
+        right={
           <View style={[styles.score, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 22 }}>{score >= 90 ? '🌟' : score >= 60 ? '😊' : '🫧'}</Text>
             <Text style={[styles.scoreN, { color: c.ink }]}>%{score}</Text>
+            <T v="small">ev puanı</T>
           </View>
-        </Float>
-      </View>
+        }
+      />
 
       {groups.map(([emoji, title, arr]) =>
         arr.length ? (
-          <View key={title} style={{ gap: 10 }}>
+          <View key={title} style={{ gap: 14 }}>
             <View style={styles.groupHead}>
-              <Text style={{ fontSize: 20 }}>{emoji}</Text>
-              <T v="h2" style={{ flex: 1 }}>{title}</T>
-              <View style={[styles.count, { backgroundColor: c.surface2 }]}>
-                <T v="small" style={{ color: c.ink }}>{arr.length}</T>
-              </View>
+              <T v="h2" style={{ flex: 1 }}>{emoji}  {title}</T>
+              <T v="small">{arr.length}</T>
             </View>
             <View style={styles.grid}>
               {arr.map(({ id, r, rc, clean }) => {
@@ -67,11 +62,9 @@ export default function Odalar() {
                       style={[styles.tile, { backgroundColor: c.room[r.type] }]}
                     >
                       <Float amp={rc.late || rc.today ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
-                        <View style={[styles.emoji, { backgroundColor: c.surface }]}>
-                          <Text style={{ fontSize: 30 }}>{ROOM_EMOJI[r.type]}</Text>
-                        </View>
+                        <Text style={{ fontSize: 42, lineHeight: 50 }}>{ROOM_EMOJI[r.type]}</Text>
                       </Float>
-                      <T v="h3" numberOfLines={1} style={{ fontSize: 16 }}>{r.name}</T>
+                      <T v="h3" numberOfLines={1}>{r.name}</T>
                       <View style={[styles.bar, { backgroundColor: c.surface }]}>
                         <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
                       </View>
@@ -92,24 +85,21 @@ export default function Odalar() {
         ) : null,
       )}
 
-      <Btn label="🏗️ Evimin planını düzenle" onPress={() => router.push('/plan')} />
+      <Btn kind="ghost" label="Evimin planını düzenle" onPress={() => router.push('/plan')} block />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  score: { alignItems: 'center', justifyContent: 'center', width: 70, height: 70, borderRadius: 35 },
-  scoreN: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 18 },
-  groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  count: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  cell: { width: '48.3%' },
-  tile: { borderRadius: radius.card, alignItems: 'center', gap: 5, paddingVertical: 13, paddingHorizontal: 12 },
-  emoji: { width: 56, height: 56, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden', alignSelf: 'stretch', marginHorizontal: 8 },
+  score: { flexDirection: 'row', alignItems: 'baseline', gap: 6, alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 14, marginTop: 12 },
+  scoreN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
+  groupHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  cell: { width: '48%' },
+  tile: { borderRadius: radius.card, alignItems: 'center', gap: 8, paddingTop: 22, paddingBottom: 18, paddingHorizontal: 14 },
+  bar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', alignSelf: 'stretch', marginHorizontal: 12 },
   fill: { height: '100%', borderRadius: radius.pill },
-  badge: { position: 'absolute', top: 10, right: 10, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', top: 12, right: 12, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },
-  ok: { position: 'absolute', top: 10, right: 14, fontSize: 16, opacity: 0.6 },
+  ok: { position: 'absolute', top: 12, right: 16, fontSize: 15, opacity: 0.5 },
 });

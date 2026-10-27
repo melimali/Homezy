@@ -22,9 +22,9 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
-import { brand, fonts, radius, space, useColors, type Colors } from '@/theme';
+import { fonts, radius, space, useColors, type Colors } from '@/theme';
 
-import { Appear, Squish } from './motion';
+import { Appear, Float, Squish } from './motion';
 
 /* ---------- metin ---------- */
 
@@ -37,16 +37,16 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, color: c.ink, letterSpacing: -0.3 };
-    case 'h2': return { fontFamily: fonts.display, fontSize: 20, lineHeight: 26, color: c.ink };
-    case 'h3': return { fontFamily: fonts.display, fontSize: 16, lineHeight: 21, color: c.ink };
-    case 'bold': return { fontFamily: fonts.bodyBold, fontSize: 16, color: c.ink };
-    case 'small': return { fontFamily: fonts.body, fontSize: 13.5, lineHeight: 19, color: c.muted };
-    case 'tiny': return { fontFamily: fonts.body, fontSize: 12, color: c.muted };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40, color: c.ink, letterSpacing: -0.6 };
+    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: c.ink, letterSpacing: -0.2 };
+    case 'h3': return { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 22, color: c.ink };
+    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink };
+    case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
+    case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted };
     case 'eyebrow':
-      return { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: c.warm, marginBottom: 6 };
-    case 'lead': return { fontFamily: fonts.body, fontSize: 16, lineHeight: 24, color: c.muted, marginTop: 8 };
-    default: return { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: c.ink };
+      return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.hi, marginBottom: 4 };
+    case 'lead': return { fontFamily: fonts.bodyBold, fontSize: 16.5, lineHeight: 24, color: c.muted, marginTop: 6 };
+    default: return { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: c.ink };
   }
 }
 
@@ -60,7 +60,7 @@ export function Screen({ children, scrollEnabled = true, header = true }: { chil
       style={{ flex: 1, backgroundColor: c.bg }}
       scrollEnabled={scrollEnabled}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: header ? 32 : insets.bottom + 32 }]}
+      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 12, paddingBottom: header ? 48 : insets.bottom + 48 }]}
     >
       {header && <AppHeader />}
       {children}
@@ -78,13 +78,15 @@ export function AppHeader() {
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
-        <Image source={MOKA_ASSETS.happy} style={styles.headMoka} resizeMode="contain" accessibilityLabel="Moka" />
-        <View style={[styles.brandPill, { backgroundColor: brand.mint }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+        <View style={[styles.headMokaRing, { backgroundColor: c.surface }]}>
+          <Image source={MOKA_ASSETS.happy} style={styles.headMoka} resizeMode="contain" accessibilityLabel="Moka" />
+        </View>
+        <View>
+          <Text style={[styles.brandWord, { color: c.ink }]}>Homezy</Text>
+          <T v="tiny">{fmtShort(now)}</T>
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <T v="small" style={{ fontFamily: fonts.bodyBold }}>{fmtShort(now)}</T>
         {state.setup && (
           <Pressable
             onPress={() => router.push('/bildirimler')}
@@ -93,7 +95,7 @@ export function AppHeader() {
             hitSlop={6}
             style={({ pressed }) => [styles.bell, { backgroundColor: c.surface }, pressed && { transform: [{ translateY: 1 }] }]}
           >
-            <Text style={{ fontSize: 18 }}>🔔</Text>
+            <Text style={{ fontSize: 19 }}>🔔</Text>
             {n > 0 && (
               <View style={[styles.badge, { backgroundColor: c.late }]}>
                 <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{n}</Text>
@@ -120,12 +122,37 @@ export function BackLink({ label = 'Geri' }: { label?: string }) {
 
 /* ---------- kart ---------- */
 
-/** Düz, gölgesiz kart. İlk göründüğünde yaylanarak gelir (`index` ile sırayla). */
-export function Card({ children, style, index }: { children: ReactNode; style?: StyleProp<ViewStyle>; index?: number }) {
+/**
+ * Yüzen yüzey: çok yuvarlak, kenarlıksız, gölgesiz. `bare` ile zemin rengi kalkar, içerik doğrudan
+ * sayfa zemininde nefes alır. İlk göründüğünde yaylanarak gelir (`index` ile sırayla).
+ */
+export function Card({ children, style, index, bare }: { children: ReactNode; style?: StyleProp<ViewStyle>; index?: number; bare?: boolean }) {
   const c = useColors();
   return (
-    <Appear index={index} style={[styles.card, { backgroundColor: c.surface }, style]}>
+    <Appear index={index} style={[styles.card, bare ? styles.cardBare : { backgroundColor: c.surface }, style]}>
       {children}
+    </Appear>
+  );
+}
+
+/** Sekme başlığı: büyük başlık, kısa alt cümle ve yanında yüzen Moka. */
+export function MokaHero({
+  title, sub, eyebrow, pose = 'happy', right,
+}: { title: string; sub?: string; eyebrow?: string; pose?: MokaPose; right?: ReactNode }) {
+  const c = useColors();
+  return (
+    <Appear style={styles.hero}>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        {!!eyebrow && <T v="eyebrow">{eyebrow}</T>}
+        <T v="h1">{title}</T>
+        {!!sub && <T v="lead">{sub}</T>}
+        {right}
+      </View>
+      <View style={[styles.heroRing, { backgroundColor: c.surface }]}>
+        <Float amp={4} dur={2400}>
+          <Image source={MOKA_ASSETS[pose]} style={styles.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+        </Float>
+      </View>
     </Appear>
   );
 }
@@ -143,8 +170,10 @@ export function SecHead({ title, right, h = 'h2' }: { title: string; right?: Rea
 export function EmptyMsg({ children, pose = 'wink' }: { children: ReactNode; pose?: MokaPose }) {
   return (
     <View style={styles.empty}>
-      <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
-      <T v="small" style={{ fontSize: 14, lineHeight: 20, flex: 1 }}>{children}</T>
+      <Float amp={3} dur={2600}>
+        <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+      </Float>
+      <T v="bold" style={{ fontSize: 16, lineHeight: 23, textAlign: 'center', maxWidth: 280 }}>{children}</T>
     </View>
   );
 }
@@ -166,11 +195,11 @@ export function Btn({
         styles.btn,
         small && styles.btnSmall,
         block && { alignSelf: 'stretch' },
-        { backgroundColor: bg, borderColor: kind === 'ghost' ? c.line : bg },
+        { backgroundColor: kind === 'ghost' ? c.surface : bg },
         style,
       ]}
     >
-      <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13 : 15 }}>{label}</Text>
+      <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13.5 : 16, letterSpacing: 0.1 }}>{label}</Text>
     </Squish>
   );
 }
@@ -192,7 +221,7 @@ export function Chip({ label, on, onPress }: { label: string; on: boolean; onPre
     <Squish
       onPress={onPress}
       accessibilityState={{ selected: on }}
-      style={[styles.chip, on ? { backgroundColor: c.accent, borderColor: c.accent } : { backgroundColor: c.surface, borderColor: c.line }]}
+      style={[styles.chip, { backgroundColor: on ? c.accent : c.surface }]}
     >
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{label}</Text>
     </Squish>
@@ -218,14 +247,9 @@ export function Tabs<K extends string>({
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             accessibilityLabel={it.badge ? `${it.label}, ${it.badge}` : it.label}
-            style={[
-              styles.tab,
-              on
-                ? { backgroundColor: c.accent }
-                : { backgroundColor: c.surface },
-            ]}
+            style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }]}
           >
-            <Text style={{ fontSize: 22 }}>{it.emoji}</Text>
+            <Text style={{ fontSize: 24 }}>{it.emoji}</Text>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
             {!!it.badge && (
               <View style={[styles.tabBadge, { backgroundColor: c.late }]}>
@@ -251,7 +275,7 @@ export function Pill({ k, label }: { k: StatusKind | 'neutral'; label: string })
   } as const;
   const [bg, fg] = map[k];
   return (
-    <View style={[styles.pill, { backgroundColor: bg }, k === 'neutral' && { borderWidth: 1.5, borderColor: c.line }]}>
+    <View style={[styles.pill, { backgroundColor: k === 'neutral' ? c.surface2 : bg }]}>
       <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: 11.5 }}>{label}</Text>
     </View>
   );
@@ -295,42 +319,46 @@ export function Field(props: ComponentProps<typeof TextInput>) {
     <TextInput
       placeholderTextColor={c.muted}
       {...props}
-      style={[styles.field, { borderColor: c.line, color: c.ink, backgroundColor: c.bg }, props.style]}
+      style={[styles.field, { color: c.ink, backgroundColor: c.surface2 }, props.style]}
     />
   );
 }
 
 export const styles = StyleSheet.create({
   screen: { paddingHorizontal: space.screen, gap: space.section, width: '100%', maxWidth: 520, alignSelf: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  headMoka: { width: 48, height: 48, marginVertical: -6 },
-  empty: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
-  emptyMoka: { width: 64, height: 64 },
-  sheetMoka: { position: 'absolute', top: -58, right: 24, width: 76, height: 76 },
-  brandPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
-  wordmark: { width: 102, height: 34 },
-  bell: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headMokaRing: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  headMoka: { width: 50, height: 50, marginTop: 6 },
+  brandWord: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 22, letterSpacing: -0.3 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  heroRing: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
+  heroMoka: { width: 104, height: 104 },
+  empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
+  emptyMoka: { width: 132, height: 132 },
+  sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
+  bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 },
-  card: { borderRadius: radius.card, padding: space.card, gap: 14 },
+  back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
+  card: { borderRadius: radius.card, padding: space.card, gap: 16 },
+  cardBare: { paddingHorizontal: 0, paddingVertical: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
-    paddingVertical: 13, paddingHorizontal: 20, borderWidth: 1.5,
+    paddingVertical: 16, paddingHorizontal: 24,
   },
-  btnSmall: { paddingVertical: 7, paddingHorizontal: 14 },
-  chip: { borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 12 },
-  tabs: { gap: 8, paddingVertical: 6, paddingHorizontal: 2 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minWidth: 78, paddingVertical: 9, paddingHorizontal: 12, borderRadius: radius.tile },
+  btnSmall: { paddingVertical: 9, paddingHorizontal: 16 },
+  chip: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
+  tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },
   tabBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   x: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  pill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
+  pill: { borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 4, alignSelf: 'flex-start' },
   sheetBg: { flex: 1 },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: space.card, paddingTop: 10, gap: 14, maxWidth: 520, alignSelf: 'center', width: '100%' },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: space.card, paddingTop: 12, gap: 16, maxWidth: 520, alignSelf: 'center', width: '100%' },
   grab: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 4 },
   field: {
-    flex: 1, minWidth: 0, borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 9,
-    fontFamily: fonts.body, fontSize: 15,
+    flex: 1, minWidth: 0, borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 13,
+    fontFamily: fonts.bodyBold, fontSize: 15.5,
   },
 });

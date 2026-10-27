@@ -42,7 +42,7 @@ export default function RoomScreen() {
                   onPress={() => !on && router.setParams({ id: rid })}
                   accessibilityLabel={x.name}
                   accessibilityState={{ selected: on }}
-                  style={[styles.hop, { backgroundColor: on ? c.room[x.type] : c.surface, borderColor: on ? c.wall : 'transparent' }]}
+                  style={[styles.hop, { backgroundColor: on ? c.room[x.type] : c.surface }, on && { transform: [{ scale: 1.08 }] }]}
                 >
                   <Text style={{ fontSize: 22 }}>{ROOM_EMOJI[x.type]}</Text>
                   {dot && <View style={[styles.dot, { backgroundColor: dot, borderColor: c.bg }]} />}
@@ -80,10 +80,10 @@ export default function RoomScreen() {
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
-  hop: { width: 46, height: 46, borderRadius: 18, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', top: -2, right: -2, width: 13, height: 13, borderRadius: 7, borderWidth: 2 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.card },
-  emoji: { width: 64, height: 64, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden', marginTop: 4 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 22, paddingHorizontal: 20, borderRadius: radius.card },
+  emoji: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  bar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', marginTop: 8 },
   fill: { height: '100%', borderRadius: radius.pill },
 });

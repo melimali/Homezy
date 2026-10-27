@@ -9,7 +9,7 @@ import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { Appear, Float, Squish } from '@/components/motion';
-import { Btn, Card, SecHead, Screen, T } from '@/components/ui';
+import { Btn, Card, EmptyMsg, SecHead, Screen, T } from '@/components/ui';
 import { allTasks, greet, greeting } from '@/domain/logic';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
@@ -48,48 +48,51 @@ export default function Home() {
 
   return (
     <Screen>
-      <View>
+      <Appear>
         <T v="h1">{greet(new Date(now), name)}</T>
         <T v="lead">
-          {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda ✨ ${greeting(new Date(now)).line}`}
+          {due.length ? `Bugün ${due.length} iş var. ${greeting(new Date(now)).line}` : `Bugün her şey yolunda. ${greeting(new Date(now)).line}`}
         </T>
-      </View>
+      </Appear>
 
-      <Appear index={1}><MokaMascot pose={pose} title={moka.title} message={moka.message} tip={tip.text} onPress={moka.next} /></Appear>
+      <Appear index={1}><MokaMascot pose={pose} size="lg" title={moka.title} message={moka.message} tip={tip.text} onPress={moka.next} /></Appear>
 
       <Appear index={2}><StreakCard progress={hp} points={S.play.points} freezeLeft={freezeLeft} freezeMax={lim.freezes} /></Appear>
 
       {weekReady && (
-        <Pressable
-          onPress={() => router.push('/hafta')}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.week, { backgroundColor: c.accentSoft }, pressed && { transform: [{ translateY: 1 }] }]}
-        >
-          <Text style={{ fontSize: 24 }}>📅</Text>
+        <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ fontSize: 26 }}>📅</Text>
           <View style={{ flex: 1 }}>
             <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
             <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
           </View>
-          <Text style={[styles.weekT, { color: c.ink }]}>›</Text>
-        </Pressable>
+          <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+        </Squish>
       )}
 
-      {S.others.length > 0 && (
-        <Pressable onPress={() => router.push('/evler')} accessibilityRole="button" style={{ alignSelf: 'center' }}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
-        </Pressable>
-      )}
-      <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
-      <T v="small" style={{ textAlign: 'center', marginTop: -8, fontSize: 14 }}>Bir odaya dokun, işlerini gör.</T>
-      <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={6} style={{ alignSelf: 'center', marginTop: -6 }}>
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ok }}>🎬 Evimin hikâyesi</Text>
-      </Pressable>
+      <View style={{ gap: 12 }}>
+        {S.others.length > 0 && (
+          <Pressable onPress={() => router.push('/evler')} accessibilityRole="button" style={[styles.homeSwitch, { backgroundColor: c.surface }]}>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
+          </Pressable>
+        )}
+        <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
+        <View style={styles.houseFoot}>
+          <T v="small">Bir odaya dokun</T>
+          <Text style={{ color: c.line }}>•</Text>
+          <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={8}>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi }}>Evimin hikâyesi</Text>
+          </Pressable>
+        </View>
+      </View>
 
-      <Card index={3}>
-        <SecHead title="🧹 Sıradaki işler" right={due.length > 3 ? `+${due.length - 3} iş daha` : undefined} />
-        {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
-        {!due.length && <T style={{ fontSize: 15 }}>Bugünlük her şey tamam 🎉 Biraz dinlen.</T>}
-        {due.length > 3 && <Btn small label="Hepsini gör" onPress={toToday} style={{ alignSelf: 'flex-start' }} />}
+      <Card bare index={3}>
+        <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
+        <View>
+          {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
+        </View>
+        {!due.length && <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>}
+        {due.length > 3 && <Btn label="Hepsini gör" onPress={toToday} block />}
       </Card>
 
       <Appear index={4} style={styles.quick}>
@@ -115,39 +118,32 @@ function StreakCard({ progress: p, points, freezeLeft, freezeMax }: { progress: 
   return (
     <View style={[styles.streak, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
       <View style={styles.streakTop}>
-        <View style={styles.stat}>
-          <Text style={{ fontSize: 22 }}>{p.streak ? '🔥' : '🪵'}</Text>
-          <View>
-            <Text style={[styles.statN, { color: c.ink }]}>{p.streak} gün</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>seri</Text>
-          </View>
-        </View>
-        <View style={styles.stat}>
-          <Text style={{ fontSize: 22 }}>⭐</Text>
-          <View>
-            <Text style={[styles.statN, { color: c.ink }]}>{points}</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>puan</Text>
-          </View>
-        </View>
-        <View style={styles.stat}>
-          <Text style={{ fontSize: 22 }}>🏠</Text>
-          <View>
-            <Text style={[styles.statN, { color: c.ink }]}>{p.level >= BUILT ? `Sv. ${p.level}` : `${built}/${BUILT}`}</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>{p.level >= BUILT ? 'ev' : 'inşaat'}</Text>
-          </View>
-        </View>
+        <Stat emoji={p.streak ? '🔥' : '🪵'} n={`${p.streak}`} label="gün seri" />
+        <Stat emoji="⭐" n={`${points}`} label="puan" />
+        <Stat emoji="🏠" n={p.level >= BUILT ? `${p.level}` : `${built}/${BUILT}`} label={p.level >= BUILT ? 'seviye' : 'inşaat'} />
       </View>
       {p.level < BUILT && (
         <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
           <View style={[styles.barFill, { width: `${(built / BUILT) * 100}%`, backgroundColor: c.hi }]} />
         </View>
       )}
-      <Text style={[styles.streakLine, { color: warn ? c.late : c.ink }]}>{houseLine(p)}</Text>
+      <Text style={[styles.streakLine, { color: warn ? c.late : c.muted }]}>{houseLine(p)}</Text>
       {warn && p.level > 0 && (
         <Text style={[styles.freeze, { color: c.muted }]}>
           ❄️ Bu ay {freezeLeft}/{freezeMax} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.
         </Text>
       )}
+    </View>
+  );
+}
+
+function Stat({ emoji, n, label }: { emoji: string; n: string; label: string }) {
+  const c = useColors();
+  return (
+    <View style={styles.stat}>
+      <Text style={{ fontSize: 20 }}>{emoji}</Text>
+      <Text style={[styles.statN, { color: c.ink }]}>{n}</Text>
+      <Text style={[styles.statL, { color: c.muted }]}>{label}</Text>
     </View>
   );
 }
@@ -181,30 +177,35 @@ function Celebrate({ level }: { level: number }) {
 function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onPress: () => void; i: number }) {
   const c = useColors();
   return (
-    <Squish onPress={onPress} style={[styles.q, { backgroundColor: c.surface }]}>
-      <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
-        <Text style={{ fontSize: 28 }}>{emoji}</Text>
-      </Float>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
+    <Squish onPress={onPress} style={styles.q}>
+      <View style={[styles.qRing, { backgroundColor: c.surface }]}>
+        <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
+          <Text style={{ fontSize: 28 }}>{emoji}</Text>
+        </Float>
+      </View>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.ink }}>{label}</Text>
     </Squish>
   );
 }
 
 const styles = StyleSheet.create({
-  streak: { borderRadius: radius.card, padding: 14, gap: 10 },
-  streakTop: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
-  stat: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 21 },
-  statL: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  bar: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
+  streak: { borderRadius: radius.card, paddingVertical: 22, paddingHorizontal: 20, gap: 16 },
+  streakTop: { flexDirection: 'row', justifyContent: 'space-around' },
+  stat: { alignItems: 'center', gap: 2, minWidth: 72 },
+  statN: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.4 },
+  statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
+  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden', marginHorizontal: 8 },
   barFill: { height: '100%', borderRadius: radius.pill },
-  streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },
-  freeze: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center', marginTop: -4 },
-  quick: { flexDirection: 'row', gap: 10 },
-  week: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.card, paddingVertical: 12, paddingHorizontal: 14 },
-  weekT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  q: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: radius.card, gap: 2 },
+  streakLine: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  freeze: { fontFamily: fonts.bodyBold, fontSize: 12.5, lineHeight: 18, textAlign: 'center', marginTop: -6 },
+  quick: { flexDirection: 'row', justifyContent: 'space-between' },
+  week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
+  weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
+  homeSwitch: { alignSelf: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16 },
+  houseFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  q: { flex: 1, alignItems: 'center', gap: 8 },
+  qRing: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  modalMoka: { marginTop: -90 },
-  modal: { borderRadius: radius.card, padding: 24, paddingTop: 0, marginTop: 80, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
+  modalMoka: { marginTop: -100 },
+  modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },
 });

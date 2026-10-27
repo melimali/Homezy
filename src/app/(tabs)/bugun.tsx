@@ -7,7 +7,7 @@ import { ShopList } from '@/components/ShopList';
 import { Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
-import { Btn, Card, Chip, EmptyMsg, Pill, Screen, SecHead, T } from '@/components/ui';
+import { Btn, Card, Chip, EmptyMsg, MokaHero, Pill, Screen, SecHead, T } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { allTasks, fmtLong, isGuestRoom, quickPick, shopItems } from '@/domain/logic';
 import type { ModeKind } from '@/domain/types';
@@ -25,8 +25,8 @@ export default function Bugun() {
   const all = sorted.filter(x => !guest.includes(x));
   // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bu hafta kapalı başlar.
   const groups: [string, typeof all][] = [
-    ['🫖 Misafir gelmeden', guest],
-    ['🧹 Bugün yapılacaklar', all.filter(x => x.s.k !== 'ok')],
+    ['Misafir gelmeden', guest],
+    ['Bugün', all.filter(x => x.s.k !== 'ok')],
   ];
   const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7);
   const [showWeek, setShowWeek] = useState(false);
@@ -37,14 +37,11 @@ export default function Bugun() {
 
   return (
     <Screen>
-      <View>
-        <T v="eyebrow">{fmtLong(now)}</T>
-        <T v="h1">Yapılacaklar</T>
-      </View>
+      <MokaHero eyebrow={fmtLong(now)} title="Yapılacaklar" pose={visible.length ? 'checklist' : 'rest'} />
       {!S.home.asked && <ProfilePrompt />}
       <DailyGoals now={now} />
       {visible.map(([label, arr], gi) => (
-        <Card key={label} index={gi + 1}>
+        <Card bare key={label} index={gi + 1}>
           <SecHead title={label} right={String(arr.length)} />
           <View>
             {arr.map((x, i) => (
@@ -54,14 +51,14 @@ export default function Bugun() {
         </Card>
       ))}
       {!visible.length && (
-        <Card>
-          <EmptyMsg>{S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen 🏖️ Ev seni bekler.' : 'Bugünlük her şey tamam 🎉'}</EmptyMsg>
-        </Card>
+        <EmptyMsg pose={S.mode?.k === 'tatil' ? 'blanket' : 'party'}>
+          {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
+        </EmptyMsg>
       )}
       {S.mode?.k !== 'tatil' && week.length > 0 && (
-        <Card>
+        <Card bare>
           <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
-            <T v="h2" style={{ flex: 1 }}>📅 Bu hafta</T>
+            <T v="h2" style={{ flex: 1 }}>Bu hafta</T>
             <T v="small">{showWeek ? 'Gizle' : `${week.length} iş ›`}</T>
           </Pressable>
           {showWeek && week.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
@@ -116,7 +113,7 @@ function ModeCard({ now }: { now: number }) {
     return (
       <Card>
         <Pressable onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.modeHead}>
-          <T v="h2" style={{ flex: 1 }}>💭 Bugün nasılsın?</T>
+          <T v="h2" style={{ flex: 1 }}>Bugün nasılsın?</T>
           <T v="small">{open ? 'Kapat' : 'Mod seç ›'}</T>
         </Pressable>
         {open && (
@@ -190,7 +187,7 @@ function TimeBudget({ now }: { now: number }) {
   if (S.mode?.k === 'tatil') return null;
   return (
     <Card>
-      <SecHead title="Ne kadar vaktin var? ⏱️" right={min ? `${total} / ${min} dk` : undefined} />
+      <SecHead title="Ne kadar vaktin var?" right={min ? `${total} / ${min} dk` : undefined} />
       <View style={styles.wrap}>
         {[10, 20, 30, 60].map(m => (
           <Chip key={m} label={`${m} dk`} on={min === m} onPress={() => setMin(min === m ? null : m)} />
@@ -253,7 +250,7 @@ function DailyGoals({ now }: { now: number }) {
   ];
   return (
     <Card>
-      <SecHead title="🎯 Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
+      <SecHead title="Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
       <View style={{ gap: 8 }}>
         {goals.map(g => (
           <Squish
@@ -272,23 +269,23 @@ function DailyGoals({ now }: { now: number }) {
           </Squish>
         ))}
       </View>
-      <T v="small">Her gün en az birini yap, evin inşaatı ilerlesin 🏗️</T>
+      <T v="small">Her gün en az birini yap, evin inşaatı ilerlesin.</T>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   modeHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16 },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 24 },
   check: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
-  bar: { height: 10, borderRadius: 999, overflow: 'hidden' },
+  bar: { height: 8, borderRadius: 999, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 999 },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   dueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });
 
 const goalStyle = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24 },
   label: { flex: 1, fontFamily: fonts.bodyBlack, fontSize: 15 },
   pts: { fontFamily: fonts.bodyBlack, fontSize: 13 },
 });

@@ -12,8 +12,8 @@ export const brand = {
 };
 
 const light = {
-  // Düz 2D: zemin mint, kartlar bir ton açık, gölge yok; ayrım boşlukla ve tek renk çizgiyle.
-  bg: brand.mint, surface: '#F8FCF9', surface2: '#DFEBE4', ink: brand.navy, muted: '#5C6B80', line: '#D3E1D8',
+  // Havadar yüzeyler: zemin mint, yüzeyler neredeyse beyaz, kenarlık yok denecek kadar yumuşak, gölge yok.
+  bg: brand.mint, surface: '#F9FDFA', surface2: '#E2EEE7', ink: brand.navy, muted: '#66758A', line: '#DCE8E0',
   wall: '#283044', hatch: 'rgba(40,48,68,0.12)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.10)',
   accent: brand.navy, onAccent: brand.mint, accentSoft: '#D6E4EC', hi: brand.blue, warm: brand.cocoa, clay: brand.clay,
   onBadge: '#FFFFFF',
@@ -58,7 +58,7 @@ export const fonts = {
   bodyBlack: 'Nunito_800ExtraBold',
 };
 
-export const radius = { card: 24, tile: 20, plan: 9, pill: 999 };
+export const radius = { card: 32, tile: 26, plan: 9, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
-export const space = { screen: 20, section: 22, card: 20 };
+export const space = { screen: 24, section: 30, card: 24 };

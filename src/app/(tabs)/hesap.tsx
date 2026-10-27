@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Btn, Card, Pill, Screen, T } from '@/components/ui';
+import { Btn, Card, MokaHero, Pill, Screen, T } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { seed } from '@/domain/logic';
 import { LEGAL } from '@/lib/links';
@@ -83,18 +83,9 @@ export default function Hesap() {
 
   return (
     <Screen>
-      <T v="h1">Hesabım</T>
+      <MokaHero title={name} sub={account ? user?.email ?? undefined : 'Hesapsız kullanıyorsun'} pose={account ? 'wink' : 'begging'} />
 
       <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View style={[st.avatar, { backgroundColor: c.accent }]}>
-            <Text style={{ fontFamily: fonts.displayBold, fontSize: 24, color: c.onAccent }}>{name.slice(0, 1).toLocaleUpperCase('tr-TR')}</Text>
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <T v="h2" numberOfLines={1}>{name}</T>
-            <T v="small" numberOfLines={1}>{account ? user?.email : 'Hesapsız kullanıyorsun'}</T>
-          </View>
-        </View>
         {account ? (
           <T v="small" style={{ fontSize: 13.5 }}>
             Evin, rutinlerin ve ayarların hesabına yedekleniyor. Yeni bir telefonda giriş yapınca hepsi geri gelir.
@@ -109,7 +100,7 @@ export default function Hesap() {
         )}
       </Card>
 
-      <Card style={{ gap: 4 }}>
+      <Card style={st.list}>
         <LinkRow label="🔔  Bildirimler ve sesler" onPress={() => router.push('/bildirimler')} />
         <LinkRow label="🏠  Ev planını düzenle" onPress={() => router.push('/plan')} />
         <LinkRow label="🏡  Evlerim ve evin görünümü" onPress={() => router.push('/evler')} />
@@ -147,7 +138,7 @@ export default function Hesap() {
         )}
       </Card>
 
-      <Card style={{ gap: 4 }}>
+      <Card bare style={st.list}>
         <LinkRow label="Gizlilik politikası" onPress={() => Linking.openURL(LEGAL.privacy)} />
         <LinkRow label="Kullanım koşulları" onPress={() => Linking.openURL(LEGAL.terms)} />
       </Card>
@@ -168,15 +159,15 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   const c = useColors();
   return (
     <Pressable onPress={onPress} accessibilityRole="link" style={({ pressed }) => [st.link, pressed && { opacity: 0.6 }]}>
-      <T v="bold" style={{ fontSize: 14, flex: 1 }}>{label}</T>
+      <T v="bold" style={{ fontSize: 15, flex: 1 }}>{label}</T>
       <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
     </Pressable>
   );
 }
 
 const st = StyleSheet.create({
-  avatar: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
+  list: { gap: 0, paddingVertical: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
+  link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

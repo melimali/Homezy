@@ -153,7 +153,7 @@ export function TaskRow({
   const tone = k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface2;
 
   return (
-    <View style={[!first && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
+    <View style={[styles.rowWrap, { backgroundColor: c.surface }, !first && { marginTop: 10 }]}>
       <View style={styles.row}>
         <View style={[styles.bubble, { backgroundColor: tone }]}>
           <Text style={{ fontSize: 22 }}>{k.doneToday ? '✅' : k.emoji}</Text>
@@ -182,11 +182,7 @@ export function TaskRow({
             accessibilityLabel={k.doneToday ? `${t.name} bugün tamamlandı` : `${t.name}: ${k.action}`}
             style={[
               styles.done,
-              k.doneToday
-                ? { backgroundColor: c.okSoft, borderColor: c.okSoft }
-                : k.urgent
-                ? { backgroundColor: c.accent, borderColor: c.accent }
-                : { borderColor: c.hi },
+              { backgroundColor: k.doneToday ? c.okSoft : k.urgent ? c.accent : c.surface2 },
             ]}
           >
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: k.photoTask || k.plant ? 20 : 22, color: k.doneToday ? c.ok : k.urgent ? c.onAccent : c.ink }}>
@@ -268,12 +264,12 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
   const k = useTask(t, rid, list);
   const [open, setOpen] = useState(false);
   const tone = k.doneToday
-    ? { bg: c.okSoft, fg: c.ok, ring: c.okSoft }
+    ? { bg: c.okSoft, fg: c.ok }
     : k.s.k === 'late'
-    ? { bg: c.lateSoft, fg: c.late, ring: c.late }
+    ? { bg: c.lateSoft, fg: c.late }
     : k.s.k === 'today'
-    ? { bg: c.todaySoft, fg: c.today, ring: c.today }
-    : { bg: c.surface, fg: c.muted, ring: c.line };
+    ? { bg: c.todaySoft, fg: c.today }
+    : { bg: c.surface, fg: c.muted };
   const label = k.doneToday ? 'Yapıldı ✓' : k.s.label;
 
   return (
@@ -287,7 +283,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
           accessibilityLabel={`${t.name}, ${label}. ${k.doneToday ? 'Ayarlar için dokun' : `${k.action} için dokun, ayarlar için basılı tut`}`}
           style={[
             styles.tile,
-            { backgroundColor: tone.bg, borderColor: tone.ring },
+            { backgroundColor: tone.bg },
           ]}
         >
           <Float amp={k.urgent ? 3 : 0} dur={1600 + (index % 4) * 200}>
@@ -405,26 +401,27 @@ export function AddTaskForm({ rid, list, placeholder }: { rid: string; list: Tas
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
-  bubble: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
-  tileWrap: { width: '48.5%' },
-  tile: { minHeight: 124, borderRadius: radius.tile, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 8 },
-  tileEmoji: { fontSize: 38, lineHeight: 46 },
-  tileName: { fontFamily: fonts.bodyBlack, fontSize: 14, lineHeight: 18, textAlign: 'center' },
-  tileTag: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 9, marginTop: 2 },
+  rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  bubble: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  tileWrap: { width: '48%' },
+  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10 },
+  tileEmoji: { fontSize: 40, lineHeight: 48 },
+  tileName: { fontFamily: fonts.bodyBlack, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  tileTag: { borderRadius: radius.pill, paddingVertical: 3, paddingHorizontal: 10, marginTop: 2 },
   tileCheck: { position: 'absolute', top: 8, left: 10, fontSize: 16 },
   tileMore: { position: 'absolute', top: 4, right: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   more: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  panel: { borderRadius: 16, padding: 12, gap: 10, marginBottom: 10 },
+  panel: { borderRadius: radius.tile, padding: 16, gap: 12, marginBottom: 14 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
   gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, zIndex: 2 },
-  done: { width: 46, height: 46, borderWidth: 2.5, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  done: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },
 });

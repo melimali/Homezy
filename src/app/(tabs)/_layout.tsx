@@ -19,16 +19,22 @@ function TabIcon({ name, color, focused }: { name: IconName; color: ColorValue; 
     Animated.spring(v, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }).start();
   }, [focused, v]);
   return (
-    <Animated.View style={{ transform: [{ scale: v }, { translateY: focused ? -2 : 0 }] }}>
+    <Animated.View
+      style={{
+        transform: [{ scale: v }],
+        width: 56, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: focused ? 'rgba(235,245,238,0.16)' : 'transparent',
+      }}
+    >
       <TabGlyph name={name} color={color} />
     </Animated.View>
   );
 }
 
 function TabGlyph({ name, color }: { name: IconName; color: ColorValue }) {
-  const p = { stroke: color, strokeWidth: 2.2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const p = { stroke: color, strokeWidth: 2.4, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
-    <Svg width={26} height={26} viewBox="0 0 24 24">
+    <Svg width={24} height={24} viewBox="0 0 24 24">
       {name === 'home' && <Path {...p} d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />}
       {name === 'rooms' && (
         <>
@@ -73,17 +79,19 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: brand.mint,
-        tabBarInactiveTintColor: 'rgba(235,245,238,0.55)',
+        tabBarInactiveTintColor: 'rgba(235,245,238,0.5)',
         tabBarStyle: {
           backgroundColor: barBg,
           borderTopWidth: 0,
-          height: 66 + bottom,
-          paddingTop: 8,
-          borderTopLeftRadius: 26,
-          borderTopRightRadius: 26,
+          height: 72 + bottom,
+          paddingTop: 10,
+          paddingHorizontal: 12,
+          borderTopLeftRadius: 36,
+          borderTopRightRadius: 36,
           elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarLabelStyle: { fontFamily: fonts.bodyBlack, fontSize: 12, marginTop: 2 },
+        tabBarLabelStyle: { fontFamily: fonts.bodyBlack, fontSize: 11.5, letterSpacing: 0.3, marginTop: 4 },
         sceneStyle: { backgroundColor: c.bg },
       }}
     >

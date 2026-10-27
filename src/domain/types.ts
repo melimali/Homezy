@@ -1,3 +1,5 @@
+import type { Garden } from './garden';
+import type { PersonaId } from './items';
 export type RoomType =
   | 'yatak'
   | 'mutfak'
@@ -176,6 +178,10 @@ export type Play = {
   welcomed: DayKey | null;
   /** Haftalık özet kartının en son açıldığı gün (ana ekrandaki "özetin hazır" şeridi için). */
   weekSeen: DayKey | null;
+  /** Moka'nın bahçesi: saksılar, albüm, bugünün gübreleri (src/domain/garden.ts). */
+  garden: Garden;
+  /** Evin seçili kişiliği. Sıcak ücretsiz; diğerleri puanla bir kere alınır (`owned` içinde `kisilik_<id>`). */
+  persona: PersonaId;
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */

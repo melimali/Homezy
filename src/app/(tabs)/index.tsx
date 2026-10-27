@@ -16,6 +16,7 @@ import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, freezesUsed, houseLine, progressOf, type HouseProgress } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
+import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -35,6 +36,7 @@ export default function Home() {
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
+  const mood = houseMood(hp, S.play, S.mode, now);
   const moka = useMokaState();
   // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
   const tip = mokaTip(now);
@@ -76,7 +78,12 @@ export default function Home() {
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
           </Pressable>
         )}
-        <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} />
+        <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        {hp.level >= 5 && (
+          <Text style={[styles.mood, { color: c.muted }]}>
+            <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
+          </Text>
+        )}
         <View style={styles.houseFoot}>
           <T v="small">Bir odaya dokun</T>
           <Text style={{ color: c.line }}>•</Text>
@@ -85,6 +92,8 @@ export default function Home() {
           </Pressable>
         </View>
       </View>
+
+      <GardenStrip now={now} />
 
       <Card bare index={3}>
         <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
@@ -107,6 +116,34 @@ export default function Home() {
       <Celebrate level={hp.level} />
       <WelcomeBack />
     </Screen>
+  );
+}
+
+/** Moka'nın bahçesine giriş: büyüyen saksılar ve açanlar. */
+function GardenStrip({ now }: { now: number }) {
+  const c = useColors();
+  const router = useRouter();
+  const { state: S } = useStore();
+  const plots = S.play.garden.plots;
+  const open = plots.filter(p => p.bloomed).length;
+  const best = plots
+    .filter(p => !p.bloomed && FLOWER[p.flower])
+    .map(p => ({ f: FLOWER[p.flower]!, g: growth(S.play, p, now) }))
+    .sort((a, b) => b.g / b.f.grow - a.g / a.f.grow)[0];
+  const sub = open
+    ? `${open} çiçek açtı! Albüme almaya gel 🌸`
+    : best
+      ? `${best.f.emoji} ${best.f.name} %${Math.round((best.g / best.f.grow) * 100)} büyüdü`
+      : 'Puanlarınla tohum al, iş yaptıkça büyüsün';
+  return (
+    <Squish onPress={() => router.push('/bahce')} style={[styles.week, { backgroundColor: c.room.balkon }]}>
+      <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🌷</Text></Float>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
+        <Text style={[styles.statL, { color: c.muted }]}>{sub}</Text>
+      </View>
+      <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+    </Squish>
   );
 }
 
@@ -202,6 +239,7 @@ const styles = StyleSheet.create({
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   homeSwitch: { alignSelf: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16 },
+  mood: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, textAlign: 'center', paddingHorizontal: 8 },
   houseFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   q: { flex: 1, alignItems: 'center', gap: 8 },
   qRing: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },

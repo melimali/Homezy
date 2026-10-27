@@ -34,6 +34,7 @@ type Page = {
   blob: (c: Colors) => string;
   /** Metni konuşma balonunda anlatan Moka'nın pozu. İlk sayfada Moka zaten çizimin kendisi. */
   pose?: MokaPose;
+  mokaTitle?: string;
 };
 
 /** İlk sayfanın çizimi: kendini tanıtan Moka, hafifçe süzülür. */
@@ -66,6 +67,7 @@ const PAGES: Page[] = [
     Art: PlanArt,
     blob: c => c.accentSoft,
     pose: 'analyzing',
+    mokaTitle: 'Önce evini tanıyalım',
   },
   {
     eyebrow: 'Rutinler',
@@ -74,6 +76,7 @@ const PAGES: Page[] = [
     Art: RoutineArt,
     blob: c => c.todaySoft,
     pose: 'checklist',
+    mokaTitle: 'Sen yap, ben hatırlatayım',
   },
   {
     eyebrow: 'Akıllı gardırop',
@@ -82,6 +85,7 @@ const PAGES: Page[] = [
     Art: WardrobeArt,
     blob: c => c.fashion,
     pose: 'analyzing',
+    mokaTitle: 'Stilini birlikte bulalım',
   },
   {
     eyebrow: 'Buzdolabı takibi',
@@ -90,6 +94,7 @@ const PAGES: Page[] = [
     Art: FridgeArt,
     blob: c => c.room.mutfak,
     pose: 'checklist',
+    mokaTitle: 'Alışverişi kolaylaştıralım',
   },
   {
     eyebrow: 'Sabah özeti',
@@ -98,6 +103,7 @@ const PAGES: Page[] = [
     Art: MorningArt,
     blob: c => c.room.salon,
     pose: 'cozy_plant',
+    mokaTitle: 'Her sabah yanındayım',
   },
 ];
 
@@ -233,7 +239,7 @@ function PageView({ p, i, h, y, t, top, c }: { p: Page; i: number; h: number; y:
   const textOpacity = y.interpolate({ inputRange: [r[0] + h * 0.4, r[1], r[2] - h * 0.5], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   const blobRotate = y.interpolate({ inputRange: r, outputRange: ['-25deg', '0deg', '25deg'] });
   // Küçük ekranlarda çizim metne yer bıraksın diye küçülür.
-  const fit = Math.max(0.55, Math.min(1, (h - top - 64 - 150 - (p.pose ? 210 : 180)) / 290));
+  const fit = Math.max(0.55, Math.min(1, (h - top - 64 - 150 - (p.pose ? 236 : 180)) / 290));
 
   return (
     <View style={{ height: h, paddingTop: top + 64, paddingBottom: 150, paddingHorizontal: 28 }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
@@ -247,7 +253,7 @@ function PageView({ p, i, h, y, t, top, c }: { p: Page; i: number; h: number; y:
         <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase('tr-TR')}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         {p.pose ? (
-          <MokaMascot pose={p.pose} message={p.text} size="sm" style={{ marginTop: 12 }} />
+          <MokaMascot pose={p.pose} title={p.mokaTitle} message={p.text} size="sm" style={{ marginTop: 12 }} />
         ) : (
           <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
         )}

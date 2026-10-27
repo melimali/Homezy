@@ -1,6 +1,7 @@
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { MOKA_ASSETS } from '@/constants/moka';
 import type { RoomType } from '@/domain/types';
 import { brand, fonts, radius, useColors } from '@/theme';
 
@@ -169,7 +170,7 @@ export function WardrobeArt({ t }: Props) {
   const pulse = t.interpolate({ inputRange: [0, 0.4, 0.5, 0.6, 1], outputRange: [1, 1, 1.08, 1, 1] });
   return (
     <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View style={{ width: 222, borderRadius: 30, padding: 16, gap: 13, backgroundColor: c.fashionSurface, borderWidth: 1, borderColor: c.fashionLine, transform: [{ translateY: lift }] }}>
+      <Animated.View style={{ width: 222, borderRadius: 30, padding: 16, gap: 13, backgroundColor: c.fashionSurface, borderWidth: 1, borderColor: c.fashionLine, shadowColor: c.fashionInk, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.13, shadowRadius: 20, elevation: 5, transform: [{ translateY: lift }] }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
             <Text style={{ color: c.fashionAccent, fontFamily: fonts.bodyBlack, fontSize: 10, letterSpacing: 1.3 }}>MOKA&apos;NIN SEÇİMİ</Text>
@@ -202,6 +203,7 @@ export function WardrobeArt({ t }: Props) {
       <View style={{ position: 'absolute', bottom: 20, left: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, transform: [{ rotate: '-4deg' }] }}>
         <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 11 }}>🧺  Kirli · 2 parça</Text>
       </View>
+      <Image pointerEvents="none" source={MOKA_ASSETS.scarf} style={{ position: 'absolute', width: 76, height: 76, right: 4, bottom: -2 }} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Sparkle t={t} x={108} y={-82} at={0.18} />
     </View>
   );
@@ -238,6 +240,7 @@ export function FridgeArt({ t }: Props) {
       <Animated.View style={[{ position: 'absolute', right: -6, bottom: 24, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 18, backgroundColor: c.accent, transform: [{ rotate: '4deg' }] }, arrive(0.25)]}>
         <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 11 }}>✓  Sen onayla</Text>
       </Animated.View>
+      <Image pointerEvents="none" source={MOKA_ASSETS.chef} style={{ position: 'absolute', width: 88, height: 88, left: 4, bottom: -2 }} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Sparkle t={t} x={88} y={-94} at={0.42} />
     </View>
   );

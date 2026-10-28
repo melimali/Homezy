@@ -832,13 +832,13 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
       onPress={() => setZoom(z => !z)}
       accessibilityRole="button"
       accessibilityLabel="Evi yakınlaştır / uzaklaştır"
-      style={{ width: '100%' }}
+      style={{ width: '100%', overflow: 'hidden' }}
     >
       <Animated.View
         onLayout={e => setWidth(e.nativeEvent.layout.width)}
         style={{
           width: '100%',
-          aspectRatio: zoom ? vbW / (vbH * 0.75) : vbW / vbH,
+          aspectRatio: vbW / vbH,
           opacity: pop,
           transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, zoom ? 1.25 : 1] }) }],
         }}

@@ -526,7 +526,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     // Taban. Damalı olsun diye her ikinci blok çok hafif koyu. 4. seviyeye kadar çıplak kalas.
     const p = clean[id] ?? 100;
     const base = painted ? mix(floor, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
-    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open, stroke: c.ink, strokeWidth: 0.9, strokeOpacity: 0.3 });
+    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open, stroke: c.ink, strokeWidth: 1.2, strokeOpacity: 0.45 });
     // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
     if (p < 80) {
       const n = p < 40 ? 3 : p < 60 ? 2 : (r + col) % 2 === 0 ? 1 : 0;
@@ -670,8 +670,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     const [x, y] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, LABEL_Z);
     return (
       <G key={'ptr-' + id}>
-        <Circle cx={x} cy={y} r={3} fill={c.ink} stroke={c.surface} strokeWidth={1} />
-        <Line x1={x} y1={y} x2={x} y2={y - 18} stroke={c.ink} strokeWidth={1.4} strokeLinecap="round" strokeOpacity={0.6} />
+        <Circle cx={x} cy={y} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.5} />
+        <Line x1={x} y1={y} x2={x} y2={y - 24} stroke={c.ink} strokeWidth={1.6} strokeLinecap="round" strokeOpacity={0.7} />
       </G>
     );
   });

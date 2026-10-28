@@ -15,7 +15,7 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
-import { MOKA_ASSETS } from '@/constants/moka';
+import { ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
@@ -23,12 +23,14 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
+import { HOME_MOKA_KITCHEN_BACKGROUND, HOME_MOKA_STUDY_BACKGROUND, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
+import { HOME_MOKA_ASSETS, type HomeMokaPose } from '@/constants/home-moka';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, space, useColors } from '@/theme';
+import type { TaskRef } from '@/domain/types';
 
 export default function Home() {
   const c = useColors();
@@ -41,6 +43,7 @@ export default function Home() {
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
+  const lastDone = all.filter(x => isDoneToday(x.t, now)).sort((a, b) => (b.t.last ?? 0) - (a.t.last ?? 0))[0];
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
@@ -51,6 +54,36 @@ export default function Home() {
   // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
   const tip = mokaTip(now);
   const pose = CALM_POSES.includes(moka.pose) ? tip.pose : moka.pose;
+  const taskPose = (ref?: TaskRef): MokaPose | undefined => {
+    if (!ref) return undefined;
+    const room = S.rooms[ref.rid];
+    if (!room) return 'maintenance';
+    if (room.type === 'mutfak') {
+      return /yemek|pişir|hazırla|fırın|ocak|kahvaltı|hamur|tarif/.test(ref.t.name.toLocaleLowerCase('tr-TR')) ? 'baking' : 'dishes';
+    }
+    if (room.type === 'calisma') return 'laptop';
+    return ROOM_POSE[room.type];
+  };
+  const homePose = (candidate?: MokaPose): HomeMokaPose => {
+    switch (candidate) {
+      case 'panicked': case 'laptop': case 'baking': case 'dishes': case 'thumbs_up': case 'happy': return candidate;
+      default: return 'happy';
+    }
+  };
+  const heroPose: HomeMokaPose = S.mode
+    ? homePose(moka.pose)
+    : due.length >= 5
+      ? 'panicked'
+      : lastDone
+        ? homePose(taskPose(lastDone) ?? 'thumbs_up')
+        : due.length >= 3
+          ? 'panicked'
+          : homePose(taskPose(due[0]) ?? pose);
+  const heroScene = heroPose === 'laptop'
+    ? HOME_MOKA_STUDY_BACKGROUND
+    : heroPose === 'baking' || heroPose === 'dishes'
+      ? HOME_MOKA_KITCHEN_BACKGROUND
+      : HOME_SOFA_BACKGROUND;
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -68,10 +101,10 @@ export default function Home() {
     <Screen header={false}>
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <SceneImage source={HOME_SOFA_BACKGROUND} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
+        <SceneImage source={heroScene} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
-          <HomeMokaAnimation />
+          <HomeMokaAnimation pose={heroPose} />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Yazı resmin üstünde de okunsun: arkasında yarı saydam krem kart. */}
             <View style={styles.heroText}>
@@ -89,7 +122,9 @@ export default function Home() {
           <View style={styles.mokaRow}>
             <Pressable onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <Image source={MOKA_ASSETS[pose]} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+                <Float amp={2} dur={1900}>
+                  <Image source={HOME_MOKA_ASSETS[heroPose]} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+                </Float>
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>

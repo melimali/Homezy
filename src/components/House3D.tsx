@@ -230,6 +230,24 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
     case 'piyano':
       faces = [...b('p', 0.16, 0.18, 0.28, 0.64, 0, 18, '#2E3242'), ...b('k', 0.44, 0.2, 0.1, 0.6, 9, 1.5, WHITE)];
       break;
+    case 'kahve_makinesi':
+      faces = [...b('s', 0.3, 0.3, 0.2, 0.2, 0, 10, '#3A302A'), ...b('c', 0.34, 0.34, 0.12, 0.12, 10, 4, GOLD)];
+      extra.push(ball('st', 0.4, 0.4, 14, 2, WHITE));
+      break;
+    case 'tv_unitesi':
+      faces = [...b('u', 0.15, 0.15, 0.2, 0.7, 0, 8, WOOD), ...b('t', 0.2, 0.35, 0.08, 0.4, 8, 14, '#2E3242')];
+      break;
+    case 'teleskop':
+      faces = [...b('st', 0.4, 0.4, 0.2, 0.2, 0, 14, '#5B4A40')];
+      extra.push(ball('t', 0.5, 0.5, 14, 5, GOLD));
+      break;
+    case 'avize':
+      faces = [...b('l', 0.45, 0.45, 0.1, 0.1, 24, 6, GOLD)];
+      extra.push(ball('g', 0.5, 0.5, 20, 8, GOLD, 0.3));
+      break;
+    case 'bilardo':
+      faces = [...b('m', 0.15, 0.15, 0.7, 0.5, 0, 12, '#38533F'), ...b('f', 0.15, 0.15, 0.06, 0.5, 12, 2, WOOD)];
+      break;
   }
   return [
     ...faces.map(f => <Polygon key={f.key} points={f.points} fill={f.fill} stroke={f.fill} strokeWidth={0.6} strokeLinejoin="round" />),
@@ -490,6 +508,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   const now = nowProp ?? tick;
   const dark = useIsDark();
   const [width, setWidth] = useState(0);
+  const [zoom, setZoom] = useState(false);
 
   // Açılışta ev hafifçe zıplayarak yerine otursun.
   const [pop] = useState(() => new Animated.Value(0));
@@ -809,28 +828,35 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   });
 
   return (
-    <Animated.View
-      onLayout={e => setWidth(e.nativeEvent.layout.width)}
-      style={{
-        width: '100%',
-        aspectRatio: vbW / vbH,
-        opacity: pop,
-        transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
-      }}
+    <Pressable
+      onPress={() => setZoom(z => !z)}
+      accessibilityRole="button"
+      accessibilityLabel="Evi yakınlaştır / uzaklaştır"
+      style={{ width: '100%' }}
     >
-      <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
-        {scene.back}
-        {garden.ground ?? shadow}
-        {garden.back}
-        {els}
-        {yard.els}
-        {garden.front}
-        {scene.front}
-      </Svg>
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {showLabels && labels}
-      </View>
-    </Animated.View>
+      <Animated.View
+        onLayout={e => setWidth(e.nativeEvent.layout.width)}
+        style={{
+          width: '100%',
+          aspectRatio: zoom ? vbW / (vbH * 0.75) : vbW / vbH,
+          opacity: pop,
+          transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, zoom ? 1.25 : 1] }) }],
+        }}
+      >
+        <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
+          {scene.back}
+          {garden.ground ?? shadow}
+          {garden.back}
+          {els}
+          {yard.els}
+          {garden.front}
+          {scene.front}
+        </Svg>
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          {showLabels && labels}
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 

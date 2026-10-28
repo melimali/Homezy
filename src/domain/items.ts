@@ -5,7 +5,8 @@
  */
 export type ItemId =
   | 'saksi' | 'hali' | 'puf' | 'abajur' | 'kitaplik' | 'kedi' | 'kopek' | 'gitar'
-  | 'akvaryum' | 'somine' | 'piyano';
+  | 'akvaryum' | 'somine' | 'piyano' | 'kahve_makinesi' | 'tv_unitesi' | 'teleskop'
+  | 'avize' | 'bilardo';
 
 export type Item = { id: ItemId; name: string; emoji: string; price: number; premium?: boolean };
 
@@ -17,12 +18,17 @@ export const ITEMS: Item[] = [
   { id: 'puf', name: 'Puf koltuk', emoji: '🪑', price: 40 },
   { id: 'hali', name: 'Tüylü halı', emoji: '🧶', price: 50 },
   { id: 'abajur', name: 'Abajur', emoji: '💡', price: 60 },
+  { id: 'kahve_makinesi', name: 'Kahve makinesi', emoji: '☕', price: 70 },
   { id: 'kitaplik', name: 'Kitaplık', emoji: '📚', price: 80 },
   { id: 'gitar', name: 'Gitar', emoji: '🎸', price: 90 },
+  { id: 'tv_unitesi', name: 'TV ünitesi', emoji: '📺', price: 110 },
   { id: 'kedi', name: 'Kedi', emoji: '🐱', price: 120 },
   { id: 'kopek', name: 'Köpek', emoji: '🐶', price: 120 },
+  { id: 'teleskop', name: 'Teleskop', emoji: '🔭', price: 140 },
   { id: 'akvaryum', name: 'Akvaryum', emoji: '🐠', price: 150, premium: true },
+  { id: 'avize', name: 'Şık avize', emoji: '✨', price: 170, premium: true },
   { id: 'somine', name: 'Şömine', emoji: '🔥', price: 200, premium: true },
+  { id: 'bilardo', name: 'Bilardo masası', emoji: '🎱', price: 220, premium: true },
   { id: 'piyano', name: 'Piyano', emoji: '🎹', price: 250, premium: true },
 ];
 

@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 
 import { House3D } from '@/components/House3D';
 import { MokaMascot } from '@/components/MokaMascot';
-import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
@@ -23,8 +22,8 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_KITCHEN_BACKGROUND, HOME_MOKA_STUDY_BACKGROUND, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
-import { HOME_MOKA_ASSETS, type HomeMokaPose } from '@/constants/home-moka';
+import { HOME_MOKA_BAKING_SCENE, HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE } from '@/constants/curated-scenes';
+import type { HomeMokaPose } from '@/constants/home-moka';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -80,10 +79,12 @@ export default function Home() {
           ? 'panicked'
           : homePose(taskPose(due[0]) ?? pose);
   const heroScene = heroPose === 'laptop'
-    ? HOME_MOKA_STUDY_BACKGROUND
-    : heroPose === 'baking' || heroPose === 'dishes'
-      ? HOME_MOKA_KITCHEN_BACKGROUND
-      : HOME_SOFA_BACKGROUND;
+    ? HOME_MOKA_STUDY_SCENE
+    : heroPose === 'baking'
+      ? HOME_MOKA_BAKING_SCENE
+      : heroPose === 'dishes'
+        ? HOME_MOKA_KITCHEN_SCENE
+        : HOME_MOKA_SCENE;
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -104,7 +105,6 @@ export default function Home() {
         <SceneImage source={heroScene} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
-          <HomeMokaAnimation pose={heroPose} />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Yazı resmin üstünde de okunsun: arkasında yarı saydam krem kart. */}
             <View style={styles.heroText}>
@@ -122,9 +122,7 @@ export default function Home() {
           <View style={styles.mokaRow}>
             <Pressable onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <Float amp={2} dur={1900}>
-                  <Image source={HOME_MOKA_ASSETS[heroPose]} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
-                </Float>
+                <Image source={HOME_MOKA_SEATED} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>

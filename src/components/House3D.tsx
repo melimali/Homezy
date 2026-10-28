@@ -620,11 +620,11 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
 
   // Oda isimleri evin dışındaki beyaz alana, sol ve sağ kenara. Yazı ne zemine ne eve biner;
   // her odanın pininden kenardaki etikete bir ok çizgisi çekilir.
-  const TAG_H = 34, TAG_GAP = 16, EDGE = 6;
+  const TAG_H = 28, TAG_GAP = 4, EDGE = 2;
   const ids = [...S.order].filter(id => anchors[id] != null && S.rooms[id]).sort((x, y) => depth(anchors[x]) - depth(anchors[y]));
   const tagW = (id: string) => {
     const rc = roomCounts(S, id, now);
-    return 48 + S.rooms[id].name.length * 9 + (rc.late + rc.today ? 26 : 0);
+    return 40 + S.rooms[id].name.length * 7.5 + (rc.late + rc.today ? 22 : 0);
   };
   const PAD = 35;
   const sideW = Math.max(0, ...ids.map(tagW));
@@ -671,16 +671,16 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         <Circle cx={ax} cy={ay} r={3.5} fill={c.ink} />
         {/* Etiket: beyaz kart, emoji, oda adı, varsa iş sayısı. */}
         <Rect x={cardX} y={cardY} width={w} height={TAG_H} rx={TAG_H / 2} fill={c.surface} stroke={c.line} strokeWidth={1.4} />
-        <SvgText x={cardX + 20} y={my} fontSize={15} textAnchor="middle">
+        <SvgText x={cardX + 17} y={my} fontSize={13} textAnchor="middle">
           {isClean ? '✨' : ROOM_EMOJI[room.type]}
         </SvgText>
-        <SvgText x={cardX + 38} y={my} fontSize={14} fontFamily={fonts.bodyBlack} fill={c.ink}>
+        <SvgText x={cardX + 32} y={my} fontSize={12.5} fontFamily={fonts.bodyBlack} fill={c.ink}>
           {room.name}
         </SvgText>
         {nTask > 0 && (
           <G>
-            <Circle cx={cardX + w - 13} cy={cardY + TAG_H / 2} r={9} fill={rc.late ? c.late : c.warm} />
-            <SvgText x={cardX + w - 13} y={cardY + TAG_H / 2 + 4} fontSize={11} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
+            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={rc.late ? c.late : c.warm} />
+            <SvgText x={cardX + w - 11} y={cardY + TAG_H / 2 + 3.5} fontSize={9.5} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
               {nTask}
             </SvgText>
           </G>

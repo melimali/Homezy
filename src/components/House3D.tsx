@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactElement } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
+import { useEffect, useState } from 'react';
+import { Animated } from 'react-native';
+import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { type Mood } from '@/domain/garden';
@@ -8,7 +8,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
-import { fonts, useColors, useIsDark, type Colors } from '@/theme';
+import { useColors, useIsDark, type Colors } from '@/theme';
 
 /**
  * Ana ekrandaki ev: kullanıcının bloklarla çizdiği plan, izometrik (yandan-üstten) bir
@@ -25,10 +25,6 @@ const WALL_H = 34;
 const INNER_H = 20;
 const FRONT_H = 8;
 const T = 0.12;
-/** Etiketin ekrandaki yüksekliği (çakışma kontrolü için). */
-const LABEL_H = 27;
-/** Etiket çapasının genişliği; etiket bunun ortasına oturur. */
-const ANCHOR_W = 150;
 
 type Pt = [number, number];
 /** Izgara koordinatından (satır, sütun, yükseklik) ekran noktasına. */
@@ -409,7 +405,6 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   const tick = useNow();
   const now = nowProp ?? tick;
   const dark = useIsDark();
-  const [width, setWidth] = useState(0);
 
   // Açılışta ev hafifçe zıplayarak yerine otursun.
   const [pop] = useState(() => new Animated.Value(0));
@@ -544,9 +539,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         <Polygon key={k + 'sp'} points={pts([[x, y - 5], [x + 1.3, y - 1.3], [x + 5, y], [x + 1.3, y + 1.3], [x, y + 5], [x - 1.3, y + 1.3], [x - 5, y], [x - 1.3, y - 1.3]])} fill={GOLD} />,
       );
     }
-    if (!painted)
-      for (const u of [1 / 3, 2 / 3])
-        els.push(<Line key={k + 'pl' + u} x1={P(r + u, col)[0]} y1={P(r + u, col)[1]} x2={P(r + u, col + 1)[0]} y2={P(r + u, col + 1)[1]} stroke={shade(WOOD, -0.22)} strokeWidth={0.8} />);
+
 
     // Bakımsızlık: 1. gün toz.
     if (idle >= 1) {
@@ -616,86 +609,107 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   const PAD = 35;
   minX -= PAD; maxX += PAD; minY -= PAD + 25; maxY += PAD + 6;
   const vbW = maxX - minX, vbH = maxY - minY;
-  const scale = width ? width / vbW : 0;
 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH });
 
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
-  // Etiketler üst üste binmesin: arkadan öne sırayla yerleştir, çakışan etiketi yukarı it.
-  const placed: { id: string; x: number; y: number; w: number }[] = [];
-  if (width)
-    for (const id of [...S.order].filter(id => anchors[id] != null).sort((a, b) => depth(anchors[a]) - depth(anchors[b]))) {
-      const i = anchors[id];
-      const [x, y0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
-      const nTask = roomCounts(S, id, now);
-      const w = 34 + S.rooms[id].name.length * 6.6 + (nTask.late + nTask.today ? 22 : 0);
-      let y = (y0 - minY) * scale - 70;
-      const lx = (x - minX) * scale;
-      for (let pass = 0; pass < 3; pass++)
-        for (const o of placed)
-          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y - LABEL_H - 6;
-      placed.push({ id, x: lx, y, w: Math.min(w, 140) });
-    }
+  // Oda isimlerini evin sağında ve solunda, ortayı kapatmayacak şekilde düzenle.
+  const centerX = (minX + maxX) / 2;
+  const leftX = minX - 18;
+  const rightX = maxX + 18;
 
-  const labels = placed.map(({ id, x, y }) => {
+  const leftTags: { id: string; fx: number; fy: number; tagX: number; tagY: number; w: number }[] = [];
+  const rightTags: { id: string; fx: number; fy: number; tagX: number; tagY: number; w: number }[] = [];
+
+  for (const id of [...S.order].filter(id => anchors[id] != null).sort((a, b) => depth(anchors[a]) - depth(anchors[b]))) {
+    const i = anchors[id];
+    const [fx, fy] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
+    const room = S.rooms[id];
+    if (!room) continue;
     const rc = roomCounts(S, id, now);
     const nTask = rc.late + rc.today;
-    const room = S.rooms[id];
-    return (
-      <View key={id} pointerEvents="box-none" style={[styles.anchor, { left: x - ANCHOR_W / 2, top: y - LABEL_H / 2 }]}>
-        <Pressable
-          onPress={() => onOpenRoom?.(id)}
-          accessibilityRole="button"
-          accessibilityLabel={`${room.name} odasını aç, yüzde ${clean[id]} temiz${nTask ? `, ${nTask} iş bekliyor` : ''}`}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.tag,
-            { backgroundColor: c.surface, borderColor: c.line },
-            pressed && { transform: [{ translateY: 1 }] },
-          ]}
-        >
-          <Text style={styles.icon}>{clean[id] >= 100 ? '✨' : ROOM_EMOJI[room.type]}</Text>
-          <Text style={[styles.name, { color: c.ink }]} numberOfLines={1}>{room.name}</Text>
-          {nTask > 0 && (
-            <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>
-              <Text style={[styles.badgeText, { color: c.onBadge }]}>{nTask}</Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
-    );
-  });
+    const w = 40 + room.name.length * 6 + (nTask > 0 ? 16 : 0);
 
-  const pointerOverlay = showLabels && width > 0
-    ? placed.map(({ id, x: tagX, y: tagY }) => {
-        const i = anchors[id];
-        if (i == null) return null;
-        const [cx0, cy0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
-        const floorX = (cx0 - minX) * scale;
-        const floorY = (cy0 - minY) * scale;
-        return (
-          <G key={'ptr-' + id}>
-            <Circle cx={floorX} cy={floorY} r={4} fill={c.surface} stroke={c.ink} strokeWidth={2} />
-            <Line
-              x1={floorX}
-              y1={floorY}
-              x2={tagX}
-              y2={tagY + 12}
-              stroke={c.ink}
-              strokeWidth={1.8}
-              strokeDasharray="4 3"
-              strokeOpacity={0.85}
-            />
+    if (fx < centerX) {
+      let ty = fy - 8;
+      for (const o of leftTags) {
+        if (Math.abs(o.tagY - ty) < 24) ty = o.tagY - 26;
+      }
+      leftTags.push({ id, fx, fy, tagX: leftX, tagY: ty, w });
+    } else {
+      let ty = fy - 8;
+      for (const o of rightTags) {
+        if (Math.abs(o.tagY - ty) < 24) ty = o.tagY - 26;
+      }
+      rightTags.push({ id, fx, fy, tagX: rightX, tagY: ty, w });
+    }
+  }
+
+  const allSvgTags = [...leftTags, ...rightTags];
+
+  const svgLabels = showLabels ? allSvgTags.map(({ id, fx, fy, tagX, tagY, w }) => {
+    const room = S.rooms[id];
+    if (!room) return null;
+    const rc = roomCounts(S, id, now);
+    const nTask = rc.late + rc.today;
+    const h = 20;
+    const rx = h / 2;
+    const isRight = tagX > centerX;
+    const cardX = isRight ? tagX - w : tagX;
+    const cardY = tagY - h / 2;
+    const isClean = (clean[id] ?? 100) >= 100;
+
+    return (
+      <G key={'svgtag-' + id} onPress={() => onOpenRoom?.(id)}>
+        {/* Floor Pin */}
+        <Circle cx={fx} cy={fy} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.6} />
+        {/* Angled Dashed Callout Line from Floor Pin to Side Tag */}
+        <Line
+          x1={fx}
+          y1={fy}
+          x2={isRight ? cardX : cardX + w}
+          y2={cardY + h / 2}
+          stroke={c.ink}
+          strokeWidth={1.5}
+          strokeDasharray="3 2"
+          strokeOpacity={0.7}
+        />
+        {/* Tag Background Pill */}
+        <Rect
+          x={cardX}
+          y={cardY}
+          width={w}
+          height={h}
+          rx={rx}
+          fill={c.surface}
+          stroke={c.line}
+          strokeWidth={1.2}
+        />
+        {/* Emoji */}
+        <SvgText x={cardX + 11} y={cardY + 14} fontSize={10} textAnchor="middle">
+          {isClean ? '✨' : ROOM_EMOJI[room.type]}
+        </SvgText>
+        {/* Room Name */}
+        <SvgText x={cardX + 20} y={cardY + 13.5} fontSize={9.5} fontWeight="bold" fill={c.ink}>
+          {room.name}
+        </SvgText>
+        {/* Task Badge */}
+        {nTask > 0 && (
+          <G>
+            <Circle cx={cardX + w - 9} cy={cardY + h / 2} r={6} fill={rc.late ? c.late : c.warm} />
+            <SvgText x={cardX + w - 9} y={cardY + h / 2 + 3.5} fontSize={8} fontWeight="bold" fill={c.onBadge} textAnchor="middle">
+              {nTask}
+            </SvgText>
           </G>
-        );
-      })
-    : null;
+        )}
+      </G>
+    );
+  }) : null;
 
   return (
     <Animated.View
-      onLayout={e => setWidth(e.nativeEvent.layout.width)}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
@@ -710,28 +724,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {els}
         {garden.front}
         {scene.front}
+        {svgLabels}
       </Svg>
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {pointerOverlay && (
-          <Svg width="100%" height="100%" pointerEvents="none" style={StyleSheet.absoluteFill}>
-            {pointerOverlay}
-          </Svg>
-        )}
-        {showLabels && labels}
-      </View>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  // Noktayı ortalayan sabit boyutlu çapa. Sıfır boyutlu çapa Android'de etiketin içini eziyor.
-  anchor: { position: 'absolute', width: ANCHOR_W, height: LABEL_H, alignItems: 'center', justifyContent: 'center' },
-  tag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingLeft: 6, paddingRight: 8,
-    borderRadius: 999, borderWidth: 1.5, maxWidth: ANCHOR_W,
-  },
-  icon: { fontSize: 12 },
-  name: { fontFamily: fonts.display, fontSize: 12, lineHeight: 16, flexShrink: 1 },
-  badge: { minWidth: 18, paddingHorizontal: 5, borderRadius: 999, alignItems: 'center', marginLeft: 2 },
-  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 11, lineHeight: 16 },
-});

@@ -106,10 +106,11 @@ export default function Home() {
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
-            {/* Yazı resmin üstünde de okunsun: arkasında yarı saydam krem kart. */}
-            <View style={styles.heroText}>
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, opacity: 0.82 }]} />
-              <T v="h1" style={{ fontSize: 30, lineHeight: 36 }}>{greet(new Date(now), name)}</T>
+            {/* Moka'nın konuşma baloncuğu */}
+            <View style={styles.speechBubble}>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, borderRadius: radius.card }]} />
+              <View style={[styles.bubbleTail, { backgroundColor: c.surface }]} />
+              <T v="h1" style={{ fontSize: 26, lineHeight: 32 }}>{greet(new Date(now), name)}</T>
               <T v="bold" style={[styles.heroLead, { color: c.ink }]}>
                 {due.length ? `Bugün ${due.length} iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
               </T>
@@ -313,7 +314,8 @@ function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onP
 const styles = StyleSheet.create({
   heroWrap: { marginHorizontal: -space.screen },
   heroTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: space.screen - 8 },
-  heroText: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.tile, paddingVertical: 10, paddingHorizontal: 16, overflow: 'hidden' },
+  speechBubble: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18, overflow: 'visible' },
+  bubbleTail: { position: 'absolute', bottom: -6, left: 32, width: 14, height: 14, borderRadius: 3, transform: [{ rotate: '45deg' }] },
   heroLead: { fontSize: 15, lineHeight: 21, marginTop: 2, maxWidth: 250 },
   mokaCard: { marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10 },
   mokaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

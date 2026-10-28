@@ -8,7 +8,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
-import { useColors, useIsDark, type Colors } from '@/theme';
+import { fonts, useColors, useIsDark, type Colors } from '@/theme';
 
 /**
  * Ana ekrandaki ev: kullanıcının bloklarla çizdiği plan, izometrik (yandan-üstten) bir
@@ -618,8 +618,18 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
 
   if (!els.length) return null;
 
+  // Oda isimleri evin dışındaki beyaz alana, sol ve sağ kenara. Yazı ne zemine ne eve biner;
+  // her odanın pininden kenardaki etikete bir ok çizgisi çekilir.
+  const TAG_H = 34, TAG_GAP = 16, EDGE = 6;
+  const ids = [...S.order].filter(id => anchors[id] != null && S.rooms[id]).sort((x, y) => depth(anchors[x]) - depth(anchors[y]));
+  const tagW = (id: string) => {
+    const rc = roomCounts(S, id, now);
+    return 48 + S.rooms[id].name.length * 9 + (rc.late + rc.today ? 26 : 0);
+  };
   const PAD = 35;
-  minX -= PAD; maxX += PAD; minY -= PAD + 25; maxY += PAD + 6;
+  const sideW = Math.max(0, ...ids.map(tagW));
+  const PAD_X = sideW + TAG_GAP + EDGE;
+  minX -= PAD_X; maxX += PAD_X; minY -= PAD + 25; maxY += PAD + 6;
   const vbW = maxX - minX, vbH = maxY - minY;
 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH });
@@ -627,91 +637,50 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
-  // Oda isimlerini evin sağında ve solunda, ortayı kapatmayacak şekilde düzenle.
   const centerX = (minX + maxX) / 2;
-  const leftX = minX - 18;
-  const rightX = maxX + 18;
-
-  const leftTags: { id: string; fx: number; fy: number; tagX: number; tagY: number; w: number }[] = [];
-  const rightTags: { id: string; fx: number; fy: number; tagX: number; tagY: number; w: number }[] = [];
-
-  for (const id of [...S.order].filter(id => anchors[id] != null).sort((a, b) => depth(anchors[a]) - depth(anchors[b]))) {
+  const stacks = { left: [] as number[], right: [] as number[] };
+  const tags: { id: string; fx: number; fy: number; w: number; cardX: number; cardY: number; right: boolean }[] = [];
+  for (const id of ids) {
     const i = anchors[id];
     const [fx, fy] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
-    const room = S.rooms[id];
-    if (!room) continue;
-    const rc = roomCounts(S, id, now);
-    const nTask = rc.late + rc.today;
-    const w = 40 + room.name.length * 6 + (nTask > 0 ? 16 : 0);
-
-    if (fx < centerX) {
-      let ty = fy - 8;
-      for (const o of leftTags) {
-        if (Math.abs(o.tagY - ty) < 24) ty = o.tagY - 26;
-      }
-      leftTags.push({ id, fx, fy, tagX: leftX, tagY: ty, w });
-    } else {
-      let ty = fy - 8;
-      for (const o of rightTags) {
-        if (Math.abs(o.tagY - ty) < 24) ty = o.tagY - 26;
-      }
-      rightTags.push({ id, fx, fy, tagX: rightX, tagY: ty, w });
-    }
+    const right = fx >= centerX;
+    const ys = right ? stacks.right : stacks.left;
+    const w = tagW(id);
+    // Aynı tarafta üst üste binmesin: çakışan etiketi bir kat aşağı it.
+    let top = fy - TAG_H / 2;
+    for (let pass = 0; pass < 3; pass++) for (const y of ys) if (Math.abs(y - top) < TAG_H + 6) top = y + TAG_H + 6;
+    ys.push(top);
+    const cardX = right ? maxX - EDGE - w : minX + EDGE;
+    tags.push({ id, fx, fy, w, cardX, cardY: top, right });
   }
 
-  const allSvgTags = [...leftTags, ...rightTags];
-
-  const svgLabels = showLabels ? allSvgTags.map(({ id, fx, fy, tagX, tagY, w }) => {
+  const svgLabels = showLabels ? tags.map(({ id, fx, fy, w, cardX, cardY, right }) => {
     const room = S.rooms[id];
-    if (!room) return null;
     const rc = roomCounts(S, id, now);
     const nTask = rc.late + rc.today;
-    const h = 20;
-    const rx = h / 2;
-    const isRight = tagX > centerX;
-    const cardX = isRight ? tagX - w : tagX;
-    const cardY = tagY - h / 2;
     const isClean = (clean[id] ?? 100) >= 100;
+    const ax = right ? cardX : cardX + w;
+    const ay = cardY + TAG_H / 2;
+    const my = cardY + TAG_H / 2 + 5;
 
     return (
       <G key={'svgtag-' + id} onPress={() => onOpenRoom?.(id)}>
-        {/* Floor Pin */}
-        <Circle cx={fx} cy={fy} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.6} />
-        {/* Angled Dashed Callout Line from Floor Pin to Side Tag */}
-        <Line
-          x1={fx}
-          y1={fy}
-          x2={isRight ? cardX : cardX + w}
-          y2={cardY + h / 2}
-          stroke={c.ink}
-          strokeWidth={1.5}
-          strokeDasharray="3 2"
-          strokeOpacity={0.7}
-        />
-        {/* Tag Background Pill */}
-        <Rect
-          x={cardX}
-          y={cardY}
-          width={w}
-          height={h}
-          rx={rx}
-          fill={c.surface}
-          stroke={c.line}
-          strokeWidth={1.2}
-        />
-        {/* Emoji */}
-        <SvgText x={cardX + 11} y={cardY + 14} fontSize={10} textAnchor="middle">
+        {/* Oda pini ve ok çizgisi: evdeki odadan etikete. */}
+        <Line x1={fx} y1={fy} x2={ax} y2={ay} stroke={c.ink} strokeWidth={2} strokeOpacity={0.8} />
+        <Circle cx={fx} cy={fy} r={4.5} fill={c.ink} />
+        <Circle cx={ax} cy={ay} r={3.5} fill={c.ink} />
+        {/* Etiket: beyaz kart, emoji, oda adı, varsa iş sayısı. */}
+        <Rect x={cardX} y={cardY} width={w} height={TAG_H} rx={TAG_H / 2} fill={c.surface} stroke={c.line} strokeWidth={1.4} />
+        <SvgText x={cardX + 20} y={my} fontSize={15} textAnchor="middle">
           {isClean ? '✨' : ROOM_EMOJI[room.type]}
         </SvgText>
-        {/* Room Name */}
-        <SvgText x={cardX + 20} y={cardY + 13.5} fontSize={9.5} fontWeight="bold" fill={c.ink}>
+        <SvgText x={cardX + 38} y={my} fontSize={14} fontFamily={fonts.bodyBlack} fill={c.ink}>
           {room.name}
         </SvgText>
-        {/* Task Badge */}
         {nTask > 0 && (
           <G>
-            <Circle cx={cardX + w - 9} cy={cardY + h / 2} r={6} fill={rc.late ? c.late : c.warm} />
-            <SvgText x={cardX + w - 9} y={cardY + h / 2 + 3.5} fontSize={8} fontWeight="bold" fill={c.onBadge} textAnchor="middle">
+            <Circle cx={cardX + w - 13} cy={cardY + TAG_H / 2} r={9} fill={rc.late ? c.late : c.warm} />
+            <SvgText x={cardX + w - 13} y={cardY + TAG_H / 2 + 4} fontSize={11} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
               {nTask}
             </SvgText>
           </G>

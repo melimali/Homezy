@@ -51,7 +51,7 @@ function mix(a: string, b: string, t: number) {
   return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
 }
 
-type Face = { key: string; points: string; fill: string; onPress?: () => void };
+type Face = { key: string; points: string; fill: string; stroke?: string; strokeWidth?: number; strokeOpacity?: number; onPress?: () => void };
 
 /** Kutunun görünen üç yüzü: üst, sol ön (+satır), sağ ön (+sütun). */
 function box(key: string, r0: number, c0: number, dr: number, dc: number, z0: number, h: number, color: string): Face[] {
@@ -475,8 +475,9 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         key={f.key}
         points={f.points}
         fill={f.fill}
-        stroke={f.fill}
-        strokeWidth={0.8}
+        stroke={f.stroke ?? f.fill}
+        strokeWidth={f.strokeWidth ?? 0.8}
+        strokeOpacity={f.strokeOpacity ?? 1}
         strokeLinejoin="round"
         onPress={f.onPress}
       />,
@@ -525,7 +526,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     // Taban. Damalı olsun diye her ikinci blok çok hafif koyu. 4. seviyeye kadar çıplak kalas.
     const p = clean[id] ?? 100;
     const base = painted ? mix(floor, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
-    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open });
+    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open, stroke: c.ink, strokeWidth: 0.9, strokeOpacity: 0.3 });
     // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
     if (p < 80) {
       const n = p < 40 ? 3 : p < 60 ? 2 : (r + col) % 2 === 0 ? 1 : 0;
@@ -665,6 +666,16 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     );
   });
 
+  const pointerLines = Object.entries(anchors).map(([id, i]) => {
+    const [x, y] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, LABEL_Z);
+    return (
+      <G key={'ptr-' + id}>
+        <Circle cx={x} cy={y} r={3} fill={c.ink} stroke={c.surface} strokeWidth={1} />
+        <Line x1={x} y1={y} x2={x} y2={y - 18} stroke={c.ink} strokeWidth={1.4} strokeLinecap="round" strokeOpacity={0.6} />
+      </G>
+    );
+  });
+
   return (
     <Animated.View
       onLayout={e => setWidth(e.nativeEvent.layout.width)}
@@ -680,6 +691,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {garden.ground ?? shadow}
         {garden.back}
         {els}
+        {pointerLines}
         {garden.front}
         {scene.front}
       </Svg>

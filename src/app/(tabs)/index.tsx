@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -251,7 +251,7 @@ function GardenStrip({ now }: { now: number }) {
       ? `${best.f.emoji} ${best.f.name} %${Math.round((best.g / best.f.grow) * 100)} büyüdü`
       : 'Puanlarınla tohum al, iş yaptıkça büyüsün';
   return (
-    <Squish onPress={() => router.push('/bahce')} style={[styles.week, { backgroundColor: c.room.balkon }]}>
+    <Squish onPress={() => router.push('/bahce' as Href)} style={[styles.week, { backgroundColor: c.room.balkon }]}>
       <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🌷</Text></Float>
       <View style={{ flex: 1 }}>
         <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>

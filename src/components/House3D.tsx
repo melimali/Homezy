@@ -3,6 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
+import { type Mood } from '@/domain/garden';
 import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
@@ -398,9 +399,10 @@ type Props = {
   theme?: HouseTheme;
   /** Oda etiketleri görünsün mü (paylaşılan kartlarda ve hikâyede gizli). */
   labels?: boolean;
+  mood?: Mood;
 };
 
-export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true }: Props) {
+export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();

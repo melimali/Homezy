@@ -1,4 +1,3 @@
-import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -158,7 +157,7 @@ export function TaskRow({
   const [open, setOpen] = useState(false);
   const tone = k.doneToday ? c.ok : k.s.k === 'late' ? c.late : k.s.k === 'today' ? c.today : c.muted;
   const sub = [showRoom ? `${k.plant ? '🪴' : k.place.emoji} ${k.place.name}` : null, k.doneToday ? 'Bugün yapıldı' : k.s.label, `${k.min} dk`].filter(Boolean).join(' · ');
-  const detail = () => router.push({ pathname: '/is', params: { rid, list, id: t.id } });
+  const detail = () => router.push({ pathname: '/is' as any, params: { rid, list, id: t.id } });
 
   return (
     <View style={[styles.rowWrap, { backgroundColor: c.surface }, !first && { marginTop: 10 }]}>

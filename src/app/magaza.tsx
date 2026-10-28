@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -45,7 +45,7 @@ export default function Magaza() {
         <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
       </View>
 
-      <Pressable onPress={() => router.push('/bahce')} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
+      <Pressable onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
         <Text style={{ fontSize: 30 }}>🌷</Text>
         <View style={{ flex: 1 }}>
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>

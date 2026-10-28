@@ -89,6 +89,7 @@ function RootStack() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="oda/[id]" />
         <Stack.Screen name="is" />
+        <Stack.Screen name="temizlik" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="plan" />
         <Stack.Screen name="bildirimler" />
         <Stack.Screen name="magaza" />

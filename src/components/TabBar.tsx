@@ -1,3 +1,4 @@
+import { useRouter, type Href } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View, type ColorValue } from 'react-native';
@@ -22,7 +23,9 @@ const ICONS: Record<string, IconName> = { index: 'home', odalar: 'rooms', bugun:
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const [menu, setMenu] = useState(false);
   const [add, setAdd] = useState(false);
+  const router = useRouter();
   const tabs = state.routes.map((r, i) => {
     const o = descriptors[r.key].options;
     const focused = state.index === i;
@@ -38,13 +41,40 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     <View style={[st.wrap, { backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 10) }]}>
       <View style={[st.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
         {tabs.slice(0, half)}
-        <Squish onPress={() => setAdd(true)} accessibilityLabel="Yeni iş ekle" style={[st.plus, { backgroundColor: c.accent }]}>
+        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.accent }]}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
             <Path d="M12 5v14M5 12h14" stroke={c.onAccent} strokeWidth={2.8} strokeLinecap="round" />
           </Svg>
         </Squish>
         {tabs.slice(half)}
       </View>
+      <Sheet open={menu} onClose={() => setMenu(false)} pose="todo">
+        <T v="h2">Ne yapalım?</T>
+        <View style={{ gap: 10 }}>
+          <Squish
+            onPress={() => { setMenu(false); setAdd(true); }}
+            accessibilityLabel="İş ekle"
+            style={[st.opt, { backgroundColor: c.surface2 }]}
+          >
+            <Text style={{ fontSize: 28 }}>📝</Text>
+            <View style={{ flex: 1 }}>
+              <T v="bold">İş ekle</T>
+              <T v="small">Odaya yeni bir iş yaz</T>
+            </View>
+          </Squish>
+          <Squish
+            onPress={() => { setMenu(false); router.push('/temizlik' as Href); }}
+            accessibilityLabel="Temizlik başlat"
+            style={[st.opt, { backgroundColor: c.accent }]}
+          >
+            <Text style={{ fontSize: 28 }}>🧹</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.onAccent }}>Temizlik başlat</Text>
+              <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.onAccent, opacity: 0.85 }}>Moka sırayı seçsin, sen yap</Text>
+            </View>
+          </Squish>
+        </View>
+      </Sheet>
       <AddSheet open={add} onClose={() => setAdd(false)} />
     </View>
   );
@@ -126,6 +156,7 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 8, gap: 2,
     borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(40,48,68,0.08)', shadowColor: '#24352E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.09, shadowRadius: 16, elevation: 5,
   },
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
   tabOuter: { flex: 1 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 7, borderRadius: radius.pill },
   label: { fontSize: 11 },

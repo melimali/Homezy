@@ -526,8 +526,9 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
 
     // Taban. Damalı olsun diye her ikinci blok çok hafif koyu. 4. seviyeye kadar çıplak kalas.
     const p = clean[id] ?? 100;
-    const base = painted ? mix(floor, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
-    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open, stroke: c.ink, strokeWidth: 1.2, strokeOpacity: 0.45 });
+    const roomTint = mix(WOOD, floor, 0.45);
+    const base = painted ? mix(floor, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : roomTint;
+    add({ key: k + 'f', fill: (r + col) % 2 ? shade(base, dark ? 0.03 : -0.025) : base, points: tile, onPress: open, stroke: c.ink, strokeWidth: 1.4, strokeOpacity: 0.5 });
     // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
     if (p < 80) {
       const n = p < 40 ? 3 : p < 60 ? 2 : (r + col) % 2 === 0 ? 1 : 0;
@@ -612,8 +613,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
 
   if (!els.length) return null;
 
-  const PAD = 10;
-  minX -= PAD; maxX += PAD; minY -= PAD; maxY += PAD + 6;
+  const PAD = 35;
+  minX -= PAD; maxX += PAD; minY -= PAD + 25; maxY += PAD + 6;
   const vbW = maxX - minX, vbH = maxY - minY;
   const scale = width ? width / vbW : 0;
 
@@ -630,11 +631,11 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
       const [x, y0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
       const nTask = roomCounts(S, id, now);
       const w = 34 + S.rooms[id].name.length * 6.6 + (nTask.late + nTask.today ? 22 : 0);
-      let y = (y0 - minY) * scale - 28;
+      let y = (y0 - minY) * scale - 70;
       const lx = (x - minX) * scale;
       for (let pass = 0; pass < 3; pass++)
         for (const o of placed)
-          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y - LABEL_H - 4;
+          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y - LABEL_H - 6;
       placed.push({ id, x: lx, y, w: Math.min(w, 140) });
     }
 
@@ -676,16 +677,16 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         const floorY = (cy0 - minY) * scale;
         return (
           <G key={'ptr-' + id}>
-            <Circle cx={floorX} cy={floorY} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.8} />
+            <Circle cx={floorX} cy={floorY} r={4} fill={c.surface} stroke={c.ink} strokeWidth={2} />
             <Line
               x1={floorX}
               y1={floorY}
               x2={tagX}
-              y2={tagY + 10}
+              y2={tagY + 12}
               stroke={c.ink}
-              strokeWidth={1.5}
-              strokeDasharray="3 3"
-              strokeOpacity={0.7}
+              strokeWidth={1.8}
+              strokeDasharray="4 3"
+              strokeOpacity={0.85}
             />
           </G>
         );

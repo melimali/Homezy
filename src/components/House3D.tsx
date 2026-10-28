@@ -28,7 +28,6 @@ const T = 0.12;
 const LABEL_H = 27;
 /** Etiket çapasının genişliği; etiket bunun ortasına oturur. */
 const ANCHOR_W = 150;
-const LABEL_Z = 4;
 
 type Pt = [number, number];
 /** Izgara koordinatından (satır, sütun, yükseklik) ekran noktasına. */
@@ -621,19 +620,19 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
-  // Etiketler üst üste binmesin: arkadan öne sırayla yerleştir, çakışan etiketi biraz aşağı it.
+  // Etiketler üst üste binmesin: arkadan öne sırayla yerleştir, çakışan etiketi yukarı it.
   const placed: { id: string; x: number; y: number; w: number }[] = [];
   if (width)
     for (const id of [...S.order].filter(id => anchors[id] != null).sort((a, b) => depth(anchors[a]) - depth(anchors[b]))) {
       const i = anchors[id];
-      const [x, y0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, LABEL_Z);
+      const [x, y0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
       const nTask = roomCounts(S, id, now);
       const w = 34 + S.rooms[id].name.length * 6.6 + (nTask.late + nTask.today ? 22 : 0);
-      let y = (y0 - minY) * scale;
+      let y = (y0 - minY) * scale - 28;
       const lx = (x - minX) * scale;
       for (let pass = 0; pass < 3; pass++)
         for (const o of placed)
-          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y + LABEL_H;
+          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y - LABEL_H - 4;
       placed.push({ id, x: lx, y, w: Math.min(w, 140) });
     }
 
@@ -650,7 +649,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
           hitSlop={4}
           style={({ pressed }) => [
             styles.tag,
-            { backgroundColor: c.surface, borderColor: c.line, boxShadow: `0 2px 0 ${c.line}` },
+            { backgroundColor: c.surface, borderColor: c.line },
             pressed && { transform: [{ translateY: 1 }] },
           ]}
         >
@@ -666,15 +665,30 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
     );
   });
 
-  const pointerLines = Object.entries(anchors).map(([id, i]) => {
-    const [x, y] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, LABEL_Z);
-    return (
-      <G key={'ptr-' + id}>
-        <Circle cx={x} cy={y} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.5} />
-        <Line x1={x} y1={y} x2={x} y2={y - 24} stroke={c.ink} strokeWidth={1.6} strokeLinecap="round" strokeOpacity={0.7} />
-      </G>
-    );
-  });
+  const pointerOverlay = showLabels && width > 0
+    ? placed.map(({ id, x: tagX, y: tagY }) => {
+        const i = anchors[id];
+        if (i == null) return null;
+        const [cx0, cy0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
+        const floorX = (cx0 - minX) * scale;
+        const floorY = (cy0 - minY) * scale;
+        return (
+          <G key={'ptr-' + id}>
+            <Circle cx={floorX} cy={floorY} r={3.5} fill={c.surface} stroke={c.ink} strokeWidth={1.8} />
+            <Line
+              x1={floorX}
+              y1={floorY}
+              x2={tagX}
+              y2={tagY + 10}
+              stroke={c.ink}
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              strokeOpacity={0.7}
+            />
+          </G>
+        );
+      })
+    : null;
 
   return (
     <Animated.View
@@ -691,11 +705,15 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {garden.ground ?? shadow}
         {garden.back}
         {els}
-        {pointerLines}
         {garden.front}
         {scene.front}
       </Svg>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        {pointerOverlay && (
+          <Svg width="100%" height="100%" pointerEvents="none" style={StyleSheet.absoluteFill}>
+            {pointerOverlay}
+          </Svg>
+        )}
         {showLabels && labels}
       </View>
     </Animated.View>

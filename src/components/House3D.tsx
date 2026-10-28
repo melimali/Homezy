@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -9,7 +9,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
-import { fonts, useColors, useIsDark, type Colors } from '@/theme';
+import { fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
 
 /**
  * Ana ekrandaki ev: kullanıcının bloklarla çizdiği plan, izometrik (yandan-üstten) bir
@@ -828,35 +828,67 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   });
 
   return (
-    <Pressable
-      onPress={() => setZoom(z => !z)}
-      accessibilityRole="button"
-      accessibilityLabel="Evi yakınlaştır / uzaklaştır"
-      style={{ width: '100%', overflow: 'hidden' }}
-    >
-      <Animated.View
-        onLayout={e => setWidth(e.nativeEvent.layout.width)}
-        style={{
-          width: '100%',
-          aspectRatio: vbW / vbH,
-          opacity: pop,
-          transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, zoom ? 1.25 : 1] }) }],
-        }}
+    <>
+      <Pressable
+        onPress={() => setZoom(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Evi büyük ekranda incele"
+        style={{ width: '100%', overflow: 'hidden', borderRadius: radius.card }}
       >
-        <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
-          {scene.back}
-          {garden.ground ?? shadow}
-          {garden.back}
-          {els}
-          {yard.els}
-          {garden.front}
-          {scene.front}
-        </Svg>
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-          {showLabels && labels}
+        <Animated.View
+          onLayout={e => setWidth(e.nativeEvent.layout.width)}
+          style={{
+            width: '100%',
+            aspectRatio: vbW / vbH,
+            opacity: pop,
+            transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
+          }}
+        >
+          <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
+            {scene.back}
+            {garden.ground ?? shadow}
+            {garden.back}
+            {els}
+            {yard.els}
+            {garden.front}
+            {scene.front}
+          </Svg>
+          <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+            {showLabels && labels}
+          </View>
+        </Animated.View>
+      </Pressable>
+
+      <Modal visible={zoom} transparent animationType="fade" onRequestClose={() => setZoom(false)}>
+        <View style={[styles.modalBg, { backgroundColor: 'rgba(40,48,68,0.75)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: c.bg }]}>
+            <View style={styles.modalHeader}>
+              <Text style={{ fontFamily: fonts.displayBold, fontSize: 20, color: c.ink }}>🏡 Evini İncele</Text>
+              <Pressable onPress={() => setZoom(false)} accessibilityRole="button" accessibilityLabel="Kapat" style={[styles.closeBtn, { backgroundColor: c.surface }]}>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>✕</Text>
+              </Pressable>
+            </View>
+            <View style={{ width: '100%', aspectRatio: vbW / vbH, alignItems: 'center', justifyContent: 'center' }}>
+              <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`}>
+                {scene.back}
+                {garden.ground ?? shadow}
+                {garden.back}
+                {els}
+                {yard.els}
+                {garden.front}
+                {scene.front}
+              </Svg>
+              <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+                {showLabels && labels}
+              </View>
+            </View>
+            <Text style={{ textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 13, color: c.muted, marginTop: 12 }}>
+              Odaların üzerine dokunarak detayları görebilirsin.
+            </Text>
+          </View>
         </View>
-      </Animated.View>
-    </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -871,4 +903,8 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.display, fontSize: 12, lineHeight: 16, flexShrink: 1 },
   badge: { minWidth: 18, paddingHorizontal: 5, borderRadius: 999, alignItems: 'center', marginLeft: 2 },
   badgeText: { fontFamily: fonts.bodyBlack, fontSize: 11, lineHeight: 16 },
+  modalBg: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalContent: { width: '100%', maxWidth: 500, borderRadius: radius.card, padding: 20, gap: 14, overflow: 'hidden' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

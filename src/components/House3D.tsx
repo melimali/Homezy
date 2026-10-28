@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Animated } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
@@ -200,6 +200,18 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
       break;
     case 'piyano':
       faces = [...b('p', 0.16, 0.18, 0.28, 0.64, 0, 18, '#2E3242'), ...b('k', 0.44, 0.2, 0.1, 0.6, 9, 1.5, WHITE)];
+      break;
+    case 'komodin':
+      faces = b('m', 0.25, 0.25, 0.5, 0.5, 0, 12, WOOD);
+      break;
+    case 'calisma_masasi':
+      faces = [...b('d', 0.15, 0.15, 0.3, 0.7, 0, 12, WOOD), ...b('c', 0.5, 0.4, 0.2, 0.2, 0, 7, '#283044')];
+      break;
+    case 'berjer':
+      faces = [...b('b', 0.2, 0.2, 0.6, 0.6, 0, 8, '#BFA89E'), ...b('bk', 0.2, 0.2, 0.15, 0.6, 8, 14, '#BFA89E')];
+      break;
+    case 'vazo':
+      faces = b('v', 0.35, 0.35, 0.3, 0.3, 0, 10, POT);
       break;
   }
   return [

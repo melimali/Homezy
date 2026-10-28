@@ -1,10 +1,19 @@
 # Mağaza metinleri (Google Play ve App Store)
 
-Karakter sınırları parantez içinde. Hepsi Türkçe; ilk yayında sadece Türkiye için yeterli.
+Karakter sınırları parantez içinde. Varsayılan dil Türkçe; İngilizce kayıt en altta (isteğe bağlı, sonra da eklenebilir).
+
+Paket kimliği her iki mağazada `com.meikai.homezy`; ilk yüklemeden sonra değişmez.
 
 ## Uygulama adı (30)
 
-Homezy: Ev İşleri ve Rutinler
+| Mağaza | Dil | Ad | Karakter |
+|---|---|---|---|
+| Google Play | Türkçe (varsayılan) | Homezy: Rutin ve Ev İşleri | 26 |
+| Google Play | İngilizce (en-US) | Homezy: Routine & Chores | 24 |
+| App Store | Türkçe | Homezy: Günlük Rutin ve İşler | 29 |
+| App Store | İngilizce (U.S.) | Homezy: Daily Routine & Chores | 30 |
+
+Telefonun ana ekranında görünen ad her yerde kısaca **Homezy** (`app.json` > `name`).
 
 ## Kısa açıklama — Google Play (80)
 
@@ -70,3 +79,37 @@ Uygulama hesapsız (misafir) kullanılabilir, test hesabı gerekmez. Açılışt
 - Toplanan: ad ve e-posta (isteğe bağlı, hesap için), uygulama içi içerik (ev verisi yedeği), satın alma geçmişi (RevenueCat), fotoğraflar (sadece tarama sırasında işlenir, saklanmaz), reklam kimliği (sadece ücretsiz planda AdMob).
 - Takip (App Store): ücretsiz plandaki AdMob reklamı nedeniyle "Evet" seçilip ATT izni sorulmalı, ya da AdMob kişiselleştirilmemiş reklama ayarlanıp "Hayır" seçilmeli.
 - Şifreleme: veriler aktarımda şifrelenir (HTTPS). Kullanıcı verilerini silebilir (uygulama içinden).
+
+## English listing (en-US, isteğe bağlı)
+
+**App name:** Google Play "Homezy: Routine & Chores", App Store "Homezy: Daily Routine & Chores".
+
+**Short description — Google Play (80):** Draw your home, do a little every day, keep your streak, build your house. 🏡
+
+**Subtitle — App Store (30):** Chores, routines, shopping
+
+**Keywords — App Store (100):** chores,cleaning,routine,home,shopping list,laundry,fridge,reminder,planner,family
+
+**Full description (4000):**
+
+Housework never ends, but a little every day keeps it from piling up. Homezy gathers every chore in your home in one place and tells you only what to do today.
+
+🏡 DRAW YOUR HOME — Sketch your rooms with blocks in seconds. Each room gets its own routines automatically, tuned by a few quick questions (pets, dishwasher, boiler…).
+
+✅ KNOW WHAT TO DO TODAY — Your three most urgent tasks are on the home screen. Overdue tasks are red, today's are warm; rooms fade as they get dirty and shine as you clean.
+
+🔥 KEEP YOUR STREAK, BUILD YOUR HOUSE — Do at least one task a day and your house grows floor by floor. Spend points on items in the shop.
+
+👕 WARDROBE & LAUNDRY — Mark clothes Clean, Dirty or To iron; we tell you when it's laundry time. Add clothes from a photo.
+
+🧊 FRIDGE & SHOPPING LIST — Snap your fridge; AI finds what's running low and adds it to your shopping list. Expiry reminders included.
+
+🔧 HOME CARE & BILLS — Boiler service, detector tests, seasonal jobs, bill due dates and warranty ends.
+
+🔔 MORNING SUMMARY — One notification each morning at the time you choose.
+
+⭐ PREMIUM — More AI scans, streak freezes, 1.5× points, multiple homes, themes, family sharing and no ads. The basics are always free.
+
+Your data stays on your phone first; create an account only if you want a backup. We never see your card details.
+
+> Not: Uygulamanın kendisi şu an sadece Türkçe. İngilizce kaydı açarsan uygulama içi metinler Türkçe kalır; çoklu dil (i18n) gelene kadar sadece Türkçe kayıtla yayınlamak daha doğru olabilir.

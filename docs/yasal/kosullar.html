@@ -3,25 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
 <title>Homezy Kullanım Koşulları</title>
-<!-- Yayın adresi: https://themeikai.com/homezy/kosullar (uygulamadaki src/lib/links.ts ile aynı olmalı).
-     [KÖŞELİ PARANTEZ] içindeki yerleri yayınlamadan önce doldur. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;700&display=swap">
 <style>
-  body { margin: 0; background: #EBF5EE; color: #283044; font: 16px/1.6 Nunito, system-ui, sans-serif; }
-  main { max-width: 720px; margin: 0 auto; padding: 32px 18px 64px; }
+  :root { --bg: #EBF5EE; --ink: #283044; --muted: #8B786D; --card: #FFFFFF; --line: #D5E3D9; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #283044; --ink: #EBF5EE; --muted: #BFA89E; --card: #333C52; --line: #3E4862; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Nunito, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
   h1, h2 { font-family: "Baloo 2", system-ui, sans-serif; line-height: 1.2; }
   h1 { font-size: 34px; margin: 0 0 4px; }
   h2 { font-size: 22px; margin: 32px 0 8px; }
-  .muted { color: #8B786D; }
-  a { color: #283044; }
+  .muted { color: var(--muted); }
+  .card { background: var(--card); border-radius: 22px; padding: 18px 20px; margin-top: 16px; }
+  a { color: inherit; }
   li { margin: 4px 0; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
+  footer a { margin-right: 14px; }
 </style>
 </head>
 <body>
 <main>
 <p class="muted">HOMEZY · MEIKAI DIGITAL</p>
 <h1>Kullanım Koşulları</h1>
-<p class="muted">Son güncelleme: [GG.AA.YYYY]</p>
+<p class="muted">Son güncelleme: 28.10.2026</p>
 
 <p>Homezy'yi kullanarak bu koşulları kabul etmiş olursun. Uygulama Meikai Digital tarafından sunulur.</p>
 
@@ -56,6 +63,13 @@
 
 <h2>Değişiklikler ve iletişim</h2>
 <p>Bu koşulları değiştirirsek bu sayfadaki tarihi güncelleriz. Sorular için: <a href="mailto:[iletisim@themeikai.com]">[iletisim@themeikai.com]</a>. Bu koşullar Türkiye Cumhuriyeti yasalarına tabidir.</p>
+
+<footer class="muted">
+  <a href="/homezy/gizlilik">Gizlilik Politikası</a>
+  <a href="/homezy/kosullar">Kullanım Koşulları</a>
+  <a href="/homezy/hesap-silme">Hesap silme</a>
+  <div>© 2026 Meikai Digital</div>
+</footer>
 </main>
 </body>
 </html>

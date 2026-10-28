@@ -20,9 +20,9 @@ Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı mağazaya girile
 
 ### 1. Google Play Console hesabı (bir kere, ≈ 25 $)
 
-1. [play.google.com/console](https://play.google.com/console) → geliştirici hesabı aç. Bireysel mi, Meikai Digital adına mı kararı burada verilir (CLAUDE.md'deki açık karar). Kimlik doğrulaması birkaç gün sürebilir.
+1. [play.google.com/console](https://play.google.com/console) → geliştirici hesabı Meikai Digital adına (kuruluş hesabı, D-U-N-S numarası gerekir). Kimlik doğrulaması birkaç gün sürebilir.
 2. **Ödeme profili** (Settings → Payments profile): para satabilmek için şart. Banka hesabı ve vergi bilgisi burada.
-3. **Uygulama oluştur**: adı Homezy, varsayılan dil Türkçe, "Uygulama", "Ücretsiz" (abonelik olsa da uygulama ücretsiz sayılır).
+3. **Uygulama oluştur**: adı **Homezy: Rutin ve Ev İşleri** (Türkçe; İngilizce kayıt eklenirse "Homezy: Routine & Chores", bkz. [magaza-metni.md](magaza-metni.md)), varsayılan dil Türkçe, "Uygulama", "Ücretsiz" (abonelik olsa da uygulama ücretsiz sayılır).
 
 ### 2. İlk sürümü Play Console'a yükle
 

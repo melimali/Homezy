@@ -11,6 +11,7 @@ import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { MoodCheckin } from '@/components/MoodCheckin';
+import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
@@ -22,7 +23,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { CALM_POSES, mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_BAKING_SCENE, HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE } from '@/constants/curated-scenes';
+import { HOME_MOKA_BAKING_SCENE, HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
 import type { HomeMokaPose } from '@/constants/home-moka';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
@@ -84,7 +85,8 @@ export default function Home() {
       ? HOME_MOKA_BAKING_SCENE
       : heroPose === 'dishes'
         ? HOME_MOKA_KITCHEN_SCENE
-        : HOME_MOKA_SCENE;
+        : HOME_SOFA_BACKGROUND;
+  const showSofaMoka = heroPose !== 'laptop' && heroPose !== 'baking' && heroPose !== 'dishes';
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -105,6 +107,7 @@ export default function Home() {
         <SceneImage source={heroScene} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
+          {showSofaMoka && <HomeMokaAnimation />}
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Moka'nın konuşma baloncuğu */}
             <View style={styles.speechBubble}>

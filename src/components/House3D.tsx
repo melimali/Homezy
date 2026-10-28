@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect } from 'react-native-svg';
+import { Animated } from 'react-native';
+import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { type Mood } from '@/domain/garden';
@@ -25,10 +25,6 @@ const WALL_H = 34;
 const INNER_H = 20;
 const FRONT_H = 8;
 const T = 0.12;
-/** Etiketin ekrandaki yüksekliği (çakışma kontrolü için). */
-const LABEL_H = 27;
-/** Etiket çapasının genişliği; etiket bunun ortasına oturur. */
-const ANCHOR_W = 150;
 
 type Pt = [number, number];
 /** Izgara koordinatından (satır, sütun, yükseklik) ekran noktasına. */
@@ -204,6 +200,18 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
       break;
     case 'piyano':
       faces = [...b('p', 0.16, 0.18, 0.28, 0.64, 0, 18, '#2E3242'), ...b('k', 0.44, 0.2, 0.1, 0.6, 9, 1.5, WHITE)];
+      break;
+    case 'komodin':
+      faces = b('m', 0.25, 0.25, 0.5, 0.5, 0, 12, WOOD);
+      break;
+    case 'calisma_masasi':
+      faces = [...b('d', 0.15, 0.15, 0.3, 0.7, 0, 12, WOOD), ...b('c', 0.5, 0.4, 0.2, 0.2, 0, 7, '#283044')];
+      break;
+    case 'berjer':
+      faces = [...b('b', 0.2, 0.2, 0.6, 0.6, 0, 8, '#BFA89E'), ...b('bk', 0.2, 0.2, 0.15, 0.6, 8, 14, '#BFA89E')];
+      break;
+    case 'vazo':
+      faces = b('v', 0.35, 0.35, 0.3, 0.3, 0, 10, POT);
       break;
   }
   return [
@@ -409,7 +417,6 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
   const tick = useNow();
   const now = nowProp ?? tick;
   const dark = useIsDark();
-  const [width, setWidth] = useState(0);
 
   // Açılışta ev hafifçe zıplayarak yerine otursun.
   const [pop] = useState(() => new Animated.Value(0));
@@ -544,9 +551,7 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         <Polygon key={k + 'sp'} points={pts([[x, y - 5], [x + 1.3, y - 1.3], [x + 5, y], [x + 1.3, y + 1.3], [x, y + 5], [x - 1.3, y + 1.3], [x - 5, y], [x - 1.3, y - 1.3]])} fill={GOLD} />,
       );
     }
-    if (!painted)
-      for (const u of [1 / 3, 2 / 3])
-        els.push(<Line key={k + 'pl' + u} x1={P(r + u, col)[0]} y1={P(r + u, col)[1]} x2={P(r + u, col + 1)[0]} y2={P(r + u, col + 1)[1]} stroke={shade(WOOD, -0.22)} strokeWidth={0.8} />);
+
 
     // Bakımsızlık: 1. gün toz.
     if (idle >= 1) {
@@ -613,89 +618,79 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
 
   if (!els.length) return null;
 
+  // Oda isimleri evin dışındaki beyaz alana, sol ve sağ kenara. Yazı ne zemine ne eve biner;
+  // her odanın pininden kenardaki etikete bir ok çizgisi çekilir.
+  const TAG_H = 28, TAG_GAP = 4, EDGE = 2;
+  const ids = [...S.order].filter(id => anchors[id] != null && S.rooms[id]).sort((x, y) => depth(anchors[x]) - depth(anchors[y]));
+  const tagW = (id: string) => {
+    const rc = roomCounts(S, id, now);
+    return 40 + S.rooms[id].name.length * 7.5 + (rc.late + rc.today ? 22 : 0);
+  };
   const PAD = 35;
-  minX -= PAD; maxX += PAD; minY -= PAD + 25; maxY += PAD + 6;
+  const sideW = Math.max(0, ...ids.map(tagW));
+  const PAD_X = sideW + TAG_GAP + EDGE;
+  minX -= PAD_X; maxX += PAD_X; minY -= PAD + 25; maxY += PAD + 6;
   const vbW = maxX - minX, vbH = maxY - minY;
-  const scale = width ? width / vbW : 0;
 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH });
 
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
-  // Etiketler üst üste binmesin: arkadan öne sırayla yerleştir, çakışan etiketi yukarı it.
-  const placed: { id: string; x: number; y: number; w: number }[] = [];
-  if (width)
-    for (const id of [...S.order].filter(id => anchors[id] != null).sort((a, b) => depth(anchors[a]) - depth(anchors[b]))) {
-      const i = anchors[id];
-      const [x, y0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
-      const nTask = roomCounts(S, id, now);
-      const w = 34 + S.rooms[id].name.length * 6.6 + (nTask.late + nTask.today ? 22 : 0);
-      let y = (y0 - minY) * scale - 70;
-      const lx = (x - minX) * scale;
-      for (let pass = 0; pass < 3; pass++)
-        for (const o of placed)
-          if (Math.abs(o.x - lx) < (o.w + Math.min(w, 140)) / 2 + 2 && Math.abs(o.y - y) < LABEL_H) y = o.y - LABEL_H - 6;
-      placed.push({ id, x: lx, y, w: Math.min(w, 140) });
-    }
+  const centerX = (minX + maxX) / 2;
+  const stacks = { left: [] as number[], right: [] as number[] };
+  const tags: { id: string; fx: number; fy: number; w: number; cardX: number; cardY: number; right: boolean }[] = [];
+  for (const id of ids) {
+    const i = anchors[id];
+    const [fx, fy] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
+    const right = fx >= centerX;
+    const ys = right ? stacks.right : stacks.left;
+    const w = tagW(id);
+    // Aynı tarafta üst üste binmesin: çakışan etiketi bir kat aşağı it.
+    let top = fy - TAG_H / 2;
+    for (let pass = 0; pass < 3; pass++) for (const y of ys) if (Math.abs(y - top) < TAG_H + 6) top = y + TAG_H + 6;
+    ys.push(top);
+    const cardX = right ? maxX - EDGE - w : minX + EDGE;
+    tags.push({ id, fx, fy, w, cardX, cardY: top, right });
+  }
 
-  const labels = placed.map(({ id, x, y }) => {
+  const svgLabels = showLabels ? tags.map(({ id, fx, fy, w, cardX, cardY, right }) => {
+    const room = S.rooms[id];
     const rc = roomCounts(S, id, now);
     const nTask = rc.late + rc.today;
-    const room = S.rooms[id];
-    return (
-      <View key={id} pointerEvents="box-none" style={[styles.anchor, { left: x - ANCHOR_W / 2, top: y - LABEL_H / 2 }]}>
-        <Pressable
-          onPress={() => onOpenRoom?.(id)}
-          accessibilityRole="button"
-          accessibilityLabel={`${room.name} odasını aç, yüzde ${clean[id]} temiz${nTask ? `, ${nTask} iş bekliyor` : ''}`}
-          hitSlop={4}
-          style={({ pressed }) => [
-            styles.tag,
-            { backgroundColor: c.surface, borderColor: c.line },
-            pressed && { transform: [{ translateY: 1 }] },
-          ]}
-        >
-          <Text style={styles.icon}>{clean[id] >= 100 ? '✨' : ROOM_EMOJI[room.type]}</Text>
-          <Text style={[styles.name, { color: c.ink }]} numberOfLines={1}>{room.name}</Text>
-          {nTask > 0 && (
-            <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>
-              <Text style={[styles.badgeText, { color: c.onBadge }]}>{nTask}</Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
-    );
-  });
+    const isClean = (clean[id] ?? 100) >= 100;
+    const ax = right ? cardX : cardX + w;
+    const ay = cardY + TAG_H / 2;
+    const my = cardY + TAG_H / 2 + 5;
 
-  const pointerOverlay = showLabels && width > 0
-    ? placed.map(({ id, x: tagX, y: tagY }) => {
-        const i = anchors[id];
-        if (i == null) return null;
-        const [cx0, cy0] = P(Math.floor(i / cols) + 0.5, (i % cols) + 0.5, 0);
-        const floorX = (cx0 - minX) * scale;
-        const floorY = (cy0 - minY) * scale;
-        return (
-          <G key={'ptr-' + id}>
-            <Circle cx={floorX} cy={floorY} r={4} fill={c.surface} stroke={c.ink} strokeWidth={2} />
-            <Line
-              x1={floorX}
-              y1={floorY}
-              x2={tagX}
-              y2={tagY + 12}
-              stroke={c.ink}
-              strokeWidth={1.8}
-              strokeDasharray="4 3"
-              strokeOpacity={0.85}
-            />
+    return (
+      <G key={'svgtag-' + id} onPress={() => onOpenRoom?.(id)}>
+        {/* Oda pini ve ok çizgisi: evdeki odadan etikete. */}
+        <Line x1={fx} y1={fy} x2={ax} y2={ay} stroke={c.ink} strokeWidth={2} strokeOpacity={0.8} />
+        <Circle cx={fx} cy={fy} r={4.5} fill={c.ink} />
+        <Circle cx={ax} cy={ay} r={3.5} fill={c.ink} />
+        {/* Etiket: beyaz kart, emoji, oda adı, varsa iş sayısı. */}
+        <Rect x={cardX} y={cardY} width={w} height={TAG_H} rx={TAG_H / 2} fill={c.surface} stroke={c.line} strokeWidth={1.4} />
+        <SvgText x={cardX + 17} y={my} fontSize={13} textAnchor="middle">
+          {isClean ? '✨' : ROOM_EMOJI[room.type]}
+        </SvgText>
+        <SvgText x={cardX + 32} y={my} fontSize={12.5} fontFamily={fonts.bodyBlack} fill={c.ink}>
+          {room.name}
+        </SvgText>
+        {nTask > 0 && (
+          <G>
+            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={rc.late ? c.late : c.warm} />
+            <SvgText x={cardX + w - 11} y={cardY + TAG_H / 2 + 3.5} fontSize={9.5} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
+              {nTask}
+            </SvgText>
           </G>
-        );
-      })
-    : null;
+        )}
+      </G>
+    );
+  }) : null;
 
   return (
     <Animated.View
-      onLayout={e => setWidth(e.nativeEvent.layout.width)}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
@@ -710,28 +705,8 @@ export function House3D({ state: S, onOpenRoom, now: nowProp, build, theme = 'gu
         {els}
         {garden.front}
         {scene.front}
+        {svgLabels}
       </Svg>
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {pointerOverlay && (
-          <Svg width="100%" height="100%" pointerEvents="none" style={StyleSheet.absoluteFill}>
-            {pointerOverlay}
-          </Svg>
-        )}
-        {showLabels && labels}
-      </View>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  // Noktayı ortalayan sabit boyutlu çapa. Sıfır boyutlu çapa Android'de etiketin içini eziyor.
-  anchor: { position: 'absolute', width: ANCHOR_W, height: LABEL_H, alignItems: 'center', justifyContent: 'center' },
-  tag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingLeft: 6, paddingRight: 8,
-    borderRadius: 999, borderWidth: 1.5, maxWidth: ANCHOR_W,
-  },
-  icon: { fontSize: 12 },
-  name: { fontFamily: fonts.display, fontSize: 12, lineHeight: 16, flexShrink: 1 },
-  badge: { minWidth: 18, paddingHorizontal: 5, borderRadius: 999, alignItems: 'center', marginLeft: 2 },
-  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 11, lineHeight: 16 },
-});

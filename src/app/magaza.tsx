@@ -1,17 +1,27 @@
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
-import { ITEMS, type Item } from '@/domain/items';
+import { ITEMS, type Item, type ItemCategory } from '@/domain/items';
 import { POINTS } from '@/domain/play';
 import { LIMITS } from '@/domain/premium';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+
+const CATEGORIES: [ItemCategory, string][] = [
+  ['tum', '✨ Tümü'],
+  ['mobilya', '🪑 Mobilya'],
+  ['dekor', '💡 Dekor'],
+  ['bitki', '🪴 Bitki'],
+  ['elektronik', '🎸 Elektronik'],
+  ['evcil', '🐱 Evcil'],
+  ['ozel', '👑 Özel'],
+];
 
 /**
  * Eşya mağazası: görev yaparak kazanılan puanla evine tatlı eşyalar al. Puan parayla satılmaz.
@@ -22,8 +32,11 @@ export default function Magaza() {
   const { state: S } = useStore();
   const P = S.play;
   const [open, setOpen] = useState<string | null>(null);
+  const [cat, setCat] = useState<ItemCategory>('tum');
   const { premium } = usePurchases();
   const router = useRouter();
+
+  const filtered = cat === 'tum' ? ITEMS : ITEMS.filter(it => it.category === cat);
 
   return (
     <Screen header={false}>
@@ -54,8 +67,14 @@ export default function Magaza() {
         <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
       </Pressable>
 
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
+        {CATEGORIES.map(([k, label]) => (
+          <Chip key={k} label={label} on={cat === k} onPress={() => setCat(k)} />
+        ))}
+      </ScrollView>
+
       <View style={styles.grid}>
-        {ITEMS.map(it => (
+        {filtered.map(it => (
           <ItemCard key={it.id} item={it} selected={open === it.id} onPress={() => setOpen(open === it.id ? null : it.id)} />
         ))}
       </View>

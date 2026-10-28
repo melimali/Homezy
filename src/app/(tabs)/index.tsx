@@ -110,8 +110,8 @@ export default function Home() {
             <View style={styles.speechBubble}>
               <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, borderRadius: radius.card }]} />
               <View style={[styles.bubbleTail, { backgroundColor: c.surface }]} />
-              <T v="h1" style={{ fontSize: 26, lineHeight: 32 }}>{greet(new Date(now), name)}</T>
-              <T v="bold" style={[styles.heroLead, { color: c.ink }]}>
+              <T v="h1" style={{ fontSize: 23, lineHeight: 28 }}>{greet(new Date(now), name)}</T>
+              <T v="bold" style={[styles.heroLead, { color: c.ink, fontSize: 13.5, lineHeight: 18 }]}>
                 {due.length ? `Bugün ${due.length} iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
               </T>
             </View>
@@ -314,7 +314,7 @@ function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onP
 const styles = StyleSheet.create({
   heroWrap: { marginHorizontal: -space.screen },
   heroTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: space.screen - 8 },
-  speechBubble: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18, overflow: 'visible' },
+  speechBubble: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.card, paddingVertical: 10, paddingHorizontal: 14, overflow: 'visible' },
   bubbleTail: { position: 'absolute', bottom: -6, left: 32, width: 14, height: 14, borderRadius: 3, transform: [{ rotate: '45deg' }] },
   heroLead: { fontSize: 15, lineHeight: 21, marginTop: 2, maxWidth: 250 },
   mokaCard: { marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10 },

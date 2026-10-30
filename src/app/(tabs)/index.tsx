@@ -1,11 +1,12 @@
 import { useRouter, type Href } from 'expo-router';
-import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { useEffect } from 'react';
 
 import { House3D } from '@/components/House3D';
+import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
@@ -30,12 +31,14 @@ import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, space, useColors } from '@/theme';
-import type { TaskRef } from '@/domain/types';
+import type { HouseTheme, TaskRef } from '@/domain/types';
 
 export default function Home() {
   const c = useColors();
   const router = useRouter();
   const { state: S } = useStore();
+  const [houseOpen, setHouseOpen] = useState(false);
+  const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
   const { status, user } = useAuth();
@@ -44,7 +47,6 @@ export default function Home() {
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
   const lastDone = all.filter(x => isDoneToday(x.t, now)).sort((a, b) => (b.t.last ?? 0) - (a.t.last ?? 0))[0];
-  const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
   // Günün mod cevabı varsa selamın altındaki cümle ona göre.
@@ -192,14 +194,14 @@ export default function Home() {
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
           </Pressable>
         )}
-        <House3D state={S} onOpenRoom={open} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        <House3D state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
           </Text>
         )}
         <View style={styles.houseFoot}>
-          <T v="small">Bir odaya dokun</T>
+          <T v="small">Eve dokun, 3D görünümü aç</T>
           <Text style={{ color: c.line }}>•</Text>
           <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={8}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi }}>Evimin hikâyesi</Text>
@@ -207,7 +209,26 @@ export default function Home() {
         </View>
       </View>
 
+      {houseOpen && (
+        <HouseViewer
+          state={S}
+          build={hp}
+          theme={themeFor(S.settings.theme, premium.active)}
+          now={now}
+          onClose={() => setHouseOpen(false)}
+        />
+      )}
+
       <GardenStrip now={now} />
+      <Squish onPress={() => setLofiOpen(true)} style={[styles.week, { backgroundColor: c.accentSoft }]}>
+        <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🎵</Text></Float>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın Plak Çaları</Text>
+          <Text style={[styles.statL, { color: c.muted }]}>Yağmur, şömine ve lo-fi ASMR sesleri 🎧</Text>
+        </View>
+        <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+      </Squish>
+      <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
       <Card bare index={3}>
         <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
@@ -231,6 +252,63 @@ export default function Home() {
       <WelcomeBack />
       <MoodCheckin />
     </Screen>
+  );
+}
+
+function HouseViewer({
+  state,
+  build,
+  theme,
+  now,
+  onClose,
+}: {
+  state: Parameters<typeof House3D>[0]['state'];
+  build: { level: number; idle: number };
+  theme: HouseTheme;
+  now: number;
+  onClose: () => void;
+}) {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  const [zoom] = useState(() => new Animated.Value(0.72));
+  const [opacity] = useState(() => new Animated.Value(0));
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(zoom, { toValue: 1, friction: 8, tension: 55, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+    ]).start();
+  }, [opacity, zoom]);
+
+  const close = () => {
+    if (closing) return;
+    setClosing(true);
+    Animated.parallel([
+      Animated.timing(zoom, { toValue: 0.72, duration: 190, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: 160, useNativeDriver: true }),
+    ]).start(onClose);
+  };
+
+  return (
+    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={close}>
+      <View style={[styles.viewer, { backgroundColor: c.bg }]}>
+        <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
+          <View style={styles.viewerModel}>
+            <House3D state={state} now={now} build={build} theme={theme} zoom={1.08} labels={false} />
+          </View>
+        </Animated.View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Evi kapat"
+          onPress={close}
+          hitSlop={12}
+          style={[styles.viewerClose, { top: insets.top + 12, backgroundColor: c.surface }]}
+        >
+          <Text style={[styles.viewerCloseText, { color: c.ink }]}>×</Text>
+        </Pressable>
+      </View>
+    </Modal>
   );
 }
 
@@ -344,4 +422,9 @@ const styles = StyleSheet.create({
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },
   modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },
+  viewer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  viewerScene: { width: '100%', paddingHorizontal: 8 },
+  viewerModel: { width: '100%' },
+  viewerClose: { position: 'absolute', right: 18, width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  viewerCloseText: { fontSize: 32, lineHeight: 36, fontFamily: fonts.bodyBold },
 });

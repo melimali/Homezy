@@ -2,7 +2,9 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { DustPopMiniGame } from '@/components/DustPopMiniGame';
 import { PlantArt } from '@/components/GardenArt';
+import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { Burst, Float } from '@/components/motion';
@@ -38,6 +40,8 @@ export default function Bahce() {
   const [tab, setTab] = useState<Tab>('cicek');
   const [sel, setSel] = useState<string | null>(null);
   const [detailFlower, setDetailFlower] = useState<Flower | null>(null);
+  const [lofiOpen, setLofiOpen] = useState(false);
+  const [dustOpen, setDustOpen] = useState(false);
 
   // Açan her çiçekte yıldız saçılsın: açılıştaki sayıdan fazlası (albüme almak sayıyı değiştirmez).
   const blooms = G.plots.filter(p => p.bloomed).length + Object.values(G.album).reduce((s, n) => s + n, 0);
@@ -87,6 +91,12 @@ export default function Bahce() {
         <Text style={{ fontSize: 26 }}>⭐</Text>
         <Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text>
         <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
+      </View>
+
+      {/* Plak Çalar & Hızlı Toz Avı Mini Oyun Butonları */}
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <Btn small kind="soft" label="🎵 Plak Çalar (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
+        <Btn small kind="soft" label="🧹 Hızlı Toz Avı" onPress={() => setDustOpen(true)} style={{ flex: 1 }} />
       </View>
 
       <Card style={[styles.statsCard, { backgroundColor: c.surface }]}>
@@ -172,6 +182,16 @@ export default function Bahce() {
       )}
       {tab === 'kisilik' && <Personas />}
       {tab === 'album' && <Album onSelect={setDetailFlower} />}
+
+      <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
+      <DustPopMiniGame
+        open={dustOpen}
+        onClose={() => setDustOpen(false)}
+        onReward={pts => {
+          update(D => void (D.play.points += pts));
+          toast(`🎉 +${pts} ⭐ bonus puan kazandın!`);
+        }}
+      />
 
       {detailFlower && (
         <Sheet open={!!detailFlower} onClose={() => setDetailFlower(null)} pose="plants">

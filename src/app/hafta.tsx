@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import type { View } from 'react-native';
 
+import { HeatmapCard } from '@/components/HeatmapCard';
 import { BackLink, Btn, Screen, T } from '@/components/ui';
 import { WeekCard } from '@/components/WeekCard';
 import { weekSummary } from '@/domain/logic';
@@ -39,6 +40,7 @@ export default function Hafta() {
       <T v="h1">Haftan 📅</T>
       <WeekCard ref={card} state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} />
       <Btn kind="primary" label="📤 Paylaş" onPress={share} block />
+      <HeatmapCard state={S} now={now} />
       <Btn label="🎬 Evimin hikâyesi" onPress={() => router.push('/hikaye')} block />
       <T v="small" style={{ textAlign: 'center' }}>Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da evini toplasın 🏡</T>
     </Screen>

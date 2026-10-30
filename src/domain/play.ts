@@ -6,7 +6,7 @@ import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
 /**
  * Puan, seri ve seriyle inşa olan ev. Amaç: her gün uygulamaya biraz vakit ayırmak.
  * - Her iş (rutin ya da bitki) günde bir kez "Tamamladım" ile puan verir. Spor ve günlük de günde birer kez.
- * - Bir şey yapılan her gün evin inşaatı bir adım ilerler; 7. günde ev biter, sonraki ay güzelleşir.
+ * - Bir şey yapılan her gün evin gelişimi ilerler; 7. günde ev biter, 100. günde rüya bahçesine dönüşür.
  * - Gün kaçırılınca ev önce tozlanır, sonra çatlar, 3. günden itibaren her gün bir parçası çöker.
  *   Bir iş yapınca toz ve çatlaklar hemen gider, çöken parçalar her gün biri olmak üzere yeniden yapılır.
  * Hesap varsa puanı sunucu sayar (supabase/migrations/…_puan.sql); telefonun saatiyle oynamak işe yaramaz.
@@ -41,6 +41,7 @@ export const defaultSettings = (): Settings => ({
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
   actions: true,
+  language: 'tr',
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */
@@ -84,9 +85,20 @@ export const STAGES: { level: number; name: string; emoji: string }[] = [
   { level: 30, name: 'Taş yol döşendi', emoji: '🪨' },
   { level: 34, name: 'Kelebekler geldi', emoji: '🦋' },
   { level: 37, name: 'Altın yıldız! Rüya ev', emoji: '⭐' },
+  { level: 42, name: 'Bahçe fenerleri yerleşti', emoji: '🏮' },
+  { level: 48, name: 'Kuş evi ağaca kondu', emoji: '🐦' },
+  { level: 54, name: 'Minik gölet açıldı', emoji: '💧' },
+  { level: 60, name: 'Gül bahçesi büyüdü', emoji: '🌹' },
+  { level: 66, name: 'Bahçe kemeri kuruldu', emoji: '🌿' },
+  { level: 72, name: 'Yeni kelebekler geldi', emoji: '🦋' },
+  { level: 78, name: 'Dinlenme köşesi hazır', emoji: '🪑' },
+  { level: 84, name: 'Meyve ağacı büyüdü', emoji: '🍎' },
+  { level: 90, name: 'Gölete fıskiye eklendi', emoji: '⛲' },
+  { level: 95, name: 'Işıklar bahçeyi sardı', emoji: '✨' },
+  { level: 100, name: 'Yüz günlük rüya bahçe', emoji: '🏡' },
 ];
 export const BUILT = 7;
-export const MAX_LEVEL = 37;
+export const MAX_LEVEL = 100;
 
 export type HouseProgress = {
   /** Evin şu anki seviyesi (0: boş arsa). */
@@ -131,7 +143,11 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
-export const progressOf = (P: Play, now = Date.now()) => houseProgress(P.days, now, P.frozen);
+export const progressOf = (P: Play, now = Date.now()) => {
+  const res = houseProgress(P.days, now, P.frozen);
+  // GEÇİCİ TEST KODU: Test için evin seviyesini 50 yapar
+  return { ...res, level: 50 };
+};
 
 /* ---------- seri dondurma ---------- */
 

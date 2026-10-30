@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -75,6 +76,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       x.snooze = null;
       if (photo) x.photo = photo;
     });
+    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
     bounce.setValue(0.8);
     Animated.spring(bounce, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
     setBurst(b => b + 1);

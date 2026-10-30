@@ -19,6 +19,8 @@ const TRACKS: Track[] = [
   { id: 'fireplace', emoji: '🪵', name: 'Şömine Çıtırtısı', desc: 'Sıcak odun ateşi ve kış akşamı', soundType: 'fire' },
   { id: 'lofi', emoji: '☕', name: 'Lo-Fi Odaklanma', desc: 'Temizlik ve ders çalışmak için yumuşak ritimler', soundType: 'lofi' },
   { id: 'nature', emoji: '🌿', name: 'Orman Kuşları', desc: 'Doğanın kalbinde dinlendirici kuş sesleri', soundType: 'nature' },
+  { id: 'sea', emoji: '🌊', name: 'Deniz Dalgaları', desc: 'Kıyıya vuran yavaş dalgalar ve martılar', soundType: 'sea' },
+  { id: 'night', emoji: '🌙', name: 'Gece Cırcır Böcekleri', desc: 'Yaz gecesi, açık pencere, uzaktan rüzgâr', soundType: 'night' },
 ];
 
 type Props = {
@@ -31,6 +33,44 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   const c = useColors();
   const [activeTrack, setActiveTrack] = useState<Track | null>(null);
   const [spinAnim] = useState(() => new Animated.Value(0));
+  const [armAnim] = useState(() => new Animated.Value(0));
+  const [pulseAnim] = useState(() => new Animated.Value(0));
+  const [bars] = useState(() => [0, 1, 2, 3, 4].map(() => new Animated.Value(0.3)));
+
+  useEffect(() => {
+    Animated.timing(armAnim, {
+      toValue: activeTrack ? 1 : 0,
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    if (!activeTrack) {
+      pulseAnim.setValue(0);
+      bars.forEach(b => b.setValue(0.3));
+      return;
+    }
+    const pulse = Animated.loop(
+      Animated.timing(pulseAnim, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    );
+    const waves = bars.map((b, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(b, { toValue: 1, duration: 380 + i * 90, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(b, { toValue: 0.25, duration: 380 + i * 90, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+      ),
+    );
+    pulse.start();
+    waves.forEach(w => w.start());
+    return () => {
+      pulse.stop();
+      waves.forEach(w => w.stop());
+    };
+  }, [activeTrack, armAnim, pulseAnim, bars]);
+
+  const armRot = armAnim.interpolate({ inputRange: [0, 1], outputRange: ['-28deg', '4deg'] });
+  const glowScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] });
+  const glowOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
 
   useEffect(() => {
     if (!activeTrack) {
@@ -60,6 +100,13 @@ export function LofiPlayerModal({ open, onClose }: Props) {
     setActiveTrack(activeTrack?.id === t.id ? null : t);
   };
 
+  const step = (dir: 1 | -1) => {
+    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    sfx('tap');
+    const i = activeTrack ? TRACKS.findIndex(t => t.id === activeTrack.id) : dir === 1 ? -1 : 0;
+    setActiveTrack(TRACKS[(i + dir + TRACKS.length) % TRACKS.length]);
+  };
+
   return (
     <Sheet open={open} onClose={onClose} pose="cozy_plant">
       <View style={{ alignItems: 'center', gap: 16, paddingVertical: 10 }}>
@@ -71,9 +118,31 @@ export function LofiPlayerModal({ open, onClose }: Props) {
 
         {/* Dönen Plak Animasyonu */}
         <View style={[styles.turntable, { backgroundColor: c.surface2 }]}>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.glow, { borderColor: c.warm, opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
+          />
           <Animated.View style={[styles.vinyl, { transform: [{ rotate: spin }], backgroundColor: activeTrack ? c.ink : c.muted }]}>
+            <View style={[styles.groove, { width: 94, height: 94, borderRadius: 47 }]} />
+            <View style={[styles.groove, { width: 74, height: 74, borderRadius: 37 }]} />
             <View style={[styles.vinylLabel, { backgroundColor: c.warm }]} />
           </Animated.View>
+          <Animated.View style={[styles.armWrap, { transform: [{ rotate: armRot }] }]}>
+            <View style={[styles.arm, { backgroundColor: c.muted }]} />
+            <View style={[styles.armHead, { backgroundColor: c.ink }]} />
+          </Animated.View>
+        </View>
+
+        <View style={styles.waves}>
+          {bars.map((b, i) => (
+            <Animated.View key={i} style={[styles.bar, { backgroundColor: c.warm, transform: [{ scaleY: b }] }]} />
+          ))}
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Btn label="⏮" onPress={() => step(-1)} />
+          <Btn label={activeTrack ? '⏸' : '▶'} onPress={() => (activeTrack ? setActiveTrack(null) : step(1))} />
+          <Btn label="⏭" onPress={() => step(1)} />
         </View>
 
         <T v="bold" style={{ color: activeTrack ? c.ok : c.muted }}>
@@ -139,6 +208,31 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFF',
   },
+  glow: {
+    position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 3,
+  },
+  groove: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  armWrap: {
+    position: 'absolute',
+    top: 2,
+    right: 10,
+    width: 8,
+    height: 70,
+    alignItems: 'center',
+    transformOrigin: 'top center',
+  },
+  arm: { width: 4, height: 58, borderRadius: 2 },
+  armHead: { width: 10, height: 12, borderRadius: 3 },
+  waves: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 28 },
+  bar: { width: 5, height: 28, borderRadius: 3 },
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',

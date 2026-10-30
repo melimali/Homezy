@@ -12,37 +12,42 @@ export const brand = {
 };
 
 const light = {
-  // Ferah adaçayı zemini ve sıcak porselen yüzeyler; Navy ve Moka mavisi ana marka vurgusu.
-  bg: '#F0F4EE', surface: '#FFFEFA', surface2: '#E7EEE6', ink: brand.navy, muted: '#69766F', line: '#DFE7DD',
-  wall: '#283044', hatch: 'rgba(40,48,68,0.12)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.10)',
-  accent: '#31473F', onAccent: '#F8F7EF', accentSoft: '#DDE8E1', hi: '#6D9AAF', warm: brand.cocoa, clay: brand.clay,
+  // Pastel sıcak: krem zemin, şeftali / adaçayı / lavanta / gül vurguları (docs/tasarim-finch.md).
+  bg: '#FBF4EA', surface: '#FFFBF5', surface2: '#F6E6DA', ink: '#3B3345', muted: '#7A6F80', line: '#EEDFD0',
+  wall: '#3B3345', hatch: 'rgba(59,51,69,0.10)', shadow: 'rgba(150,100,90,0.16)', lift: 'rgba(150,100,90,0.10)',
+  accent: '#7F9C86', onAccent: '#FFFBF5', accentSoft: '#E3EEE4', hi: '#9BB5C9', warm: '#A8806C', clay: brand.clay,
   onBadge: '#FFFFFF',
-  fashion: '#F4EADF', fashionSurface: '#FBF7F1', fashionInk: '#604B43', fashionAccent: '#A66F5B', fashionLine: '#E8D9CA',
-  late: '#B8584C', lateSoft: '#F3DCD6', today: '#7E6658', todaySoft: '#EADFD8', ok: '#4E7D98', okSoft: '#D6E4EC',
+  fashion: '#F8E9E2', fashionSurface: '#FFF7F2', fashionInk: '#5A4650', fashionAccent: '#C57F8D', fashionLine: '#F0D8D4',
+  late: '#C97B72', lateSoft: '#F8E0DB', today: '#B9805F', todaySoft: '#FBE6D6', ok: '#6F9A86', okSoft: '#DDEBE0',
   /** Yumuşak, parlayan vurgu (kutlama, seçili sekme). */
-  glow: '#F6E3C8', glowInk: '#8B5E3C',
+  glow: '#FBDDBF', glowInk: '#8B5E3C',
   /** Kutlama ekranının koyu zemini, üstündeki kart ve yazı. */
-  night: brand.navy, nightCard: '#3A4258', onNight: brand.mint, cream: '#FBF6EC',
+  night: '#3B3345', nightCard: '#4C4459', onNight: '#FBF4EA', cream: '#FFF8EE',
+  /** Pastel vurgu seti. */
+  peach: '#F7C9B0', peachSoft: '#FCE8DC', sage: '#BFD8C4', sageSoft: '#E6F0E8',
+  lavender: '#D9CDEB', lavenderSoft: '#EEE8F6', rose: '#F2C6CF', roseSoft: '#FAE4E8',
   room: {
-    yatak: '#CBDCE8', mutfak: '#E9DAD2', banyo: '#D3EADD', salon: '#DDD3CD', calisma: '#BCD0DD',
-    cocuk: '#EED6CC', balkon: '#CDE4D3', antre: '#E0E3DE', camasir: '#C9D5E2',
+    yatak: '#D9CDEB', mutfak: '#F7C9B0', banyo: '#C9E2E4', salon: '#F2D9C4', calisma: '#C7D6E8',
+    cocuk: '#F2C6CF', balkon: '#BFD8C4', antre: '#EADFD0', camasir: '#D4D9EE',
   } as Record<RoomType, string>,
 };
 
 export type Colors = typeof light;
 
 const dark: Colors = {
-  bg: brand.navy, surface: '#333A4F', surface2: '#40465C', ink: brand.mint, muted: '#B3B8C4', line: '#4C5167',
-  wall: '#EBF5EE', hatch: 'rgba(235,245,238,0.14)', shadow: 'rgba(10,14,24,0.45)', lift: 'rgba(10,14,24,0.35)',
-  accent: brand.blue, onAccent: '#1C2232', accentSoft: '#3A5068', hi: brand.blue, warm: brand.clay, clay: brand.clay,
-  onBadge: '#1C2232',
-  fashion: '#51413F', fashionSurface: '#40383B', fashionInk: '#F1E4D7', fashionAccent: '#D49A82', fashionLine: '#665252',
-  late: '#E58C7E', lateSoft: '#583A3C', today: '#D2BBAF', todaySoft: '#54484A', ok: '#9CC0D6', okSoft: '#36506A',
-  glow: '#5A4A3E', glowInk: '#F6D9B0',
-  night: '#1C2232', nightCard: '#333A4F', onNight: brand.mint, cream: '#F3EDE1',
+  bg: '#2B2A35', surface: '#37364A', surface2: '#44425A', ink: '#FBF4EA', muted: '#BDB6C6', line: '#4E4B64',
+  wall: '#FBF4EA', hatch: 'rgba(251,244,234,0.14)', shadow: 'rgba(10,8,18,0.45)', lift: 'rgba(10,8,18,0.35)',
+  accent: '#BFD8C4', onAccent: '#232230', accentSoft: '#44584C', hi: '#9BB5C9', warm: '#E3B9A0', clay: brand.clay,
+  onBadge: '#232230',
+  fashion: '#4A3C43', fashionSurface: '#40353D', fashionInk: '#F6E4DC', fashionAccent: '#E3A3B0', fashionLine: '#5E4A53',
+  late: '#E8A199', lateSoft: '#5A3B40', today: '#E3B9A0', todaySoft: '#54433F', ok: '#A9CBB6', okSoft: '#3A5048',
+  glow: '#5E4A3E', glowInk: '#F6D9B0',
+  night: '#211F2B', nightCard: '#37364A', onNight: '#FBF4EA', cream: '#F3EAE0',
+  peach: '#B98672', peachSoft: '#4F3E3E', sage: '#6E8F78', sageSoft: '#34463D',
+  lavender: '#8F82B5', lavenderSoft: '#403B58', rose: '#B5798A', roseSoft: '#4E3A46',
   room: {
-    yatak: '#3F5672', mutfak: '#5D4F4B', banyo: '#355349', salon: '#4F4655', calisma: '#365169',
-    cocuk: '#634E49', balkon: '#38533F', antre: '#434A5E', camasir: '#3C4C66',
+    yatak: '#5A5078', mutfak: '#7A5A4E', banyo: '#3E5C60', salon: '#6B5646', calisma: '#40536E',
+    cocuk: '#7A4F5E', balkon: '#46624C', antre: '#4E4A5C', camasir: '#464E72',
   },
 };
 
@@ -63,7 +68,7 @@ export const fonts = {
   bodyBlack: 'Nunito_800ExtraBold',
 };
 
-export const radius = { card: 26, tile: 22, plan: 14, pill: 999 };
+export const radius = { card: 28, tile: 24, plan: 14, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
 export const space = { screen: 22, section: 24, card: 20 };

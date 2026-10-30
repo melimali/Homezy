@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PlantArt } from '@/components/GardenArt';
+import { Glass } from '@/components/Glass';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { Burst, Float } from '@/components/motion';
@@ -19,7 +20,7 @@ import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { brand, fonts, radius, useColors } from '@/theme';
 
 type Tab = 'cicek' | 'gubre' | 'sus' | 'kisilik' | 'album';
 
@@ -83,17 +84,16 @@ export default function Bahce() {
         <T v="lead">Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
       </View>
 
-      <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>
+      <Glass style={styles.wallet}>
         <Text style={{ fontSize: 26 }}>⭐</Text>
-        <Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text>
-        <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
-      </View>
+        <Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text>
+        <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
+      </Glass>
 
-      <Card style={[styles.statsCard, { backgroundColor: c.surface }]}>
+      <Glass style={styles.statsCard}>
         <View style={styles.statsRow}>
           <View style={{ flex: 1 }}>
             <T v="tiny" style={{ color: c.muted }}>BAHÇE SEVİYESİ</T>
-
             <T v="bold" style={{ color: c.ink, fontSize: 16 }}>{rank.title}</T>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
@@ -102,14 +102,19 @@ export default function Bahce() {
           </View>
         </View>
         <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2, marginTop: 4 }]}>
-          <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: c.today }]} />
+          <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
         </View>
-      </Card>
+      </Glass>
 
       <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
+        <View pointerEvents="none" style={[styles.blob, { top: -30, right: -20, backgroundColor: brand.blue }]} />
+        <View pointerEvents="none" style={[styles.blob, { bottom: 40, left: -40, backgroundColor: brand.clay }]} />
         {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
         <View style={styles.bedTop}>
-          <MokaMascot pose={pose} size="sm" message={message} />
+          <MokaMascot pose={pose} size="md" showBubble={false} />
+          <Glass style={styles.bubble} intensity={30}>
+            <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
+          </Glass>
         </View>
         <View style={styles.plots}>
           {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
@@ -184,7 +189,6 @@ export default function Bahce() {
             </View>
             <Card style={{ width: '100%', gap: 8, backgroundColor: c.surface2 }}>
               <T v="bold">Moka&apos;nın Hikayesi 📖</T>
-
               <T v="small">{detailFlower.story ?? `${detailFlower.name} bahçene neşe ve renk katan harika bir çiçek!`}</T>
             </Card>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 }}>
@@ -212,7 +216,7 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${flower.name}, ${STAGE_NAMES[stage]}, ${g}/${flower.grow} büyüme`}
-      style={[styles.plot, on && { backgroundColor: c.surface }]}
+      style={[styles.plot, on && { backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }]}
     >
       <Float amp={stage >= 5 ? 2 : 0.01} dur={2400}>
         <PlantArt flower={flower} stage={stage} size={54} />
@@ -251,6 +255,7 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
   };
 
   const giveLove = () => {
+    if (lovedToday || fertLeft <= 0) return;
     const today = dayKey(now);
     update(D => {
       const G = D.play.garden;
@@ -270,7 +275,7 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
   };
 
   return (
-    <Card style={{ gap: 10 }}>
+    <Glass style={{ gap: 10 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <T v="h3">{f.emoji} {f.name}</T>
         <Btn small kind="soft" label="Detay ℹ️" onPress={() => onOpenDetail(f)} />
@@ -286,12 +291,12 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
             {`Açmasına ${left} büyüme kaldı: iş yaparak en az ${Math.ceil(Math.max(0, left - fertLeft) / GROW_PER_DAY)} gün.`}
             {fertLeft > 0 ? ` Gübreyle ${fertLeft} büyüme daha hızlanabilir.` : ' Gübre sınırı doldu, gerisi işlerle.'}
           </T>
-          {!lovedToday && (
+          {!lovedToday && fertLeft > 0 && (
             <Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={giveLove} block />
           )}
         </>
       )}
-    </Card>
+    </Glass>
   );
 }
 
@@ -483,14 +488,17 @@ function Album({ onSelect }: { onSelect: (f: Flower) => void }) {
 }
 
 const styles = StyleSheet.create({
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: radius.card, justifyContent: 'center' },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, justifyContent: 'center' },
   walletN: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 32 },
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  statsCard: { borderRadius: radius.card, padding: 12, gap: 6 },
+  statsCard: { padding: 20, gap: 8 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bed: { borderRadius: radius.card, padding: 14, gap: 10, overflow: 'hidden' },
+  bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
+  blob: { position: 'absolute', width: 150, height: 150, borderRadius: 75, opacity: 0.35 },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
-  bedTop: { alignItems: 'flex-start' },
+  bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
+  bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
   plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
   plot: { width: '31.5%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, textAlign: 'center' },

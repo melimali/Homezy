@@ -41,6 +41,7 @@ export const defaultSettings = (): Settings => ({
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
   actions: true,
+  language: 'tr',
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */
@@ -142,7 +143,11 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
-export const progressOf = (P: Play, now = Date.now()) => houseProgress(P.days, now, P.frozen);
+export const progressOf = (P: Play, now = Date.now()) => {
+  const res = houseProgress(P.days, now, P.frozen);
+  // GEÇİCİ TEST KODU: Test için evin seviyesini 50 yapar
+  return { ...res, level: 50 };
+};
 
 /* ---------- seri dondurma ---------- */
 

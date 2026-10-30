@@ -1,11 +1,12 @@
 import { useRouter, type Href } from 'expo-router';
-import { Animated, Image, Modal, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 
 import { House3D } from '@/components/House3D';
+import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
@@ -37,6 +38,7 @@ export default function Home() {
   const router = useRouter();
   const { state: S } = useStore();
   const [houseOpen, setHouseOpen] = useState(false);
+  const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
   const { status, user } = useAuth();
@@ -192,7 +194,7 @@ export default function Home() {
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
           </Pressable>
         )}
-        <House3D state={S} onPressHouse={() => setHouseOpen(true)} autoRotate zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        <House3D state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
@@ -218,6 +220,15 @@ export default function Home() {
       )}
 
       <GardenStrip now={now} />
+      <Squish onPress={() => setLofiOpen(true)} style={[styles.week, { backgroundColor: c.accentSoft }]}>
+        <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🎵</Text></Float>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın Plak Çaları</Text>
+          <Text style={[styles.statL, { color: c.muted }]}>Yağmur, şömine ve lo-fi ASMR sesleri 🎧</Text>
+        </View>
+        <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+      </Squish>
+      <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
       <Card bare index={3}>
         <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
@@ -261,22 +272,7 @@ function HouseViewer({
   const insets = useSafeAreaInsets();
   const [zoom] = useState(() => new Animated.Value(0.72));
   const [opacity] = useState(() => new Animated.Value(0));
-  const [turn] = useState(() => new Animated.Value(0));
-  const [angle, setAngle] = useState(0);
   const [closing, setClosing] = useState(false);
-
-  const [pan] = useState(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => turn.stopAnimation(value => { turn.setOffset(value); turn.setValue(0); }),
-    onPanResponderMove: (_, gesture) => turn.setValue(gesture.dx * 0.012),
-    onPanResponderRelease: () => turn.flattenOffset(),
-  }));
-
-  useEffect(() => {
-    const listener = turn.addListener(({ value }) => setAngle(value));
-    return () => turn.removeListener(listener);
-  }, [turn]);
 
   useEffect(() => {
     Animated.parallel([
@@ -298,9 +294,9 @@ function HouseViewer({
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={close}>
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
-          <Animated.View style={styles.viewerModel} {...pan.panHandlers}>
-            <House3D state={state} now={now} build={build} theme={theme} rotation={angle} zoom={1.08} labels={false} />
-          </Animated.View>
+          <View style={styles.viewerModel}>
+            <House3D state={state} now={now} build={build} theme={theme} zoom={1.08} labels={false} />
+          </View>
         </Animated.View>
         <Pressable
           accessibilityRole="button"

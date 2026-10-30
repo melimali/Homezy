@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { Animated, Pressable, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { Animated, Easing, Pressable, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Ellipse, G, Line, Polygon, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -7,6 +8,7 @@ import { type Mood } from '@/domain/garden';
 import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
+import { sfx } from '@/lib/sfx';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
 import { fonts, useColors, useIsDark, type Colors } from '@/theme';
 
@@ -61,12 +63,11 @@ function mix(a: string, b: string, t: number) {
 
 type Face = { key: string; points: string; fill: string; stroke?: string; strokeWidth?: number; strokeOpacity?: number; onPress?: () => void };
 
-/** Kutunun görünen üç yüzü: üst, sol ön (+satır), sağ ön (+sütun). */
+/** Kutunun görünen 3 yüzü: Back-Face Culling ile sadece kameraya bakan 2 yan duvar ve üst yüz çizilir. */
 function box(key: string, r0: number, c0: number, dr: number, dc: number, z0: number, h: number, color: string): Face[] {
   const r1 = r0 + dr, c1 = c0 + dc, z1 = z0 + h;
   const sin = Math.sin(projectionAngle), cos = Math.cos(projectionAngle);
   const faces: Face[] = [];
-  // Camera-facing sides change as the house turns around its vertical axis.
   if (cos - sin > 0)
     faces.push({ key: key + 'l', fill: shade(color, -0.1), points: pts([P(r1, c0, z0), P(r1, c1, z0), P(r1, c1, z1), P(r1, c0, z1)]) });
   else
@@ -517,28 +518,37 @@ function scatter(n: number, seed: number) {
 /** Temanın gökyüzü (arkada) ve süsleri (önde): yıldızlar ve ay, kar taneleri ya da düşen yapraklar. */
 function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }) {
   const sky = SKY[theme];
-  if (!sky) return { back: null, front: null };
   const { x, y, w, h } = box;
-  const back: ReactElement[] = [<Rect key="sky" x={x} y={y} width={w} height={h} rx={22} fill={sky[dark ? 1 : 0]} />];
+  const back: ReactElement[] = [];
+  if (sky) {
+    back.push(<Rect key="sky" x={x} y={y} width={w} height={h} rx={22} fill={sky[dark ? 1 : 0]} />);
+  }
   const front: ReactElement[] = [];
-  if (theme === 'gece') {
-    scatter(26, 7).forEach(([u, v, k], i) =>
-      back.push(<Circle key={'st' + i} cx={x + u * w} cy={y + v * h * 0.45} r={0.8 + k * 1.2} fill="#FFF6D8" opacity={0.5 + k * 0.5} />),
+  if (theme === 'gece' || dark) {
+    scatter(28, 7).forEach(([u, v, k], i) =>
+      back.push(<Circle key={'st' + i} cx={x + u * w} cy={y + v * h * 0.5} r={0.8 + k * 1.4} fill="#FFF6D8" opacity={0.4 + k * 0.6} />),
     );
     const mx = x + w * 0.84, my = y + h * 0.13, mr = Math.min(w, h) * 0.06;
     back.push(
       <Circle key="moon" cx={mx} cy={my} r={mr} fill="#FFF1B8" />,
-      <Circle key="moonCut" cx={mx + mr * 0.45} cy={my - mr * 0.3} r={mr * 0.85} fill={sky[dark ? 1 : 0]} />,
+      <Circle key="moonCut" cx={mx + mr * 0.45} cy={my - mr * 0.3} r={mr * 0.85} fill={sky ? sky[dark ? 1 : 0] : '#2B3556'} />,
     );
   } else if (theme === 'kis') {
-    scatter(40, 3).forEach(([u, v, k], i) =>
-      front.push(<Circle key={'sn' + i} cx={x + u * w} cy={y + v * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.65 + k * 0.35} />),
+    scatter(42, 3).forEach(([u, v, k], i) =>
+      front.push(<Circle key={'sn' + i} cx={x + u * w} cy={y + v * h} r={1 + k * 2} fill="#FFFFFF" opacity={0.6 + k * 0.4} />),
     );
   } else if (theme === 'sonbahar') {
     const leaf = ['#D9813F', '#C2543A', '#E3A64B', '#A86B3C'];
-    scatter(18, 11).forEach(([u, v, k], i) => {
+    scatter(22, 11).forEach(([u, v, k], i) => {
       const cx = x + u * w, cy = y + v * h;
-      front.push(<Ellipse key={'lf' + i} cx={cx} cy={cy} rx={4.6} ry={2.2} fill={leaf[i % 4]} opacity={0.9} transform={`rotate(${Math.round(k * 180)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
+      front.push(<Ellipse key={'lf' + i} cx={cx} cy={cy} rx={4.8} ry={2.3} fill={leaf[i % 4]} opacity={0.88} transform={`rotate(${Math.round(k * 180)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
+    });
+  } else {
+    // Gündüz / Bahar tatlı süzülen pembe & altın çiçek yaprakları
+    const petalColors = ['#F4A6C0', '#FFE082', '#E58C7E', '#FFF0F5'];
+    scatter(14, 5).forEach(([u, v, k], i) => {
+      const cx = x + u * w, cy = y + v * h * 0.8;
+      front.push(<Ellipse key={'pet' + i} cx={cx} cy={cy} rx={3.5} ry={1.8} fill={petalColors[i % 4]} opacity={0.75} transform={`rotate(${Math.round(k * 120)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
     });
   }
   return { back, front };
@@ -560,16 +570,12 @@ type Props = {
   labels?: boolean;
   /** Evin kendisine dokunma eylemi. */
   onPressHouse?: () => void;
-  /** Ana ekranda evi yavaşça kendi ekseninde döndürür. */
-  autoRotate?: boolean;
-  /** Ev ve bahçenin geometrik dönüş açısı (radyan). */
-  rotation?: number;
   /** Modeli kadraj içinde sabit oranda büyütür. */
   zoom?: number;
   mood?: Mood;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false, rotation, zoom = 1, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
+export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -581,30 +587,35 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
   const [pop] = useState(() => new Animated.Value(0));
   const [sproutScale] = useState(() => new Animated.Value(1));
   const [sproutOpacity] = useState(() => new Animated.Value(1));
+  const [floatAnim] = useState(() => new Animated.Value(0));
   const previousLevel = useRef(L);
-  const [turnAngle, setTurnAngle] = useState(0);
-  const [floatY, setFloatY] = useState(0);
+
   useEffect(() => {
     Animated.spring(pop, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }).start();
   }, [pop]);
+
+  // Native Driver ile 60 FPS pürüzsüz, 0 CPU yüklü dikey süzülme (float) animasyonu
   useEffect(() => {
-    if (!autoRotate) return;
-    let frame = 0;
-    let started = 0;
-    let last = 0;
-    const tick = (time: number) => {
-      if (!started) started = time;
-      if (time - last >= 50) {
-        const elapsed = time - started;
-        setTurnAngle((elapsed % 90000) / 90000 * Math.PI * 2);
-        setFloatY(Math.sin(elapsed / 1800) * 2.5);
-        last = time;
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [autoRotate]);
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    floatLoop.start();
+    return () => floatLoop.stop();
+  }, [floatAnim]);
+
   useEffect(() => {
     const grew = previousLevel.current !== L;
     previousLevel.current = L;
@@ -627,7 +638,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     rMin = Math.min(rMin, r); cMin = Math.min(cMin, c);
     rMax = Math.max(rMax, r + 1); cMax = Math.max(cMax, c + 1);
   });
-  const angle = rotation ?? turnAngle;
+  const angle = 0;
   const centerR = (rMin + rMax) / 2, centerC = (cMin + cMax) / 2;
   setProjection(angle, centerR, centerC);
   const at = (r: number, col: number) => (r >= 0 && r < rows && col >= 0 && col < cols ? cells[r * cols + col] : null);
@@ -636,8 +647,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
   const cap = c.wall;
   const slab = dark ? '#5A4F50' : '#BFA89E';
 
-  // Her odanın etiketi odanın ortasına en yakın blokta durur. Eşya, etiketin altında
-  // kalmasın diye mümkünse onun hemen arkasındaki bir blokta.
+  // Memoize room clean percentages & anchors
+  const clean = useMemo(() => {
+    const res: Record<string, number> = {};
+    for (const id of S.order) res[id] = roomClean(S, id, now);
+    return res;
+  }, [S, now]);
+
   const anchors: Record<string, number> = {};
   const props: Record<string, number> = {};
   const depth = (i: number) => {
@@ -660,9 +676,6 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     props[id] = behind.length ? nearest(behind) : rest.length ? nearest(rest) : a;
   }
 
-  // Canlı ev haritası: her odanın temizlik yüzdesi. Kirlendikçe zemin solar ve tozlanır, iş yapılınca parlar.
-  const clean: Record<string, number> = {};
-  for (const id of S.order) clean[id] = roomClean(S, id, now);
   const DUSTY = dark ? '#5E5A57' : '#BDB3A6';
 
   // Mağazadan alınan eşyalar: odanın etiket ve eşya dışındaki bloklarına sırayla.
@@ -706,7 +719,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
   const capColor = painted ? cap : shade(BRICK, -0.15);
   const wallH = (h: number) => (L === 3 ? Math.round(h * 0.55) : h);
   const wall = (key: string, r0: number, c0: number, dr: number, dc: number, h: number) =>
-    box(key, r0, c0, dr, dc, 0, h, wallColor).forEach(f => add({ ...f, fill: f.key.endsWith('t') ? capColor : f.fill }));
+    box(key, r0, c0, dr, dc, 0, h, wallColor).forEach(f => {
+      if (f.key.endsWith('t')) {
+        add({ ...f, fill: capColor });
+      } else {
+        add(f);
+      }
+    });
   /** İskelet: köşede bir direk ve duvar boyunca üst kiriş. */
   const frame = (key: string, r0: number, c0: number, dr: number, dc: number, h: number) => {
     box(key + 'p', r0, c0, T * 0.7, T * 0.7, 0, h, BEAM).forEach(add);
@@ -715,13 +734,26 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
   const crack = (key: string, ps: Pt[]) =>
     els.push(<Polyline key={key} points={pts(ps)} fill="none" stroke="#5B4A40" strokeWidth={1.1} strokeLinejoin="round" strokeLinecap="round" />);
 
+  const handleOpenRoom = (id: string) => {
+    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    sfx('tap');
+    onOpenRoom?.(id);
+  };
+  const handlePressHouse = () => {
+    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    sfx('tap');
+    onPressHouse?.();
+  };
+
+  const isNight = dark || theme === 'gece';
+
   for (const i of order) {
     const id = cells[i]!;
     const room = S.rooms[id];
     if (!room) continue;
     const r = Math.floor(i / cols), col = i % cols;
     for (const pt of [P(r, col, WALL_H), P(r + 1, col + 1, -SLAB), P(r + 1, col, -SLAB), P(r, col + 1, -SLAB), P(r, col, WALL_H + 8)]) grow(pt);
-    const open = onOpenRoom ? () => onOpenRoom(id) : onPressHouse;
+    const open = onOpenRoom ? () => handleOpenRoom(id) : handlePressHouse;
     const k = 'c' + i;
     const tile = pts([P(r, col), P(r, col + 1), P(r + 1, col + 1), P(r + 1, col)]);
 
@@ -764,7 +796,6 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
       );
     }
 
-
     // Bakımsızlık: 1. gün toz.
     if (idle >= 1) {
       els.push(<Polygon key={k + 'dz'} points={tile} fill="#8C7B6B" fillOpacity={0.22} />);
@@ -776,13 +807,19 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
 
     // Arka duvarlar (kuzey ve batı kenarı). Dışarıya bakan yüksek, iki oda arasındaki alçak.
     const n = at(r - 1, col), w = at(r, col - 1);
+    const winFill = isNight && p >= 70 ? '#FFF2B2' : c.hi;
     if (n !== id && L >= 2) {
       const h = wallH(n ? INNER_H : WALL_H);
       if (L === 2) frame(k + 'n', r, col, T * 0.7, 1, h);
       else {
         wall(k + 'n', r, col, T, 1, h);
-        if (!n && L >= 5 && (r + col) % 2 === 0)
-          add({ key: k + 'nw', fill: c.hi, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
+        if (!n && L >= 5 && (r + col) % 2 === 0) {
+          add({ key: k + 'nw', fill: winFill, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
+          if (isNight && p >= 70) {
+            const [gx, gy] = P(r + T + 0.1, col + 0.5, 19);
+            els.push(<Circle key={k + 'nw_glow'} cx={gx} cy={gy} r={12} fill="#FFE082" fillOpacity={0.28} />);
+          }
+        }
         if (idle >= 2 && (r + col) % 2 === 1)
           crack(k + 'nc', [P(r + T, col + 0.5, h - 2), P(r + T, col + 0.6, h - 7), P(r + T, col + 0.47, h - 11), P(r + T, col + 0.58, h - 16)]);
         if (!n && L >= 26)
@@ -798,8 +835,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
       if (L === 2) frame(k + 'w', r, col, 1, T * 0.7, h);
       else {
         wall(k + 'w', r0, col, r + 1 - r0, T, h);
-        if (!w && L >= 5 && (r + col) % 2 === 1)
-          add({ key: k + 'ww', fill: c.hi, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
+        if (!w && L >= 5 && (r + col) % 2 === 1) {
+          add({ key: k + 'ww', fill: winFill, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
+          if (isNight && p >= 70) {
+            const [gx, gy] = P(r + 0.5, col + T + 0.1, 19);
+            els.push(<Circle key={k + 'ww_glow'} cx={gx} cy={gy} r={12} fill="#FFE082" fillOpacity={0.28} />);
+          }
+        }
         if (idle >= 2 && (r + col) % 2 === 0)
           crack(k + 'wc', [P(r + 0.5, col + T, h - 3), P(r + 0.4, col + T, h - 8), P(r + 0.55, col + T, h - 12), P(r + 0.45, col + T, h - 17)]);
       }
@@ -821,6 +863,30 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     } else if (L === 2) {
       if (!at(r + 1, col)) frame(k + 's', r + 1 - T * 0.7, col, T * 0.7, 1, WALL_H);
       if (!at(r, col + 1)) frame(k + 'x', r, col + 1 - T * 0.7, 1, T * 0.7, WALL_H);
+    }
+  }
+
+  // Minik 3D Moka maskotu evin salonunda veya çalışma odasında durur.
+  if (L >= 5) {
+    const mokaRoomId = S.order.find(id => S.rooms[id]?.type === 'salon') ?? S.order.find(id => S.rooms[id]?.type === 'calisma') ?? S.order[0];
+    if (mokaRoomId && props[mokaRoomId] !== undefined) {
+      const mi = props[mokaRoomId];
+      const mr = Math.floor(mi / cols), mcol = mi % cols;
+      const [mx, my] = P(mr + 0.5, mcol + 0.5, 0);
+      els.push(
+        <G key="mini_moka_in_house" onPress={handlePressHouse}>
+          <Ellipse cx={mx} cy={my + 1} rx={7} ry={3} fill="rgba(40,48,68,0.2)" />
+          <Circle cx={mx} cy={my - 7} r={6.5} fill="#D99B6A" />
+          <Circle cx={mx} cy={my - 7} r={4.5} fill="#FFF3E0" />
+          <Circle cx={mx} cy={my - 16} r={5.5} fill="#D99B6A" />
+          <Circle cx={mx - 4.5} cy={my - 20} r={2.2} fill="#A6683B" />
+          <Circle cx={mx + 4.5} cy={my - 20} r={2.2} fill="#A6683B" />
+          <Circle cx={mx - 1.8} cy={my - 16.5} r={0.8} fill="#283044" />
+          <Circle cx={mx + 1.8} cy={my - 16.5} r={0.8} fill="#283044" />
+          <Ellipse cx={mx} cy={my - 14.5} rx={2} ry={1.2} fill="#FFF3E0" />
+          <Circle cx={mx} cy={my - 15} r={0.7} fill="#283044" />
+        </G>,
+      );
     }
   }
 
@@ -891,7 +957,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     const my = cardY + TAG_H / 2 + 5;
 
     return (
-      <G key={'svgtag-' + id} onPress={() => onOpenRoom?.(id)}>
+      <G key={'svgtag-' + id} onPress={() => handleOpenRoom(id)}>
         {/* Oda pini ve ok çizgisi: evdeki odadan etikete. */}
         <Polyline points={pts([[fx, fy], [ax, fy], [ax, ay]])} fill="none" stroke={c.ink} strokeWidth={2} strokeOpacity={0.8} strokeLinejoin="round" />
         <Circle cx={fx} cy={fy} r={4.5} fill={c.ink} />
@@ -916,6 +982,11 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     );
   }) : null;
 
+  const floatY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3.5],
+  });
+
   const model = (
     <Animated.View
       style={{
@@ -923,14 +994,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
         aspectRatio: vbW / vbH,
         opacity: pop,
         transform: [
-          ...(autoRotate ? [{ translateY: floatY }] : []),
+          { translateY: floatY },
           { scale: zoom },
           { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
         ],
       }}
     >
-      <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`} onPress={onPressHouse}>
-        {onPressHouse && <Rect x={minX} y={minY} width={vbW} height={vbH} fill="transparent" onPress={onPressHouse} />}
+      <Svg width="100%" height="100%" viewBox={`${minX} ${minY} ${vbW} ${vbH}`} onPress={handlePressHouse}>
+        {onPressHouse && <Rect x={minX} y={minY} width={vbW} height={vbH} fill="transparent" onPress={handlePressHouse} />}
         {scene.back}
         {garden.ground ?? shadow}
         {garden.back}
@@ -949,7 +1020,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, autoRotate = false
     </Animated.View>
   );
   return onPressHouse ? (
-    <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={onPressHouse} style={{ width: '100%' }}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={handlePressHouse} style={{ width: '100%' }}>
       {model}
     </Pressable>
   ) : model;

@@ -81,35 +81,35 @@ function RootStack() {
   const inside = introSeen && (status === 'guest' || status === 'account');
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Protected guard={!introSeen}>
         <Stack.Screen name="tanitim" options={{ animation: 'fade' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="oda/[id]" />
-        <Stack.Screen name="is" />
-        <Stack.Screen name="temizlik" options={{ animation: 'fade_from_bottom' }} />
-        <Stack.Screen name="plan" />
-        <Stack.Screen name="bildirimler" />
-        <Stack.Screen name="magaza" />
-        <Stack.Screen name="bahce" />
-        <Stack.Screen name="spor" />
-        <Stack.Screen name="gunluk" />
-        <Stack.Screen name="evler" />
-        <Stack.Screen name="aile" />
-        <Stack.Screen name="bakim" />
-        <Stack.Screen name="evim" />
-        <Stack.Screen name="hafta" />
+        <Stack.Screen name="oda/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="magaza" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bahce" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="evler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bakim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="evim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="hafta" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
-        <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="premium" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>
-        <Stack.Screen name="kurulum" />
+        <Stack.Screen name="kurulum" options={{ animation: 'fade' }} />
       </Stack.Protected>
       {/* Misafir de buradan hesap açabilsin diye hesapla girmemiş herkese açık. */}
       <Stack.Protected guard={introSeen && status !== 'account'}>
-        <Stack.Screen name="giris" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="giris" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>
   );

@@ -28,6 +28,7 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
+      ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
       "expo-font",
       [
         "expo-splash-screen",

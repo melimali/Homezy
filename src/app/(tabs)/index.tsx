@@ -295,7 +295,7 @@ function HouseViewer({
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
           <View style={styles.viewerModel}>
-            <House3D state={state} now={now} build={build} theme={theme} zoom={1.08} labels={false} />
+            <House3D state={state} now={now} build={build} theme={theme} zoom={1.2} bleed labels={false} />
           </View>
         </Animated.View>
         <Pressable

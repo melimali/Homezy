@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -9,6 +9,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
+import { useSky, type Sky } from '@/lib/weather';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
 import { fonts, useColors, useIsDark, type Colors } from '@/theme';
 
@@ -559,23 +560,12 @@ function scatter(n: number, seed: number) {
 }
 
 /** Temanın gökyüzü (arkada) ve süsleri (önde): yıldızlar ve ay, kar taneleri ya da düşen yapraklar. */
-function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }, animatedSnow = false) {
-  const sky = SKY[theme];
+function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }, animatedSnow = false, petals = true) {
   const { x, y, w, h } = box;
   const back: ReactElement[] = [];
-  if (sky) {
-    back.push(<Rect key="sky" x={x} y={y} width={w} height={h} rx={22} fill={sky[dark ? 1 : 0]} />);
-  }
   const front: ReactElement[] = [];
   if (theme === 'gece' || dark) {
-    scatter(28, 7).forEach(([u, v, k], i) =>
-      back.push(<Circle key={'st' + i} cx={x + u * w} cy={y + v * h * 0.5} r={0.8 + k * 1.4} fill="#FFF6D8" opacity={0.4 + k * 0.6} />),
-    );
-    const mx = x + w * 0.84, my = y + h * 0.13, mr = Math.min(w, h) * 0.06;
-    back.push(
-      <Circle key="moon" cx={mx} cy={my} r={mr} fill="#FFF1B8" />,
-      <Circle key="moonCut" cx={mx + mr * 0.45} cy={my - mr * 0.3} r={mr * 0.85} fill={sky ? sky[dark ? 1 : 0] : '#2B3556'} />,
-    );
+    // Yıldız ve ay: SkyBackdrop.
   } else if (theme === 'kis') {
     if (!animatedSnow) scatter(42, 3).forEach(([u, v, k], i) =>
       front.push(<Circle key={'sn' + i} cx={x + u * w} cy={y + v * h} r={1 + k * 2} fill="#FFFFFF" opacity={0.6 + k * 0.4} />),
@@ -586,7 +576,7 @@ function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: numbe
       const cx = x + u * w, cy = y + v * h;
       front.push(<Ellipse key={'lf' + i} cx={cx} cy={cy} rx={4.8} ry={2.3} fill={leaf[i % 4]} opacity={0.88} transform={`rotate(${Math.round(k * 180)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
     });
-  } else {
+  } else if (petals) {
     // Gündüz / Bahar tatlı süzülen pembe & altın çiçek yaprakları
     const petalColors = ['#F4A6C0', '#FFE082', '#E58C7E', '#FFF0F5'];
     scatter(14, 5).forEach(([u, v, k], i) => {
@@ -659,13 +649,83 @@ function Burst({ vb, cx, cy, spread }: { vb: string; cx: number; cy: number; spr
   );
 }
 
+/** Gökyüzü zemini: hava durumuna göre renk, gece yıldız (parlar) ve ay, gündüz güneş. `bleed` ev kutusunun dışındaki boşluğu da boyar. */
+function SkyBackdrop({ colors, w, h, bleed, night, sun, twA, twB, breath }: {
+  colors: [string, string]; w: number; h: number; bleed: boolean; night: boolean; sun: boolean;
+  twA: Animated.AnimatedInterpolation<number>; twB: Animated.AnimatedInterpolation<number>; breath: Animated.AnimatedInterpolation<number>;
+}) {
+  const pad = bleed ? 500 : 0;
+  const vb = `${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}`;
+  const pos = { position: 'absolute' as const, left: -pad, top: -pad };
+  const stars = useMemo(() => scatter(bleed ? 90 : 36, 7), [bleed]);
+  const starEls = (parity: number) =>
+    stars.filter((_, i) => i % 2 === parity).map(([u, v, k], i) => (
+      <Circle key={'bs' + parity + i} cx={-pad + u * (w + 2 * pad)} cy={-pad + v * (h * 0.6 + pad)} r={0.8 + k * 1.4} fill="#FFF6D8" opacity={0.5 + k * 0.5} />
+    ));
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, !bleed && { borderRadius: 22, overflow: 'hidden' }]}>
+      <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>
+        <Defs>
+          <LinearGradient id="h3dSky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={h}>
+            <Stop offset="0" stopColor={colors[0]} />
+            <Stop offset="1" stopColor={colors[1]} />
+          </LinearGradient>
+        </Defs>
+        <Rect x={-pad} y={-pad} width={w + 2 * pad} height={h + 2 * pad} fill="url(#h3dSky)" />
+        {night && (
+          <>
+            <Circle cx={w * 0.84} cy={h * 0.13} r={Math.min(w, h) * 0.06} fill="#FFF1B8" />
+            <Circle cx={w * 0.84 + Math.min(w, h) * 0.027} cy={h * 0.13 - Math.min(w, h) * 0.018} r={Math.min(w, h) * 0.051} fill={colors[0]} />
+          </>
+        )}
+      </Svg>
+      {night && (
+        <>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: twA }]}>
+            <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>{starEls(0)}</Svg>
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: twB }]}>
+            <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>{starEls(1)}</Svg>
+          </Animated.View>
+        </>
+      )}
+      {sun && (
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: breath }]}>
+          <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>
+            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.16} fill="#FFE9A6" opacity={0.3} />
+            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.09} fill="#FFE08A" opacity={0.6} />
+            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.055} fill="#FFD25A" />
+          </Svg>
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+/** Gökyüzü renkleri [üst, alt]. Hava yoksa temanın kendi gökyüzü; gündüz varsayılanı gökyüzü çizmez. */
+function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null): [string, string] | null {
+  if (wx) {
+    if (dark || !wx.day) return wx.kind === 'clear' ? ['#141B30', '#2B3556'] : ['#1B2336', '#3A445E'];
+    switch (wx.kind) {
+      case 'clear': return ['#8CC8F0', '#E4F3FB'];
+      case 'cloudy': return ['#AEBCCB', '#DCE4EB'];
+      case 'rain': case 'storm': return ['#7F8FA3', '#B4BFCC'];
+      case 'fog': return ['#C4CCD3', '#E6EAED'];
+      case 'snow': return ['#C7D4E1', '#EEF3F7'];
+    }
+  }
+  const t = SKY[theme];
+  return t ? [t[dark ? 1 : 0], t[dark ? 1 : 0]] : null;
+}
+
 /** Hava: gündüz bulut ve kuş, yağmur ya da kar; ev bitince bacadan duman. */
-function ambient(o: { theme: HouseTheme; dark: boolean; day: number; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
-  const { theme, dark, day, L, box: { x, y, w, h }, chimney } = o;
-  const night = dark || theme === 'gece';
-  const rain = !night && (theme === 'sonbahar' || (theme === 'gunduz' && day % 7 === 3));
-  const snow = theme === 'kis';
-  const cloudFill = rain ? '#B8C2CE' : '#FFFFFF';
+function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
+  const { theme, dark, wx, L, box: { x, y, w, h }, chimney } = o;
+  const night = dark || theme === 'gece' || (!!wx && !wx.day);
+  const rain = wx ? wx.kind === 'rain' || wx.kind === 'storm' : !night && theme === 'sonbahar';
+  const snow = theme === 'kis' || wx?.kind === 'snow';
+  const overcast = !!wx && wx.kind !== 'clear';
+  const cloudFill = night ? '#59637A' : rain || wx?.kind === 'fog' ? '#B8C2CE' : '#FFFFFF';
   const cloud = (cx: number, cy: number, s: number, i: number) => (
     <G key={'cl' + i} opacity={rain ? 0.7 : 0.9}>
       <Ellipse cx={cx} cy={cy} rx={22 * s} ry={7 * s} fill={cloudFill} />
@@ -681,9 +741,9 @@ function ambient(o: { theme: HouseTheme; dark: boolean; day: number; L: number; 
   const flakes = (copy: number) =>
     scatter(40, 3).map(([u, v, k], i) => <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />);
   return {
-    clouds: night ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1)],
-    clouds2: night ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2)],
-    birds: !night && !rain && !snow && L >= 7
+    clouds: night && !overcast ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1), ...(overcast ? [cloud(x + w * 0.45, y + h * 0.22, 1.1, 3)] : [])],
+    clouds2: night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])],
+    birds: !night && !rain && !snow && !overcast && L >= 7
       ? [0, 1].map(i => {
           const bx = x + w * (0.35 + i * 0.1), by = y + h * (0.14 + i * 0.04);
           return <Polyline key={'bd' + i} points={pts([[bx - 4, by - 2], [bx, by + 1], [bx + 4, by - 2]])} fill="none" stroke={dark ? '#C9D3DE' : '#4A4F63'} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />;
@@ -737,16 +797,20 @@ type Props = {
   onPressHouse?: () => void;
   /** Modeli kadraj içinde sabit oranda büyütür. */
   zoom?: number;
+  /** Gökyüzü zemini ev kutusunun dışına da taşar (tam ekran görünüm). */
+  bleed?: boolean;
   mood?: Mood;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
+export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli' }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
   const tick = useNow();
   const now = nowProp ?? tick;
   const dark = useIsDark();
+  const sky = useSky(theme === 'gunduz');
+  const wx = theme === 'gunduz' ? sky : null;
 
   // Açılışta ev hafifçe zıplayarak yerine otursun.
   const [pop] = useState(() => new Animated.Value(0));
@@ -915,7 +979,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
     onPressHouse?.();
   };
 
-  const isNight = dark || theme === 'gece';
+  const isNight = dark || theme === 'gece' || (!!wx && !wx.day);
   /** Bekleyen işi olan odalar: gecikme varsa true, sadece bugün varsa false. */
   const roomLate: Record<string, boolean> = {};
   for (const id of S.order) {
@@ -1158,8 +1222,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   minY -= showLabels ? PAD + TAG_H / 2 : 10; maxY += showLabels ? PAD + TAG_H / 2 : 10;
   const vbW = maxX - minX, vbH = maxY - minY;
 
-  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce);
-  const air = ambient({ theme, dark, day: Math.floor(now / 86400000), L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
+  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day && !dark));
+  const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
   const sc = boxW > 0 ? boxW / vbW : 0;
 
   // Evin altındaki yumuşak gölge.
@@ -1309,9 +1373,18 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
       )}
     </Animated.View>
   );
-  return onPressHouse ? (
+  const colors = skyColors(theme, dark, wx);
+  const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
+  const content = onPressHouse ? (
     <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={handlePressHouse} style={{ width: '100%' }}>
       {model}
     </Pressable>
   ) : model;
+  if (!colors) return content;
+  return (
+    <View style={{ width: '100%' }}>
+      {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear' && !dark} twA={twOpA} twB={twOpB} breath={breathOp} />}
+      {content}
+    </View>
+  );
 }

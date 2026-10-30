@@ -5,7 +5,9 @@ import { radius, useColors, useIsDark } from '@/theme';
 
 // expo-blur yerel modül: Expo Go / eski derlemede yoksa require ya da çizim patlar; o zaman düz yarı saydam yüzey.
 let BlurView: React.ComponentType<any> | null = null;
-if (Platform.OS !== 'web') {
+// Yerel modül gömülü değilse (eski dev derlemesi) native tarafta çöker; JS try/catch yetmez, önce modülün varlığına bak.
+const hasBlur = Platform.OS !== 'web' && !!(globalThis as { expo?: { modules?: Record<string, unknown> } }).expo?.modules?.ExpoBlur;
+if (hasBlur) {
   try {
     BlurView = require('expo-blur').BlurView; // eslint-disable-line @typescript-eslint/no-require-imports
   } catch {

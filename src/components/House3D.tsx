@@ -635,6 +635,30 @@ function Drift({ vb, scale, dx = 0, dy = 0, ms, restart, fade, reduce, children 
   );
 }
 
+/** Onarım ya da seviye atlama: evin ortasından yıldız halkası saçılır, solar. */
+function Burst({ vb, cx, cy, spread }: { vb: string; cx: number; cy: number; spread: number }) {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const a = Animated.timing(v, { toValue: 1, duration: 1200, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [v]);
+  const cols = [GOLD, '#FFFFFF', '#E58C7E', '#78A1BB'];
+  const stars = Array.from({ length: 12 }, (_, i) => {
+    const t = (i / 12) * Math.PI * 2;
+    const d = spread * (i % 2 ? 0.55 : 0.8);
+    return sparkle('bs' + i, cx + Math.cos(t) * d, cy + Math.sin(t) * d * 0.55, 4 + (i % 3) * 2, cols[i % 4]);
+  });
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { opacity: v.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.25] }) }] }]}
+    >
+      <Svg width="100%" height="100%" viewBox={vb}>{stars}</Svg>
+    </Animated.View>
+  );
+}
+
 /** Hava: gündüz bulut ve kuş, yağmur ya da kar; ev bitince bacadan duman. */
 function ambient(o: { theme: HouseTheme; dark: boolean; day: number; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
   const { theme, dark, day, L, box: { x, y, w, h }, chimney } = o;
@@ -735,6 +759,12 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   const previousLevel = useRef(L);
   const [reduce, setReduce] = useState(false);
   const [boxW, setBoxW] = useState(0);
+  const [burst, setBurst] = useState(0);
+  const prevIdle = useRef(idle);
+  useEffect(() => {
+    if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
+    prevIdle.current = idle;
+  }, [idle]);
   useEffect(() => {
     let on = true;
     AccessibilityInfo.isReduceMotionEnabled().then(v => on && setReduce(v)).catch(() => {});
@@ -764,6 +794,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   useEffect(() => {
     const grew = previousLevel.current !== L;
     previousLevel.current = L;
+    if (grew && L >= 1) setBurst(b => b + 1);
     if (!grew || L < 9) return;
     sproutScale.setValue(0.45);
     sproutOpacity.setValue(0);
@@ -1204,6 +1235,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
+      {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && mokaEls.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.03} dy={-1.5} ms={2600} reduce={reduce}>{mokaEls}</Drift>}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}

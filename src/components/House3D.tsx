@@ -760,6 +760,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   const [reduce, setReduce] = useState(false);
   const [boxW, setBoxW] = useState(0);
   const [burst, setBurst] = useState(0);
+  const [pinch] = useState(() => new Animated.Value(1));
+  const pinchRef = useRef({ d: 0, base: 1, cur: 1 });
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
@@ -875,6 +877,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
     minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
   };
   const els: ReactElement[] = [];
+  /** Gezen evcil hayvanlar: kendi katmanlarında odalarında volta atar. */
+  const pets: { id: string; el: ReactElement }[] = [];
   const add = (f: Face) => els.push(renderFace({ strokeWidth: 0.8, ...f }));
   // Üstte canlandırılan ışıklar: oda glow'ları ve pencere huzmeleri (nefes), temiz oda parıltıları (twA / twB).
   const life = emptyLife();
@@ -1032,7 +1036,10 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
     }
 
     if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c)}</G>);
-    for (const item of itemAt[i] ?? []) els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item)}</G>);
+    for (const item of itemAt[i] ?? []) {
+      if (item === 'kedi' || item === 'kopek') pets.push({ id: item, el: <G key={k + 'i' + item}>{itemShape(item, r, col, k + 'i' + item)}</G> });
+      else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item)}</G>);
+    }
 
     // 3. günden sonra: moloz.
     if (idle >= 3 && (r * 7 + col * 3) % 4 === 0) {
@@ -1058,6 +1065,37 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
     box('chim', cr + 0.55, cc + 0.55, 0.16, 0.16, WALL_H, 12, BRICK, 0.4).forEach(add);
     box('chimc', cr + 0.52, cc + 0.52, 0.22, 0.22, WALL_H + 12, 2, shade(BRICK, -0.2)).forEach(add);
     chimney = P(cr + 0.63, cc + 0.63, WALL_H + 16);
+  }
+
+  // Seviyeyle büyüyen giriş: paspas (8), fener direği (16), saksılı çiçeklik (24), altın kupa (50).
+  if (L >= 8 && order.length) {
+    const fi = order[order.length - 1];
+    const fr = Math.floor(fi / cols), fc = fi % cols;
+    box('mat', fr + 0.7, fc + 0.3, 0.2, 0.4, 0, 0.8, '#B8584C').forEach(add);
+    if (L >= 16) {
+      box('lp', fr + 0.78, fc + 0.8, 0.05, 0.05, 0, 18, '#283044').forEach(add);
+      box('lh', fr + 0.74, fc + 0.76, 0.13, 0.13, 18, 4, GOLD).forEach(add);
+      const [lx, ly] = P(fr + 0.8, fc + 0.82, 21);
+      life.breath.push(<Circle key="porch_glow" cx={lx} cy={ly} r={isNight ? 16 : 8} fill="url(#h3dLamp)" />);
+    }
+    if (L >= 24) {
+      box('fb', fr + 0.8, fc + 0.12, 0.1, 0.3, 0, 4, POT).forEach(add);
+      [0.17, 0.26, 0.35].forEach((v, i) => {
+        const [x, y] = P(fr + 0.85, fc + v, 6);
+        els.push(<Circle key={'fbf' + i} cx={x} cy={y} r={2} fill={['#E58C7E', '#F2C46D', '#F4A6C0'][i]} />);
+      });
+    }
+    if (L >= 50) {
+      const [tx, ty] = P(fr + 0.5, fc + 0.5, 0);
+      els.push(
+        <G key="trophy">
+          <Ellipse cx={tx} cy={ty + 1} rx={5} ry={2} fill="rgba(40,48,68,0.2)" />
+          <Polygon points={pts([[tx - 3, ty - 12], [tx + 3, ty - 12], [tx + 2, ty - 5], [tx - 2, ty - 5]])} fill={GOLD} />
+          <Rect x={tx - 1} y={ty - 5} width={2} height={4} fill={GOLD} />
+          <Rect x={tx - 3} y={ty - 1.5} width={6} height={1.5} fill={shade(GOLD, -0.2)} />
+        </G>,
+      );
+    }
   }
 
   // Minik 3D Moka maskotu evin salonunda veya çalışma odasında durur.
@@ -1208,6 +1246,23 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   const model = (
     <Animated.View
       onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
+      onTouchMove={e => {
+        const t = e.nativeEvent.touches;
+        if (t.length < 2) return;
+        const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
+        const g = pinchRef.current;
+        if (!g.d) { g.d = d; g.base = g.cur; return; }
+        g.cur = Math.min(2.2, Math.max(0.8, g.base * (d / g.d)));
+        pinch.setValue(g.cur);
+      }}
+      onTouchEnd={e => {
+        if (e.nativeEvent.touches.length >= 2) return;
+        const g = pinchRef.current;
+        if (!g.d) return;
+        g.d = 0;
+        g.cur = 1;
+        Animated.spring(pinch, { toValue: 1, friction: 6, tension: 70, useNativeDriver: true }).start();
+      }}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
@@ -1217,6 +1272,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
           { translateX: swayX },
           { rotate: tilt },
           { scale: zoom },
+          { scale: pinch },
           { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
         ],
       }}
@@ -1235,6 +1291,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
+      {sc > 0 && pets.map((pt, i) => <Drift key={'pet' + i} vb={vb} scale={sc} dx={vbW * (pt.id === 'kedi' ? 0.025 : 0.035)} dy={pt.id === 'kedi' ? 1 : -1} ms={pt.id === 'kedi' ? 3800 : 2300} reduce={reduce}>{pt.el}</Drift>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && mokaEls.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.03} dy={-1.5} ms={2600} reduce={reduce}>{mokaEls}</Drift>}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}

@@ -1,7 +1,27 @@
-import { BlurView } from 'expo-blur';
+import { Component, type ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { radius, useColors, useIsDark } from '@/theme';
+
+// expo-blur yerel modül: Expo Go / eski derlemede yoksa require ya da çizim patlar; o zaman düz yarı saydam yüzey.
+let BlurView: React.ComponentType<any> | null = null;
+if (Platform.OS !== 'web') {
+  try {
+    BlurView = require('expo-blur').BlurView; // eslint-disable-line @typescript-eslint/no-require-imports
+  } catch {
+    BlurView = null;
+  }
+}
+
+class Safe extends Component<{ children: ReactNode }, { bad: boolean }> {
+  state = { bad: false };
+  static getDerivedStateFromError() {
+    return { bad: true };
+  }
+  render() {
+    return this.state.bad ? null : this.props.children;
+  }
+}
 
 type Props = {
   children?: React.ReactNode;
@@ -17,14 +37,16 @@ export function Glass({ children, intensity = 40, style }: Props) {
   const edge = dark ? 'rgba(235,245,238,0.18)' : 'rgba(255,255,255,0.75)';
   return (
     <View style={[styles.wrap, { borderColor: edge, shadowColor: c.shadow }, style]}>
-      {Platform.OS !== 'web' && (
-        <BlurView
-          pointerEvents="none"
-          intensity={intensity}
-          tint={dark ? 'dark' : 'light'}
-          experimentalBlurMethod="dimezisBlurView"
-          style={StyleSheet.absoluteFill}
-        />
+      {BlurView && (
+        <Safe>
+          <BlurView
+            pointerEvents="none"
+            intensity={intensity}
+            tint={dark ? 'dark' : 'light'}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+          />
+        </Safe>
       )}
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint }]} />
       {children}

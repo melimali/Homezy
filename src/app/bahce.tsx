@@ -8,7 +8,8 @@ import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
-import { Burst, Float } from '@/components/motion';
+import { Breathe, Flutter, Shower, Sway, Twinkle } from '@/components/gardenFx';
+import { Appear, Burst, Float, Pulse } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
   FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, gardenRank, growth,
@@ -82,24 +83,27 @@ export default function Bahce() {
   return (
     <Screen header={false}>
       <BackLink />
-      <View>
+      <Appear>
         <T v="eyebrow">Puanla bahçe</T>
         <T v="h1">Moka&apos;nın bahçesi 🌷</T>
         <T v="lead">Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
-      </View>
+      </Appear>
 
-      <Glass style={styles.wallet}>
-        <Text style={{ fontSize: 26 }}>⭐</Text>
-        <Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text>
-        <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
-      </Glass>
+      <Appear index={1}>
+        <Glass style={styles.wallet}>
+          <Float amp={3} dur={1800}><Text style={{ fontSize: 26 }}>⭐</Text></Float>
+          <Pulse on={P.points}><Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text></Pulse>
+          <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
+        </Glass>
+      </Appear>
 
       {/* Plak Çalar & Hızlı Toz Avı Mini Oyun Butonları */}
-      <View style={{ flexDirection: 'row', gap: 10 }}>
+      <Appear index={2} style={{ flexDirection: 'row', gap: 10 }}>
         <Btn small kind="soft" label="🎵 Plak Çalar (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
         <Btn small kind="soft" label="🧹 Hızlı Toz Avı" onPress={() => setDustOpen(true)} style={{ flex: 1 }} />
-      </View>
+      </Appear>
 
+      <Appear index={3}>
       <Glass style={styles.statsCard}>
         <View style={styles.statsRow}>
           <View style={{ flex: 1 }}>
@@ -115,13 +119,24 @@ export default function Bahce() {
           <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
         </View>
       </Glass>
+      </Appear>
 
+      <Appear index={4}>
       <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
-        <View pointerEvents="none" style={[styles.blob, { top: -30, right: -20, backgroundColor: brand.blue }]} />
-        <View pointerEvents="none" style={[styles.blob, { bottom: 40, left: -40, backgroundColor: brand.clay }]} />
+        <Float amp={6} dur={5200} style={[styles.blob, { top: -30, right: -20 }]}>
+          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.blue }]} />
+        </Float>
+        <Float amp={5} dur={4400} delay={600} style={[styles.blob, { bottom: 40, left: -40 }]}>
+          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.clay }]} />
+        </Float>
         {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
+        <Flutter emoji="🦋" top="14%" dur={8500} />
+        <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
+        {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
         <View style={styles.bedTop}>
-          <MokaMascot pose={pose} size="md" showBubble={false} />
+          <Float amp={5} dur={2600}>
+            <MokaMascot pose={pose} size="md" showBubble={false} />
+          </Float>
           <Glass style={styles.bubble} intensity={30}>
             <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
           </Glass>
@@ -129,12 +144,18 @@ export default function Bahce() {
         <View style={styles.plots}>
           {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
             x ? (
-              <PlotCard key={x.p.id} plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
+              <Appear key={x.p.id} index={i} style={styles.plotCell}>
+                <PlotCard plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
+              </Appear>
             ) : (
-              <Pressable key={'e' + i} onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={styles.plot}>
-                <View style={{ opacity: 0.55 }}><PlantArt stage={-1} size={54} /></View>
-                <Text style={[styles.plotName, { color: c.muted }]}>Boş saksı</Text>
-              </Pressable>
+              <Appear key={'e' + i} index={i} style={styles.plotCell}>
+                <Pressable onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
+                  <Breathe amp={0.06} dur={2000}>
+                    <View style={{ opacity: 0.55 }}><PlantArt stage={-1} size={54} /></View>
+                  </Breathe>
+                  <Text style={[styles.plotName, { color: c.muted }]}>Boş saksı</Text>
+                </Pressable>
+              </Appear>
             ),
           )}
         </View>
@@ -147,7 +168,7 @@ export default function Bahce() {
         </View>
         <Burst fire={fire} />
       </View>
-
+      </Appear>
       {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
 
       <Tabs
@@ -238,9 +259,18 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
       accessibilityLabel={`${flower.name}, ${STAGE_NAMES[stage]}, ${g}/${flower.grow} büyüme`}
       style={[styles.plot, on && { backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }]}
     >
-      <Float amp={stage >= 5 ? 2 : 0.01} dur={2400}>
-        <PlantArt flower={flower} stage={stage} size={54} />
-      </Float>
+      <Twinkle on={g} />
+      <Sway deg={stage >= 3 ? 4 : 2} dur={2200 + (flower.price % 7) * 260} delay={(flower.grow % 5) * 200}>
+        {plot.bloomed ? (
+          <Breathe amp={0.08} dur={1200}>
+            <Float amp={3} dur={1900}>
+              <PlantArt flower={flower} stage={stage} size={54} />
+            </Float>
+          </Breathe>
+        ) : (
+          <PlantArt flower={flower} stage={stage} size={54} />
+        )}
+      </Sway>
       <Text style={[styles.plotName, { color: c.ink }]} numberOfLines={1}>{flower.name}</Text>
       <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
         <View style={[styles.barFill, { width: `${(g / flower.grow) * 100}%`, backgroundColor: stage >= 5 ? c.warm : c.ok }]} />
@@ -253,6 +283,7 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
 /** Seçili saksı: açtıysa albüme al, büyüyorsa durumunu söyle. */
 function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => void; onOpenDetail: (f: Flower) => void }) {
   const now = useNow();
+  const [hearts, setHearts] = useState(0);
   const toast = useToast();
   const { state: S, update } = useStore();
   const plot = S.play.garden.plots.find(p => p.id === id);
@@ -291,11 +322,14 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
       }
     });
     sfx('party');
+    setHearts(h => h + 1);
     toast(`❤️ Moka ${f.name} saksısına sevgi verdi! (+1 Büyüme)`);
   };
 
   return (
+    <Appear>
     <Glass style={{ gap: 10 }}>
+      <Shower fire={hearts} emoji="❤️" up />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <T v="h3">{f.emoji} {f.name}</T>
         <Btn small kind="soft" label="Detay ℹ️" onPress={() => onOpenDetail(f)} />
@@ -303,7 +337,7 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
       {plot.bloomed ? (
         <>
           <T v="small">Açtı! Albüme alınca saksı boşalır, çiçek evinin bahçesine geçer.</T>
-          <Btn kind="primary" label="Albüme al 📖" onPress={harvest} block />
+          <Breathe amp={0.03} dur={1100}><Btn kind="primary" label="Albüme al 📖" onPress={harvest} block /></Breathe>
         </>
       ) : (
         <>
@@ -312,11 +346,12 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
             {fertLeft > 0 ? ` Gübreyle ${fertLeft} büyüme daha hızlanabilir.` : ' Gübre sınırı doldu, gerisi işlerle.'}
           </T>
           {!lovedToday && fertLeft > 0 && (
-            <Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={giveLove} block />
+            <Breathe amp={0.025} dur={1500}><Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={giveLove} block /></Breathe>
           )}
         </>
       )}
     </Glass>
+    </Appear>
   );
 }
 
@@ -328,6 +363,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
   const { spend } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  const [popped, setPopped] = useState(0);
   const locked = f.premium && !premium.active;
   const short = f.price - S.play.points;
 
@@ -341,13 +377,15 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
     setBusy(false);
     if (!r.ok) return toast(r.error);
     sfx('coin');
+    setPopped(n => n + 1);
     toast(`${f.emoji} ${f.name} ekildi! Her iş onu biraz büyütecek 🌱`);
   };
 
   return (
     <View style={[styles.row, { backgroundColor: month ? c.glow : c.surface }]}>
+      <Burst fire={popped} />
       <Pressable onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} detaylarını gör`}>
-        <PlantArt flower={f} stage={5} size={44} />
+        <Sway deg={4} dur={2000 + (f.price % 5) * 300}><PlantArt flower={f} stage={5} size={44} /></Sway>
       </Pressable>
       <Pressable onPress={() => onSelect(f)} style={{ flex: 1, gap: 2 }}>
         <Text style={[styles.rowT, { color: month ? c.glowInk : c.ink }]}>{f.name}{f.premium ? ' 👑' : ''}</Text>
@@ -371,6 +409,7 @@ function FertRow({ plot }: { plot: Plot }) {
   const { state: S } = useStore();
   const { spend } = usePlay();
   const [busy, setBusy] = useState<string | null>(null);
+  const [rain, setRain] = useState<{ n: number; e: string }>({ n: 0, e: '💧' });
   const f = FLOWER[plot.flower]!;
   const room = Math.max(0, FERT_CAP(f) - plot.fert);
   const g = growth(S.play, plot, now);
@@ -389,12 +428,14 @@ function FertRow({ plot }: { plot: Plot }) {
     setBusy(null);
     if (!r.ok) return toast(r.error);
     sfx('done');
+    setRain(r => ({ n: r.n + 1, e: fert.emoji }));
     toast(`${fert.emoji} ${f.name} +${Math.min(fert.grow, room)} büyüdü!`);
   };
 
   return (
-    <View style={[styles.row, { backgroundColor: c.surface, alignItems: 'flex-start' }]}>
-      <PlantArt flower={f} stage={stageOf(g, f.grow)} size={44} />
+    <View style={[styles.row, { backgroundColor: c.surface, alignItems: 'flex-start', overflow: 'hidden' }]}>
+      <Shower fire={rain.n} emoji={rain.e} />
+      <Sway deg={3} dur={2400}><PlantArt flower={f} stage={stageOf(g, f.grow)} size={44} /></Sway>
       <View style={{ flex: 1, gap: 8 }}>
         <Text style={[styles.rowT, { color: c.ink }]}>{f.name} · {g}/{f.grow}</Text>
         {room === 0 ? (
@@ -514,13 +555,15 @@ const styles = StyleSheet.create({
   statsCard: { padding: 20, gap: 8 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
-  blob: { position: 'absolute', width: 150, height: 150, borderRadius: 75, opacity: 0.35 },
+  blob: { position: 'absolute', width: 150, height: 150, opacity: 0.35 },
+  blobIn: { flex: 1, borderRadius: 75 },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
   plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
-  plot: { width: '31.5%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
+  plotCell: { width: '31.5%' },
+  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, textAlign: 'center' },
   plotStage: { fontFamily: fonts.bodyBold, fontSize: 11 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },

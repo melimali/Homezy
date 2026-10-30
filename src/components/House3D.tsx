@@ -128,6 +128,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('m', 0.17, 0.23, 0.66, 0.54, 7, 4, WHITE),
         ...b('y', 0.17, 0.27, 0.15, 0.46, 11, 3, WHITE),
         ...b('o', 0.42, 0.23, 0.41, 0.54, 11, 2, col.hi),
+        ...b('n', 0.16, 0.84, 0.13, 0.12, 0, 8, WOOD),
+        ...b('ls', 0.19, 0.87, 0.07, 0.06, 8, 5, '#F2C46D'),
       ];
       break;
     case 'cocuk':
@@ -135,6 +137,7 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('a', 0.3, 0.22, 0.22, 0.22, 0, 9, '#E58C7E'),
         ...b('b', 0.3, 0.48, 0.22, 0.22, 0, 9, '#78A1BB'),
         ...b('c', 0.3, 0.35, 0.22, 0.22, 9, 9, '#F2C46D'),
+        ...b('rg', 0.55, 0.15, 0.35, 0.7, 0, 0.6, '#9CB9D0'),
       ];
       extra.push(ball('t', 0.72, 0.62, 5, 5, '#E58C7E'));
       break;
@@ -144,6 +147,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('k', 0.24, 0.14, 0.14, 0.72, 7, 9, shade('#BFA89E', -0.05)),
         ...b('m', 0.4, 0.2, 0.3, 0.28, 7, 3, WHITE),
         ...b('n', 0.4, 0.52, 0.3, 0.28, 7, 3, WHITE),
+        ...b('tv', 0.84, 0.22, 0.08, 0.56, 0, 5, WOOD),
+        ...b('tl', 0.85, 0.3, 0.03, 0.4, 5, 10, '#283044'),
       ];
       break;
     case 'mutfak':
@@ -151,10 +156,11 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('t', 0.12, 0.14, 0.3, 0.72, 0, 15, WHITE),
         ...b('p', 0.18, 0.3, 0.16, 0.18, 15, 6, '#B8584C'),
         ...b('m', 0.58, 0.3, 0.28, 0.42, 0, 9, WOOD),
+        ...b('fr', 0.14, 0.88, 0.26, 0.1, 0, 24, '#E6EDF2'),
       ];
       break;
     case 'banyo':
-      faces = [...b('k', 0.2, 0.14, 0.62, 0.72, 0, 11, WHITE), ...b('s', 0.26, 0.2, 0.5, 0.6, 11, 0.5, WATER)];
+      faces = [...b('k', 0.2, 0.14, 0.62, 0.72, 0, 11, WHITE), ...b('s', 0.26, 0.2, 0.5, 0.6, 11, 0.5, WATER), ...b('lv', 0.84, 0.3, 0.12, 0.3, 0, 8, WHITE)];
       extra.push(ball('a', 0.4, 0.4, 14, 3, WHITE), ball('b', 0.5, 0.55, 14, 2.5, WHITE));
       break;
     case 'camasir':
@@ -166,6 +172,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
         ...b('d', 0.18, 0.14, 0.34, 0.72, 0, 12, WOOD),
         ...b('l', 0.26, 0.34, 0.18, 0.3, 12, 1.5, '#283044'),
         ...b('c', 0.62, 0.4, 0.22, 0.22, 0, 7, col.hi),
+        ...b('mo', 0.22, 0.42, 0.1, 0.16, 13.5, 6, '#4A5575'),
+        ...b('sh', 0.06, 0.2, 0.08, 0.6, 14, 1.5, WOOD),
       ];
       break;
     case 'balkon':
@@ -1022,14 +1030,15 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   }
 
   // Minik 3D Moka maskotu evin salonunda veya çalışma odasında durur.
+  let mokaEls: ReactElement[] = [];
   if (L >= 5) {
     const mokaRoomId = S.order.find(id => S.rooms[id]?.type === 'salon') ?? S.order.find(id => S.rooms[id]?.type === 'calisma') ?? S.order[0];
     if (mokaRoomId && props[mokaRoomId] !== undefined) {
       const mi = props[mokaRoomId];
       const mr = Math.floor(mi / cols), mcol = mi % cols;
       const [mx, my] = P(mr + 0.5, mcol + 0.5, 0);
-      els.push(
-        <G key="mini_moka_in_house" onPress={handlePressHouse}>
+      mokaEls = [
+        <G key="mini_moka_in_house">
           <Ellipse cx={mx} cy={my + 1} rx={7} ry={3} fill="rgba(40,48,68,0.2)" />
           <Circle cx={mx} cy={my - 7} r={6.5} fill="#D99B6A" />
           <Circle cx={mx} cy={my - 7} r={4.5} fill="#FFF3E0" />
@@ -1041,7 +1050,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
           <Ellipse cx={mx} cy={my - 14.5} rx={2} ry={1.2} fill="#FFF3E0" />
           <Circle cx={mx} cy={my - 15} r={0.7} fill="#283044" />
         </G>,
-      );
+      ];
     }
   }
 
@@ -1195,6 +1204,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
+      {sc > 0 && mokaEls.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.03} dy={-1.5} ms={2600} reduce={reduce}>{mokaEls}</Drift>}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}

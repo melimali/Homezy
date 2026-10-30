@@ -141,11 +141,11 @@ export const MOKA_QUOTES: Record<MokaPose, MokaQuote[]> = {
     { title: '✨ Küçük bir ipucu', message: '"Ne kadar vaktin var?" ile 10 dakikaya sığan işleri bulabilirsin.' },
   ],
   panicked: [
-    { title: '😱 İmdaat, {n} iş gecikti!', message: 'Panik yok, panik yok! Tek tek gideriz. İlk işi birlikte seçelim.' },
-    { title: '🆘 Ev alarmı', message: '{n} iş birikmiş. Bugün sadece en acil üçünü yapsak yeter.' },
+    { title: '🫶 {n} iş seni bekliyor', message: 'Hepsi şart değil. Birini seç, birlikte yapalım.' },
+    { title: '🌿 Yavaş yavaş', message: '{n} iş birikmiş ama sorun yok. Bugün sadece birini yapsak yeter.' },
   ],
   begging: [
-    { title: '🥺 Bir tanecik iş…', message: '{n} iş seni bekliyor. Yapar mısın, lütfeeen?' },
+    { title: '🥺 Bir tanecik iş…', message: '{n} iş seni bekliyor. İstersen birini yapalım mı?' },
     { title: '🙏 Moka rica ediyor', message: 'Küçük bir iş, kocaman bir rahatlama. Hadi bir tane!' },
   ],
   blanket: [

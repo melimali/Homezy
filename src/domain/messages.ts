@@ -77,7 +77,7 @@ export function taskLine(o: { name: string; type: RoomType | null; plant: boolea
 
 /** Durumu kısa ve yumuşak anlatan ek. */
 export function statusTail(k: StatusKind, diff: number, never: boolean) {
-  if (k === 'late') return diff <= -7 ? `${-diff} gündür bekliyor 🥺` : `${-diff} gün gecikti ⏰`;
+  if (k === 'late') return diff <= -7 ? `${-diff} gündür bekliyor 🥺` : `${-diff} gündür seni bekliyor 🤍`;
   if (never) return 'Hadi ilk kez yapalım 🌟';
   return 'Bugün yapılacak 📅';
 }
@@ -138,15 +138,15 @@ export function streakLine(streak: number, built: boolean, key: string, now: num
   if (streak > 0)
     return pick(
       [
-        `🔥 ${streak} günlük serin bozulmasın! Minik bir iş yeter 💪`,
+        `🔥 ${streak} günlük serin seni bekliyor. İstersen minik bir iş yeter 🤍`,
         `Evin seni bekliyor 🏡 ${streak} günlük seriyi sürdürelim mi?`,
-        `Bugün daha bir şey yapmadın 🥺 Tek bir iş, ev tozlanmasın 🧹`,
+        `Bugün sakin geçti 🌿 Tek bir küçük iş yeter, istersen.`,
       ],
       key,
       now,
     );
   if (built)
-    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, tozlanmasın 🧹', 'Bugün daha bir şey yapmadın 🥺 Yeni bir seri başlatalım mı? 🔥'], key, now);
+    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, tozlanmasın 🧹', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
   return pick(
     ['Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️', 'Minik bir adım, büyük bir ev 🪵✨ Bugün bir iş yapalım mı?'],
     key,

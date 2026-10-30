@@ -226,10 +226,10 @@ export const nextStage = (level: number) => STAGES.find(s => s.level > level) ??
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
   if (p.idle >= 3) return 'Evin biraz yıprandı 😢 Dert etme: bir iş yap, tamir hemen başlasın 🔨';
-  if (p.idle === 2) return 'Duvarlarda çatlaklar var 😟 Bugün bir iş yapmazsan yarın bir parçası çöker.';
+  if (p.idle === 2) return 'Duvarlar biraz yorgun 🧱 Küçük bir iş yeter, birlikte toparlarız.';
   if (p.idle === 1) return 'Ev biraz tozlandı 🌫️ Bir iş yap, tozu alalım!';
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
-  if (!p.today) return 'Bugün henüz bir şey yapmadın. Serin bozulmasın 🔥';
+  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍 Serin yanında.';
   const next = nextStage(p.level);
   return next ? `Sıradaki: ${next.emoji} ${next.name}` : 'Rüya evin tamam! Seriyi sürdür ⭐';
 }

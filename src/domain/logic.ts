@@ -34,7 +34,7 @@ export function status(t: Task, now = Date.now(), flex = false): TaskStatus {
   const snoozed = t.snooze != null && diff > 0;
   if (diff < 0) {
     if (flex && -diff <= tolerance(t.every)) return { k: 'today', diff, label: `${-diff} gün geçti` };
-    return { k: 'late', diff, label: `${-diff} gün gecikti` };
+    return { k: 'late', diff, label: `${-diff} gündür bekliyor` };
   }
   if (diff === 0) return { k: 'today', diff, label: 'Bugün' };
   if (diff === 1) return { k: 'ok', diff, label: snoozed ? 'Yarına ertelendi' : 'Yarın' };

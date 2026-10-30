@@ -44,7 +44,7 @@ function textStyle(v: Variant, c: Colors): TextStyle {
     case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
     case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted };
     case 'eyebrow':
-      return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.hi, marginBottom: 4 };
+      return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.warm, marginBottom: 4 };
     case 'lead': return { fontFamily: fonts.bodyBold, fontSize: 16.5, lineHeight: 24, color: c.muted, marginTop: 6 };
     default: return { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: c.ink };
   }
@@ -238,6 +238,7 @@ export function Btn({
         small && styles.btnSmall,
         block && { alignSelf: 'stretch' },
         { backgroundColor: kind === 'ghost' ? c.surface : bg },
+        kind === 'ghost' && { shadowOpacity: 0, elevation: 0 },
         style,
       ]}
     >
@@ -307,13 +308,17 @@ export function Tabs<K extends string>({
 
 /* ---------- rozetler ---------- */
 
-export function Pill({ k, label }: { k: StatusKind | 'neutral'; label: string }) {
+export function Pill({ k, label }: { k: StatusKind | 'neutral' | 'rose' | 'lavender' | 'sage' | 'peach'; label: string }) {
   const c = useColors();
   const map = {
     late: [c.lateSoft, c.late],
     today: [c.todaySoft, c.today],
     ok: [c.okSoft, c.ok],
     neutral: [c.surface, c.muted],
+    rose: [c.roseSoft, c.fashionAccent],
+    lavender: [c.lavenderSoft, c.fashionInk],
+    sage: [c.sageSoft, c.ok],
+    peach: [c.peachSoft, c.today],
   } as const;
   const [bg, fg] = map[k];
   return (
@@ -385,15 +390,16 @@ export const styles = StyleSheet.create({
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {
     borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#24352E', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.055, shadowRadius: 16, elevation: 2,
+    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 20, elevation: 3,
   },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
     paddingVertical: 16, paddingHorizontal: 24,
+    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 2,
   },
-  btnSmall: { paddingVertical: 9, paddingHorizontal: 16 },
+  btnSmall: { paddingVertical: 9, paddingHorizontal: 16, shadowOpacity: 0, elevation: 0 },
   chip: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },

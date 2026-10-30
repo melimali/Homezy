@@ -130,8 +130,17 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
   return { level, streak, today: active, idle: active || !sorted.length ? 0 : miss };
 }
 
-/** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
-export const progressOf = (P: Play, now = Date.now()) => houseProgress(P.days, now, P.frozen);
+/**
+ * Oyun durumundan evin ilerlemesi (dondurulan günler dahil).
+ * Sadece geliştirme sürümünde: `.env.local` içine `EXPO_PUBLIC_DEV_HOUSE_LEVEL=50` yazılırsa ev o seviyede gösterilir
+ * (en fazla MAX_LEVEL). Tanımsızsa hiçbir şey değişmez; kayıtlı veriye yazılmaz, yayın sürümünde çalışmaz.
+ */
+const DEV_HOUSE_LEVEL = __DEV__ ? Math.floor(Number(process.env.EXPO_PUBLIC_DEV_HOUSE_LEVEL)) : NaN;
+
+export const progressOf = (P: Play, now = Date.now()): HouseProgress => {
+  const h = houseProgress(P.days, now, P.frozen);
+  return DEV_HOUSE_LEVEL > 0 ? { ...h, level: Math.min(MAX_LEVEL, DEV_HOUSE_LEVEL) } : h;
+};
 
 /* ---------- seri dondurma ---------- */
 

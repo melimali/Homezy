@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Animated, Easing, Pressable, StyleSheet } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -551,7 +551,7 @@ function scatter(n: number, seed: number) {
 }
 
 /** Temanın gökyüzü (arkada) ve süsleri (önde): yıldızlar ve ay, kar taneleri ya da düşen yapraklar. */
-function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }) {
+function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: number; w: number; h: number }, animatedSnow = false) {
   const sky = SKY[theme];
   const { x, y, w, h } = box;
   const back: ReactElement[] = [];
@@ -569,7 +569,7 @@ function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: numbe
       <Circle key="moonCut" cx={mx + mr * 0.45} cy={my - mr * 0.3} r={mr * 0.85} fill={sky ? sky[dark ? 1 : 0] : '#2B3556'} />,
     );
   } else if (theme === 'kis') {
-    scatter(42, 3).forEach(([u, v, k], i) =>
+    if (!animatedSnow) scatter(42, 3).forEach(([u, v, k], i) =>
       front.push(<Circle key={'sn' + i} cx={x + u * w} cy={y + v * h} r={1 + k * 2} fill="#FFFFFF" opacity={0.6 + k * 0.4} />),
     );
   } else if (theme === 'sonbahar') {
@@ -587,6 +587,82 @@ function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: numbe
     });
   }
   return { back, front };
+}
+
+/** Ayrı bir katmanı native driver ile döngüde kaydırır / solduralır. `reduce` açıksa durur. */
+function Drift({ vb, scale, dx = 0, dy = 0, ms, restart, fade, reduce, children }: {
+  vb: string; scale: number; dx?: number; dy?: number; ms: number; restart?: boolean; fade?: boolean; reduce: boolean; children: ReactElement | ReactElement[];
+}) {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce) return;
+    const a = Animated.loop(
+      restart
+        ? Animated.timing(v, { toValue: 1, duration: ms, easing: Easing.linear, useNativeDriver: true })
+        : Animated.sequence([
+            Animated.timing(v, { toValue: 1, duration: ms, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+            Animated.timing(v, { toValue: 0, duration: ms, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          ]),
+    );
+    a.start();
+    return () => a.stop();
+  }, [v, ms, restart, reduce]);
+  const from = restart ? 0 : -1;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          opacity: fade ? v.interpolate({ inputRange: [0, 0.15, 0.8, 1], outputRange: [0, 0.8, 0.35, 0] }) : 1,
+          transform: [
+            { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [from * dx * scale, dx * scale] }) },
+            { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [from * dy * scale, dy * scale] }) },
+          ],
+        },
+      ]}
+    >
+      <Svg width="100%" height="100%" viewBox={vb}>{children}</Svg>
+    </Animated.View>
+  );
+}
+
+/** Hava: gündüz bulut ve kuş, yağmur ya da kar; ev bitince bacadan duman. */
+function ambient(o: { theme: HouseTheme; dark: boolean; day: number; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
+  const { theme, dark, day, L, box: { x, y, w, h }, chimney } = o;
+  const night = dark || theme === 'gece';
+  const rain = !night && (theme === 'sonbahar' || (theme === 'gunduz' && day % 7 === 3));
+  const snow = theme === 'kis';
+  const cloudFill = rain ? '#B8C2CE' : '#FFFFFF';
+  const cloud = (cx: number, cy: number, s: number, i: number) => (
+    <G key={'cl' + i} opacity={rain ? 0.7 : 0.9}>
+      <Ellipse cx={cx} cy={cy} rx={22 * s} ry={7 * s} fill={cloudFill} />
+      <Ellipse cx={cx - 11 * s} cy={cy - 5 * s} rx={11 * s} ry={7 * s} fill={cloudFill} />
+      <Ellipse cx={cx + 6 * s} cy={cy - 7 * s} rx={13 * s} ry={8 * s} fill={cloudFill} />
+    </G>
+  );
+  const drops = (copy: number) =>
+    scatter(34, 21).map(([u, v, k], i) => {
+      const px = x + u * w, py = y + v * h - copy * h;
+      return <Line key={'rd' + copy + i} x1={px} y1={py} x2={px - 3} y2={py + 9 + k * 4} stroke="#8FB4D0" strokeWidth={1.1} strokeLinecap="round" opacity={0.65} />;
+    });
+  const flakes = (copy: number) =>
+    scatter(40, 3).map(([u, v, k], i) => <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />);
+  return {
+    clouds: night ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1)],
+    clouds2: night ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2)],
+    birds: !night && !rain && !snow && L >= 7
+      ? [0, 1].map(i => {
+          const bx = x + w * (0.35 + i * 0.1), by = y + h * (0.14 + i * 0.04);
+          return <Polyline key={'bd' + i} points={pts([[bx - 4, by - 2], [bx, by + 1], [bx + 4, by - 2]])} fill="none" stroke={dark ? '#C9D3DE' : '#4A4F63'} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />;
+        })
+      : [],
+    rain: rain ? [...drops(0), ...drops(1)] : [],
+    snow: snow ? [...flakes(0), ...flakes(1)] : [],
+    smoke: chimney && L >= 7
+      ? [0, 1, 2].map(i => <Circle key={'sm' + i} cx={chimney[0] + (i - 1) * 3} cy={chimney[1] - i * 7} r={3 + i * 1.6} fill={night ? '#9AA3B5' : '#E9E4DC'} opacity={0.75 - i * 0.15} />)
+      : [],
+  };
 }
 
 /** Işık geçişleri: lamba/pencere hâlesi, ışık huzmesi, oda glow'ları. */
@@ -649,6 +725,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   const [breathAnim] = useState(() => new Animated.Value(0));
   const [twinkle] = useState(() => new Animated.Value(0));
   const previousLevel = useRef(L);
+  const [reduce, setReduce] = useState(false);
+  const [boxW, setBoxW] = useState(0);
+  useEffect(() => {
+    let on = true;
+    AccessibilityInfo.isReduceMotionEnabled().then(v => on && setReduce(v)).catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', v => setReduce(v));
+    return () => { on = false; sub.remove(); };
+  }, []);
 
   useEffect(() => {
     Animated.spring(pop, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }).start();
@@ -663,10 +747,11 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
           Animated.timing(v, { toValue: 0, duration: ms, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
         ]),
       );
+    if (reduce) return;
     const loops = [loop(floatAnim, 3300), loop(swayAnim, 5100), loop(breathAnim, 2600), loop(twinkle, 1500)];
     loops.forEach(l => l.start());
     return () => loops.forEach(l => l.stop());
-  }, [floatAnim, swayAnim, breathAnim, twinkle]);
+  }, [floatAnim, swayAnim, breathAnim, twinkle, reduce]);
 
   useEffect(() => {
     const grew = previousLevel.current !== L;
@@ -926,6 +1011,16 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
     }
   }
 
+  // Baca: en arkadaki bloğun duvarında; dumanı ambient katmanından çıkar.
+  let chimney: Pt | undefined;
+  if (L >= 7 && order.length) {
+    const ci = order[0];
+    const cr = Math.floor(ci / cols), cc = ci % cols;
+    box('chim', cr + 0.55, cc + 0.55, 0.16, 0.16, WALL_H, 12, BRICK, 0.4).forEach(add);
+    box('chimc', cr + 0.52, cc + 0.52, 0.22, 0.22, WALL_H + 12, 2, shade(BRICK, -0.2)).forEach(add);
+    chimney = P(cr + 0.63, cc + 0.63, WALL_H + 16);
+  }
+
   // Minik 3D Moka maskotu evin salonunda veya çalışma odasında durur.
   if (L >= 5) {
     const mokaRoomId = S.order.find(id => S.rooms[id]?.type === 'salon') ?? S.order.find(id => S.rooms[id]?.type === 'calisma') ?? S.order[0];
@@ -985,7 +1080,9 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
   minY -= showLabels ? PAD + TAG_H / 2 : 10; maxY += showLabels ? PAD + TAG_H / 2 : 10;
   const vbW = maxX - minX, vbH = maxY - minY;
 
-  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH });
+  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce);
+  const air = ambient({ theme, dark, day: Math.floor(now / 86400000), L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
+  const sc = boxW > 0 ? boxW / vbW : 0;
 
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
@@ -1070,6 +1167,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
 
   const model = (
     <Animated.View
+      onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
@@ -1097,6 +1195,12 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, now: now
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
+      {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
+      {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
+      {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
+      {sc > 0 && !reduce && air.smoke.length > 0 && <Drift vb={vb} scale={sc} dy={-12} dx={4} ms={3200} restart fade reduce={reduce}>{air.smoke}</Drift>}
+      {sc > 0 && !reduce && air.rain.length > 0 && <Drift vb={vb} scale={sc} dy={vbH} dx={-vbW * 0.02} ms={1400} restart reduce={reduce}>{air.rain}</Drift>}
+      {sc > 0 && !reduce && air.snow.length > 0 && <Drift vb={vb} scale={sc} dy={vbH} dx={vbW * 0.03} ms={9000} restart reduce={reduce}>{air.snow}</Drift>}
       {garden.sprouts.length > 0 && (
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: sproutOpacity, transform: [{ scale: sproutScale }] }]}>
           <Svg width="100%" height="100%" viewBox={vb}>

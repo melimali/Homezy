@@ -31,6 +31,9 @@ async function fetchSky(): Promise<Sky | null> {
   try {
     // Yerel modül: yeni derleme yoksa require atar, sessizce saate döneriz.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { requireOptionalNativeModule } = require('expo-modules-core');
+    if (!requireOptionalNativeModule('ExpoLocation')) return null;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Loc = require('expo-location');
     let perm = await Loc.getForegroundPermissionsAsync();
     if (perm.status !== 'granted' && perm.canAskAgain !== false) perm = await Loc.requestForegroundPermissionsAsync();
@@ -60,10 +63,12 @@ export function useSky(enabled = true): Sky {
     if (cache && Date.now() - cache.at < TTL) return;
     let on = true;
     inflight ||= fetchSky().finally(() => { inflight = null; });
-    inflight.then(s => {
-      if (s) cache = { at: Date.now(), sky: s };
-      if (on && s) setSky(s);
-    });
+    inflight
+      .then(s => {
+        if (s) cache = { at: Date.now(), sky: s };
+        if (on && s) setSky(s);
+      })
+      .catch(() => {});
     return () => { on = false; };
   }, [enabled]);
   return sky;

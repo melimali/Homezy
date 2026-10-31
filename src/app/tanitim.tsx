@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
 import { Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
@@ -302,7 +303,7 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
       </Animated.View>
 
       <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], maxWidth: 440, width: '100%', marginTop: 26 }}>
-        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase('tr-TR')}</Text>
+        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${tx(p.eyebrow)}`.toLocaleUpperCase(dateLocale())}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
       </Animated.View>

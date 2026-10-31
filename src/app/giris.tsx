@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
 import { validEmail } from '@/auth/errors';
 import { Btn, Card, Field, T, XBtn } from '@/components/ui';
@@ -110,7 +111,7 @@ export default function Giris() {
         </View>
 
         <View>
-          <T v="eyebrow">{(mode === 'sifre' ? 'Şifremi unuttum' : 'Hesap').toLocaleUpperCase('tr-TR')}</T>
+          <T v="eyebrow">{tx(mode === 'sifre' ? 'Şifremi unuttum' : 'Hesap').toLocaleUpperCase(dateLocale())}</T>
           <T v="h1">{title}</T>
           <T v="lead">{lead}</T>
         </View>

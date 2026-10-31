@@ -15,10 +15,12 @@ import { supabase } from '@/lib/supabase';
  */
 export const ENTITLEMENT = 'premium';
 
-const apiKey = Platform.select({
+const rawKey = Platform.select({
   ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
   android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
 });
+// RevenueCat "Test Store" anahtarı (test_...) yayın sürümünde uygulamayı açılışta çökertir; yayında yok sayılır.
+const apiKey = rawKey && !rawKey.includes('xxxx') && (__DEV__ || !rawKey.startsWith('test_')) ? rawKey : undefined;
 
 export const purchasesEnabled = Boolean(apiKey);
 
@@ -118,7 +120,14 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!apiKey || configured.current) return;
     configured.current = true;
-    Purchases.configure({ apiKey, appUserID: user?.id ?? null });
+    try {
+      Purchases.configure({ apiKey, appUserID: user?.id ?? null });
+    } catch (e) {
+      console.warn('Homezy: RevenueCat başlatılamadı', e);
+      configured.current = false;
+      setReady(true);
+      return;
+    }
     Purchases.addCustomerInfoUpdateListener(apply);
     Purchases.getCustomerInfo().then(apply).catch(() => {}).finally(() => setReady(true));
     loadPackages().then(setPkgs).catch(() => {});

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
@@ -12,9 +12,9 @@ import { fonts, useColors } from '@/theme';
 
 /**
  * Odalar: iki sütun polaroid kartlar (oda sahnesi, ad, temizlik çubuğu, yapılan/toplam iş).
- * İşi olan odalar önde. Ev sekmesinde ve gizli Odalar rotasında kullanılır.
+ * İşi olan odalar önde. `row`: Ev sekmesinde yana kayan tek sıra; yoksa iki sütun (Odalar rotası).
  */
-export function RoomGrid({ state: S, now, start = 0 }: { state: AppState; now: number; start?: number }) {
+export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; now: number; start?: number; row?: boolean }) {
   const c = useColors();
   const router = useRouter();
   const refs = allTasks(S, now);
@@ -24,14 +24,14 @@ export function RoomGrid({ state: S, now, start = 0 }: { state: AppState; now: n
     .sort((a, b) => b.rc.late - a.rc.late || b.rc.today - a.rc.today);
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
 
-  return (
-    <View style={styles.grid}>
+  const cards = (
+    <>
       {rooms.map(({ id, r, rc, clean, mine }, i) => {
         const scene = ROOM_ART[r.type];
         const okN = mine.filter(x => x.s.k === 'ok').length;
         const n = rc.late + rc.today;
         return (
-          <Appear key={id} index={start + i} style={styles.cell}>
+          <Appear key={id} index={start + i} style={row ? styles.rowCell : styles.cell}>
             <Squish
               onPress={() => open(id)}
               accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
@@ -63,13 +63,24 @@ export function RoomGrid({ state: S, now, start = 0 }: { state: AppState; now: n
           </Appear>
         );
       })}
-    </View>
+    </>
   );
+  if (row) {
+    return (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.row}>
+        {cards}
+      </ScrollView>
+    );
+  }
+  return <View style={styles.grid}>{cards}</View>;
 }
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 20, marginTop: 4 },
   cell: { width: '48%' },
+  bleed: { marginHorizontal: -22 },
+  row: { gap: 14, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 18 },
+  rowCell: { width: 158 },
   card: { borderRadius: 22, padding: 8, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4 },
   photo: { borderRadius: 16, overflow: 'hidden' },
   tape: { position: 'absolute', top: -7, alignSelf: 'center', width: 54, height: 16, borderRadius: 6, opacity: 0.85, zIndex: 2, transform: [{ rotate: '-3deg' }] },

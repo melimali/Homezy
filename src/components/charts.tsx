@@ -27,6 +27,8 @@ function useGrow(delay = 0) {
 export function WeekBars({ bars, height = 120 }: { bars: DayBar[]; height?: number }) {
   const c = useColors();
   const max = Math.max(3, ...bars.map(b => b.n));
+  // Hiç iş yoksa boş bir kutu yerine alçak, sakin bir şerit.
+  if (!bars.some(b => b.n)) height = 36;
   return (
     <View style={[st.bars, { height: height + 40 }]} accessibilityLabel={bars.map(b => `${b.label} ${b.n}`).join(', ')}>
       {bars.map((b, i) => (
@@ -65,10 +67,10 @@ export function Ring({ pct, size = 112, stroke = 13, color, label, emoji }: { pc
           </LinearGradient>
         </Defs>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
-        <Circle
+        {p > 0 && <Circle
           cx={size / 2} cy={size / 2} r={r} stroke={`url(#${id})`} strokeWidth={stroke} fill="none" strokeLinecap="round"
           strokeDasharray={`${(len * p) / 100} ${len}`} transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
+        />}
       </Svg>
       <View style={[StyleSheet.absoluteFill, st.center]}>
         {emoji ? <Text style={{ fontSize: size * 0.16 }}>{emoji}</Text> : null}
@@ -105,6 +107,7 @@ export function StreakDots({ dots }: { dots: { key: string; mark: DotMark }[] })
 export function MoodLine({ points, height = 110 }: { points: MoodPoint[]; height?: number }) {
   const c = useColors();
   const [w, setW] = useState(0);
+  if (!points.some(p => p.score != null)) height = 44;
   const pad = 14;
   const x = (i: number) => pad + (i * (w - pad * 2)) / Math.max(1, points.length - 1);
   const y = (s: number) => pad + ((5 - s) / 4) * (height - pad * 2);

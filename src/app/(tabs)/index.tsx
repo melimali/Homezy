@@ -175,7 +175,7 @@ export default function Home() {
             <T v="small">✏️ Planı düzenle</T>
           </Squish>
         } />
-        <RoomGrid state={S} now={now} start={3} />
+        <RoomGrid state={S} now={now} start={3} row />
       </View>
 
       <View style={{ gap: 12 }}>

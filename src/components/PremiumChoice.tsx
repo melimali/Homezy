@@ -55,7 +55,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Text style={{ fontSize: 48 }}>🏡</Text>
         <T v="h1" style={{ textAlign: 'center' }}>Nasıl başlamak istersin?</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin işleri her iki planda da ücretsiz. Premium serini korur, evini güzelleştirir, ailenle paylaştırır ve reklamları kaldırır.</T>
+        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar.</T>
       </View>
 
       <View style={styles.plans}>

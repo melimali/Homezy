@@ -56,7 +56,7 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
     title: 'Merhaba, ben Moka!',
-    text: 'Kahveye bayılan, biraz tombul bir kakapoyum. Evinin işlerini seninle birlikte takip edeceğim. Hadi sana etrafı gezdireyim!',
+    text: 'Kahveye bayılan, biraz tombul bir kakapoyum. Evinin işlerini seninle birlikte, kendi hızında takip edeceğim. Seni yormadan, yanında olacağım.',
     Art: MokaArt,
     blob: c => c.room.salon,
   },
@@ -72,7 +72,7 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Rutinler',
     title: 'Ne zaman ne yapılacak, ben hatırlarım',
-    text: 'Her iş kendi aralığıyla tekrar eder. Sen "Tamamladım"a bas, puanını kap; ben de saymaya yeniden başlarım.',
+    text: 'Her iş kendi aralığıyla tekrar eder. Sen "Tamamladım"a bas, küçük bir ödül kazan; ben de saymaya yeniden başlarım. Aksayan gün olursa sorun değil.',
     Art: RoutineArt,
     blob: c => c.todaySoft,
     pose: 'checklist',
@@ -99,7 +99,7 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Sabah özeti',
     title: 'Her sabah tek bir mesaj',
-    text: 'Saatini sen seç, kahvemi alıp gelirim. Geciken işleri, eksik ürünleri ve çamaşırı tek mesajda anlatırım.',
+    text: 'Saatini sen seç, kahvemi alıp gelirim. Seni bekleyen işleri, eksik ürünleri ve çamaşırı tek nazik mesajda anlatırım.',
     Art: MorningArt,
     blob: c => c.room.salon,
     pose: 'cozy_plant',

@@ -34,7 +34,7 @@ export function status(t: Task, now = Date.now(), flex = false): TaskStatus {
   const snoozed = t.snooze != null && diff > 0;
   if (diff < 0) {
     if (flex && -diff <= tolerance(t.every)) return { k: 'today', diff, label: `${-diff} gün geçti` };
-    return { k: 'late', diff, label: `${-diff} gün gecikti` };
+    return { k: 'late', diff, label: `${-diff} gündür bekliyor` };
   }
   if (diff === 0) return { k: 'today', diff, label: 'Bugün' };
   if (diff === 1) return { k: 'ok', diff, label: snoozed ? 'Yarına ertelendi' : 'Yarın' };
@@ -208,7 +208,7 @@ export function roomCounts(S: AppState, rid: string, now = Date.now()) {
   };
 }
 
-export const cellCount = (S: AppState, id: string) => S.cells.filter(x => x === id).length;
+export const cellCount = (S: AppState, id: string) => S.cells.filter(x => x === id).length + (S.cells2?.filter(x => x === id).length ?? 0);
 
 export const sortByDue = (arr: Task[], now = Date.now()) =>
   arr
@@ -350,6 +350,7 @@ export function makeRoom(S: AppState, type: RoomType) {
 
 export function removeRoom(S: AppState, id: string) {
   S.cells = S.cells.map(x => (x === id ? null : x));
+  if (S.cells2) S.cells2 = S.cells2.map(x => (x === id ? null : x));
   delete S.rooms[id];
   delete S.tasks[id];
   delete S.mod[id];

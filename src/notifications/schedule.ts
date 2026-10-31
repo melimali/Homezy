@@ -41,7 +41,7 @@ export function getNotifications(): NotificationsModule | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     loaded = require('expo-notifications') as NotificationsModule;
   } catch (e) {
-    console.warn('Layfapp: bildirim modülü yüklenemedi, bildirimler kapalı', e);
+    console.warn('Homezy: bildirim modülü yüklenemedi, bildirimler kapalı', e);
     loaded = null;
   }
   return loaded;
@@ -151,8 +151,10 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   // Ev silindiyse eski evin hatırlatmaları gelmesin.
   if (!S.setup) return void (await N.cancelAllScheduledNotificationsAsync());
   await ensureChannel(N);
-  await ensureCategories(N).catch(e => console.warn('Layfapp: bildirim düğmeleri kurulamadı', e));
-  await N.cancelAllScheduledNotificationsAsync();
+  await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
+  // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
+  for (const n of await N.getAllScheduledNotificationsAsync())
+    if ((n.content.data as { focus?: boolean } | undefined)?.focus !== true) await N.cancelScheduledNotificationAsync(n.identifier);
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));

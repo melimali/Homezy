@@ -3,8 +3,10 @@ import { AppState as RNAppState } from 'react-native';
 
 import { useAuth } from '@/auth/AuthProvider';
 import { useToast } from '@/components/Toast';
-import { ITEM } from '@/domain/items';
-import { autoFreeze, awardLocal, awardToast, pruneLog, type AwardResult } from '@/domain/play';
+import { FERTS, FLOWER } from '@/domain/garden';
+import { BUYABLE, ITEM } from '@/domain/items';
+import { autoFreeze, awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
+import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
@@ -138,15 +140,20 @@ export function usePlay() {
   /** Bir işi bugün için tamamlar; puan günde bir kez verilir. `what` mesajda görünen ad. */
   const award = useCallback(
     (kind: PlayKind, ref: string, label: string, what: string, extra?: (D: AppState) => void): AwardResult => {
-      const out: { r?: AwardResult } = {};
+      const out: { r?: AwardResult; up?: number } = {};
       update(D => {
         extra?.(D);
         out.r = awardLocal(D, kind, ref, label, Date.now(), limits(premium.active).mult);
         pruneLog(D.play);
+        const lv = mokaLevel(D.play.moka).level;
+        if (lv > D.play.moka.seen) {
+          out.up = lv;
+          D.play.moka.seen = lv;
+        }
       });
       const r = out.r!;
       if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
-      toast(awardToast(r, what));
+      toast(out.up ? `🎉 Moka ${out.up}. seviye oldu! ${awardToast(r, what)}` : awardToast(r, what));
       return out.r!;
     },
     [update, toast, premium.active],
@@ -154,11 +161,12 @@ export function usePlay() {
 
   const buy = useCallback(
     async (id: string, room: string | null): Promise<BuyResult> => {
-      const item = ITEM[id];
+      const item = BUYABLE[id];
       if (!item) return { ok: false, error: 'Bu eşya bulunamadı.' };
       if (item.premium && !premium.active) return { ok: false, error: `${item.name} Premium üyelere özel ⭐` };
       if (state.play.points < item.price) return { ok: false, error: `${item.price - state.play.points} puan daha lazım. Bir iş tamamla! 💪` };
-      const place = (D: AppState) => void (D.play.placed[id] = room);
+      // Sadece odaya konan eşyalar yerleşir; bahçe süsleri ve kişilikler odaya girmez.
+      const place = (D: AppState) => void (ITEM[id] && (D.play.placed[id] = room));
       if (supabase) {
         if (!session) return { ok: false, error: 'Mağaza için internet bağlantısı gerekiyor.' };
         // Önce sırada bekleyen puanlar gitsin, yoksa sunucu yetersiz puan der.
@@ -188,5 +196,46 @@ export function usePlay() {
     [premium.active, session, state.play.points, get, update],
   );
 
-  return { play: state.play, award, buy };
+  /**
+   * Tekrar alınabilen bahçe harcaması (tohum ya da gübre). Sunucu fiyatı, Premium'u ve günlük sınırı
+   * kendi tablosundan kontrol eder (`play_spend`, …_bahce.sql). Başarılı olursa `then` taslakta çalışır.
+   */
+  const spend = useCallback(
+    async (id: string, then: (D: AppState) => void): Promise<BuyResult> => {
+      const flower = FLOWER[id];
+      const fert = FERTS.find(f => f.id === id);
+      const thing = flower ?? fert;
+      if (!thing) return { ok: false, error: 'Bulunamadı.' };
+      if (flower?.premium && !premium.active) return { ok: false, error: `${flower.name} Premium üyelere özel ⭐` };
+      if (state.play.points < thing.price) return { ok: false, error: `${thing.price - state.play.points} puan daha lazım. Bir iş tamamla! 💪` };
+      if (supabase) {
+        if (!session) return { ok: false, error: "Moka'nın bahçesi için internet bağlantısı gerekiyor." };
+        await flush(get, update);
+        if (get().play.pending.length) return { ok: false, error: 'Puanların henüz sunucuya ulaşmadı. İnternet bağlantını kontrol et.' };
+        const { data, error } = await supabase.rpc('play_spend', { p_item: id, p_day: dayKey() });
+        if (error) {
+          const m = error.message || '';
+          return {
+            ok: false,
+            error: error.code === 'PGRST202' ? 'Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
+              : m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
+              : m.includes('premium') ? `${thing.name} Premium üyelere özel ⭐`
+              : m.includes('daily limit') ? 'Bugünlük bu gübre hakkın doldu. Yarın tekrar 🌱'
+              : 'Alınamadı. İnternet bağlantını kontrol edip tekrar dene.',
+          };
+        }
+        apply(update, data as Summary);
+        update(then);
+      } else {
+        update(D => {
+          D.play.points -= thing.price;
+          then(D);
+        });
+      }
+      return { ok: true };
+    },
+    [premium.active, session, state.play.points, get, update],
+  );
+
+  return { play: state.play, award, buy, spend };
 }

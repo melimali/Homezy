@@ -6,8 +6,9 @@ import type { HouseTheme } from './types';
  * (supabase/migrations/…_premium.sql) bunlarla aynı olmalı.
  */
 export const LIMITS = {
-  free: { freezes: 1, homes: 1, mult: 1 },
-  premium: { freezes: 3, homes: 5, mult: 1.5 },
+  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_scan_premium_50.sql). `chats`: Moka sohbet mesajı, her gün; sınırı `…_moka_chat.sql` tutar. */
+  free: { freezes: 1, homes: 1, mult: 1, scans: 2, chats: 15 },
+  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 50, chats: 150 },
 } as const;
 
 export const limits = (premium: boolean) => (premium ? LIMITS.premium : LIMITS.free);
@@ -17,6 +18,9 @@ export const THEMES: { id: HouseTheme; name: string; emoji: string; premium: boo
   { id: 'gece', name: 'Gece', emoji: '🌙', premium: true },
   { id: 'kis', name: 'Kış', emoji: '❄️', premium: true },
   { id: 'sonbahar', name: 'Sonbahar', emoji: '🍂', premium: true },
+  { id: 'cottage', name: 'Cottagecore', emoji: '🌼', premium: false },
+  { id: 'minimal', name: 'Minimal', emoji: '🤍', premium: true },
+  { id: 'lavanta', name: 'Lavanta', emoji: '💜', premium: true },
 ];
 
 /** Premium bittiyse seçili tema gündüze döner (seçim silinmez, üyelik dönünce geri gelir). */
@@ -27,13 +31,15 @@ export const themeFor = (theme: HouseTheme | undefined, premium: boolean): House
 export const FEATURES: { emoji: string; label: string; free: string; premium: string }[] = [
   { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
   { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
-  { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: 'Haftada 2', premium: 'Günde 2' },
+  { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
+  { emoji: '💬', label: 'Moka ile sohbet (her gün)', free: `Günde ${LIMITS.free.chats} mesaj`, premium: `Günde ${LIMITS.premium.chats} mesaj` },
   { emoji: '❄️', label: 'Seri dondurma (gün kaçırınca ev yıkılmaz)', free: 'Ayda 1', premium: 'Ayda 3' },
   { emoji: '⭐', label: 'Görevlerden kazanılan puan', free: '1 kat', premium: '1,5 kat' },
   { emoji: '🎹', label: 'Premium eşyalar (akvaryum, şömine, piyano)', free: '—', premium: '✓' },
   { emoji: '🏡', label: 'Birden fazla ev (yazlık, iş yeri)', free: '1 ev', premium: '5 ev' },
   { emoji: '🌙', label: 'Ev temaları: gece, kış, sonbahar', free: 'Gündüz', premium: '✓' },
   { emoji: '📔', label: 'Günlükte fotoğraf, ruh hali grafiği, "geçen yıl bugün"', free: 'Yazı', premium: '✓' },
+  { emoji: '📊', label: 'Ayrıntılı haftalık rapor (gün gün, ruh hali)', free: 'Özet', premium: '✓' },
   { emoji: '🏃', label: 'Spor grafikleri ve kişisel antrenman planı', free: 'Kayıt', premium: '✓' },
   { emoji: '🍳', label: 'Buzdolabındakilerle tarif önerisi', free: '—', premium: '✓' },
   { emoji: '🧥', label: 'Haftalık kombin planı', free: '—', premium: '✓' },

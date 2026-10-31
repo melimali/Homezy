@@ -1,18 +1,22 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { addHome, homeCount, removeHome, renameHome, switchHome } from '@/domain/homes';
+import { premiumHref } from '@/components/PaywallMoments';
+import { packFor } from '@/domain/seasons';
+import { track } from '@/lib/events';
 import { limits, LIMITS, THEMES, themeFor } from '@/domain/premium';
 import type { HouseTheme } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 /** Evlerim ve evin görünümü. Birden fazla ev ve gündüz dışındaki temalar Premium. */
 export default function Evler() {
@@ -30,6 +34,9 @@ export default function Evler() {
   const [armed, setArmed] = useState<string | null>(null);
   const theme = themeFor(S.settings.theme, premium.active);
   const shared = family.sharedId;
+  const [peek, setPeek] = useState<HouseTheme | null>(null);
+  const pack = packFor();
+  const peekTheme = THEMES.find(t => t.id === peek);
 
   const homes = [
     { id: S.homeId, name: S.homeName, rooms: S.order.map(id => S.rooms[id]), active: true },
@@ -58,7 +65,10 @@ export default function Evler() {
     setEditing(null);
   };
   const setTheme = (t: HouseTheme, locked: boolean) => {
-    if (locked) return router.push('/premium');
+    if (locked) {
+      track('season_peek', t);
+      return setPeek(t);
+    }
     update(D => void (D.settings.theme = t));
   };
 
@@ -82,9 +92,9 @@ export default function Evler() {
                   <Btn small kind="primary" label="Kaydet" onPress={() => saveName(h.id)} />
                 </View>
               ) : (
-                <Pressable onPress={() => { setEditing(h.id); setDraft(h.name); }} accessibilityRole="button" accessibilityLabel={`${h.name} adını değiştir`}>
+                <Squish onPress={() => { setEditing(h.id); setDraft(h.name); }} accessibilityRole="button" accessibilityLabel={`${h.name} adını değiştir`}>
                   <T v="bold">{h.name} {h.id === shared ? '👨‍👩‍👧' : ''} <Text style={{ color: c.muted }}>✎</Text></T>
-                </Pressable>
+                </Squish>
               )}
               <T v="small" numberOfLines={1}>
                 {h.rooms.length ? h.rooms.map(r => r && ROOM_EMOJI[r.type]).join(' ') : 'Henüz kurulmadı'}
@@ -122,6 +132,14 @@ export default function Evler() {
         )}
       </Card>
 
+      {pack && (
+        <Card>
+          <SecHead title={`${pack.emoji} ${pack.name}`} />
+          <T v="small">Bu ayın teması. {THEMES.find(t => t.id === pack.theme)?.premium && !premium.active ? 'Önizleyebilirsin; uygulamak Premium.' : 'Hemen uygulayabilirsin.'}</T>
+          <Btn small kind="primary" label={theme === pack.theme ? 'Uygulandı' : 'Göz at'} onPress={() => setTheme(pack.theme, !!THEMES.find(t => t.id === pack.theme)?.premium && !premium.active)} disabled={theme === pack.theme} style={{ alignSelf: 'flex-start' }} />
+        </Card>
+      )}
+
       <Card>
         <SecHead title="Evin görünümü" />
         <View style={styles.themes}>
@@ -146,11 +164,24 @@ export default function Evler() {
         </View>
         {!premium.active && <T v="small">Gece, kış ve sonbahar temaları Premium üyelere özel.</T>}
       </Card>
+      <Modal transparent visible={!!peekTheme} animationType="fade" onRequestClose={() => setPeek(null)}>
+        <View style={[styles.bg, { backgroundColor: c.shadow }]}>
+          <View style={[styles.sheet, { backgroundColor: c.surface }]}>
+            <Text style={{ fontSize: 64 }}>{peekTheme?.emoji}</Text>
+            <T v="h1" style={{ textAlign: 'center' }}>{peekTheme?.name} teması</T>
+            <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin bu temayla başka görünür. İlerlemen ve eşyaların aynen kalır, istediğin zaman Gündüz&apos;e dönebilirsin.</T>
+            <Btn kind="primary" label="Premium'a bak ⭐" block onPress={() => { setPeek(null); router.push(premiumHref('theme')); }} />
+            <Btn kind="ghost" label="Vazgeç" block onPress={() => setPeek(null)} />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  bg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  sheet: { borderRadius: 40, padding: 28, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
   home: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   on: { fontFamily: fonts.bodyBlack, fontSize: 13 },

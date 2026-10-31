@@ -89,6 +89,8 @@ export function taskDataOf(content: { data?: unknown; dataString?: unknown } | u
 type Live = { update: (fn: (draft: AppState) => void) => AppState; onOutcome?: (o: ActionOutcome, action: TaskAction) => void };
 let live: Live | null = null;
 export const setLiveStore = (l: Live | null) => void (live = l);
+/** Uygulama açıksa store; ana ekran widget'ı da değişikliği bunun üzerinden yapar. */
+export const liveStore = () => live;
 
 /** Aynı cevabı iki kez işleme (arka plan görevi ve dinleyici aynı anda gelebilir). */
 const handled = new Set<string>();
@@ -128,7 +130,7 @@ export async function handleTaskAction(
     outcome = applyTaskAction(S, data.tid, action, now, mult);
     if (outcome) {
       await saveState(S);
-      await reschedule(S, data.premium).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
+      await reschedule(S, data.premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
     }
   }
 

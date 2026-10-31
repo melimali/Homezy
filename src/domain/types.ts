@@ -1,3 +1,7 @@
+import type { Garden } from './garden';
+import type { PersonaId } from './items';
+import type { CheckIn } from './mood';
+import type { HouseLook } from './look';
 export type RoomType =
   | 'yatak'
   | 'mutfak'
@@ -44,6 +48,12 @@ export type Cloth = {
   worn?: number | null;
   /** Dolaba eklendiği an. */
   added?: number;
+  /** Kombin önerisi için (src/domain/style.ts). Fotoğraf taramasından gelir; yoksa addan tahmin edilir. */
+  kind?: string;
+  color?: string;
+  hex?: string;
+  fabric?: string;
+  pattern?: 'düz' | 'desenli';
 };
 
 export type StockLevel = 'var' | 'az' | 'yok';
@@ -95,6 +105,7 @@ export type Settings = {
   sound: boolean;
   /** Bugünün işleri için ayrı bildirim; bildirimden "Yaptım" / "Yapmadım" diye cevaplanır. */
   actions: boolean;
+  language: 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr';
 };
 
 /* ---------- ev profili, modlar, faturalar, garantiler ---------- */
@@ -114,7 +125,7 @@ export type Bill = { id: string; name: string; day: number; paid: string | null 
 /** Garanti belgesi: `end` bitiş günü. */
 export type Warranty = { id: string; name: string; end: number };
 
-export type HouseTheme = 'gunduz' | 'gece' | 'kis' | 'sonbahar';
+export type HouseTheme = 'gunduz' | 'gece' | 'kis' | 'sonbahar' | 'cottage' | 'minimal' | 'lavanta';
 
 export type WorkoutGoal = 'form' | 'kilo' | 'guc' | 'esneklik';
 export type WorkoutLevel = 'yeni' | 'orta' | 'ileri';
@@ -152,6 +163,10 @@ export type Play = {
   owned: string[];
   /** Eşya kimliği → konduğu oda (null: depoda). */
   placed: Record<string, string | null>;
+  /** Eşya kimliği → konduğu bloğun sırası (`cells` indeksi). Yoksa oda içinde boş bir yere kendisi dizilir. */
+  spots?: Record<string, number>;
+  /** Evin görünümü: zemin, duvar, pencere, dış cephe (src/domain/look.ts). */
+  look?: HouseLook;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */
   awarded: Record<string, DayKey>;
   /** Gün → o gün tamamlananların kısa adları (günlükte "bugün neler yaptım"). */
@@ -170,6 +185,32 @@ export type Play = {
   welcomed: DayKey | null;
   /** Haftalık özet kartının en son açıldığı gün (ana ekrandaki "özetin hazır" şeridi için). */
   weekSeen: DayKey | null;
+  /** Moka'nın bahçesi: saksılar, albüm, bugünün gübreleri (src/domain/garden.ts). */
+  garden: Garden;
+  /** Evin seçili kişiliği. Sıcak ücretsiz; diğerleri puanla bir kere alınır (`owned` içinde `kisilik_<id>`). */
+  persona: PersonaId;
+  /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
+  checkins: Record<DayKey, CheckIn>;
+  /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
+  moka: MokaGrowth;
+  /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */
+  notes: MokaNote[];
+};
+
+export type MokaNote = { id: string; day: DayKey; text: string; at: number };
+
+export type MokaStat = 'zeka' | 'disiplin' | 'saglik';
+/** Bir odak (Pomodoro) oturumu: gün, dakika, ne için, bitiş zamanı. */
+export type FocusSession = { day: DayKey; min: number; topic: string; at: number };
+export type MokaGrowth = {
+  /** Stat başına toplam deneyim. Seviye üç statın toplamından hesaplanır. */
+  xp: Record<MokaStat, number>;
+  /** Gün → stat → o gün kazanılan exp (günlük sınırlar için, sadece bugün tutulur). */
+  today: { day: DayKey; xp: Record<MokaStat, number> };
+  /** Kutlaması gösterilmiş en yüksek Moka seviyesi. */
+  seen: number;
+  /** Tamamlanan odak oturumları (son 200). */
+  focus: FocusSession[];
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */
@@ -177,6 +218,8 @@ export type HomeData = {
   cols: number;
   rows: number;
   cells: (string | null)[];
+  /** 2. kat (dubleks, Premium): `cells` ile aynı boyutta. null/yok: tek katlı ev. */
+  cells2?: (string | null)[] | null;
   rooms: Record<string, Room>;
   order: string[];
   tasks: Record<string, Task[]>;
@@ -199,6 +242,8 @@ export type AppState = {
   rows: number;
   /** Satır satır, `cols * rows` uzunluğunda; her hücrede oda id'si ya da null. */
   cells: (string | null)[];
+  /** 2. kat (dubleks, Premium): `cells` ile aynı boyutta, satır satır. null/yok: tek katlı ev. */
+  cells2?: (string | null)[] | null;
   rooms: Record<string, Room>;
   order: string[];
   tasks: Record<string, Task[]>;

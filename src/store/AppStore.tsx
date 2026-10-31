@@ -33,7 +33,7 @@ function createSaver() {
         try {
           await saveState(next);
         } catch (e) {
-          console.warn('Layfapp: kayıt başarısız', e);
+          console.warn('Homezy: kayıt başarısız', e);
         }
       }
     } finally {
@@ -55,7 +55,7 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
       try {
         S = await loadState();
       } catch (e) {
-        console.warn('Layfapp: veri okunamadı', e);
+        console.warn('Homezy: veri okunamadı', e);
       }
       if (!S) {
         S = seed();

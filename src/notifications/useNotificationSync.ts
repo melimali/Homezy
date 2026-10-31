@@ -39,7 +39,7 @@ export function useNotificationSync() {
   useEffect(() => {
     if (!getNotifications()) return;
     const t = setTimeout(() => {
-      rescheduleMorningSummaries(state, active).catch(e => console.warn('Layfapp: bildirim zamanlanamadı', e));
+      rescheduleMorningSummaries(state, active).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
     }, 1500);
     return () => clearTimeout(t);
   }, [state, active]);
@@ -51,7 +51,7 @@ export function useNotificationSync() {
       const { request, date } = response.notification;
       if (response.actionIdentifier !== N.DEFAULT_ACTION_IDENTIFIER) {
         handleTaskAction(N, { id: request.identifier, action: response.actionIdentifier, date, content: request.content }, rescheduleMorningSummaries)
-          .catch(e => console.warn('Layfapp: bildirim cevabı işlenemedi', e))
+          .catch(e => console.warn('Homezy: bildirim cevabı işlenemedi', e))
           .finally(() => N.clearLastNotificationResponse());
         return;
       }

@@ -9,7 +9,7 @@ Uygulamadaki karşılaştırma tablosu ve kilitler tek yerden gelir: `src/domain
 | Özellik | Ücretsiz | Premium | Nerede, nasıl korunuyor |
 |---|---|---|---|
 | Ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar | ✓ | ✓ | |
-| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 2 | Sunucu (`scan_usage`, aşağıda) |
+| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 50 | Sunucu (`scan_usage`, aşağıda) |
 | Seri dondurma: gün kaçırınca seri bozulmaz, ev tozlanmaz | Ayda 1 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
 | Görev puanı | 1 kat | 1,5 kat (seri bonusu dahil) | Sunucu `play_award` |
 | Premium eşyalar (akvaryum, şömine, piyano) | — | ✓ | Sunucu `play_buy` |
@@ -86,17 +86,17 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 | Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
 | Kombin önerisi (telefondaki kurallar) | ✓ | ✓ |
 | Buzdolabı fotoğrafı saklama (taramasız) | ✓ | ✓ |
-| Yapay zekâ ile buzdolabı ya da kıyafet taraması | **Haftada 2** (iki tür ortak) | **Günde 2** (iki tür ortak) |
+| Yapay zekâ ile buzdolabı ya da kıyafet taraması | **Haftada 2** (iki tür ortak) | **Günde 50** (iki tür ortak) |
 
-- Ücretsiz üyelikte haftada 2 tarama var, pazartesi yenilenir. Özelliği tanıtır ve haftalık buzdolabı kontrolüne yeter. Maliyeti kullanıcı başına ayda en fazla ≈ 9 tarama ≈ 0,10 $ (Sonnet).
-- Premium'da günde 2 tarama var; buzdolabı ya da kıyafet, kullanıcı istediği gibi dağıtır (ör. iki buzdolabı).
+- Ücretsiz üyelikte haftada 2 tarama var, pazartesi yenilenir. Özelliği tanıtır ve haftalık buzdolabı kontrolüne yeter. Maliyeti kullanıcı başına ayda en fazla ≈ 9 tarama ≈ 0,01 $ (Haiku).
+- Premium'da günde 50 tarama var (Melih, 2026-10-25; önce günde 2 idi); buzdolabı ya da kıyafet, kullanıcı istediği gibi dağıtır. Sınır `20261025120000_scan_premium_50.sql` ile.
 - Premium hakkı gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
 - **Sadece başarılı tarama hak yer.** Hata, iptal ya da "fotoğraf okunamadı" sonucu sayılmaz.
 
 ### Kod nerede?
 
 - Sunucu: `supabase/functions/scan/index.ts` (istemler, Claude çağrısı, sonucu temizleme) ve `supabase/migrations/20261023000000_scan.sql` (`scan_usage`, `scan_reserve`, `scan_release`).
-- Uygulama: `src/lib/scan.ts` (fotoğrafı fonksiyona gönderir, hata mesajları) ve `src/components/PhotoScan.tsx` (buzdolabı ve gardırop onay listeleri). Buzdolabında yeni fotoğraf çekilince tarama kendiliğinden başlar; gardıropta "Fotoğraftan ekle" kutusu var.
+- Uygulama: `src/lib/scan.ts` (fotoğrafı fonksiyona gönderir, hata mesajları) ve `src/components/PhotoScan.tsx` (buzdolabı ve gardırop onay listeleri). Kıyafet taraması her parçanın türünü, rengini, kumaşını ve desenini döner; kombin değerlendirmesi ve öneriler bunları telefonda kurallarla puanlar (`src/domain/style.ts`, `src/components/Outfits.tsx`), yapay zekâ kullanmaz. Buzdolabında yeni fotoğraf çekilince tarama kendiliğinden başlar; gardıropta "Fotoğraftan ekle" kutusu var.
 - Kurulum: `supabase db push`, `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`, `supabase functions deploy scan`. Fonksiyon kurulmadan uygulamadaki tarama "şu an kullanılamıyor" der, geri kalan her şey çalışır.
 
 ### Günlük sınır nasıl uygulanır?
@@ -104,7 +104,7 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göstermek için. Uygulama silinip kurulsa da, saat ileri alınsa da sunucu sayacı değişmez.
 
 1. `scan_usage` tablosu: `user_id`, `period` (Premium için Türkiye saatine göre o günün tarihi, ücretsiz için o haftanın pazartesisi), `n`. Birincil anahtar `(user_id, period)`. Taramanın türü (buzdolabı / kıyafet) sadece istatistik için ayrı bir sütunda tutulur, sınıra etki etmez.
-2. `scan` fonksiyonu Claude'u çağırmadan önce veritabanında tek bir işlemle hak **ayırır**: satır yoksa `n = 1` ile ekler, varsa `n < sınır` ise `n`'yi bir artırır; artıramazsa 429 döner ve uygulama "Bugünkü 2 taramanı yaptın, gece yarısı yenilenir" (ücretsizde "pazartesi yenilenir") der. Tek işlem olduğu için iki kere hızlı dokunma iki hak kullandırmaz ve sınırı da aşamaz.
+2. `scan` fonksiyonu Claude'u çağırmadan önce veritabanında tek bir işlemle hak **ayırır**: satır yoksa `n = 1` ile ekler, varsa `n < sınır` ise `n`'yi bir artırır; artıramazsa 429 döner ve uygulama "Bugünkü 50 taramanı yaptın, gece yarısı yenilenir" (ücretsizde "pazartesi yenilenir") der. Tek işlem olduğu için iki kere hızlı dokunma iki hak kullandırmaz ve sınırı da aşamaz.
 3. Claude hata verirse ya da sonuç boşsa ayrılan hak geri verilir (`n - 1`).
 4. Premium mi değil mi sorusu RevenueCat'ten gelir (`premium` yetkisi). Abonelik bittiği an ücretsiz kurallara düşer.
 5. Ek korumalar: aynı kullanıcıdan dakikada en fazla 5 istek; fotoğraf en fazla 1600 px ve 1,5 MB; Anthropic Console'da aylık harcama tavanı. Tavan dolarsa taramalar "şu an kullanılamıyor" der, uygulamanın geri kalanı çalışır.
@@ -129,7 +129,7 @@ Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göster
 
 ## Gelir ve gider hesabı
 
-Senaryo: **aylık 6,99 $** (yıllık 59,99 $; mağazalar fiyatı ,99 ile bitirir), Premium kullanıcı günde 2 tarama (buzdolabı ya da kıyafet) yapabiliyor, yani ayda en fazla **60 tarama**; ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
+Senaryo: **aylık 6,99 $** (yıllık 59,99 $; mağazalar fiyatı ,99 ile bitirir), Premium kullanıcı günde 50 tarama yapabiliyor (ayda en fazla **1.500**), ama aşağıdaki tablolar gerçekçi kullanım için günde 2 (ayda 60) ile hesaplandı; sınırı dolduran kullanıcının maliyeti "Model önerisi" altında. Ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
 
 ### Kullanıcı başına
 
@@ -187,20 +187,30 @@ Notlar:
 
 ### Model önerisi
 
-1. **Sonnet 5.5 ile başla.** Prototipteki kaliteye yakın; 6,99 $ fiyatta en kötü durumda bile elimize geçenin %15'i.
-2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5, Sonnet 5.5 ve Opus 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku yeterince iyiyse maliyet 20'de birine iner.
+1. **Haiku 5.5 ile başla** (Melih'in kararı, 2026-10-25). Sonnet'in yaklaşık 20'de biri maliyet; tablolardaki yapay zekâ satırları neredeyse sıfıra iner.
+2. Kapalı test sırasında 30–50 gerçek buzdolabı ve kıyafet fotoğrafını **Haiku 5.5 ve Sonnet 5.5** ile aynı istemle çalıştırıp sonuçları yan yana karşılaştır. Haiku ürün ya da kumaş atlıyorsa `npx supabase secrets set SCAN_MODEL=claude-sonnet-5-5` ile Sonnet'e dön.
 3. Opus 5.5 da günlük sınırla zarar ettirmez (en kötü durumda kullanıcı başına 1,44 $); kalite farkı açıksa tercih edilebilir.
 
 Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
+
+**Günde 50 sınırıyla en kötü durum:** her gün 50 tarama yapan bir Premium kullanıcı ayda 1.500 tarama eder. Haiku'da bu ≈ 1,50 $ (elimize geçen 4,95 $'ın ≈ %30'u), Sonnet'te ≈ 18–30 $, yani zarar. Bu yüzden günde 50 sınırı Haiku ile birlikte düşünülmeli; Sonnet'e dönülürse sınır da düşürülmeli. Anthropic Console'daki aylık harcama tavanı yine son güvence.
 
 ---
 
 ## Yapılacaklar sırası
 
 1. Apple Small Business Program başvurusu, Paid Apps sözleşmesi, iki mağazada banka ve vergi bilgisi.
-2. Abonelik ürünleri, ülkeye göre fiyat: Play Console'da tek abonelik `layfapp_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $); App Store Connect'te tek grupta `layfapp_premium_aylik` ve `layfapp_premium_yillik`. Aylık plana ilk ay 4,99 $ giriş teklifi. Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md).
+2. Abonelik ürünleri, ülkeye göre fiyat: Play Console'da tek abonelik `homezy_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $); App Store Connect'te tek grupta `homezy_premium_aylik` ve `homezy_premium_yillik`. Aylık plana ilk ay 4,99 $ giriş teklifi. Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md).
 3. RevenueCat projesi, `premium` yetkisi, iki ürün, bir "offering".
 4. Supabase projesi: anonim oturum, `scan_usage` tablosu ve hak ayırma / geri verme fonksiyonları, `scan` Edge Function, `ANTHROPIC_API_KEY` ve `REVENUECAT_API_KEY` gizli değişkenleri.
 5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.
 6. Anthropic Console'da aylık harcama limiti.
 7. Gizlilik politikası ve mağaza gizlilik formlarına fotoğraf ve satın alma maddeleri.
+
+## Moka sohbet botu (Haiku)
+
+- Uygulama: `src/app/moka.tsx` (Ben → "Moka ile sohbet" ya da ortadaki Moka "+" menüsü), `src/lib/mokaChat.ts`, `src/domain/chat.ts` (bağlam ve eylemleri uygulama).
+- Sunucu: `supabase/functions/moka-chat/index.ts`. Model `CHAT_MODEL` (varsayılan `claude-haiku-5-5`). Sistem istemi Moka kişiliği + ev/rutin/odak konularıyla sınırlı; alan dışını nazikçe reddeder.
+- Araçlar: iş ekle, işi tamamla, yarına ertele, takvim notu, odak başlat. Sunucu çağrıyı şemaya ve uygulamanın gönderdiği oda/iş listesine göre doğrular; telefon aynısını yerel veriye göre tekrar doğrular. Mesajlar saklanmaz.
+- Sınır: ücretsiz günde 15, Premium günde 150 mesaj (`chat_usage`, `20261031120000_moka_chat.sql`; `LIMITS.*.chats` ile aynı).
+- Kurulum: `supabase db push`, `supabase functions deploy moka-chat` (`ANTHROPIC_API_KEY` scan ile aynı).

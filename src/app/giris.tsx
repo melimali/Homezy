@@ -20,6 +20,7 @@ import { cloudEnabled } from '@/lib/supabase';
 import { LEGAL } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 type Mode = 'kayit' | 'giris' | 'sifre';
 
@@ -102,8 +103,8 @@ export default function Giris() {
         contentContainerStyle={[st.wrap, { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 }]}
       >
         <View style={st.head}>
-          <View style={[st.logoPill, { backgroundColor: brand.navy }]}>
-            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
           </View>
           {fromApp && <XBtn label="Kapat" onPress={() => (router.canGoBack() ? router.back() : router.replace(state.setup ? '/' : '/kurulum'))} />}
         </View>
@@ -124,7 +125,7 @@ export default function Giris() {
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   onPress={() => switchTo(m)}
-                  style={[st.segBtn, on && { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }]}
+                  style={[st.segBtn, on && { backgroundColor: c.surface }]}
                 >
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: on ? c.ink : c.muted }}>
                     {m === 'kayit' ? 'Hesap oluştur' : 'Giriş yap'}
@@ -185,14 +186,14 @@ export default function Giris() {
           />
 
           {mode === 'giris' && (
-            <Pressable onPress={() => switchTo('sifre')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
+            <Squish onPress={() => switchTo('sifre')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
               <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.hi }}>Şifremi unuttum</Text>
-            </Pressable>
+            </Squish>
           )}
           {mode === 'sifre' && (
-            <Pressable onPress={() => switchTo('giris')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
+            <Squish onPress={() => switchTo('giris')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
               <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.hi }}>Girişe dön</Text>
-            </Pressable>
+            </Squish>
           )}
         </Card>
 

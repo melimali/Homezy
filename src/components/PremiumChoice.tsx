@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
+import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
 import { FEATURES } from '@/domain/premium';
+import { track } from '@/lib/events';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
 
@@ -16,21 +18,26 @@ const short = (v: string) => v === '✓' || v === '—';
  * Ücretsiz mi Premium mu? Uygulama ilk açıldığında açılış animasyonundan hemen sonra çıkar,
  * sonra Hesabım'dan tekrar açılabilir. `onDone` seçim yapılınca (ya da satın alma bitince) çağrılır.
  */
-export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose?: () => void }) {
+export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void; onClose?: () => void; moment?: PaywallMoment }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
-  const [plan, setPlan] = useState<Plan>('monthly');
+  const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const intro = plan === 'monthly' ? introPrice : null;
+  useEffect(() => {
+    track('paywall_view', moment ?? 'manual');
+  }, [moment]);
+  const copy = moment ? MOMENT_COPY[moment] : undefined;
 
   const doBuy = async () => {
     setBusy('buy');
     const r = await buy(plan);
     setBusy(null);
     if (r.ok) {
+      track('paywall_buy', moment ?? 'manual');
       if (r.active) toast('Premium açıldı. Hoş geldin! 🎉');
       onDone();
     } else if (!r.cancelled) toast(r.error);
@@ -54,8 +61,8 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
     >
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Text style={{ fontSize: 48 }}>🏡</Text>
-        <T v="h1" style={{ textAlign: 'center' }}>Nasıl başlamak istersin?</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin işleri her iki planda da ücretsiz. Premium serini korur, evini güzelleştirir, ailenle paylaştırır ve reklamları kaldırır.</T>
+        <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
+        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar."}</T>
       </View>
 
       <View style={styles.plans}>
@@ -166,16 +173,16 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
 }
 
 const styles = StyleSheet.create({
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 2 },
+  planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
-  plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 2, gap: 2 },
+  plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 0, gap: 2 },
   planName: { fontFamily: fonts.bodyBlack, fontSize: 13, paddingVertical: 3 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   price: { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40 },
-  table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6 },
+  table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
   cell: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12.5 },

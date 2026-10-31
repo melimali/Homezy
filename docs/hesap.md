@@ -40,7 +40,7 @@
 
 ### 2. RevenueCat ve mağazalar
 
-Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlement'ı, Google Play'de tek abonelik `layfapp_premium` (temel planlar `aylik`, `yillik`; aylığa ilk ay 4,99 $ teklifi), App Store'da iki ürün, `default` offering'de Monthly ve Annual paketleri, webhook Supabase'e.
+Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlement'ı, Google Play'de tek abonelik `homezy_premium` (temel planlar `aylik`, `yillik`; aylığa ilk ay 4,99 $ teklifi), App Store'da iki ürün, `default` offering'de Monthly ve Annual paketleri, webhook Supabase'e.
 
 ### 3. Uygulama
 

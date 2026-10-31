@@ -4,8 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
 import { Bar, Btn, IconBtn, Screen, T, TitleBar } from '@/components/ui';
-import { ROOM_SCENES } from '@/constants/scenes';
-import { roomMokaScene } from '@/constants/curated-scenes';
+import { ROOM_ART } from '@/constants/room-art';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, homeScore, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
@@ -35,7 +34,7 @@ export default function Odalar() {
 
       <View style={styles.grid}>
         {rooms.map(({ id, r, rc, clean, mine }, i) => {
-          const scene = roomMokaScene(r.type, ROOM_SCENES[r.type]);
+          const scene = ROOM_ART[r.type];
           const okN = mine.filter(x => x.s.k === 'ok').length;
           const n = rc.late + rc.today;
           return (

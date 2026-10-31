@@ -73,9 +73,10 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(2100, v.meikai, 500, exitEase, 0),
       // 2. Moka'nın evi
       at(2100, v.sky, 700, Easing.out(Easing.quad)),
+      at(2400, v.hearts, 2000, Easing.out(Easing.quad)),
       at(2100, v.house, 900, Easing.out(Easing.quad)), // ışık hâlesi
       at(2250, v.moka, 800, expo),
-      at(2500, v.steam, 1800, Easing.inOut(Easing.sin)), // Moka'nın nefesi (tek yumuşak süzülme)
+      at(2400, v.steam, 1900, Easing.inOut(Easing.sin)), // Moka'nın nefesi (tek yumuşak süzülme)
       // Döngü (Animated.loop) paralelin bitişini bekletiyordu; buhar tek uzun yükselişle iki kez tüter.
       ...v.word.map((l, i) => at(2750 + i * 60, l, 650, expo)),
       at(3350, v.tag, 500, Easing.out(Easing.quad)),
@@ -183,6 +184,13 @@ const STAGE = 300;
 const HOUSE = 150;
 const MOKA = 190;
 const HALO = 380;
+const GREEN = '#A8CBB0'; // düz pastel adaçayı yeşili (temadan bağımsız)
+const INK = '#2E4B3A';
+const SPARKS = [
+  { e: '🍃', x: 10, y: 55, s: 26, dx: 30, rot: 40 }, { e: '✨', x: 82, y: 40, s: 22, dx: -18, rot: 20 },
+  { e: '🌿', x: 20, y: 28, s: 24, dx: 20, rot: -35 }, { e: '✨', x: 68, y: 62, s: 18, dx: 12, rot: 15 },
+  { e: '🍃', x: 85, y: 70, s: 28, dx: -34, rot: -50 }, { e: '✨', x: 38, y: 20, s: 16, dx: 0, rot: 30 },
+];
 const WORD = 'Homezy'.split('');
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
@@ -204,6 +212,9 @@ const st = StyleSheet.create({
   door: { position: 'absolute', left: HOUSE * 0.41, top: HOUSE * 0.58, width: HOUSE * 0.2, height: HOUSE * 0.3, borderRadius: HOUSE * 0.1, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
   moka: { width: MOKA, height: MOKA, marginBottom: 8 },
   halo: { position: 'absolute', width: HALO, height: HALO, marginTop: -150 },
+  spark: { position: 'absolute' },
+  inkCh: { color: INK },
+  warmCh: { color: '#FFF8EE', textShadowColor: INK, textShadowRadius: 6, textShadowOffset: { width: 0, height: 2 } },
   mokaImg: { width: MOKA, height: MOKA },
   steam: { position: 'absolute', width: 12, height: 12, borderRadius: 6 },
   heart: { position: 'absolute', fontSize: 22 },
@@ -221,18 +232,25 @@ type V = {
 function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number>; c: ReturnType<typeof useColors> }) {
   return (
     <View style={st.center} pointerEvents="none">
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: v.sky }]}>
-        <Svg width="100%" height="100%">
-          <Defs>
-            <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={c.lavenderSoft} />
-              <Stop offset="0.55" stopColor={c.peachSoft} />
-              <Stop offset="1" stopColor={c.bg} />
-            </LinearGradient>
-          </Defs>
-          <Rect width="100%" height="100%" fill="url(#sky)" />
-        </Svg>
-      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: GREEN, opacity: v.sky }]} />
+
+      {/* Süzülen yapraklar ve parıltılar: tek seferlik yükselme */}
+      {SPARKS.map((p, i) => (
+        <Animated.Text
+          key={i}
+          style={[st.spark, {
+            left: `${p.x}%`, top: `${p.y}%`, fontSize: p.s,
+            opacity: v.hearts.interpolate({ inputRange: [0, 0.25, 0.8, 1], outputRange: [0, 0.95, 0.9, 0] }),
+            transform: [
+              { translateY: lerp(v.hearts, 30, -70 - (i % 3) * 25) },
+              { translateX: lerp(v.hearts, 0, p.dx) },
+              { rotate: v.hearts.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${p.rot}deg`] }) },
+              { scale: lerp(v.hearts, 0.5, 1) },
+            ],
+          }]}>
+          {p.e}
+        </Animated.Text>
+      ))}
 
       {/* Işık hâlesi: Moka'nın arkasında yumuşakça açılır */}
       <Animated.View style={[st.halo, {
@@ -242,9 +260,9 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
         <Svg width={HALO} height={HALO}>
           <Defs>
             <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor={c.glow} stopOpacity={0.95} />
-              <Stop offset="0.6" stopColor={c.glow} stopOpacity={0.35} />
-              <Stop offset="1" stopColor={c.glow} stopOpacity={0} />
+              <Stop offset="0" stopColor="#FFF8EE" stopOpacity={0.9} />
+              <Stop offset="0.6" stopColor="#FFF8EE" stopOpacity={0.3} />
+              <Stop offset="1" stopColor="#FFF8EE" stopOpacity={0} />
             </RadialGradient>
           </Defs>
           <Circle cx={HALO / 2} cy={HALO / 2} r={HALO / 2} fill="url(#halo)" />
@@ -266,15 +284,15 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
         {WORD.map((ch, i) => (
           <Animated.Text
             key={i}
-            style={[st.wordCh, { color: i < 4 ? c.ink : c.warm }, {
+            style={[st.wordCh, i < 4 ? st.inkCh : st.warmCh, {
               opacity: v.word[i].interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-              transform: [{ translateY: lerp(v.word[i], 12, 0) }],
+              transform: [{ translateY: Animated.add(lerp(v.word[i], 14, 0), v.hearts.interpolate({ inputRange: [0, 0.3 + i * 0.08, 0.4 + i * 0.08, 0.5 + i * 0.08, 1], outputRange: [0, 0, -9, 0, 0] })) }],
             }]}>
             {ch}
           </Animated.Text>
         ))}
       </View>
-      <Animated.Text style={[st.tag, { color: c.muted, opacity: v.tag, transform: [{ translateY: lerp(v.tag, 8, 0) }] }]}>
+      <Animated.Text style={[st.tag, { color: INK, opacity: v.tag, transform: [{ translateY: lerp(v.tag, 8, 0) }] }]}>
         Moka ile sıcacık bir ev ☕
       </Animated.Text>
     </View>

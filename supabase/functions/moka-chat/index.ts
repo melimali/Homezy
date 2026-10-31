@@ -205,7 +205,7 @@ Deno.serve(async req => {
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);
   const userId = auth.user.id;
 
-  let body: { messages?: unknown; ctx?: unknown };
+  let body: { messages?: unknown; ctx?: unknown; lang?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -224,7 +224,7 @@ Deno.serve(async req => {
     const res = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 500,
-      system: system(ctx),
+      system: system(ctx) + (body.lang === 'en' ? '\n\nLANGUAGE (overrides every earlier language rule): the user uses the app in English. Always reply in English, and write any note text in English.' : ''),
       tools: TOOLS,
       tool_choice: { type: 'auto' },
       messages,

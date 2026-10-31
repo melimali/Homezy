@@ -1,3 +1,4 @@
+import { tx } from '@/i18n/runtime';
 import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -139,7 +140,7 @@ export async function handleTaskAction(
     // Aynı kimlikle göndermek bildirimi yerinde değiştirir; sessiz kanalda ses ve açılır pencere yok.
     await N.scheduleNotificationAsync({
       identifier: id,
-      content: { title: fb.title, body: fb.body, data: { url: '/bugun' }, autoDismiss: true },
+      content: { title: tx(fb.title), body: tx(fb.body), data: { url: '/bugun' }, autoDismiss: true },
       trigger: Platform.OS === 'android' ? { channelId: FEEDBACK_CHANNEL } : null,
     }).catch(() => N.dismissNotificationAsync(id));
   } else {

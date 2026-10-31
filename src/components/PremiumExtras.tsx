@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -83,7 +84,7 @@ export function OutfitPlan({ rid }: { rid: string }) {
       {plan.map((d, i) => (
         <View key={d.day} style={[styles.day, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
           <Text style={[styles.dayName, { color: i === 0 ? c.ok : c.muted }]}>
-            {i === 0 ? 'Bugün' : new Date(dayTs(d.day)).toLocaleDateString('tr-TR', { weekday: 'short' })}
+            {i === 0 ? 'Bugün' : new Date(dayTs(d.day)).toLocaleDateString(dateLocale(), { weekday: 'short' })}
           </Text>
           <T style={{ flex: 1, fontSize: 14 }}>{d.pieces.map(p => p.name).join(' + ')}</T>
         </View>

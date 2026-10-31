@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -48,8 +49,8 @@ export default function Magaza() {
         <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
         <T v="small" style={{ marginTop: 4 }}>
           {premium.active
-            ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString('tr-TR')} kat geliyor, 👑 eşyalar senin için açık.`
-            : `👑 Premium'da puanlar ${LIMITS.premium.mult.toLocaleString('tr-TR')} kat gelir ve 👑 işaretli eşyalar açılır.`}
+            ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString(dateLocale())} kat geliyor, 👑 eşyalar senin için açık.`
+            : `👑 Premium'da puanlar ${LIMITS.premium.mult.toLocaleString(dateLocale())} kat gelir ve 👑 işaretli eşyalar açılır.`}
         </T>
       </View>
 

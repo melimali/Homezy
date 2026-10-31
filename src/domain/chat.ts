@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { DAY } from './constants';
 import { allTasks, placeOf, uid } from './logic';
 import { applyTaskAction } from '@/notifications/actions';
@@ -100,5 +101,5 @@ export function noteDayLabel(day: DayKey, now = Date.now()) {
   const today = dayKey(now);
   if (day === today) return 'Bugün';
   if (day === dayKey(now + DAY)) return 'Yarın';
-  return new Date(`${day}T12:00:00`).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+  return new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
 }

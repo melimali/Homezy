@@ -1,3 +1,4 @@
+import { tx } from '@/i18n/runtime';
 import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -174,8 +175,8 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       await N.scheduleNotificationAsync({
         identifier: `gorev-${n.tid}-${dayKey(at.getTime())}`,
         content: {
-          title: n.title,
-          body: n.text,
+          title: tx(n.title),
+          body: tx(n.text),
           data,
           categoryIdentifier: n.list === 'plants' ? PLANT_CATEGORY : TASK_CATEGORY,
           threadIdentifier: 'isler',
@@ -186,13 +187,13 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
     const msg = summaryFor(ns.filter(n => !own.includes(n)), at, ns.filter(n => n.k !== 'ok').length);
     if (!msg) continue;
     await N.scheduleNotificationAsync({
-      content: { title: msg.title, body: msg.body, data: { url: msg.url } },
+      content: { title: tx(msg.title), body: tx(msg.body), data: { url: msg.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
   for (const n of nudges(S, now, smart, premium))
     await N.scheduleNotificationAsync({
-      content: { title: n.title, body: n.body, data: { url: n.url } },
+      content: { title: tx(n.title), body: tx(n.body), data: { url: n.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
 }

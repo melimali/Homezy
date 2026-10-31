@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -148,7 +149,7 @@ export default function Spor() {
             <Text style={{ fontSize: 20 }}>{EMOJI[x.type] ?? '💪'}</Text>
             <View style={{ flex: 1 }}>
               <T v="bold" style={{ fontSize: 14 }}>{x.type} · {x.min} dk</T>
-              <T v="small">{new Date(dayTs(x.day)).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</T>
+              <T v="small">{new Date(dayTs(x.day)).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</T>
             </View>
             <XBtn onPress={() => remove(x.id)} label={`${x.type} kaydını sil`} />
           </View>
@@ -239,7 +240,7 @@ function WorkoutPlan({ now, onPick }: { now: number; onPick: (type: string, min:
           <Text style={{ fontSize: 20 }}>{done.has(p.day) ? '✅' : EMOJI[p.type] ?? '💪'}</Text>
           <View style={{ flex: 1 }}>
             <T v="bold" style={{ fontSize: 14, color: p.day === today ? c.ok : c.ink }}>
-              {new Date(dayTs(p.day)).toLocaleDateString('tr-TR', { weekday: 'long' })}{p.day === today ? ' · bugün' : ''}
+              {new Date(dayTs(p.day)).toLocaleDateString(dateLocale(), { weekday: 'long' })}{p.day === today ? ' · bugün' : ''}
             </T>
             <T v="small">{p.what} · {p.min} dk</T>
           </View>
@@ -267,7 +268,7 @@ function Charts({ sport, now }: { sport: SportEntry[]; now: number }) {
             <Text style={[styles.chartN, { color: c.muted }]}>{w.min || ''}</Text>
             <View style={[styles.chartBar, { height: 4 + (w.min / max) * 86, backgroundColor: i === weeks.length - 1 ? c.hi : c.accentSoft }]} />
             <Text style={[styles.chartL, { color: c.muted }]}>
-              {new Date(dayTs(w.start)).toLocaleDateString('tr-TR', { day: 'numeric', month: 'numeric' })}
+              {new Date(dayTs(w.start)).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'numeric' })}
             </Text>
           </View>
         ))}

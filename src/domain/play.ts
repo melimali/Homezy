@@ -1,4 +1,5 @@
 import { DAY } from './constants';
+import { deviceLang } from '@/i18n/runtime';
 import type { Garden } from './garden';
 import { emptyMoka, gainFromAward } from './mokaLevel';
 import { baseCare, emptyProfile } from './home';
@@ -42,7 +43,7 @@ export const defaultSettings = (): Settings => ({
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
   actions: true,
-  language: 'tr',
+  language: deviceLang(),
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */

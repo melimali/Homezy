@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -20,8 +21,8 @@ import { Squish } from '@/components/motion';
 const MOODS = ['😄', '🙂', '😐', '😔', '😴'];
 /** Ruh hali grafiği için puan: 5 çok iyi … 1 kötü. */
 const MOOD_SCORE: Record<string, number> = { '😄': 5, '🙂': 4, '😐': 3, '😴': 2, '😔': 1 };
-const fmtDay = (k: string) => new Date(dayTs(k)).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
-const fmtYear = (k: string) => new Date(dayTs(k)).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtDay = (k: string) => new Date(dayTs(k)).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtYear = (k: string) => new Date(dayTs(k)).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 /** Geçen yılın aynı günü (29 şubat → 28 şubat). */
 const lastYear = (k: string) => {
   const [y, m, d] = k.split('-').map(Number);

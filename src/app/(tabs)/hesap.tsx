@@ -188,7 +188,9 @@ export default function Hesap() {
               return (
                 <Pressable
                   key={l.code}
+                  disabled={!!l.soon}
                   onPress={() => {
+                    if (l.soon) return;
                     update(D => void (D.settings.language = l.code));
                     setLangOpen(false);
                     toast(`${l.flag} ${l.label} seçildi.`);
@@ -197,11 +199,12 @@ export default function Hesap() {
                   accessibilityLabel={l.label}
                   style={[
                     st.langRow,
-                    { backgroundColor: selected ? c.accentSoft : c.surface2, borderColor: selected ? c.hi : c.line },
+                    { backgroundColor: selected ? c.accentSoft : c.surface2, borderColor: selected ? c.hi : c.line, opacity: l.soon ? 0.55 : 1 },
                   ]}
                 >
                   <Text style={{ fontSize: 22 }}>{l.flag}</Text>
                   <Text style={[st.langText, { color: c.ink }]}>{l.label}</Text>
+                  {l.soon && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{l.soon}</Text>}
                   {selected && <Text style={{ fontFamily: fonts.bodyBlack, color: c.ok }}>✓</Text>}
                 </Pressable>
               );

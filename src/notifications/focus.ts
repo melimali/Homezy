@@ -1,3 +1,4 @@
+import { tx } from '@/i18n/runtime';
 import { getNotifications } from './schedule';
 
 const ID = 'odak-bitti';
@@ -10,7 +11,7 @@ export async function scheduleFocusEnd(endsAt: number, topic: string) {
     if ((await N.getPermissionsAsync()).status !== 'granted') return;
     await N.scheduleNotificationAsync({
       identifier: ID,
-      content: { title: 'Odak süresi bitti 🎉', body: `${topic} için güzel iş! Moka seninle gurur duyuyor.`, data: { url: '/odak', focus: true } },
+      content: { title: tx('Odak süresi bitti 🎉'), body: tx(`${topic} için güzel iş! Moka seninle gurur duyuyor.`), data: { url: '/odak', focus: true } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: new Date(endsAt) },
     });
   } catch (e) {

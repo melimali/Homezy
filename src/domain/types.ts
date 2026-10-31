@@ -105,7 +105,7 @@ export type Settings = {
   sound: boolean;
   /** Bugünün işleri için ayrı bildirim; bildirimden "Yaptım" / "Yapmadım" diye cevaplanır. */
   actions: boolean;
-  language: 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr';
+  language: 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr' | 'pt' | 'ar';
 };
 
 /* ---------- ev profili, modlar, faturalar, garantiler ---------- */

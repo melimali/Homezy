@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
 import { baseCare, billStatus, dayDiff, emptyProfile, GUEST_ROOMS, seasonalNow, taskMin, warrantyStatus } from './home';
 import { defaultSettings, emptyPlay } from './play';
@@ -15,9 +16,9 @@ export const sod = (ts: number) => {
 export const daysSince = (ts: number, now = Date.now()) => Math.round((sod(now) - sod(ts)) / DAY);
 export const ago = (days: number, now = Date.now()) => now - days * DAY;
 
-export const fmtShort = (ts: number) => new Date(ts).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+export const fmtShort = (ts: number) => new Date(ts).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
 export const fmtLong = (ts: number) =>
-  new Date(ts).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(ts).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 export { greet, greeting } from './greeting';
 

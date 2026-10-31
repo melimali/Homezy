@@ -1,13 +1,16 @@
-export type Lang = 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr';
+export type Lang = 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr' | 'pt' | 'ar';
 
-export const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
+/** `soon`: henüz desteklenmiyor; menüde kendi dilinde "Yakında" yazar ve seçilemez. */
+export const LANGUAGES: { code: Lang; label: string; flag: string; soon?: string }[] = [
   { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { code: 'es', label: 'Español', flag: '🇪🇸' },
-  { code: 'ja', label: '日本語', flag: '🇯🇵' },
-  { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪', soon: 'Demnächst' },
+  { code: 'es', label: 'Español', flag: '🇪🇸', soon: 'Próximamente' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷', soon: 'Bientôt' },
+  { code: 'pt', label: 'Português', flag: '🇧🇷', soon: 'Em breve' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵', soon: '近日公開' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷', soon: '곧 출시' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦', soon: 'قريبًا' },
 ];
 
 export const DICTIONARY: Record<Lang, Record<string, string>> = {
@@ -396,4 +399,6 @@ export const DICTIONARY: Record<Lang, Record<string, string>> = {
     decor: 'Décor',
     album: 'Album',
   },
+  pt: {},
+  ar: {},
 };

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
 import { seed } from '@/domain/logic';
 import { normalize } from '@/domain/play';
@@ -47,6 +48,11 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
   const [saver] = useState(createSaver);
   // En güncel state; arka arkaya gelen değişikliklerin (ör. parmakla boyama) hepsi bunun üzerinden çalışır.
   const current = useRef<AppState | null>(null);
+
+  const langCode = state?.settings?.language;
+  useEffect(() => {
+    if (langCode) setLang(langCode);
+  }, [langCode]);
 
   useEffect(() => {
     let alive = true;

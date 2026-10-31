@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Float, useReduceMotion } from '@/components/motion';
+import { MokaLive, timePose, type MokaLiveHandle } from '@/components/MokaLive';
 import { MokaWearLayer } from '@/components/MokaWearLayer';
 import { SceneImage } from '@/components/SceneImage';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
@@ -31,6 +32,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
   const c = useColors();
   const reduce = useReduceMotion();
   const [hop] = useState(() => new Animated.Value(0));
+  const live = useRef<MokaLiveHandle | null>(null);
   const px = SIZE[size];
   const bubble = showBubble && !!(title || message || tip);
   const sceneSrc = scene ? POSE_SCENES[pose] : undefined;
@@ -39,6 +41,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
   const bounce = () => {
     sfx('tap');
     onPress?.();
+    live.current?.tickle();
     if (reduce) return;
     hop.setValue(0);
     Animated.sequence([
@@ -56,6 +59,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
   return (
     <Pressable
       onPress={bounce}
+      onLongPress={() => live.current?.cuddle()}
       accessibilityRole="button"
       accessibilityLabel={['Moka', title, message, tip && `Günün cümlesi: ${tip}`].filter(Boolean).join('. ')}
       style={[styles.row, (size === 'lg' || wide) && styles.col, wide && { gap: 0 }, style]}
@@ -67,10 +71,10 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
       ) : (
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
           <Animated.View style={{ transform }}>
-            <View style={{ width: px, height: px }}>
-              <Image source={MOKA_ASSETS[pose]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <MokaLive size={px} handleRef={live}>
+              <Image source={MOKA_ASSETS[timePose(pose)]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
               <MokaWearLayer size={px} />
-            </View>
+            </MokaLive>
           </Animated.View>
         </Float>
       )}

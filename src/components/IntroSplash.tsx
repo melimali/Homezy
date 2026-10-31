@@ -78,7 +78,8 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(2850, v.door, 320, Easing.inOut(Easing.quad)),
       spring(3050, v.moka, 4, 60),
       at(3350, v.hearts, 1300, Easing.out(Easing.quad)),
-      Animated.sequence([Animated.delay(3300), Animated.loop(Animated.timing(v.steam, { toValue: 1, duration: 1100, easing: Easing.linear, useNativeDriver: true }), { iterations: 2 })]),
+      // Döngü (Animated.loop) paralelin bitişini bekletiyordu; buhar tek uzun yükselişle iki kez tüter.
+      at(3300, v.steam, 2200, Easing.linear),
       ...v.word.map((l, i) => spring(3400 + i * 70, l, 4, 120)),
       at(3950, v.tag, 500, Easing.out(Easing.quad)),
       at(4800, v.all, 300, Easing.in(Easing.quad), 0),
@@ -300,8 +301,11 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
               key={i}
               style={[st.steam, {
                 backgroundColor: c.surface, right: MOKA * 0.16 + i * 9, top: MOKA * 0.2,
-                opacity: v.steam.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 0.8, 0] }),
-                transform: [{ translateY: lerp(v.steam, 0, -34 - i * 8) }, { scale: lerp(v.steam, 0.5, 1.3) }],
+                opacity: v.steam.interpolate({ inputRange: [0, 0.15, 0.5, 0.65, 1], outputRange: [0, 0.8, 0, 0.8, 0] }),
+                transform: [
+                  { translateY: v.steam.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, -34 - i * 8, 0, -34 - i * 8] }) },
+                  { scale: v.steam.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0.5, 1.3, 0.5, 1.3] }) },
+                ],
               }]}
             />
           ))}

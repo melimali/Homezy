@@ -93,7 +93,7 @@ export async function loadState(): Promise<AppState | null> {
     order: [],
     tasks: {},
     mod: {},
-    settings: JSON.parse(m.settings) as Settings,
+    settings: json<Settings>(m.settings, {} as Settings),
     play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
     homeId: m.homeId || 'ev1',
     homeName: m.homeName || 'Evim',

@@ -52,14 +52,22 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
     let alive = true;
     (async () => {
       let S: AppState | null = null;
-      try {
-        S = await loadState();
-      } catch (e) {
-        console.warn('Homezy: veri okunamadı', e);
+      let failed = false;
+      // Okuma hatasında bir kez daha dene; yine olmazsa mevcut veriyi seed ile EZME.
+      for (let i = 0; i < 2 && !S; i++) {
+        try {
+          S = await loadState();
+          failed = false;
+          break;
+        } catch (e) {
+          failed = true;
+          console.warn('Homezy: veri okunamadı', e);
+          await new Promise(r => setTimeout(r, 400));
+        }
       }
       if (!S) {
         S = seed();
-        saver(S);
+        if (!failed) saver(S);
       }
       if (alive) {
         current.current = S;

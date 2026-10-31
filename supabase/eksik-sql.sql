@@ -1,0 +1,8 @@
+-- Sadece büyük ihtimalle eksik olanlar: bahçe, aile evi, moka sohbet. Tekrar çalıştırmak güvenli.
+-- Önkoşul: puan, premium, scan bölümleri uygulanmış olmalı (yoksa tum-sql.sql çalıştır).
+-- =====================================================================
+-- 20261027120000_bahce.sql
+-- =====================================================================
+-- 20261031000000_aile_evi.sql
+-- =====================================================================
+-- 20261031120000_moka_chat.sql

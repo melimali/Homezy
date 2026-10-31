@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
 import { FEATURES } from '@/domain/premium';
+import { track } from '@/lib/events';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
 
@@ -26,6 +27,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const intro = plan === 'monthly' ? introPrice : null;
+  useEffect(() => {
+    track('paywall_view', moment ?? 'manual');
+  }, [moment]);
   const copy = moment ? MOMENT_COPY[moment] : undefined;
 
   const doBuy = async () => {
@@ -33,6 +37,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
     const r = await buy(plan);
     setBusy(null);
     if (r.ok) {
+      track('paywall_buy', moment ?? 'manual');
       if (r.active) toast('Premium açıldı. Hoş geldin! 🎉');
       onDone();
     } else if (!r.cancelled) toast(r.error);

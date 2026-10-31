@@ -8,6 +8,7 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { House3D } from '@/components/House3D';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
+import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
@@ -255,6 +256,7 @@ export default function Home() {
 
       <Celebrate level={hp.level} />
       <StreakMoment />
+      <LevelUpPeek />
       <WelcomeBack />
       <MoodCheckin />
     </Screen>

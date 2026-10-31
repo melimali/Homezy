@@ -10,6 +10,7 @@ import {
 } from '@/domain/paywall';
 import { progressOf } from '@/domain/play';
 import { THEMES } from '@/domain/premium';
+import { track } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -58,6 +59,7 @@ export function StreakMoment() {
   if (!show) return null;
   const close = (toPremium: boolean) => {
     prefs.set(STREAK_KEY, String(mark));
+    track('streak_mark', String(mark));
     if (offer) writeMem(markPaywallShown(readMem()));
     setClosed(true);
     if (toPremium) router.push(premiumHref('streak'));

@@ -92,3 +92,58 @@ Kodda sabit olanlar: yetki (entitlement) kimliği **`premium`**; paketler **`$rc
 9. **Sandbox / test:** Play lisans test hesabı (bölüm G.4) ile dahili test sürümünden satın al. Beklenen: uygulamada Premium açılır, RevenueCat > Customers'ta kullanıcı UUID'si görünür, Supabase `subscriptions` tablosunda `active = true`, `product_id = homezy_premium:aylik`. Test aboneliği hızlı yenilenir/biter; iptal edip Premium'un düştüğünü de dene. Geliştirici kimliğiyle emülatörde (Play'siz) satın alma denenemez.
 10. **iOS (sonra):** App Store Connect'te `homezy_premium_aylik` / `homezy_premium_yillik` ürünleri (bölüm İ), RevenueCat'e iOS app + App Store Connect API anahtarı, ürünleri `premium`'a ve aynı offering'e bağla (iOS ürünleri aynı Monthly/Annual paketlerine eklenir).
 11. **Fiyatlar:** 6,99 $ / 59,99 $ / ilk ay 4,99 $; Türkiye 149,99 TL / 1.564,99 TL / ilk ay 119,99 TL. RevenueCat fiyat tutmaz, mağazadaki fiyat geçerlidir; Play'de Türkiye fiyatını elle gir.
+
+## L. İlk AAB: derle ve Play'e yükle (Windows, cmd, C:\lf-wt)
+Kural: tüm komutlar `npx.cmd` ile, OneDrive dışındaki klasörde (C:\lf-wt). Paket adı `com.meikai.homezy` ilk yüklemeden sonra değişmez.
+
+**1. Hazırlık**
+1. `git pull origin integration/tum-pr`, `npm install`, `npm run typecheck`, `npm run lint` (hata varsa dur, bana ilet).
+2. `npx.cmd eas login` (Expo hesabı, proje `@meikai/homezy`), `npx.cmd eas whoami` ile doğrula.
+3. `eas.json` hazır: `production` profili AAB üretir, `autoIncrement` sürüm kodunu EAS'ta artırır. `eas build:configure` gerekmez (zaten yapılandırılmış); sorarsa "Android" seç, dosyayı değiştirmesine izin verme.
+
+**2. Ortam değişkenleri (EAS bulutu `.env.local` dosyanı görmez)**
+- Herkese açık anahtarlar `EXPO_PUBLIC_*` olarak EAS'ın "production" ortamında olmalı. Kontrol: `npx.cmd eas env:list production`.
+- Repodaki `.env` zaten şunları taşır: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` (goog_...). Derleme bunları `.env`'den alır.
+- AdMob için EAS'ta olması gerekenler (yoksa uygulama **Google test reklamlarıyla** çıkar, mağazaya böyle gitmesin): `EXPO_PUBLIC_ADMOB_APP_ID_ANDROID` = ca-app-pub-6763724339604565~6223192132, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID` = ca-app-pub-6763724339604565/6167351815. Ekleme: `npx.cmd eas env:create --environment production --name EXPO_PUBLIC_ADMOB_APP_ID_ANDROID --value "ca-app-pub-..." --visibility plaintext` (banner için aynısı). iOS değerleri iOS'a geçince.
+- **Eklenmemesi gerekenler:** `EXPO_PUBLIC_DEV_PREMIUM` (herkese Premium açar) asla production'da olmasın; `sk_...`, service_role, Anthropic anahtarları uygulamaya hiç girmez (onlar Supabase secret'ı).
+- `eas env:list production` çıktısında DEV_PREMIUM görürsen `eas env:delete` ile sil.
+
+**3. İmzalama**
+- `npx.cmd eas build -p android --profile production` ilk çalışmada "Generate a new Android Keystore?" diye sorar: **Yes**, EAS saklasın. Anahtarı sen yönetme. Yedek için `npx.cmd eas credentials -p android` > Download keystore (güvenli bir yere kaydet, repoya koyma).
+- Play'e yüklediğin anahtar "upload key" olur; Play App Signing (Play Console'da varsayılan, açık kalsın) asıl imza anahtarını Google'da tutar. Upload key kaybolursa Play'den sıfırlatılabilir.
+
+**4. Derle**
+1. `npx.cmd eas build -p android --profile production` (10-25 dk, bulutta). Bittiğinde panelde ve terminalde .aab indirme bağlantısı çıkar.
+2. İndir: `npx.cmd eas build:list --platform android` ya da expo.dev > proje > Builds > Download. Dosya `.aab` olmalı (`.apk` değil).
+3. Hata olursa: expo.dev'deki build log'unu bana yapıştır (gizli anahtar varsa gizle).
+
+**5. Play Console: uygulamayı oluştur**
+1. Tüm uygulamalar > Uygulama oluştur: ad "Homezy: Rutin ve Ev İşleri", varsayılan dil Türkçe, **Uygulama** (oyun değil), **Ücretsiz**, bildirimleri kabul et.
+2. Pano'daki "Uygulamanızı ayarlayın" görevleri (hepsi tamamlanmadan test yayını yapılamaz): 
+   - **Gizlilik politikası URL'si:** https://melimali.github.io/layfapp/yasal/gizlilik.html (sayfa yayında mı tarayıcıdan aç).
+   - **Uygulama erişimi:** hesap açılmadan da kullanılır (misafir), kısıtlı bölüm yok; inceleme için istersen test hesabı yaz.
+   - **Reklamlar:** Evet, reklam içerir.
+   - **İçerik derecelendirme:** anketi doldur (şiddet/cinsellik yok, kullanıcı etkileşimi: Moka sohbet yapay zekâ; kullanıcılar arası mesajlaşma yok, konum paylaşılmaz).
+   - **Hedef kitle:** 13+ (çocuklara yönelik değil, "Aile" programına katılma).
+   - **Veri güvenliği:** `docs/yasal/magaza-formlari.md` içindeki cevapları aynen gir.
+   - **Hesap silme:** uygulama içinde var (Ben > Hesabı sil); Play'e web adresi ver: gizlilik sayfasındaki hesap silme bölümü (`docs/yasal/`).
+   - **Haber/COVID/finans/sağlık uygulaması:** hayır (spor takibi var ama tıbbi iddia yok; sağlık sorusunda "hayır" ya da "diğer" seç).
+   - **Kategori:** Ev ve Dekorasyon (ya da Yaşam Tarzı), iletişim e-postası info@themeikai.com.
+3. Mağaza sayfası: metinler `docs/magaza-metni.md` (TR), 512×512 ikon (`assets/icon.png`), 1024×500 görsel, en az 2 ekran görüntüsü.
+
+**6. İlk yükleme**
+1. Test > **Dahili test** > Yeni sürüm > .aab'yi yükle (ilk yükleme **elle** olmak zorunda; sonra `eas submit` çalışır). Play App Signing sorusunu kabul et.
+2. Sürüm adı "1 (1.0.0)", sürüm notu TR: "İlk test sürümü".
+3. Test kullanıcıları: Dahili test > Test kullanıcıları > e-posta listesi oluştur (kendi Gmail'in + 12'ye kadar kişi), kaydet, **"Katılma bağlantısı"nı** kopyala, telefonda aç ve Play'den kur.
+4. Kişisel hesap için asıl gereken **Kapalı test**: Test > Kapalı test > aynı .aab'yi yayınla, en az 12 test kullanıcısı ekle, hepsi bağlantıyla katılıp 14 gün kalmalı. Sonra "Production erişimi için başvur" aç.
+5. Yayın gözden geçirme birkaç saat-gün sürer; ilk kez hesap doğrulaması da bekletebilir.
+
+**7. İlk yüklemeden SONRA: abonelik ürünleri**
+1. Ürünler artık oluşturulabilir: Para kazanma > Ürünler > Abonelikler > Abonelik oluştur: kimlik `homezy_premium`, ad "Homezy Premium". Temel planlar: `aylik` (aylık yenilenen, 6,99 $), `yillik` (yıllık, 59,99 $); Türkiye fiyatlarını elle gir (149,99 TL / 1.564,99 TL). `aylik` için teklif `ilk-ay` (yeni müşteri, 1 ay, 4,99 $; TR 119,99 TL). Hepsini **Etkinleştir**.
+2. Ödeme profili ve satıcı hesabı gerekir (Play Console > Ödeme profili; vergi/banka bilgisi). Eksikse abonelik oluşturma açılmaz.
+3. RevenueCat > Products > Import (bölüm K.3), `premium` entitlement'ına bağla, `default` offering'in Monthly/Annual paketlerine ata. Ekran görüntüsünde `default` offering'in paket listesi boş görünüyor: ürünleri içe aktarıp paketlere bağlamadan uygulamada fiyat çıkmaz.
+4. Ayarlar > Lisans testi'ne Gmail'ini ekle, dahili test sürümünden test satın alması yap.
+5. Ürünler eklenince uygulamayı yeniden derlemen gerekmez (RevenueCat canlı okunur).
+
+**8. Sonraki sürümler**
+`npx.cmd eas build -p android --profile production --auto-submit` ya da önce `npx.cmd eas submit -p android` (Play servis hesabı JSON'u gerekir, bölüm K.2). Her yeni .aab'nin sürüm kodu otomatik artar.

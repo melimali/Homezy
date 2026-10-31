@@ -191,6 +191,22 @@ export type Play = {
   persona: PersonaId;
   /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
   checkins: Record<DayKey, CheckIn>;
+  /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
+  moka: MokaGrowth;
+};
+
+export type MokaStat = 'zeka' | 'disiplin' | 'saglik';
+/** Bir odak (Pomodoro) oturumu: gün, dakika, ne için, bitiş zamanı. */
+export type FocusSession = { day: DayKey; min: number; topic: string; at: number };
+export type MokaGrowth = {
+  /** Stat başına toplam deneyim. Seviye üç statın toplamından hesaplanır. */
+  xp: Record<MokaStat, number>;
+  /** Gün → stat → o gün kazanılan exp (günlük sınırlar için, sadece bugün tutulur). */
+  today: { day: DayKey; xp: Record<MokaStat, number> };
+  /** Kutlaması gösterilmiş en yüksek Moka seviyesi. */
+  seen: number;
+  /** Tamamlanan odak oturumları (son 200). */
+  focus: FocusSession[];
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */

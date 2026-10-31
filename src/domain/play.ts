@@ -1,5 +1,6 @@
 import { DAY } from './constants';
 import type { Garden } from './garden';
+import { emptyMoka, gainFromAward } from './mokaLevel';
 import { baseCare, emptyProfile } from './home';
 import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
 
@@ -32,7 +33,7 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
-  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {},
+  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(),
 });
 
 export const defaultSettings = (): Settings => ({
@@ -49,6 +50,7 @@ export function normalize(S: AppState): AppState {
   S.settings = { ...defaultSettings(), ...(S.settings || {}) };
   S.play = { ...emptyPlay(), ...(S.play || {}) };
   S.play.garden = { ...emptyGarden(), ...S.play.garden };
+  S.play.moka = { ...emptyMoka(), ...S.play.moka };
   S.homeId ||= 'ev1';
   S.homeName ||= 'Evim';
   S.others ||= [];
@@ -271,6 +273,7 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
   (P.log[day] ||= []).push(label);
   P.pending.push({ kind, ref: kind === 'gorev' ? ref : kind, day });
   const d = new Date(now);
+  if (pts > 0 || kind !== 'gorev') gainFromAward(P, kind, now);
   P.times = [...P.times, d.getHours() * 60 + d.getMinutes()].slice(-40);
   return { awarded: true, points: pts, before, after: progressOf(P, now) };
 }

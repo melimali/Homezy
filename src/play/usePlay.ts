@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { FERTS, FLOWER } from '@/domain/garden';
 import { BUYABLE, ITEM } from '@/domain/items';
 import { autoFreeze, awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
+import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
@@ -139,15 +140,20 @@ export function usePlay() {
   /** Bir işi bugün için tamamlar; puan günde bir kez verilir. `what` mesajda görünen ad. */
   const award = useCallback(
     (kind: PlayKind, ref: string, label: string, what: string, extra?: (D: AppState) => void): AwardResult => {
-      const out: { r?: AwardResult } = {};
+      const out: { r?: AwardResult; up?: number } = {};
       update(D => {
         extra?.(D);
         out.r = awardLocal(D, kind, ref, label, Date.now(), limits(premium.active).mult);
         pruneLog(D.play);
+        const lv = mokaLevel(D.play.moka).level;
+        if (lv > D.play.moka.seen) {
+          out.up = lv;
+          D.play.moka.seen = lv;
+        }
       });
       const r = out.r!;
       if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
-      toast(awardToast(r, what));
+      toast(out.up ? `🎉 Moka ${out.up}. seviye oldu! ${awardToast(r, what)}` : awardToast(r, what));
       return out.r!;
     },
     [update, toast, premium.active],

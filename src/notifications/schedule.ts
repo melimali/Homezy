@@ -152,7 +152,9 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   if (!S.setup) return void (await N.cancelAllScheduledNotificationsAsync());
   await ensureChannel(N);
   await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
-  await N.cancelAllScheduledNotificationsAsync();
+  // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
+  for (const n of await N.getAllScheduledNotificationsAsync())
+    if ((n.content.data as { focus?: boolean } | undefined)?.focus !== true) await N.cancelScheduledNotificationAsync(n.identifier);
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));

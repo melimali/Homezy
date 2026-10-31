@@ -4,9 +4,10 @@ import { StyleSheet, View } from 'react-native';
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Appear, Squish } from '@/components/motion';
-import { Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
+import { Bar, Btn, Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, doneToday, homeScore } from '@/domain/logic';
+import { MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel';
 import { freezesUsed, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from '@/domain/stats';
@@ -37,6 +38,7 @@ export default function Gelisim() {
   const todayPct = Math.round((100 * doneN) / Math.max(1, doneN + dueN));
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
+  const ml = mokaLevel(S.play.moka);
   const pose = week >= 10 ? 'party' : week ? 'thumbs_up' : 'sipping';
 
   return (
@@ -50,6 +52,23 @@ export default function Gelisim() {
           <T v="small" numberOfLines={3}>{weekLine(bars)}</T>
         </View>
       </Appear>
+
+      <Card index={2}>
+        <SecHead title={`Moka seviye ${ml.level}`} h="h3" right={mokaTitle(ml.level)} />
+        <Bar value={ml.pct / 100} />
+        <T v="tiny">Sonraki seviyeye {ml.need - ml.into} exp</T>
+        {MOKA_STATS.map(m => {
+          const sl = statLevel(S.play.moka.xp[m.id]);
+          return (
+            <View key={m.id} style={{ gap: 4 }}>
+              <T v="bold">{m.emoji} {m.name} · sv. {sl.level}</T>
+              <Bar value={sl.pct / 100} />
+              <T v="tiny">{m.hint}</T>
+            </View>
+          );
+        })}
+        <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />
+      </Card>
 
       <Appear index={2} style={st.rings}>
         <View style={[st.ringCard, { backgroundColor: c.surface }]}>

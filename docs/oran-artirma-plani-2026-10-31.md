@@ -63,4 +63,5 @@ Etki: Y/O/D = yüksek/orta/düşük [TAHMİN]. Efor: S = ≤1 gün, M = 2–4 g�
 - #1 (kısmen): `src/lib/events.ts` yerel olay sayacına `app_open`, `day_return` (d1/d3/d7/d14/d30), `first_task_done` eklendi; ilk açılış günü saklanıyor. Bulut analitiği ve çökme izleme hâlâ yok (servis kararı + native).
 - #4: `welcomeNudges()` (`schedule.ts`): ilk 7 günde 3 nazik bildirim (1. gün 19:00, 2. gün 12:30, 5. gün 19:00); o gün iş yapıldıysa atlanır.
 - Zaten vardı: yıllık varsayılan paywall, paywall anları, kırılma/geri dönüş akışı (`WelcomeBack`), akşam seri bildirimi. Metinler İngilizce çeviri sırasında i18n'e alınacak.
-- Yapılmadı: onboarding kısaltma (#2, tasarım kararı gerekir), paylaşım görseli (#6), widget (#7), yorum isteme (#12); native modül.
+- #2: tanıtım 13 → 5 sayfa; plandan sonra 7 soru atlanıp doğrudan eve gidiliyor (sorular Bugün kartından), `onboarding_done` olayı.
+- Yapılmadı: paylaşım görseli (#6), widget (#7), yorum isteme (#12); native modül.

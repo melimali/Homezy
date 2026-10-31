@@ -38,7 +38,7 @@ type Page = {
 };
 
 // Moka kendini tanıtır, sonra her sayfayı tek cümleyle kendi anlatır (docs/skeleton-v3.md).
-const PAGES: Page[] = [
+const ALL_PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
     title: 'Merhaba, ben Moka!',
@@ -149,6 +149,13 @@ const PAGES: Page[] = [
     premium: true,
   },
 ];
+
+/**
+ * İlk açılışta yalnızca 5 sayfa: tanışma, ev çizme, küçük işler, 3D ev, Premium. Gerisi
+ * (tarama, bahçe, günlük...) uygulamada kendiliğinden keşfedilir; ilk değere (ilk iş) daha çabuk varılsın.
+ */
+const SHORT = ['Tanışalım', 'Evini çiz', 'Küçük işler', '3D evin', 'Premium'];
+const PAGES = ALL_PAGES.filter(p => SHORT.includes(p.eyebrow));
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. */
 export default function Tanitim() {

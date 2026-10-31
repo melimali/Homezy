@@ -3,17 +3,17 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 
 /**
  * Plak çaların sürekli (loop) çalan parçaları: lofi ve ambiyans sesleri. Birden fazlası aynı anda açılıp
- * karıştırılabilir (ör. lofi + yağmur). Dosyalar assets/sounds/lofi/ altında. Yerel ses modülü yoksa hiçbir şey çalmaz.
+ * karıştırılabilir (ör. lofi + yağmur). Dosyalar assets/sounds/ altında. Yerel ses modülü yoksa hiçbir şey çalmaz.
  */
 export type AmbientId = 'lofi' | 'rain' | 'fireplace' | 'nature' | 'sea' | 'night';
 
 const SOURCES: Record<AmbientId, number> = {
-  lofi: require('../../assets/sounds/lofi/lofi.mp3'),
-  rain: require('../../assets/sounds/lofi/yagmur.mp3'),
-  fireplace: require('../../assets/sounds/lofi/somine.mp3'),
-  nature: require('../../assets/sounds/lofi/kus.mp3'),
-  sea: require('../../assets/sounds/lofi/deniz.mp3'),
-  night: require('../../assets/sounds/lofi/circir.mp3'),
+  lofi: require('../../assets/sounds/lofi.mp3'),
+  rain: require('../../assets/sounds/rain.mp3'),
+  fireplace: require('../../assets/sounds/firepit.mp3'),
+  nature: require('../../assets/sounds/bird.mp3'),
+  sea: require('../../assets/sounds/sea.mp3'),
+  night: require('../../assets/sounds/cricet.mp3'),
 };
 
 /** Lofi ana müzik, ambiyanslar altta durur ki karışınca birbirini bastırmasın. */

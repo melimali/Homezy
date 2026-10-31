@@ -22,7 +22,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   const toast = useToast();
   const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
-  const [plan, setPlan] = useState<Plan>('monthly');
+  const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const intro = plan === 'monthly' ? introPrice : null;
 

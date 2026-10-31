@@ -16,6 +16,7 @@ import { useFamily } from '@/family/FamilyProvider';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 /** Evlerim ve evin görünümü. Birden fazla ev ve gündüz dışındaki temalar Premium. */
 export default function Evler() {
@@ -91,9 +92,9 @@ export default function Evler() {
                   <Btn small kind="primary" label="Kaydet" onPress={() => saveName(h.id)} />
                 </View>
               ) : (
-                <Pressable onPress={() => { setEditing(h.id); setDraft(h.name); }} accessibilityRole="button" accessibilityLabel={`${h.name} adını değiştir`}>
+                <Squish onPress={() => { setEditing(h.id); setDraft(h.name); }} accessibilityRole="button" accessibilityLabel={`${h.name} adını değiştir`}>
                   <T v="bold">{h.name} {h.id === shared ? '👨‍👩‍👧' : ''} <Text style={{ color: c.muted }}>✎</Text></T>
-                </Pressable>
+                </Squish>
               )}
               <T v="small" numberOfLines={1}>
                 {h.rooms.length ? h.rooms.map(r => r && ROOM_EMOJI[r.type]).join(' ') : 'Henüz kurulmadı'}

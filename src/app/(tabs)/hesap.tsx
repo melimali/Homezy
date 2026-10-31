@@ -18,6 +18,7 @@ import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
 function confirm(title: string, text: string, ok: string, onOk: () => void) {
@@ -213,9 +214,9 @@ export default function Hesap() {
             <Btn label={t('goPremium')} kind="primary" onPress={() => router.push('/premium')} block />
           )}
           {!premium.active && (
-            <Pressable onPress={doRestore} disabled={busy === 'restore'} accessibilityRole="button" accessibilityLabel={t('restorePurchases')} style={{ alignSelf: 'center', padding: 4 }}>
+            <Squish onPress={doRestore} disabled={busy === 'restore'} accessibilityRole="button" accessibilityLabel={t('restorePurchases')} style={{ alignSelf: 'center', padding: 4 }}>
               <T v="small" style={{ textDecorationLine: 'underline' }}>{busy === 'restore' ? 'Kontrol ediliyor…' : t('restorePurchases')}</T>
-            </Pressable>
+            </Squish>
           )}
         </Appear>
       )}
@@ -237,13 +238,13 @@ export default function Hesap() {
       <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
         <T v="h3">{t('about')}</T>
         <View style={st.legal}>
-          <Pressable onPress={() => Linking.openURL(LEGAL.terms)} accessibilityRole="link" accessibilityLabel={t('terms')}>
+          <Squish onPress={() => Linking.openURL(LEGAL.terms)} accessibilityRole="link" accessibilityLabel={t('terms')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
-          </Pressable>
+          </Squish>
           <Text style={{ color: c.muted }}>•</Text>
-          <Pressable onPress={() => Linking.openURL(LEGAL.privacy)} accessibilityRole="link" accessibilityLabel={t('privacy')}>
+          <Squish onPress={() => Linking.openURL(LEGAL.privacy)} accessibilityRole="link" accessibilityLabel={t('privacy')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
-          </Pressable>
+          </Squish>
         </View>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
       </Appear>

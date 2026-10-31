@@ -97,10 +97,10 @@ export default function Bugun() {
       <DailyGoals now={now} />
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>
-          <Pressable onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
+          <Squish onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
             <T v="h2" style={{ flex: 1 }}>Bu hafta</T>
             <T v="small">{showWeek ? 'Gizle' : `${week.length} iş ›`}</T>
-          </Pressable>
+          </Squish>
           {showWeek && week.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </Card>
       )}
@@ -184,10 +184,10 @@ function ModeCard({ now }: { now: number }) {
   if (!mode)
     return (
       <Card>
-        <Pressable onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.modeHead}>
+        <Squish onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.modeHead}>
           <T v="h2" style={{ flex: 1 }}>Bugün nasılsın?</T>
           <T v="small">{open ? 'Kapat' : 'Mod seç ›'}</T>
-        </Pressable>
+        </Squish>
         {open && (
           <View style={{ gap: 8 }}>
             {MODE_KINDS.map(k => (

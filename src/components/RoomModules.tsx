@@ -102,9 +102,9 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   <Text numberOfLines={2} style={[styles.clothName, { color: c.ink }]}>{x.name}</Text>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: fg }}>{CSTATE_EMOJI[x.state]} {CSTATE[x.state]}</Text>
                 </Squish>
-                <Pressable onPress={() => setSheet(x.id)} accessibilityRole="button" accessibilityLabel={`${x.name} ayarları`} hitSlop={8} style={styles.more}>
+                <Squish onPress={() => setSheet(x.id)} accessibilityRole="button" accessibilityLabel={`${x.name} ayarları`} hitSlop={8} style={styles.more}>
                   <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 15 }}>⋯</Text>
-                </Pressable>
+                </Squish>
               </Appear>
             );
           })}

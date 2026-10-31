@@ -129,7 +129,7 @@ export default function Home() {
 
         <Appear index={1} style={[styles.mokaCard, { backgroundColor: c.surface }]}>
           <View style={styles.mokaRow}>
-            <Pressable onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
+            <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
                 <Image source={HOME_MOKA_SEATED} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
               </View>
@@ -137,7 +137,7 @@ export default function Home() {
                 <T v="bold" numberOfLines={1}>{moka.title}</T>
                 <T v="small" numberOfLines={3} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
               </View>
-            </Pressable>
+            </Squish>
             <IconBtn icon={<Text style={[styles.chev, { color: c.ink }]}>›</Text>} label="Bugünün işleri" size={34} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
           </View>
           <View style={styles.mokaFoot}>
@@ -150,9 +150,9 @@ export default function Home() {
 
       <View style={{ gap: 14 }}>
         <SecHead title="Günün Özeti" h="h3" right={
-          <Pressable onPress={() => router.push('/hafta')} accessibilityRole="link" hitSlop={8}>
+          <Squish onPress={() => router.push('/hafta')} accessibilityRole="link" hitSlop={8}>
             <T v="small">Tümünü Gör</T>
-          </Pressable>
+          </Squish>
         } />
         <Appear index={2} style={styles.stats}>
           <StatTile emoji={hp.streak ? '🔥' : '🪵'} n={`${hp.streak}`} label="gün seri" />
@@ -193,9 +193,9 @@ export default function Home() {
 
       <View style={{ gap: 12 }}>
         {S.others.length > 0 && (
-          <Pressable onPress={() => router.push('/evler')} accessibilityRole="button" style={[styles.homeSwitch, { backgroundColor: c.surface }]}>
+          <Squish onPress={() => router.push('/evler')} accessibilityRole="button" style={[styles.homeSwitch, { backgroundColor: c.surface }]}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
-          </Pressable>
+          </Squish>
         )}
         <House3D state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         {hp.level >= 5 && (
@@ -206,9 +206,9 @@ export default function Home() {
         <View style={styles.houseFoot}>
           <T v="small">Eve dokun, 3D görünümü aç</T>
           <Text style={{ color: c.line }}>•</Text>
-          <Pressable onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={8}>
+          <Squish onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={8}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi }}>Evimin hikâyesi</Text>
-          </Pressable>
+          </Squish>
         </View>
       </View>
 

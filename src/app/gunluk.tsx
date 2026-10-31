@@ -15,6 +15,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { photoUrl, removePhoto, uploadPhoto } from '@/sync/photos';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 const MOODS = ['😄', '🙂', '😐', '😔', '😴'];
 /** Ruh hali grafiği için puan: 5 çok iyi … 1 kötü. */
@@ -128,9 +129,9 @@ export default function Gunluk() {
         {photo && (
           <View>
             <Image source={{ uri: photo }} style={styles.photo} resizeMode="cover" accessibilityLabel="Günün fotoğrafı" />
-            <Pressable onPress={() => setPhoto(null)} accessibilityRole="button" accessibilityLabel="Fotoğrafı kaldır" style={[styles.photoX, { backgroundColor: c.surface }]}>
+            <Squish onPress={() => setPhoto(null)} accessibilityRole="button" accessibilityLabel="Fotoğrafı kaldır" style={[styles.photoX, { backgroundColor: c.surface }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>✕</Text>
-            </Pressable>
+            </Squish>
           </View>
         )}
         {premium.active ? (

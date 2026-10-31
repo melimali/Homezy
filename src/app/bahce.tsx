@@ -24,6 +24,7 @@ import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 type Tab = 'cicek' | 'gubre' | 'sus' | 'kisilik' | 'album';
 
@@ -149,12 +150,12 @@ export default function Bahce() {
               </Appear>
             ) : (
               <Appear key={'e' + i} index={i} style={styles.plotCell}>
-                <Pressable onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
+                <Squish onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
                   <Breathe amp={0.06} dur={2000}>
                     <View style={{ opacity: 0.55 }}><PlantArt stage={-1} size={54} /></View>
                   </Breathe>
                   <Text style={[styles.plotName, { color: c.muted }]}>Boş saksı</Text>
-                </Pressable>
+                </Squish>
               </Appear>
             ),
           )}
@@ -384,15 +385,15 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
   return (
     <View style={[styles.row, { backgroundColor: month ? c.glow : c.surface }]}>
       <Burst fire={popped} />
-      <Pressable onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} detaylarını gör`}>
+      <Squish onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} detaylarını gör`}>
         <Sway deg={4} dur={2000 + (f.price % 5) * 300}><PlantArt flower={f} stage={5} size={44} /></Sway>
-      </Pressable>
-      <Pressable onPress={() => onSelect(f)} style={{ flex: 1, gap: 2 }}>
+      </Squish>
+      <Squish onPress={() => onSelect(f)} style={{ flex: 1, gap: 2 }}>
         <Text style={[styles.rowT, { color: month ? c.glowInk : c.ink }]}>{f.name}{f.premium ? ' 👑' : ''}</Text>
         <Text style={[styles.rowS, { color: month ? c.glowInk : c.muted }]}>
           {month ? '🌟 Ayın çiçeği · ' : ''}{f.grow} büyümede açar
         </Text>
-      </Pressable>
+      </Squish>
       {locked ? (
         <Btn small label="👑 Premium" onPress={() => router.push('/premium')} />
       ) : (

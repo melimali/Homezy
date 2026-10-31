@@ -1,6 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
@@ -12,6 +12,7 @@ import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 const CATEGORIES: [ItemCategory, string][] = [
   ['tum', '✨ Tümü'],
@@ -58,14 +59,14 @@ export default function Magaza() {
         <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
       </View>
 
-      <Pressable onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
+      <Squish onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
         <Text style={{ fontSize: 30 }}>🌷</Text>
         <View style={{ flex: 1 }}>
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
           <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
         </View>
         <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
-      </Pressable>
+      </Squish>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
         {CATEGORIES.map(([k, label]) => (
@@ -107,7 +108,7 @@ function ItemCard({ item, selected, onPress }: { item: Item; selected: boolean; 
 
   return (
     <Card style={[styles.item, selected && { width: '100%' }]}>
-      <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${item.price} puan`} style={{ alignItems: 'center', gap: 4 }}>
+      <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${item.price} puan`} style={{ alignItems: 'center', gap: 4 }}>
         <Text style={{ fontSize: 40 }}>{item.emoji}</Text>
         <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{item.name}</T>
         {owned ? (
@@ -115,7 +116,7 @@ function ItemCard({ item, selected, onPress }: { item: Item; selected: boolean; 
         ) : (
           <Text style={[styles.tag, { color: locked ? c.warm : c.ink }]}>{item.premium ? '👑 ' : ''}⭐ {item.price}</Text>
         )}
-      </Pressable>
+      </Squish>
 
       {selected && !owned && (
         <View style={{ gap: 8, alignSelf: 'stretch' }}>

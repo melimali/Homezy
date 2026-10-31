@@ -10,7 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { sfx } from '@/lib/sfx';
+import { sfx, type Sfx } from '@/lib/sfx';
 
 /**
  * Cozy temanın hareketleri: yumuşak beliriş, basınca esneyen kartlar, hafifçe süzülen emojiler
@@ -79,8 +79,8 @@ function split(style: StyleProp<ViewStyle>) {
 
 /** Basınca içine çöküp bırakınca zıplayan dokunma alanı. */
 export function Squish({
-  children, style, scaleTo = 0.94, quiet, dim = true, onPressIn, onPressOut, ...rest
-}: Omit<PressableProps, 'style' | 'children'> & { children: ReactNode; style?: StyleProp<ViewStyle>; scaleTo?: number; quiet?: boolean; dim?: boolean }) {
+  children, style, scaleTo = 0.94, quiet, sound = 'tap', dim = true, onPressIn, onPressOut, ...rest
+}: Omit<PressableProps, 'style' | 'children'> & { children: ReactNode; style?: StyleProp<ViewStyle>; scaleTo?: number; quiet?: boolean; sound?: Sfx; dim?: boolean }) {
   const [s] = useState(() => new Animated.Value(1));
   const to = (toValue: number, spring: boolean) =>
     (spring
@@ -96,7 +96,7 @@ export function Squish({
       accessibilityRole="button"
       {...rest}
       onPressIn={e => {
-        if (!quiet) sfx('tap');
+        if (!quiet) sfx(sound);
         to(scaleTo, false);
         onPressIn?.(e);
       }}

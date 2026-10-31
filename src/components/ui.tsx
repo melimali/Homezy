@@ -211,12 +211,26 @@ export function SecHead({ title, right, h = 'h2' }: { title: string; right?: Rea
 /** Boş durum: Moka ve kısa bir cümle. */
 export function EmptyMsg({ children, pose = 'wink' }: { children: ReactNode; pose?: MokaPose }) {
   return (
-    <View style={styles.empty}>
+    <Appear style={styles.empty}>
       <Float amp={3} dur={2600}>
         <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
       </Float>
       <T v="bold" style={{ fontSize: 16, lineHeight: 23, textAlign: 'center', maxWidth: 280 }}>{children}</T>
-    </View>
+    </Appear>
+  );
+}
+
+/** Yükleniyor: Moka hafifçe süzülür. */
+export function Loading({ text = 'Bir saniye…', pose = 'analyzing' }: { text?: string; pose?: MokaPose }) {
+  return (
+    <Appear style={styles.empty}>
+      <View accessibilityRole="progressbar" accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: 8 }}>
+        <Float amp={5} dur={1200}>
+          <Image source={MOKA_ASSETS[pose]} style={styles.emptyMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+        </Float>
+        <T v="small" style={{ textAlign: 'center' }}>{text}</T>
+      </View>
+    </Appear>
   );
 }
 
@@ -232,6 +246,8 @@ export function Btn({
   const fg = kind === 'primary' ? c.onAccent : kind === 'danger' ? c.onBadge : c.ink;
   return (
     <Squish
+      sound={kind === 'primary' ? 'pop' : 'tap'}
+      scaleTo={kind === 'primary' ? 0.92 : 0.94}
       {...rest}
       style={[
         styles.btn,

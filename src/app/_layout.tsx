@@ -1,7 +1,8 @@
+import { installTranslationPatch } from '@/i18n/patch';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -15,6 +16,7 @@ import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
+import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
@@ -23,6 +25,7 @@ import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
 import { useColors } from '@/theme';
 
+installTranslationPatch();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 // Emülatörde Google Play hesabı olmadığı için RevenueCat her açılışta hata yazar; geliştirirken ekranı kaplamasın.
 if (__DEV__) LogBox.ignoreLogs(['[RevenueCat]']);
@@ -34,6 +37,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
   });
+
+  useEffect(() => trackOpen(), []);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(c.bg).catch(() => {});
@@ -77,49 +82,63 @@ function RootStack() {
   }, [loading]);
 
   if (loading) return null;
-  // Açılış sırası: açılış animasyonu → Ücretsiz / Premium seçimi (LaunchChoice) → tanıtım → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → ana ekran.
+  // Açılış sırası: açılış animasyonu → tanıtım (Moka) → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → evle ilgili sorular → Ücretsiz / Premium seçimi (LaunchChoice) → ana ekran.
   const inside = introSeen && (status === 'guest' || status === 'account');
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Protected guard={!introSeen}>
         <Stack.Screen name="tanitim" options={{ animation: 'fade' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="oda/[id]" />
-        <Stack.Screen name="plan" />
-        <Stack.Screen name="bildirimler" />
-        <Stack.Screen name="magaza" />
-        <Stack.Screen name="spor" />
-        <Stack.Screen name="gunluk" />
-        <Stack.Screen name="evler" />
-        <Stack.Screen name="aile" />
-        <Stack.Screen name="bakim" />
-        <Stack.Screen name="evim" />
-        <Stack.Screen name="hafta" />
+        <Stack.Screen name="oda/[id]" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="yasal" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="magaza" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bahce" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="dekor" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="odak" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="evler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bakim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="evim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="hafta" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
-        <Stack.Screen name="premium" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="premium" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>
-        <Stack.Screen name="kurulum" />
+        <Stack.Screen name="kurulum" options={{ animation: 'fade' }} />
       </Stack.Protected>
       {/* Misafir de buradan hesap açabilsin diye hesapla girmemiş herkese açık. */}
       <Stack.Protected guard={introSeen && status !== 'account'}>
-        <Stack.Screen name="giris" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="giris" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>
   );
 }
 
+// Evi kurarken ve tanıtımda satın alma ekranı çıkmasın diye bu sayfalarda gizlenir.
+const CHOICE_WAIT = ['/tanitim', '/giris', '/kurulum', '/evim'];
+
 /**
- * İlk açılışta, açılış animasyonunun hemen arkasında Ücretsiz / Premium seçimi.
- * Bir kere seçilince bir daha çıkmaz; sonra Hesabım'dan açılır. Premium olana hiç çıkmaz.
+ * Tanıtım ve ev kurulumundan sonra Ücretsiz / Premium seçimi. Bir kere seçilince bir daha çıkmaz;
+ * sonra Hesabım'dan açılır. Premium olana hiç çıkmaz.
  */
 function LaunchChoice() {
   const { premium } = usePurchases();
+  const { state } = useStore();
+  const { status, introSeen } = useAuth();
+  const path = usePathname();
   const [done, setDone] = useState(() => prefs.get('planChoice') != null);
-  if (done || premium.active) return null;
+  const ready = introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
+  if (done || premium.active || !ready) return null;
   return (
     <View style={StyleSheet.absoluteFill}>
       <PremiumChoice

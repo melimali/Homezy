@@ -4,6 +4,7 @@ import { PlanEditor } from '@/components/PlanEditor';
 import { useToast } from '@/components/Toast';
 import { Btn } from '@/components/ui';
 import { cancelNewHome } from '@/domain/homes';
+import { track } from '@/lib/events';
 import { requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
 
@@ -16,8 +17,10 @@ export default function Kurulum() {
   return (
     <PlanEditor
       onSaved={(_first, next) => {
-        // Plandan sonra evle ilgili birkaç soru; cevaplara göre rutinler gelir. Yeni bir ek evde de aynı sorular sorulur.
-        router.replace({ pathname: '/evim', params: { ilk: '1' } });
+        // 7 soru ilk değeri geciktirmesin: doğrudan eve gidilir, sorular Bugün'deki karttan (ya da Plan'dan) cevaplanır.
+        router.replace('/');
+        if (!extra) track('onboarding_done');
+        if (!extra) toast('Evin hazır 🏡 Bugün sekmesinden ilk işini yap, Moka sevinsin!');
         if (extra) toast(`${next.homeName} hazır 🏡 Evler arasında Hesabım > Evlerim'den geçebilirsin.`);
         // Sabah özeti için izni ev kurulduktan hemen sonra istiyoruz.
         requestPermission()

@@ -1,9 +1,11 @@
+import { tx } from '@/i18n/runtime';
 import type * as NotificationsTypes from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask } from '@/domain/home';
 import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
+import { firstOpenDay } from '@/lib/events';
 import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
@@ -41,7 +43,7 @@ export function getNotifications(): NotificationsModule | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     loaded = require('expo-notifications') as NotificationsModule;
   } catch (e) {
-    console.warn('Layfapp: bildirim modülü yüklenemedi, bildirimler kapalı', e);
+    console.warn('Homezy: bildirim modülü yüklenemedi, bildirimler kapalı', e);
     loaded = null;
   }
   return loaded;
@@ -151,8 +153,10 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   // Ev silindiyse eski evin hatırlatmaları gelmesin.
   if (!S.setup) return void (await N.cancelAllScheduledNotificationsAsync());
   await ensureChannel(N);
-  await ensureCategories(N).catch(e => console.warn('Layfapp: bildirim düğmeleri kurulamadı', e));
-  await N.cancelAllScheduledNotificationsAsync();
+  await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
+  // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
+  for (const n of await N.getAllScheduledNotificationsAsync())
+    if ((n.content.data as { focus?: boolean } | undefined)?.focus !== true) await N.cancelScheduledNotificationAsync(n.identifier);
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
@@ -171,8 +175,8 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       await N.scheduleNotificationAsync({
         identifier: `gorev-${n.tid}-${dayKey(at.getTime())}`,
         content: {
-          title: n.title,
-          body: n.text,
+          title: tx(n.title),
+          body: tx(n.text),
           data,
           categoryIdentifier: n.list === 'plants' ? PLANT_CATEGORY : TASK_CATEGORY,
           threadIdentifier: 'isler',
@@ -183,13 +187,13 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
     const msg = summaryFor(ns.filter(n => !own.includes(n)), at, ns.filter(n => n.k !== 'ok').length);
     if (!msg) continue;
     await N.scheduleNotificationAsync({
-      content: { title: msg.title, body: msg.body, data: { url: msg.url } },
+      content: { title: tx(msg.title), body: tx(msg.body), data: { url: msg.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
   for (const n of nudges(S, now, smart, premium))
     await N.scheduleNotificationAsync({
-      content: { title: n.title, body: n.body, data: { url: n.url } },
+      content: { title: tx(n.title), body: tx(n.body), data: { url: n.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
 }
@@ -233,6 +237,32 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       const msg = eveningNudge({ streak, idle: idleAhead(hp, d, freezeLeft), away, built: hp.level > 0, key: 'seri', now: at.getTime() });
       if (at.getTime() > now) out.push({ at, ...msg, url: '/bugun' });
     }
+  }
+  out.push(...welcomeNudges(S, now));
+  return out;
+}
+
+/**
+ * İlk 7 gün: kullanıcıyı alışkanlığa sokan 3 nazik hatırlatma (1. gün akşam, 2. gün öğle, 5. gün akşam).
+ * Bugün zaten iş yapıldıysa 1. gündeki atlanır. Günde en çok 2 bildirim kuralını bozmaz (sabah özeti + bir tane).
+ */
+export function welcomeNudges(S: AppState, now = Date.now()) {
+  const first = firstOpenDay();
+  if (!first) return [];
+  const steps: { age: number; h: number; m: number; title: string; body: string; url: string }[] = [
+    { age: 0, h: 19, m: 0, title: '🏡 Evin seni bekliyor', body: 'Bugün tek bir küçük iş yeter. Moka sevinsin!', url: '/bugun' },
+    { age: 1, h: 12, m: 30, title: '☕ Moka selam söylüyor', body: 'Dün evini kurdun. Bugün de bir iş yap, serin başlasın.', url: '/bugun' },
+    { age: 4, h: 19, m: 0, title: '✨ Evin güzelleşiyor', body: 'Serin sürüyor mu? Bugün bir iş daha, ev bir adım büyüsün.', url: '/bugun' },
+  ];
+  const out: { at: Date; title: string; body: string; url: string }[] = [];
+  const hp = progressOf(S.play, now);
+  for (const st of steps) {
+    const at = new Date(`${first}T00:00:00`);
+    at.setDate(at.getDate() + st.age);
+    at.setHours(st.h, st.m, 0, 0);
+    if (at.getTime() <= now) continue;
+    if (dayKey(at.getTime()) === dayKey(now) && hp.today) continue;
+    out.push({ at, title: st.title, body: st.body, url: st.url });
   }
   return out;
 }

@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, StyleSheet, View } from 'react-native';
 
+import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { Btn, T } from '@/components/ui';
 import { allTasks, quickPick } from '@/domain/logic';
 import { taskMin } from '@/domain/home';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
+import { reactMoka } from '@/lib/mokaReact';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
@@ -28,14 +30,20 @@ export function WelcomeBack() {
     return { open, away, hurt: hp.idle >= 3, pick };
   });
   const { open, away, hurt, pick } = first;
-  if (!open || S.play.welcomed === today) return null;
+  const shown = open && S.play.welcomed !== today;
+  useEffect(() => {
+    if (!shown) return;
+    const t = setTimeout(() => reactMoka('hug'), 500);
+    return () => clearTimeout(t);
+  }, [shown]);
+  if (!shown) return null;
 
   const close = () => void update(D => void (D.play.welcomed = today));
   return (
     <Modal transparent animationType="fade" onRequestClose={close}>
       <View style={[styles.bg, { backgroundColor: c.shadow }]}>
         <View style={[styles.box, { backgroundColor: c.surface }]}>
-          <Text style={{ fontSize: 52, textAlign: 'center' }}>{hp.today ? '🔨🏡' : '🤗'}</Text>
+          <MokaMascot pose={hp.today ? 'maintenance' : 'happy'} size="lg" showBubble={false} style={styles.moka} />
           <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
@@ -59,5 +67,6 @@ export function WelcomeBack() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  box: { borderRadius: radius.card, padding: 22, gap: 14, alignItems: 'center', maxWidth: 420, width: '100%' },
+  moka: { marginTop: -90 },
+  box: { borderRadius: radius.card, padding: 24, paddingTop: 0, marginTop: 80, gap: 14, alignItems: 'center', maxWidth: 420, width: '100%' },
 });

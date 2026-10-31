@@ -160,7 +160,7 @@ export function useCloudSync() {
       timer.current = null;
       pushHome(active, latest.current)
         .then(() => void (dirty.current = false))
-        .catch(e => console.warn('Layfapp: bulut yedeği yazılamadı', e));
+        .catch(e => console.warn('Homezy: bulut yedeği yazılamadı', e));
     }, DELAY);
   }, [active, state]);
 

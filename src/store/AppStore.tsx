@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
+import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
 import { seed } from '@/domain/logic';
 import { normalize } from '@/domain/play';
@@ -33,7 +34,7 @@ function createSaver() {
         try {
           await saveState(next);
         } catch (e) {
-          console.warn('Layfapp: kayıt başarısız', e);
+          console.warn('Homezy: kayıt başarısız', e);
         }
       }
     } finally {
@@ -48,18 +49,31 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
   // En güncel state; arka arkaya gelen değişikliklerin (ör. parmakla boyama) hepsi bunun üzerinden çalışır.
   const current = useRef<AppState | null>(null);
 
+  const langCode = state?.settings?.language;
+  useEffect(() => {
+    if (langCode) setLang(langCode);
+  }, [langCode]);
+
   useEffect(() => {
     let alive = true;
     (async () => {
       let S: AppState | null = null;
-      try {
-        S = await loadState();
-      } catch (e) {
-        console.warn('Layfapp: veri okunamadı', e);
+      let failed = false;
+      // Okuma hatasında bir kez daha dene; yine olmazsa mevcut veriyi seed ile EZME.
+      for (let i = 0; i < 2 && !S; i++) {
+        try {
+          S = await loadState();
+          failed = false;
+          break;
+        } catch (e) {
+          failed = true;
+          console.warn('Homezy: veri okunamadı', e);
+          await new Promise(r => setTimeout(r, 400));
+        }
       }
       if (!S) {
         S = seed();
-        saver(S);
+        if (!failed) saver(S);
       }
       if (alive) {
         current.current = S;

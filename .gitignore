@@ -40,3 +40,7 @@ yarn-error.*
 /ios
 /android
 
+
+# Python
+__pycache__/
+*.pyc

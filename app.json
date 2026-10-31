@@ -1,22 +1,36 @@
 {
   "expo": {
-    "name": "Layfapp",
-    "slug": "layfapp",
-    "scheme": "layfapp",
+    "name": "Homezy",
+    "slug": "homezy",
+    "scheme": "homezy",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo-kare.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.meikaidigital.layfapp"
+      "bundleIdentifier": "com.meikai.homezy"
     },
     "android": {
-      "package": "com.meikaidigital.layfapp",
+      "package": "com.meikai.homezy",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A1A34"
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/logo-kare.png",
+      "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "single"
     },
@@ -24,6 +38,7 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
+      ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
       "expo-font",
       [
         "expo-splash-screen",
@@ -48,8 +63,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Buzdolabı ve günlük fotoğraflarını galeriden seçebilmen için Layfapp fotoğraflarına erişmek istiyor.",
-          "cameraPermission": "Buzdolabının ve günün fotoğrafını çekebilmen için Layfapp kameraya erişmek istiyor.",
+          "photosPermission": "Buzdolabı ve günlük fotoğraflarını galeriden seçebilmen için Homezy fotoğraflarına erişmek istiyor.",
+          "cameraPermission": "Buzdolabının ve günün fotoğrafını çekebilmen için Homezy kameraya erişmek istiyor.",
           "microphonePermission": false
         }
       ],
@@ -69,10 +84,47 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf",
+            "./node_modules/@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf",
+            "./node_modules/@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf",
+            "./node_modules/@expo-google-fonts/nunito/800ExtraBold/Nunito_800ExtraBold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "Bugun",
+              "label": "Homezy · Bugün",
+              "description": "Bugünün işleri, serin ve günün cümlesi. İşi widget'tan tamamlayabilirsin.",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "520dp",
+              "maxResizeHeight": "340dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview.png",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3"
+      }
     }
   }
 }

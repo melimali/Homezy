@@ -35,6 +35,8 @@ export type Premium = {
   until: number | null;
   willRenew: boolean;
   productId: string | null;
+  /** Ev sahibinin Premium'u ailede paylaşılıyor (kendi aboneliği yok). */
+  viaFamily?: boolean;
 };
 
 type RestoreResult = { ok: true; active: boolean } | { ok: false; error: string };
@@ -43,6 +45,8 @@ type BuyResult = { ok: true; active: boolean } | { ok: false; cancelled?: boolea
 type PurchasesCtx = {
   ready: boolean;
   premium: Premium;
+  /** Aile paylaşımı, ev sahibinin Premium'unu üyelere yansıtır. */
+  setFamilyPremium: (on: boolean) => void;
   /** Mağazanın gösterdiği fiyatlar (ör. "₺299,99"); okunamadıysa PREMIUM_PRICE. */
   prices: Record<Plan, string>;
   /** Yıllık planın aylığa düşen fiyatı (ör. "$5.00"); okunamadıysa null. */
@@ -95,7 +99,12 @@ function readPremium(info: CustomerInfo): Premium {
 export function PurchasesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [ready, setReady] = useState(false);
-  const [premium, setPremium] = useState<Premium>(none);
+  const [own, setPremium] = useState<Premium>(none);
+  const [familyPremium, setFamilyPremium] = useState(false);
+  const premium = useMemo<Premium>(
+    () => (own.active || !familyPremium ? own : { active: true, until: null, willRenew: false, productId: null, viaFamily: true }),
+    [own, familyPremium],
+  );
   const [pkgs, setPkgs] = useState<Packages>({ monthly: null, annual: null });
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
@@ -188,8 +197,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
   const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
-    [ready, premium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
+    [ready, premium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

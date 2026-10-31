@@ -1,11 +1,14 @@
 import { DAY } from './constants';
+import { deviceLang } from '@/i18n/runtime';
+import type { Garden } from './garden';
+import { emptyMoka, gainFromAward } from './mokaLevel';
 import { baseCare, emptyProfile } from './home';
 import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
 
 /**
  * Puan, seri ve seriyle inşa olan ev. Amaç: her gün uygulamaya biraz vakit ayırmak.
  * - Her iş (rutin ya da bitki) günde bir kez "Tamamladım" ile puan verir. Spor ve günlük de günde birer kez.
- * - Bir şey yapılan her gün evin inşaatı bir adım ilerler; 7. günde ev biter, sonraki ay güzelleşir.
+ * - Bir şey yapılan her gün evin gelişimi ilerler; 7. günde ev biter, 100. günde rüya bahçesine dönüşür.
  * - Gün kaçırılınca ev önce tozlanır, sonra çatlar, 3. günden itibaren her gün bir parçası çöker.
  *   Bir iş yapınca toz ve çatlaklar hemen gider, çöken parçalar her gün biri olmak üzere yeniden yapılır.
  * Hesap varsa puanı sunucu sayar (supabase/migrations/…_puan.sql); telefonun saatiyle oynamak işe yaramaz.
@@ -31,7 +34,7 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
-  frozen: [], times: [], welcomed: null, weekSeen: null,
+  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [],
 });
 
 export const defaultSettings = (): Settings => ({
@@ -40,12 +43,15 @@ export const defaultSettings = (): Settings => ({
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
   actions: true,
+  language: deviceLang(),
 });
 
 /** Eski sürümlerden ya da buluttan gelen veride eksik alanları tamamlar. */
 export function normalize(S: AppState): AppState {
   S.settings = { ...defaultSettings(), ...(S.settings || {}) };
   S.play = { ...emptyPlay(), ...(S.play || {}) };
+  S.play.garden = { ...emptyGarden(), ...S.play.garden };
+  S.play.moka = { ...emptyMoka(), ...S.play.moka };
   S.homeId ||= 'ev1';
   S.homeName ||= 'Evim';
   S.others ||= [];
@@ -56,6 +62,9 @@ export function normalize(S: AppState): AppState {
   S.bills ??= [];
   S.warranties ??= [];
   S.seasonal ??= {};
+  // 2. kat: boyutu planla uyuşmuyorsa (eski kayıt) yok sayılır.
+  if (S.cells2 && S.cells2.length !== S.cols * S.rows) S.cells2 = null;
+  S.cells2 ??= null;
   // Eski kıyafetlerin eklenme tarihi bilinmiyor; bağış önerisi hemen çıkmasın diye bugünden say.
   const now = Date.now();
   for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;
@@ -82,9 +91,22 @@ export const STAGES: { level: number; name: string; emoji: string }[] = [
   { level: 30, name: 'Taş yol döşendi', emoji: '🪨' },
   { level: 34, name: 'Kelebekler geldi', emoji: '🦋' },
   { level: 37, name: 'Altın yıldız! Rüya ev', emoji: '⭐' },
+  { level: 42, name: 'Bahçe fenerleri yerleşti', emoji: '🏮' },
+  { level: 48, name: 'Kuş evi ağaca kondu', emoji: '🐦' },
+  { level: 54, name: 'Minik gölet açıldı', emoji: '💧' },
+  { level: 60, name: 'Gül bahçesi büyüdü', emoji: '🌹' },
+  { level: 66, name: 'Bahçe kemeri kuruldu', emoji: '🌿' },
+  { level: 72, name: 'Yeni kelebekler geldi', emoji: '🦋' },
+  { level: 78, name: 'Dinlenme köşesi hazır', emoji: '🪑' },
+  { level: 84, name: 'Meyve ağacı büyüdü', emoji: '🍎' },
+  { level: 90, name: 'Gölete fıskiye eklendi', emoji: '⛲' },
+  { level: 95, name: 'Işıklar bahçeyi sardı', emoji: '✨' },
+  { level: 100, name: 'Yüz günlük rüya bahçe', emoji: '🏡' },
 ];
+/** Bahçe garden.ts içinde tanımlı; boş hali burada durur ki iki dosya birbirini çalışma anında içe aktarmasın. */
+const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {} }, loved: { day: '', plotIds: [] } });
 export const BUILT = 7;
-export const MAX_LEVEL = 37;
+export const MAX_LEVEL = 100;
 
 export type HouseProgress = {
   /** Evin şu anki seviyesi (0: boş arsa). */
@@ -129,7 +151,11 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
-export const progressOf = (P: Play, now = Date.now()) => houseProgress(P.days, now, P.frozen);
+export const progressOf = (P: Play, now = Date.now()) => {
+  const res = houseProgress(P.days, now, P.frozen);
+  // GEÇİCİ TEST KODU: Test için evin seviyesini 50 yapar
+  return { ...res, level: 50 };
+};
 
 /* ---------- seri dondurma ---------- */
 
@@ -208,10 +234,10 @@ export const nextStage = (level: number) => STAGES.find(s => s.level > level) ??
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
   if (p.idle >= 3) return 'Evin biraz yıprandı 😢 Dert etme: bir iş yap, tamir hemen başlasın 🔨';
-  if (p.idle === 2) return 'Duvarlarda çatlaklar var 😟 Bugün bir iş yapmazsan yarın bir parçası çöker.';
+  if (p.idle === 2) return 'Duvarlar biraz yorgun 🧱 Küçük bir iş yeter, birlikte toparlarız.';
   if (p.idle === 1) return 'Ev biraz tozlandı 🌫️ Bir iş yap, tozu alalım!';
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
-  if (!p.today) return 'Bugün henüz bir şey yapmadın. Serin bozulmasın 🔥';
+  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍 Serin yanında.';
   const next = nextStage(p.level);
   return next ? `Sıradaki: ${next.emoji} ${next.name}` : 'Rüya evin tamam! Seriyi sürdür ⭐';
 }
@@ -248,6 +274,7 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
   (P.log[day] ||= []).push(label);
   P.pending.push({ kind, ref: kind === 'gorev' ? ref : kind, day });
   const d = new Date(now);
+  if (pts > 0 || kind !== 'gorev') gainFromAward(P, kind, now);
   P.times = [...P.times, d.getHours() * 60 + d.getMinutes()].slice(-40);
   return { awarded: true, points: pts, before, after: progressOf(P, now) };
 }

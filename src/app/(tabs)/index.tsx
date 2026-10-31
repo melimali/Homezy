@@ -12,6 +12,7 @@ import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { MoodCheckin } from '@/components/MoodCheckin';
+import { SelfCareCard } from '@/components/SelfCareCard';
 import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
@@ -230,6 +231,8 @@ export default function Home() {
       </Squish>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
+      <SelfCareCard />
+
       <Card bare index={3}>
         <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
         <View>
@@ -398,7 +401,10 @@ const styles = StyleSheet.create({
   speechBubble: { flexShrink: 1, alignSelf: 'flex-start', borderRadius: radius.card, paddingVertical: 10, paddingHorizontal: 14, overflow: 'visible' },
   bubbleTail: { position: 'absolute', bottom: -6, left: 32, width: 14, height: 14, borderRadius: 3, transform: [{ rotate: '45deg' }] },
   heroLead: { fontSize: 15, lineHeight: 21, marginTop: 2, maxWidth: 250 },
-  mokaCard: { marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10 },
+  mokaCard: {
+    marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)',
+    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 4,
+  },
   mokaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   mokaTap: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
   mokaIcon: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

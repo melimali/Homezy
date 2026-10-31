@@ -3,6 +3,8 @@ import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MOKA_ASSETS } from '@/constants/moka';
+import { MokaLive } from '@/components/MokaLive';
+import { reactMoka } from '@/lib/mokaReact';
 import { sfx } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -16,14 +18,19 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
   const c = useColors();
   const insets = useSafeAreaInsets();
   useEffect(() => {
-    if (open) sfx('party');
+    if (!open) return;
+    sfx('party');
+    const t = setTimeout(() => reactMoka('confetti'), 350);
+    return () => clearTimeout(t);
   }, [open]);
   return (
     <Modal visible={open} animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <ScrollView style={{ backgroundColor: c.night }} contentContainerStyle={[st.page, { paddingBottom: insets.bottom + 28 }]} bounces={false}>
         <View style={[st.hero, { paddingTop: insets.top }]}>
           <Float amp={5} dur={2200}>
-            <Image source={MOKA_ASSETS.party} style={st.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <MokaLive size={st.heroMoka.width as number}>
+              <Image source={MOKA_ASSETS.party} style={st.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+            </MokaLive>
           </Float>
           {[[0.18, 0.2, 0], [0.72, 0.12, 300], [0.86, 0.38, 600], [0.1, 0.5, 900]].map(([x, y, d], i) => (
             <Float key={i} amp={5} dur={1800 + i * 300} delay={d} style={[st.star, { left: `${x * 100}%`, top: `${y * 100}%` }]}>

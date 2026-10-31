@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, type MutableRefObject, type ReactNode } fr
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
+import { progressOf } from '@/domain/play';
+import { onMokaReact, reactMoka } from '@/lib/mokaReact';
+import { useStore } from '@/store/AppStore';
 
 /** Dokunma/uzun basma tepkileri için tutamaç. */
 export type MokaLiveHandle = { tickle: () => void; cuddle: () => void };
@@ -18,7 +21,16 @@ export function MokaLive({ children, size, handleRef }: { children: ReactNode; s
   const sway = useRef(new Animated.Value(0)).current;
   const wiggle = useRef(new Animated.Value(0)).current;
   const heart = useRef(new Animated.Value(0)).current;
+  const hop = useRef(new Animated.Value(0)).current;
   const [heartKey, setHeartKey] = useState(0);
+  const [stars, setStars] = useState(0);
+  const { state } = useStore();
+  const level = progressOf(state.play).level;
+  const lastLevel = useRef(level);
+  useEffect(() => {
+    if (level > lastLevel.current) reactMoka('confetti');
+    lastLevel.current = level;
+  }, [level]);
 
   useEffect(() => {
     if (reduce) return;
@@ -59,7 +71,25 @@ export function MokaLive({ children, size, handleRef }: { children: ReactNode; s
     };
   }, [handleRef, wiggle, heart]);
 
+  useEffect(
+    () =>
+      onMokaReact(r => {
+        if (r === 'hug') return handleRef?.current?.cuddle();
+        if (r === 'confetti') setStars(k => k + 1);
+        hop.setValue(0);
+        Animated.sequence([
+          Animated.timing(hop, { toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(hop, { toValue: 0, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          Animated.timing(hop, { toValue: 1, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.spring(hop, { toValue: 0, friction: 3, tension: 160, useNativeDriver: true }),
+        ]).start();
+      }),
+    [handleRef, hop],
+  );
+
   const transform = [
+    { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.14] }) },
+    { rotate: hop.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-5deg'] }) },
     { translateY: breath.interpolate({ inputRange: [0, 1], outputRange: [0, size * 0.015] }) },
     { scaleY: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) },
     { scaleX: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 0.985] }) },
@@ -70,6 +100,25 @@ export function MokaLive({ children, size, handleRef }: { children: ReactNode; s
   return (
     <View style={{ width: size, height: size }}>
       <Animated.View style={{ transform }}>{children}</Animated.View>
+      {stars > 0 && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill} key={`s${stars}`}>
+          {['⭐', '🎉', '✨', '⭐'].map((h, i) => (
+            <Animated.Text
+              key={i}
+              style={[
+                styles.heart,
+                { left: size * (0.1 + i * 0.25), fontSize: size * 0.18 },
+                {
+                  opacity: hop.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }),
+                  transform: [{ translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -size * (0.2 + (i % 2) * 0.2)] }) }],
+                },
+              ]}
+            >
+              {h}
+            </Animated.Text>
+          ))}
+        </View>
+      )}
       {heartKey > 0 && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill} key={heartKey}>
           {HEARTS.map((h, i) => (

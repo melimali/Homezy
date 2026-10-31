@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
 import { MokaMascot } from '@/components/MokaMascot';
@@ -8,6 +8,7 @@ import { allTasks, quickPick } from '@/domain/logic';
 import { taskMin } from '@/domain/home';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
+import { reactMoka } from '@/lib/mokaReact';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
@@ -29,7 +30,13 @@ export function WelcomeBack() {
     return { open, away, hurt: hp.idle >= 3, pick };
   });
   const { open, away, hurt, pick } = first;
-  if (!open || S.play.welcomed === today) return null;
+  const shown = open && S.play.welcomed !== today;
+  useEffect(() => {
+    if (!shown) return;
+    const t = setTimeout(() => reactMoka('hug'), 500);
+    return () => clearTimeout(t);
+  }, [shown]);
+  if (!shown) return null;
 
   const close = () => void update(D => void (D.play.welcomed = today));
   return (

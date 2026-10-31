@@ -10,7 +10,7 @@ import { MOKA_ASSETS } from '@/constants/moka';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
-import { homeScore, seed } from '@/domain/logic';
+import { homeScore, emptyState } from '@/domain/logic';
 import { addDays, dayKey, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
@@ -90,7 +90,7 @@ export default function Hesap() {
           // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
           await deleteAccount();
         }
-        replace(seed());
+        replace(emptyState());
       },
     );
 
@@ -104,7 +104,7 @@ export default function Hesap() {
         const r = await deleteAccount();
         setBusy(null);
         if (!r.ok) return toast(r.error);
-        replace(seed());
+        replace(emptyState());
         toast('Hesabın silindi.');
       },
     );

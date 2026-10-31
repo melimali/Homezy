@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 
 import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
-import { seed } from '@/domain/logic';
+import { emptyState } from '@/domain/logic';
 import { normalize } from '@/domain/play';
 import type { AppState } from '@/domain/types';
 
@@ -72,7 +72,7 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
         }
       }
       if (!S) {
-        S = seed();
+        S = emptyState();
         if (!failed) saver(S);
       }
       if (alive) {

@@ -7,6 +7,7 @@ import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { addHome, homeCount, removeHome, renameHome, switchHome } from '@/domain/homes';
+import { premiumHref } from '@/components/PaywallMoments';
 import { limits, LIMITS, THEMES, themeFor } from '@/domain/premium';
 import type { HouseTheme } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
@@ -58,7 +59,7 @@ export default function Evler() {
     setEditing(null);
   };
   const setTheme = (t: HouseTheme, locked: boolean) => {
-    if (locked) return router.push('/premium');
+    if (locked) return router.push(premiumHref('theme'));
     update(D => void (D.settings.theme = t));
   };
 

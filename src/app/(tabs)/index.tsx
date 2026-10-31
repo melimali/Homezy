@@ -8,6 +8,7 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { House3D } from '@/components/House3D';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
+import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade, SceneImage } from '@/components/SceneImage';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
@@ -249,9 +250,11 @@ export default function Home() {
         <Quick i={3} emoji="📅" label="Haftam" onPress={() => router.push('/hafta')} />
       </Appear>
 
+      <PremiumEndedCard />
       <AdBanner />
 
       <Celebrate level={hp.level} />
+      <StreakMoment />
       <WelcomeBack />
       <MoodCheckin />
     </Screen>

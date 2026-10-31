@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
+import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
 import { FEATURES } from '@/domain/premium';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
@@ -16,7 +17,7 @@ const short = (v: string) => v === '✓' || v === '—';
  * Ücretsiz mi Premium mu? Uygulama ilk açıldığında açılış animasyonundan hemen sonra çıkar,
  * sonra Hesabım'dan tekrar açılabilir. `onDone` seçim yapılınca (ya da satın alma bitince) çağrılır.
  */
-export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose?: () => void }) {
+export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void; onClose?: () => void; moment?: PaywallMoment }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
@@ -25,6 +26,7 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
   const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const intro = plan === 'monthly' ? introPrice : null;
+  const copy = moment ? MOMENT_COPY[moment] : undefined;
 
   const doBuy = async () => {
     setBusy('buy');
@@ -54,8 +56,8 @@ export function PremiumChoice({ onDone, onClose }: { onDone: () => void; onClose
     >
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Text style={{ fontSize: 48 }}>🏡</Text>
-        <T v="h1" style={{ textAlign: 'center' }}>Nasıl başlamak istersin?</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar.</T>
+        <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
+        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar."}</T>
       </View>
 
       <View style={styles.plans}>

@@ -11,6 +11,7 @@ import {
 import { progressOf } from '@/domain/play';
 import { THEMES } from '@/domain/premium';
 import { track } from '@/lib/events';
+import { haptic, sfx } from '@/lib/sfx';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -55,6 +56,12 @@ export function StreakMoment() {
   useEffect(() => {
     writeMem(markFirstSeen(readMem()));
   }, []);
+
+  useEffect(() => {
+    if (!show) return;
+    sfx('levelup');
+    haptic('success');
+  }, [show]);
 
   if (!show) return null;
   const close = (toPremium: boolean) => {

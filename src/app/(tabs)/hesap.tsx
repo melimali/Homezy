@@ -13,6 +13,7 @@ import { useTranslation } from '@/i18n/i18n';
 import { homeScore, seed } from '@/domain/logic';
 import { addDays, dayKey, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
+import { extrasUnlocked } from '@/lib/events';
 import { legalUrl } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -45,6 +46,7 @@ export default function Hesap() {
   const account = status === 'account';
   const name = account ? displayName(user) : t('guest');
   const now = useNow();
+  const extras = extrasUnlocked(state.play.days.length, now);
   const hp = progressOf(state.play, now);
   const next = nextStage(hp.level);
   const prev = [...STAGES].reverse().find(x => x.level <= hp.level);
@@ -136,13 +138,7 @@ export default function Hesap() {
       </Appear>
 
       {/* Her şey kategorilerde; sayılar ve grafikler Gelişim sekmesinde (docs/skeleton-v3.md). */}
-      <Group index={2} title="Kendim" items={[
-        { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
-        { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
-        { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' },
-        { emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' },
-      ]} />
-      <Group index={3} title="Evim" items={[
+      <Group index={2} title="Evim" items={[
         { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
         { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
         { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
@@ -150,12 +146,20 @@ export default function Hesap() {
         { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
         { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
       ]} />
-      <Group index={4} title="Keyif" items={[
+      <Group index={3} title="Keyif" items={[
+        { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
         { emoji: '🌷', label: "Moka'nın bahçesi", sub: 'Çiçek yetiştir', tint: c.sageSoft, href: '/bahce' },
         { emoji: '🛍️', label: 'Mağaza', sub: `${state.play.points} puanın var`, tint: c.peachSoft, href: '/magaza' },
-        { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' },
+        { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
+        ...(extras ? [
+          { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },
+          { emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' as Href },
+          { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },
+        ] : [
+          { emoji: '🔒', label: 'Odak, Spor, Hikâye', sub: '3. günden sonra açılır', tint: c.lavenderSoft, onPress: () => toast('Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱') },
+        ]),
       ]} />
-      <Group index={5} title="Ayarlar" items={[
+      <Group index={4} title="Ayarlar" items={[
         { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
         { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
         { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },

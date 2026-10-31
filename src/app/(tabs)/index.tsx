@@ -22,6 +22,7 @@ import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
 import { ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
+import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf } from '@/domain/play';
@@ -155,6 +156,7 @@ export default function Home() {
         <View>
           {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </View>
+        {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
         {!due.length && <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>}
       </Card>
 
@@ -235,7 +237,7 @@ export default function Home() {
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
-          <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+          {extrasUnlocked(S.play.days.length, now) && <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />}
         </Appear>
       </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />

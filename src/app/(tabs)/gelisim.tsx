@@ -11,6 +11,7 @@ import { MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel'
 import { freezesUsed, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from '@/domain/stats';
+import { extrasUnlocked } from '@/lib/events';
 import { useNow } from '@/hooks/useNow';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -67,7 +68,7 @@ export default function Gelisim() {
             </View>
           );
         })}
-        <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />
+        {extrasUnlocked(S.play.days.length, now) && <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />}
       </Card>
 
       <Appear index={2} style={st.rings}>
@@ -114,7 +115,7 @@ export default function Gelisim() {
       <Appear index={8} style={st.links}>
         <LinkTile emoji="📅" label="Haftam" sub="Paylaşılabilir kart" tint={c.roseSoft} onPress={() => router.push('/hafta')} />
         <LinkTile emoji="🌤️" label="Günüm" sub="Moka ile paylaş" tint={c.roseSoft} onPress={() => router.push('/gunum')} />
-        <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />
+        {extrasUnlocked(S.play.days.length, now) && <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />}
       </Appear>
     </Screen>
   );

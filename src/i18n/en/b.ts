@@ -164,4 +164,10 @@ export const EN_B: Record<string, string> = {
   '✨ {} tertemiz! Harikasın 🎉': '✨ {} is spotless! You are amazing 🎉',
   '{} eklendi.': '{} added.',
   'Sayfa {} / {}': 'Page {} / {}',
+  'Kendim': 'Me',
+  'Keyif': 'Fun',
+  'İpucu: Bir işe dokun = yaptım ✨': 'Tip: tap a task = done ✨',
+  'Odak, Spor, Hikâye': 'Focus, Sports, Story',
+  '3. günden sonra açılır': 'Unlocks after day 3',
+  'Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱': 'Focus, Sports and My home’s story unlock after day 3 🌱',
 };

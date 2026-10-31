@@ -60,3 +60,12 @@ export function trackOpen(now = Date.now()) {
     // Ölçüm uygulamayı bozmasın.
   }
 }
+
+/** Odak, Spor ve Evimin hikâyesi ilk iki gün sade kalır; 3. günden sonra (ya da 3 aktif gün olunca) açılır. */
+export function extrasUnlocked(activeDays: number, now = Date.now()): boolean {
+  if (activeDays >= 3) return true;
+  const first = firstOpenDay();
+  if (!first) return true;
+  const age = Math.round((new Date(`${dayStr(now)}T12:00:00`).getTime() - new Date(`${first}T12:00:00`).getTime()) / 86400000);
+  return age >= 2;
+}

@@ -20,11 +20,11 @@ export function MokaLive({ children, size, handleRef, weather }: { children: Rea
   const reduce = useReduceMotion();
   const sky = useSky(!!weather);
   const gear = !weather ? null : sky.kind === 'rain' || sky.kind === 'storm' ? '☂️' : sky.kind === 'snow' ? '🧣' : null;
-  const breath = useRef(new Animated.Value(0)).current;
-  const sway = useRef(new Animated.Value(0)).current;
-  const wiggle = useRef(new Animated.Value(0)).current;
-  const heart = useRef(new Animated.Value(0)).current;
-  const hop = useRef(new Animated.Value(0)).current;
+  const breath = useState(() => new Animated.Value(0))[0];
+  const sway = useState(() => new Animated.Value(0))[0];
+  const wiggle = useState(() => new Animated.Value(0))[0];
+  const heart = useState(() => new Animated.Value(0))[0];
+  const hop = useState(() => new Animated.Value(0))[0];
   const [heartKey, setHeartKey] = useState(0);
   const [stars, setStars] = useState(0);
   const { state } = useStore();

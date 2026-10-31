@@ -54,6 +54,8 @@ const errText = (m: string) =>
   : m.includes('own family') ? 'Bu senin kendi ailenin kodu 🙂'
   : 'Bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';
 
+const NO_GOALS: FamilyGoal[] = [];
+
 export function FamilyProvider({ children }: { children: ReactNode }) {
   const { session, user } = useAuth();
   const { state, update, get } = useStore();
@@ -103,14 +105,12 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   }, [uid]);
   const goalsOn = !!info?.active;
   useEffect(() => {
-    if (!goalsOn) {
-      setGoals([]);
-      return;
-    }
-    loadGoals();
+    if (!goalsOn) return;
+    const first = setTimeout(loadGoals, 0);
     const t = setInterval(loadGoals, POLL);
     const sub = RNAppState.addEventListener('change', s => s === 'active' && loadGoals());
     return () => {
+      clearTimeout(first);
       clearInterval(t);
       sub.remove();
     };
@@ -267,9 +267,11 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  // Aile evi kapalıyken hedefler boş görünür; state'i effect içinde sıfırlamaya gerek yok.
+  const shownGoals = goalsOn ? goals : NO_GOALS;
   const value = useMemo(
-    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals, addGoal, logGoal, removeGoal }),
-    [info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals, addGoal, logGoal, removeGoal],
+    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals: shownGoals, addGoal, logGoal, removeGoal }),
+    [info, loading, sharedId, sharing, refresh, create, join, leave, kick, shownGoals, addGoal, logGoal, removeGoal],
   );
   return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;
 }

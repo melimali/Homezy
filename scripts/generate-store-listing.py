@@ -38,7 +38,7 @@ for filename, screen, pose, line1, line2, sub in items:
     logo.thumbnail((120, 120), Image.Resampling.LANCZOS)
     im.paste(logo, (76, 64), logo)
     d = ImageDraw.Draw(im)
-    d.text((211, 88), "LayfApp", font=ImageFont.truetype(str(ROOT / "node_modules/@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf"), 52), fill=NAVY)
+    d.text((211, 88), "Homezy", font=ImageFont.truetype(str(ROOT / "node_modules/@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf"), 52), fill=NAVY)
     # Headline and a small Moka sticker.
     d.text((78, 206), line1, font=HEAD, fill=NAVY, stroke_width=0)
     d.text((78, 314), line2, font=HEAD, fill=NAVY, stroke_width=0)

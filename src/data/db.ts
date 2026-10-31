@@ -7,7 +7,7 @@ import type {
 } from '@/domain/types';
 
 /**
- * Bütün veriler telefondaki `layfapp.db` dosyasında. Veri küçük olduğu için her kayıtta
+ * Bütün veriler telefondaki `layfapp.db` (eski ad, dosya adı bilerek korundu) dosyasında. Veri küçük olduğu için her kayıtta
  * tablolar tek bir işlemde baştan yazılır; böylece uygulama tarafı sade bir state ile çalışır.
  */
 const SCHEMA_VERSION = 3;

@@ -4,302 +4,144 @@
 
 # Homezy
 
-Evin bütün gündelik işleri tek uygulamada.
+Evin gündelik işleri, bir kakapu arkadaşla.
 
-Homezy, evini bloklarla çizdiğin ve her odanın kendi işlerini takip ettiğin bir mobil uygulama. Çarşafı en son ne zaman değiştirdin, buzdolabında ne bitti, hangi kıyafetler kirli, bitkiler ne zaman sulanacak: hepsini odasında görürsün. Zamanı gelen işler için de telefonuna bildirim gelir.
+Homezy, ev işlerini ve günlük düzeni tek yerde toplayan mobil uygulama. Evini çizersin, her odanın rutinleri kendi odasında durur, gecikenler ve bugünün işleri tek bakışta görünür. Ev rehberin **Moka**, kahve renkli bir kakapu: işler bitince sevinir, serin bozulunca evde toz birikir.
 
-Hedef: App Store ve Google Play'de yayınlamak.
-
-> **Durum:** Expo (React Native) uygulaması kuruldu ve prototipteki akışın tamamı taşındı: ev planı editörü, odalar, rutinler, gardırop, buzdolabı, stok, bitkiler, Bugün ve Bildirimler sekmeleri. Veriler telefonda SQLite'ta, sabah özeti telefonda yerel bildirim olarak zamanlanıyor. Sıradaki adım telefonda Expo Go ile denemek.
-
----
-
-## İçindekiler
-
-- [Uygulama nasıl çalışıyor?](#uygulama-nasıl-çalışıyor)
-  - [1. Evini bloklarla kur](#1-evini-bloklarla-kur)
-  - [2. Ana ekran: ev planın](#2-ana-ekran-ev-planın)
-  - [3. Odalar ve rutinler](#3-odalar-ve-rutinler)
-  - [4. Odaya özel işlevler](#4-odaya-özel-işlevler)
-  - [5. Bugün sekmesi](#5-bugün-sekmesi)
-  - [6. Bildirimler](#6-bildirimler)
-  - [7. Evin düzeni](#7-evin-düzeni)
-- [Varsayılan rutinler](#varsayılan-rutinler)
-- [Görsel kimlik](#görsel-kimlik)
-- [Teknik yapı](#teknik-yapı)
-- [Yol planı](#yol-planı)
-- [Repo yapısı](#repo-yapısı)
-- [Prototipi açmak](#prototipi-açmak)
+- **Platform:** iOS ve Android, tek kod (Expo / React Native + TypeScript)
+- **Dil:** Türkçe (taban). İngilizce ve diğer diller yolda, bkz. [docs/yurtdisi-lansman.md](docs/yurtdisi-lansman.md)
+- **Paket kimliği:** `com.meikai.homezy`, şema `homezy://`
+- **Yayıncı:** Meikai Digital
 
 ---
 
-## Uygulama nasıl çalışıyor?
+## Özellikler
 
-Uygulamanın alt kısmında dört sekme var: **Ev**, **Bugün**, **Bildirimler** ve **Plan**.
+**Ev ve odalar**
+- Evi bloklarla çiz, oda türü seç, boya. Plan editöründen sonradan değiştir.
+- **3D ev:** Katlı ev (ikinci kat Premium), kat okları, zemin / duvar / pencere / cephe dekoru, eşya yerleştirme. Bulut, kuş, duman, yağmur ve kar efektleri; konuma göre gökyüzü; parmakla yakınlaştırma. Moka evde gezer, seviye arttıkça ev büyür.
+- Her odanın rutinleri ("her N günde bir"), son yapılma tarihi, gecikti / bugün / yarın durumları, esnek zamanlama, tahmini süre.
+- Odaya özel işlevler: gardırop ve kombin önerisi, buzdolabı ve alışveriş listesi, sarf malzeme stoğu, bitkiler.
+- Yapay zekâ taraması: buzdolabı ve kıyafet fotoğrafı.
+- Ev bakımı, faturalar, garantiler, mevsimlik işler. Modlar (misafir, tatil, yoğun / hasta, bayram temizliği).
 
-### 1. Evini bloklarla kur
+**Moka ve alışkanlık**
+- **Moka sohbeti** (`moka-chat` sunucu fonksiyonu), günün cümlesi, ruh hali check-in'i.
+- **Odak / Pomodoro**, **temizlik oturumu**, **lofi plak çalar** (sesler).
+- **Seviyeler**, puan, seri, rozetler, Moka kıyafetleri; puanla alınan eşyalar.
+- **Bahçe:** Moka'nın bahçesi, bitki büyütme.
+- **Günlük** (ruh hali, fotoğraf), **spor** takibi ve antrenman planı, **Gelişim** sekmesinde grafikler, haftalık rapor, evin hikâyesi.
+- Aile paylaşımı (davet koduyla ortak ev), ana ekran widget'ı.
 
-Uygulama ilk açıldığında kullanıcıdan evini çizmesini ister.
+**Premium** (RevenueCat): daha çok yapay zekâ taraması, ikinci kat ve 5 ev, temalar, ek grafikler, tarif ve kombin planı, reklamsızlık. Ücretsiz planda küçük bir afiş reklam var. Tüm farklar: [docs/premium.md](docs/premium.md), kodda `src/domain/premium.ts`.
 
-- Ekranda bloklardan oluşan bir ızgara var. Varsayılan boyut 6 × 8 blok, her blok yaklaşık 2 m².
-- Kullanıcı önce bir **oda türü** seçer: yatak odası, mutfak, banyo, salon, çalışma odası, çocuk odası, antre, balkon ya da çamaşır odası.
-- Sonra bloklara dokunarak ya da parmağını sürükleyerek odayı boyar. Aynı odaya ait bloklar birleşir, odalar arasında duvar çizgisi oluşur.
-- Aynı türden birden fazla oda olabilir (örneğin iki yatak odası). Her odanın adı değiştirilebilir, örneğin "Yatak odası" yerine "Yatak odam".
-- **Silgi** ile yanlış boyanan bloklar temizlenir.
-- Başlangıçta örnek bir ev çizili gelir. Kullanıcı onu düzenleyebilir ya da temizleyip baştan çizebilir.
-- Ev planı daha sonra **Plan** sekmesinden her zaman düzenlenebilir.
-
-### 2. Ana ekran: ev planın
-
-Ev kurulduktan sonra açılış ekranı ev planı olur.
-
-- En üstte günün özeti: kaç iş gecikmiş, kaçı bugün yapılacak, alışveriş listesinde kaç ürün var.
-- Planda her odanın üzerinde bekleyen iş sayısı yazar. Gecikmiş iş varsa rozet kırmızı, sadece bugünün işleri varsa sıcak renkte.
-- Plandaki bir odaya dokununca o odanın ekranı açılır.
-- Planın altında odaların listesi var. Her odada durum özeti görünür, örneğin "2 gecikmiş · 1 bugün" ya da "Sıradaki: Toz alma, 3 gün kaldı".
-
-### 3. Odalar ve rutinler
-
-Her odanın kendi **rutinleri** var. Rutin, belli aralıklarla tekrarlanan bir ev işi: "her 7 günde bir çarşaf değişimi" gibi.
-
-Her rutin için şunlar tutulur:
-
-- **Ad:** Çarşaf değişimi
-- **Sıklık:** Kaç günde bir yapılacağı
-- **Son yapılma tarihi**
-
-Uygulama bunlardan rutinin durumunu hesaplar:
-
-| Durum | Anlamı |
-|---|---|
-| **N gün gecikti** | Sıklık süresi geçti, iş yapılmadı |
-| **Bugün** | Bugün yapılması gerekiyor |
-| **Yarın** | Yarın yapılacak |
-| **N gün kaldı** | Henüz zamanı gelmedi |
-| **Başlanmadı** | Hiç işaretlenmedi, bugün yapılacaklar arasında görünür |
-
-- İş yapıldığında **Yaptım** butonuna basılır. Son yapılma tarihi bugüne çekilir ve sıradaki tarih gösterilir.
-- Oda ekranında rutinler en acil olandan başlayarak sıralanır.
-- Her odaya kendi rutinini ve sıklığını ekleyebilirsin, istemediğin rutini silebilirsin.
-
-### 4. Odaya özel işlevler
-
-Rutinlerin yanında her oda türünün kendi işlevi var.
-
-#### Yatak odası ve çocuk odası: gardırop
-
-- Dolaptaki kıyafetler kategoriyle eklenir: Üst, Alt, Elbise / Takım, Dış giyim, Ev / Pijama, İç giyim, Ayakkabı, Aksesuar.
-- Her kıyafetin bir durumu var: **Temiz**, **Kirli** ya da **Ütülenecek**. Durum etikete dokunarak değiştirilir.
-- Kıyafetler duruma göre filtrelenebilir.
-- 3 ve daha fazla kirli parça birikince "çamaşır zamanı" uyarısı çıkar.
-- **Fotoğraftan dolaba ekleme:** Kullanıcı kombinini aynada çeker ya da parçaları yatağa serip çeker. Yapay zekâ her parçayı ayrı ayrı çıkarır: türü (tişört, gömlek, kot pantolon, ceket, spor ayakkabı…), rengi ve kumaşı (pamuk, keten, yün, kot, deri…). Sonuç önce onay listesinde görünür; dolapta olan parçalar eşleşir, yeniler eklenir. Elle eklenen parçalarda renk ve kumaş addan anlaşılır ("Lacivert keten gömlek").
-- **Kombin önerisi:** Temiz parçalardan üst + alt (ya da elbise / takım) + ayakkabı, mevsime göre bir de dış giyim seçilir. Her kombin şu kurallarla puanlanır ve neden uyduğu yazılır:
-  - Renk: nötrler (siyah, beyaz, gri, lacivert, bej, kahve, kot mavisi…) her şeyle gider; tek canlı renk dengeli durur; komşu tonlar ve karşıt renkler uyumludur; üç canlı renk kalabalık; siyah ile lacivert yan yana karışır.
-  - Kontrast: açık üst ile koyu alt (ya da tersi) net durur; üst ve alt aynı tonsa tek parça gibi görünür.
-  - Kumaş: keten üst chino ya da şortla; kalın örgü kazak kot, chino ya da kumaş pantolonla; saten üst mat bir altla; spor kumaş klasik ayakkabıyla olmaz; dış katman alttakinden ince olmamalı; yazlık ve kışlık kumaşlar karışmamalı.
-  - Stil seviyesi: her parçanın spor / günlük / şık / resmi aralığı örtüşmeli. Kullanıcı Günlük, Şık ya da Spor seçer.
-  - Mevsim: yazın kalın kumaş, kışın dış giyimsiz kombin puan kaybeder.
-- **Sonraki fotoğraflar:** Yeni bir kombin fotoğrafı çekilince fotoğraftaki kombin değerlendirilir ve aynı parçalar dolaptaki diğer parçalarla yeniden eşleştirilir ("bu gömlek dolabındaki bej chinoyla da olur"). Herhangi bir parçanın adına dokununca da o parçayla kombin önerilir.
-
-#### Mutfak: buzdolabı
-
-- **Buzdolabı fotoğrafı:** Kullanıcı buzdolabını açıp fotoğrafını çeker. Marketteyken evde ne olduğunu uygulamadan görür. Fotoğraf bir haftadan eskiyse yenisini çekmesi hatırlatılır.
-- **Yapay zekâ ile tarama:** Fotoğraf çekilince yapay zekâ içindeki ürünleri ve her birinden yaklaşık ne kadar kaldığını çıkarır (ör. "Süt · yarım şişe · Az"). Sonuç önce bir onay listesinde görünür: listede olanların durumu güncellenir, yeni ürünler eklenir, fotoğrafta görünmeyenler istenirse **Bitti** yapılır. Kullanıcı onaylamadan liste değişmez. Her taramanın kısa notu ("Süt azalmış, domates yok") tarihiyle saklanır, böylece buzdolabının zaman içindeki durumu izlenir.
-- **Ürün takibi:** Her ürün **Var**, **Az** ya da **Bitti** olarak işaretlenir. Tarama ile gelen miktar tahmini ve son görülme tarihi ürünün altında görünür.
-- **Alışveriş listesi:** Az kalan ve biten ürünler otomatik olarak listeye düşer. Liste tek dokunuşla kopyalanabilir.
-
-#### Banyo ve çamaşır odası: malzeme stoğu
-
-- Tuvalet kağıdı, şampuan, diş macunu, deterjan gibi malzemeler **Var / Az / Bitti** olarak takip edilir.
-- Eksikler alışveriş listesine eklenir.
-
-#### Salon ve balkon: bitkiler
-
-- Her bitki kendi sulama aralığıyla eklenir, örneğin "Monstera, 7 günde bir".
-- Sulama zamanı gelen bitkiler rutinler gibi görünür, sulanınca **Sulandı** butonuna basılır.
-
-#### Antre ve çalışma odası
-
-- Sadece rutinler var.
-
-### 5. Bugün sekmesi
-
-Bütün odalardaki işler tek listede, aciliyete göre gruplanmış halde:
-
-- **Gecikenler**
-- **Bugün**
-- **Bu hafta**
-
-Her işin yanında hangi odaya ait olduğu yazar ve iş doğrudan buradan "yapıldı" olarak işaretlenebilir. Altta bütün odaların eksiklerinden oluşan **ortak alışveriş listesi** var.
-
-### 6. Bildirimler
-
-- Her sabah, kullanıcının seçtiği saatte bir **günlük özet** gelir.
-- Bildirim türleri ayrı ayrı açılıp kapatılabilir:
-
-| Tür | Ne zaman gelir? |
-|---|---|
-| **Rutin hatırlatmaları** | Geciken ve bugün yapılacak işler, sulama zamanı gelen bitkiler |
-| **Eksik ürünler** | Biten ürünler, eski ya da hiç çekilmemiş buzdolabı fotoğrafı |
-| **Çamaşır ve dolap** | Aynı yıkama türünden 3 kirli parça (bir makine dolusu), mevsim değişimi, bir yıldır giyilmeyenler için bağış önerisi |
-| **Faturalar ve bakım** | Faturanın son gününe 2 gün kala, garantinin bitişine 30 gün kala, kombi / klima / dedektör gibi bakım işleri, mevsimlik işler (ayın 1'i ve 15'i) |
-| **Son kullanma tarihleri** | Buzdolabındaki ürünün tarihine 2 gün kala ve tarihi geçince |
-| **Haftalık özet** | Pazar akşamı 19:00'da haftanın özeti |
-
-- Bildirimler sekmesinde bekleyen bütün bildirimler aciliyete göre sıralanır. Bir bildirime dokununca ilgili oda (ya da Ev bakımı) açılır.
-
-### 7. Evin düzeni
-
-- **Kurulum soruları:** Ev çizildikten sonra 7 soru gelir: evcil hayvan, bulaşık makinesi, halı, kombi, klima, su arıtma, saksı bitkileri. "Evet" denen soruların rutinleri ilgili odaya (ya da Ev bakımına) eklenir, "hayır" denince kalkar. Cevaplar Plan ekranındaki "Evim hakkında" kartından değiştirilir. Yeni eklenen işler hepsi aynı gün çıkmasın diye birkaç güne yayılır.
-- **Canlı ev haritası:** Her odanın bir temizlik yüzdesi var. İş yapıldıktan sonra sıklığın yarısı kadar gün oda tam temiz sayılır, sonra azalır, sıklığın iki katında sıfıra iner. Ana ekrandaki evde kirlenen odanın zemini solar ve tozlanır, tertemiz oda parlar. Odaların ağırlıklı ortalaması **ev puanı**.
-- **Ertele ve atla:** Her işin "⋯" menüsünde "Yarına ertele" ve "Bu sefer atla" var. Atlanan iş bir sonraki döneme kayar; oda temizliği değişmez.
-- **Esnek zamanlama:** Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığın yarısı kadar gün (haftalık işte 3 gün) "N gün geçti" olarak bekler, sonra gecikir. Ayarlardan kapatılabilir.
-- **Süre:** Her işin tahmini süresi var (dakika). Sıklık ve süre "⋯" menüsünden değiştirilir.
-- **Ne kadar vaktin var?:** Bugün sekmesinde 10 / 20 / 30 / 60 dakika seçilince o süreye sığan en acil işler listelenir.
-- **Modlar:** Misafir geliyor (misafirin göreceği odalar öne çıkar), Tatile gidiyorum (rutinler donar, dönünce kaldığı yerden devam eder), Yoğun / hasta (sadece her gün yapılan işler), Bayram temizliği (adım adım liste).
-- **Ev bakımı:** Kombi, klima, su arıtma, duman dedektörü, sayaç fotoğrafı gibi odasız işler; faturalar (ayın günü, "Ödendi" işareti); garanti belgeleri; mevsimlik işler (bahar temizliği, dolap değişimi, sineklik, salça, turşu, kışlık hazırlık).
-- **Gardırop:** Her kıyafetin yıkama türü var (beyaz, renkli, koyu, hassas). Çamaşır planı türlere göre gruplar; aynı türden 3 parça bir makine dolusudur. Mevsim değişimi kartı ve bir yıldır giyilmeyenler için bağış önerisi.
-- **Buzdolabı:** Ürünlere son kullanma tarihi girilir, 2 gün kala hatırlatılır.
-- **Motivasyon:** Seri sayacı, ev puanı ve son 7 günün özeti ana ekranda; bir oda tertemiz olunca kısa kutlama (kapatılabilir).
-- **Yakında:** Akıllı buzdolabı (fotoğraftan ürün tanıma, Premium) ve ana ekran widget'ı (ücretsiz, geliştirme derlemesi gerekir).
+Alt menü: **Ev · Bugün · Moka "+" · Gelişim · Ben** ([docs/skeleton-v3.md](docs/skeleton-v3.md)).
 
 ---
 
-## Varsayılan rutinler
-
-Bir oda eklendiğinde aşağıdaki rutinler otomatik gelir. Kullanıcı hepsini değiştirebilir ya da silebilir.
-
-| Oda | Rutinler (kaç günde bir) |
-|---|---|
-| **Yatak odası** | Odayı süpür ve sil (7), Çarşaf değişimi (7), Toz alma (7), Havalandırma (1), Yastık ve yorgan havalandırma (30) |
-| **Mutfak** | Bulaşık (1), Tezgah silme (1), Çöpü çıkar (2), Buzdolabı temizliği (30), Fırın temizliği (30), Yer silme (7) |
-| **Banyo** | Lavabo ve ayna (3), Klozet (3), Duş / küvet (7), Havlu değişimi (4), Yer silme (7) |
-| **Salon** | Süpürme (3), Toz alma (7), Koltuk minderleri (14), Cam silme (30) |
-| **Çalışma odası** | Masa düzeni (7), Toz alma (7), Kablo ve şarj düzeni (30) |
-| **Çocuk odası** | Oyuncak toplama (1), Çarşaf değişimi (7), Süpürme (3) |
-| **Antre** | Ayakkabılık düzeni (7), Yer silme (7) |
-| **Balkon** | Süpürme (7), Cam ve korkuluk (30) |
-| **Çamaşır odası** | Çamaşır yıkama (3), Makine filtresi (30), Ütü (7) |
-
----
-
-## Görsel kimlik
-
-<p align="center">
-  <img src="assets/logo-yatay.png" alt="Homezy yatay logo" width="420">
-</p>
-
-Tarz logodan geliyor: tombul, yuvarlak hatlı, hafif kabarık ve yumuşak gölgeli.
-
-| Renk | Kod | Kullanım |
-|---|---|---|
-| Lacivert | `#283044` | Yazılar, ana butonlar, alt menü, oda duvarları. Koyu temada zemin. |
-| Açık mint | `#EBF5EE` | Açık temada zemin. Koyu temada yazılar ve duvarlar. |
-| Mavi | `#78A1BB` | Vurgular, açma-kapama düğmeleri, yolunda giden işler. |
-| Kil | `#BFA89E` | Rozetler, sıcak vurgular. |
-| Kahve | `#8B786D` | "Bugün" durumu, başlık üstü etiketler. |
-
-- **Gecikmiş işler:** Paletin dışında yumuşak bir kırmızı kullanılıyor, açık temada `#B8584C`, koyu temada `#E58C7E`.
-- **Yazı tipleri:** Başlıklarda Baloo 2, metinlerde Nunito. (Fredoka denendi ama Türkçe ş, ğ ve İ harflerini içermiyor.)
-- **Temalar:** Açık ve koyu tema desteklenecek.
-- **Formlar:** Hap şeklinde butonlar, büyük köşe yuvarlaklıkları, ev planında yuvarlatılmış oda köşeleri.
-
----
-
-## Teknik yapı
+## Teknoloji
 
 | Konu | Seçim |
 |---|---|
-| Çatı | Expo (React Native) + TypeScript |
-| Platformlar | iOS ve Android, tek kod |
-| Veri | Telefonda yerel veritabanı (expo-sqlite). İlk sürümde sunucu yok. |
-| Bildirimler | Telefonda yerel olarak zamanlanır (expo-notifications) |
-| Kamera | Buzdolabı fotoğrafı için kamera ya da galeri (expo-image-picker) |
-| Buzdolabı taraması | Fotoğraf, API anahtarını tutan küçük bir sunucu fonksiyonuna (ör. Supabase Edge Function) gider, o da Claude API'ye görsel olarak gönderir ve JSON ürün listesi döner. Anahtar uygulamanın içine konmaz. |
-| Kıyafet taraması | Buzdolabıyla aynı sunucu fonksiyonu. Kombin önerisi ise kurallarla telefonda hesaplanır, sunucu ve internet gerekmez. |
-| Premium üyelik | Yapay zekâ taramaları ücretli abonelikte. App Store / Google Play aboneliği RevenueCat ile; sunucu fonksiyonu yetkiyi ve günlük tarama hakkını kontrol eder. Plan, mağaza kuralları ve gelir-gider hesabı: [docs/premium.md](docs/premium.md) |
-| Derleme ve yayın | EAS Build, EAS Submit. iOS derlemesi bulutta yapılır, Mac gerekmez. |
-| Geliştirme sırasında test | Telefonda Expo Go |
-
-**Neden sunucusuz?** İlk sürüm hızlı ve ücretsiz çıkar, veriler kullanıcının telefonundan çıkmaz, mağaza gizlilik formları kolay geçer. Aile üyelerinin aynı evi paylaşması gibi özellikler ikinci sürümde, bir sunucuyla (ör. Supabase) gelecek.
+| Çatı | Expo SDK 58, Expo Router, React Native 0.88, TypeScript |
+| Veri | Önce telefonda (expo-sqlite; web önizlemesinde localStorage) |
+| Hesap ve yedek | Supabase (Auth: e-posta + şifre, anonim misafir; evin yedeği) |
+| Abonelik | RevenueCat (`premium` yetkisi), mağaza ödeme sistemi |
+| Yapay zekâ | Supabase Edge Function'lar (`scan`, `moka-chat`), Claude API; anahtar sunucuda durur |
+| Bildirim | Yerel, expo-notifications (sunucu yok) |
+| Reklam | Google AdMob, yalnızca ücretsiz planda |
+| Derleme | EAS Build / EAS Submit (Mac gerekmez) |
 
 ---
 
-## Yol planı
+## Kurulum ve çalıştırma
 
-- [x] **Aşama 0: Fikir ve prototip.** HTML prototip, renk paleti, logo.
-- [x] **Aşama 1: Proje iskeleti.** Expo + TypeScript kurulumu, sekmeler ve ekran iskeletleri, Expo Go ile telefonda açılış.
-- [x] **Aşama 2: Prototipi taşıma.** Ev planı editörü, odalar, rutinler, gardırop, buzdolabı ve stok takibi, yerel veritabanı.
-- [x] **Aşama 2b: Evin düzeni.** Kurulum soruları, canlı ev haritası, ertele / atla, esnek zamanlama, süre ve zaman bütçesi, modlar, ev bakımı, faturalar, garantiler, mevsimlik işler, çamaşır planı, son kullanma tarihi, haftalık özet.
-- [x] **Aşama 3: Telefona özel özellikler.** Gerçek bildirimler, sabah özeti, kamera.
-- [ ] **Aşama 4: Kimlik.** Uygulama ikonu, açılış ekranı, mağaza ekran görüntüleri ve tanıtım metni.
-- [ ] **Aşama 5: Test.** Google Play kapalı testi ve iOS için TestFlight.
-- [ ] **Aşama 6: Yayın.** Gizlilik politikası, mağaza kayıtları, inceleme.
-- [ ] **Aşama 7: Yayın sonrası.** EAS Update ile güncellemeler, v2 planı.
+Gerekenler: Node.js, Android Studio emülatörü ya da telefonda Expo Go. Windows'ta PowerShell betik kısıtı yüzünden `npx` yerine **`npx.cmd`** kullan.
 
-**Yayın sırası:** Önce Google Play süreci başlatılacak. Yeni kişisel geliştirici hesaplarında, yayına çıkmadan önce 12 test kullanıcısının 14 gün kesintisiz kapalı teste kayıtlı kalması gerekiyor. Bu süre içinde iOS sürümü TestFlight'ta hazırlanacak ve iki mağazaya aynı hafta başvurulacak.
+```bash
+npm install
+cp .env.example .env.local   # Windows: copy .env.example .env.local
+npx expo start               # Windows: npx.cmd expo start
+```
 
-**Açık kararlar:**
-- Yapay zekâ modeli: Haiku 5.5 (maliyet için). Kapalı testte Sonnet 5.5 ile karşılaştır; gerekirse `SCAN_MODEL` gizli değişkeniyle değiştir ([docs/premium.md](docs/premium.md)).
-- Geliştirici hesapları bireysel mi olacak, Meikai Digital adına mı?
+> Uygulama yerel modüller kullanıyor (expo-blur, expo-location, expo-haptics, expo-audio, AdMob, RevenueCat). Bunlar Expo Go'da tam çalışmaz; emülatör / cihaz için geliştirme derlemesi gerekir: `npx.cmd expo run:android`. Yeni yerel bağımlılık eklenince derlemeyi yenile. Derlemeyi OneDrive dışındaki kısa bir klasörde yap (uzun yol sınırı).
+
+Diğer komutlar:
+- `npm run web`: tarayıcı önizlemesi (bildirim yok)
+- `npm run typecheck` ve `npm run lint`: her değişiklikten sonra
+- Paket eklerken `npx expo install <paket>`
+
+### Ortam değişkenleri (`.env.local`)
+
+| Değişken | Açıklama |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY` | Supabase > Project Settings > API |
+| `EXPO_PUBLIC_REVENUECAT_IOS_KEY`, `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` | RevenueCat herkese açık SDK anahtarları |
+| `EXPO_PUBLIC_ADMOB_APP_ID_*`, `EXPO_PUBLIC_ADMOB_BANNER_*` | AdMob kimlikleri, boşsa test reklamı ([docs/reklam.md](docs/reklam.md)) |
+| `EXPO_PUBLIC_DEV_PREMIUM` | Geliştirmede Premium'u zorla açar |
+
+Gizli anahtarlar (service role, RevenueCat `sk_`, Anthropic) uygulamaya ya da repoya yazılmaz; yalnızca Supabase'de durur.
+
+### Supabase
+
+1. `supabase/migrations/` altındaki dosyaları tarih sırasıyla çalıştır (`supabase db push` ya da SQL editörü). Bahçe (`20261027120000_bahce.sql`), aile evi ve Moka sohbeti tabloları dahil.
+2. Gizli değişkenleri tanımla:
+   ```bash
+   supabase secrets set ANTHROPIC_API_KEY=... REVENUECAT_API_KEY=... REVENUECAT_WEBHOOK_SECRET=...
+   # isteğe bağlı: SCAN_MODEL, CHAT_MODEL
+   ```
+3. Fonksiyonları yayınla:
+   ```bash
+   supabase functions deploy scan
+   supabase functions deploy moka-chat
+   supabase functions deploy revenuecat-webhook --no-verify-jwt
+   supabase functions deploy subscription-sync
+   ```
+4. RevenueCat webhook adresi: `https://<proje>.supabase.co/functions/v1/revenuecat-webhook`.
+
+Ayrıntılar: [docs/hesap.md](docs/hesap.md), [docs/odeme-kurulumu.md](docs/odeme-kurulumu.md).
+
+### Yayın
+
+```bash
+eas build --profile preview --platform android      # test APK
+eas build --profile production --platform all
+eas submit --platform android
+```
 
 ---
+
+## Dokümanlar
+
+| Dosya | Konu |
+|---|---|
+| [CLAUDE.md](CLAUDE.md) | Proje kararları ve kod yapısı |
+| [docs/hesap.md](docs/hesap.md) | Hesap, Supabase, RevenueCat kurulumu |
+| [docs/odeme-kurulumu.md](docs/odeme-kurulumu.md) | Mağaza ürünleri ve ödeme |
+| [docs/premium.md](docs/premium.md) | Premium farkları, tarama hakları, maliyet |
+| [docs/reklam.md](docs/reklam.md) | AdMob kurulumu |
+| [docs/aile-evi.md](docs/aile-evi.md) | Aile paylaşımı |
+| [docs/skeleton-v3.md](docs/skeleton-v3.md), [docs/tasarim-finch.md](docs/tasarim-finch.md), [docs/tasarim-v2.md](docs/tasarim-v2.md) | Tasarım |
+| [docs/moka-animasyon.md](docs/moka-animasyon.md), [docs/sahneler.md](docs/sahneler.md) | Moka animasyon ve sahneler |
+| [docs/magaza-metni.md](docs/magaza-metni.md) | Mağaza metinleri |
+| [docs/yurtdisi-lansman.md](docs/yurtdisi-lansman.md) | Yurt dışı lansman planı |
+| [docs/pazar-raporu-2026-10-31.md](docs/pazar-raporu-2026-10-31.md), [docs/premium-retention-plan.md](docs/premium-retention-plan.md) | Pazar ve elde tutma |
+| [docs/yasal/](docs/yasal) | Gizlilik politikası ve koşullar (HTML) |
 
 ## Repo yapısı
 
 ```
-homezy/
-├── README.md              Bu dosya
-├── CLAUDE.md              Claude Code için proje notları ve alınan kararlar
-├── AGENTS.md              Expo'nun yapay zekâ ajanları için notları
-├── app.json               Expo ayarları (ad, ikon, izin metinleri, eklentiler)
-├── docs/
-│   ├── hesap.md           Hesap, Supabase ve RevenueCat kurulumu
-│   └── premium.md         Premium üyelik, mağaza kuralları ve yapay zekâ maliyeti
-├── prototype/
-│   └── homezy.html       Çalışan HTML prototipi
-├── assets/
-│   ├── logo-kare.png      Kare logo (şimdilik uygulama ikonu ve açılış ekranı)
-│   └── logo-yatay.png     Yatay logo
-└── src/
-    ├── app/               Ekranlar (Expo Router: her dosya bir ekran)
-    │   ├── _layout.tsx    Fontlar, veri, ilk açılışta kurulum ekranına yönlendirme
-    │   ├── kurulum.tsx    Evini bloklarla kur
-    │   ├── oda/[id].tsx   Oda ekranı
-    │   └── (tabs)/        Ev, Bugün, Bildirimler, Plan sekmeleri
-    ├── components/        Plan, plan editörü, rutin satırı, oda modülleri, ortak parçalar
-    ├── domain/            Prototipteki kurallar: varsayılan rutinler, durum hesabı, bildirim kuralları
-    ├── data/              SQLite kaydı (web önizlemesinde localStorage)
-    ├── notifications/     Sabah özetinin zamanlanması
-    ├── store/             Uygulama verisinin tutulduğu yer
-    └── theme/             Renkler (açık / koyu tema) ve yazı tipleri
+app.json / app.config.ts   Expo ayarları
+assets/                    Logo, Moka görselleri, sesler
+docs/                      Dokümanlar
+prototype/homezy.html      Çalışan HTML prototipi (referans)
+scripts/                   İkon, sahne, ses, mağaza görseli üreticileri
+supabase/                  migrations/ ve functions/ (scan, moka-chat, revenuecat-webhook, subscription-sync)
+src/app/                   Ekranlar (Expo Router)
+src/components/            House3D, Plan, Moka bileşenleri, grafikler, ortak parçalar
+src/domain/                İş kuralları (rutin durumu, puan, seviye, kombin, bildirim)
+src/data/ store/ sync/     SQLite, uygulama durumu, Supabase yedeği
+src/notifications/         Yerel bildirim zamanlama
+src/purchases/ ads/        RevenueCat, AdMob
+src/theme/ i18n/           Renkler (açık / koyu), metinler
 ```
-
----
-
-## Geliştirme
-
-Gerekenler: Node.js ve telefonda **Expo Go** uygulaması.
-
-```bash
-npm install
-npx expo start
-```
-
-Terminalde çıkan QR kodu telefonda Expo Go ile (iPhone'da kamerayla) okut, uygulama telefonda açılır. Bilgisayarla telefon aynı Wi-Fi ağında olmalı; olmuyorsa `npx expo start --tunnel` dene.
-
-- `npm run web`: Tarayıcıda önizleme. Veriler tarayıcıda tutulur, bildirim gönderilmez.
-- `npm run typecheck` ve `npm run lint`: Değişikliklerden sonra çalıştır.
-- Paket eklerken `npm install` yerine `npx expo install <paket>` kullan; Expo sürümüne uygun sürümü seçer.
-
-Nasıl çalışıyor:
-- **Veri:** Bütün veriler telefondaki `homezy.db` SQLite dosyasında (odalar, plan hücreleri, rutinler, kıyafetler, stok). Buzdolabı fotoğrafı uygulamanın kendi klasörüne kopyalanır, veritabanında yalnızca yolu tutulur.
-- **Bildirimler:** Sunucu yok. Uygulama her açıldığında ve veri değiştiğinde önümüzdeki 7 sabahın özetini o güne göre hesaplayıp telefona zamanlar. Bildirime dokununca ilgili oda ya da Bugün sekmesi açılır.
-
----
-
-## Prototipi açmak
-
-`prototype/homezy.html` tek bir dosya, kurulum gerektirmiyor. Bilgisayarda çift tıklayıp tarayıcıda açabilirsin. Telefon görünümü için tarayıcının geliştirici araçlarındaki mobil görünümü kullan.
-
-Prototip verileri tarayıcıda `homezy.v1` anahtarıyla saklıyor. Varsayılan verilerde değişiklik yaptıysan ve uygulamayı sıfırdan görmek istiyorsan bu anahtarı değiştir ya da tarayıcının site verisini temizle.

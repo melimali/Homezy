@@ -17,7 +17,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { validEmail } from '@/auth/errors';
 import { Btn, Card, Field, T, XBtn } from '@/components/ui';
 import { cloudEnabled } from '@/lib/supabase';
-import { LEGAL } from '@/lib/links';
+import { legalUrl } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
 import { Squish } from '@/components/motion';
@@ -200,10 +200,10 @@ export default function Giris() {
         {mode === 'kayit' && (
           <Text style={[st.legal, { color: c.muted }]}>
             Hesap oluşturarak{' '}
-            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(LEGAL.terms)}>Kullanım koşulları</Text>
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))}>Kullanım koşulları</Text>
             {"'nı ve "}
-            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(LEGAL.privacy)}>Gizlilik politikası</Text>
-            {"'nı kabul etmiş olursun."}
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))}>Gizlilik politikası</Text>
+            {"'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
           </Text>
         )}
 

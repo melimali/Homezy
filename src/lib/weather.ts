@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { locationOk } from '@/lib/consent';
+
 /** Evin gökyüzü için sadeleştirilmiş hava durumu. */
 export type SkyKind = 'clear' | 'cloudy' | 'rain' | 'snow' | 'storm' | 'fog';
 export type Sky = { kind: SkyKind; day: boolean; live: boolean };
@@ -27,7 +29,7 @@ function kindOf(code: number): SkyKind {
 }
 
 async function fetchSky(): Promise<Sky | null> {
-  if (denied) return null;
+  if (denied || !locationOk.get()) return null;
   try {
     // Yerel modül: yeni derleme yoksa require atar, sessizce saate döneriz.
     // eslint-disable-next-line @typescript-eslint/no-require-imports

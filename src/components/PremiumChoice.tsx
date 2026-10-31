@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
@@ -7,6 +7,8 @@ import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
 import { FEATURES } from '@/domain/premium';
 import { track } from '@/lib/events';
+import { legalUrl } from '@/lib/links';
+import { useStore } from '@/store/AppStore';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
 
@@ -19,6 +21,7 @@ const short = (v: string) => v === '✓' || v === '—';
  * sonra Hesabım'dan tekrar açılabilir. `onDone` seçim yapılınca (ya da satın alma bitince) çağrılır.
  */
 export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void; onClose?: () => void; moment?: PaywallMoment }) {
+  const { state: S } = useStore();
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
@@ -130,8 +133,12 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
 
       <T v="small" style={{ textAlign: 'center' }}>
         {intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Premium her {unit} kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin.
-        Ödemeyi mağaza alır, kart bilgilerin bize gelmez.
+        Ödemeyi mağaza alır, kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı kabul edersin.
       </T>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(legalUrl('privacy', S.settings.language))} accessibilityRole="link">Gizlilik Politikası</T>
+      </View>
       {!premium.active && (
         <Btn kind="ghost" small label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} style={{ alignSelf: 'center' }} />
       )}

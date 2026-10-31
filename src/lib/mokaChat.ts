@@ -2,6 +2,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import type { ChatAction, ChatCtx, ChatMsg } from '@/domain/chat';
 import { LIMITS } from '@/domain/premium';
+import { ensureAiConsent } from '@/lib/consent';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -15,6 +16,7 @@ const TIMEOUT = 45_000;
 
 export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | Fail> {
   if (!supabase) return { ok: false, message: 'Sohbet bu sürümde kullanılamıyor.' };
+  if (!(await ensureAiConsent('chat'))) return { ok: false, message: 'Sohbet için mesajlarının yapay zekâ ile işlenmesini kabul etmen gerekiyor. Tekrar yazınca yeniden sorarım.' };
   const { data: auth } = await supabase.auth.getSession();
   if (!auth.session) {
     const { error } = await supabase.auth.signInAnonymously();

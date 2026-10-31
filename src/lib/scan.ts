@@ -2,6 +2,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 import { LIMITS } from '@/domain/premium';
+import { ensureAiConsent } from '@/lib/consent';
 import { supabase } from '@/lib/supabase';
 import type { StockLevel, WashType } from '@/domain/types';
 
@@ -35,6 +36,7 @@ export async function scanPhoto(kind: 'fridge', uri: string, known: string[]): P
 export async function scanPhoto(kind: 'look', uri: string, known: string[]): Promise<Ok<LookScan> | Fail>;
 export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): Promise<Ok<FridgeScan | LookScan> | Fail> {
   if (!supabase) return { ok: false, message: 'Tarama bu sürümde kullanılamıyor.' };
+  if (!(await ensureAiConsent('scan'))) return { ok: false, message: 'Taramak için yapay zekâ ile işlenmesini kabul etmen gerekiyor.' };
   const image = await prepare(uri);
   if (!image) return { ok: false, message: 'Fotoğraf okunamadı. Başka bir fotoğraf dene.' };
   // Sunucu kullanıcıyı oturumundan tanır; misafirin anonim oturumu henüz açılmadıysa şimdi açılır.

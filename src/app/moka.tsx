@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MokaFace } from '@/components/MokaFace';
@@ -11,6 +11,7 @@ import { mimikOf } from '@/constants/mimik';
 import { applyChatAction, chatCtx, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
 import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
+import { SUPPORT_EMAIL } from '@/lib/links';
 import { askMoka } from '@/lib/mokaChat';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -105,6 +106,16 @@ export default function MokaChat() {
     }
   };
 
+  /** Google Play yapay zekâ içeriği kuralı: uygunsuz cevap uygulama içinden bildirilebilir. */
+  const report = () => {
+    const text = last && last.id !== 0 ? last.content : '';
+    if (!text) return toast('Bildirilecek bir cevap yok.');
+    Alert.alert('Cevabı bildir', 'Moka’nın son cevabı uygunsuz, yanlış ya da zararlı mıydı? Bize e-posta ile bildir; cevap metni mesaja eklenir.', [
+      { text: 'Vazgeç', style: 'cancel' },
+      { text: 'Bildir', onPress: () => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Moka cevabı bildirimi')}&body=${encodeURIComponent(`Bildirdiğim cevap:\n\n${text}\n\nNeden:`)}`) },
+    ]);
+  };
+
   const clear = () => {
     memory = [HELLO];
     setItems(memory);
@@ -126,11 +137,18 @@ export default function MokaChat() {
           <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" style={[st.pill, { backgroundColor: notes ? c.accent : c.surface2 }]}>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: notes ? c.onAccent : c.ink }}>📝 Notlar</Text>
           </Squish>
+          <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.pill, { backgroundColor: c.surface2 }]}>
+            <Text style={{ fontSize: 14 }}>🚩</Text>
+          </Squish>
           <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.pill, { backgroundColor: c.surface2 }]}>
             <Text style={{ fontSize: 14 }}>🧹</Text>
           </Squish>
         </View>
       </View>
+
+      <T v="tiny" style={{ textAlign: 'center', paddingHorizontal: 20, opacity: 0.75 }}>
+        Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+      </T>
 
       {notes ? (
         <ScrollView contentContainerStyle={st.list}>

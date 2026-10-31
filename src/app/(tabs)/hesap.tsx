@@ -13,7 +13,7 @@ import { useTranslation } from '@/i18n/i18n';
 import { homeScore, seed } from '@/domain/logic';
 import { addDays, dayKey, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
-import { LEGAL } from '@/lib/links';
+import { legalUrl } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
@@ -157,6 +157,7 @@ export default function Hesap() {
       ]} />
       <Group index={5} title="Ayarlar" items={[
         { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
+        { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
         { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
       ]} />
 
@@ -249,16 +250,16 @@ export default function Hesap() {
       <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
         <T v="h3">{t('about')}</T>
         <View style={st.legal}>
-          <Squish onPress={() => Linking.openURL(LEGAL.terms)} accessibilityRole="link" accessibilityLabel={t('terms')}>
+          <Squish onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
           </Squish>
           <Text style={{ color: c.muted }}>•</Text>
-          <Squish onPress={() => Linking.openURL(LEGAL.privacy)} accessibilityRole="link" accessibilityLabel={t('privacy')}>
+          <Squish onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
           </Squish>
         </View>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
-          Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Konum yalnızca gökyüzü için kullanılır, saklanmaz.
+          Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Hava durumu: Open-Meteo.com. Konum yalnızca gökyüzü için kullanılır, saklanmaz. Tüm lisanslar: Gizlilik ve yasal.
         </T>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
       </Appear>

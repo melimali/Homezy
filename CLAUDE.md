@@ -34,6 +34,8 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 - **Test:** Geliştirirken telefonda Expo Go ile. Yayın için EAS Build ve EAS Submit.
 - **Aile paylaşımı (Premium):** ev sahibi evini bir davet koduyla paylaşır (`src/family/FamilyProvider.tsx`, `shared_homes` tablosu). Paylaşılan sadece ev; puan, günlük ve ayarlar kişiye ait.
 
+- **Yasal:** Gizlilik/Koşullar/Hesap silme sayfaları `docs/yasal/` (TR+EN), mağaza formları ve avukat listesi orada. Yapay zekâ rızası `src/lib/consent.ts`, ekran `src/app/yasal.tsx`. Yeni veri, SDK ya da paket eklersen politika, `veri-envanteri.md`, `magaza-formlari.md` ve lisans listesini güncelle.
+
 ## Kod yapısı
 
 - Expo SDK 58, Expo Router, ekranlar `src/app/` altında. Expo API'leri sürümden sürüme değişiyor; yeni bir API kullanmadan önce `AGENTS.md`'deki gibi o sürümün belgesine bak. Paket eklerken `npx expo install`.

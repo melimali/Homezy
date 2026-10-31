@@ -91,6 +91,7 @@ function RootStack() {
         <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="yasal" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="magaza" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bahce" options={{ animation: 'slide_from_right' }} />

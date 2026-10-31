@@ -10,7 +10,8 @@ import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
-import { supabase } from '@/lib/supabase';
+import { track } from '@/lib/events';
+import { prefs, supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 
@@ -152,6 +153,10 @@ export function usePlay() {
         }
       });
       const r = out.r!;
+      if (r.awarded && kind === 'gorev' && prefs.get('firstTask') == null) {
+        prefs.set('firstTask', '1');
+        track('first_task_done');
+      }
       if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
       toast(out.up ? `🎉 Moka ${out.up}. seviye oldu! ${awardToast(r, what)}` : awardToast(r, what));
       return out.r!;

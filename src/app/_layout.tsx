@@ -15,6 +15,7 @@ import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
+import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
@@ -34,6 +35,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
   });
+
+  useEffect(() => trackOpen(), []);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(c.bg).catch(() => {});

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { DAY } from '@/domain/constants';
 import { isPhotoTask } from '@/domain/home';
 import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
+import { firstOpenDay } from '@/lib/events';
 import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
@@ -235,6 +236,32 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       const msg = eveningNudge({ streak, idle: idleAhead(hp, d, freezeLeft), away, built: hp.level > 0, key: 'seri', now: at.getTime() });
       if (at.getTime() > now) out.push({ at, ...msg, url: '/bugun' });
     }
+  }
+  out.push(...welcomeNudges(S, now));
+  return out;
+}
+
+/**
+ * İlk 7 gün: kullanıcıyı alışkanlığa sokan 3 nazik hatırlatma (1. gün akşam, 2. gün öğle, 5. gün akşam).
+ * Bugün zaten iş yapıldıysa 1. gündeki atlanır. Günde en çok 2 bildirim kuralını bozmaz (sabah özeti + bir tane).
+ */
+export function welcomeNudges(S: AppState, now = Date.now()) {
+  const first = firstOpenDay();
+  if (!first) return [];
+  const steps: { age: number; h: number; m: number; title: string; body: string; url: string }[] = [
+    { age: 0, h: 19, m: 0, title: '🏡 Evin seni bekliyor', body: 'Bugün tek bir küçük iş yeter. Moka sevinsin!', url: '/bugun' },
+    { age: 1, h: 12, m: 30, title: '☕ Moka selam söylüyor', body: 'Dün evini kurdun. Bugün de bir iş yap, serin başlasın.', url: '/bugun' },
+    { age: 4, h: 19, m: 0, title: '✨ Evin güzelleşiyor', body: 'Serin sürüyor mu? Bugün bir iş daha, ev bir adım büyüsün.', url: '/bugun' },
+  ];
+  const out: { at: Date; title: string; body: string; url: string }[] = [];
+  const hp = progressOf(S.play, now);
+  for (const st of steps) {
+    const at = new Date(`${first}T00:00:00`);
+    at.setDate(at.getDate() + st.age);
+    at.setHours(st.h, st.m, 0, 0);
+    if (at.getTime() <= now) continue;
+    if (dayKey(at.getTime()) === dayKey(now) && hp.today) continue;
+    out.push({ at, title: st.title, body: st.body, url: st.url });
   }
   return out;
 }

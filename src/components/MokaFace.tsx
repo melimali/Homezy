@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
@@ -11,12 +11,11 @@ import { MIMIK, type Mimik } from '@/constants/mimik';
  */
 export function MokaFace({ size, mood = 'happy', talking = false }: { size: number; mood?: Exclude<Mimik, 'wink' | 'talk'>; talking?: boolean }) {
   const reduce = useReduceMotion();
-  const breath = useRef(new Animated.Value(0)).current;
-  const fur = useRef(new Animated.Value(0)).current;
-  const wink = useRef(new Animated.Value(0)).current;
-  const talk = useRef(new Animated.Value(0)).current;
-  const [base, setBase] = useState<Mimik>(mood);
-  useEffect(() => setBase(mood), [mood]);
+  const [breath] = useState(() => new Animated.Value(0));
+  const [fur] = useState(() => new Animated.Value(0));
+  const [wink] = useState(() => new Animated.Value(0));
+  const [talk] = useState(() => new Animated.Value(0));
+  const base: Mimik = mood;
 
   // Nefes ve tüy salınımı.
   useEffect(() => {

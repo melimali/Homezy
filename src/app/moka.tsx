@@ -51,6 +51,7 @@ export default function MokaChat() {
   const lastId = last?.id;
   useEffect(() => {
     if (!lastId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSpeaking(true);
     const t = setTimeout(() => setSpeaking(false), Math.min(4000, 800 + (last?.content.length ?? 0) * 25));
     return () => clearTimeout(t);

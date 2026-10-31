@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { displayName, useAuth } from '@/auth/AuthProvider';
 
 import { House3D } from '@/components/House3D';
+import { HouseFloors } from '@/components/HouseFloors';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { LevelUpPeek } from '@/components/LevelUpPeek';
@@ -179,12 +180,19 @@ export default function Home() {
       </View>
 
       <View style={{ gap: 12 }}>
-        <SecHead title="Evim" h="h3" right={S.others.length > 0 ? (
-          <Squish onPress={() => router.push('/evler')} accessibilityRole="button" hitSlop={8}>
-            <T v="small">🏡 {S.homeName} ⌄</T>
-          </Squish>
-        ) : undefined} />
-        <House3D state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        <SecHead title="Evim" h="h3" right={
+          <View style={{ flexDirection: 'row', gap: 14 }}>
+            <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
+              <T v="small">🎨 Evini düzenle</T>
+            </Squish>
+            {S.others.length > 0 && (
+              <Squish onPress={() => router.push('/evler')} accessibilityRole="button" hitSlop={8}>
+                <T v="small">🏡 {S.homeName} ⌄</T>
+              </Squish>
+            )}
+          </View>
+        } />
+        <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
@@ -284,7 +292,7 @@ function HouseViewer({
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
           <View style={styles.viewerModel}>
-            <House3D state={state} now={now} build={build} theme={theme} zoom={1.2} bleed labels={false} />
+            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed labels={false} />
           </View>
         </Animated.View>
         <Pressable

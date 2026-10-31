@@ -105,6 +105,8 @@ export async function loadState(): Promise<AppState | null> {
     bills: json<Bill[]>(m.bills, []),
     warranties: json<Warranty[]>(m.warranties, []),
     seasonal: json<Record<string, number>>(m.seasonal, {}),
+    // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
+    cells2: json<(string | null)[] | null>(m.cells2, null),
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
@@ -143,6 +145,7 @@ export async function loadState(): Promise<AppState | null> {
   for (const s of await db.getAllAsync<StockRow>('SELECT * FROM stock ORDER BY ord'))
     if (S.mod[s.room_id]) (S.mod[s.room_id].stock ||= []).push({ id: s.id, name: s.name, lvl: s.lvl, exp: s.exp });
 
+  if (S.cells2) S.cells2 = S.cells2.map(x => (x && S.rooms[x] ? x : null));
   return normalize(S);
 }
 
@@ -166,6 +169,7 @@ export async function saveState(S: AppState): Promise<void> {
       ['bills', JSON.stringify(S.bills)],
       ['warranties', JSON.stringify(S.warranties)],
       ['seasonal', JSON.stringify(S.seasonal)],
+      ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],
     ];

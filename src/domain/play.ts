@@ -59,6 +59,9 @@ export function normalize(S: AppState): AppState {
   S.bills ??= [];
   S.warranties ??= [];
   S.seasonal ??= {};
+  // 2. kat: boyutu planla uyuşmuyorsa (eski kayıt) yok sayılır.
+  if (S.cells2 && S.cells2.length !== S.cols * S.rows) S.cells2 = null;
+  S.cells2 ??= null;
   // Eski kıyafetlerin eklenme tarihi bilinmiyor; bağış önerisi hemen çıkmasın diye bugünden say.
   const now = Date.now();
   for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;

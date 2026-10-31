@@ -1,12 +1,14 @@
+import { useRouter, type Href } from 'expo-router';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
 import { cellCount, emptyState, makeRoom, removeRoom } from '@/domain/logic';
-import { applyTemplate, GRID, resizeGrid, restoreSnap, snapOf, TEMPLATES, type PlanSnap } from '@/domain/plan-templates';
+import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeUpper, resizeGrid, restoreSnap, snapOf, TEMPLATES, type Floor, type PlanSnap } from '@/domain/plan-templates';
 import type { AppState } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -36,6 +38,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const [history, setHistory] = useState<PlanSnap[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
   const editing = S.setup;
+  const router = useRouter();
+  const { premium } = usePurchases();
+  /** Düzenlenen kat. 2. kat (dubleks) Premium. */
+  const [floor, setFloor] = useState<Floor>(0);
+  const [upperArm, setUpperArm] = useState(false);
+  const floorRef = useRef<Floor>(floor);
 
   // Dokunma olaylarında güncel aracı ve durumu okumak için.
   const toolRef = useRef<Tool>(tool);
@@ -43,6 +51,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   useLayoutEffect(() => {
     toolRef.current = tool;
     stateRef.current = S;
+    floorRef.current = floor;
   });
 
   useEffect(() => {
@@ -69,20 +78,57 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     const cur = toolRef.current;
     if (!cur) {
       if (!first) return;
-      const id = stateRef.current.cells[i];
+      const id = floorCells(stateRef.current, floorRef.current)[i];
       if (id) setTool(id);
       else toast('Önce aşağıdan bir oda seç.');
       return;
     }
     if (first) remember();
     const val = cur === 'erase' ? null : cur;
+    const f = floorRef.current;
     update(D => {
-      if (D.cells[i] !== val) D.cells[i] = val;
+      if (f === 1) addUpper(D);
+      const cells = f === 1 ? D.cells2! : D.cells;
+      if (cells[i] !== val) cells[i] = val;
     });
   };
 
   const rooms = S.order.filter(id => S.rooms[id]);
-  const blocks = S.cells.filter(Boolean).length;
+  const blocks = S.cells.filter(Boolean).length + (S.cells2?.filter(Boolean).length ?? 0);
+  const upper = hasUpper(S);
+  const view = floorView(S, floor);
+
+  useEffect(() => {
+    if (!upperArm) return;
+    const t = setTimeout(() => setUpperArm(false), 4000);
+    return () => clearTimeout(t);
+  }, [upperArm]);
+
+  const goFloor = (f: Floor) => {
+    if (f === floor) return;
+    if (f === 1 && !premium.active && !upper) {
+      toast('2. kat (dubleks) Premium ile açılır 👑');
+      router.push('/premium' as Href);
+      return;
+    }
+    if (f === 1 && !S.cells2) {
+      remember();
+      update(D => addUpper(D));
+    }
+    setTool(null);
+    setFloor(f);
+    sfx('pop');
+  };
+
+  const dropUpper = () => {
+    if (!upperArm) return setUpperArm(true);
+    setUpperArm(false);
+    remember();
+    update(D => removeUpper(D));
+    setFloor(0);
+    setTool(null);
+    toast('2. kat kaldırıldı.');
+  };
   const cur = tool && tool !== 'erase' ? S.rooms[tool] : null;
 
   // Moka adım adım yol gösterir.
@@ -90,6 +136,8 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     ? { pose: 'analyzing' as const, title: 'Hadi evini çizelim', message: 'Hazır bir plan seç ya da aşağıdan ilk odanı ekle.' }
     : tool === 'erase'
       ? { pose: 'sweeping' as const, title: 'Silgi elimde', message: 'Boşaltmak istediğin bloklara dokun ya da üstünden kaydır.' }
+      : floor === 1 && !cur
+        ? { pose: 'handyman' as const, title: '2. kattasın ⬆️', message: 'Üst kattaki odaları çiz. Merdiven iki katta da dolu olan bir bloğa kendisi konur.' }
       : cur
         ? { pose: 'handyman' as const, title: `${ROOM_EMOJI[cur.type]} ${cur.name} çiziliyor`, message: 'Bloklara dokun ya da parmağını sürükle. Her blok ~2 m².' }
         : rooms.length < 3
@@ -100,6 +148,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     const first = !S.setup;
     const next = update(D => {
       for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+      if (D.cells2 && !D.cells2.some(Boolean)) D.cells2 = null;
       if (D.order.length) D.setup = true;
     });
     if (!next.order.length) {
@@ -124,6 +173,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       D.cols = fresh.cols;
       D.rows = fresh.rows;
       D.cells = fresh.cells;
+      D.cells2 = null;
       D.rooms = {};
       D.order = [];
       D.tasks = {};
@@ -142,6 +192,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     setTool(null);
     remember();
     update(D => applyTemplate(D, t));
+    setFloor(0);
     sfx('pop');
     toast(`${t.label} çizildi. Odalara dokunup düzenleyebilirsin.`);
   };
@@ -215,6 +266,15 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         </ScrollView>
       </View>
 
+      {/* Kat seçici: 2. kat (dubleks) Premium */}
+      <View style={st.tools}>
+        <ToolPill on={floor === 0} label="🏠 1. kat" onPress={() => goFloor(0)} />
+        <ToolPill on={floor === 1} label={upper || premium.active ? '⬆️ 2. kat' : '⬆️ 2. kat 👑'} onPress={() => goFloor(1)} />
+      </View>
+      {floor === 1 && (
+        <Btn small kind={upperArm ? 'danger' : 'ghost'} label={upperArm ? 'Emin misin? 2. kattaki odalar silinir' : '2. katı kaldır'} onPress={dropUpper} />
+      )}
+
       {/* Araçlar */}
       <View style={st.tools}>
         <ToolPill on={!!cur} label={cur ? `${ROOM_EMOJI[cur.type]} Çiz` : '✏️ Çiz'} onPress={() => setTool(cur ? null : rooms[rooms.length - 1] ?? null)} />
@@ -224,7 +284,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
 
       {/* 3. Plan */}
       <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
-        <Plan state={S} edit activeId={tool} onPaint={paint} onPaintingChange={setPainting} />
+        <Plan state={view} edit activeId={tool} onPaint={paint} onPaintingChange={setPainting} />
       </View>
 
       <View style={st.sizeRow}>
@@ -232,7 +292,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         <Stepper label="Uzunluk" n={S.rows} min={GRID.minRows} max={GRID.maxRows} onStep={d => resize(0, d)} />
       </View>
       <T v="small" style={{ textAlign: 'center' }}>
-        {rooms.length} oda · ~{blocks * 2} m² · {S.cols} × {S.rows} blok
+        {rooms.length} oda · ~{blocks * 2} m² · {S.cols} × {S.rows} blok{upper ? ' · 2 kat' : ''}
       </T>
 
       {/* Odalar: dokun → çiz, kalem → adı / sil */}

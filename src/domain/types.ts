@@ -1,6 +1,7 @@
 import type { Garden } from './garden';
 import type { PersonaId } from './items';
 import type { CheckIn } from './mood';
+import type { HouseLook } from './look';
 export type RoomType =
   | 'yatak'
   | 'mutfak'
@@ -162,6 +163,10 @@ export type Play = {
   owned: string[];
   /** Eşya kimliği → konduğu oda (null: depoda). */
   placed: Record<string, string | null>;
+  /** Eşya kimliği → konduğu bloğun sırası (`cells` indeksi). Yoksa oda içinde boş bir yere kendisi dizilir. */
+  spots?: Record<string, number>;
+  /** Evin görünümü: zemin, duvar, pencere, dış cephe (src/domain/look.ts). */
+  look?: HouseLook;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */
   awarded: Record<string, DayKey>;
   /** Gün → o gün tamamlananların kısa adları (günlükte "bugün neler yaptım"). */
@@ -193,6 +198,8 @@ export type HomeData = {
   cols: number;
   rows: number;
   cells: (string | null)[];
+  /** 2. kat (dubleks, Premium): `cells` ile aynı boyutta. null/yok: tek katlı ev. */
+  cells2?: (string | null)[] | null;
   rooms: Record<string, Room>;
   order: string[];
   tasks: Record<string, Task[]>;
@@ -215,6 +222,8 @@ export type AppState = {
   rows: number;
   /** Satır satır, `cols * rows` uzunluğunda; her hücrede oda id'si ya da null. */
   cells: (string | null)[];
+  /** 2. kat (dubleks, Premium): `cells` ile aynı boyutta, satır satır. null/yok: tek katlı ev. */
+  cells2?: (string | null)[] | null;
   rooms: Record<string, Room>;
   order: string[];
   tasks: Record<string, Task[]>;

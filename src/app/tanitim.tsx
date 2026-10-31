@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
+import { LIMITS } from '@/domain/premium';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
@@ -32,6 +33,8 @@ type Page = {
   tint: (c: Colors) => string;
   /** Sahnenin altındaki küçük çıkartmalar: neyi anlattığını bir bakışta gösterir. */
   chips: string[];
+  /** Sayfada Premium'a özel bir parça var: köşede rozet çıkar. */
+  premium?: boolean;
 };
 
 // Moka kendini tanıtır, sonra her sayfayı tek cümleyle kendi anlatır (docs/skeleton-v3.md).
@@ -55,26 +58,86 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Küçük işler',
     title: 'Her iş evine bir iyilik',
-    text: 'Bir işi bitir, puan kazan; evin her gün biraz daha büyüsün. Kaçırdığın gün sorun değil.',
+    text: 'Bir işi bitir, puan kazan; serin uzadıkça evin büyür. Kaçırdığın gün sorun değil.',
     scene: POSE_SCENES.sweeping!,
     tint: c => c.roseSoft,
     chips: ['✅ Tamamladım', '⭐ +10 puan', '🔥 Seri'],
   },
   {
+    eyebrow: 'Her odanın kendi işi',
+    title: 'Dolap, buzdolabı, bitkiler',
+    text: 'Kirli çamaşırı, biten ürünü, sulanacak bitkiyi odası takip eder. Alışveriş listesi kendiliğinden çıkar.',
+    scene: POSE_SCENES.plants!,
+    tint: c => c.sageSoft,
+    chips: ['👕 Gardırop', '🥛 Stok', '🪴 Bitkiler', '🛒 Alışveriş'],
+  },
+  {
     eyebrow: 'Fotoğrafla tara',
     title: 'Buzdolabı ve dolap tek fotoğrafta',
-    text: 'Fotoğrafı çek, eksik ürünleri ve kıyafetlerini ben tanıyayım. Sen sadece onayla.',
+    text: 'Fotoğrafı çek, eksik ürünleri ve kıyafetlerini ben tanıyayım. Kombin önerisi de internetsiz çalışır.',
     scene: POSE_SCENES.analyzing!,
     tint: c => c.lavenderSoft,
-    chips: ['🥛 Süt azaldı', '👕 3 kirli', '🛒 Liste hazır'],
+    chips: ['🥛 Süt azaldı', '👕 3 kirli', '🧥 Kombin'],
+  },
+  {
+    eyebrow: '3D evin',
+    title: 'Evin gerçekten canlanır',
+    text: 'Çevir, yakınlaştır; hava durumu ve saate göre gökyüzü değişir. Puanınla eşya al, evi kendin döşe.',
+    scene: POSE_SCENES.amazed!,
+    tint: c => c.peachSoft,
+    chips: ['🏡 3D ev', '🛋️ Eşyalar', '🌦️ Gökyüzü', '✨ 2. kat'],
+    premium: true,
+  },
+  {
+    eyebrow: 'Moka ile sohbet',
+    title: 'Takıldığında bana sor',
+    text: 'Bugün nereden başlasam? de, planını birlikte yapalım. Odaklanırken lofi müziği de ben açarım.',
+    scene: POSE_SCENES.laptop!,
+    tint: c => c.lavenderSoft,
+    chips: ['💬 Sohbet', '🎧 Lofi', '🎯 Odak'],
+  },
+  {
+    eyebrow: 'Bahçe ve mağaza',
+    title: 'Puanlar eşyaya, çiçeğe dönüşür',
+    text: 'Moka’nın bahçesine bak, mağazadan evine yeni eşyalar al. Akvaryum, şömine ve piyano Premium’da.',
+    scene: POSE_SCENES.cozy_plant!,
+    tint: c => c.sageSoft,
+    chips: ['🌱 Bahçe', '🛍️ Mağaza', '🐠 Akvaryum', '🎹 Piyano'],
+    premium: true,
+  },
+  {
+    eyebrow: 'Kendin için',
+    title: 'Günlük, spor, ruh halin',
+    text: 'Günün nasıldı, yaz ve işaretle. Antrenmanını kaydet. Premium’da fotoğraf, grafikler ve “geçen yıl bugün” de var.',
+    scene: POSE_SCENES.reading!,
+    tint: c => c.roseSoft,
+    chips: ['📔 Günlük', '💛 Ruh hali', '🏃 Spor'],
+    premium: true,
   },
   {
     eyebrow: 'Gelişimin',
     title: 'Ne kadar yol aldığını gör',
-    text: 'Haftalık grafikler, seri takvimi ve ruh halin. Her sabah da tek nazik bir özet getiririm.',
+    text: 'Haftalık grafikler ve seri takvimi. Her sabah da tek nazik bir özet bildirimi getiririm, saatini sen seçersin.',
     scene: POSE_SCENES.cheers!,
     tint: c => c.peachSoft,
-    chips: ['📊 Haftan', '🌤️ Sabah özeti', '💛 Ruh hali'],
+    chips: ['📊 Haftan', '🌤️ Sabah özeti', '🔔 Hatırlatma'],
+  },
+  {
+    eyebrow: 'Zor günler',
+    title: 'Yoğunsan, hastaysan, tatildeysen',
+    text: 'Misafir, tatil ve hasta modları işleri hafifletir. Seri dondurma ile bir gün kaçırsan da evin yıkılmaz. Aile ile paylaşabilirsin.',
+    scene: POSE_SCENES.blanket!,
+    tint: c => c.lavenderSoft,
+    chips: ['🛋️ Modlar', '❄️ Seri dondur', '👨‍👩‍👧 Aile', '🔧 Ev bakımı'],
+  },
+  {
+    eyebrow: 'Premium',
+    title: 'Evinin tadını çıkar',
+    text: 'Daha çok tarama ve sohbet, 2. kat, Premium eşyalar, ev temaları, 5 ev, aile paylaşımı, tarif ve kombin planı, reklamsız. İlk ay indirimli, istediğin zaman iptal.',
+    scene: POSE_SCENES.party!,
+    tint: c => c.peachSoft,
+    chips: [`📸 Günde ${LIMITS.premium.scans} tarama`, `💬 ${LIMITS.premium.chats} mesaj`, `❄️ Ayda ${LIMITS.premium.freezes} dondurma`, '⭐ 1,5 kat puan'],
+    premium: true,
   },
 ];
 
@@ -204,6 +267,11 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
       <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }] }}>
         <Squish quiet onPress={onPoke} accessibilityLabel="Moka'ya dokun" style={[st.polaroid, { width: card, backgroundColor: c.surface, shadowColor: c.shadow }]}>
           <View style={[st.tape, { backgroundColor: p.tint(c) }]} />
+          {p.premium && (
+            <View style={[st.badge, { backgroundColor: brand.navy }]}>
+              <Text style={st.badgeT}>✨ Premium</Text>
+            </View>
+          )}
           <Image source={p.scene} style={{ width: card - 20, height: ((card - 20) * 3) / 4, borderRadius: 22 }} resizeMode="cover" accessibilityIgnoresInvertColors />
           <View style={st.chips}>
             {p.chips.map((ch, k) => (
@@ -240,6 +308,8 @@ const st = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 }, shadowOpacity: 1, shadowRadius: 24, elevation: 6,
   },
   tape: { position: 'absolute', top: -9, alignSelf: 'center', width: 70, height: 20, borderRadius: 7, zIndex: 2, opacity: 0.95, transform: [{ rotate: '-3deg' }] },
+  badge: { position: 'absolute', top: 14, right: 14, zIndex: 3, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
+  badgeT: { fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
   chip: { borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 6 },
   chipT: { fontFamily: fonts.bodyBlack, fontSize: 12.5 },

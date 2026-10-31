@@ -1,3 +1,4 @@
+import { BADGE_ART, type BadgeArt } from '@/constants/badges';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -54,11 +55,15 @@ export default function Hesap() {
   const weekDone = [0, 1, 2, 3, 4, 5, 6].reduce((n, i) => n + (state.play.log[addDays(today, -i)]?.length ?? 0), 0);
   const allDone = Object.values(state.play.log).reduce((n, a) => n + a.length, 0);
   const plants = Object.values(state.play.log).flat().filter(x => x.startsWith('🪴')).length;
-  const badges: { label: string; pose: MokaPose; on: boolean; hint: string }[] = [
-    { label: 'Kahve Sever', pose: 'sipping', on: hp.streak >= 3, hint: '3 gün seri yap' },
-    { label: 'Temizlik Ustası', pose: 'sweeping', on: allDone >= 20, hint: '20 iş tamamla' },
-    { label: 'Düzen Canavarı', pose: 'checklist', on: homeScore(state, now) >= 80, hint: 'Ev puanını %80 yap' },
-    { label: 'Bitki Dostu', pose: 'watering', on: plants >= 3, hint: '3 kez bitki sula' },
+  const badges: { label: string; art: BadgeArt; on: boolean; hint: string }[] = [
+    { label: 'İlk Adım', art: 'ilk', on: allDone >= 1, hint: 'İlk işini tamamla' },
+    { label: 'Kahve Sever', art: 'kus', on: hp.streak >= 3, hint: '3 gün seri yap' },
+    { label: 'Seri Ateşi', art: 'seri', on: hp.streak >= 7, hint: '7 gün seri yap' },
+    { label: 'Haftanın Yıldızı', art: 'takvim', on: weekDone >= 10, hint: 'Bu hafta 10 iş yap' },
+    { label: 'Temizlik Ustası', art: 'el', on: allDone >= 20, hint: '20 iş tamamla' },
+    { label: 'Düzen Canavarı', art: 'ev', on: homeScore(state, now) >= 80, hint: 'Ev puanını %80 yap' },
+    { label: 'Bitki Dostu', art: 'filiz', on: plants >= 3, hint: '3 kez bitki sula' },
+    { label: 'Yıldız Ev', art: 'yildiz', on: allDone >= 100, hint: '100 iş tamamla' },
   ];
 
   const doRestore = async () => {
@@ -154,8 +159,8 @@ export default function Hesap() {
         <Appear index={3} style={st.badges}>
           {badges.map(b => (
             <View key={b.label} style={[st.badge, { backgroundColor: c.surface }]} accessibilityLabel={`${b.label}: ${b.on ? 'kazanıldı' : b.hint}`}>
-              <View style={[st.badgeIcon, { backgroundColor: c.surface2 }, !b.on && { opacity: 0.35 }]}>
-                <Image source={MOKA_ASSETS[b.pose]} style={st.badgeImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+              <View style={[st.badgeIcon, !b.on && { opacity: 0.3 }]}>
+                <Image source={BADGE_ART[b.art]} style={st.badgeImg} resizeMode="contain" accessibilityIgnoresInvertColors />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" style={!b.on && { opacity: 0.5 }} numberOfLines={1}>{b.label}</T>
@@ -283,8 +288,8 @@ const st = StyleSheet.create({
   stat: { flex: 1, borderRadius: radius.card, paddingVertical: 12, alignItems: 'center', gap: 2 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  badgeIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  badgeImg: { width: 34, height: 34, marginTop: 4 },
+  badgeIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
+  badgeImg: { width: 46, height: 46 },
   card: { borderRadius: radius.card, padding: 16, gap: 12 },
   legal: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
   danger: { gap: 8, marginBottom: 20 },

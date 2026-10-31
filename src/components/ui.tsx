@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   View,
+  type ImageSourcePropType,
   type PressableProps,
   type StyleProp,
   type TextProps,
@@ -54,15 +55,15 @@ function textStyle(v: Variant, c: Colors): TextStyle {
 /* ---------- ekran ---------- */
 
 export function Screen({
-  children, scrollEnabled = true, header = true, tone = 'peach', tab,
-}: { children: ReactNode; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean }) {
+  children, scrollEnabled = true, header = true, tone = 'peach', tab, image,
+}: { children: ReactNode; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
   const bottom = tab ? 118 : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <ScreenBackground tone={tone} />
+      {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       <ScrollView
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}

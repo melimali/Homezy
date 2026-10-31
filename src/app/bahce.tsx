@@ -82,7 +82,7 @@ export default function Bahce() {
   const albumTypesCount = Object.keys(G.album).length;
 
   return (
-    <Screen header={false}>
+    <Screen header={false} image={require('../../assets/bahce/bahce-arka.jpg')}>
       <BackLink />
       <Appear>
         <T v="eyebrow">Puanla bahçe</T>

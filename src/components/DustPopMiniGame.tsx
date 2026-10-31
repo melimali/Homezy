@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
-import { sfx } from '@/lib/sfx';
+import { sfx, haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 import { Btn, Sheet, T } from './ui';
 
@@ -68,14 +67,14 @@ export function DustPopMiniGame({ open, onClose, onReward }: Props) {
   }, [isPlaying]);
 
   const popBubble = (id: number) => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    haptic('light');
     sfx('tap');
     setScore(s => s + 1);
     setBubbles(b => b.filter(item => item.id !== id));
   };
 
   const startGame = () => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    haptic('medium');
     sfx('coin');
     setScore(0);
     setTimeLeft(30);

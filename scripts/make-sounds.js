@@ -65,3 +65,10 @@ write('party', 1.1, b => {
   [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6].forEach((f, i) => bell(f, i * 0.11, 0.7, 0.8, b));
   bell(NOTE.E6, 0.44, 0.6, 0.5, b);
 });
+// Seviye atlama: iki katlı yükselen arpej ve parlak son.
+write('levelup', 1.4, b => {
+  [NOTE.C5, NOTE.G5, NOTE.C6, NOTE.E6, NOTE.G6].forEach((f, i) => bell(f, i * 0.1, 0.8, 0.75, b));
+  bell(NOTE.C6, 0.55, 0.8, 0.6, b); bell(NOTE.G6, 0.55, 0.8, 0.5, b);
+});
+// Küçük baloncuk patlaması.
+write('pop', 0.12, b => { pop(0, 1, b); pop(0.03, 0.5, b); });

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -8,7 +7,7 @@ import { type Mood } from '@/domain/garden';
 import { roomClean, roomCounts } from '@/domain/logic';
 import { MAX_LEVEL } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
-import { sfx } from '@/lib/sfx';
+import { sfx, haptic } from '@/lib/sfx';
 import { useSky, type Sky } from '@/lib/weather';
 import type { AppState, HouseTheme, RoomType } from '@/domain/types';
 import { fonts, useColors, useIsDark, type Colors } from '@/theme';
@@ -867,8 +866,10 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
 
   useEffect(() => {
     const grew = previousLevel.current !== L;
+    const up = L > previousLevel.current;
     previousLevel.current = L;
     if (grew && L >= 1) setBurst(b => b + 1);
+    if (up) sfx('levelup');
     if (!grew || L < 9) return;
     sproutScale.setValue(0.45);
     sproutOpacity.setValue(0);
@@ -977,12 +978,12 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     els.push(<Polyline key={key} points={pts(ps)} fill="none" stroke="#5B4A40" strokeWidth={1.1} strokeLinejoin="round" strokeLinecap="round" />);
 
   const handleOpenRoom = (id: string) => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    haptic('light');
     sfx('tap');
     onOpenRoom?.(id);
   };
   const handlePressHouse = () => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    haptic('light');
     sfx('tap');
     onPressHouse?.();
   };

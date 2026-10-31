@@ -2,7 +2,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -13,7 +12,7 @@ import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { useNow } from '@/hooks/useNow';
 import { persistPhoto } from '@/lib/photos';
-import { sfx } from '@/lib/sfx';
+import { sfx, haptic } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -76,7 +75,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       x.snooze = null;
       if (photo) x.photo = photo;
     });
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    haptic('medium');
     bounce.setValue(0.8);
     Animated.spring(bounce, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
     setBurst(b => b + 1);

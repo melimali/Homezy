@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
-import { sfx } from '@/lib/sfx';
+import { sfx, haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 import { Btn, Sheet, T } from './ui';
 
@@ -95,13 +94,13 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   });
 
   const selectTrack = (t: Track) => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+    haptic('medium');
     sfx('coin');
     setActiveTrack(activeTrack?.id === t.id ? null : t);
   };
 
   const step = (dir: 1 | -1) => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    haptic('light');
     sfx('tap');
     const i = activeTrack ? TRACKS.findIndex(t => t.id === activeTrack.id) : dir === 1 ? -1 : 0;
     setActiveTrack(TRACKS[(i + dir + TRACKS.length) % TRACKS.length]);

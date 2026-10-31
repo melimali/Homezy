@@ -87,7 +87,7 @@ function RootStack() {
       </Stack.Protected>
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="oda/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="oda/[id]" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />

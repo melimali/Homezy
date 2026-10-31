@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { sfx, haptic } from '@/lib/sfx';
+import { ambientAvailable, getActive, setPlaying, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
+import { haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 import { Btn, Sheet, T } from './ui';
 
 type Track = {
-  id: string;
+  id: AmbientId;
   emoji: string;
   name: string;
   desc: string;
@@ -30,7 +31,10 @@ type Props = {
 /** Moka'nın Plak Çaları: Dinlendirici ASMR ve Lo-Fi sesler modalı. */
 export function LofiPlayerModal({ open, onClose }: Props) {
   const c = useColors();
-  const [activeTrack, setActiveTrack] = useState<Track | null>(null);
+  // Parçalar modal kapansa da çalmaya devam eder; birden fazlası karışabilir.
+  const active = useSyncExternalStore(subscribe, getActive);
+  const activeTrack = TRACKS.find(t => active.includes(t.id)) ?? null;
+  const playing = active.length > 0;
   const [spinAnim] = useState(() => new Animated.Value(0));
   const [armAnim] = useState(() => new Animated.Value(0));
   const [pulseAnim] = useState(() => new Animated.Value(0));
@@ -38,12 +42,12 @@ export function LofiPlayerModal({ open, onClose }: Props) {
 
   useEffect(() => {
     Animated.timing(armAnim, {
-      toValue: activeTrack ? 1 : 0,
+      toValue: playing ? 1 : 0,
       duration: 600,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-    if (!activeTrack) {
+    if (!playing) {
       pulseAnim.setValue(0);
       bars.forEach(b => b.setValue(0.3));
       return;
@@ -65,14 +69,14 @@ export function LofiPlayerModal({ open, onClose }: Props) {
       pulse.stop();
       waves.forEach(w => w.stop());
     };
-  }, [activeTrack, armAnim, pulseAnim, bars]);
+  }, [playing, armAnim, pulseAnim, bars]);
 
   const armRot = armAnim.interpolate({ inputRange: [0, 1], outputRange: ['-28deg', '4deg'] });
   const glowScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] });
   const glowOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
 
   useEffect(() => {
-    if (!activeTrack) {
+    if (!playing) {
       spinAnim.stopAnimation();
       return;
     }
@@ -86,7 +90,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
     );
     loop.start();
     return () => loop.stop();
-  }, [activeTrack, spinAnim]);
+  }, [playing, spinAnim]);
 
   const spin = spinAnim.interpolate({
     inputRange: [0, 1],
@@ -95,15 +99,13 @@ export function LofiPlayerModal({ open, onClose }: Props) {
 
   const selectTrack = (t: Track) => {
     haptic('medium');
-    sfx('coin');
-    setActiveTrack(activeTrack?.id === t.id ? null : t);
+    toggle(t.id);
   };
 
   const step = (dir: 1 | -1) => {
     haptic('light');
-    sfx('tap');
     const i = activeTrack ? TRACKS.findIndex(t => t.id === activeTrack.id) : dir === 1 ? -1 : 0;
-    setActiveTrack(TRACKS[(i + dir + TRACKS.length) % TRACKS.length]);
+    solo(TRACKS[(i + dir + TRACKS.length) % TRACKS.length].id);
   };
 
   return (
@@ -121,7 +123,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             pointerEvents="none"
             style={[styles.glow, { borderColor: c.warm, opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
           />
-          <Animated.View style={[styles.vinyl, { transform: [{ rotate: spin }], backgroundColor: activeTrack ? c.ink : c.muted }]}>
+          <Animated.View style={[styles.vinyl, { transform: [{ rotate: spin }], backgroundColor: playing ? c.ink : c.muted }]}>
             <View style={[styles.groove, { width: 94, height: 94, borderRadius: 47 }]} />
             <View style={[styles.groove, { width: 74, height: 74, borderRadius: 37 }]} />
             <View style={[styles.vinylLabel, { backgroundColor: c.warm }]} />
@@ -140,18 +142,18 @@ export function LofiPlayerModal({ open, onClose }: Props) {
 
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Btn label="⏮" onPress={() => step(-1)} />
-          <Btn label={activeTrack ? '⏸' : '▶'} onPress={() => (activeTrack ? setActiveTrack(null) : step(1))} />
+          <Btn label={playing ? '⏸' : '▶'} onPress={() => (playing ? stopAll() : setPlaying('lofi', true))} />
           <Btn label="⏭" onPress={() => step(1)} />
         </View>
 
-        <T v="bold" style={{ color: activeTrack ? c.ok : c.muted }}>
-          {activeTrack ? `Çalıyor: ${activeTrack.emoji} ${activeTrack.name}` : 'Plak çalar duruyor'}
+        <T v="bold" style={{ color: playing ? c.ok : c.muted }}>
+          {playing ? `Çalıyor: ${TRACKS.filter(t => active.includes(t.id)).map(t => `${t.emoji} ${t.name}`).join(' + ')}` : ambientAvailable() ? 'Plak çalar duruyor' : 'Bu derlemede ses çalma yok'}
         </T>
 
         {/* Parça Listesi */}
         <View style={{ width: '100%', gap: 8, marginTop: 4 }}>
           {TRACKS.map(t => {
-            const isPlaying = activeTrack?.id === t.id;
+            const isPlaying = active.includes(t.id);
             return (
               <Pressable
                 key={t.id}

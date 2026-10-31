@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
 import { progressOf } from '@/domain/play';
+import { useSky } from '@/lib/weather';
 import { onMokaReact, reactMoka } from '@/lib/mokaReact';
 import { useStore } from '@/store/AppStore';
 
@@ -15,8 +16,10 @@ const HEARTS = ['💗', '💛', '💗', '🤎'];
  * Moka'ya can verir: nefes, yan salınım ve tepkiler. Sadece `Animated` (native driver).
  * `children` Moka resmidir. Hareketi azalt açıksa yalnız tepkiler (kısa) çalışır.
  */
-export function MokaLive({ children, size, handleRef }: { children: ReactNode; size: number; handleRef?: MutableRefObject<MokaLiveHandle | null> }) {
+export function MokaLive({ children, size, handleRef, weather }: { children: ReactNode; size: number; handleRef?: MutableRefObject<MokaLiveHandle | null>; weather?: boolean }) {
   const reduce = useReduceMotion();
+  const sky = useSky(!!weather);
+  const gear = !weather ? null : sky.kind === 'rain' || sky.kind === 'storm' ? '☂️' : sky.kind === 'snow' ? '🧣' : null;
   const breath = useRef(new Animated.Value(0)).current;
   const sway = useRef(new Animated.Value(0)).current;
   const wiggle = useRef(new Animated.Value(0)).current;
@@ -100,6 +103,11 @@ export function MokaLive({ children, size, handleRef }: { children: ReactNode; s
   return (
     <View style={{ width: size, height: size }}>
       <Animated.View style={{ transform }}>{children}</Animated.View>
+      {!!gear && (
+        <Text pointerEvents="none" style={[styles.heart, { right: size * 0.04, left: undefined, top: size * 0.02, fontSize: size * 0.24 }]}>
+          {gear}
+        </Text>
+      )}
       {stars > 0 && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill} key={`s${stars}`}>
           {['⭐', '🎉', '✨', '⭐'].map((h, i) => (

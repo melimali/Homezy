@@ -7,6 +7,8 @@ import { MokaWearLayer } from '@/components/MokaWearLayer';
 import { SceneImage } from '@/components/SceneImage';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
+import { checkinOf, feelOf } from '@/domain/mood';
+import { useStore } from '@/store/AppStore';
 import { sfx } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -32,6 +34,10 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
   const c = useColors();
   const reduce = useReduceMotion();
   const [hop] = useState(() => new Animated.Value(0));
+  const { state } = useStore();
+  const ci = checkinOf(state.play);
+  // Sakin pozlarda bugünkü ruh hali yüzü belirler.
+  const shown = ci && 'feel' in ci && (pose === 'happy' || pose === 'wink') ? feelOf(ci.feel).pose : pose;
   const live = useRef<MokaLiveHandle | null>(null);
   const px = SIZE[size];
   const bubble = showBubble && !!(title || message || tip);
@@ -71,8 +77,8 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
       ) : (
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
           <Animated.View style={{ transform }}>
-            <MokaLive size={px} handleRef={live}>
-              <Image source={MOKA_ASSETS[timePose(pose)]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <MokaLive size={px} handleRef={live} weather={size !== 'sm'}>
+              <Image source={MOKA_ASSETS[timePose(shown)]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
               <MokaWearLayer size={px} />
             </MokaLive>
           </Animated.View>

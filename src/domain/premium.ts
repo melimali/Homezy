@@ -18,6 +18,9 @@ export const THEMES: { id: HouseTheme; name: string; emoji: string; premium: boo
   { id: 'gece', name: 'Gece', emoji: '🌙', premium: true },
   { id: 'kis', name: 'Kış', emoji: '❄️', premium: true },
   { id: 'sonbahar', name: 'Sonbahar', emoji: '🍂', premium: true },
+  { id: 'cottage', name: 'Cottagecore', emoji: '🌼', premium: false },
+  { id: 'minimal', name: 'Minimal', emoji: '🤍', premium: true },
+  { id: 'lavanta', name: 'Lavanta', emoji: '💜', premium: true },
 ];
 
 /** Premium bittiyse seçili tema gündüze döner (seçim silinmez, üyelik dönünce geri gelir). */

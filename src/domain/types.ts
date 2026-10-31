@@ -124,7 +124,7 @@ export type Bill = { id: string; name: string; day: number; paid: string | null 
 /** Garanti belgesi: `end` bitiş günü. */
 export type Warranty = { id: string; name: string; end: number };
 
-export type HouseTheme = 'gunduz' | 'gece' | 'kis' | 'sonbahar';
+export type HouseTheme = 'gunduz' | 'gece' | 'kis' | 'sonbahar' | 'cottage' | 'minimal' | 'lavanta';
 
 export type WorkoutGoal = 'form' | 'kilo' | 'guc' | 'esneklik';
 export type WorkoutLevel = 'yeni' | 'orta' | 'ileri';

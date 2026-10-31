@@ -544,12 +544,18 @@ const GRASS: Partial<Record<HouseTheme, [string, string]>> = {
   gece: ['#6F9A7C', '#2F4A3A'],
   kis: ['#F3F7FA', '#C9D3DE'],
   sonbahar: ['#D9B36C', '#7A6236'],
+  cottage: ['#A9CFA0', '#46684A'],
+  minimal: ['#EDE6DA', '#6F6A62'],
+  lavanta: ['#CFC3E3', '#4F4768'],
 };
 /** Gökyüzü [açık, koyu]. */
 const SKY: Partial<Record<HouseTheme, [string, string]>> = {
   gece: ['#2B3556', '#1A2033'],
   kis: ['#DCE8F2', '#2E3A52'],
   sonbahar: ['#F6E6D3', '#4A3B36'],
+  cottage: ['#FBEBD8', '#3F3A4A'],
+  minimal: ['#F6F1EA', '#3A3844'],
+  lavanta: ['#E9E0F5', '#3A3556'],
 };
 
 /** Aynı ev için hep aynı yerlere düşen "rastgele" noktalar. */
@@ -576,6 +582,8 @@ function themeParts(theme: HouseTheme, dark: boolean, box: { x: number; y: numbe
       const cx = x + u * w, cy = y + v * h;
       front.push(<Ellipse key={'lf' + i} cx={cx} cy={cy} rx={4.8} ry={2.3} fill={leaf[i % 4]} opacity={0.88} transform={`rotate(${Math.round(k * 180)} ${cx.toFixed(1)} ${cy.toFixed(1)})`} />);
     });
+  } else if (theme === 'minimal') {
+    // Sade: süs yok.
   } else if (petals) {
     // Gündüz / Bahar tatlı süzülen pembe & altın çiçek yaprakları
     const petalColors = ['#F4A6C0', '#FFE082', '#E58C7E', '#FFF0F5'];

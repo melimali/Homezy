@@ -50,14 +50,14 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 ## Yayın sırası
 
 1. Uygulamayı iki platform için birlikte geliştir.
-2. Kullanılabilir ilk sürüm hazır olunca Google Play'e yükle. Yayıncı Meikai Digital (kuruluş hesabı); kuruluş hesaplarında 12 test kullanıcılı 14 günlük kapalı test zorunlu değil.
+2. Kullanılabilir ilk sürüm hazır olunca Google Play'e yükle. Yayıncı Melih Tuğyan (kişisel geliştirici hesabı; Play'de bireysel hesaplarda yeni hesaplar için 12 test kullanıcılı 14 günlük kapalı test gerekebilir, Play Console'da kontrol et).
 3. Bu sürede iOS'u TestFlight'a gönder.
 4. Google testi bitince iki mağazaya aynı hafta başvur.
 
 Ayrıca gerekenler:
-- Gizlilik politikası sayfası (Meikai Digital sitesinde yayınlanabilir).
+- Gizlilik politikası sayfası (docs/yasal, GitHub Pages: https://melimali.github.io/layfapp/yasal/gizlilik.html).
 - Mağaza ekran görüntüleri ve tanıtım metni.
-- Karar: geliştirici hesapları Meikai Digital adına (kuruluş). Google Play ve Apple kuruluş hesabı için D-U-N-S numarası gerekiyor.
+- Karar (Melih, 2026-10-31): geliştirici hesapları kişisel (Melih Tuğyan); D-U-N-S gerekmez. Adres belgelerde yazılmaz, iletişim info@themeikai.com. Play/Apple bireysel hesapta adres isteyebilir (Play bunu mağaza sayfasında gösterir); gerekirse posta kutusu/sanal adres düşün.
 
 ## Görsel kimlik
 

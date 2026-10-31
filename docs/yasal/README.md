@@ -14,24 +14,23 @@
 | `magaza-formlari.md` | Play Data Safety, Apple Privacy Labels, yaş derecelendirmesi, inceleme notları |
 | `../../supabase/migrations/20261031150000_yasal_silme.sql` | Hesap silince her şeyi silen `delete_me()` |
 
-## Yayınlamak
+## Yayınlamak (GitHub Pages)
 
-1. `docs/yasal/` klasörünü yayınla. En kolayı GitHub Pages (Settings › Pages › `main` / `docs`; adres `…/yasal/gizlilik.html`) ya da `themeikai.com/homezy/` altına kopyalamak.
-2. Adres belli olunca `src/lib/links.ts` içindeki `BASE`'i güncelle (şimdi `https://themeikai.com/homezy`; sayfalar `.html` uzantısıyla açılıyor).
-3. Mağazalara şu adresleri gir:
-   - Gizlilik politikası: `…/gizlilik.html` (Google Play ve App Store Connect; EN mağaza girdisi için `…/privacy.html`)
-   - Kullanım koşulları: `…/kosullar.html` (App Store açıklamasının altına ya da özel EULA alanına; yoksa Apple standart EULA'sı geçerli)
-   - Hesap silme (Play Console › Veri güvenliği › Hesap silme URL'si): `…/hesap-silme.html`
+1. GitHub › `melimali/layfapp` › Settings › Pages › Source: *Deploy from a branch*, Branch: `main`, Folder: `/docs` › Save. (`integration/tum-pr` main'e birleşmeden sayfa çıkmaz; geçici olarak branch'i `integration/tum-pr` seçebilirsin.) Not: özel (private) repoda Pages ücretli GitHub planı ister; ücretsizde repo public olmalı ya da sayfaları `themeikai.com/homezy/` altına kopyala.
+2. Birkaç dakika sonra adresler:
+   - Gizlilik (TR): https://melimali.github.io/layfapp/yasal/gizlilik.html
+   - Privacy (EN): https://melimali.github.io/layfapp/yasal/privacy.html
+   - Koşullar: https://melimali.github.io/layfapp/yasal/kosullar.html · Terms: …/terms.html
+   - Hesap silme (Play Console › Veri güvenliği): https://melimali.github.io/layfapp/yasal/hesap-silme.html
+3. `src/lib/links.ts` içindeki `BASE` zaten `https://melimali.github.io/layfapp/yasal`. Başka alan adına taşırsan sadece onu değiştir.
+4. Bu adresleri Play Console ve App Store Connect formlarına gir.
 
-## Senin doldurman gerekenler
+## Doldurulanlar ve kalanlar
 
-HTML dosyalarında sarı işaretli (`class="todo"`) yerleri ara:
-
-- [ ] `[AD SOYAD / ÜNVAN]`, `[ADRES, TÜRKİYE]`: bireysel geliştirici olarak adın ve posta adresin. Play'de bireysel hesap adresi herkese görünür; Apple/Google'a verdiğin bilgiyle birebir aynı olmalı. (Not: CLAUDE.md'de yayıncı "Meikai Digital" yazıyor; bireysel hesapla çıkacaksan o satırı güncelle.)
-- [ ] `[E-POSTA]`: yasal talepler ve destek için gerçek bir adres. Aynısını `src/lib/links.ts` içindeki `SUPPORT_EMAIL`'e yaz (şimdi `destek@example.com`). Moka'daki "🚩 bildir" düğmesi bu adrese gider.
-- [ ] `[GG.AA.YYYY]`: son güncelleme tarihi (hepsinde).
-- [ ] Supabase proje bölgesini doğrula (Frankfurt/AB yazdım).
-- [ ] Mağaza formlarını `magaza-formlari.md`'ye göre doldur.
+- Veri sorumlusu: Melih Tuğyan (şahıs). Adres **yazılmadı**, iletişim info@themeikai.com. Play bireysel hesapta mağaza sayfasında adres gösterir, Apple de adres ister; bu konuyu avukata/Play'e sor (posta kutusu/sanal adres seçeneği).
+- Tarih 31.10.2026; yayın günü güncelle.
+- Supabase proje bölgesini doğrula (Frankfurt/AB yazdım).
+- Mağaza formlarını `magaza-formlari.md`'ye göre doldur.
 
 ## Avukata sorulacaklar
 

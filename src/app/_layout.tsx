@@ -110,6 +110,7 @@ function RootStack() {
         <Stack.Screen name="bakim" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evim" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hafta" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="gunum" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
         <Stack.Screen name="premium" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>

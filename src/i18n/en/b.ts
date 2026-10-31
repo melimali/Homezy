@@ -170,4 +170,13 @@ export const EN_B: Record<string, string> = {
   'Odak, Spor, Hikâye': 'Focus, Sports, Story',
   '3. günden sonra açılır': 'Unlocks after day 3',
   'Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱': 'Focus, Sports and My home’s story unlock after day 3 🌱',
+  'Sıradaki iş': 'Up next',
+  'Önce bunu halledelim, sonra rahatlarsın.': 'Let’s get this one out of the way, then relax.',
+  'Küçük bir adımla başlayalım.': 'Let’s start with one small step.',
+  'Son iş! Bitirince gün tamam.': 'Last one! Finish it and the day is done.',
+  'Bugünlük her şey tamam. Harika iş!': 'All done for today. Great job!',
+  'Tamamladım': 'Done',
+  '💧 Suladım': '💧 Watered',
+  '📸 Çek': '📸 Snap',
+  '{}, ayrıntı': '{}, details',
 };

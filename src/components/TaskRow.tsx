@@ -12,7 +12,7 @@ import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { useNow } from '@/hooks/useNow';
 import { persistPhoto } from '@/lib/photos';
-import { sfx, haptic } from '@/lib/sfx';
+import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -75,9 +75,11 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       x.snooze = null;
       if (photo) x.photo = photo;
     });
-    haptic('medium');
-    bounce.setValue(0.8);
-    Animated.spring(bounce, { toValue: 1, friction: 3, tension: 160, useNativeDriver: true }).start();
+    // Anında ödül: başarı titreşimi + "bitti" sesi, puan geldiyse hemen ardından jeton sesi.
+    sfx('done');
+    if (r.awarded) setTimeout(() => sfx('coin'), 220);
+    bounce.setValue(0.7);
+    Animated.spring(bounce, { toValue: 1, friction: 3, tension: 140, useNativeDriver: true }).start();
     setBurst(b => b + 1);
     if (r.awarded) {
       setGain(r.points);
@@ -133,7 +135,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
 export type TaskApi = ReturnType<typeof useTask>;
 
 /** '+10 ⭐' yazısı: düğmenin üstünden süzülüp kaybolur. */
-function Gain({ k }: { k: TaskApi }) {
+export function Gain({ k }: { k: TaskApi }) {
   const c = useColors();
   if (!k.gain) return null;
   return (
@@ -435,7 +437,7 @@ const styles = StyleSheet.create({
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   who: { borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 8 },
-  gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, zIndex: 2 },
+  gain: { position: 'absolute', top: -6, alignSelf: 'center', fontFamily: fonts.bodyBlack, fontSize: 16, zIndex: 2 },
   done: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   everyText: { fontFamily: fonts.bodyBold, fontSize: 14 },

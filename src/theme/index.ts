@@ -13,14 +13,14 @@ export const brand = {
 
 const light = {
   // Pastel sıcak: krem zemin, şeftali / adaçayı / lavanta / gül vurguları (docs/tasarim-finch.md).
-  bg: '#FBF4EA', surface: '#FFFBF5', surface2: '#F6E6DA', ink: '#3B3345', muted: '#7A6F80', line: '#EEDFD0',
+  bg: '#FBF4EA', surface: '#FFFBF5', surface2: '#F6E6DA', ink: '#3B3345', muted: '#625869', line: '#EEDFD0',
   wall: '#3B3345', hatch: 'rgba(59,51,69,0.10)', shadow: 'rgba(150,100,90,0.16)', lift: 'rgba(150,100,90,0.10)',
-  accent: '#7F9C86', onAccent: '#FFFBF5', accentSoft: '#E3EEE4', hi: '#9BB5C9', warm: '#A8806C', clay: brand.clay,
+  accent: '#4F7A5E', onAccent: '#FFFBF5', accentSoft: '#E3EEE4', hi: '#9BB5C9', warm: '#86573F', clay: brand.clay,
   onBadge: '#FFFFFF',
-  fashion: '#F8E9E2', fashionSurface: '#FFF7F2', fashionInk: '#5A4650', fashionAccent: '#C57F8D', fashionLine: '#F0D8D4',
-  late: '#C97B72', lateSoft: '#F8E0DB', today: '#B9805F', todaySoft: '#FBE6D6', ok: '#6F9A86', okSoft: '#DDEBE0',
+  fashion: '#F8E9E2', fashionSurface: '#FFF7F2', fashionInk: '#5A4650', fashionAccent: '#9A4A5E', fashionLine: '#F0D8D4',
+  late: '#A5473D', lateSoft: '#F8E0DB', today: '#8A5530', todaySoft: '#FBE6D6', ok: '#3C6F5A', okSoft: '#DDEBE0',
   /** Yumuşak, parlayan vurgu (kutlama, seçili sekme). */
-  glow: '#FBDDBF', glowInk: '#8B5E3C',
+  glow: '#FBDDBF', glowInk: '#6F4426',
   /** Kutlama ekranının koyu zemini, üstündeki kart ve yazı. */
   night: '#3B3345', nightCard: '#4C4459', onNight: '#FBF4EA', cream: '#FFF8EE',
   /** Pastel vurgu seti. */
@@ -37,7 +37,7 @@ export type Colors = typeof light;
 const dark: Colors = {
   bg: '#2B2A35', surface: '#37364A', surface2: '#44425A', ink: '#FBF4EA', muted: '#BDB6C6', line: '#4E4B64',
   wall: '#FBF4EA', hatch: 'rgba(251,244,234,0.14)', shadow: 'rgba(10,8,18,0.45)', lift: 'rgba(10,8,18,0.35)',
-  accent: '#BFD8C4', onAccent: '#232230', accentSoft: '#44584C', hi: '#9BB5C9', warm: '#E3B9A0', clay: brand.clay,
+  accent: '#BFD8C4', onAccent: '#232230', accentSoft: '#3C5045', hi: '#9BB5C9', warm: '#E3B9A0', clay: brand.clay,
   onBadge: '#232230',
   fashion: '#4A3C43', fashionSurface: '#40353D', fashionInk: '#F6E4DC', fashionAccent: '#E3A3B0', fashionLine: '#5E4A53',
   late: '#E8A199', lateSoft: '#5A3B40', today: '#E3B9A0', todaySoft: '#54433F', ok: '#A9CBB6', okSoft: '#3A5048',
@@ -67,6 +67,13 @@ export const fonts = {
   bodyBold: 'Nunito_700Bold',
   bodyBlack: 'Nunito_800ExtraBold',
 };
+
+/**
+ * Yazı ölçeği (tek yer): başlık 36 / 23 / 18, gövde 15–16, yardımcı 13.5 / 12. En küçük yazı 12.
+ * Yazı rengi olan muted / warm / late / today / ok renkleri WCAG AA (4.5:1) için denendi.
+ * Büyük yazı tipi ayarında taşmasın diye `T` yazıyı en çok 1.3 kat büyütür.
+ */
+export const type = { h1: 36, h2: 23, h3: 18, lead: 16.5, bold: 16, body: 15, small: 13.5, tiny: 12, maxScale: 1.3 };
 
 export const radius = { card: 28, tile: 24, plan: 14, pill: 999 };
 

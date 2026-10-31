@@ -6,7 +6,8 @@ import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
-import { Appear, Squish } from '@/components/motion';
+import { Appear, Pulse, Squish } from '@/components/motion';
+import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { Bar, Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
@@ -43,6 +44,7 @@ export default function Bugun() {
   const today = visible.flatMap(g => g[1]);
   const total = today.length;
   const doneN = today.filter(x => isDoneToday(x.t, now)).length;
+  const next = today.find(x => !isDoneToday(x.t, now));
   const places = [...new Map(today.map(x => [x.rid, placeOf(S, x.rid)])).entries()];
   const [only, setOnly] = useState<string | null>(null);
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
@@ -50,8 +52,11 @@ export default function Bugun() {
   return (
     <Screen header={false} tab tone="rose">
       <TitleBar title="Bugün" right={<IconBtn icon="📅" label="Haftam" onPress={() => router.push('/hafta')} />} />
-      <WeekStrip now={now} />
-      <DayPlanCard />
+      {next ? (
+        <NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} />
+      ) : total > 0 ? (
+        <EmptyMsg pose="party">Bugünlük her şey tamam. Harika iş!</EmptyMsg>
+      ) : null}
 
       {total > 0 && (
         <Appear index={1} style={[styles.progress, { backgroundColor: c.surface }]}>
@@ -60,9 +65,11 @@ export default function Bugun() {
               <T v="bold">Günlük İlerleme</T>
               <T v="small">{doneN}/{total} tamamlandı</T>
             </View>
-            <Text style={[styles.pct, { color: c.ink }]}>%{Math.round((doneN / total) * 100)}</Text>
+            <Pulse on={doneN}>
+              <Text style={[styles.pct, { color: c.ink }]}>%{Math.round((doneN / total) * 100)}</Text>
+            </Pulse>
           </View>
-          <Bar value={doneN / total} height={10} />
+          <Bar value={doneN / total} height={10} color={c.accent} />
         </Appear>
       )}
 
@@ -90,12 +97,14 @@ export default function Bugun() {
           </Card>
         );
       })}
-      {!visible.length && (
+      {!visible.length && !total && (
         <EmptyMsg pose={S.mode?.k === 'tatil' ? 'blanket' : 'party'}>
           {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
         </EmptyMsg>
       )}
       <DailyGoals now={now} />
+      <WeekStrip now={now} />
+      <DayPlanCard />
       <SelfCareCard />
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>

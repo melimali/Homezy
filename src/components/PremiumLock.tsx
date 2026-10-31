@@ -19,7 +19,7 @@ export function PremiumLock({ title, text, emoji = '👑' }: { title: string; te
         </View>
       </View>
       <T v="small" style={{ fontSize: 13.5 }}>{text}</T>
-      <Btn kind="primary" small label="Premium'a bak ⭐" onPress={() => router.push('/premium')} style={{ alignSelf: 'flex-start' }} />
+      <Btn small label="Premium'a bak ⭐" onPress={() => router.push('/premium')} style={{ alignSelf: 'flex-start' }} />
     </View>
   );
 }

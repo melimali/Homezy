@@ -23,7 +23,7 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
-import { fonts, radius, space, useColors, type Colors } from '@/theme';
+import { fonts, radius, space, type, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
 import { ScreenBackground, type Tone } from './ScreenBackground';
@@ -34,7 +34,7 @@ type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'bold' | 'small' | 'tiny' | 'eyebro
 
 export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
   const c = useColors();
-  return <Text {...rest} style={[textStyle(v, c), style]} />;
+  return <Text maxFontSizeMultiplier={type.maxScale} {...rest} style={[textStyle(v, c), style]} />;
 }
 
 function textStyle(v: Variant, c: Colors): TextStyle {
@@ -42,9 +42,9 @@ function textStyle(v: Variant, c: Colors): TextStyle {
     case 'h1': return { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 42, color: c.ink, letterSpacing: -0.8 };
     case 'h2': return { fontFamily: fonts.displayBold, fontSize: 23, lineHeight: 29, color: c.ink, letterSpacing: -0.3 };
     case 'h3': return { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 24, color: c.ink };
-    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink };
+    case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: type.bold, lineHeight: 22, color: c.ink };
     case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
-    case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted };
+    case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: type.tiny, lineHeight: 16, color: c.muted };
     case 'eyebrow':
       return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.warm, marginBottom: 4 };
     case 'lead': return { fontFamily: fonts.bodyBold, fontSize: 16.5, lineHeight: 24, color: c.muted, marginTop: 6 };
@@ -267,7 +267,7 @@ export function Btn({
         style,
       ]}
     >
-      <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13.5 : 16, letterSpacing: 0.1 }}>{label}</Text>
+      <Text maxFontSizeMultiplier={type.maxScale} style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13.5 : 16, letterSpacing: 0.1, textAlign: 'center' }}>{label}</Text>
     </Squish>
   );
 }

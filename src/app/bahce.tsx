@@ -9,7 +9,7 @@ import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { Breathe, Flutter, Shower, Sway, Twinkle } from '@/components/gardenFx';
-import { Appear, Burst, Float, Pulse } from '@/components/motion';
+import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
   FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, gardenRank, growth,
@@ -24,7 +24,6 @@ import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
-import { Squish } from '@/components/motion';
 
 type Tab = 'cicek' | 'gubre' | 'sus' | 'kisilik' | 'album';
 

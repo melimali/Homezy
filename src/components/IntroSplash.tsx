@@ -9,8 +9,7 @@ import { fonts, useColors } from '@/theme';
 /**
  * Açılış animasyonu, iki bölüm:
  * 1. Meikai Digital introsu: themeikai.com'daki CSS introsunun aynısı (süreler ve eğriler oradan).
- * 2. Moka'nın evi: pastel gökyüzünde tepe, küçük ev zıplayarak belirir, kapı açılır, Moka kahvesiyle
- *    zıplayarak çıkar (buhar, kalpler), "Homezy" harfleri tek tek zıplar (docs/skeleton-v3.md).
+ * 2. Moka: pastel baloncuklar yükselir, uykulu Moka düşüp zıplar ve göz kırpar, "Homezy" harfleri tek tek zıplar (docs/skeleton-v3.md).
  * Her soğuk açılışta bir kez oynar (~5 sn), ekrana dokununca atlanır. Hareket azaltma açıksa
  * sitede olduğu gibi hiç oynamaz. Android'de takılmasın diye sadece opacity ve transform
  * canlandırılıyor (useNativeDriver); sitedeki blur efektleri bu yüzden yok.
@@ -74,10 +73,10 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(2100, v.meikai, 500, exitEase, 0),
       // 2. Moka'nın evi
       at(2100, v.sky, 700, Easing.out(Easing.quad)),
-      spring(2350, v.house, 5, 80),
-      at(2850, v.door, 320, Easing.inOut(Easing.quad)),
-      spring(3050, v.moka, 4, 60),
-      at(3350, v.hearts, 1300, Easing.out(Easing.quad)),
+      spring(2200, v.house, 5, 80),
+      at(3150, v.door, 250, Easing.inOut(Easing.quad)),
+      spring(2450, v.moka, 4, 60),
+      at(2700, v.hearts, 2200, Easing.out(Easing.quad)),
       // Döngü (Animated.loop) paralelin bitişini bekletiyordu; buhar tek uzun yükselişle iki kez tüter.
       at(3300, v.steam, 2200, Easing.linear),
       ...v.word.map((l, i) => spring(3400 + i * 70, l, 4, 120)),
@@ -187,7 +186,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
 const GLOW = 760; // sitede 520px daire + 120px blur
 const STAGE = 300;
 const HOUSE = 150;
-const MOKA = 150;
+const MOKA = 190;
 const WORD = 'Homezy'.split('');
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
@@ -207,7 +206,9 @@ const st = StyleSheet.create({
   hill: { position: 'absolute', left: -80, bottom: -STAGE * 0.04 },
   house: { position: 'absolute', bottom: STAGE * 0.2, left: STAGE * 0.08 },
   door: { position: 'absolute', left: HOUSE * 0.41, top: HOUSE * 0.58, width: HOUSE * 0.2, height: HOUSE * 0.3, borderRadius: HOUSE * 0.1, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
-  moka: { position: 'absolute', bottom: STAGE * 0.06, right: -STAGE * 0.02, width: MOKA, height: MOKA },
+  moka: { width: MOKA, height: MOKA, marginBottom: 8 },
+  mokaImg: { width: MOKA, height: MOKA },
+  blob: { position: 'absolute', bottom: '18%' },
   steam: { position: 'absolute', width: 12, height: 12, borderRadius: 6 },
   heart: { position: 'absolute', fontSize: 22 },
   word: { flexDirection: 'row', marginTop: 4 },
@@ -220,15 +221,14 @@ type V = {
   steam: Animated.Value; hearts: Animated.Value; word: Animated.Value[]; tag: Animated.Value;
 };
 
-/** İkinci bölüm: pastel gökyüzü, tepe, ev, kapıdan çıkan Moka ve zıplayan "Homezy". */
+/** İkinci bölüm: pastel baloncuklar yükselir, uykulu Moka zıplayıp göz kırpar, "Homezy" harfleri dalgayla belirir. */
 function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number>; c: ReturnType<typeof useColors> }) {
-  const pop = (val: Animated.Value, from = 0.3) => ({
-    opacity: val.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-    transform: [{ scale: lerp(val, from, 1) }],
-  });
+  const blobs = [
+    { x: 0.12, s: 54, col: c.rose, d: 0 }, { x: 0.78, s: 44, col: c.peach, d: 1 }, { x: 0.3, s: 30, col: c.lavender, d: 2 },
+    { x: 0.62, s: 62, col: c.sageSoft, d: 3 }, { x: 0.9, s: 26, col: c.rose, d: 4 }, { x: 0.46, s: 38, col: c.peach, d: 5 },
+  ];
   return (
     <View style={st.center} pointerEvents="none">
-      {/* Gökyüzü: kremden şeftaliye, köşede yumuşak güneş */}
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: v.sky }]}>
         <Svg width="100%" height="100%">
           <Defs>
@@ -237,80 +237,44 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
               <Stop offset="0.55" stopColor={c.peachSoft} />
               <Stop offset="1" stopColor={c.bg} />
             </LinearGradient>
-            <RadialGradient id="sun" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor={c.glow} stopOpacity={1} />
-              <Stop offset="1" stopColor={c.glow} stopOpacity={0} />
-            </RadialGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#sky)" />
-          <Circle cx="78%" cy="18%" r="90" fill="url(#sun)" />
         </Svg>
       </Animated.View>
 
-      <View style={st.scene}>
-        {/* Tepe: yuvarlak, kenarsız bir ada */}
-        <Animated.View style={[st.hill, { opacity: v.sky, transform: [{ translateY: lerp(v.sky, 40, 0) }] }]}>
-          <Svg width={STAGE + 160} height={STAGE * 0.5}>
-            <Ellipse cx={(STAGE + 160) / 2} cy={STAGE * 0.3} rx={STAGE * 0.64} ry={STAGE * 0.19} fill={c.sage} />
-            <Ellipse cx={(STAGE + 160) / 2 - 20} cy={STAGE * 0.2} rx={STAGE * 0.4} ry={STAGE * 0.06} fill={c.sageSoft} opacity={0.55} />
-            <Circle cx={84} cy={STAGE * 0.27} r={8} fill={c.rose} />
-            <Circle cx={STAGE + 50} cy={STAGE * 0.3} r={7} fill={c.peach} />
-            <Circle cx={102} cy={STAGE * 0.33} r={5.5} fill={c.lavender} />
-          </Svg>
-        </Animated.View>
+      {/* Baloncuklar: aşağıdan yukarı süzülür */}
+      {blobs.map((b, i) => (
+        <Animated.View
+          key={i}
+          style={[st.blob, {
+            left: `${b.x * 100}%`, width: b.s, height: b.s, borderRadius: b.s / 2, backgroundColor: b.col,
+            opacity: v.house.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0.55, 0.55], extrapolate: 'clamp' }),
+            transform: [{ translateY: lerp(v.hearts, 60, -150 - b.d * 55) }, { scale: lerp(v.house, 0.3, 1) }],
+          }]}
+        />
+      ))}
 
-        {/* Ev: zıplayarak belirir */}
-        <Animated.View style={[st.house, { transformOrigin: 'bottom' }, pop(v.house, 0.2)]}>
-          <Svg width={HOUSE} height={HOUSE} viewBox="0 0 150 150">
-            <Path d="M104 30 h14 a4 4 0 0 1 4 4 v28 h-22 v-28 a4 4 0 0 1 4-4z" fill={c.rose} />
-            <Rect x={22} y={66} width={106} height={80} rx={22} fill={c.cream} />
-            <Path d="M10 74 Q75 6 140 74 Q143 80 136 82 L14 82 Q7 80 10 74z" fill={c.peach} />
-            <Rect x={36} y={92} width={26} height={24} rx={10} fill={c.glow} />
-            <Rect x={94} y={92} width={22} height={22} rx={11} fill={c.glow} />
-            <Rect x={60} y={86} width={32} height={46} rx={16} fill={c.glowInk} opacity={0.75} />
-            <Circle cx={76} cy={104} r={9} fill={c.glow} opacity={0.8} />
-            <Circle cx={75} cy={52} r={9} fill={c.cream} />
-            <Path d="M70 52 a5 5 0 0 1 10 0 l-5 6z" fill={c.rose} />
-          </Svg>
-          {/* Kapı: açılınca sola katlanır */}
-          <Animated.View style={[st.door, { backgroundColor: c.warm, transformOrigin: 'left', transform: [{ scaleX: lerp(v.door, 1, 0.08) }] }]} />
-        </Animated.View>
+      {/* Moka: yukarıdan düşer, zıplar; uykulu poz göz kırpana döner */}
+      <Animated.View style={[st.moka, {
+        opacity: v.moka.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+        transform: [{ translateY: lerp(v.moka, -STAGE * 0.7, 0) }, { scale: lerp(v.moka, 0.6, 1) }, { rotate: v.moka.interpolate({ inputRange: [0, 1], outputRange: ['-14deg', '0deg'] }) }],
+      }]}>
+        <Image source={MOKA_ASSETS.sleepy} style={st.mokaImg} resizeMode="contain" />
+        <Animated.Image source={MOKA_ASSETS.wink} style={[st.mokaImg, StyleSheet.absoluteFill, { opacity: v.door }]} resizeMode="contain" />
+      </Animated.View>
 
-        {/* Kalpler */}
-        {[0, 1, 2].map(i => (
-          <Animated.Text
-            key={i}
-            style={[st.heart, {
-              left: STAGE * 0.72 + (i - 1) * 40 - 11, bottom: STAGE * 0.5,
-              opacity: v.hearts.interpolate({ inputRange: [0, 0.2, 0.75, 1], outputRange: [0, 1, 1, 0] }),
-              transform: [{ translateY: lerp(v.hearts, 0, -70 - i * 14) }, { scale: lerp(v.hearts, 0.4, 1.1) }],
-            }]}>
-            {['💛', '🤍', '🧡'][i]}
-          </Animated.Text>
-        ))}
-
-        {/* Moka: kapıdan çıkıp öne zıplar */}
-        <Animated.View style={[st.moka, {
-          opacity: v.moka.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-          transform: [{ translateX: lerp(v.moka, -STAGE * 0.3, 0) }, { translateY: lerp(v.moka, -STAGE * 0.2, 0) }, { scale: lerp(v.moka, 0.25, 1) }],
-        }]}>
-          <Image source={MOKA_ASSETS.sipping} style={{ width: MOKA, height: MOKA }} resizeMode="contain" />
-          {/* Kahve buharı */}
-          {[0, 1, 2].map(i => (
-            <Animated.View
-              key={i}
-              style={[st.steam, {
-                backgroundColor: c.surface, right: MOKA * 0.16 + i * 9, top: MOKA * 0.2,
-                opacity: v.steam.interpolate({ inputRange: [0, 0.15, 0.5, 0.65, 1], outputRange: [0, 0.8, 0, 0.8, 0] }),
-                transform: [
-                  { translateY: v.steam.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0, -34 - i * 8, 0, -34 - i * 8] }) },
-                  { scale: v.steam.interpolate({ inputRange: [0, 0.5, 0.5001, 1], outputRange: [0.5, 1.3, 0.5, 1.3] }) },
-                ],
-              }]}
-            />
-          ))}
-        </Animated.View>
-      </View>
+      {/* Kıvılcımlar */}
+      {['✨', '💛', '✨'].map((e, i) => (
+        <Animated.Text
+          key={i}
+          style={[st.heart, {
+            left: `${28 + i * 22}%`, top: '30%',
+            opacity: v.hearts.interpolate({ inputRange: [0, 0.2, 0.75, 1], outputRange: [0, 1, 1, 0] }),
+            transform: [{ translateY: lerp(v.hearts, 0, -50 - i * 12) }, { scale: lerp(v.hearts, 0.4, 1.1) }],
+          }]}>
+          {e}
+        </Animated.Text>
+      ))}
 
       <View style={st.word}>
         {WORD.map((ch, i) => (

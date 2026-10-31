@@ -24,7 +24,7 @@ const HELLO: Item = {
   role: 'assistant',
   content: 'Merhaba, ben Moka ☕ Bana iş ekletebilir, yaptıklarını işaretletebilir, takvime not yazdırabilir ya da sadece sohbet edebilirsin!',
 };
-const IDEAS = ['Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım'];
+const IDEAS = ['Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım', 'Bugün günlük yazmak istiyorum', 'Biraz hareket edelim mi?', 'Dışarı çıkmaya ne dersin?', 'Evi toparlamak için küçük bir adım öner'];
 
 /** Oturum boyunca konuşma kalır; kapatınca silinir (mesajlar telefonda saklanmaz). */
 let memory: Item[] = [HELLO];

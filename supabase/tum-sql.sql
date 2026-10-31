@@ -1,31 +1,31 @@
--- Homezy: TÜM Supabase SQL'leri tek dosyada (supabase/migrations/*.sql, tarih sırasıyla).
--- Supabase > SQL Editor > New query > yapıştır > Run. Tekrar çalıştırmak güvenlidir
--- (IF NOT EXISTS / CREATE OR REPLACE / DROP ... IF EXISTS / ON CONFLICT kullanıldı).
--- Bu dosya otomatik üretildi; kaynak: supabase/migrations. Elle düzenleme, yeniden üret.
+-- Homezy: TUM Supabase SQL'leri tek dosyada (supabase/migrations/*.sql, tarih sirasiyla).
+-- Supabase > SQL Editor > New query > yapistir > Run. Tekrar calistirmak guvenlidir
+-- (IF NOT EXISTS / CREATE OR REPLACE / DROP ... IF EXISTS / ON CONFLICT kullanildi).
+-- Bu dosya otomatik uretildi; kaynak: supabase/migrations. Elle duzenleme, yeniden uret.
 
 
 -- =====================================================================
 -- 20261020210000_hesap.sql
 -- =====================================================================
--- Hesaplar, ev yedeği ve abonelik durumu.
--- Ödeme / kart bilgisi hiçbir tabloda yok: ödemeyi App Store ve Google Play alır,
--- biz sadece RevenueCat'in bildirdiği "Premium etkin mi, ne zaman bitiyor" bilgisini tutarız.
+-- Hesaplar, ev yedegi ve abonelik durumu.
+-- Odeme / kart bilgisi hicbir tabloda yok: odemeyi App Store ve Google Play alir,
+-- biz sadece RevenueCat'in bildirdigi "Premium etkin mi, ne zaman bitiyor" bilgisini tutariz.
 
--- Profil: ad. Kayıtta auth.users'tan otomatik oluşur.
+-- Profil: ad. Kayitta auth.users'tan otomatik olusur.
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   name text,
   created_at timestamptz not null default now()
 );
 
--- Ev verisinin bulut yedeği: kullanıcı başına tek satır, uygulamadaki state'in JSON hâli.
+-- Ev verisinin bulut yedegi: kullanici basina tek satir, uygulamadaki state'in JSON hali.
 create table if not exists public.homes (
   user_id uuid primary key references auth.users (id) on delete cascade,
   state jsonb not null,
   updated_at timestamptz not null default now()
 );
 
--- Abonelik durumu. Sadece sunucu (RevenueCat webhook fonksiyonu) yazar, kullanıcı okur.
+-- Abonelik durumu. Sadece sunucu (RevenueCat webhook fonksiyonu) yazar, kullanici okur.
 create table if not exists public.subscriptions (
   user_id uuid primary key references auth.users (id) on delete cascade,
   entitlement text not null default 'premium',
@@ -43,11 +43,11 @@ alter table public.profiles enable row level security;
 alter table public.homes enable row level security;
 alter table public.subscriptions enable row level security;
 
-drop policy if exists "profil: kendi satırını okur" on public.profiles;
-create policy "profil: kendi satırını okur" on public.profiles
+drop policy if exists U&"profil: kendi sat\0131r\0131n\0131 okur" on public.profiles;
+create policy U&"profil: kendi sat\0131r\0131n\0131 okur" on public.profiles
   for select to authenticated using ((select auth.uid()) = id);
-drop policy if exists "profil: kendi satırını günceller" on public.profiles;
-create policy "profil: kendi satırını günceller" on public.profiles
+drop policy if exists U&"profil: kendi sat\0131r\0131n\0131 g\00FCnceller" on public.profiles;
+create policy U&"profil: kendi sat\0131r\0131n\0131 g\00FCnceller" on public.profiles
   for update to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 
 drop policy if exists "ev: kendi evini okur" on public.homes;
@@ -56,15 +56,15 @@ create policy "ev: kendi evini okur" on public.homes
 drop policy if exists "ev: kendi evini ekler" on public.homes;
 create policy "ev: kendi evini ekler" on public.homes
   for insert to authenticated with check ((select auth.uid()) = user_id);
-drop policy if exists "ev: kendi evini günceller" on public.homes;
-create policy "ev: kendi evini günceller" on public.homes
+drop policy if exists U&"ev: kendi evini g\00FCnceller" on public.homes;
+create policy U&"ev: kendi evini g\00FCnceller" on public.homes
   for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 drop policy if exists "abonelik: kendi durumunu okur" on public.subscriptions;
 create policy "abonelik: kendi durumunu okur" on public.subscriptions
   for select to authenticated using ((select auth.uid()) = user_id);
 
--- updated_at'i her yazışta tazele.
+-- updated_at'i her yazista tazele.
 create or replace function public.touch_updated_at() returns trigger
 language plpgsql set search_path = '' as $$
 begin
@@ -77,7 +77,7 @@ drop trigger if exists homes_touch on public.homes;
 create trigger homes_touch before update on public.homes
   for each row execute function public.touch_updated_at();
 
--- Yeni kullanıcıya profil satırı aç (anonim misafirler dahil).
+-- Yeni kullaniciya profil satiri ac (anonim misafirler dahil).
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
@@ -94,9 +94,9 @@ create trigger on_auth_user_created after insert on auth.users
 -- =====================================================================
 -- 20261020230000_delete_me.sql
 -- =====================================================================
--- Uygulamadaki "Hesabımı sil" düğmesi (Apple App Review 5.1.1(v): hesap açılabiliyorsa uygulama içinden silinebilmeli).
--- Giriş yapmış kullanıcı (anonim misafir dahil) sadece kendini silebilir. profiles, homes ve subscriptions
--- satırları "on delete cascade" ile birlikte gider.
+-- Uygulamadaki "Hesabimi sil" dugmesi (Apple App Review 5.1.1(v): hesap acilabiliyorsa uygulama icinden silinebilmeli).
+-- Giris yapmis kullanici (anonim misafir dahil) sadece kendini silebilir. profiles, homes ve subscriptions
+-- satirlari "on delete cascade" ile birlikte gider.
 create or replace function public.delete_me() returns void
 language plpgsql security definer set search_path = '' as $$
 begin
@@ -114,13 +114,13 @@ grant execute on function public.delete_me() to authenticated;
 -- =====================================================================
 -- 20261021000000_puan.sql
 -- =====================================================================
--- Puan, seri ve eşya mağazası.
--- Puanı sunucu sayar: uygulama sadece "şu işi bugün yaptım" der, kaç puan verileceğine ve
--- aynı işin o gün daha önce puan alıp almadığına sunucu karar verir. Telefonun saatini
--- değiştirmek en fazla bir günlük oynama payı bırakır (saat dilimleri için gerekli).
--- Tablolara uygulama doğrudan yazamaz; sadece aşağıdaki fonksiyonlar yazar.
+-- Puan, seri ve esya magazasi.
+-- Puani sunucu sayar: uygulama sadece "su isi bugun yaptim" der, kac puan verilecegine ve
+-- ayni isin o gun daha once puan alip almadigina sunucu karar verir. Telefonun saatini
+-- degistirmek en fazla bir gunluk oynama payi birakir (saat dilimleri icin gerekli).
+-- Tablolara uygulama dogrudan yazamaz; sadece asagidaki fonksiyonlar yazar.
 
--- Puan getiren her iş: (kullanıcı, gün, tür, iş) başına bir satır. Günde bir kuralı birincil anahtarla sağlanır.
+-- Puan getiren her is: (kullanici, gun, tur, is) basina bir satir. Gunde bir kurali birincil anahtarla saglanir.
 create table if not exists public.play_events (
   user_id uuid not null references auth.users (id) on delete cascade,
   day date not null,
@@ -131,7 +131,7 @@ create table if not exists public.play_events (
   primary key (user_id, day, kind, ref)
 );
 
--- Mağazadaki eşyalar. Uygulamadaki src/domain/items.ts ile aynı olmalı.
+-- Magazadaki esyalar. Uygulamadaki src/domain/items.ts ile ayni olmali.
 create table if not exists public.play_items (
   id text primary key,
   price integer not null check (price > 0),
@@ -144,7 +144,7 @@ insert into public.play_items (id, price, premium) values
   ('akvaryum', 150, true), ('somine', 200, true), ('piyano', 250, true)
 on conflict (id) do nothing;
 
--- Alınan eşyalar. Fiyat alındığı andaki hâliyle saklanır.
+-- Alinan esyalar. Fiyat alindigi andaki haliyle saklanir.
 create table if not exists public.play_owned (
   user_id uuid not null references auth.users (id) on delete cascade,
   item_id text not null references public.play_items (id),
@@ -157,17 +157,17 @@ alter table public.play_events enable row level security;
 alter table public.play_items enable row level security;
 alter table public.play_owned enable row level security;
 
-drop policy if exists "puan: kendi kayıtlarını okur" on public.play_events;
-create policy "puan: kendi kayıtlarını okur" on public.play_events
+drop policy if exists U&"puan: kendi kay\0131tlar\0131n\0131 okur" on public.play_events;
+create policy U&"puan: kendi kay\0131tlar\0131n\0131 okur" on public.play_events
   for select to authenticated using ((select auth.uid()) = user_id);
-drop policy if exists "mağaza: herkes okur" on public.play_items;
-create policy "mağaza: herkes okur" on public.play_items
+drop policy if exists U&"ma\011Faza: herkes okur" on public.play_items;
+create policy U&"ma\011Faza: herkes okur" on public.play_items
   for select to authenticated using (true);
-drop policy if exists "eşya: kendi eşyalarını okur" on public.play_owned;
-create policy "eşya: kendi eşyalarını okur" on public.play_owned
+drop policy if exists U&"e\015Fya: kendi e\015Fyalar\0131n\0131 okur" on public.play_owned;
+create policy U&"e\015Fya: kendi e\015Fyalar\0131n\0131 okur" on public.play_owned
   for select to authenticated using ((select auth.uid()) = user_id);
 
--- Kullanıcının puanı (kazanılan - harcanan), puan alınan günler (son 400 gün) ve eşyaları.
+-- Kullanicinin puani (kazanilan - harcanan), puan alinan gunler (son 400 gun) ve esyalari.
 create or replace function public.play_summary() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
@@ -182,9 +182,9 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- "Bugün şunu yaptım". Gün, telefonun yerel günüdür; sunucunun gününden en fazla bir gün farklı olabilir.
--- Her iş günde bir kez puan verir: rutin/bitki 10, spor 15, günlük 10. Bir günde en fazla 20 iş puan verir.
--- Günün ilk işinde seri bonusu: önceki üst üste gün sayısı × 2, en fazla 20.
+-- "Bugun sunu yaptim". Gun, telefonun yerel gunudur; sunucunun gununden en fazla bir gun farkli olabilir.
+-- Her is gunde bir kez puan verir: rutin/bitki 10, spor 15, gunluk 10. Bir gunde en fazla 20 is puan verir.
+-- Gunun ilk isinde seri bonusu: onceki ust uste gun sayisi x 2, en fazla 20.
 create or replace function public.play_award(p_kind text, p_ref text, p_day date) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -206,7 +206,7 @@ begin
   if p_day is null or p_day < today - 1 or p_day > today + 1 then
     raise exception 'bad day';
   end if;
-  -- Aynı kullanıcının aynı anda gelen istekleri sırayla işlensin.
+  -- Ayni kullanicinin ayni anda gelen istekleri sirayla islensin.
   perform pg_advisory_xact_lock(hashtext(uid::text));
 
   p_ref := case when p_kind = 'gorev' then left(coalesce(nullif(p_ref, ''), '?'), 64) else p_kind end;
@@ -241,7 +241,7 @@ begin
 end;
 $$;
 
--- Eşya satın alma: puan yeterliyse ve eşya Premium'a özelse Premium etkinse.
+-- Esya satin alma: puan yeterliyse ve esya Premium'a ozelse Premium etkinse.
 create or replace function public.play_buy(p_item text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -286,12 +286,12 @@ grant execute on function public.play_buy(text) to authenticated;
 -- =====================================================================
 -- 20261021100000_premium.sql
 -- =====================================================================
--- Premium özellikleri: seri dondurma, 1,5 kat puan, aile paylaşımı ve fotoğraf yedeği.
--- Sınırlar uygulamadaki src/domain/premium.ts (LIMITS) ile aynı olmalı.
--- Bu dosya …_puan.sql'den sonra çalıştırılır (play_* fonksiyonlarını günceller).
+-- Premium ozellikleri: seri dondurma, 1,5 kat puan, aile paylasimi ve fotograf yedegi.
+-- Sinirlar uygulamadaki src/domain/premium.ts (LIMITS) ile ayni olmali.
+-- Bu dosya ..._puan.sql'den sonra calistirilir (play_* fonksiyonlarini gunceller).
 
--- Kullanıcı şu an Premium mi? `subscriptions` satırını RevenueCat webhook'u ve subscription-sync yazar.
--- Sadece aşağıdaki fonksiyonlar içinden çağrılır; başkasının durumunu sorgulamak için açık değil.
+-- Kullanici su an Premium mi? `subscriptions` satirini RevenueCat webhook'u ve subscription-sync yazar.
+-- Sadece asagidaki fonksiyonlar icinden cagrilir; baskasinin durumunu sorgulamak icin acik degil.
 create or replace function public.is_premium(p_user uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
@@ -301,7 +301,7 @@ language sql stable security definer set search_path = '' as $$
 $$;
 revoke all on function public.is_premium(uuid) from public, anon, authenticated;
 
--- Depolama kuralları için: giriş yapan kullanıcı kendisi Premium mi?
+-- Depolama kurallari icin: giris yapan kullanici kendisi Premium mi?
 create or replace function public.i_am_premium() returns boolean
 language sql stable security definer set search_path = '' as $$
   select public.is_premium(auth.uid());
@@ -311,12 +311,12 @@ grant execute on function public.i_am_premium() to authenticated;
 
 /* ---------- seri dondurma ve 1,5 kat puan ---------- */
 
--- 'dondur': o gün kaçırıldı ama seri dondurma hakkıyla korundu (0 puan).
+-- 'dondur': o gun kacirildi ama seri dondurma hakkiyla korundu (0 puan).
 alter table public.play_events drop constraint if exists play_events_kind_check;
 alter table public.play_events add constraint play_events_kind_check
   check (kind in ('gorev', 'spor', 'gunluk', 'seri', 'dondur'));
 
--- Özet: puan, puan alınan günler (dondurulanlar hariç), dondurulan günler ve eşyalar.
+-- Ozet: puan, puan alinan gunler (dondurulanlar haric), dondurulan gunler ve esyalar.
 create or replace function public.play_summary() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
@@ -339,8 +339,8 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- …_puan.sql'deki kurallar aynen geçerli; Premium üyede iş puanı ve seri bonusu 1,5 kat.
--- Dondurulan günler seriyi bozmaz (seri döngüsü o günü de "bir şey var" sayar).
+-- ..._puan.sql'deki kurallar aynen gecerli; Premium uyede is puani ve seri bonusu 1,5 kat.
+-- Dondurulan gunler seriyi bozmaz (seri dongusu o gunu de "bir sey var" sayar).
 create or replace function public.play_award(p_kind text, p_ref text, p_day date) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -400,7 +400,7 @@ begin
 end;
 $$;
 
--- Kaçırılan bir günü (son 8 gün) seri dondurma hakkıyla korur. Ayda ücretsiz 1, Premium 3 hak.
+-- Kacirilan bir gunu (son 8 gun) seri dondurma hakkiyla korur. Ayda ucretsiz 1, Premium 3 hak.
 create or replace function public.play_freeze(p_day date) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -416,7 +416,7 @@ begin
     raise exception 'bad day';
   end if;
   perform pg_advisory_xact_lock(hashtext(uid::text));
-  -- O gün zaten bir şey yapılmış ya da dondurulmuşsa hak harcanmaz.
+  -- O gun zaten bir sey yapilmis ya da dondurulmussa hak harcanmaz.
   if exists (select 1 from public.play_events where user_id = uid and day = p_day) then
     return public.play_summary();
   end if;
@@ -434,9 +434,9 @@ $$;
 revoke all on function public.play_freeze(date) from public, anon;
 grant execute on function public.play_freeze(date) to authenticated;
 
-/* ---------- aile paylaşımı ---------- */
+/* ---------- aile paylasimi ---------- */
 
--- Ev sahibi başına bir aile. `home_id`: ev sahibinin telefonunda paylaşılan evin kimliği.
+-- Ev sahibi basina bir aile. `home_id`: ev sahibinin telefonunda paylasilan evin kimligi.
 create table if not exists public.families (
   owner_id uuid primary key references auth.users (id) on delete cascade,
   owner_name text not null,
@@ -445,7 +445,7 @@ create table if not exists public.families (
   created_at timestamptz not null default now()
 );
 
--- Katılanlar. Bir kullanıcı aynı anda tek bir aileye üye olabilir.
+-- Katilanlar. Bir kullanici ayni anda tek bir aileye uye olabilir.
 create table if not exists public.family_members (
   user_id uuid primary key references auth.users (id) on delete cascade,
   owner_id uuid not null references public.families (owner_id) on delete cascade,
@@ -453,7 +453,7 @@ create table if not exists public.family_members (
   joined_at timestamptz not null default now()
 );
 
--- Paylaşılan ev: sadece ev kısmı (odalar, rutinler, gardırop, stok, bitkiler). Puan ve günlük girmez.
+-- Paylasilan ev: sadece ev kismi (odalar, rutinler, gardirop, stok, bitkiler). Puan ve gunluk girmez.
 create table if not exists public.shared_homes (
   owner_id uuid primary key references public.families (owner_id) on delete cascade,
   state jsonb not null,
@@ -461,12 +461,12 @@ create table if not exists public.shared_homes (
   updated_by uuid
 );
 
--- Tablolara doğrudan erişim yok; sadece aşağıdaki fonksiyonlar okur ve yazar.
+-- Tablolara dogrudan erisim yok; sadece asagidaki fonksiyonlar okur ve yazar.
 alter table public.families enable row level security;
 alter table public.family_members enable row level security;
 alter table public.shared_homes enable row level security;
 
--- Çağıranın ailesi (ev sahibi ya da üye). Yoksa null.
+-- Cagiranin ailesi (ev sahibi ya da uye). Yoksa null.
 create or replace function public.family_of(p_user uuid) returns uuid
 language sql stable security definer set search_path = '' as $$
   select coalesce(
@@ -494,7 +494,7 @@ language sql stable security definer set search_path = '' as $$
   left join public.families f on f.owner_id = x.id;
 $$;
 
--- Ev sahibi (Premium) açık evini paylaşır ve bir davet kodu alır. Zaten paylaşıyorsa paylaşılan evi değiştirir.
+-- Ev sahibi (Premium) acik evini paylasir ve bir davet kodu alir. Zaten paylasiyorsa paylasilan evi degistirir.
 create or replace function public.family_create(p_home_id text, p_name text, p_state jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -510,7 +510,7 @@ begin
   if exists (select 1 from public.family_members where user_id = uid) then
     delete from public.family_members where user_id = uid;
   end if;
-  -- Karışmasın diye 0/O, 1/I yok.
+  -- Karismasin diye 0/O, 1/I yok.
   loop
     k := (select string_agg(substr('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 1 + floor(random() * 32)::int, 1), '') from generate_series(1, 6));
     exit when not exists (select 1 from public.families where code = k);
@@ -524,7 +524,7 @@ begin
 end;
 $$;
 
--- Koda katıl. Ev sahibinin Premium'u sürmeli; ailede en fazla 6 kişi (ev sahibi dahil).
+-- Koda katil. Ev sahibinin Premium'u surmeli; ailede en fazla 6 kisi (ev sahibi dahil).
 create or replace function public.family_join(p_code text, p_name text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -548,16 +548,16 @@ begin
   if (select count(*) from public.family_members where owner_id = fam.owner_id and user_id <> uid) >= 5 then
     raise exception 'family full';
   end if;
-  -- Kendi ailesi varsa (ev sahibiyse) önce o kapanır.
+  -- Kendi ailesi varsa (ev sahibiyse) once o kapanir.
   delete from public.families where owner_id = uid;
   insert into public.family_members (user_id, owner_id, name)
-    values (uid, fam.owner_id, left(coalesce(nullif(trim(p_name), ''), 'Aile üyesi'), 30))
+    values (uid, fam.owner_id, left(coalesce(nullif(trim(p_name), ''), U&'Aile \00FCyesi'), 30))
     on conflict (user_id) do update set owner_id = excluded.owner_id, name = excluded.name, joined_at = now();
   return public.family_info();
 end;
 $$;
 
--- Ev sahibi çağırırsa paylaşım kapanır (herkesin kopyası telefonunda kalır); üye çağırırsa aileden çıkar.
+-- Ev sahibi cagirirsa paylasim kapanir (herkesin kopyasi telefonunda kalir); uye cagirirsa aileden cikar.
 create or replace function public.family_leave() returns void
 language plpgsql security definer set search_path = '' as $$
 begin
@@ -573,7 +573,7 @@ begin
 end;
 $$;
 
--- Paylaşılan evi oku. Ev sahibinin Premium'u bittiyse paylaşım durur.
+-- Paylasilan evi oku. Ev sahibinin Premium'u bittiyse paylasim durur.
 create or replace function public.family_load() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 declare
@@ -591,8 +591,8 @@ begin
 end;
 $$;
 
--- Paylaşılan evi yaz. `p_base`: telefonun bildiği son sürüm; arada başkası yazdıysa yazmaz,
--- güncel evi döner (telefon birleştirip tekrar gönderir).
+-- Paylasilan evi yaz. `p_base`: telefonun bildigi son surum; arada baskasi yazdiysa yazmaz,
+-- guncel evi doner (telefon birlestirip tekrar gonderir).
 create or replace function public.family_save(p_state jsonb, p_base timestamptz) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -636,28 +636,28 @@ grant execute on function public.family_kick(uuid) to authenticated;
 grant execute on function public.family_load() to authenticated;
 grant execute on function public.family_save(jsonb, timestamptz) to authenticated;
 
-/* ---------- fotoğraf yedeği (Premium) ---------- */
+/* ---------- fotograf yedegi (Premium) ---------- */
 
--- Özel kova: herkes sadece kendi klasörünü (`<kullanıcı id>/…`) görür. Yazmak Premium.
+-- Ozel kova: herkes sadece kendi klasorunu (`<kullanici id>/...`) gorur. Yazmak Premium.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
   values ('yedek', 'yedek', false, 3145728, array['image/jpeg'])
   on conflict (id) do nothing;
 
-drop policy if exists "yedek: kendi fotoğraflarını görür" on storage.objects;
-create policy "yedek: kendi fotoğraflarını görür" on storage.objects
+drop policy if exists U&"yedek: kendi foto\011Fraflar\0131n\0131 g\00F6r\00FCr" on storage.objects;
+create policy U&"yedek: kendi foto\011Fraflar\0131n\0131 g\00F6r\00FCr" on storage.objects
   for select to authenticated
   using (bucket_id = 'yedek' and (storage.foldername(name))[1] = (select auth.uid())::text);
-drop policy if exists "yedek: Premium kendi klasörüne yükler" on storage.objects;
-create policy "yedek: Premium kendi klasörüne yükler" on storage.objects
+drop policy if exists U&"yedek: Premium kendi klas\00F6r\00FCne y\00FCkler" on storage.objects;
+create policy U&"yedek: Premium kendi klas\00F6r\00FCne y\00FCkler" on storage.objects
   for insert to authenticated
   with check (bucket_id = 'yedek' and (storage.foldername(name))[1] = (select auth.uid())::text and (select public.i_am_premium()));
-drop policy if exists "yedek: Premium kendi fotoğrafını günceller" on storage.objects;
-create policy "yedek: Premium kendi fotoğrafını günceller" on storage.objects
+drop policy if exists U&"yedek: Premium kendi foto\011Fraf\0131n\0131 g\00FCnceller" on storage.objects;
+create policy U&"yedek: Premium kendi foto\011Fraf\0131n\0131 g\00FCnceller" on storage.objects
   for update to authenticated
   using (bucket_id = 'yedek' and (storage.foldername(name))[1] = (select auth.uid())::text)
   with check (bucket_id = 'yedek' and (storage.foldername(name))[1] = (select auth.uid())::text and (select public.i_am_premium()));
-drop policy if exists "yedek: kendi fotoğrafını siler" on storage.objects;
-create policy "yedek: kendi fotoğrafını siler" on storage.objects
+drop policy if exists U&"yedek: kendi foto\011Fraf\0131n\0131 siler" on storage.objects;
+create policy U&"yedek: kendi foto\011Fraf\0131n\0131 siler" on storage.objects
   for delete to authenticated
   using (bucket_id = 'yedek' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
@@ -665,28 +665,28 @@ create policy "yedek: kendi fotoğrafını siler" on storage.objects
 -- =====================================================================
 -- 20261023000000_scan.sql
 -- =====================================================================
--- Yapay zekâ ile fotoğraf taraması (buzdolabı ve kıyafet) için hak sayacı. Ayrıntılar: docs/premium.md.
--- Ücretsiz: haftada 2 (pazartesi yenilenir). Premium: günde 2 (Türkiye saatiyle gece yarısı yenilenir).
--- İki tür aynı hakkı paylaşır. Sınırlar uygulamadaki src/domain/premium.ts (LIMITS.*.scans) ile aynı olmalı.
--- Sadece `scan` fonksiyonu (service_role) yazar; fotoğraf saklanmaz, sadece sayaç tutulur.
+-- Yapay zeka ile fotograf taramasi (buzdolabi ve kiyafet) icin hak sayaci. Ayrintilar: docs/premium.md.
+-- Ucretsiz: haftada 2 (pazartesi yenilenir). Premium: gunde 2 (Turkiye saatiyle gece yarisi yenilenir).
+-- Iki tur ayni hakki paylasir. Sinirlar uygulamadaki src/domain/premium.ts (LIMITS.*.scans) ile ayni olmali.
+-- Sadece `scan` fonksiyonu (service_role) yazar; fotograf saklanmaz, sadece sayac tutulur.
 
 create table if not exists public.scan_usage (
   user_id uuid not null references auth.users on delete cascade,
-  -- Premium için o günün tarihi, ücretsiz için o haftanın pazartesisi.
+  -- Premium icin o gunun tarihi, ucretsiz icin o haftanin pazartesisi.
   period date not null,
   n int not null default 0,
-  -- Sadece istatistik; sınıra etki etmez.
+  -- Sadece istatistik; sinira etki etmez.
   fridge int not null default 0,
   look int not null default 0,
   primary key (user_id, period)
 );
 alter table public.scan_usage enable row level security;
-drop policy if exists "tarama: kendi sayacını okur" on public.scan_usage;
-create policy "tarama: kendi sayacını okur" on public.scan_usage
+drop policy if exists U&"tarama: kendi sayac\0131n\0131 okur" on public.scan_usage;
+create policy U&"tarama: kendi sayac\0131n\0131 okur" on public.scan_usage
   for select to authenticated using (user_id = auth.uid());
 
--- Tek işlemde hak ayırır: satır yoksa n = 1, varsa ve n < sınır ise n + 1. İki hızlı dokunuş iki hak
--- kullandıramaz, sınır da aşılamaz. Dönen `ok` false ise hak kalmamıştır.
+-- Tek islemde hak ayirir: satir yoksa n = 1, varsa ve n < sinir ise n + 1. Iki hizli dokunus iki hak
+-- kullandiramaz, sinir da asilamaz. Donen `ok` false ise hak kalmamistir.
 create or replace function public.scan_reserve(p_user uuid, p_kind text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -710,7 +710,7 @@ end;
 $$;
 revoke all on function public.scan_reserve(uuid, text) from public, anon, authenticated;
 
--- Tarama başarısız olursa (hata, boş sonuç) ayrılan hakkı geri verir.
+-- Tarama basarisiz olursa (hata, bos sonuc) ayrilan hakki geri verir.
 create or replace function public.scan_release(p_user uuid, p_period date, p_kind text) returns void
 language sql security definer set search_path = '' as $$
   update public.scan_usage
@@ -725,8 +725,8 @@ revoke all on function public.scan_release(uuid, date, text) from public, anon, 
 -- =====================================================================
 -- 20261025120000_scan_premium_50.sql
 -- =====================================================================
--- Premium tarama sınırı günde 2'den günde 50'ye çıktı (Melih, 2026-10-25). Ücretsiz hâlâ haftada 2.
--- Sınırlar uygulamadaki src/domain/premium.ts (LIMITS.*.scans) ile aynı olmalı. Ayrıntılar: docs/premium.md.
+-- Premium tarama siniri gunde 2'den gunde 50'ye cikti (Melih, 2026-10-25). Ucretsiz hala haftada 2.
+-- Sinirlar uygulamadaki src/domain/premium.ts (LIMITS.*.scans) ile ayni olmali. Ayrintilar: docs/premium.md.
 
 create or replace function public.scan_reserve(p_user uuid, p_kind text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -755,22 +755,22 @@ revoke all on function public.scan_reserve(uuid, text) from public, anon, authen
 -- =====================================================================
 -- 20261027120000_bahce.sql
 -- =====================================================================
--- Moka'nın bahçesi ve ev kişiliği.
--- Tohum ve gübre tekrar alınır: `play_owned` (kullanıcı + eşya başına bir satır) bunu tutamaz, bu yüzden
--- ayrı bir harcama tablosu var. Bahçe süsleri ve kişilikler bir kere alınır, mevcut `play_items` / `play_buy`
--- ile çalışır. Puan = kazanılan - eşyalar - bahçe harcamaları. Uygulamadaki src/domain/garden.ts ve
--- src/domain/items.ts ile aynı olmalı. Bu dosya bir kere çalıştırılır.
+-- Moka'nin bahcesi ve ev kisiligi.
+-- Tohum ve gubre tekrar alinir: `play_owned` (kullanici + esya basina bir satir) bunu tutamaz, bu yuzden
+-- ayri bir harcama tablosu var. Bahce susleri ve kisilikler bir kere alinir, mevcut `play_items` / `play_buy`
+-- ile calisir. Puan = kazanilan - esyalar - bahce harcamalari. Uygulamadaki src/domain/garden.ts ve
+-- src/domain/items.ts ile ayni olmali. Bu dosya bir kere calistirilir.
 
-/* ---------- tek seferlik: süsler ve kişilikler ---------- */
+/* ---------- tek seferlik: susler ve kisilikler ---------- */
 
 insert into public.play_items (id, price, premium) values
   ('sulama', 60, false), ('ugurbocegi', 90, false), ('hamak', 120, false), ('sera', 180, true),
   ('kisilik_sakin', 150, false), ('kisilik_neseli', 150, false)
 on conflict (id) do update set price = excluded.price, premium = excluded.premium;
 
-/* ---------- tekrar alınanlar: tohumlar ve gübre ---------- */
+/* ---------- tekrar alinanlar: tohumlar ve gubre ---------- */
 
--- `daily_max`: bir günde en fazla kaç kez alınır (null: sınırsız).
+-- `daily_max`: bir gunde en fazla kac kez alinir (null: sinirsiz).
 create table if not exists public.play_garden_items (
   id text primary key,
   price integer not null check (price > 0),
@@ -788,7 +788,7 @@ insert into public.play_garden_items (id, price, premium, daily_max) values
   ('gubre_avuc', 15, false, 2), ('gubre_torba', 40, false, 1)
 on conflict (id) do nothing;
 
--- Her harcama bir satır. Gün, telefonun yerel günü (günlük sınır için).
+-- Her harcama bir satir. Gun, telefonun yerel gunu (gunluk sinir icin).
 create table if not exists public.play_spend (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -801,14 +801,14 @@ create index if not exists play_spend_user_day on public.play_spend (user_id, da
 
 alter table public.play_garden_items enable row level security;
 alter table public.play_spend enable row level security;
-drop policy if exists "bahçe: herkes okur" on public.play_garden_items;
-create policy "bahçe: herkes okur" on public.play_garden_items
+drop policy if exists U&"bah\00E7e: herkes okur" on public.play_garden_items;
+create policy U&"bah\00E7e: herkes okur" on public.play_garden_items
   for select to authenticated using (true);
-drop policy if exists "bahçe: kendi harcamalarını okur" on public.play_spend;
-create policy "bahçe: kendi harcamalarını okur" on public.play_spend
+drop policy if exists U&"bah\00E7e: kendi harcamalar\0131n\0131 okur" on public.play_spend;
+create policy U&"bah\00E7e: kendi harcamalar\0131n\0131 okur" on public.play_spend
   for select to authenticated using ((select auth.uid()) = user_id);
 
--- Özet (…_premium.sql'deki ile aynı), puandan bahçe harcamaları da düşülür.
+-- Ozet (..._premium.sql'deki ile ayni), puandan bahce harcamalari da dusulur.
 create or replace function public.play_summary() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
@@ -832,7 +832,7 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- Tohum ya da gübre alma: puan yeterliyse, Premium'a özelse Premium etkinse, günlük sınır dolmadıysa.
+-- Tohum ya da gubre alma: puan yeterliyse, Premium'a ozelse Premium etkinse, gunluk sinir dolmadiysa.
 create or replace function public.play_spend(p_item text, p_day date) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -878,12 +878,12 @@ grant execute on function public.play_spend(text, date) to authenticated;
 -- =====================================================================
 -- 20261031000000_aile_evi.sql
 -- =====================================================================
--- Aile evi, ikinci adım (docs/aile-evi.md). Supabase SQL Editor'de bir kere çalıştır.
--- Önce 20261021100000_premium.sql çalışmış olmalı.
+-- Aile evi, ikinci adim (docs/aile-evi.md). Supabase SQL Editor'de bir kere calistir.
+-- Once 20261021100000_premium.sql calismis olmali.
 
-/* ---------- Premium ev halkasına yayılır ---------- */
+/* ---------- Premium ev halkasina yayilir ---------- */
 
--- Kendi aboneliği (eski is_premium).
+-- Kendi aboneligi (eski is_premium).
 create or replace function public.is_premium_own(p_user uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
@@ -893,8 +893,8 @@ language sql stable security definer set search_path = '' as $$
 $$;
 revoke all on function public.is_premium_own(uuid) from public, anon, authenticated;
 
--- Premium: kendi aboneliği ya da ev sahibinin aboneliği (aile üyesiyse). Tarama hakkı, 1,5 kat puan
--- ve depolama kuralları bunu kullanır, yani katılan kişi de Premium avantajını alır.
+-- Premium: kendi aboneligi ya da ev sahibinin aboneligi (aile uyesiyse). Tarama hakki, 1,5 kat puan
+-- ve depolama kurallari bunu kullanir, yani katilan kisi de Premium avantajini alir.
 create or replace function public.is_premium(p_user uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select public.is_premium_own(p_user) or exists (
@@ -903,7 +903,7 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
--- Ev kurmak için kişinin kendi aboneliği gerekir (üyelikten gelen Premium yetmez).
+-- Ev kurmak icin kisinin kendi aboneligi gerekir (uyelikten gelen Premium yetmez).
 create or replace function public.family_create(p_home_id text, p_name text, p_state jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -938,7 +938,7 @@ create table if not exists public.family_goals (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.families (owner_id) on delete cascade,
   title text not null,
-  emoji text not null default '🎯',
+  emoji text not null default U&'\1F3AF',
   target int not null check (target between 1 and 10000),
   unit text not null default 'kez',
   due date,
@@ -957,11 +957,11 @@ create table if not exists public.family_goal_logs (
 );
 create index if not exists family_goal_logs_goal on public.family_goal_logs (goal_id);
 
--- Tablolara doğrudan erişim yok; sadece fonksiyonlar.
+-- Tablolara dogrudan erisim yok; sadece fonksiyonlar.
 alter table public.family_goals enable row level security;
 alter table public.family_goal_logs enable row level security;
 
--- Çağıranın ailesinin hedefleri, toplam ve kişi başı ilerlemeyle.
+-- Cagiranin ailesinin hedefleri, toplam ve kisi basi ilerlemeyle.
 create or replace function public.goals_list() returns jsonb
 language sql stable security definer set search_path = '' as $$
   select coalesce(jsonb_agg(jsonb_build_object(
@@ -989,13 +989,13 @@ begin
     raise exception 'too many goals';
   end if;
   insert into public.family_goals (owner_id, title, emoji, target, unit, due, created_by)
-    values (fid, left(trim(p_title), 60), left(coalesce(nullif(trim(p_emoji), ''), '🎯'), 8),
+    values (fid, left(trim(p_title), 60), left(coalesce(nullif(trim(p_emoji), ''), U&'\1F3AF'), 8),
             greatest(1, least(p_target, 10000)), left(coalesce(nullif(trim(p_unit), ''), 'kez'), 16), p_due, uid);
   return public.goals_list();
 end;
 $$;
 
--- Hedefe ilerleme yaz (ör. "3 kitap okudum"). Hedef dolunca tamamlandı olur.
+-- Hedefe ilerleme yaz (or. "3 kitap okudum"). Hedef dolunca tamamlandi olur.
 create or replace function public.goal_log(p_goal uuid, p_n int) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -1042,9 +1042,9 @@ grant execute on function public.goal_delete(uuid) to authenticated;
 -- =====================================================================
 -- 20261031120000_moka_chat.sql
 -- =====================================================================
--- Moka sohbet botu: kullanıcı başına günlük mesaj sınırı (Türkiye saatine göre gün).
--- Ücretsiz günde 15, Premium günde 150. Sınırlar uygulamadaki src/domain/premium.ts (LIMITS.*.chats) ile aynı olmalı.
--- Sadece fonksiyon yazar; mesaj içeriği saklanmaz, sadece sayaç tutulur.
+-- Moka sohbet botu: kullanici basina gunluk mesaj siniri (Turkiye saatine gore gun).
+-- Ucretsiz gunde 15, Premium gunde 150. Sinirlar uygulamadaki src/domain/premium.ts (LIMITS.*.chats) ile ayni olmali.
+-- Sadece fonksiyon yazar; mesaj icerigi saklanmaz, sadece sayac tutulur.
 
 create table if not exists public.chat_usage (
   user_id uuid not null references auth.users on delete cascade,
@@ -1053,7 +1053,7 @@ create table if not exists public.chat_usage (
   primary key (user_id, day)
 );
 alter table public.chat_usage enable row level security;
--- Hiçbir politika yok: istemci okuyamaz ya da yazamaz, service role atlar.
+-- Hicbir politika yok: istemci okuyamaz ya da yazamaz, service role atlar.
 
 create or replace function public.chat_reserve(p_user uuid) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -1075,9 +1075,41 @@ end;
 $$;
 revoke all on function public.chat_reserve(uuid) from public, anon, authenticated;
 
--- Cevap alınamazsa hak geri verilir.
+-- Cevap alinamazsa hak geri verilir.
 create or replace function public.chat_release(p_user uuid, p_day date) returns void
 language sql security definer set search_path = '' as $$
   update public.chat_usage set n = greatest(0, n - 1) where user_id = p_user and day = p_day;
 $$;
 revoke all on function public.chat_release(uuid, date) from public, anon, authenticated;
+
+
+-- =====================================================================
+-- 20261031150000_yasal_silme.sql
+-- =====================================================================
+-- Yasal uyum (KVKK / GDPR / LGPD): "Hesabimi sil" kullaniciya ait HER seyi silsin.
+-- Supabase SQL Editor'de bir kere calistir. Once 20261031000000_aile_evi.sql calismis olmali.
+--
+-- Zaten "on delete cascade" ile gidenler: profiles, homes, subscriptions, play_events, play_owned, play_spend,
+-- scan_usage, chat_usage, families (ev sahibiyse aile, paylasilan ev, ortak hedefler), family_members.
+-- Baglantisi olmayan ve burada elle silinenler: ortak hedeflere yazdigi ilerleme kayitlari, ortak evde "son duzenleyen" izi.
+-- Storage'daki yedek fotograflar uygulamada silinir (src/sync/photos.ts removeAllPhotos); asagida yedek olarak SQL'den de silinir.
+
+create or replace function public.delete_me() returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not signed in';
+  end if;
+  delete from public.family_goal_logs where user_id = uid;
+  update public.shared_homes set updated_by = null where updated_by = uid;
+  -- Bu kullanicinin ekledigi hedefler baskalarinin ailesinde kaliyorsa sahibi artik yok sayilmasin diye ev sahibine devret.
+  update public.family_goals set created_by = owner_id where created_by = uid and owner_id <> uid;
+  delete from storage.objects where bucket_id = 'yedek' and (storage.foldername(name))[1] = uid::text;
+  delete from auth.users where id = uid;
+end;
+$$;
+
+revoke all on function public.delete_me() from public, anon;
+grant execute on function public.delete_me() to authenticated;

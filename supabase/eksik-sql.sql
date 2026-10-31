@@ -1,8 +1,10 @@
--- Sadece büyük ihtimalle eksik olanlar: bahçe, aile evi, moka sohbet. Tekrar çalıştırmak güvenli.
--- Önkoşul: puan, premium, scan bölümleri uygulanmış olmalı (yoksa tum-sql.sql çalıştır).
+-- Sadece buyuk ihtimalle eksik olanlar: bahce, aile evi, moka sohbet, yasal silme. Tekrar calistirmak guvenli.
+-- Onkosul: puan, premium, scan bolumleri uygulanmis olmali (yoksa tum-sql.sql calistir).
 -- =====================================================================
 -- 20261027120000_bahce.sql
 -- =====================================================================
 -- 20261031000000_aile_evi.sql
 -- =====================================================================
 -- 20261031120000_moka_chat.sql
+-- =====================================================================
+-- 20261031150000_yasal_silme.sql

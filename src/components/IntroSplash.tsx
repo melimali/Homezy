@@ -108,7 +108,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       <StatusBar style={dark ? 'light' : 'auto'} />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
         {/* 2. Moka'nın evi (altta, Meikai katmanı kaybolunca görünür) */}
-        <MokaHome v={v} lerp={lerp} c={c} />
+        <MokaHome v={v} lerp={lerp} />
 
         {/* 1. Meikai Digital introsu */}
         <Animated.View style={[st.center, { backgroundColor: M.bg, opacity: v.meikai }]} pointerEvents="none">
@@ -229,7 +229,7 @@ type V = {
 };
 
 /** İkinci bölüm: pastel baloncuklar yükselir, uykulu Moka zıplayıp göz kırpar, "Homezy" harfleri dalgayla belirir. */
-function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number>; c: ReturnType<typeof useColors> }) {
+function MokaHome({ v, lerp }: { v: V; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number> }) {
   return (
     <View style={st.center} pointerEvents="none">
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: GREEN, opacity: v.sky }]} />

@@ -38,6 +38,7 @@ export const FEATURES: { emoji: string; label: string; free: string; premium: st
   { emoji: '🏡', label: 'Birden fazla ev (yazlık, iş yeri)', free: '1 ev', premium: '5 ev' },
   { emoji: '🌙', label: 'Ev temaları: gece, kış, sonbahar', free: 'Gündüz', premium: '✓' },
   { emoji: '📔', label: 'Günlükte fotoğraf, ruh hali grafiği, "geçen yıl bugün"', free: 'Yazı', premium: '✓' },
+  { emoji: '📊', label: 'Ayrıntılı haftalık rapor (gün gün, ruh hali)', free: 'Özet', premium: '✓' },
   { emoji: '🏃', label: 'Spor grafikleri ve kişisel antrenman planı', free: 'Kayıt', premium: '✓' },
   { emoji: '🍳', label: 'Buzdolabındakilerle tarif önerisi', free: '—', premium: '✓' },
   { emoji: '🧥', label: 'Haftalık kombin planı', free: '—', premium: '✓' },

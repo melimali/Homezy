@@ -55,15 +55,15 @@ Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme
 
 Her adım ayrı commit, `npm run typecheck` + `npm run lint`, doğrudan `integration/tum-pr`. Yerel modül yok.
 
-1. **Paywall zamanlayıcı** (`src/domain/paywall.ts`): "an" tanımı + sıklık kuralları (günde 1, ilk 3 gün yok, tekrar eden kapatma). Saf fonksiyon, test edilebilir. *Başla: bu.*
+1. ✅ **Paywall zamanlayıcı** (`src/domain/paywall.ts`): "an" tanımı + sıklık kuralları (günde 1, ilk 3 gün yok, tekrar eden kapatma). Saf fonksiyon, test edilebilir. *Başla: bu.*
 2. **Paywall ekranı**: yıllık varsayılan, deneme metni, "an" bazlı başlık/Moka mesajı.
-3. **Seri kilometre taşları** (3/7/14/30): kutlama + paywall anı 2.
-4. **Tema önizleme**: Premium temada Uygula → önizleme + paywall anı 4.
-5. **Deneme bitti / Premium bitti kartı** ("ne kaybediyorsun"), ilerleme dokunulmaz.
-6. **Haftalık rapor v2**: ücretsiz özet + Premium ayrıntı + bulanık önizleme.
-7. **Akşam seri bildirimi** (≥3 gün seri, o gün iş yoksa).
+3. ✅ **Seri kilometre taşları** (3/7/14/30): kutlama + paywall anı 2.
+4. ✅ (paywall anı başlığı; tam önizleme sonra) **Tema önizleme**: Premium temada Uygula → önizleme + paywall anı 4.
+5. ✅ **Deneme bitti / Premium bitti kartı** ("ne kaybediyorsun"), ilerleme dokunulmaz.
+6. ✅ **Haftalık rapor v2**: ücretsiz özet + Premium ayrıntı + bulanık önizleme.
+7. ✅ (zaten vardı: schedule.ts STREAK_TIME) **Akşam seri bildirimi** (≥3 gün seri, o gün iş yoksa).
 8. **Seviye atlama + kilitli mobilya önizlemesi** (anı 3).
-9. **Mevsim paketi altyapısı** (`SEASONS` sabiti: tarih aralığı + tema + Moka kıyafeti) ve Kasım paketi.
+9. 🟡 (sabit hazır: `src/domain/seasons.ts`, arayüz sonra) **Mevsim paketi altyapısı** (`SEASONS` sabiti: tarih aralığı + tema + Moka kıyafeti) ve Kasım paketi.
 10. **Ayrıntılı rapor / ruh hali içgörüsü**, çoklu hedef planı, kendi fotoğrafıyla ev (en son, büyük işler).
 11. **Ölçüm olayları** ve RevenueCat deney kurulumu (`docs/odeme-kurulumu.md`).
 

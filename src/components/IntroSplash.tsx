@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, Platform, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, RadialGradient, Circle, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { MOKA_ASSETS } from '@/constants/moka';
 import { fonts, useColors } from '@/theme';
@@ -203,9 +203,10 @@ const st = StyleSheet.create({
   line: { marginTop: 20, width: 160, height: 1 },
   sub: { marginTop: 16, paddingLeft: 7, color: M.muted, fontFamily: mono, fontSize: 11, letterSpacing: 6.7 },
   scene: { width: STAGE, height: STAGE * 0.92, alignItems: 'center' },
-  house: { position: 'absolute', bottom: STAGE * 0.2 },
+  hill: { position: 'absolute', left: -80, bottom: -STAGE * 0.04 },
+  house: { position: 'absolute', bottom: STAGE * 0.2, left: STAGE * 0.08 },
   door: { position: 'absolute', left: HOUSE * 0.41, top: HOUSE * 0.58, width: HOUSE * 0.2, height: HOUSE * 0.3, borderRadius: HOUSE * 0.1, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
-  moka: { position: 'absolute', bottom: STAGE * 0.04, width: MOKA, height: MOKA },
+  moka: { position: 'absolute', bottom: STAGE * 0.06, right: -STAGE * 0.02, width: MOKA, height: MOKA },
   steam: { position: 'absolute', width: 12, height: 12, borderRadius: 6 },
   heart: { position: 'absolute', fontSize: 22 },
   word: { flexDirection: 'row', marginTop: 4 },
@@ -246,13 +247,14 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
       </Animated.View>
 
       <View style={st.scene}>
-        {/* Tepe */}
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: v.sky, transform: [{ translateY: lerp(v.sky, 40, 0) }] }]}>
-          <Svg width={STAGE} height={STAGE * 0.92}>
-            <Path d={`M-20 ${STAGE * 0.8} Q${STAGE / 2} ${STAGE * 0.6} ${STAGE + 20} ${STAGE * 0.8} L${STAGE + 20} ${STAGE} L-20 ${STAGE} Z`} fill={c.sage} />
-            <Circle cx={STAGE * 0.12} cy={STAGE * 0.74} r={9} fill={c.rose} />
-            <Circle cx={STAGE * 0.88} cy={STAGE * 0.75} r={7} fill={c.peach} />
-            <Circle cx={STAGE * 0.2} cy={STAGE * 0.78} r={6} fill={c.lavender} />
+        {/* Tepe: yuvarlak, kenarsız bir ada */}
+        <Animated.View style={[st.hill, { opacity: v.sky, transform: [{ translateY: lerp(v.sky, 40, 0) }] }]}>
+          <Svg width={STAGE + 160} height={STAGE * 0.5}>
+            <Ellipse cx={(STAGE + 160) / 2} cy={STAGE * 0.3} rx={STAGE * 0.64} ry={STAGE * 0.19} fill={c.sage} />
+            <Ellipse cx={(STAGE + 160) / 2 - 20} cy={STAGE * 0.2} rx={STAGE * 0.4} ry={STAGE * 0.06} fill={c.sageSoft} opacity={0.55} />
+            <Circle cx={84} cy={STAGE * 0.27} r={8} fill={c.rose} />
+            <Circle cx={STAGE + 50} cy={STAGE * 0.3} r={7} fill={c.peach} />
+            <Circle cx={102} cy={STAGE * 0.33} r={5.5} fill={c.lavender} />
           </Svg>
         </Animated.View>
 
@@ -264,7 +266,8 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
             <Path d="M10 74 Q75 6 140 74 Q143 80 136 82 L14 82 Q7 80 10 74z" fill={c.peach} />
             <Rect x={36} y={92} width={26} height={24} rx={10} fill={c.glow} />
             <Rect x={94} y={92} width={22} height={22} rx={11} fill={c.glow} />
-            <Rect x={60} y={86} width={32} height={46} rx={16} fill={c.night} opacity={0.18} />
+            <Rect x={60} y={86} width={32} height={46} rx={16} fill={c.glowInk} opacity={0.75} />
+            <Circle cx={76} cy={104} r={9} fill={c.glow} opacity={0.8} />
             <Circle cx={75} cy={52} r={9} fill={c.cream} />
             <Path d="M70 52 a5 5 0 0 1 10 0 l-5 6z" fill={c.rose} />
           </Svg>
@@ -277,7 +280,7 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
           <Animated.Text
             key={i}
             style={[st.heart, {
-              left: STAGE / 2 + (i - 1) * 46 - 11, bottom: STAGE * 0.42,
+              left: STAGE * 0.72 + (i - 1) * 40 - 11, bottom: STAGE * 0.5,
               opacity: v.hearts.interpolate({ inputRange: [0, 0.2, 0.75, 1], outputRange: [0, 1, 1, 0] }),
               transform: [{ translateY: lerp(v.hearts, 0, -70 - i * 14) }, { scale: lerp(v.hearts, 0.4, 1.1) }],
             }]}>
@@ -288,7 +291,7 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
         {/* Moka: kapıdan çıkıp öne zıplar */}
         <Animated.View style={[st.moka, {
           opacity: v.moka.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-          transform: [{ translateY: lerp(v.moka, -STAGE * 0.24, 0) }, { scale: lerp(v.moka, 0.25, 1) }],
+          transform: [{ translateX: lerp(v.moka, -STAGE * 0.3, 0) }, { translateY: lerp(v.moka, -STAGE * 0.2, 0) }, { scale: lerp(v.moka, 0.25, 1) }],
         }]}>
           <Image source={MOKA_ASSETS.sipping} style={{ width: MOKA, height: MOKA }} resizeMode="contain" />
           {/* Kahve buharı */}

@@ -101,16 +101,19 @@ export function PlantArt({ flower, stage, size = 72, pot = true }: { flower?: Fl
       if (stage >= 2) parts.push(leaf('l1', 24, soilY - 8, 6, 2.6, -25), leaf('l2', 36, soilY - 11, 6, 2.6, 25));
       if (stage >= 3) parts.push(leaf('l3', 25, soilY - 20, 5, 2.2, -35), leaf('l4', 35, soilY - 23, 5, 2.2, 35));
       if (stage === 4) parts.push(<Ellipse key="bud" cx={30} cy={top - 5} rx={5.5} ry={8} fill={flower.petal} stroke={STEM} strokeWidth={1.2} />);
+      if (stage >= 5) parts.push(<Circle key="glow" cx={30} cy={top - 9} r={17} fill={flower.petal} fillOpacity={0.18} />, <Circle key="sp1" cx={10} cy={top - 22} r={1.3} fill="#FFF3B0" />, <Circle key="sp2" cx={51} cy={top - 4} r={1.1} fill="#FFF3B0" />);
       if (stage >= 5) parts.push(...bloom(flower, 30, top - 9, 1.6, 'fl'));
     }
   }
   return (
     <Svg width={size} height={(size * 80) / 60} viewBox="0 0 60 80">
+      <Ellipse cx={30} cy={78} rx={20} ry={2.4} fill="#000" fillOpacity={0.12} />
       <G>{parts}</G>
       {pot && (
         <G>
           <Ellipse cx={30} cy={soilY} rx={15} ry={3.4} fill={SOIL} />
           <Polygon points={`13,${soilY} 47,${soilY} 43,77 17,77`} fill={POT} />
+          <Path d="M20 62 L22 74" stroke="#FFFFFF" strokeOpacity={0.3} strokeWidth={2.4} strokeLinecap="round" />
           <Rect x={11} y={soilY - 1} width={38} height={6} rx={3} fill={shadeHex(POT, -0.08)} />
         </G>
       )}

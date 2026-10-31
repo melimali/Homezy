@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { DustPopMiniGame } from '@/components/DustPopMiniGame';
 import { PlantArt } from '@/components/GardenArt';
 import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
@@ -43,7 +42,6 @@ export default function Bahce() {
   const [sel, setSel] = useState<string | null>(null);
   const [detailFlower, setDetailFlower] = useState<Flower | null>(null);
   const [lofiOpen, setLofiOpen] = useState(false);
-  const [dustOpen, setDustOpen] = useState(false);
 
   // Açan her çiçekte yıldız saçılsın: açılıştaki sayıdan fazlası (albüme almak sayıyı değiştirmez).
   const blooms = G.plots.filter(p => p.bloomed).length + Object.values(G.album).reduce((s, n) => s + n, 0);
@@ -97,10 +95,9 @@ export default function Bahce() {
         </Glass>
       </Appear>
 
-      {/* Plak Çalar & Hızlı Toz Avı Mini Oyun Butonları */}
+      {/* Plak Çalar */}
       <Appear index={2} style={{ flexDirection: 'row', gap: 10 }}>
         <Btn small kind="soft" label="🎵 Plak Çalar (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
-        <Btn small kind="soft" label="🧹 Hızlı Toz Avı" onPress={() => setDustOpen(true)} style={{ flex: 1 }} />
       </Appear>
 
       <Appear index={3}>
@@ -129,6 +126,13 @@ export default function Bahce() {
         <Float amp={5} dur={4400} delay={600} style={[styles.blob, { bottom: 40, left: -40 }]}>
           <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.clay }]} />
         </Float>
+        <View pointerEvents="none" style={[styles.sky, { backgroundColor: c.surface }]} />
+        <Float amp={3} dur={3800} style={styles.sun}><Text style={{ fontSize: 34 }}>☀️</Text></Float>
+        <Float amp={8} dur={9000} style={[styles.cloud, { top: 22, left: '38%' }]}><Text style={{ fontSize: 26, opacity: 0.85 }}>☁️</Text></Float>
+        <Float amp={6} dur={7000} delay={900} style={[styles.cloud, { top: 60, right: '12%' }]}><Text style={{ fontSize: 20, opacity: 0.7 }}>☁️</Text></Float>
+        <View pointerEvents="none" style={styles.grass}>
+          <Text style={styles.grassT}>🌿🌱🌾🌿🌱🌾🌿🌱🌾🌿🌱🌾</Text>
+        </View>
         {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
         <Flutter emoji="🦋" top="14%" dur={8500} />
         <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
@@ -210,14 +214,6 @@ export default function Bahce() {
       {tab === 'album' && <Album onSelect={setDetailFlower} />}
 
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
-      <DustPopMiniGame
-        open={dustOpen}
-        onClose={() => setDustOpen(false)}
-        onReward={pts => {
-          update(D => void (D.play.points += pts));
-          toast(`🎉 +${pts} ⭐ bonus puan kazandın!`);
-        }}
-      />
 
       {detailFlower && (
         <Sheet open={!!detailFlower} onClose={() => setDetailFlower(null)} pose="plants">
@@ -554,6 +550,11 @@ const styles = StyleSheet.create({
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   statsCard: { padding: 20, gap: 8 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 110, opacity: 0.35 },
+  sun: { position: 'absolute', top: 8, left: 12 },
+  cloud: { position: 'absolute' },
+  grass: { position: 'absolute', bottom: -4, left: 0, right: 0, alignItems: 'center', opacity: 0.7 },
+  grassT: { fontSize: 22, letterSpacing: 2 },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
   blob: { position: 'absolute', width: 150, height: 150, opacity: 0.35 },
   blobIn: { flex: 1, borderRadius: 75 },

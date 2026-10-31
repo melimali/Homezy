@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
+import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
 import { Appear, Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
@@ -95,6 +96,7 @@ export default function Bugun() {
         </EmptyMsg>
       )}
       <DailyGoals now={now} />
+      <SelfCareCard />
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>
           <Squish onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>

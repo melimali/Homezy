@@ -5,7 +5,10 @@ import { useNotificationSync } from '@/notifications/useNotificationSync';
 import { useWidgetSync } from '@/widget/useWidgetSync';
 import { useColors } from '@/theme';
 
-/** Dört sekme: Ev, Odalar, Bugün, Hesabım; ortada "+" ile yeni iş (TabBar). Bildirimler ve plan düzenleme bunların içinden açılır. */
+/**
+ * Dört sekme (docs/skeleton-v3.md): Ev, Bugün, Gelişim, Ben; ortada Moka "+" (TabBar).
+ * Odalar artık Ev'in içinde; rota eski bağlantılar için gizli sekme olarak duruyor.
+ */
 export default function TabLayout() {
   const c = useColors();
   useNotificationSync();
@@ -21,9 +24,10 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Ev' }} />
-      <Tabs.Screen name="odalar" options={{ title: 'Odalar' }} />
       <Tabs.Screen name="bugun" options={{ title: 'Bugün' }} />
-      <Tabs.Screen name="hesap" options={{ title: 'Hesabım' }} />
+      <Tabs.Screen name="gelisim" options={{ title: 'Gelişim' }} />
+      <Tabs.Screen name="hesap" options={{ title: 'Ben' }} />
+      <Tabs.Screen name="odalar" options={{ title: 'Odalar', href: null }} />
     </Tabs>
   );
 }

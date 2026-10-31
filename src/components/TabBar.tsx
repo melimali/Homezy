@@ -1,10 +1,11 @@
 import { useRouter, type Href } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View, type ColorValue } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { MOKA_ASSETS } from '@/constants/moka';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors, useIsDark } from '@/theme';
@@ -13,13 +14,14 @@ import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
 import { Chip, Sheet, T } from './ui';
 
-type IconName = 'home' | 'rooms' | 'today' | 'me';
-const ICONS: Record<string, IconName> = { index: 'home', odalar: 'rooms', bugun: 'today', hesap: 'me' };
-const BUBBLE: Record<IconName, 'peachSoft' | 'sageSoft' | 'roseSoft' | 'lavenderSoft'> = { home: 'peachSoft', rooms: 'sageSoft', today: 'roseSoft', me: 'lavenderSoft' };
+type IconName = 'home' | 'today' | 'growth' | 'me';
+/** Alt menüde görünen sekmeler; listede olmayan rota (ör. odalar) gizli kalır. */
+const ICONS: Record<string, IconName> = { index: 'home', bugun: 'today', gelisim: 'growth', hesap: 'me' };
+const BUBBLE: Record<IconName, 'peachSoft' | 'sageSoft' | 'roseSoft' | 'lavenderSoft'> = { home: 'peachSoft', today: 'roseSoft', growth: 'sageSoft', me: 'lavenderSoft' };
 
 /**
  * Alt menü (tasarımdaki gibi): açık, yuvarlak köşeli bir şerit; seçili sekme açık bir hapın içinde,
- * ortada koyu, yuvarlak "+" düğmesi (yeni iş ekleme). Sıra: Ev, Odalar, +, Bugün, Hesabım.
+ * ortada Moka'lı yuvarlak "+" düğmesi (iş ekle / temizlik başlat). Sıra: Ev, Bugün, +, Gelişim, Ben.
  */
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const c = useColors();
@@ -28,14 +30,15 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
   const [menu, setMenu] = useState(false);
   const [add, setAdd] = useState(false);
   const router = useRouter();
-  const tabs = state.routes.map((r, i) => {
+  const tabs = state.routes.flatMap((r, i) => {
+    if (!ICONS[r.name]) return [];
     const o = descriptors[r.key].options;
     const focused = state.index === i;
     const press = () => {
       const e = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
       if (!focused && !e.defaultPrevented) navigateToTab(r.key);
     };
-    return <Tab key={r.key} name={ICONS[r.name] ?? 'home'} label={String(o.title ?? r.name)} focused={focused} onPress={press} />;
+    return [<Tab key={r.key} name={ICONS[r.name]} label={String(o.title ?? r.name)} focused={focused} onPress={press} />];
   });
   const half = Math.ceil(tabs.length / 2);
 
@@ -43,10 +46,15 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <View style={[st.bar, { backgroundColor: dark ? 'rgba(55,54,74,0.94)' : 'rgba(255,251,245,0.94)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
-        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.accent }]}>
-          <Svg width={24} height={24} viewBox="0 0 24 24">
-            <Path d="M12 5v14M5 12h14" stroke={c.onAccent} strokeWidth={2.8} strokeLinecap="round" />
-          </Svg>
+        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
+          <View style={st.plusClip}>
+            <Image source={MOKA_ASSETS.happy} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </View>
+          <View style={[st.plusBadge, { backgroundColor: c.accent, borderColor: c.surface }]}>
+            <Svg width={12} height={12} viewBox="0 0 24 24">
+              <Path d="M12 5v14M5 12h14" stroke={c.onAccent} strokeWidth={4} strokeLinecap="round" />
+            </Svg>
+          </View>
         </Squish>
         {tabs.slice(half)}
       </View>
@@ -107,12 +115,11 @@ function Glyph({ name, color, filled, cut }: { name: IconName; color: ColorValue
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24">
       {name === 'home' && <Path {...p} d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />}
-      {name === 'rooms' && (
+      {name === 'growth' && (
         <>
-          <Rect {...p} x={3} y={3} width={8} height={8} rx={2.5} />
-          <Rect {...p} x={13} y={3} width={8} height={8} rx={2.5} />
-          <Rect {...p} x={3} y={13} width={8} height={8} rx={2.5} />
-          <Rect {...p} x={13} y={13} width={8} height={8} rx={2.5} />
+          <Rect {...p} x={3.5} y={13} width={4.5} height={8} rx={2.25} />
+          <Rect {...p} x={9.75} y={8} width={4.5} height={13} rx={2.25} />
+          <Rect {...p} x={16} y={3} width={4.5} height={18} rx={2.25} />
         </>
       )}
       {name === 'today' && (
@@ -162,5 +169,11 @@ const st = StyleSheet.create({
   tabOuter: { flex: 1 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 7, borderRadius: radius.pill },
   label: { fontSize: 11 },
-  plus: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginHorizontal: 6, shadowColor: '#24352E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  plus: {
+    width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -22, borderWidth: 4,
+    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
+  },
+  plusClip: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden', alignItems: 'center' },
+  plusMoka: { width: 60, height: 60, marginTop: 4 },
+  plusBadge: { position: 'absolute', right: -4, bottom: -2, width: 22, height: 22, borderRadius: 11, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
 });

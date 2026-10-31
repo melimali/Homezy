@@ -11,10 +11,10 @@ import { MokaMascot } from '@/components/MokaMascot';
 import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade, SceneImage } from '@/components/SceneImage';
+import { RoomGrid } from '@/components/RoomGrid';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { MoodCheckin } from '@/components/MoodCheckin';
-import { SelfCareCard } from '@/components/SelfCareCard';
 import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
@@ -34,7 +34,7 @@ import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, space, useColors } from '@/theme';
-import type { HouseTheme, TaskRef } from '@/domain/types';
+import type { AppState, HouseTheme, TaskRef } from '@/domain/types';
 
 export default function Home() {
   const c = useColors();
@@ -103,7 +103,6 @@ export default function Home() {
   const bell = notifs(S, now).length;
   const next = nextStage(hp.level);
   const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
-  const built = Math.min(hp.level, BUILT);
 
   return (
     <Screen header={false} tab tone="peach">
@@ -148,37 +147,15 @@ export default function Home() {
         </Appear>
       </View>
 
-      <View style={{ gap: 14 }}>
-        <SecHead title="Günün Özeti" h="h3" right={
-          <Squish onPress={() => router.push('/hafta')} accessibilityRole="link" hitSlop={8}>
-            <T v="small">Tümünü Gör</T>
-          </Squish>
-        } />
-        <Appear index={2} style={styles.stats}>
-          <StatTile emoji={hp.streak ? '🔥' : '🪵'} n={`${hp.streak}`} label="gün seri" />
-          <StatTile emoji="⭐" n={`${S.play.points}`} label="puan" />
-          <StatTile emoji="🏠" n={hp.level >= BUILT ? `${hp.level}` : `${built}/${BUILT}`} label={hp.level >= BUILT ? 'seviye' : 'inşaat'} />
-        </Appear>
-        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
-          <View style={[styles.nextIcon, { backgroundColor: c.surface2 }]}>
-            <Text style={{ fontSize: 24 }}>{warn ? '🏚️' : next?.emoji ?? '🏡'}</Text>
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            {warn || !next ? (
-              <T v="small" style={{ color: warn ? c.late : c.ink }}>{houseLine(hp)}</T>
-            ) : (
-              <>
-                <T v="tiny">Sıradaki:</T>
-                <T v="bold" numberOfLines={1}>{next.name}</T>
-              </>
-            )}
-          </View>
-          <Text style={[styles.chev, { color: c.muted }]}>›</Text>
-        </Squish>
-        {warn && hp.level > 0 && (
-          <T v="tiny" style={{ textAlign: 'center' }}>❄️ Bu ay {freezeLeft}/{lim.freezes} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.</T>
-        )}
-      </View>
+      <Card bare index={2}>
+        <SecHead title="Sıradaki işler" h="h3" right={due.length > 3 ? (
+          <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - 3} ›</T></Squish>
+        ) : undefined} />
+        <View>
+          {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
+        </View>
+        {!due.length && <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>}
+      </Card>
 
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
@@ -191,25 +168,47 @@ export default function Home() {
         </Squish>
       )}
 
-      <View style={{ gap: 12 }}>
-        {S.others.length > 0 && (
-          <Squish onPress={() => router.push('/evler')} accessibilityRole="button" style={[styles.homeSwitch, { backgroundColor: c.surface }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>🏡 {S.homeName} ⌄</Text>
+      {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
+      <View style={{ gap: 10 }}>
+        <SecHead title="Odalarım" h="h3" right={
+          <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
+            <T v="small">✏️ Planı düzenle</T>
           </Squish>
-        )}
+        } />
+        <RoomGrid state={S} now={now} start={3} />
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <SecHead title="Evim" h="h3" right={S.others.length > 0 ? (
+          <Squish onPress={() => router.push('/evler')} accessibilityRole="button" hitSlop={8}>
+            <T v="small">🏡 {S.homeName} ⌄</T>
+          </Squish>
+        ) : undefined} />
         <House3D state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
           </Text>
         )}
-        <View style={styles.houseFoot}>
-          <T v="small">Eve dokun, 3D görünümü aç</T>
-          <Text style={{ color: c.line }}>•</Text>
-          <Squish onPress={() => router.push('/hikaye')} accessibilityRole="button" hitSlop={8}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi }}>Evimin hikâyesi</Text>
-          </Squish>
-        </View>
+        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
+          <View style={[styles.nextIcon, { backgroundColor: c.surface2 }]}>
+            <Text style={{ fontSize: 24 }}>{warn ? '🏚️' : next?.emoji ?? '🏡'}</Text>
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            {warn || !next ? (
+              <T v="small" style={{ color: warn ? c.late : c.ink }}>{houseLine(hp)}</T>
+            ) : (
+              <>
+                <T v="tiny">Sıradaki · 🔥 {hp.streak} gün seri</T>
+                <T v="bold" numberOfLines={1}>{next.name}</T>
+              </>
+            )}
+          </View>
+          <Text style={[styles.chev, { color: c.muted }]}>›</Text>
+        </Squish>
+        {warn && hp.level > 0 && (
+          <T v="tiny" style={{ textAlign: 'center' }}>❄️ Bu ay {freezeLeft}/{lim.freezes} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.</T>
+        )}
       </View>
 
       {houseOpen && (
@@ -222,34 +221,16 @@ export default function Home() {
         />
       )}
 
-      <GardenStrip now={now} />
-      <Squish onPress={() => setLofiOpen(true)} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-        <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🎵</Text></Float>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın Plak Çaları</Text>
-          <Text style={[styles.statL, { color: c.muted }]}>Yağmur, şömine ve lo-fi ASMR sesleri 🎧</Text>
-        </View>
-        <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
-      </Squish>
+      <View style={{ gap: 12 }}>
+        <SecHead title="Moka ile keyif" h="h3" />
+        <Appear index={4} style={styles.quick}>
+          <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
+          <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
+          <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
+          <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+        </Appear>
+      </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
-
-      <SelfCareCard />
-
-      <Card bare index={3}>
-        <SecHead title="Sıradaki işler" right={due.length > 3 ? `+${due.length - 3}` : undefined} />
-        <View>
-          {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
-        </View>
-        {!due.length && <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>}
-        {due.length > 3 && <Btn label="Hepsini gör" onPress={toToday} block />}
-      </Card>
-
-      <Appear index={4} style={styles.quick}>
-        <Quick i={0} emoji="🏃" label="Spor" onPress={() => router.push('/spor')} />
-        <Quick i={1} emoji="📔" label="Günlük" onPress={() => router.push('/gunluk')} />
-        <Quick i={2} emoji="🛍️" label="Mağaza" onPress={() => router.push('/magaza')} />
-        <Quick i={3} emoji="📅" label="Haftam" onPress={() => router.push('/hafta')} />
-      </Appear>
 
       <PremiumEndedCard />
       <AdBanner />
@@ -320,44 +301,15 @@ function HouseViewer({
   );
 }
 
-/** Moka'nın bahçesine giriş: büyüyen saksılar ve açanlar. */
-function GardenStrip({ now }: { now: number }) {
-  const c = useColors();
-  const router = useRouter();
-  const { state: S } = useStore();
+/** Bahçe kısayolunun alt satırı: açan çiçek ya da en çok büyüyen tohum. */
+function gardenSub(S: AppState, now: number) {
   const plots = S.play.garden.plots;
-  const open = plots.filter(p => p.bloomed).length;
+  if (plots.some(p => p.bloomed)) return 'Çiçek açtı 🌸';
   const best = plots
     .filter(p => !p.bloomed && FLOWER[p.flower])
     .map(p => ({ f: FLOWER[p.flower]!, g: growth(S.play, p, now) }))
     .sort((a, b) => b.g / b.f.grow - a.g / a.f.grow)[0];
-  const sub = open
-    ? `${open} çiçek açtı! Albüme almaya gel 🌸`
-    : best
-      ? `${best.f.emoji} ${best.f.name} %${Math.round((best.g / best.f.grow) * 100)} büyüdü`
-      : 'Puanlarınla tohum al, iş yaptıkça büyüsün';
-  return (
-    <Squish onPress={() => router.push('/bahce' as Href)} style={[styles.week, { backgroundColor: c.room.balkon }]}>
-      <Float amp={3} dur={2000}><Text style={{ fontSize: 26 }}>🌷</Text></Float>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.weekT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
-        <Text style={[styles.statL, { color: c.muted }]}>{sub}</Text>
-      </View>
-      <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
-    </Squish>
-  );
-}
-
-/** Günün özeti kutucuğu: emoji, büyük sayı, kısa ad. */
-function StatTile({ emoji, n, label }: { emoji: string; n: string; label: string }) {
-  const c = useColors();
-  return (
-    <View style={[styles.stat, { backgroundColor: c.surface }]}>
-      <Text style={{ fontSize: 24 }}>{emoji}</Text>
-      <Text style={[styles.statN, { color: c.ink }]}>{n}</Text>
-      <Text style={[styles.statL, { color: c.muted }]}>{label}</Text>
-    </View>
-  );
+  return best ? `%${Math.round((best.g / best.f.grow) * 100)} büyüdü` : 'Tohum ek';
 }
 
 /** Ev ilk kez bitince (7. gün) bir kere kutlama. */
@@ -386,16 +338,15 @@ function Celebrate({ level }: { level: number }) {
   );
 }
 
-function Quick({ emoji, label, onPress, i }: { emoji: string; label: string; onPress: () => void; i: number }) {
+function Quick({ emoji, label, sub, tint, onPress, i }: { emoji: string; label: string; sub: string; tint: string; onPress: () => void; i: number }) {
   const c = useColors();
   return (
-    <Squish onPress={onPress} style={styles.q}>
-      <View style={[styles.qRing, { backgroundColor: c.surface }]}>
-        <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
-          <Text style={{ fontSize: 28 }}>{emoji}</Text>
-        </Float>
-      </View>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.ink }}>{label}</Text>
+    <Squish onPress={onPress} accessibilityLabel={label} style={[styles.q, { backgroundColor: tint }]}>
+      <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
+        <Text style={{ fontSize: 30 }}>{emoji}</Text>
+      </Float>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
+      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{sub}</Text>
     </Squish>
   );
 }
@@ -416,20 +367,14 @@ const styles = StyleSheet.create({
   mokaImg: { width: 58, height: 58, marginTop: 8 },
   mokaFoot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22, lineHeight: 24 },
-  stats: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 16 },
-  statN: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 30, letterSpacing: -0.4 },
   statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
   nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   quick: { flexDirection: 'row', justifyContent: 'space-between' },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
-  homeSwitch: { alignSelf: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16 },
   mood: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, textAlign: 'center', paddingHorizontal: 8 },
-  houseFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  q: { flex: 1, alignItems: 'center', gap: 8 },
-  qRing: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
+  q: { flex: 1, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },
   modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },

@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MokaFace } from '@/components/MokaFace';
 import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Field, T } from '@/components/ui';
-import { MOKA_ASSETS } from '@/constants/moka';
+import { mimikOf } from '@/constants/mimik';
 import { applyChatAction, chatCtx, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
 import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
@@ -43,6 +44,17 @@ export default function MokaChat() {
   const [notes, setNotes] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const lv = mokaLevel(S.play.moka);
+  // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
+  const last = [...items].reverse().find(i => i.role === 'assistant' && !i.error);
+  const mood = last && last.id !== 0 ? mimikOf(last.content) : 'happy';
+  const [speaking, setSpeaking] = useState(false);
+  const lastId = last?.id;
+  useEffect(() => {
+    if (!lastId) return;
+    setSpeaking(true);
+    const t = setTimeout(() => setSpeaking(false), Math.min(4000, 800 + (last?.content.length ?? 0) * 25));
+    return () => clearTimeout(t);
+  }, [lastId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const push = useCallback((fn: (prev: Item[]) => Item[]) => {
     setItems(prev => (memory = fn(prev)));
@@ -101,7 +113,7 @@ export default function MokaChat() {
         <BackLink />
         <View style={st.head}>
           <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
-            <Image source={MOKA_ASSETS[busy ? 'analyzing' : 'happy']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <MokaFace size={st.avatarImg.width} mood={mood} talking={busy || speaking} />
           </View>
           <View style={{ flex: 1 }}>
             <T v="h3">Moka</T>
@@ -206,8 +218,8 @@ function NotesList() {
 const st = StyleSheet.create({
   top: { paddingHorizontal: 16, gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', alignItems: 'center' },
-  avatarImg: { width: 46, height: 46, marginTop: 4 },
+  avatar: { width: 64, height: 64, borderRadius: 32, overflow: 'hidden', alignItems: 'center' },
+  avatarImg: { width: 66, height: 66, marginTop: 4 },
   pill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 8 },
   list: { padding: 16, gap: 10, flexGrow: 1 },
   bubble: { maxWidth: '86%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },

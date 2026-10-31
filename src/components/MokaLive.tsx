@@ -97,6 +97,7 @@ export function MokaLive({ children, size, handleRef, weather }: { children: Rea
     { scaleY: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) },
     { scaleX: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 0.985] }) },
     { rotate: sway.interpolate({ inputRange: [0, 1], outputRange: ['-1.5deg', '1.5deg'] }) },
+    { skewX: breath.interpolate({ inputRange: [0, 1], outputRange: ['0.4deg', '-0.4deg'] }) },
     { rotate: wiggle.interpolate({ inputRange: [-1, 1], outputRange: ['-7deg', '7deg'] }) },
   ];
 

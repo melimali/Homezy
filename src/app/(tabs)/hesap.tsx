@@ -5,7 +5,6 @@ import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } fr
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { Appear } from '@/components/motion';
-import { MokaWardrobe } from '@/components/MokaWardrobe';
 import { Bar, Btn, IconBtn, Screen, SecHead, Sheet, T, TitleBar } from '@/components/ui';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { useToast } from '@/components/Toast';
@@ -147,11 +146,6 @@ export default function Hesap() {
           <Stat emoji="✅" n={weekDone} label={t('tasksCompleted')} />
           <Stat emoji="⭐" n={state.play.points} label={t('points')} />
         </Appear>
-      </View>
-
-      <View style={{ gap: 12 }}>
-        <SecHead title="Moka'nın dolabı" h="h3" />
-        <MokaWardrobe />
       </View>
 
       <View style={{ gap: 12 }}>

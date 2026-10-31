@@ -186,8 +186,6 @@ export type Play = {
   persona: PersonaId;
   /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
   checkins: Record<DayKey, CheckIn>;
-  /** Moka'nın giydiği aksesuar (src/domain/mokaWear.ts). Yoksa aksesuarsız. */
-  wear?: string;
 };
 
 /** Bir evin kendine ait kısmı. Puan, seri, günlük ve ayarlar bütün evlerde ortak. */

@@ -106,7 +106,7 @@ export default function Home() {
   const built = Math.min(hp.level, BUILT);
 
   return (
-    <Screen header={false}>
+    <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
         <SceneImage source={heroScene} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>

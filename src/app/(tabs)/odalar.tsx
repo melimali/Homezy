@@ -30,7 +30,7 @@ export default function Odalar() {
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
 
   return (
-    <Screen header={false}>
+    <Screen header={false} tab tone="sage">
       <TitleBar title="Odalar" sub={`Ev puanı %${score}`} right={<IconBtn icon={<GridIcon color={c.ink} />} label="Ev planını düzenle" onPress={() => router.push('/plan')} />} />
 
       <View style={styles.grid}>

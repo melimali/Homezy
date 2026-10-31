@@ -17,6 +17,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: c.bg },
+        tabBarStyle: { position: 'absolute' },
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Ev' }} />

@@ -25,6 +25,7 @@ import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { fonts, radius, space, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
+import { ScreenBackground, type Tone } from './ScreenBackground';
 
 /* ---------- metin ---------- */
 
@@ -52,19 +53,26 @@ function textStyle(v: Variant, c: Colors): TextStyle {
 
 /* ---------- ekran ---------- */
 
-export function Screen({ children, scrollEnabled = true, header = true }: { children: ReactNode; scrollEnabled?: boolean; header?: boolean }) {
+export function Screen({
+  children, scrollEnabled = true, header = true, tone = 'peach', tab,
+}: { children: ReactNode; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
+  const bottom = tab ? 118 : (header ? 42 : insets.bottom + 42);
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      scrollEnabled={scrollEnabled}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={[styles.screen, { paddingTop: insets.top + 10, paddingBottom: header ? 42 : insets.bottom + 42 }]}
-    >
-      {header && <AppHeader />}
-      {children}
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <ScreenBackground tone={tone} />
+      <ScrollView
+        style={{ flex: 1 }}
+        scrollEnabled={scrollEnabled}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.screen, { paddingTop: insets.top + 10, paddingBottom: bottom }]}
+      >
+        {header && <AppHeader />}
+        {children}
+      </ScrollView>
+    </View>
   );
 }
 

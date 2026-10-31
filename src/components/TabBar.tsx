@@ -7,7 +7,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, useIsDark } from '@/theme';
 
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
@@ -15,6 +15,7 @@ import { Chip, Sheet, T } from './ui';
 
 type IconName = 'home' | 'rooms' | 'today' | 'me';
 const ICONS: Record<string, IconName> = { index: 'home', odalar: 'rooms', bugun: 'today', hesap: 'me' };
+const BUBBLE: Record<IconName, 'peachSoft' | 'sageSoft' | 'roseSoft' | 'lavenderSoft'> = { home: 'peachSoft', rooms: 'sageSoft', today: 'roseSoft', me: 'lavenderSoft' };
 
 /**
  * Alt menü (tasarımdaki gibi): açık, yuvarlak köşeli bir şerit; seçili sekme açık bir hapın içinde,
@@ -22,6 +23,7 @@ const ICONS: Record<string, IconName> = { index: 'home', odalar: 'rooms', bugun:
  */
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const c = useColors();
+  const dark = useIsDark();
   const insets = useSafeAreaInsets();
   const [menu, setMenu] = useState(false);
   const [add, setAdd] = useState(false);
@@ -38,8 +40,8 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
   const half = Math.ceil(tabs.length / 2);
 
   return (
-    <View style={[st.wrap, { backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 10) }]}>
-      <View style={[st.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
+    <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={[st.bar, { backgroundColor: dark ? 'rgba(55,54,74,0.94)' : 'rgba(255,251,245,0.94)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
         <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.accent }]}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -86,13 +88,13 @@ function Tab({ name, label, focused, onPress }: { name: IconName; label: string;
   useEffect(() => {
     if (!focused) return;
     v.setValue(0.8);
-    Animated.spring(v, { toValue: 1, friction: 3, tension: 200, useNativeDriver: true }).start();
+    Animated.spring(v, { toValue: 1.06, friction: 3, tension: 200, useNativeDriver: true }).start();
   }, [focused, v]);
   const color = focused ? c.ink : c.muted;
   return (
     <Squish onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} quiet style={st.tabOuter}>
-      <Animated.View style={[st.tab, focused && { backgroundColor: c.surface2 }, { transform: [{ scale: v }] }]}>
-        <Glyph name={name} color={color} filled={focused} cut={c.surface2} />
+      <Animated.View style={[st.tab, focused && { backgroundColor: c[BUBBLE[name]] }, { transform: [{ scale: v }] }]}>
+        <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
         <Text numberOfLines={1} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
       </Animated.View>
     </Squish>
@@ -151,10 +153,10 @@ function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 const st = StyleSheet.create({
-  wrap: { paddingHorizontal: 14, paddingTop: 6 },
+  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 6, maxWidth: 520, alignSelf: 'center', width: '100%' },
   bar: {
     flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 8, gap: 2,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(40,48,68,0.08)', shadowColor: '#24352E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.09, shadowRadius: 16, elevation: 5,
+    borderWidth: 1.5, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 1, shadowRadius: 22, elevation: 8,
   },
   opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
   tabOuter: { flex: 1 },

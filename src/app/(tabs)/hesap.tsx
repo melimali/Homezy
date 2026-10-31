@@ -105,7 +105,7 @@ export default function Hesap() {
     );
 
   return (
-    <Screen header={false}>
+    <Screen header={false} tab tone="lavender">
       <TitleBar
         title={t('profile')}
         right={

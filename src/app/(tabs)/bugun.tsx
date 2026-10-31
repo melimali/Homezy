@@ -47,7 +47,7 @@ export default function Bugun() {
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
   return (
-    <Screen header={false}>
+    <Screen header={false} tab tone="rose">
       <TitleBar title="Bugün" right={<IconBtn icon="📅" label="Haftam" onPress={() => router.push('/hafta')} />} />
       <WeekStrip now={now} />
       <DayPlanCard />

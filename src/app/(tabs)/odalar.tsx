@@ -10,7 +10,7 @@ import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, homeScore, roomClean, roomCounts } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, useColors } from '@/theme';
 
 /**
  * Odalar sekmesi: iki sütun resimli kartlar (oda sahnesi, ad, temizlik çubuğu, yapılan/toplam iş).
@@ -43,12 +43,13 @@ export default function Odalar() {
               <Squish
                 onPress={() => open(id)}
                 accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
-                style={[styles.card, { backgroundColor: c.surface }]}
+                style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadow, transform: [{ rotate: i % 2 ? '1.2deg' : '-1.2deg' }] }]}
               >
+                <View style={[styles.tape, { backgroundColor: c.room[r.type] }]} />
                 {scene ? (
-                  <SceneImage source={scene} height={124} />
+                  <View style={styles.photo}><SceneImage source={scene} height={116} /></View>
                 ) : (
-                  <View style={[styles.noScene, { backgroundColor: c.room[r.type] }]}>
+                  <View style={[styles.noScene, styles.photo, { backgroundColor: c.room[r.type] }]}>
                     <Float amp={n ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
                       <Text style={{ fontSize: 46, lineHeight: 56 }}>{ROOM_EMOJI[r.type]}</Text>
                     </Float>
@@ -86,11 +87,13 @@ function GridIcon({ color }: { color: string }) {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14, marginTop: -4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 20, marginTop: 4 },
   cell: { width: '48%' },
-  card: { borderRadius: radius.card, overflow: 'hidden', borderWidth: 0 },
-  noScene: { height: 124, alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 14, gap: 8 },
+  card: { borderRadius: 20, padding: 8, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4 },
+  photo: { borderRadius: 14, overflow: 'hidden' },
+  tape: { position: 'absolute', top: -7, alignSelf: 'center', width: 54, height: 16, borderRadius: 4, opacity: 0.85, zIndex: 2, transform: [{ rotate: '-3deg' }] },
+  noScene: { height: 116, alignItems: 'center', justifyContent: 'center' },
+  body: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 6, gap: 8 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: { position: 'absolute', top: 10, right: 10, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },

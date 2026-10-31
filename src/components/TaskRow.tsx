@@ -162,7 +162,12 @@ export function TaskRow({
   const detail = () => router.push({ pathname: '/is' as any, params: { rid, list, id: t.id } });
 
   return (
-    <View style={[styles.rowWrap, { backgroundColor: c.surface }, !first && { marginTop: 10 }]}>
+    <View style={[styles.rowWrap, { backgroundColor: k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface, shadowColor: c.shadow, borderLeftColor: tone }, !first && { marginTop: 10 }]}>
+      {k.doneToday && (
+        <Appear style={[styles.stamp, { borderColor: c.ok }]}>
+          <Text style={{ fontFamily: fonts.displayBold, fontSize: 12, letterSpacing: 1.5, color: c.ok }}>YAPILDI</Text>
+        </Appear>
+      )}
       <View style={styles.row}>
         <Animated.View style={{ transform: [{ scale: k.bounce }] }}>
           <Gain k={k} />
@@ -409,7 +414,8 @@ export function AddTaskForm({ rid, list, placeholder, autoOpen, onAdded }: { rid
 }
 
 const styles = StyleSheet.create({
-  rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14, borderWidth: 0 },
+  rowWrap: { borderRadius: radius.tile, paddingHorizontal: 14, borderLeftWidth: 5, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 10, elevation: 2 },
+  stamp: { position: 'absolute', top: 8, right: 12, zIndex: 3, borderWidth: 2, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 1, transform: [{ rotate: '-8deg' }], opacity: 0.8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   rowMain: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },

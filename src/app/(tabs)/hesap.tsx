@@ -1,12 +1,12 @@
 import { BADGE_ART, type BadgeArt } from '@/constants/badges';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Appear } from '@/components/motion';
+import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, SecHead, Sheet, T, TitleBar } from '@/components/ui';
-import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
@@ -18,7 +18,6 @@ import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { fonts, radius, useColors } from '@/theme';
-import { Squish } from '@/components/motion';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
 function confirm(title: string, text: string, ok: string, onOk: () => void) {
@@ -113,10 +112,7 @@ export default function Hesap() {
       <TitleBar
         title={t('profile')}
         right={
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <IconBtn icon="🌍" label={t('language')} onPress={() => setLangOpen(true)} />
-            <IconBtn icon="⚙️" label={t('settings')} onPress={() => router.push('/bildirimler')} />
-          </View>
+          <IconBtn icon="⚙️" label={t('settings')} onPress={() => router.push('/bildirimler')} />
         }
       />
 
@@ -139,18 +135,31 @@ export default function Hesap() {
         </View>
       </Appear>
 
-      <View style={{ gap: 12 }}>
-        <SecHead title={t('stats')} h="h3" right={t('thisWeek')} />
-        <Appear index={2} style={st.stats}>
-          <Stat emoji="🔥" n={hp.streak} label={t('streakDays')} />
-          <Stat emoji="✅" n={weekDone} label={t('tasksCompleted')} />
-          <Stat emoji="⭐" n={state.play.points} label={t('points')} />
-        </Appear>
-      </View>
+      {/* Her şey kategorilerde; sayılar ve grafikler Gelişim sekmesinde (docs/skeleton-v3.md). */}
+      <Group index={2} title="Kendim" items={[
+        { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
+        { emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' },
+      ]} />
+      <Group index={3} title="Evim" items={[
+        { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
+        { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
+        { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
+        { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
+        { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
+      ]} />
+      <Group index={4} title="Keyif" items={[
+        { emoji: '🌷', label: "Moka'nın bahçesi", sub: 'Çiçek yetiştir', tint: c.sageSoft, href: '/bahce' },
+        { emoji: '🛍️', label: 'Mağaza', sub: `${state.play.points} puanın var`, tint: c.peachSoft, href: '/magaza' },
+        { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' },
+      ]} />
+      <Group index={5} title="Ayarlar" items={[
+        { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
+        { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
+      ]} />
 
       <View style={{ gap: 12 }}>
         <SecHead title={t('badges')} h="h3" right={`${badges.filter(b => b.on).length}/${badges.length}`} />
-        <Appear index={3} style={st.badges}>
+        <Appear index={6} style={st.badges}>
           {badges.map(b => (
             <View key={b.label} style={[st.badge, { backgroundColor: c.surface }]} accessibilityLabel={`${b.label}: ${b.on ? 'kazanıldı' : b.hint}`}>
               <View style={[st.badgeIcon, !b.on && { opacity: 0.3 }]}>
@@ -260,14 +269,34 @@ export default function Hesap() {
   );
 }
 
-function Stat({ emoji, n, label }: { emoji: string; n: number; label: string }) {
+type Item = { emoji: string; label: string; sub: string; tint: string; href?: Href; onPress?: () => void };
+
+/** Kategori: başlık ve altında ikon baloncuklu, yuvarlak satırlar tek kartta. */
+function Group({ title, items, index }: { title: string; items: Item[]; index: number }) {
   const c = useColors();
+  const router = useRouter();
   return (
-    <View style={[st.stat, { backgroundColor: c.surface }]}>
-      <Text style={{ fontSize: 24 }}>{emoji}</Text>
-      <T v="h3">{n}</T>
-      <T v="tiny" style={{ color: c.muted }}>{label}</T>
-    </View>
+    <Appear index={index} style={{ gap: 8 }}>
+      <T v="eyebrow" style={{ marginLeft: 6, marginBottom: 0 }}>{title}</T>
+      <View style={[st.group, { backgroundColor: c.surface }]}>
+        {items.map((x, i) => (
+          <Squish
+            key={x.label}
+            onPress={() => (x.onPress ? x.onPress() : x.href && router.push(x.href))}
+            accessibilityRole="button"
+            accessibilityLabel={x.label}
+            style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}
+          >
+            <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 20 }}>{x.emoji}</Text></View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
+              {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
+            </View>
+            <Text style={[st.chev, { color: c.muted }]}>›</Text>
+          </Squish>
+        ))}
+      </View>
+    </Appear>
   );
 }
 
@@ -278,8 +307,10 @@ const st = StyleSheet.create({
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   level: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
   levelT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, textTransform: 'uppercase' },
-  stats: { flexDirection: 'row', gap: 8 },
-  stat: { flex: 1, borderRadius: radius.card, paddingVertical: 12, alignItems: 'center', gap: 2 },
+  group: { borderRadius: radius.card, paddingHorizontal: 6, paddingVertical: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 10 },
+  rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  chev: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
   badgeIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },

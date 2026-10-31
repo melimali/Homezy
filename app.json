@@ -41,6 +41,16 @@
       ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
       "expo-font",
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**"
+          }
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/logo-kare.png",

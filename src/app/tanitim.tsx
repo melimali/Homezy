@@ -139,6 +139,38 @@ const PAGES: Page[] = [
     chips: [`📸 Günde ${LIMITS.premium.scans} tarama`, `💬 ${LIMITS.premium.chats} mesaj`, `❄️ Ayda ${LIMITS.premium.freezes} dondurma`, '⭐ 1,5 kat puan'],
     premium: true,
   },
+  {
+    eyebrow: 'Moka sohbet',
+    title: 'Moka ile konuş, odaklan',
+    text: 'Ne yapacağını bilmiyorsan Moka\'ya sor; o işleri sıralar. Odak oturumunda lofi müzik eşliğinde tek işe sarıl.',
+    scene: POSE_SCENES.laptop!,
+    tint: c => c.sageSoft,
+    chips: ['💬 Sohbet', '🎧 Lofi', '⏱️ Odak'],
+  },
+  {
+    eyebrow: 'Evin büyüsün',
+    title: '3B evin ve bahçen seninle büyür',
+    text: 'Kazandığın puanla eşya al, evi döşe, bahçeni sula. Seriyi bozarsan toz biriktirir; geri dönünce evi onarırsın.',
+    scene: POSE_SCENES.watering!,
+    tint: c => c.peachSoft,
+    chips: ['🏠 3B ev', '🌱 Bahçe', '🛋️ Eşyalar'],
+  },
+  {
+    eyebrow: 'Sana göre',
+    title: 'Vaktine ve haline uyar',
+    text: '"Ne kadar vaktin var?" de, sığan işleri göster. Misafir, tatil ya da hasta modunda rutinler seni yormaz.',
+    scene: POSE_SCENES.rest!,
+    tint: c => c.lavenderSoft,
+    chips: ['⏳ 10-60 dk', '🧳 Tatil modu', '🤒 Hasta modu'],
+  },
+  {
+    eyebrow: 'Premium',
+    title: 'Premium ile daha fazlası',
+    text: 'Daha çok yapay zekâ taraması, 5 ev, aile paylaşımı, ev temaları, spor ve günlük grafikleri, kombin planı ve reklamsız kullanım. Her şeyin temeli ücretsiz kalır.',
+    scene: POSE_SCENES.party!,
+    tint: c => c.roseSoft,
+    chips: ['👨‍👩‍👧 Aile', '📸 Çok tarama', '🚫 Reklamsız'],
+  },
 ];
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. */

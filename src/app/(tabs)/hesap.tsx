@@ -257,6 +257,9 @@ export default function Hesap() {
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
           </Squish>
         </View>
+        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
+          Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Konum yalnızca gökyüzü için kullanılır, saklanmaz.
+        </T>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
       </Appear>
 

@@ -73,11 +73,13 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(2100, v.meikai, 500, exitEase, 0),
       // 2. Moka'nın evi
       at(2100, v.sky, 700, Easing.out(Easing.quad)),
-      at(2300, v.moka, 900, Easing.out(Easing.quad)),
+      at(2100, v.house, 900, Easing.out(Easing.quad)), // ışık hâlesi
+      at(2250, v.moka, 800, expo),
+      at(2500, v.steam, 1800, Easing.inOut(Easing.sin)), // Moka'nın nefesi (tek yumuşak süzülme)
       // Döngü (Animated.loop) paralelin bitişini bekletiyordu; buhar tek uzun yükselişle iki kez tüter.
-      ...v.word.map((l, i) => at(3000 + i * 90, l, 500, Easing.out(Easing.quad))),
-      at(3800, v.tag, 500, Easing.out(Easing.quad)),
-      at(4600, v.all, 300, Easing.in(Easing.quad), 0),
+      ...v.word.map((l, i) => at(2750 + i * 60, l, 650, expo)),
+      at(3350, v.tag, 500, Easing.out(Easing.quad)),
+      at(4400, v.all, 300, Easing.in(Easing.quad), 0),
     ]);
     const t = setTimeout(() => alive && setDark(false), 2300);
 
@@ -180,6 +182,7 @@ const GLOW = 760; // sitede 520px daire + 120px blur
 const STAGE = 300;
 const HOUSE = 150;
 const MOKA = 190;
+const HALO = 380;
 const WORD = 'Homezy'.split('');
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
@@ -200,6 +203,7 @@ const st = StyleSheet.create({
   house: { position: 'absolute', bottom: STAGE * 0.2, left: STAGE * 0.08 },
   door: { position: 'absolute', left: HOUSE * 0.41, top: HOUSE * 0.58, width: HOUSE * 0.2, height: HOUSE * 0.3, borderRadius: HOUSE * 0.1, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
   moka: { width: MOKA, height: MOKA, marginBottom: 8 },
+  halo: { position: 'absolute', width: HALO, height: HALO, marginTop: -150 },
   mokaImg: { width: MOKA, height: MOKA },
   steam: { position: 'absolute', width: 12, height: 12, borderRadius: 6 },
   heart: { position: 'absolute', fontSize: 22 },
@@ -230,10 +234,30 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
         </Svg>
       </Animated.View>
 
-      {/* Moka: yumuşakça belirir */}
+      {/* Işık hâlesi: Moka'nın arkasında yumuşakça açılır */}
+      <Animated.View style={[st.halo, {
+        opacity: v.house,
+        transform: [{ scale: v.house.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
+      }]}>
+        <Svg width={HALO} height={HALO}>
+          <Defs>
+            <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor={c.glow} stopOpacity={0.95} />
+              <Stop offset="0.6" stopColor={c.glow} stopOpacity={0.35} />
+              <Stop offset="1" stopColor={c.glow} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Circle cx={HALO / 2} cy={HALO / 2} r={HALO / 2} fill="url(#halo)" />
+        </Svg>
+      </Animated.View>
+
+      {/* Moka: yumuşakça belirir, sonra hafifçe nefes alır */}
       <Animated.View style={[st.moka, {
         opacity: v.moka.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-        transform: [{ scale: lerp(v.moka, 0.9, 1) }],
+        transform: [
+          { translateY: Animated.add(lerp(v.moka, 18, 0), v.steam.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -7, 0] })) },
+          { scale: Animated.multiply(lerp(v.moka, 0.88, 1), v.steam.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.025, 1] })) },
+        ],
       }]}>
         <Image source={MOKA_ASSETS.happy} style={st.mokaImg} resizeMode="contain" />
       </Animated.View>
@@ -243,7 +267,8 @@ function MokaHome({ v, lerp, c }: { v: V; lerp: (val: Animated.Value, from: numb
           <Animated.Text
             key={i}
             style={[st.wordCh, { color: i < 4 ? c.ink : c.warm }, {
-              opacity: v.word[i].interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+              opacity: v.word[i].interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+              transform: [{ translateY: lerp(v.word[i], 12, 0) }],
             }]}>
             {ch}
           </Animated.Text>

@@ -70,7 +70,10 @@ export default function MokaChat() {
     if (!msg || busy) return;
     setText('');
     const mine: Item = { id: nextId++, role: 'user', content: msg };
-    const history = [...items.filter(i => !i.error), mine].slice(-12).map(({ role, content }) => ({ role, content }));
+    const history = [...items.filter(i => !i.error), mine].slice(-12).map(({ role, content, done }) => ({
+      role,
+      content: done?.length ? `${content}\n[Uygulama bu işlemleri zaten yaptı: ${done.join(' | ')}]` : content,
+    }));
     push(p => [...p, mine]);
     setBusy(true);
     sfx('tap');
@@ -97,7 +100,7 @@ export default function MokaChat() {
     push(p => [...p, { id: nextId++, role: 'assistant', content: r.reply, done }]);
     const f = got.focus;
     if (f) {
-      setTimeout(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic } }), 900);
+      setTimeout(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
     }
   };
 

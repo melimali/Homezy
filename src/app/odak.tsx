@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { MokaMascot } from '@/components/MokaMascot';
@@ -23,7 +23,7 @@ export default function Odak() {
   const toast = useToast();
   const { state: S, update } = useStore();
   // Moka sohbetinden gelince süre ve konu hazır gelir.
-  const params = useLocalSearchParams<{ min?: string; topic?: string }>();
+  const params = useLocalSearchParams<{ min?: string; topic?: string; auto?: string }>();
   const [min, setMin] = useState(() => MINUTES.reduce((a, m) => (Math.abs(m - Number(params.min)) < Math.abs(a - Number(params.min)) ? m : a), 25));
   const [topic, setTopic] = useState(() => (TOPICS.includes(String(params.topic)) ? String(params.topic) : TOPICS[0]));
   const [run, setRun] = useState<Run | null>(null);
@@ -60,13 +60,21 @@ export default function Odak() {
     return () => clearInterval(t);
   }, [run, finish]);
 
-  const start = () => {
-    const r = { endsAt: Date.now() + min * 60000, min, topic };
+  const start = (minutes = min) => {
+    const r = { endsAt: Date.now() + minutes * 60000, min: minutes, topic };
     setRun(r);
     setNow(Date.now());
     scheduleFocusEnd(r.endsAt, topic);
     sfx('pop');
   };
+  // Moka sohbeti `auto=1` ile açtıysa oturum kendiliğinden, istenen süreyle başlar.
+  const auto = useRef(params.auto === '1');
+  useEffect(() => {
+    if (!auto.current) return;
+    auto.current = false;
+    const m = Math.floor(Number(params.min));
+    start(m >= 10 && m <= 90 ? m : min);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const stop = () => {
     if (!run) return;
     const done = Math.floor((min_(run) - Math.max(0, run.endsAt - Date.now())) / 60000);
@@ -99,7 +107,7 @@ export default function Odak() {
           <View style={st.row}>{MINUTES.map(m => <Chip key={m} label={`${m} dk`} on={min === m} onPress={() => setMin(m)} />)}</View>
           <SecHead title="Ne çalışıyorsun?" h="h3" />
           <View style={st.row}>{TOPICS.map(t => <Chip key={t} label={t} on={topic === t} onPress={() => setTopic(t)} />)}</View>
-          <Btn kind="primary" label="Başla" block onPress={start} />
+          <Btn kind="primary" label="Başla" block onPress={() => start()} />
         </Card>
       ) : (
         <Btn label="Bitir" block onPress={stop} />

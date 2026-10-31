@@ -245,20 +245,21 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
               const on = tool === id;
               const n = cellCount(S, id);
               return (
-                <Squish
-                  key={id}
-                  onPress={() => setTool(on ? null : id)}
-                  onLongPress={() => setEditId(id)}
-                  accessibilityLabel={`${r.name}, ${n} blok. Çizmek için dokun, düzenlemek için basılı tut.`}
-                  style={[st.roomChip, { backgroundColor: on ? c.room[r.type] : c.surface, borderColor: on ? c.ink : 'transparent' }]}
-                >
-                  <View style={[st.dot, { backgroundColor: c.room[r.type] }]}><Text style={{ fontSize: 14 }}>{ROOM_EMOJI[r.type]}</Text></View>
-                  <Text numberOfLines={1} style={[st.roomT, { color: c.ink }]}>{r.name}</Text>
-                  <Text style={[st.roomM, { color: c.muted }]}>{n * 2} m²</Text>
-                  <Squish quiet onPress={() => setEditId(id)} hitSlop={8} accessibilityLabel={`${r.name} düzenle`} style={[st.pen, { backgroundColor: c.surface2 }]}>
+                <View key={id} style={[st.roomChip, { backgroundColor: on ? c.room[r.type] : c.surface, borderColor: on ? c.ink : 'transparent' }]}>
+                  <Squish
+                    onPress={() => setTool(on ? null : id)}
+                    onLongPress={() => setEditId(id)}
+                    accessibilityLabel={`${r.name}, ${n} blok. Çizmek için dokun.`}
+                    style={st.roomMain}
+                  >
+                    <View style={[st.dot, { backgroundColor: c.room[r.type] }]}><Text style={{ fontSize: 14 }}>{ROOM_EMOJI[r.type]}</Text></View>
+                    <Text numberOfLines={1} style={[st.roomT, { color: c.ink }]}>{r.name}</Text>
+                    <Text style={[st.roomM, { color: c.muted }]}>{n * 2} m²</Text>
+                  </Squish>
+                  <Squish onPress={() => setEditId(id)} hitSlop={8} accessibilityLabel={`${r.name} düzenle`} style={[st.pen, { backgroundColor: c.surface2 }]}>
                     <Text style={{ fontSize: 11 }}>✏️</Text>
                   </Squish>
-                </Squish>
+                </View>
               );
             })}
           </View>
@@ -360,7 +361,8 @@ const st = StyleSheet.create({
   stepN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
   stepL: { fontFamily: fonts.bodyBold, fontSize: 11 },
   roomWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  roomChip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: radius.pill, paddingVertical: 6, paddingLeft: 6, paddingRight: 6, borderWidth: 2, maxWidth: '100%' },
+  roomChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 2, maxWidth: '100%' },
+  roomMain: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   roomT: { fontFamily: fonts.bodyBlack, fontSize: 13.5, flexShrink: 1 },
   roomM: { fontFamily: fonts.bodyBold, fontSize: 11.5 },

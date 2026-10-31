@@ -91,8 +91,6 @@ export type Garden = {
   loved?: { day: DayKey; plotIds: string[] };
 };
 
-export const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {} }, loved: { day: '', plotIds: [] } });
-
 /** Saksının büyümesi: ekildikten sonraki işler (günde en fazla 3) + gübre (hedefin en fazla yarısı). */
 export function growth(P: Play, plot: Plot, now = Date.now()) {
   const f = FLOWER[plot.flower];

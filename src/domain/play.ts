@@ -1,5 +1,5 @@
 import { DAY } from './constants';
-import { emptyGarden } from './garden';
+import type { Garden } from './garden';
 import { baseCare, emptyProfile } from './home';
 import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
 
@@ -97,6 +97,8 @@ export const STAGES: { level: number; name: string; emoji: string }[] = [
   { level: 95, name: 'Işıklar bahçeyi sardı', emoji: '✨' },
   { level: 100, name: 'Yüz günlük rüya bahçe', emoji: '🏡' },
 ];
+/** Bahçe garden.ts içinde tanımlı; boş hali burada durur ki iki dosya birbirini çalışma anında içe aktarmasın. */
+const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {} }, loved: { day: '', plotIds: [] } });
 export const BUILT = 7;
 export const MAX_LEVEL = 100;
 

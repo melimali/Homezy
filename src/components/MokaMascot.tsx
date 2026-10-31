@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Float, useReduceMotion } from '@/components/motion';
+import { MokaWearLayer } from '@/components/MokaWearLayer';
 import { SceneImage } from '@/components/SceneImage';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
@@ -66,7 +67,10 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
       ) : (
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
           <Animated.View style={{ transform }}>
-            <Image source={MOKA_ASSETS[pose]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <View style={{ width: px, height: px }}>
+              <Image source={MOKA_ASSETS[pose]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
+              <MokaWearLayer size={px} />
+            </View>
           </Animated.View>
         </Float>
       )}

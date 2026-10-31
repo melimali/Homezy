@@ -2,10 +2,11 @@
 
 Sıra önemli. Her madde: ne, nerede, neden. Kod tarafı hazır; aşağıdakiler sadece senin hesaplarınla yapılabilir.
 
-## A. Hesaplar (beklemesi uzun olanlar önce)
-1. **D-U-N-S numarası** (Meikai Digital) — https://www.dnb.com/duns-number/get-a-duns.html (ücretsiz). Neden: Play ve Apple kuruluş hesabı bunu ister; onayı günler/haftalar sürer.
-2. **Google Play Console kuruluş hesabı** — play.google.com/console. Yayıncı adı Meikai Digital. Neden: hesap onaylanmadan hiçbir yükleme yapılamaz. (Kişisel hesapta 12 kişi/14 gün test zorunlu, kuruluşta değil.)
-3. **Apple Developer kuruluş hesabı** (99 $/yıl) — developer.apple.com. Neden: TestFlight için; Google testi sürerken başlat.
+## A. Hesaplar (kişisel hesaplar alındı; D-U-N-S gerekmiyor)
+1. **Google Play kişisel hesap:** yeni kişisel hesaplarda production'dan önce **kapalı test** zorunlu: en az **12 test kullanıcısı**, hepsi **14 gün kesintisiz** katılımda kalmalı (Play Console > Test > Kapalı test, e-posta listesi ya da Google Grubu). Sonra "Production erişimi için başvur" formu açılır. Test kullanıcılarını şimdiden topla (arkadaş, aile; Gmail ile). İlk yükleme bu testle başlar, bu yüzden süreyi erken başlat.
+2. **Kişisel hesapta adın ve adresin Play'de herkese görünür.** Gönderen adı olarak kendi adın çıkar; adres/telefon/e-posta mağaza sayfasında gösterilebilir. İstemezsen ileride kuruluş hesabına geçmek gerekir (bu durumda uygulama aktarımı yapılır). Destek e-postası olarak ayrı bir adres kullan.
+3. Play kişisel hesapta kimlik doğrulama ve telefon/cihaz doğrulaması ister; Console'daki adımları tamamla.
+4. **Not:** CLAUDE.md ve mağaza metinlerinde "yayıncı Meikai Digital" geçiyor; kişisel hesapla yayıncı sen olursun. Gizlilik/koşullar sayfasındaki yayıncı adını da buna göre düzelt.
 
 ## B. Supabase (proje gkccsimguzabfrsumjtv) — SQL Editor'de sırayla
 Neden: yeni özellikler bu tablolar olmadan çalışmaz (hata verir).
@@ -60,6 +61,17 @@ Neden: yapay zekâ taraması ve Moka sohbet sunucuda çalışır; API anahtarı 
 - Satın alma (lisans testi), satın alımı geri yükle, iptal sonrası Premium'un düşmesi.
 - Hesabı sil → tekrar giriş denenemez, veri gitmiş olmalı.
 - Karanlık tema, küçük ekran, uygulamayı kapat-aç.
+
+## İ. Apple tarafı (kişisel Apple Developer hesabı)
+1. **App Store Connect:** yeni uygulama, paket kimliği `com.meikai.homezy` (kimlik Developer portalında kayıtlı olmalı; EAS ilk build'de sorar), ad "Homezy: Günlük Rutin ve İşler", birincil dil Türkçe.
+2. **iOS build:** `npx.cmd eas build -p ios --profile production` (Mac gerekmez; Apple girişini ve sertifikaları EAS yönetir). Sonra `npx.cmd eas submit -p ios` ile TestFlight'a gönder.
+3. **TestFlight:** dahili test (kendi Apple kimliğin) hemen çalışır; dış test için ilk sürümde kısa bir Apple incelemesi olur.
+4. **Abonelik (iOS):** App Store Connect > Abonelikler: grup + ürünler `homezy_premium_aylik` ve `homezy_premium_yillik`, ilk ay giriş teklifi. Ücretli Uygulamalar sözleşmesi + banka/vergi bilgisi doldurulmadan ürünler aktif olmaz.
+5. **RevenueCat iOS:** iOS uygulaması ekle, App Store Connect API anahtarı/paylaşılan gizli anahtarı yükle, ürünleri `premium` yetkisine bağla, `goog_` yanına `appl_` genel anahtarını al ve `.env`'e ekle (kodda iOS anahtarının okunduğunu ilk iOS build'den önce doğrula).
+6. **Gizlilik "beslenme etiketleri" (App Privacy):** e-posta (hesap), fotoğraflar (tarama), yaklaşık konum, satın alma geçmişi, reklam/kullanım verisi (AdMob). İzleme: AdMob kullanıyorsan ATT izni ve `NSUserTrackingUsageDescription` gerekir; iOS AdMob kimliklerini (`EXPO_PUBLIC_ADMOB_APP_ID_IOS` ve banner) al, yoksa iOS'ta reklam kapalı kalmalı.
+7. **Sign in with Apple:** sadece Google/Facebook gibi *üçüncü taraf girişi* sunarsan zorunlu. Uygulamada e-posta + şifre ve misafir var, bu yüzden **gerekmez**; ileride Google ile giriş eklenirse Apple ile giriş de eklenmeli.
+8. **Hesap silme** uygulama içinde var (Apple şartı karşılanıyor). İnceleme için bir demo hesabı ve notu hazırla; fotoğraf/konum izin metinleri `app.json`'da Türkçe.
+9. Ekran görüntüleri: 6,7" (1290×2796) ve 6,5"/5,5" setleri.
 
 ## J. Sonra (ilk testten sonra)
 - İngilizce çeviri altyapısı (yurtdışı öncesi şart).

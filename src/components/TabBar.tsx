@@ -62,6 +62,17 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
         <T v="h2">Ne yapalım?</T>
         <View style={{ gap: 10 }}>
           <Squish
+            onPress={() => { setMenu(false); router.push('/moka' as Href); }}
+            accessibilityLabel="Moka ile sohbet"
+            style={[st.opt, { backgroundColor: c.peachSoft }]}
+          >
+            <Text style={{ fontSize: 28 }}>💬</Text>
+            <View style={{ flex: 1 }}>
+              <T v="bold">Moka ile sohbet</T>
+              <T v="small">İş ekle, not aldır, sohbet et</T>
+            </View>
+          </Squish>
+          <Squish
             onPress={() => { setMenu(false); setAdd(true); }}
             accessibilityLabel="İş ekle"
             style={[st.opt, { backgroundColor: c.surface2 }]}

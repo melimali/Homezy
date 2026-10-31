@@ -138,6 +138,7 @@ export default function Hesap() {
       {/* Her şey kategorilerde; sayılar ve grafikler Gelişim sekmesinde (docs/skeleton-v3.md). */}
       <Group index={2} title="Kendim" items={[
         { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
+        { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
         { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' },
         { emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' },
       ]} />

@@ -206,3 +206,11 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 5. Uygulamada: ödeme ekranı (prototipteki `paywallHTML()` tasarımı), tarama düğmelerinde kilit, Bildirimler sekmesinde Premium kartı ve günlük sayaçlar.
 6. Anthropic Console'da aylık harcama limiti.
 7. Gizlilik politikası ve mağaza gizlilik formlarına fotoğraf ve satın alma maddeleri.
+
+## Moka sohbet botu (Haiku)
+
+- Uygulama: `src/app/moka.tsx` (Ben → "Moka ile sohbet" ya da ortadaki Moka "+" menüsü), `src/lib/mokaChat.ts`, `src/domain/chat.ts` (bağlam ve eylemleri uygulama).
+- Sunucu: `supabase/functions/moka-chat/index.ts`. Model `CHAT_MODEL` (varsayılan `claude-haiku-5-5`). Sistem istemi Moka kişiliği + ev/rutin/odak konularıyla sınırlı; alan dışını nazikçe reddeder.
+- Araçlar: iş ekle, işi tamamla, yarına ertele, takvim notu, odak başlat. Sunucu çağrıyı şemaya ve uygulamanın gönderdiği oda/iş listesine göre doğrular; telefon aynısını yerel veriye göre tekrar doğrular. Mesajlar saklanmaz.
+- Sınır: ücretsiz günde 15, Premium günde 150 mesaj (`chat_usage`, `20261031120000_moka_chat.sql`; `LIMITS.*.chats` ile aynı).
+- Kurulum: `supabase db push`, `supabase functions deploy moka-chat` (`ANTHROPIC_API_KEY` scan ile aynı).

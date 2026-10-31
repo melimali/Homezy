@@ -6,9 +6,9 @@ import type { HouseTheme } from './types';
  * (supabase/migrations/…_premium.sql) bunlarla aynı olmalı.
  */
 export const LIMITS = {
-  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_scan_premium_50.sql). */
-  free: { freezes: 1, homes: 1, mult: 1, scans: 2 },
-  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 50 },
+  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_scan_premium_50.sql). `chats`: Moka sohbet mesajı, her gün; sınırı `…_moka_chat.sql` tutar. */
+  free: { freezes: 1, homes: 1, mult: 1, scans: 2, chats: 15 },
+  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 50, chats: 150 },
 } as const;
 
 export const limits = (premium: boolean) => (premium ? LIMITS.premium : LIMITS.free);
@@ -32,6 +32,7 @@ export const FEATURES: { emoji: string; label: string; free: string; premium: st
   { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
   { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
   { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
+  { emoji: '💬', label: 'Moka ile sohbet (her gün)', free: `Günde ${LIMITS.free.chats} mesaj`, premium: `Günde ${LIMITS.premium.chats} mesaj` },
   { emoji: '❄️', label: 'Seri dondurma (gün kaçırınca ev yıkılmaz)', free: 'Ayda 1', premium: 'Ayda 3' },
   { emoji: '⭐', label: 'Görevlerden kazanılan puan', free: '1 kat', premium: '1,5 kat' },
   { emoji: '🎹', label: 'Premium eşyalar (akvaryum, şömine, piyano)', free: '—', premium: '✓' },

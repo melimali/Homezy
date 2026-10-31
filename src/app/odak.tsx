@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -21,8 +22,10 @@ export default function Odak() {
   const c = useColors();
   const toast = useToast();
   const { state: S, update } = useStore();
-  const [min, setMin] = useState(25);
-  const [topic, setTopic] = useState(TOPICS[0]);
+  // Moka sohbetinden gelince süre ve konu hazır gelir.
+  const params = useLocalSearchParams<{ min?: string; topic?: string }>();
+  const [min, setMin] = useState(() => MINUTES.reduce((a, m) => (Math.abs(m - Number(params.min)) < Math.abs(a - Number(params.min)) ? m : a), 25));
+  const [topic, setTopic] = useState(() => (TOPICS.includes(String(params.topic)) ? String(params.topic) : TOPICS[0]));
   const [run, setRun] = useState<Run | null>(null);
   const [now, setNow] = useState(Date.now());
 

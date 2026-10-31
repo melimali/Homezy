@@ -33,7 +33,7 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
-  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(),
+  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [],
 });
 
 export const defaultSettings = (): Settings => ({

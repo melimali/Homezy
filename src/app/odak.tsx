@@ -27,13 +27,7 @@ export default function Odak() {
   const [min, setMin] = useState(() => MINUTES.reduce((a, m) => (Math.abs(m - Number(params.min)) < Math.abs(a - Number(params.min)) ? m : a), 25));
   const [topic, setTopic] = useState(() => (TOPICS.includes(String(params.topic)) ? String(params.topic) : TOPICS[0]));
   const [run, setRun] = useState<Run | null>(null);
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    if (!run) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [run]);
+  const [now, setNow] = useState(() => Date.now());
 
   const finish = useCallback(
     (r: Run, minutes: number) => {
@@ -55,9 +49,16 @@ export default function Odak() {
     [update, toast],
   );
 
+  // Süre dolunca oturum, saniye sayacıyla aynı zamanlayıcıda biter (effect içinde state yazmadan).
   useEffect(() => {
-    if (run && now >= run.endsAt) finish(run, run.min);
-  }, [run, now, finish]);
+    if (!run) return;
+    const t = setInterval(() => {
+      const n = Date.now();
+      setNow(n);
+      if (n >= run.endsAt) finish(run, run.min);
+    }, 500);
+    return () => clearInterval(t);
+  }, [run, finish]);
 
   const start = () => {
     const r = { endsAt: Date.now() + min * 60000, min, topic };

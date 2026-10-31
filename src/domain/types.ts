@@ -193,7 +193,11 @@ export type Play = {
   checkins: Record<DayKey, CheckIn>;
   /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
   moka: MokaGrowth;
+  /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */
+  notes: MokaNote[];
 };
+
+export type MokaNote = { id: string; day: DayKey; text: string; at: number };
 
 export type MokaStat = 'zeka' | 'disiplin' | 'saglik';
 /** Bir odak (Pomodoro) oturumu: gün, dakika, ne için, bitiş zamanı. */

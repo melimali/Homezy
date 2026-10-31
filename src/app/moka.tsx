@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -41,7 +41,7 @@ export default function MokaChat() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState(false);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const lv = mokaLevel(S.play.moka);
 
   const push = useCallback((fn: (prev: Item[]) => Item[]) => {
@@ -185,7 +185,7 @@ function NotesList() {
   const c = useColors();
   const { state: S, update } = useStore();
   const notes = [...S.play.notes].sort((a, b) => a.day.localeCompare(b.day) || a.at - b.at);
-  if (!notes.length) return <T v="small">Henüz not yok. Moka'ya "yarın için not al: …" de.</T>;
+  if (!notes.length) return <T v="small">Henüz not yok. Moka&apos;ya &quot;yarın için not al: …&quot; de.</T>;
   return (
     <>
       {notes.map(n => (

@@ -8,34 +8,44 @@ Character limits in parentheses. Turkish version: `docs/magaza-metni.md`.
 
 ## Short description — Google Play (80)
 
-Draw your home, do a little each day, keep your streak, build your dream house. 🏡
+Moka gets to know you and makes chores, routines and meals easier. 🏡
 
 ## Subtitle — App Store (30)
 
-Chores, routines, shopping list
+Chores, routines & Moka
+
+## Promotional text — App Store (170)
+
+Moka gets to know you a little better every day: routines made for you, meal ideas, a 3D home and a garden. Your whole home life in one app.
 
 ## Keywords — App Store (100, comma-separated)
 
-chores,cleaning,routine,habit,home organizer,shopping list,laundry,fridge,reminder,house,family
+chores,cleaning,routine,habit,home organizer,shopping list,meal ideas,laundry,fridge,reminder,family
 
 ## Full description (4000)
 
-Chores never end, but if you do a little each day they never pile up. Homezy gathers all your home's chores in one place and tells you only what to do today.
+Moka gets to know you a little better every day and helps with your whole home life. Homezy gathers your chores, routines, meals and shopping in one place and tells you only what to do today.
 
-🏡 DRAW YOUR HOME
-Sketch your home with blocks in seconds: bedroom, kitchen, bathroom, living room, balcony… Routines arrive automatically for each room. Have a pet, a boiler or a dishwasher? A few quick questions tailor your routines to your home.
+🦜 MOKA GETS TO KNOW YOU
+Moka, a chubby coffee-loving kākāpō, learns about you and your home with a few quick questions: do you live alone, have a pet, a dishwasher, a boiler? You get routines made for you, and your plan keeps adapting as Moka learns more. Chat, add tasks, take notes and plan the day together.
 
-✅ KNOW WHAT TO DO TODAY
-The home screen shows your most urgent tasks. Tap "Done" and collect your points. Overdue tasks are red, today's are warm-colored; rooms fade as they get messy and glow as you do tasks.
+✅ JUST ONE SMALL STEP TODAY
+Your home screen shows the next task and the day at a glance. Tap "Done" and collect points. Overdue tasks are red, today's are warm-colored. Tired or short on time? Pick 10, 20 or 30 minute tasks.
 
-🔥 KEEP YOUR STREAK, BUILD YOUR HOME
-Do at least one task a day to keep your streak going and watch your home grow floor by floor. Miss a day? A streak freeze protects your home. Spend your points in the store on furniture and decor.
+🍽️ WHAT'S FOR DINNER?
+Practical, budget-friendly recipe ideas with a health score, based on what you already have. Missing ingredients go to your shopping list in one tap.
+
+🏡 YOUR 3D HOME AND MOKA
+Draw your home with blocks and watch it come to life in 3D. Moka roams your house, and every task you do helps it rise floor by floor. Add a second floor with Premium, and spend points on furniture, floors, walls and facades.
+
+🌷 MOKA'S GARDEN
+Buy a seed and plant it. Every task helps your flower grow, and once it blooms it joins your album and decorates your garden.
 
 👕 WARDROBE & LAUNDRY
-Mark clothes as Clean, Dirty or To iron. When enough dirty pieces of the same wash type pile up, we tell you it's laundry time. Add pieces automatically from a photo of your clothes.
+Mark clothes as Clean, Dirty or To iron. When enough dirty pieces pile up, we tell you it's laundry time. Get outfit ideas from the clean pieces in your closet, and add pieces automatically from a photo.
 
 🧊 FRIDGE & SHOPPING LIST
-Take a photo of your fridge and let AI work out what's left and what to buy. Finished items drop onto your shopping list automatically. We also remind you about expiry dates.
+Take a photo of your fridge and let AI work out what's left and what to buy. Finished items drop onto your shopping list automatically, and we remind you about expiry dates.
 
 🔧 HOME CARE & BILLS
 Never forget boiler service, smoke detector tests, seasonal chores, bill due dates or warranty expiries.
@@ -43,13 +53,10 @@ Never forget boiler service, smoke detector tests, seasonal chores, bill due dat
 🔔 MORNING SUMMARY
 Every morning at the time you choose, your day's tasks in a single notification. You pick which reminders you want.
 
-🦜 MEET MOKA
-Moka, a chubby coffee-loving kākāpō, keeps you company: chat, add tasks, focus with a Pomodoro timer, grow a garden and relax with lofi.
-
 ⭐ PREMIUM
-Daily AI scans, monthly streak freezes, 1.5x points, multiple homes, home themes, family sharing and an ad-free experience. Your home's core chores are always free.
+Daily chat with Moka, 50 AI scans a day, a second floor, 3 streak freezes a month, 1.5x points, up to 5 homes, home themes, family sharing and an ad-free experience. Your home's core chores are always free.
 
-Your data lives on your phone first; you can create an account to back it up. Your card details never reach us.
+Your data lives on your phone first; you can create an account to back it up. Your card details never reach us. For AI scans, your photo is processed only for recognition and is not stored.
 
 ## Premium description (subscription screen, App Store review note)
 
@@ -61,12 +68,16 @@ The app can be used without an account (guest), so no test account is needed. On
 
 ## Screenshot order (suggested)
 
-1. Home: your house, streak and next tasks — "Don't let chores pile up"
-2. Today: goals and task list — "Know what to do today"
-3. Room screen: routines — "Every room has its own routine"
-4. Wardrobe and laundry plan — "We tell you when it's laundry time"
-5. Fridge scan — "Snap a photo, we write the list"
-6. Store and house building — "Keep your streak, build your home"
+1. Moka gets to know you every day (home)
+2. A plan made for your home (getting-to-know-you questions)
+3. Just one small step today (Today)
+4. What's for dinner? Moka has ideas (meal ideas)
+5. Every task helps your home grow (3D home, Moka roams, Premium 2nd floor)
+6. Moka's garden blooms with you (garden)
+7. Just ask Moka and it's done (Moka chat)
+8. Your wardrobe, in your pocket (wardrobe, laundry, outfits)
+
+Generated by `python3 scripts/store/make-store-art.py`. Output: `docs/magaza/en/` (Play 1080×1920, iOS 6.7"/6.5"/5.5", feature graphic 1024×500, icon 512).
 
 ## Privacy forms (Google Play Data safety / App Store privacy labels)
 

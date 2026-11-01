@@ -4,49 +4,60 @@ Karakter sınırları parantez içinde. Hepsi Türkçe; ilk yayında sadece Tür
 
 ## Uygulama adı (30)
 
-Homezy: Ev İşleri ve Rutinler
+- Google Play (30): Homezy: Rutin ve Ev İşleri
+- App Store (30): Homezy: Günlük Rutin ve İşler
 
 ## Kısa açıklama — Google Play (80)
 
-Evini çiz, ev işlerini her gün biraz yap, seriyi koru, evini inşa et. 🏡
+Moka seni tanır, ev işlerini, rutinini ve yemeğini kolaylaştırır. 🏡
 
 ## Alt başlık — App Store (30)
 
-Ev işleri, rutinler, alışveriş
+Rutin, ev işleri ve Moka
+
+## Tanıtım metni — App Store (170)
+
+Moka seni her gün biraz daha tanır: sana göre rutinler, yemek önerileri, 3B ev ve bahçe. Bütün ev hayatın tek uygulamada.
 
 ## Anahtar kelimeler — App Store (100, virgülle)
 
-ev işleri,temizlik,rutin,ev düzeni,alışveriş listesi,çamaşır,buzdolabı,hatırlatıcı,ev planı,aile
+ev işleri,rutin,temizlik,alışveriş listesi,yemek önerisi,çamaşır,buzdolabı,ev planı,hatırlatıcı,aile
 
 ## Uzun açıklama (4000)
 
-Ev işleri bitmez, ama her gün biraz yapınca hiç birikmez. Homezy evinin bütün işlerini tek bir yerde toplar ve sana sadece bugün ne yapman gerektiğini söyler.
+Moka seni her gün biraz daha tanıyor ve bütün ev hayatında yanında. Homezy, evinin işlerini, rutinlerini, yemeğini ve alışverişini tek yerde toplar; sana sadece bugün ne yapman gerektiğini söyler.
 
-🏡 EVİNİ ÇİZ
-Evini bloklarla birkaç saniyede çiz: yatak odası, mutfak, banyo, salon, balkon... Her odaya göre rutinler kendiliğinden gelir. Evcil hayvanın, kombin ya da bulaşık makinen varsa birkaç kısa soruyla rutinlerin evine göre ayarlanır.
+🦜 MOKA SENİ TANIR
+Kahve sever tombul kakapo Moka, birkaç soruyla seni ve evini tanır: yalnız mı yaşıyorsun, evcil hayvanın var mı, bulaşık makinen, kombin? Sana özel rutinler gelir, Moka her gün biraz daha iyi tanıdıkça planın sana göre şekillenir. Sohbet et, iş ekle, not al, günü birlikte planla.
 
-✅ BUGÜN NE YAPACAĞINI BİL
-Ana ekranda en acil üç iş var. "Tamamladım" de, puanı kap. Gecikenler kırmızı, bugünküler sıcak renkte; odalar kirlendikçe solar, iş yaptıkça parlar.
+✅ BUGÜN SADECE BİR KÜÇÜK ADIM
+Ana ekranda sıradaki iş ve günün özeti. "Tamamladım" de, puanı kap. Gecikenler kırmızı, bugünküler sıcak renkte. Yorgunsan ya da vaktin azsa 10, 20, 30 dakikalık işleri seç.
 
-🔥 SERİNİ KORU, EVİNİ İNŞA ET
-Her gün en az bir iş yap, serin sürsün ve evin kat kat yükselsin. Bir gün kaçırırsan seri dondurma hakkın evini korur. Puanlarınla mağazadan evine eşya al.
+🍽️ BU AKŞAM NE YESEK?
+Dolabındaki malzemelere göre pratik, cebe dostu ve sağlık puanlı yemek önerileri. Eksik malzemeler tek dokunuşla alışveriş listesine eklenir.
+
+🏡 3B EVİN VE MOKA
+Evini bloklarla çiz, 3B evin canlansın. Moka evinde dolaşır, yaptığın her işle evin kat kat yükselir. Premium ile 2. kat çiz, puanlarınla eşya, zemin, duvar ve cephe seç.
+
+🌷 MOKA'NIN BAHÇESİ
+Tohum al, saksıya ek. Her iş çiçeğini büyütür, açınca albümüne girer ve evinin bahçesini süsler.
 
 👕 GARDIROP VE ÇAMAŞIR
-Kıyafetlerini Temiz, Kirli ya da Ütülenecek olarak işaretle. Aynı yıkama türünden yeterince kirli birikince çamaşır zamanı geldiğini söyleriz. Kıyafet fotoğrafından parçaları otomatik ekle.
+Kıyafetlerini Temiz, Kirli ya da Ütülenecek olarak işaretle. Yeterince kirli birikince çamaşır zamanını biz söyleriz. Dolaptaki temiz parçalardan kombin önerisi al; fotoğraftan parçaları otomatik ekle.
 
-🧊 BUZDOLABI VE ALIŞVERİŞ LİSTESİ
-Buzdolabının fotoğrafını çek; ne kaldığını ve ne alınacağını yapay zekâ çıkarsın. Biten ürünler alışveriş listesine kendiliğinden düşer. Son kullanma tarihlerini hatırlatırız.
+🧊 BUZDOLABI VE ALIŞVERİŞ
+Buzdolabının fotoğrafını çek, yapay zekâ ne kaldığını ve ne alınacağını çıkarsın. Biten ürünler listeye kendiliğinden düşer, son kullanma tarihlerini hatırlatırız.
 
 🔧 EV BAKIMI VE FATURALAR
-Kombi bakımı, duman dedektörü testi, mevsimlik işler, fatura son günleri ve garanti bitişleri unutulmasın.
+Kombi bakımı, duman dedektörü, mevsimlik işler, fatura son günleri ve garanti bitişleri unutulmasın.
 
 🔔 SABAH ÖZETİ
-Her sabah, seçtiğin saatte günün işleri tek bir bildirimde. Hangi hatırlatmaları istediğini sen seçersin.
+Her sabah seçtiğin saatte günün işleri tek bildirimde. Hangi hatırlatmaları istediğini sen seçersin.
 
 ⭐ PREMIUM
-Günde 50 yapay zekâ taraması, ayda 3 seri dondurma, 1,5 kat puan, birden fazla ev, ev temaları, aile paylaşımı ve reklamsız kullanım. Evin temel işleri her zaman ücretsiz.
+Moka ile günlük sohbet, günde 50 yapay zekâ taraması, 2. kat, ayda 3 seri dondurma, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı ve reklamsız kullanım. Evin temel işleri her zaman ücretsiz.
 
-Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart bilgilerin bize hiç gelmez.
+Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart bilgilerin bize hiç gelmez. Yapay zekâ taramalarında fotoğrafın sadece tanıma için işlenir, saklanmaz.
 
 ## Premium açıklaması (abonelik ekranı için, App Store inceleme notu)
 
@@ -58,12 +69,16 @@ Uygulama hesapsız (misafir) kullanılabilir, test hesabı gerekmez. Açılışt
 
 ## Ekran görüntüsü sırası (öneri)
 
-1. Ana ekran: ev, seri ve sıradaki işler — "Ev işleri birikmesin"
-2. Bugün: günün hedefleri ve iş listesi — "Bugün ne yapacağını bil"
-3. Oda ekranı: rutinler — "Her odanın kendi rutini"
-4. Gardırop ve çamaşır planı — "Çamaşır zamanını biz söyleyelim"
-5. Buzdolabı taraması — "Fotoğrafı çek, listeyi biz yazalım"
-6. Mağaza ve ev inşaatı — "Seriyi koru, evini inşa et"
+1. Moka seni her gün biraz daha tanıyor (ana ekran)
+2. Evine göre kişisel plan (tanışma soruları)
+3. Bugün sadece bir küçük adım (Bugün)
+4. Bu akşam ne yesek? Moka bilir (yemek önerisi)
+5. Yaptığın her iş evini büyütür (3B ev, Moka dolaşır, Premium 2. kat)
+6. Moka'nın bahçesi seninle çiçek açar (bahçe)
+7. Sor, Moka halletsin (Moka sohbeti)
+8. Gardırobun da cebinde (gardırop, çamaşır, kombin)
+
+Üretim: `python3 scripts/store/make-store-art.py`. Çıktı: `docs/magaza/tr/` (Play 1080×1920, iOS 6.7"/6.5"/5.5", öne çıkan görsel 1024×500, ikon 512).
 
 ## Gizlilik formları (Google Play Veri güvenliği / App Store Gizlilik etiketleri)
 

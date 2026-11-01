@@ -155,6 +155,8 @@ export type JournalEntry = {
 };
 
 export type Play = {
+  /** Sadece sahip hesapta gizli araçla ayarlanır: evin seviyesini elle belirler (null: gerçek hesap). */
+  debugLevel?: number | null;
   /** Harcanabilir puan. Hesap varsa sunucudaki değer esas alınır. */
   points: number;
   /** Bir şey yapılan (puan kazanılan) günler, sıralı. Seri ve evin inşaatı bundan hesaplanır. */

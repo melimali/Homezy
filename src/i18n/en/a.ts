@@ -2521,4 +2521,8 @@ export const EN_A: Record<string, string> = {
  "Ben sekmesindeki Gardırop ve Buzdolabı bölümlerinden yine de kullanabilirsin.": "You can still use them from Wardrobe and Fridge under the Me tab.",
  "Dönüp çizeyim": "Go back and draw",
  "Yine de kaydet": "Save anyway",
+ "Seviye atla (sadece sahip)": "Level skip (owner only)",
+ "− Seviye": "− Level",
+ "+ Seviye": "+ Level",
+ "Gerçek seviyeye dön": "Back to real level",
 };

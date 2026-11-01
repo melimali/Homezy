@@ -11,11 +11,12 @@ import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
 import { homeScore, emptyState } from '@/domain/logic';
-import { addDays, dayKey, nextStage, progressOf, STAGES } from '@/domain/play';
+import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
 import { legalUrl } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
+import { isOwner } from '@/auth/owner';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { fonts, radius, useColors } from '@/theme';
@@ -255,6 +256,18 @@ export default function Hesap() {
           <Btn label="Hesap aç veya giriş yap" kind="primary" onPress={() => router.push('/giris')} block />
         )}
       </Appear>
+
+      {isOwner(user) && (
+        <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
+          <T v="h3">Seviye atla (sadece sahip)</T>
+          <T v="small">{`Ev seviyesi: ${hp.level} / ${MAX_LEVEL}${state.play.debugLevel != null ? ' (elle)' : ''}`}</T>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Btn label="− Seviye" kind="soft" onPress={() => update(D => void (D.play.debugLevel = Math.max(0, hp.level - 1)))} style={{ flex: 1 }} />
+            <Btn label="+ Seviye" kind="primary" onPress={() => update(D => void (D.play.debugLevel = Math.min(MAX_LEVEL, hp.level + 1)))} style={{ flex: 1 }} />
+          </View>
+          <Btn label="Gerçek seviyeye dön" kind="soft" onPress={() => update(D => void (D.play.debugLevel = null))} block />
+        </Appear>
+      )}
 
       <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
         <T v="h3">{t('about')}</T>

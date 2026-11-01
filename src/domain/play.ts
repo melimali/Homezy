@@ -153,8 +153,8 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
 export const progressOf = (P: Play, now = Date.now()) => {
   const res = houseProgress(P.days, now, P.frozen);
-  // GEÇİCİ TEST KODU: Test için evin seviyesini 50 yapar
-  return { ...res, level: 50 };
+  // Sadece sahip hesabın gizli "seviye atla" aracı (hesap sekmesi) bunu ayarlar; normalde boştur.
+  return P.debugLevel == null ? res : { ...res, level: Math.max(0, Math.min(MAX_LEVEL, P.debugLevel)) };
 };
 
 /* ---------- seri dondurma ---------- */

@@ -24,7 +24,7 @@ Neden: yapay zekâ taraması ve Moka sohbet sunucuda çalışır; API anahtarı 
 5. Test: uygulamada bir buzdolabı taraması ve bir Moka mesajı.
 
 ## D. Gizlilik politikası ve koşullar
-1. `docs/yasal/gizlilik.html` ve `kosullar.html` dosyalarını themeikai.com/homezy/ altına yükle (URL'ler: themeikai.com/homezy/gizlilik, /kosullar). Neden: Play Console zorunlu tutar, uygulama da bu adreslere link verir.
+1. `docs/yasal/site/` klasörlerini themeikai.com/homezy/ altına yükle (yapıldı) (URL'ler: themeikai.com/homezy/gizlilik, /kosullar). Neden: Play Console zorunlu tutar, uygulama da bu adreslere link verir.
 2. Politikada şunlar yazmalı (kontrol et): fotoğrafların yapay zekâ servisine gönderildiği (yüz/beden saklanmadığı), konumun sadece hava durumu için kullanıldığı ve saklanmadığı, Moka sohbet mesajlarının yapay zekâya gittiği, reklam (AdMob) ve abonelik (RevenueCat) verileri, **hesap silme** yolu (Ben > Hesabı sil) ve silinen veriler.
 3. Play Console > Politika > **Hesap silme URL'si**: aynı gizlilik sayfasında "uygulamada Ben sekmesinden silebilirsin" bölümünü bağla (Play web adresi ister).
 
@@ -120,7 +120,7 @@ Kural: tüm komutlar `npx.cmd` ile, OneDrive dışındaki klasörde (C:\lf-wt). 
 **5. Play Console: uygulamayı oluştur**
 1. Tüm uygulamalar > Uygulama oluştur: ad "Homezy: Rutin ve Ev İşleri", varsayılan dil Türkçe, **Uygulama** (oyun değil), **Ücretsiz**, bildirimleri kabul et.
 2. Pano'daki "Uygulamanızı ayarlayın" görevleri (hepsi tamamlanmadan test yayını yapılamaz): 
-   - **Gizlilik politikası URL'si:** https://melimali.github.io/layfapp/yasal/gizlilik.html (sayfa yayında mı tarayıcıdan aç).
+   - **Gizlilik politikası URL'si:** https://themeikai.com/homezy/gizlilik (sayfa yayında mı tarayıcıdan aç).
    - **Uygulama erişimi:** hesap açılmadan da kullanılır (misafir), kısıtlı bölüm yok; inceleme için istersen test hesabı yaz.
    - **Reklamlar:** Evet, reklam içerir.
    - **İçerik derecelendirme:** anketi doldur (şiddet/cinsellik yok, kullanıcı etkileşimi: Moka sohbet yapay zekâ; kullanıcılar arası mesajlaşma yok, konum paylaşılmaz).

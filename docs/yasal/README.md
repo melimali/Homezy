@@ -14,16 +14,20 @@
 | `magaza-formlari.md` | Play Data Safety, Apple Privacy Labels, yaş derecelendirmesi, inceleme notları |
 | `../../supabase/migrations/20261031150000_yasal_silme.sql` | Hesap silince her şeyi silen `delete_me()` |
 
-## Yayınlamak (GitHub Pages)
+## Yayın adresleri (themeikai.com)
 
-1. GitHub › `melimali/layfapp` › Settings › Pages › Source: *Deploy from a branch*, Branch: `main`, Folder: `/docs` › Save. (`integration/tum-pr` main'e birleşmeden sayfa çıkmaz; geçici olarak branch'i `integration/tum-pr` seçebilirsin.) Not: özel (private) repoda Pages ücretli GitHub planı ister; ücretsizde repo public olmalı ya da sayfaları `themeikai.com/homezy/` altına kopyala.
-2. Birkaç dakika sonra adresler:
-   - Gizlilik (TR): https://melimali.github.io/layfapp/yasal/gizlilik.html
-   - Privacy (EN): https://melimali.github.io/layfapp/yasal/privacy.html
-   - Koşullar: https://melimali.github.io/layfapp/yasal/kosullar.html · Terms: …/terms.html
-   - Hesap silme (Play Console › Veri güvenliği): https://melimali.github.io/layfapp/yasal/hesap-silme.html
-3. `src/lib/links.ts` içindeki `BASE` şu an `https://themeikai.com/homezy` (gizlilik, kosullar, hesap-silme, eposta-onayi). Yayın adresleri bunlar; yukarıdaki GitHub Pages adresleri eskidir.
-4. Bu adresleri Play Console ve App Store Connect formlarına gir.
+Yüklenen kopya: `docs/yasal/site/` (her klasörde `index.html`, adres `.html` olmadan açılır). `docs/yasal/*.html` eski düz kopyadır; yayın kaynağı `site/`.
+
+| Sayfa | Adres |
+|---|---|
+| Gizlilik (TR) | https://themeikai.com/homezy/gizlilik |
+| Privacy (EN) | https://themeikai.com/homezy/privacy |
+| Koşullar (TR) | https://themeikai.com/homezy/kosullar |
+| Terms (EN) | https://themeikai.com/homezy/terms |
+| Hesap silme (Play Console › Veri güvenliği) | https://themeikai.com/homezy/hesap-silme |
+| E-posta onayı (Supabase Site URL) | https://themeikai.com/homezy/eposta-onayi |
+
+`src/lib/links.ts` (`BASE`) ve `src/auth/AuthProvider.tsx` (`EMAIL_CONFIRMED_URL`) aynı adresleri kullanır. Bu adresleri Play Console ve App Store Connect formlarına gir.
 
 ## Doldurulanlar ve kalanlar
 

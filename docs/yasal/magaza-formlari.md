@@ -7,7 +7,7 @@
 **Genel sorular**
 - Uygulama kullanıcı verisi topluyor / paylaşıyor mu? **Evet.**
 - Tüm veriler aktarım sırasında şifreli mi? **Evet** (HTTPS).
-- Kullanıcılar veri silme talep edebilir mi? **Evet.** Uygulama içi: Ben › Hesabımı sil. Web adresi: `…/hesap-silme.html`.
+- Kullanıcılar veri silme talep edebilir mi? **Evet.** Uygulama içi: Ben › Hesabımı sil. Web adresi: `https://themeikai.com/homezy/hesap-silme`.
 - Hesap oluşturma yöntemi: e-posta + parola (ve anonim misafir).
 
 **Veri türleri** (T = toplanıyor, P = paylaşılıyor; "paylaşım" Play tanımında, işleyici olarak bizim adımıza çalışan hizmetler (Supabase, RevenueCat, Anthropic) hariç; yine de avukat doğrulasın)
@@ -27,7 +27,7 @@
 
 Analytics, tanılama (çökme günlükleri), sağlık/fitness, rehber, mikrofon: **toplanmıyor.** (Spor özelliği yalnızca kullanıcının girdiği antrenman/hatırlatma; Health Connect/Google Fit kullanılmıyor → "Sağlık ve fitness" beyanı için kullanıcı notlarındaki sağlık bilgisini avukata/Play ekibine göre değerlendir.)
 
-**Politika adresi:** `…/gizlilik.html`
+**Politika adresi:** `https://themeikai.com/homezy/gizlilik`
 
 ## 2. Google Play diğer beyanlar
 
@@ -57,7 +57,7 @@ Analytics, tanılama (çökme günlükleri), sağlık/fitness, rehber, mikrofon:
 
 **Kullanıcıya bağlı olmayan:** Tanımlayıcılar › Cihaz kimliği, Kullanım verisi › Ürün etkileşimi / reklam verisi → *Üçüncü taraf reklamcılık* (AdMob, ücretsiz plan).
 
-Politika adresi: `…/gizlilik.html`. Kullanıcı gizlilik seçenekleri / silme adresi: `…/hesap-silme.html`.
+Politika adresi: `https://themeikai.com/homezy/gizlilik`. Kullanıcı gizlilik seçenekleri / silme adresi: `https://themeikai.com/homezy/hesap-silme`.
 
 ## 4. Apple inceleme notları (App Review)
 

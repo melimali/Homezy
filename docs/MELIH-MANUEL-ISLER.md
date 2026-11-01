@@ -204,9 +204,9 @@ npx.cmd eas build -p android --profile production
 
 
 ## Güvenlik ve yasal denetim (2026-11-01)
-1. **Yasal sayfaları yükle**: `docs/yasal/` içindeki `gizlilik.html, privacy.html, kosullar.html, terms.html, hesap-silme.html, eposta-onayi.html, style.css` dosyalarını `themeikai.com/homezy/` altına yükle. Şu an orada sadece eski `gizlilik.html` ve `kosullar.html` var. Tarayıcıda 5 adresi aç, çalıştığını gör.
-2. **Supabase** > Authentication > URL Configuration: Site URL `https://themeikai.com/homezy/eposta-onayi.html`; Redirect URLs'e aynısını ekle.
-3. **Play Console > Veri güvenliği**: hesap silme adresi `https://themeikai.com/homezy/hesap-silme.html`. Ayrıca "Yaklaşık konum", "Uygulama etkileşimleri", "Tanılama" verilerini AdMob (Google ile paylaşım, amaç: reklam) için işaretle. Hedef kitle 13+.
+1. **Yasal sayfaları yükle** ✅ yapıldı: `docs/yasal/site/` içindeki 6 klasör `themeikai.com/homezy/` altında (gizlilik, kosullar, hesap-silme, eposta-onayi, privacy, terms; `.html` yok).
+2. **Supabase** > Authentication > URL Configuration: Site URL `https://themeikai.com/homezy/eposta-onayi`; Redirect URLs'e aynısını ekle.
+3. **Play Console > Veri güvenliği**: hesap silme adresi `https://themeikai.com/homezy/hesap-silme`. Ayrıca "Yaklaşık konum", "Uygulama etkileşimleri", "Tanılama" verilerini AdMob (Google ile paylaşım, amaç: reklam) için işaretle. Hedef kitle 13+.
 4. **EAS production ortamı**: `EXPO_PUBLIC_ADMOB_APP_ID_ANDROID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID` dolu mu bak (`eas env:list production`). Boşsa yayında Google test uygulama kimliği kalır.
 5. **Open-Meteo**: ticari plan al (open-meteo.com) ya da konum/hava özelliğini ilk yayında kapat.
 6. **Marka**: "Homezy" adını marka veri tabanlarında ara (TÜRKPATENT, EUIPO, USPTO), çakışma notunu bana ilet.

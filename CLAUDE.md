@@ -55,7 +55,7 @@ Uygulamanın dili Türkçe. Geliştirici Windows kullanıyor.
 4. Google testi bitince iki mağazaya aynı hafta başvur.
 
 Ayrıca gerekenler:
-- Gizlilik politikası sayfası (docs/yasal, GitHub Pages: https://melimali.github.io/layfapp/yasal/gizlilik.html).
+- Gizlilik politikası sayfası (docs/yasal/site, themeikai.com: https://themeikai.com/homezy/gizlilik).
 - Mağaza ekran görüntüleri ve tanıtım metni.
 - Karar (Melih, 2026-10-31): geliştirici hesapları kişisel (Melih Tuğyan); D-U-N-S gerekmez. Adres belgelerde yazılmaz, iletişim info@themeikai.com. Play/Apple bireysel hesapta adres isteyebilir (Play bunu mağaza sayfasında gösterir); gerekirse posta kutusu/sanal adres düşün.
 

@@ -4,7 +4,7 @@ import { prefs } from '@/lib/supabase';
 
 /**
  * Yapay zekâ rızası. Fotoğraf taraması ve Moka sohbeti, içeriği yanıt üretmek için Anthropic'e iletir
- * (bkz. docs/yasal/gizlilik.html). İlk kullanımda bir kez sorulur; Hesabım › Gizlilik ve yasal'dan geri çekilir.
+ * (bkz. docs/yasal/site/gizlilik). İlk kullanımda bir kez sorulur; Hesabım › Gizlilik ve yasal'dan geri çekilir.
  */
 const KEY = 'consent.ai';
 const LOC = 'consent.loc';

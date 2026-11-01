@@ -333,6 +333,24 @@ export function roomBounds(S: AppState, id: string) {
 
 /* ---------- state mutations (state üzerinde yerinde çalışır) ---------- */
 
+/**
+ * Ben sekmesinden gardırop / buzdolabı: çizilmiş uygun bir oda varsa onu verir; yoksa planda boş bir bloğa
+ * 1 bloklu oda açar (gerisi odayla aynı, sonra Plan'dan büyütülür). Boş yer yoksa null.
+ */
+export const findRoom = (S: AppState, mod: 'gardirop' | 'buzdolabi') =>
+  S.order.find(id => S.rooms[id] && TYPES[S.rooms[id].type].mod === mod && cellCount(S, id) > 0) ?? null;
+
+export function roomFor(S: AppState, mod: 'gardirop' | 'buzdolabi'): string | null {
+  const found = findRoom(S, mod);
+  if (found) return found;
+  const i = S.cells.findIndex(x => !x);
+  if (i < 0) return null;
+  const id = makeRoom(S, mod === 'gardirop' ? 'yatak' : 'mutfak');
+  S.cells[i] = id;
+  S.setup = true;
+  return id;
+}
+
 export function makeRoom(S: AppState, type: RoomType) {
   const id = uid();
   const n = S.order.filter(r => S.rooms[r].type === type).length;

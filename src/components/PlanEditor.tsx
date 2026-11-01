@@ -189,7 +189,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     if (!missing.length || !S.order.length) return doSave();
     Alert.alert(
       tr('Evin eksik kaldı 🏡'),
-      tr('Şunları çizmeden bu özellikler boşa gider:') + '\n\n• ' + missing.join('\n• '),
+      tr('Şunları çizmeden bu özellikler odalarda görünmez:') + '\n\n• ' + missing.join('\n• ') + '\n\n' + tr('Ben sekmesindeki Gardırop ve Buzdolabı bölümlerinden yine de kullanabilirsin.'),
       [
         { text: tr('Dönüp çizeyim'), style: 'default' },
         { text: tr('Yine de kaydet'), style: 'cancel', onPress: doSave },

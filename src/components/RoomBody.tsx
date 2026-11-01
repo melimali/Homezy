@@ -12,17 +12,17 @@ import type { Task } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 
-type Tab = 'isler' | 'dolap' | 'kombin' | 'buzdolabi' | 'eksik' | 'tarif' | 'malzeme' | 'bitki';
+export type Tab = 'isler' | 'dolap' | 'kombin' | 'buzdolabi' | 'eksik' | 'tarif' | 'malzeme' | 'bitki';
 
 /**
  * Bir odanın içindekiler, sekme sekme: önce işler (kare kare), sonra odaya özel bölümler
  * (dolap, kombin, buzdolabı, eksikler, tarif, malzemeler, bitkiler). Bir anda tek bölüm görünür,
  * böylece uzun bir sayfayı aşağı kaydırmak gerekmez.
  */
-export function RoomBody({ rid }: { rid: string }) {
+export function RoomBody({ rid, initial = 'isler' }: { rid: string; initial?: Tab }) {
   const { state: S } = useStore();
   const now = useNow();
-  const [tab, setTab] = useState<Tab>('isler');
+  const [tab, setTab] = useState<Tab>(initial);
   // Kombin önerisi: son fotoğraftaki parçalar ya da seçilen parça. Dolap ve Kombin sekmeleri paylaşır.
   const [look, setLook] = useState<PhotoLook | null>(null);
   const [anchor, setAnchor] = useState<string[]>([]);

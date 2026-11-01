@@ -141,6 +141,8 @@ export default function Hesap() {
       <Group index={2} title="Evim" items={[
         { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
         { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
+        { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
+        { emoji: '🧊', label: 'Buzdolabı', sub: 'Ürünler, eksikler, tarifler', tint: c.sageSoft, href: '/buzdolabi' as Href },
         { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
         { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
         { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },

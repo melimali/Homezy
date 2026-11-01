@@ -2,17 +2,17 @@
  * Mağazaların istediği yasal sayfalar. Kaynak dosyalar docs/yasal/ altında; yayın adresi
  * (GitHub Pages: Settings › Pages › main /docs) belli olunca BASE'i güncelle. Mağaza formlarına yazılan adreslerle aynı olmalı.
  */
-const BASE = 'https://melimali.github.io/layfapp/yasal';
+const BASE = 'https://themeikai.com/homezy';
 
 /** Destek ve yasal talepler (KVKK / GDPR). YAYINDAN ÖNCE gerçek adresle değiştir (docs/yasal/README.md). */
 export const SUPPORT_EMAIL = 'info@themeikai.com';
 
 export const LEGAL = {
-  privacy: `${BASE}/gizlilik.html`,
-  terms: `${BASE}/kosullar.html`,
-  privacyEn: `${BASE}/privacy.html`,
-  termsEn: `${BASE}/terms.html`,
-  deletion: `${BASE}/hesap-silme.html`,
+  privacy: `${BASE}/gizlilik`,
+  terms: `${BASE}/kosullar`,
+  privacyEn: `${BASE}/gizlilik`,
+  termsEn: `${BASE}/kosullar`,
+  deletion: `${BASE}/hesap-silme`,
 };
 
 /** Uygulama dili Türkçe ise Türkçe, değilse İngilizce sayfa. */

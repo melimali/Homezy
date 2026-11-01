@@ -198,3 +198,15 @@ npx.cmd eas build -p android --profile production
 - Satın alma "ürün bulunamadı": Play'de ürün/plan etkin mi, RevenueCat offering Current mi, uygulama Play'den (dahili test) mi kuruldu, lisans test hesabıyla mı girdin.
 - Build "AdMob" hatası: 5. adım.
 - Her şey tamam deyince bana "Play'e yüklendi" de, sıradaki adımları birlikte yaparız.
+
+
+## Güvenlik ve yasal denetim (2026-11-01)
+1. **Yasal sayfaları yükle**: `docs/yasal/` içindeki `gizlilik.html, privacy.html, kosullar.html, terms.html, hesap-silme.html, eposta-onayi.html, style.css` dosyalarını `themeikai.com/homezy/` altına yükle. Şu an orada sadece eski `gizlilik.html` ve `kosullar.html` var. Tarayıcıda 5 adresi aç, çalıştığını gör.
+2. **Supabase** > Authentication > URL Configuration: Site URL `https://themeikai.com/homezy/eposta-onayi.html`; Redirect URLs'e aynısını ekle.
+3. **Play Console > Veri güvenliği**: hesap silme adresi `https://themeikai.com/homezy/hesap-silme.html`. Ayrıca "Yaklaşık konum", "Uygulama etkileşimleri", "Tanılama" verilerini AdMob (Google ile paylaşım, amaç: reklam) için işaretle. Hedef kitle 13+.
+4. **EAS production ortamı**: `EXPO_PUBLIC_ADMOB_APP_ID_ANDROID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID` dolu mu bak (`eas env:list production`). Boşsa yayında Google test uygulama kimliği kalır.
+5. **Open-Meteo**: ticari plan al (open-meteo.com) ya da konum/hava özelliğini ilk yayında kapat.
+6. **Marka**: "Homezy" adını marka veri tabanlarında ara (TÜRKPATENT, EUIPO, USPTO), çakışma notunu bana ilet.
+7. **Pixabay**: kullandığın seslerin indirme sayfası bağlantılarını bir dosyaya kaydet.
+8. **npm**: package-lock güncellendi; PC'de `npm ci` sonra emülatörde bir kez aç, sonra EAS derlemesi.
+9. App Store için App Review notuna demo hesap (e-posta + şifre) ekle.

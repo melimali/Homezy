@@ -34,7 +34,7 @@ type Auth = {
 const AuthContext = createContext<Auth | null>(null);
 
 /** Onay e-postasındaki bağlantı buraya düşer (themeikai.com/homezy). Supabase > URL Configuration > Redirect URLs'e de eklenmeli. */
-const EMAIL_CONFIRMED_URL = 'https://themeikai.com/homezy/eposta-onayi';
+const EMAIL_CONFIRMED_URL = 'https://themeikai.com/homezy/eposta-onayi.html';
 
 const offline: Result = { ok: false, error: 'Hesap sunucusu henüz bağlanmadı. Şimdilik hesapsız devam edebilirsin.' };
 const noNet = async (): Promise<Result | null> => ((await online()) ? null : { ok: false, error: offlineMsg() });

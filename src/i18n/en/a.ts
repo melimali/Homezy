@@ -570,6 +570,7 @@ export const EN_A: Record<string, string> = {
  "Hedefini seç, spor günlerine göre haftalık plan hazırlayayım.": "Pick your goal and I'll prepare a weekly plan for your workout days.",
  "{}, {} dakika. Seç": "{}, {} minutes. Select",
  " · bugün": " · today",
+"Sağlık puanı genel bir tahmindir; beslenme, diyet ya da tıbbi tavsiye değildir. Alerjin ya da özel bir beslenme düzenin varsa içindekilere ve son kullanma tarihine kendin bak.": "The health score is a rough estimate, not nutrition, diet or medical advice. If you have allergies or a special diet, check the ingredients and expiry dates yourself.",
  "Spor günlerini aşağıdaki hatırlatma bölümünden değiştirebilirsin. Ağrın varsa zorlama, doktoruna danış.": "You can change your workout days in the reminder section below. If you feel pain, don't push yourself and ask your doctor.",
  "Grafiklerim 📊": "My charts 📊",
  "son 8 hafta": "last 8 weeks",

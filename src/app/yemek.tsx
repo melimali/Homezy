@@ -116,6 +116,7 @@ export default function Yemek() {
       })}
 
       {picks.length > 0 && <Btn label="🔄 Başka öner" onPress={() => { setSkip(skip + 3); setOpen(null); }} block />}
+      {picks.length > 0 && <T v="tiny">Sağlık puanı genel bir tahmindir; beslenme, diyet ya da tıbbi tavsiye değildir. Alerjin ya da özel bir beslenme düzenin varsa içindekilere ve son kullanma tarihine kendin bak.</T>}
       {!kitchen && <T v="small">İpucu: Mutfak odan olursa dolabındakileri işaretleyip eşleştiririm.</T>}
     </Screen>
   );

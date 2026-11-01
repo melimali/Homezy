@@ -8,11 +8,11 @@ const BASE = 'https://themeikai.com/homezy';
 export const SUPPORT_EMAIL = 'info@themeikai.com';
 
 export const LEGAL = {
-  privacy: `${BASE}/gizlilik`,
-  terms: `${BASE}/kosullar`,
-  privacyEn: `${BASE}/gizlilik`,
-  termsEn: `${BASE}/kosullar`,
-  deletion: `${BASE}/hesap-silme`,
+  privacy: `${BASE}/gizlilik.html`,
+  terms: `${BASE}/kosullar.html`,
+  privacyEn: `${BASE}/privacy.html`,
+  termsEn: `${BASE}/terms.html`,
+  deletion: `${BASE}/hesap-silme.html`,
 };
 
 /** Uygulama dili Türkçe ise Türkçe, değilse İngilizce sayfa. */

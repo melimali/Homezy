@@ -184,7 +184,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
 
   const pickTemplate = (id: string) => {
     const t = TEMPLATES.find(x => x.id === id)!;
-    if (rooms.length && tplArm !== id) {
+    if (rooms.length && !tplArm) {
       setTplArm(id);
       return;
     }

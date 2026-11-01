@@ -24,7 +24,7 @@ const OV=[[/(\d+) tasks seni bekliyor\. İstersen birini yapalım mı\?/,'$1 tas
 
 const TXJS=lang==='en'?fs.readFileSync('/tmp/tx.js','utf8'):null;
 const OVSRC=JSON.stringify(OV.map(([a,b])=>[a.source,b]));
-const DOMTX=`(()=>{const OV=${OVSRC}.map(([a,b])=>[new RegExp(a),b]);const ovr=t=>{for(const [a,b] of OV)t=t.replace(a,b);return t;};const run=()=>{const w=document.createTreeWalker(document.body||document,4);let n;while(n=w.nextNode()){const v=ovr(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}document.querySelectorAll('div,span,input,textarea').forEach(el=>{if(el.placeholder){const t=window.__tx(el.placeholder);if(t!==el.placeholder)el.placeholder=t;}
+const DOMTX=`(()=>{const OV=${OVSRC}.map(([a,b])=>[new RegExp(a),b]);const ovr=t=>{for(const [a,b] of OV)t=t.replace(a,b);return t.replace(/(\\d+)\\s?TL/g,(m,n)=>'$'+Math.max(1,Math.round(n/8)));};const run=()=>{const w=document.createTreeWalker(document.body||document,4);let n;while(n=w.nextNode()){const v=ovr(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}document.querySelectorAll('div,span,input,textarea').forEach(el=>{if(el.placeholder){const t=window.__tx(el.placeholder);if(t!==el.placeholder)el.placeholder=t;}
 const kids=[...el.childNodes];if(!kids.length||!kids.every(k=>k.nodeType===3))return;const j=kids.map(k=>k.nodeValue).join('');if(!j.trim())return;const t=ovr(window.__tx(j));if(t!==j){kids[0].nodeValue=t;kids.slice(1).forEach(k=>k.nodeValue='');}});};
 new MutationObserver(()=>{clearTimeout(window.__t);window.__t=setTimeout(run,50);}).observe(document,{childList:true,subtree:true,characterData:true});setInterval(run,500);})()`;
 const state=fs.readFileSync(`/tmp/seed-${lang}.json`,'utf8');

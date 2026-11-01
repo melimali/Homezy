@@ -32,6 +32,9 @@ type Auth = {
 
 const AuthContext = createContext<Auth | null>(null);
 
+/** Onay e-postasındaki bağlantı buraya düşer (themeikai.com/homezy). Supabase > URL Configuration > Redirect URLs'e de eklenmeli. */
+const EMAIL_CONFIRMED_URL = 'https://themeikai.com/homezy/eposta-onayi';
+
 const offline: Result = { ok: false, error: 'Hesap sunucusu henüz bağlanmadı. Şimdilik hesapsız devam edebilirsin.' };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -80,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: name.trim() } },
+      options: { data: { name: name.trim() }, emailRedirectTo: EMAIL_CONFIRMED_URL },
     });
     if (error) return { ok: false, error: authErrorText(error) };
     // E-posta onayı açıksa oturum onaydan sonra, giriş yapınca açılır.
@@ -99,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string): Promise<Result> => {
     if (!supabase) return offline;
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: EMAIL_CONFIRMED_URL });
     if (error) return { ok: false, error: authErrorText(error) };
     return { ok: true };
   }, []);

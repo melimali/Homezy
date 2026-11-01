@@ -93,9 +93,23 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     update(D => {
       if (f === 1) addUpper(D);
       const cells = f === 1 ? D.cells2! : D.cells;
+      const was = cells[i];
       if (cells[i] !== val) cells[i] = val;
+      // Silgiyle son blok da silindiyse oda listeden de kalksın.
+      if (val === null && was && D.rooms[was] && !cellCount(D, was)) removeRoom(D, was);
     });
   };
+
+  // Kayıtlı veride blok(u) kalmamış odaları listeden temizle.
+  useEffect(() => {
+    const s = stateRef.current;
+    if (s.order.some(id => !cellCount(s, id))) {
+      update(D => {
+        for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const rooms = S.order.filter(id => S.rooms[id]);
   const blocks = S.cells.filter(Boolean).length + (S.cells2?.filter(Boolean).length ?? 0);

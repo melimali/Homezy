@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fetchWithTimeout } from '@/lib/net';
 
 import { locationOk } from '@/lib/consent';
 
@@ -48,7 +49,7 @@ async function fetchSky(): Promise<Sky | null> {
       (await Loc.getCurrentPositionAsync({ accuracy: Loc.Accuracy.Low }));
     const { latitude, longitude } = pos.coords;
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=weather_code,is_day`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(6000)(url);
     if (!res.ok) return null;
     const j = await res.json();
     return { kind: kindOf(Number(j.current.weather_code)), day: j.current.is_day === 1, live: true };

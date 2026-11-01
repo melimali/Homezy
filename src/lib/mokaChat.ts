@@ -4,6 +4,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import type { ChatAction, ChatCtx, ChatMsg } from '@/domain/chat';
 import { CHAT_ACCOUNT_NEEDED } from '@/domain/chatGate';
 import { ensureAiConsent } from '@/lib/consent';
+import { offlineMsg, online } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -17,6 +18,7 @@ const TIMEOUT = 45_000;
 
 export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | Fail> {
   if (!supabase) return { ok: false, message: tx('Sohbet bu sürümde kullanılamıyor.') };
+  if (!(await online())) return { ok: false, message: offlineMsg() };
   if (!(await ensureAiConsent('chat'))) return { ok: false, message: tx('Sohbet için mesajlarının yapay zekâ ile işlenmesini kabul etmen gerekiyor. Tekrar yazınca yeniden sorarım.') };
   // Hesapsız (anonim) oturum sohbete giremez; sunucu da reddeder.
   const { data: auth } = await supabase.auth.getSession();

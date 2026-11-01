@@ -5,6 +5,7 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { LIMITS } from '@/domain/premium';
 import { SCAN_ACCOUNT_NEEDED } from '@/domain/chatGate';
 import { ensureAiConsent } from '@/lib/consent';
+import { offlineMsg, online } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 import type { StockLevel, WashType } from '@/domain/types';
 
@@ -38,6 +39,7 @@ export async function scanPhoto(kind: 'fridge', uri: string, known: string[]): P
 export async function scanPhoto(kind: 'look', uri: string, known: string[]): Promise<Ok<LookScan> | Fail>;
 export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): Promise<Ok<FridgeScan | LookScan> | Fail> {
   if (!supabase) return { ok: false, message: tx('Tarama bu sürümde kullanılamıyor.') };
+  if (!(await online())) return { ok: false, retry: true, message: offlineMsg() };
   // Hesapsız (anonim) kullanıcı taramayı kullanamaz; sunucu da reddeder.
   const { data: auth } = await supabase.auth.getSession();
   if (!auth.session || auth.session.user.is_anonymous) return { ok: false, account: true, message: tx(SCAN_ACCOUNT_NEEDED) };

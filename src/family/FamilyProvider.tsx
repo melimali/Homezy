@@ -5,6 +5,7 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import type { FamilyGoal, FamilyInfo, SharedHome } from '@/domain/family';
 import { dropShared, forShare, homeData, mergeHome, openShared, sharedHomeId } from '@/domain/homes';
 import type { AppState, HomeData } from '@/domain/types';
+import { offlineMsg, online } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -122,6 +123,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   const goalCall = useCallback(
     async (fn: string, args: Record<string, unknown>): Promise<Result> => {
       if (!supabase) return { ok: false, error: 'İnternet ve giriş gerekiyor.' };
+      if (!(await online())) return { ok: false, error: offlineMsg() };
       const { data, error } = await supabase.rpc(fn, args);
       if (error) return { ok: false, error: errText(error.message) };
       if (Array.isArray(data)) setGoals(data as FamilyGoal[]);
@@ -225,6 +227,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   const create = useCallback(async (): Promise<Result> => {
     if (!supabase || !uid) return { ok: false, error: 'Aile paylaşımı için internet ve giriş gerekiyor.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     const S = get();
     const { error } = await supabase.rpc('family_create', { p_home_id: S.homeId, p_name: displayName(user), p_state: forShare(S) });
     if (error) return { ok: false, error: errText(error.message) };
@@ -235,6 +238,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   const join = useCallback(
     async (code: string, name: string): Promise<Result> => {
       if (!supabase || !uid) return { ok: false, error: 'Aileye katılmak için internet ve giriş gerekiyor.' };
+      if (!(await online())) return { ok: false, error: offlineMsg() };
       const { data, error } = await supabase.rpc('family_join', { p_code: code.trim().toUpperCase(), p_name: name.trim() || displayName(user) });
       if (error) return { ok: false, error: errText(error.message) };
       // Sunucu yanlış kod / çok deneme durumunu hata değil, {error} olarak döner (denemeler sayılabilsin diye).

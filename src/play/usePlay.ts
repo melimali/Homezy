@@ -11,6 +11,7 @@ import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
 import { track } from '@/lib/events';
+import { offlineMsg, online } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -173,7 +174,7 @@ export function usePlay() {
       // Sadece odaya konan eşyalar yerleşir; bahçe süsleri ve kişilikler odaya girmez.
       const place = (D: AppState) => void (ITEM[id] && (D.play.placed[id] = room));
       if (supabase) {
-        if (!session) return { ok: false, error: 'Mağaza için internet bağlantısı gerekiyor.' };
+        if (!session || !(await online())) return { ok: false, error: offlineMsg() };
         // Önce sırada bekleyen puanlar gitsin, yoksa sunucu yetersiz puan der.
         await flush(get, update);
         if (get().play.pending.length) return { ok: false, error: 'Puanların henüz sunucuya ulaşmadı. İnternet bağlantını kontrol et.' };

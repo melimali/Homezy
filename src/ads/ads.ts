@@ -1,6 +1,8 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
+import { withTimeout } from '@/lib/net';
+
 type AdsModule = typeof import('react-native-google-mobile-ads');
 
 /**
@@ -45,7 +47,8 @@ export function startAds(): Promise<boolean> {
   if (!ads || !bannerUnit()) return Promise.resolve(false);
   ready ||= (async () => {
     try {
-      const info = await ads.AdsConsent.gatherConsent();
+      const info = await withTimeout<Awaited<ReturnType<typeof ads.AdsConsent.gatherConsent>> | null>(ads.AdsConsent.gatherConsent(), 8000, null);
+      if (!info) return false;
       if (!info.canRequestAds) return false;
       await ads.default().setRequestConfiguration({ maxAdContentRating: ads.MaxAdContentRating.PG });
       await ads.default().initialize();

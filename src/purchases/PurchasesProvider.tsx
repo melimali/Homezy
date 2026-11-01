@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -130,7 +131,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
       return;
     }
     Purchases.addCustomerInfoUpdateListener(apply);
-    Purchases.getCustomerInfo().then(apply).catch(() => {}).finally(() => setReady(true));
+    withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).then(() => setReady(true));
     loadPackages().then(setPkgs).catch(() => {});
     return () => {
       Purchases.removeCustomerInfoUpdateListener(apply);
@@ -177,7 +178,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
         const until = data?.expires_at ? Date.parse(data.expires_at) : null;
         const ok = !!data?.active && (until == null || until > Date.now());
         setServerPremium(ok ? { active: true, until, willRenew: !!data?.will_renew, productId: data?.product_id ?? null } : none);
-      });
+      }, () => {});
     return () => {
       off = true;
     };
@@ -185,6 +186,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
 
   const buy = useCallback(async (plan: Plan): Promise<BuyResult> => {
     if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     try {
       let p = pkgs[plan];
       if (!p) {
@@ -205,6 +207,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
 
   const restore = useCallback(async (): Promise<RestoreResult> => {
     if (!apiKey) return { ok: false, error: 'Satın almalar bu sürümde henüz açık değil.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     try {
       const info = await Purchases.restorePurchases();
       apply(info);

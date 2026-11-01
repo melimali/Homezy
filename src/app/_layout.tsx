@@ -84,6 +84,12 @@ function RootStack() {
     if (!loading) SplashScreen.hideAsync().catch(() => {});
   }, [loading]);
 
+  // Ne olursa olsun 8 sn sonra açılış ekranı kalkar (ağ takılsa bile).
+  useEffect(() => {
+    const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
   if (loading) return null;
   // Açılış sırası: açılış animasyonu → tanıtım (Moka) → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → evle ilgili sorular → Ücretsiz / Premium seçimi (LaunchChoice) → ana ekran.
   const inside = introSeen && (status === 'guest' || status === 'account');

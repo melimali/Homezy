@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   type ImageSourcePropType,
   type PressableProps,
@@ -368,16 +369,17 @@ export function Callout({ children }: { children: ReactNode }) {
 }
 
 /** Alttan kayarak açılan yumuşak sayfa. */
-export function Sheet({ open, onClose, children, pose = 'happy' }: { open: boolean; onClose: () => void; children: ReactNode; pose?: MokaPose }) {
+export function Sheet({ open, onClose, children, pose = 'happy', scroll = false }: { open: boolean; onClose: () => void; children: ReactNode; pose?: MokaPose; scroll?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityLabel="Kapat" />
-      <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }]}>
+      <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }, scroll && { maxHeight: height - insets.top - 90 }]}>
         <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
         <View style={[styles.grab, { backgroundColor: c.line }]} />
-        {children}
+        {scroll ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>{children}</ScrollView> : children}
       </View>
     </Modal>
   );

@@ -109,7 +109,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   };
 
   return (
-    <Sheet open={open} onClose={onClose} pose="cozy_plant">
+    <Sheet open={open} onClose={onClose} pose="cozy_plant" scroll>
       <View style={{ alignItems: 'center', gap: 16, paddingVertical: 10 }}>
         <Text style={{ fontSize: 48 }}>🎵</Text>
         <T v="h2">Moka&apos;nın Plak Çaları</T>

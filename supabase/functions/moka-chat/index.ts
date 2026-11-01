@@ -12,12 +12,8 @@
 
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
+import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
 import { admin } from '../_shared/subscription.ts';
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 const MODEL = Deno.env.get('CHAT_MODEL') ?? 'claude-haiku-5-5';
@@ -204,11 +200,12 @@ function validate(name: string, input: any, ctx: Ctx): Action | null {
   return null;
 }
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-
 Deno.serve(async req => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  const json = (body: unknown, status = 200) => jsonResponse(req, body, status);
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) });
+  if (req.method !== 'POST') return json({ error: 'method' }, 405);
+  // Acil durum anahtarı: AI_DISABLED=1 ise model hiç çağrılmaz.
+  if (aiDisabled()) return json({ error: 'not_configured' }, 503);
   if (!Deno.env.get('ANTHROPIC_API_KEY')) return json({ error: 'not_configured' }, 503);
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
@@ -217,12 +214,10 @@ Deno.serve(async req => {
   if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
-  let body: { messages?: unknown; ctx?: unknown; lang?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'bad_request' }, 400);
-  }
+  // En kötü durumda 12 mesaj × 600 karakter + 80 iş + 20 oda; 100 KB fazlasıyla yeter.
+  const parsed0 = await readJson(req, 100_000);
+  if ('error' in parsed0) return json({ error: parsed0.error }, parsed0.error === 'too_large' ? 413 : 400);
+  const body = parsed0.body as { messages?: unknown; ctx?: unknown; lang?: unknown };
   const ctx = cleanCtx(body.ctx);
   // Son mesaj uzunluk sınırını aşarsa sessizce kesmek yerine reddet.
   const rawMsgs = Array.isArray(body.messages) ? body.messages : [];

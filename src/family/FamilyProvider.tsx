@@ -49,6 +49,9 @@ const errText = (m: string) =>
   m.includes('owner not premium') ? 'Bu ailenin Premium üyeliği bitmiş, şu an katılınamıyor.'
   : m.includes('too many goals') ? 'En fazla 20 açık hedef olabilir.'
   : m.includes('premium') ? 'Aile paylaşımı için Premium üyelik gerekiyor ⭐'
+  : m.includes('too many attempts') ? 'Çok fazla yanlış deneme. Biraz sonra tekrar dene.'
+  : m.includes('account required') ? 'Aileye katılmak için hesap açman gerekiyor (misafir katılamaz).'
+  : m.includes('rate limit') ? 'Çok hızlı gidiyorsun, biraz sonra tekrar dene.'
   : m.includes('bad code') ? 'Bu kodla bir aile bulunamadı. Kodu kontrol et.'
   : m.includes('full') ? 'Bu aile dolu (en fazla 6 kişi).'
   : m.includes('own family') ? 'Bu senin kendi ailenin kodu 🙂'
@@ -234,6 +237,8 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       if (!supabase || !uid) return { ok: false, error: 'Aileye katılmak için internet ve giriş gerekiyor.' };
       const { data, error } = await supabase.rpc('family_join', { p_code: code.trim().toUpperCase(), p_name: name.trim() || displayName(user) });
       if (error) return { ok: false, error: errText(error.message) };
+      // Sunucu yanlış kod / çok deneme durumunu hata değil, {error} olarak döner (denemeler sayılabilsin diye).
+      if (data && typeof (data as { error?: unknown }).error === 'string') return { ok: false, error: errText((data as { error: string }).error) };
       const fi = data as FamilyInfo;
       const loaded = await supabase.rpc('family_load');
       if (loaded.error || !loaded.data) return { ok: false, error: errText(loaded.error?.message ?? '') };

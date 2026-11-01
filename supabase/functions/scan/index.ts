@@ -8,12 +8,8 @@
 
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
+import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
 import { admin } from '../_shared/subscription.ts';
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 const MODEL = Deno.env.get('SCAN_MODEL') ?? 'claude-haiku-5-5';
@@ -194,12 +190,26 @@ function clean(kind: Kind, r: Record<string, unknown>) {
   return { pieces, worn: r.worn === true, note };
 }
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+/** Base64 başlığından gerçek görsel türünü bulur (istemcinin söylediği tür güvenilmez). */
+function sniff(b64: string): Media | null {
+  let head: Uint8Array;
+  try {
+    head = Uint8Array.from(atob(b64.slice(0, 32)), c => c.charCodeAt(0));
+  } catch {
+    return null;
+  }
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'image/jpeg';
+  if (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47) return 'image/png';
+  if (head[0] === 0x52 && head[1] === 0x49 && head[2] === 0x46 && head[3] === 0x46 && head[8] === 0x57 && head[9] === 0x45) return 'image/webp';
+  return null;
+}
 
 Deno.serve(async req => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  // Anahtar girilmeden hak ayrılmasın.
+  const json = (body: unknown, status = 200) => jsonResponse(req, body, status);
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) });
+  if (req.method !== 'POST') return json({ error: 'method' }, 405);
+  // Acil durum anahtarı (AI_DISABLED=1) ve anahtar girilmeden hak ayrılmasın.
+  if (aiDisabled()) return json({ error: 'not_configured' }, 503);
   if (!Deno.env.get('ANTHROPIC_API_KEY')) return json({ error: 'not_configured' }, 503);
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
@@ -208,17 +218,18 @@ Deno.serve(async req => {
   if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
-  let body: { kind?: string; image?: string; mediaType?: string; known?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'bad_request' }, 400);
-  }
+  // Gövde boyutu, kimlik doğrulamadan sonra ve JSON ayrıştırılmadan önce sınırlanır.
+  const parsed0 = await readJson(req, MAX_IMAGE + 20_000);
+  if ('error' in parsed0) return json({ error: parsed0.error }, parsed0.error === 'too_large' ? 413 : 400);
+  const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown };
   const kind = body.kind === 'fridge' || body.kind === 'look' ? body.kind : null;
   const image = typeof body.image === 'string' ? body.image : '';
-  const mediaType = (MEDIA as readonly string[]).includes(body.mediaType ?? '') ? (body.mediaType as Media) : 'image/jpeg';
   if (!kind || !image) return json({ error: 'bad_request' }, 400);
   if (image.length > MAX_IMAGE) return json({ error: 'too_large' }, 413);
+  // Sadece gerçek JPEG / PNG / WebP kabul edilir; hak ayrılmadan önce kontrol edilir.
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image.slice(0, 4096))) return json({ error: 'bad_image' }, 400);
+  const mediaType = sniff(image);
+  if (!mediaType) return json({ error: 'bad_image' }, 415);
   const known = (Array.isArray(body.known) ? body.known : []).map(x => str(x, 60)).filter(Boolean).slice(0, 80);
 
   const { data: slot, error: slotErr } = await admin.rpc('scan_reserve', { p_user: userId, p_kind: kind });

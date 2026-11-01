@@ -42,3 +42,10 @@ Avukat görüşü değildir.
 - `npm audit fix` (yüksek açıklar kapandı).
 - Gizlilik/koşullar/hesap silme/e-posta onay adresleri `.html`, EN sayfalar bağlandı.
 - Yemek ekranına sağlık/alerji uyarısı.
+
+## Marka taraması: "Homezy" (2026-11-01, web araması, resmî sorgu değil)
+- **Apple App Store'da "Homezy.ai"** (Cloudvalley Technologies LLP): ev belgeleri, envanter, harcama ve aile görev/alışveriş listeleri uygulaması. **Bizimle aynı alan ve benzer işlev, yüksek çakışma riski.**
+- App Store'da "Homezy – Bất động sản 4.0": Vietnam emlak uygulaması (farklı alan).
+- ABD (USPTO), sadece ikincil sitelerden: HOMEZY, LLC (Orlando) başvuru 99662604, şubat 2026, bekliyor, mobilya (sınıf 20); 1330165 B.C. LTD (Surrey) başvuru 98219610, 2023, bekliyor, sınıf 20. Yazılım (sınıf 9/42) kaydı bulunmadı ama doğrulanmadı.
+- EUIPO ve TÜRKPATENT: sonuç bulunamadı (sorgulanabilir veri tabanlarına erişim yok).
+- **Karar:** Resmî sorgu şart: TMview (tmdn.org/tmview), TÜRKPATENT, USPTO. Sınıf 9, 42, 35 ve "Homezy"/"Homzy"/"Homesy" yazımlarını ara. Homezy.ai ile aynı mağazada aynı isim ret/şikayet sebebi olabilir; yayından önce ad değişikliği (ör. alt başlıkla ayrışma ya da yeni ad) düşünülmeli. Ad mağazaya ilk yüklemeden önce değişmesi en ucuzu.

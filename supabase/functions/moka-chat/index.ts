@@ -5,7 +5,7 @@
 // - Kapsam: sistem istemi Moka kişiliği + ev işleri / rutin / odak ile sınırlı; alan dışını nazikçe reddeder.
 // - Araç çağrıları burada şemaya ve uygulamanın gönderdiği listeye göre doğrulanır (kimlikler listede olmalı,
 //   sayılar aralıkta, metinler kısa). Geçersiz çağrı atılır. Uygulama da aynı doğrulamayı tekrar yapar.
-// - Günlük mesaj sınırı `chat_reserve` ile (ücretsiz 15, Premium 150). Cevap alınamazsa hak geri verilir.
+// - Sadece üyelik (anonim misafir reddedilir) + Premium. `chat_reserve`: günde 150 mesaj, dakikada 6. Cevap alınamazsa hak geri verilir.
 // - Mesajlar ve ev verisi sunucuda saklanmaz.
 //
 // Gizli değişken: ANTHROPIC_API_KEY. İsteğe bağlı: CHAT_MODEL (varsayılan claude-haiku-5-5).
@@ -213,6 +213,8 @@ Deno.serve(async req => {
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);
+  // Hesapsız (anonim) kullanıcı yapay zekâya ulaşamaz: üyelik (e-posta ile giriş) gerekir.
+  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
   let body: { messages?: unknown; ctx?: unknown; lang?: unknown };
@@ -222,11 +224,18 @@ Deno.serve(async req => {
     return json({ error: 'bad_request' }, 400);
   }
   const ctx = cleanCtx(body.ctx);
+  // Son mesaj uzunluk sınırını aşarsa sessizce kesmek yerine reddet.
+  const rawMsgs = Array.isArray(body.messages) ? body.messages : [];
+  const lastRaw = String((rawMsgs[rawMsgs.length - 1] as any)?.content ?? '');
+  if (lastRaw.length > MAX_MSG) return json({ error: 'too_long', max: MAX_MSG }, 413);
   const messages = cleanHistory(body.messages);
   if (!ctx || !messages.length || messages[messages.length - 1].role !== 'user') return json({ error: 'bad_request' }, 400);
 
   const { data: slot, error: slotErr } = await admin.rpc('chat_reserve', { p_user: userId });
   if (slotErr) return json({ error: 'server' }, 500);
+  // Sohbet Premium'a özel: ücretsiz hesap için model çağrılmaz.
+  if (!slot.ok && slot.reason === 'premium') return json({ error: 'premium_required' }, 403);
+  if (!slot.ok && slot.reason === 'rate') return json({ error: 'rate' }, 429);
   if (!slot.ok) return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429);
   const release = () => admin.rpc('chat_release', { p_user: userId, p_day: slot.day });
 

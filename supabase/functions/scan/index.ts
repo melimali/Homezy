@@ -204,6 +204,8 @@ Deno.serve(async req => {
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);
+  // Hesapsız (anonim) kullanıcı taramaya ulaşamaz: üyelik (e-posta ile giriş) gerekir.
+  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
   let body: { kind?: string; image?: string; mediaType?: string; known?: unknown };

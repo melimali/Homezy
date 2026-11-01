@@ -24,7 +24,7 @@ import { Btn, SecHead, T } from './ui';
  */
 
 type Busy = { st: 'busy' };
-type Err = { st: 'err'; msg: string; retry: boolean; limit: boolean };
+type Err = { st: 'err'; msg: string; retry: boolean; limit: boolean; account?: boolean };
 
 type FridgeItem = { name: string; qty: string; lvl: StockLevel; matchId: string | null; on: boolean };
 type FridgeState = null | Busy | Err | {
@@ -44,7 +44,7 @@ export function useFridgeScan(rid: string) {
     const stock = state.mod[rid]?.stock || [];
     const r = await scanPhoto('fridge', uri, stock.map(x => x.name));
     if (me !== run.current) return;
-    if (!r.ok) return setScan({ st: 'err', msg: r.message, retry: !!r.retry, limit: !!r.limit });
+    if (!r.ok) return setScan({ st: 'err', msg: r.message, retry: !!r.retry, limit: !!r.limit, account: !!r.account });
     const byName = new Map(stock.map(x => [trLow(x.name), x]));
     const used = new Set<string>();
     const items: FridgeItem[] = [];
@@ -156,7 +156,7 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
     const w = state.mod[rid]?.wardrobe || [];
     const r = await scanPhoto('look', uri, w.map(x => `${x.name} (${x.cat})`));
     if (me !== run.current) return;
-    if (!r.ok) return setScan({ st: 'err', msg: r.message, retry: !!r.retry, limit: !!r.limit });
+    if (!r.ok) return setScan({ st: 'err', msg: r.message, retry: !!r.retry, limit: !!r.limit, account: !!r.account });
     // Model dolaptaki adı "Ad (Kategori)" biçiminde de yazabilir.
     const byName = new Map(w.flatMap(x => [[trLow(x.name), x], [trLow(`${x.name} (${x.cat})`), x]] as const));
     const used = new Set<string>();
@@ -280,6 +280,7 @@ function Failed({ e, onRetry, onClose }: { e: Err; onRetry: () => void; onClose:
       <T style={{ fontSize: 14 }}>{e.msg}</T>
       <View style={styles.row}>
         {e.retry && <Btn small kind="primary" label="Tekrar dene" onPress={onRetry} />}
+        {e.account && <Btn small kind="primary" label="Giriş yap / üye ol" onPress={() => router.push('/giris')} />}
         {e.limit && !premium.active && <Btn small kind="primary" label="Premium'a bak ⭐" onPress={() => router.push('/premium')} />}
         <Btn small kind="ghost" label="Kapat" onPress={onClose} />
       </View>

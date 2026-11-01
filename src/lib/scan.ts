@@ -3,6 +3,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 import { LIMITS } from '@/domain/premium';
+import { SCAN_ACCOUNT_NEEDED } from '@/domain/chatGate';
 import { ensureAiConsent } from '@/lib/consent';
 import { supabase } from '@/lib/supabase';
 import type { StockLevel, WashType } from '@/domain/types';
@@ -31,21 +32,18 @@ export type LookScan = {
 };
 
 type Ok<T> = { ok: true; result: T; used: number; limit: number; premium: boolean };
-type Fail = { ok: false; message: string; limit?: boolean; retry?: boolean };
+type Fail = { ok: false; message: string; limit?: boolean; retry?: boolean; account?: boolean };
 
 export async function scanPhoto(kind: 'fridge', uri: string, known: string[]): Promise<Ok<FridgeScan> | Fail>;
 export async function scanPhoto(kind: 'look', uri: string, known: string[]): Promise<Ok<LookScan> | Fail>;
 export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): Promise<Ok<FridgeScan | LookScan> | Fail> {
   if (!supabase) return { ok: false, message: tx('Tarama bu sürümde kullanılamıyor.') };
+  // Hesapsız (anonim) kullanıcı taramayı kullanamaz; sunucu da reddeder.
+  const { data: auth } = await supabase.auth.getSession();
+  if (!auth.session || auth.session.user.is_anonymous) return { ok: false, account: true, message: tx(SCAN_ACCOUNT_NEEDED) };
   if (!(await ensureAiConsent('scan'))) return { ok: false, message: tx('Taramak için yapay zekâ ile işlenmesini kabul etmen gerekiyor.') };
   const image = await prepare(uri);
   if (!image) return { ok: false, message: tx('Fotoğraf okunamadı. Başka bir fotoğraf dene.') };
-  // Sunucu kullanıcıyı oturumundan tanır; misafirin anonim oturumu henüz açılmadıysa şimdi açılır.
-  const { data: auth } = await supabase.auth.getSession();
-  if (!auth.session) {
-    const { error: anonErr } = await supabase.auth.signInAnonymously();
-    if (anonErr) return { ok: false, message: tx('Tarama için internete bağlı olman gerekiyor. Bağlantını kontrol edip tekrar dene.'), retry: true };
-  }
   const { data, error } = await supabase.functions.invoke('scan', {
     body: { kind, image, mediaType: 'image/jpeg', known },
     timeout: TIMEOUT,
@@ -55,6 +53,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
   if (!(error instanceof FunctionsHttpError)) return { ok: false, message: tx('Bağlantıda bir sorun oldu. İnternetini kontrol edip tekrar dene.'), retry: true };
   const status = error.context.status as number;
   const body = await error.context.json().catch(() => ({}));
+  if (status === 403 && body.error === 'account_required') return { ok: false, account: true, message: tx(SCAN_ACCOUNT_NEEDED) };
   if (status === 429) {
     return {
       ok: false,

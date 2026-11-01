@@ -1,5 +1,15 @@
 /** Denetimde eksik çıkan metinlerin İngilizcesi. a.ts'te olan anahtar a.ts'ten gelir. */
 export const EN_B: Record<string, string> = {
+  // Yapay zeka kapısı (src/domain/chatGate.ts)
+  "Selam, ben Moka ☕ Seninle sohbet etmeyi çok isterdim ama sohbet Premium'a özel! Premium'da benimle günde 150 mesaj konuşabilir, iş ekletip yaptıklarını işaretletebilir, takvime not yazdırabilirsin. Üstüne günde 50 yapay zekâ taraması, ikinci kat, 1,5 kat puan, ayda 3 seri dondurma, ev temaları, aile paylaşımı ve reklamsız kullanım da var. İstersen bir bak 💛": "Hi, I'm Moka ☕ I'd love to chat with you, but chatting is a Premium feature! With Premium you can talk to me up to 150 messages a day, have me add tasks, tick off what you've done and write calendar notes. You also get 50 AI scans a day, a second floor, 1.5x points, 3 streak freezes a month, home themes, family sharing and no ads. Take a look if you like 💛",
+  "Sohbet Premium'a özel ☕ Premium'a geçersen seninle seve seve konuşurum. Tüm avantajlara aşağıdaki butondan bakabilirsin 💛": "Chatting is Premium-only ☕ If you go Premium I'll happily talk with you. You can see all the perks with the button below 💛",
+  'Moka ile sohbet etmek için üye olman gerekiyor. E-posta ile ücretsiz hesap açıp giriş yapınca burada olacağım ☕': "You need an account to chat with Moka. Sign up free with your email and I'll be right here ☕",
+  'Yapay zekâ taraması için üye olman gerekiyor. E-posta ile ücretsiz hesap açıp giriş yap, sonra tekrar dene. Listeyi elle de güncelleyebilirsin.': 'You need an account for AI scanning. Sign up free with your email, then try again. You can also update the list by hand.',
+  'Giriş yap / üye ol': 'Sign in / sign up',
+  "Sohbet Premium'a özel ☕": 'Chatting is Premium-only ☕',
+  'Mesajın çok uzun. Biraz kısaltıp tekrar dene.': 'Your message is too long. Shorten it a bit and try again.',
+  'Çok hızlı yazıyorsun, bir dakika nefes alalım ☕ Birazdan tekrar dene.': "You're typing fast, let's take a breath for a minute ☕ Try again shortly.",
+  'Bugünkü mesaj hakkın doldu. Yarın yine buradayım ☕': "You've used today's messages. I'll be here again tomorrow ☕",
   'Homezy · v1.0.0': 'Homezy · v1.0.0',
   '7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷': 'You made time for your home every day for 7 days. Keep the streak going and your home will bloom even more next month 🌷',
   'Premium ile evini eşin, ev arkadaşın ya da çocuklarınla paylaş; kimin hangi işi yapacağını seç. Katılanların Premium olması gerekmez.': 'With Premium, share your home with your partner, housemate or kids and choose who does which chore. People who join do not need Premium.',

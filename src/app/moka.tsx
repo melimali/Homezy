@@ -3,22 +3,25 @@ import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'rea
 import { ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/auth/AuthProvider';
 import { MokaFace } from '@/components/MokaFace';
 import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Field, T } from '@/components/ui';
+import { BackLink, Btn, Field, T } from '@/components/ui';
 import { mimikOf } from '@/constants/mimik';
+import { CHAT_ACCOUNT_NEEDED, CHAT_PREMIUM_INTRO, CHAT_PREMIUM_NUDGE } from '@/domain/chatGate';
 import { applyChatAction, chatCtx, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
 import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL } from '@/lib/links';
 import { askMoka } from '@/lib/mokaChat';
+import { tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
-type Item = ChatMsg & { id: number; done?: string[]; error?: boolean };
+type Item = ChatMsg & { id: number; done?: string[]; error?: boolean; cta?: 'premium' | 'login' };
 
 const HELLO: Item = {
   id: 0,
@@ -30,6 +33,8 @@ const IDEAS = ['Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı',
 /** Oturum boyunca konuşma kalır; kapatınca silinir (mesajlar telefonda saklanmaz). */
 let memory: Item[] = [HELLO];
 let nextId = 1;
+/** Premium olmayan kullanıcı bu oturumda kaç mesaj yazdı (ilk mesaja uzun tanıtım, sonrakilere kısa yönlendirme). */
+let freeAsked = 0;
 
 /** Moka ile sohbet: tatlı bir muhabbet ve uygulamayı kontrol eden bir yapay zekâ (Haiku). Sunucuda çalışır, alan dışına çıkmaz. */
 export default function MokaChat() {
@@ -39,6 +44,7 @@ export default function MokaChat() {
   const insets = useSafeAreaInsets();
   const { state: S, update, get } = useStore();
   const { premium } = usePurchases();
+  const { status } = useAuth();
   const [items, setItems] = useState<Item[]>(memory);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -77,12 +83,21 @@ export default function MokaChat() {
       content: done?.length ? `${content}\n[Uygulama bu işlemleri zaten yaptı: ${done.join(' | ')}]` : content,
     }));
     push(p => [...p, mine]);
+    // Hesapsız kullanıcı: üyelik iste. Hesaplı ama Premium değil: hazır metin, yapay zekâ çağrılmaz.
+    if (status !== 'account' || !premium.active) {
+      const gate = status !== 'account'
+        ? { content: tx(CHAT_ACCOUNT_NEEDED), cta: 'login' as const }
+        : { content: tx(freeAsked++ === 0 ? CHAT_PREMIUM_INTRO : CHAT_PREMIUM_NUDGE), cta: 'premium' as const };
+      sfx('tap');
+      setTimeout(() => push(p => [...p, { id: nextId++, role: 'assistant', ...gate }]), 500);
+      return;
+    }
     setBusy(true);
     sfx('tap');
     const r = await askMoka(history, chatCtx(get()));
     setBusy(false);
     if (!r.ok) {
-      push(p => [...p, { id: nextId++, role: 'assistant', content: r.message, error: true }]);
+      push(p => [...p, { id: nextId++, role: 'assistant', content: r.message, error: true, cta: r.account ? 'login' : r.premium ? 'premium' : undefined }]);
       return;
     }
     // Sunucu doğruladı; telefon yine kendi verisine göre doğrulayıp uygular.
@@ -200,12 +215,16 @@ export default function MokaChat() {
 
 function Bubble({ item }: { item: Item }) {
   const c = useColors();
+  const router = useRouter();
   const me = item.role === 'user';
   return (
     <View style={{ gap: 6, alignItems: me ? 'flex-end' : 'flex-start' }}>
       <View style={[st.bubble, me ? st.me : st.moka, { backgroundColor: me ? c.accent : item.error ? c.surface2 : c.surface }]}>
         <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: me ? c.onAccent : c.ink }}>{item.content}</Text>
       </View>
+      {item.cta && (
+        <Btn small kind="primary" label={item.cta === 'login' ? 'Giriş yap / üye ol' : "Premium'a bak ⭐"} onPress={() => router.push(item.cta === 'login' ? '/giris' : '/premium')} />
+      )}
       {item.done?.map((d, i) => (
         <View key={i} style={[st.done, { backgroundColor: c.sageSoft }]}>
           <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: c.ink }}>{d}</Text>

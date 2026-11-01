@@ -168,7 +168,10 @@ def feature(lang):
     logo = Image.open(ROOT / "assets/icon.png").convert("RGBA").resize((96, 96))
     m = Image.new("L", (96, 96), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, 95, 95), 24, fill=255)
     img.paste(logo, (56, 44), m)
-    d.text((170, 40), "Homezy", font=H_FONT(72), fill=NAVY)
+    wm = Image.open(ROOT / "assets/logo-yatay.png").convert("RGBA")
+    wm = wm.crop(wm.getchannel("A").getbbox())
+    wm = wm.resize((round(wm.width * 108 / wm.height), 108), Image.LANCZOS)
+    img.alpha_composite(wm, (170, 38))
     head = {"tr": ("Moka ile ev hayatı", "daha kolay"), "en": ("Home life is easier", "with Moka")}[lang]
     sub = {"tr": "Rutinler, yemek, bahçe ve 3B ev. Hepsi tek yerde.", "en": "Routines, meals, garden and a 3D home. All in one place."}[lang]
     f = fit_font(d, head[0], H_FONT, 560, 74)

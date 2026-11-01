@@ -1118,6 +1118,12 @@ grant execute on function public.delete_me() to authenticated;
 -- =====================================================================
 -- 20261101000000_ai_suistimal.sql
 -- =====================================================================
+-- 20261101000000_persona.sql
+-- =====================================================================
+-- "Seni taniyalim" cevaplari: kullanici hesabina bagli, kendi satirini okur/gunceller (mevcut profil politikalari yeter).
+alter table public.profiles add column if not exists persona jsonb;
+
+-- =====================================================================
 -- Yapay zeka suistimalini engeller. Supabase SQL Editor'de bir kere calistir (tekrar calistirmak zararsiz).
 -- - Moka sohbeti sadece Premium: ucretsiz hesap AI'a ulasamaz (sunucu 'premium_required' doner).
 -- - Premium'da: gunluk 150 mesaj + dakikada en fazla 6 mesaj (rate limit).

@@ -22,7 +22,7 @@
    - Privacy (EN): https://melimali.github.io/layfapp/yasal/privacy.html
    - Koşullar: https://melimali.github.io/layfapp/yasal/kosullar.html · Terms: …/terms.html
    - Hesap silme (Play Console › Veri güvenliği): https://melimali.github.io/layfapp/yasal/hesap-silme.html
-3. `src/lib/links.ts` içindeki `BASE` zaten `https://melimali.github.io/layfapp/yasal`. Başka alan adına taşırsan sadece onu değiştir.
+3. `src/lib/links.ts` içindeki `BASE` şu an `https://themeikai.com/homezy` (gizlilik, kosullar, hesap-silme, eposta-onayi). Yayın adresleri bunlar; yukarıdaki GitHub Pages adresleri eskidir.
 4. Bu adresleri Play Console ve App Store Connect formlarına gir.
 
 ## Doldurulanlar ve kalanlar

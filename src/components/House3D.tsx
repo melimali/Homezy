@@ -700,7 +700,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
       return out.slice(1);
     };
 
-    const next = () => {
+    const next = (): void => {
       if (dead) return;
       const ns = live.current.nodes;
       const r = Math.random();
@@ -716,7 +716,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
       wait(rnd(7000, 14000), () => { setMode('sit'); wait(rnd(800, 1600), next); });
     };
 
-    const walk = () => {
+    const walk = (): void => {
       const ns = live.current.nodes;
       const sc = live.current.scale;
       const from = Math.min(live.current.cur, ns.length - 1);

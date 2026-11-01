@@ -3,20 +3,22 @@ import * as SQLite from 'expo-sqlite';
 import { CARE, TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
 import type {
-  AppState, Bill, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
+  AppState, Bill, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
 } from '@/domain/types';
 
 /**
- * Bütün veriler telefondaki `layfapp.db` dosyasında. Veri küçük olduğu için her kayıtta
+ * Bütün veriler telefondaki `layfapp.db` (eski ad, dosya adı bilerek korundu) dosyasında. Veri küçük olduğu için her kayıtta
  * tablolar tek bir işlemde baştan yazılır; böylece uygulama tarafı sade bir state ile çalışır.
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 /** Sürüm 2'de eklenen sütunlar: işlerde kim yapacak (aile paylaşımı), süre, erteleme, etiket, fotoğraf; kıyafette yıkama türü ve tarihler; üründe son kullanma tarihi. */
 const ADDED_COLUMNS: [string, string, string][] = [
   ['tasks', 'who', 'TEXT'], ['tasks', 'min', 'INTEGER'], ['tasks', 'snooze', 'INTEGER'], ['tasks', 'tag', 'TEXT'], ['tasks', 'photo', 'TEXT'],
   ['clothes', 'wash', 'TEXT'], ['clothes', 'worn', 'INTEGER'], ['clothes', 'added', 'INTEGER'],
   ['stock', 'exp', 'INTEGER'],
+  // Sürüm 3: kombin önerisi için kıyafetin türü, rengi ve kumaşı (fotoğraf taramasından ya da addan).
+  ['clothes', 'kind', 'TEXT'], ['clothes', 'color', 'TEXT'], ['clothes', 'hex', 'TEXT'], ['clothes', 'fabric', 'TEXT'], ['clothes', 'pattern', 'TEXT'],
 ];
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -67,6 +69,7 @@ type TaskRow = {
 type ClothRow = {
   id: string; room_id: string; name: string; cat: string; state: ClothState;
   wash: WashType | null; worn: number | null; added: number | null;
+  kind: string | null; color: string | null; hex: string | null; fabric: string | null; pattern: 'düz' | 'desenli' | null;
 };
 type StockRow = { id: string; room_id: string; name: string; lvl: StockLevel; exp: number | null };
 
@@ -90,7 +93,7 @@ export async function loadState(): Promise<AppState | null> {
     order: [],
     tasks: {},
     mod: {},
-    settings: JSON.parse(m.settings) as Settings,
+    settings: json<Settings>(m.settings, {} as Settings),
     play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
     homeId: m.homeId || 'ev1',
     homeName: m.homeName || 'Evim',
@@ -102,6 +105,8 @@ export async function loadState(): Promise<AppState | null> {
     bills: json<Bill[]>(m.bills, []),
     warranties: json<Warranty[]>(m.warranties, []),
     seasonal: json<Record<string, number>>(m.seasonal, {}),
+    // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
+    cells2: json<(string | null)[] | null>(m.cells2, null),
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
@@ -132,13 +137,15 @@ export async function loadState(): Promise<AppState | null> {
     if (t.list === 'plants') (S.mod[t.room_id].plants ||= []).push(task);
     else S.tasks[t.room_id].push(task);
   }
-  for (const c of await db.getAllAsync<ClothRow>('SELECT * FROM clothes ORDER BY ord'))
-    S.mod[c.room_id]?.wardrobe?.push({
-      id: c.id, name: c.name, cat: c.cat, state: c.state, wash: c.wash ?? undefined, worn: c.worn, added: c.added ?? undefined,
-    });
+  for (const c of await db.getAllAsync<ClothRow>('SELECT * FROM clothes ORDER BY ord')) {
+    const cloth: Cloth = { id: c.id, name: c.name, cat: c.cat, state: c.state, wash: c.wash ?? undefined, worn: c.worn, added: c.added ?? undefined };
+    for (const k of ['kind', 'color', 'hex', 'fabric', 'pattern'] as const) if (c[k] != null) Object.assign(cloth, { [k]: c[k] });
+    S.mod[c.room_id]?.wardrobe?.push(cloth);
+  }
   for (const s of await db.getAllAsync<StockRow>('SELECT * FROM stock ORDER BY ord'))
     if (S.mod[s.room_id]) (S.mod[s.room_id].stock ||= []).push({ id: s.id, name: s.name, lvl: s.lvl, exp: s.exp });
 
+  if (S.cells2) S.cells2 = S.cells2.map(x => (x && S.rooms[x] ? x : null));
   return normalize(S);
 }
 
@@ -162,6 +169,7 @@ export async function saveState(S: AppState): Promise<void> {
       ['bills', JSON.stringify(S.bills)],
       ['warranties', JSON.stringify(S.warranties)],
       ['seasonal', JSON.stringify(S.seasonal)],
+      ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],
     ];
@@ -177,8 +185,11 @@ export async function saveState(S: AppState): Promise<void> {
       for (const [i, t] of (S.tasks[id] || []).entries()) await insertTask(tx, t, id, 'tasks', i);
       for (const [i, t] of (m.plants || []).entries()) await insertTask(tx, t, id, 'plants', i);
       for (const [i, c] of (m.wardrobe || []).entries())
-        await tx.runAsync('INSERT INTO clothes (id, room_id, name, cat, state, ord, wash, worn, added) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          c.id, id, c.name, c.cat, c.state, i, c.wash ?? null, c.worn ?? null, c.added ?? null);
+        await tx.runAsync(
+          'INSERT INTO clothes (id, room_id, name, cat, state, ord, wash, worn, added, kind, color, hex, fabric, pattern) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          c.id, id, c.name, c.cat, c.state, i, c.wash ?? null, c.worn ?? null, c.added ?? null,
+          c.kind ?? null, c.color ?? null, c.hex ?? null, c.fabric ?? null, c.pattern ?? null,
+        );
       for (const [i, s] of (m.stock || []).entries())
         await tx.runAsync('INSERT INTO stock (id, room_id, name, lvl, ord, exp) VALUES (?, ?, ?, ?, ?, ?)', s.id, id, s.name, s.lvl, i, s.exp ?? null);
     }

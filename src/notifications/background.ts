@@ -10,7 +10,7 @@ import { getNotifications, rescheduleMorningSummaries } from './schedule';
  * düğmeleri bu görevi çalıştırır. Uygulamanın en başında (`index.ts`) tanımlanmalı, çünkü
  * sistem uygulamayı ekransız açıp sadece bu görevi çalıştırır.
  */
-const TASK = 'layfapp-bildirim-cevabi';
+const TASK = 'homezy-bildirim-cevabi';
 
 function load(): typeof TaskManagerTypes | null {
   try {
@@ -30,8 +30,8 @@ if (N && TM) {
     const r = data as NotificationResponse;
     const { request, date } = r.notification;
     await handleTaskAction(N, { id: request.identifier, action: r.actionIdentifier, date, content: request.content }, rescheduleMorningSummaries).catch(e =>
-      console.warn('Layfapp: bildirim cevabı işlenemedi', e),
+      console.warn('Homezy: bildirim cevabı işlenemedi', e),
     );
   });
-  N.registerTaskAsync(TASK).catch(e => console.warn('Layfapp: bildirim görevi kaydedilemedi', e));
+  N.registerTaskAsync(TASK).catch(e => console.warn('Homezy: bildirim görevi kaydedilemedi', e));
 }

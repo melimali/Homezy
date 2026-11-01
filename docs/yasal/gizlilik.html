@@ -3,72 +3,92 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Layfapp Gizlilik Politikası</title>
-<!-- Yayın adresi: https://meikaidigital.com/layfapp/gizlilik (uygulamadaki src/lib/links.ts ile aynı olmalı).
-     [KÖŞELİ PARANTEZ] içindeki yerleri yayınlamadan önce doldur. -->
-<style>
-  body { margin: 0; background: #EBF5EE; color: #283044; font: 16px/1.6 Nunito, system-ui, sans-serif; }
-  main { max-width: 720px; margin: 0 auto; padding: 32px 18px 64px; }
-  h1, h2 { font-family: "Baloo 2", system-ui, sans-serif; line-height: 1.2; }
-  h1 { font-size: 34px; margin: 0 0 4px; }
-  h2 { font-size: 22px; margin: 32px 0 8px; }
-  .muted { color: #8B786D; }
-  .card { background: #fff; border-radius: 22px; padding: 18px 20px; margin-top: 16px; }
-  a { color: #283044; }
-  li { margin: 4px 0; }
-</style>
+<title>Homezy Gizlilik Politikası</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
-<p class="muted">LAYFAPP · MEIKAI DIGITAL</p>
+<nav><a href="gizlilik.html">Türkçe</a><a href="privacy.html">English</a><a href="kosullar.html">Kullanım Koşulları</a><a href="hesap-silme.html">Hesap silme</a></nav>
+<p class="muted">HOMEZY</p>
 <h1>Gizlilik Politikası</h1>
-<p class="muted">Son güncelleme: [GG.AA.YYYY]</p>
+<p class="muted">Son güncelleme: 31.10.2026</p>
 
 <div class="card">
-  <strong>Kısaca:</strong> Evinin bilgileri önce senin telefonunda durur. Hesap açarsan yedeklenir. Fotoğraf taramasında fotoğrafın sadece taranır, saklanmaz. Kart bilgilerin bize hiç gelmez. Verilerini satmayız.
+  <strong>Kısaca:</strong> Evinin bilgileri önce senin telefonunda durur. Hesap açarsan yedeklenir. Fotoğraf taramasında ve Moka sohbetinde gönderdiklerin yanıt üretmek için bir yapay zekâ hizmetine (Anthropic) iletilir; biz saklamayız. Kart bilgilerin bize gelmez. Verilerini satmayız. Hesabını uygulamadan silebilir, verilerini dışa aktarabilirsin.
 </div>
 
-<h2>Biz kimiz?</h2>
-<p>Layfapp, Meikai Digital tarafından geliştirilir. Bu politikayla ilgili her soru için: <a href="mailto:[iletisim@meikaidigital.com]">[iletisim@meikaidigital.com]</a></p>
+<h2>1. Veri sorumlusu</h2>
+<p>Homezy'nin veri sorumlusu (KVKK) / veri denetleyicisi (GDPR): Melih Tuğyan (Türkiye, şahıs olarak). İletişim: <a href="mailto:info@themeikai.com">info@themeikai.com</a>. Bu politika, Homezy mobil uygulaması (iOS ve Android) için geçerlidir.</p>
 
-<h2>Hangi bilgileri işliyoruz?</h2>
+<h2>2. Hangi verileri işliyoruz?</h2>
+<table>
+<tr><th>Veri</th><th>Ne için</th><th>Nerede</th><th>Hukuki sebep</th></tr>
+<tr><td>Ev verilerin: ev planı, odalar, rutinler, gardırop, stok, bitkiler, faturalar, garanti belgeleri, notlar, puan, seri, spor ve günlük kayıtların, ayarların</td><td>Uygulamanın çalışması</td><td>Telefonunda. Hesap açtıysan ayrıca Supabase sunucusunda yedeği</td><td>Sözleşmenin ifası</td></tr>
+<tr><td>Hesap: ad, e-posta, şifre (şifrelenmiş); hesapsız kullanımda rastgele anonim kimlik</td><td>Giriş, yedek, geri yükleme</td><td>Supabase (Avrupa Birliği, Frankfurt)</td><td>Sözleşmenin ifası</td></tr>
+<tr><td>Puan, mağaza alımları, tarama ve sohbet sayaçları</td><td>Puan hilesini ve kötüye kullanımı önleme, günlük hak sınırları</td><td>Supabase</td><td>Sözleşmenin ifası, meşru menfaat</td></tr>
+<tr><td>Fotoğraflar: buzdolabı ve kıyafet taraması</td><td>Yapay zekâ ile ürün / kıyafet tanıma</td><td>Seçtiğin an sunucu fonksiyonumuz üzerinden Anthropic'e gider. Biz saklamayız</td><td>Açık rızan (taramayı başlatman)</td></tr>
+<tr><td>Moka sohbet mesajların ve ev bağlamı (oda adları, iş adları ve durumları, seviye, seri, tarih)</td><td>Moka'nın cevap vermesi ve işlem yapması</td><td>Her mesajda sunucu fonksiyonumuz üzerinden Anthropic'e gider. Biz saklamayız. Sohbet geçmişi telefonunda da kalıcı saklanmaz</td><td>Açık rızan (sohbeti ilk kullanırken verirsin)</td></tr>
+<tr><td>Günlük fotoğrafı (Premium yedeği)</td><td>Fotoğraf yedeği</td><td>Supabase Storage (sadece sana özel klasör)</td><td>Sözleşmenin ifası</td></tr>
+<tr><td>Yaklaşık konum (iki ondalık basamağa yuvarlanmış, yaklaşık 1 km)</td><td>Ev gökyüzünün gerçek hava durumunu göstermesi</td><td>Open-Meteo hava durumu servisine anlık gönderilir; saklanmaz. İzin vermezsen saate göre gökyüzü gösterilir</td><td>Açık rızan (konum izni)</td></tr>
+<tr><td>Abonelik durumu, satın alma kimliği</td><td>Premium'u açmak, geri yüklemek</td><td>RevenueCat, App Store / Google Play, Supabase</td><td>Sözleşmenin ifası</td></tr>
+<tr><td>Reklam kimliği, IP adresi, cihaz bilgisi (sadece ücretsiz planda)</td><td>Kişiselleştirilmemiş reklam göstermek</td><td>Google AdMob</td><td>Açık rızan (AB / Birleşik Krallık'ta Google onay penceresi), diğer yerlerde meşru menfaat</td></tr>
+<tr><td>Bildirimler</td><td>Hatırlatmalar</td><td>Sadece telefonunda zamanlanır; sunucuya gönderilmez</td><td>Açık rızan (bildirim izni)</td></tr>
+<tr><td>Aile paylaşımı (Premium): davet koduyla paylaştığın ev verileri, ortak hedefler, görünen ad</td><td>Evi aileyle paylaşmak</td><td>Supabase</td><td>Sözleşmenin ifası</td></tr>
+</table>
+<p>Kamera ve galeri izinlerini sadece sen bir fotoğraf çekmek ya da seçmek istediğinde kullanırız. Mikrofon, rehber ve arka plan konumu izinlerini istemeyiz. Reklam takibi (iOS'ta ATT) için izin istemeyiz, çünkü reklamlar kişiselleştirilmez.</p>
+<p>Uygulamada analiz (analytics) ya da çökme raporlama aracı kullanmıyoruz.</p>
+
+<h2>3. Yapay zekâ özellikleri</h2>
 <ul>
-  <li><strong>Ev bilgilerin:</strong> ev planı, odalar, rutinler, gardırop, stok, bitkiler, faturalar, garanti belgeleri, puan, seri, spor ve günlük kayıtların. Bunlar telefonunda saklanır.</li>
-  <li><strong>Hesap bilgilerin (isteğe bağlı):</strong> hesap açarsan adın, e-posta adresin ve şifren (şifre şifrelenmiş olarak). Hesapsız kullanırsan sana anonim bir kimlik verilir; ad ya da e-posta istemeyiz.</li>
-  <li><strong>Yedek:</strong> hesap açtıysan ev bilgilerin, telefon değişirse geri gelsin diye sunucumuzda yedeklenir. Premium'da günlük fotoğrafların da yedeklenir.</li>
-  <li><strong>Puan ve seri:</strong> mağaza eşyaları ve seri dondurma hakları hile yapılamasın diye puanların ve iş yaptığın günler sunucuda tutulur.</li>
-  <li><strong>Fotoğraf taraması:</strong> buzdolabı ya da kıyafet fotoğrafını taramak istediğinde fotoğraf, ne olduğunu tanımak için sunucu fonksiyonumuz üzerinden yapay zekâ servisine (Anthropic, Claude) gönderilir. Fotoğraf saklanmaz; sadece kaç tarama yaptığın sayılır. Kıyafet fotoğraflarında yüz ve beden hakkında hiçbir bilgi çıkarılmaz ya da saklanmaz.</li>
-  <li><strong>Abonelik:</strong> Premium satın alırsan ödemeyi App Store ya da Google Play alır. Abonelik durumun RevenueCat aracılığıyla bize bildirilir. Kart ya da banka bilgilerin bize ve RevenueCat'e gelmez.</li>
-  <li><strong>Reklam (ücretsiz plan):</strong> ücretsiz planda Ev ve Bugün sayfalarının altında küçük bir Google AdMob reklamı gösterilir. AdMob, reklam göstermek için cihazının reklam kimliğini kullanabilir. Premium'da reklam yoktur.</li>
-  <li><strong>Aile paylaşımı (Premium):</strong> evini bir davet koduyla paylaşırsan ev bilgilerin aileye katılan kişilerle paylaşılır. Puanın, günlüğün ve ayarların paylaşılmaz.</li>
-  <li><strong>Bildirimler:</strong> hatırlatmalar telefonunda zamanlanır; bildirim içeriği sunucuya gönderilmez.</li>
+  <li><strong>Fotoğraf taraması</strong> ve <strong>Moka sohbeti</strong>, Anthropic'in Claude modelleriyle çalışır. İçeriğin yalnızca isteğin sırasında, cevabı üretmek için Anthropic'e iletilir. Biz fotoğrafları ve sohbet metinlerini sunucumuzda saklamayız; sadece kaç tarama ve mesaj yaptığın sayılır.</li>
+  <li>Kıyafet fotoğraflarında yüz ya da beden bilgisi çıkarılmaz ve saklanmaz; fotoğraf yalnızca kıyafet tanıma için kullanılır. Mümkünse yüzünü kadraja alma.</li>
+  <li>Anthropic bu verileri, ticari API şartları kapsamında hizmeti sağlamak ve kötüye kullanımı önlemek için işler; varsayılan olarak modellerini eğitmek için kullanmaz. Ayrıntı: <a href="https://www.anthropic.com/legal/privacy">anthropic.com/legal/privacy</a>.</li>
+  <li>Moka bir yapay zekâdır, insan değildir. Cevapları hatalı olabilir; <strong>tıbbi, psikolojik, hukuki ya da finansal tavsiye değildir</strong>. Kendine zarar verme düşüncesi ya da acil bir durum varsa Moka yerine hemen 112'yi (Türkiye) ya da bulunduğun ülkenin acil numarasını ara veya bir uzmandan yardım al.</li>
+  <li>Kıyafet kombin önerileri yapay zekâ kullanmaz, telefonda kurallarla hesaplanır.</li>
+  <li>Bu özellikleri kullanmak zorunda değilsin. Rıza verdikten sonra da ayarlardan geri çekebilirsin (Hesabım › Gizlilik ve yasal).</li>
 </ul>
 
-<h2>Bilgilerini kimlerle paylaşıyoruz?</h2>
-<p>Sadece uygulamanın çalışması için gereken hizmet sağlayıcılarla:</p>
+<h2>4. Verilerini kimlerle paylaşıyoruz?</h2>
+<p>Sadece hizmetin çalışması için gereken işleyicilerle. Verilerini satmayız ve kendi reklam amacımızla kullanmayız.</p>
 <ul>
-  <li><strong>Supabase:</strong> hesap, yedek ve puan sunucusu.</li>
-  <li><strong>Anthropic:</strong> fotoğraf taraması (sadece tarama sırasında, fotoğraf saklanmadan).</li>
-  <li><strong>RevenueCat, Apple ve Google:</strong> abonelik.</li>
-  <li><strong>Google AdMob:</strong> ücretsiz plandaki reklamlar.</li>
-</ul>
-<p>Verilerini satmayız ve reklam amacıyla kendimiz kullanmayız.</p>
-
-<h2>Ne kadar süre saklıyoruz?</h2>
-<p>Hesabın açık olduğu sürece. Hesabını sildiğinde hesabın, yedeğin, puan kayıtların ve yedeklenen fotoğrafların kalıcı olarak silinir. Telefondaki veriler uygulamayı silince silinir.</p>
-
-<h2>Haklarına nasıl ulaşırsın?</h2>
-<ul>
-  <li><strong>Silme:</strong> uygulamada Hesabım › Hesabımı sil ile her şeyi kendin silebilirsin.</li>
-  <li><strong>Erişim, düzeltme ve diğer haklar:</strong> KVKK ve GDPR kapsamındaki tüm talepler için <a href="mailto:[iletisim@meikaidigital.com]">[iletisim@meikaidigital.com]</a> adresine yaz; en geç 30 gün içinde cevap veririz.</li>
-  <li><strong>Reklam kimliği:</strong> telefonunun ayarlarından reklam kimliğini sıfırlayabilir ya da kişiselleştirilmiş reklamları kapatabilirsin.</li>
+  <li><strong>Supabase Inc.</strong>: hesap, yedek, puan, fotoğraf yedeği, sayaçlar (AB bölgesi).</li>
+  <li><strong>Anthropic, PBC</strong> (ABD): fotoğraf taraması ve Moka sohbeti.</li>
+  <li><strong>RevenueCat Inc.</strong> (ABD), <strong>Apple</strong> ve <strong>Google</strong>: abonelik ve ödeme. Kart bilgilerin yalnızca Apple / Google'a gider.</li>
+  <li><strong>Google AdMob</strong> (ABD / Irlanda): ücretsiz plandaki afiş reklam.</li>
+  <li><strong>Open-Meteo</strong> (Avrupa): hava durumu sorgusu.</li>
+  <li>Yasal bir zorunluluk olursa yetkili makamlar.</li>
 </ul>
 
-<h2>Çocuklar</h2>
-<p>Layfapp 13 yaşından küçükler için tasarlanmadı ve bilerek bu yaştaki çocuklardan bilgi toplamayız.</p>
+<h2>5. Yurt dışına aktarım</h2>
+<p>Anthropic, RevenueCat ve Google gibi sağlayıcılar Türkiye ve AB dışındadır. Aktarımlar KVKK m.9 ve GDPR m.46 kapsamında standart sözleşme maddeleri gibi uygun güvencelerle ve açık rızanla yapılır. Moka sohbeti ve fotoğraf taramasını başlatman, bu aktarım için açık rızandır.</p>
 
-<h2>Değişiklikler</h2>
-<p>Bu politikayı değiştirirsek bu sayfadaki tarihi güncelleriz; önemli değişiklikleri uygulama içinde de duyururuz.</p>
+<h2>6. Saklama süresi</h2>
+<ul>
+  <li>Telefondaki veriler: uygulamayı silene kadar.</li>
+  <li>Hesap ve yedek: hesabın açık olduğu sürece. Hesabını sildiğinde hesabın, yedeğin, puan ve sayaç kayıtların, ortak hedef katkıların ve yedeklenen fotoğrafların hemen kalıcı olarak silinir.</li>
+  <li>RevenueCat ve mağaza kayıtları: vergi ve muhasebe zorunlulukları süresince.</li>
+  <li>Fotoğraf ve sohbet içeriği: bizde saklanmaz; Anthropic'te kendi politikasındaki süre kadar.</li>
+</ul>
+
+<h2>7. Haklarını nasıl kullanırsın?</h2>
+<p>KVKK m.11, GDPR m.15-22, LGPD m.18 ve CCPA/CPRA kapsamında; verine erişme, düzeltme, silme, işlemeyi sınırlama ya da itiraz etme, verini taşıma ve rızanı geri çekme hakkın var. Ayrıca şikâyet hakkın var (Türkiye: Kişisel Verileri Koruma Kurulu; AB: yerel veri koruma otoriten; Brezilya: ANPD; Kaliforniya: Başsavcılık).</p>
+<ul>
+  <li><strong>Silme:</strong> Uygulamada Hesabım › Hesabımı sil. Uygulamaya erişemiyorsan <a href="hesap-silme.html">hesap silme sayfasına</a> bak.</li>
+  <li><strong>Dışa aktarma:</strong> Hesabım › Gizlilik ve yasal › Verilerimi dışa aktar. Ev verilerini JSON dosyası olarak alırsın.</li>
+  <li><strong>Diğer talepler:</strong> <a href="mailto:info@themeikai.com">info@themeikai.com</a> adresine yaz; en geç 30 gün içinde cevap veririz.</li>
+  <li><strong>Reklam:</strong> Reklamlar kişiselleştirilmez. Telefonunun ayarlarından reklam kimliğini sıfırlayabilirsin. Premium'da reklam yoktur.</li>
+  <li><strong>Kaliforniya (CCPA/CPRA) ve diğer ABD eyaletleri:</strong> Kişisel verini satmayız ve çapraz bağlamlı reklam için paylaşmayız; bu yüzden "Satma/Paylaşma" seçeneği gerekmez. Haklarını kullandığın için sana ayrımcılık yapmayız.</li>
+  <li><strong>Brezilya (LGPD):</strong> Veri sorumlusu ve irtibat bilgisi yukarıdadır; haklarını aynı adresten kullanabilirsin.</li>
+</ul>
+
+<h2>8. Güvenlik</h2>
+<p>Bağlantılar şifrelidir (HTTPS). Sunucu tabloları satır düzeyinde erişim kurallarıyla korunur; herkes yalnızca kendi verisine ulaşır. Hiçbir sistem yüzde yüz güvenli değildir; bir ihlal olursa yasal süreler içinde sana ve yetkili makama bildiririz.</p>
+
+<h2>9. Çocuklar</h2>
+<p>Homezy 13 yaşından küçükler için tasarlanmamıştır ve bilerek bu yaştaki çocuklardan veri toplamayız. Bulunduğun ülkede dijital rıza yaşı 13'ten yüksekse (ör. bazı AB ülkelerinde 16) uygulamayı kullanmak için ebeveyn onayı gerekir. 13 yaşından küçük birinin hesap açtığını fark edersek hesabı sileriz; fark edersen bize yaz.</p>
+
+<h2>10. Değişiklikler</h2>
+<p>Politikayı değiştirirsek bu sayfadaki tarihi güncelleriz; önemli değişiklikleri uygulama içinde de duyururuz.</p>
 </main>
 </body>
 </html>

@@ -6,6 +6,8 @@ import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
 import { applyProfile, PROFILE } from '@/domain/home';
 import type { HomeProfile } from '@/domain/types';
+import { PLAN } from '@/domain/persona';
+import { usePersona } from '@/profile/usePersona';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -21,7 +23,9 @@ export default function Evim() {
   const { ilk } = useLocalSearchParams<{ ilk?: string }>();
   const first = ilk === '1';
   const { state: S, update } = useStore();
-  const [ans, setAns] = useState<HomeProfile>(S.home);
+  const { persona } = usePersona();
+  // İlk kurulumda cevaplar kişiye göre önceden seçili gelir (öğrenci: bulaşık makinesi yok…).
+  const [ans, setAns] = useState<HomeProfile>(() => (!S.home.asked && persona ? { ...S.home, ...PLAN[persona].home } : S.home));
 
   const save = () => {
     update(D => applyProfile(D, ans));

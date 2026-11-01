@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
 import { baseCare, billStatus, dayDiff, emptyProfile, GUEST_ROOMS, seasonalNow, taskMin, warrantyStatus } from './home';
 import { defaultSettings, emptyPlay } from './play';
@@ -15,9 +16,9 @@ export const sod = (ts: number) => {
 export const daysSince = (ts: number, now = Date.now()) => Math.round((sod(now) - sod(ts)) / DAY);
 export const ago = (days: number, now = Date.now()) => now - days * DAY;
 
-export const fmtShort = (ts: number) => new Date(ts).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+export const fmtShort = (ts: number) => new Date(ts).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
 export const fmtLong = (ts: number) =>
-  new Date(ts).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(ts).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 export { greet, greeting } from './greeting';
 
@@ -34,7 +35,7 @@ export function status(t: Task, now = Date.now(), flex = false): TaskStatus {
   const snoozed = t.snooze != null && diff > 0;
   if (diff < 0) {
     if (flex && -diff <= tolerance(t.every)) return { k: 'today', diff, label: `${-diff} gün geçti` };
-    return { k: 'late', diff, label: `${-diff} gün gecikti` };
+    return { k: 'late', diff, label: `${-diff} gündür bekliyor` };
   }
   if (diff === 0) return { k: 'today', diff, label: 'Bugün' };
   if (diff === 1) return { k: 'ok', diff, label: snoozed ? 'Yarına ertelendi' : 'Yarın' };
@@ -208,7 +209,7 @@ export function roomCounts(S: AppState, rid: string, now = Date.now()) {
   };
 }
 
-export const cellCount = (S: AppState, id: string) => S.cells.filter(x => x === id).length;
+export const cellCount = (S: AppState, id: string) => S.cells.filter(x => x === id).length + (S.cells2?.filter(x => x === id).length ?? 0);
 
 export const sortByDue = (arr: Task[], now = Date.now()) =>
   arr
@@ -332,6 +333,24 @@ export function roomBounds(S: AppState, id: string) {
 
 /* ---------- state mutations (state üzerinde yerinde çalışır) ---------- */
 
+/**
+ * Ben sekmesinden gardırop / buzdolabı: çizilmiş uygun bir oda varsa onu verir; yoksa planda boş bir bloğa
+ * 1 bloklu oda açar (gerisi odayla aynı, sonra Plan'dan büyütülür). Boş yer yoksa null.
+ */
+export const findRoom = (S: AppState, mod: 'gardirop' | 'buzdolabi') =>
+  S.order.find(id => S.rooms[id] && TYPES[S.rooms[id].type].mod === mod && cellCount(S, id) > 0) ?? null;
+
+export function roomFor(S: AppState, mod: 'gardirop' | 'buzdolabi'): string | null {
+  const found = findRoom(S, mod);
+  if (found) return found;
+  const i = S.cells.findIndex(x => !x);
+  if (i < 0) return null;
+  const id = makeRoom(S, mod === 'gardirop' ? 'yatak' : 'mutfak');
+  S.cells[i] = id;
+  S.setup = true;
+  return id;
+}
+
 export function makeRoom(S: AppState, type: RoomType) {
   const id = uid();
   const n = S.order.filter(r => S.rooms[r].type === type).length;
@@ -350,6 +369,7 @@ export function makeRoom(S: AppState, type: RoomType) {
 
 export function removeRoom(S: AppState, id: string) {
   S.cells = S.cells.map(x => (x === id ? null : x));
+  if (S.cells2) S.cells2 = S.cells2.map(x => (x === id ? null : x));
   delete S.rooms[id];
   delete S.tasks[id];
   delete S.mod[id];

@@ -33,14 +33,14 @@
 
 1. [supabase.com](https://supabase.com) üzerinde proje aç (bölge: Frankfurt, `eu-central-1`).
 2. **Authentication > Sign In / Providers**: Email açık. **Allow anonymous sign-ins** açık. "Confirm email" açık kalsın (uygulama onay e-postasını bekliyor).
-3. **Authentication > URL Configuration > Site URL**: Meikai Digital sitesinde "E-postan onaylandı, uygulamaya dönebilirsin" yazan basit bir sayfa.
-4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir.
+3. **Authentication > URL Configuration**: **Site URL** `https://themeikai.com/homezy/eposta-onayi` (varsayılan `http://localhost:3000` onay bağlantısını bozuyor). **Redirect URLs**'e aynı adresi ve `homezy://**` ekle. Sayfa kaynağı: `docs/yasal/eposta-onayi.html` (themeikai.com/homezy/eposta-onayi/ olarak yüklenir).
+4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir (konu: "Homezy hesabını onayla", bağlantı metni: "E-postamı onayla").
 5. Tabloları kur: `supabase/migrations/` içindeki dosyaları sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, `20261020230000_delete_me.sql`, `20261021000000_puan.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu, üçüncüsü puan, seri ve eşya mağazası (`play_award`, `play_buy`, `play_summary`). Üçüncüsü çalıştırılmadan puanlar sadece telefonda kalır, mağaza "Satın alınamadı" der.
 6. Abonelik fonksiyonları (`revenuecat-webhook`, `subscription-sync`): bkz. [odeme-kurulumu.md](odeme-kurulumu.md), 5. adım.
 
 ### 2. RevenueCat ve mağazalar
 
-Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlement'ı, Google Play'de tek abonelik `layfapp_premium` (temel planlar `aylik`, `yillik`; aylığa ilk ay 4,99 $ teklifi), App Store'da iki ürün, `default` offering'de Monthly ve Annual paketleri, webhook Supabase'e.
+Adım adım: [odeme-kurulumu.md](odeme-kurulumu.md). Özet: `premium` entitlement'ı, Google Play'de tek abonelik `homezy_premium` (temel planlar `aylik`, `yillik`; aylığa ilk ay 4,99 $ teklifi), App Store'da iki ürün, `default` offering'de Monthly ve Annual paketleri, webhook Supabase'e.
 
 ### 3. Uygulama
 

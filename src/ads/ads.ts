@@ -1,6 +1,8 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 
+import { withTimeout } from '@/lib/net';
+
 type AdsModule = typeof import('react-native-google-mobile-ads');
 
 /**
@@ -22,7 +24,7 @@ export function getAds(): AdsModule | null {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     mod = require('react-native-google-mobile-ads') as AdsModule;
   } catch (e) {
-    console.warn('Layfapp: reklam modülü yüklenemedi, reklamsız devam', e);
+    console.warn('Homezy: reklam modülü yüklenemedi, reklamsız devam', e);
     mod = null;
   }
   return mod;
@@ -45,13 +47,14 @@ export function startAds(): Promise<boolean> {
   if (!ads || !bannerUnit()) return Promise.resolve(false);
   ready ||= (async () => {
     try {
-      const info = await ads.AdsConsent.gatherConsent();
+      const info = await withTimeout<Awaited<ReturnType<typeof ads.AdsConsent.gatherConsent>> | null>(ads.AdsConsent.gatherConsent(), 8000, null);
+      if (!info) return false;
       if (!info.canRequestAds) return false;
       await ads.default().setRequestConfiguration({ maxAdContentRating: ads.MaxAdContentRating.PG });
       await ads.default().initialize();
       return true;
     } catch (e) {
-      console.warn('Layfapp: reklamlar başlatılamadı', e);
+      console.warn('Homezy: reklamlar başlatılamadı', e);
       return false;
     }
   })();

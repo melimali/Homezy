@@ -6,13 +6,18 @@
 // REVENUECAT_API_KEY (RevenueCat gizli API anahtarı, sk_...).
 // Bu fonksiyon kullanıcı oturumuyla çağrılmaz: `supabase functions deploy revenuecat-webhook --no-verify-jwt`.
 
+import { readJson, safeEqual } from '../_shared/http.ts';
 import { syncSubscriber, UUID } from '../_shared/subscription.ts';
 
 Deno.serve(async req => {
-  if (req.headers.get('Authorization') !== `Bearer ${Deno.env.get('REVENUECAT_WEBHOOK_SECRET')}`) {
+  // Gizli değişken tanımlı değilse hiçbir istek kabul edilmez (eskiden "Bearer undefined" geçerdi).
+  const secret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
+  if (req.method !== 'POST' || !secret || !safeEqual(req.headers.get('Authorization') ?? '', `Bearer ${secret}`)) {
     return new Response('unauthorized', { status: 401 });
   }
-  const { event } = await req.json();
+  const parsed = await readJson(req, 100_000);
+  if ('error' in parsed) return new Response(parsed.error, { status: parsed.error === 'too_large' ? 413 : 400 });
+  const { event } = parsed.body;
   // Uygulama RevenueCat'e Supabase kullanıcı kimliğini veriyor; anonim RevenueCat kimliklerini atla.
   // TRANSFER olayında (satın alma başka hesaba geri yüklendi) iki taraf da güncellenir.
   const ids: unknown[] = event?.type === 'TRANSFER'

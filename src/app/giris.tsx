@@ -13,13 +13,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
 import { validEmail } from '@/auth/errors';
 import { Btn, Card, Field, T, XBtn } from '@/components/ui';
 import { cloudEnabled } from '@/lib/supabase';
-import { LEGAL } from '@/lib/links';
+import { legalUrl } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 type Mode = 'kayit' | 'giris' | 'sifre';
 
@@ -102,14 +104,14 @@ export default function Giris() {
         contentContainerStyle={[st.wrap, { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 }]}
       >
         <View style={st.head}>
-          <View style={[st.logoPill, { backgroundColor: brand.navy }]}>
-            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
           </View>
           {fromApp && <XBtn label="Kapat" onPress={() => (router.canGoBack() ? router.back() : router.replace(state.setup ? '/' : '/kurulum'))} />}
         </View>
 
         <View>
-          <T v="eyebrow">{(mode === 'sifre' ? 'Şifremi unuttum' : 'Hesap').toLocaleUpperCase('tr-TR')}</T>
+          <T v="eyebrow">{tx(mode === 'sifre' ? 'Şifremi unuttum' : 'Hesap').toLocaleUpperCase(dateLocale())}</T>
           <T v="h1">{title}</T>
           <T v="lead">{lead}</T>
         </View>
@@ -124,7 +126,7 @@ export default function Giris() {
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   onPress={() => switchTo(m)}
-                  style={[st.segBtn, on && { backgroundColor: c.surface, boxShadow: `0 2px 0 ${c.line}` }]}
+                  style={[st.segBtn, on && { backgroundColor: c.surface }]}
                 >
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: on ? c.ink : c.muted }}>
                     {m === 'kayit' ? 'Hesap oluştur' : 'Giriş yap'}
@@ -185,24 +187,24 @@ export default function Giris() {
           />
 
           {mode === 'giris' && (
-            <Pressable onPress={() => switchTo('sifre')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
+            <Squish onPress={() => switchTo('sifre')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
               <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.hi }}>Şifremi unuttum</Text>
-            </Pressable>
+            </Squish>
           )}
           {mode === 'sifre' && (
-            <Pressable onPress={() => switchTo('giris')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
+            <Squish onPress={() => switchTo('giris')} accessibilityRole="button" style={{ alignSelf: 'center', padding: 4 }}>
               <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.hi }}>Girişe dön</Text>
-            </Pressable>
+            </Squish>
           )}
         </Card>
 
         {mode === 'kayit' && (
           <Text style={[st.legal, { color: c.muted }]}>
             Hesap oluşturarak{' '}
-            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(LEGAL.terms)}>Kullanım koşulları</Text>
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))}>Kullanım koşulları</Text>
             {"'nı ve "}
-            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(LEGAL.privacy)}>Gizlilik politikası</Text>
-            {"'nı kabul etmiş olursun."}
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))}>Gizlilik politikası</Text>
+            {"'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
           </Text>
         )}
 

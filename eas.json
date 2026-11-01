@@ -10,11 +10,15 @@
       "android": { "buildType": "apk" }
     },
     "preview": {
+      "developmentClient": false,
+      "environment": "preview",
       "distribution": "internal",
       "android": { "buildType": "apk" }
     },
     "production": {
-      "autoIncrement": true
+      "environment": "production",
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" }
     }
   },
   "submit": {

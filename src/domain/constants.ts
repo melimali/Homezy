@@ -26,6 +26,7 @@ export const STOCK_DEF: Partial<Record<RoomType, string[]>> = {
 export const CATS = ['Üst', 'Alt', 'Elbise / Takım', 'Dış giyim', 'Ev / Pijama', 'İç giyim', 'Ayakkabı', 'Aksesuar'];
 
 export const CSTATE: Record<ClothState, string> = { temiz: 'Temiz', kirli: 'Kirli', utu: 'Ütülenecek' };
+export const CSTATE_EMOJI: Record<ClothState, string> = { temiz: '🧼', kirli: '🧺', utu: '💨' };
 export const NEXT_CSTATE: Record<ClothState, ClothState> = { temiz: 'kirli', kirli: 'utu', utu: 'temiz' };
 
 export const LV: [StockLevel, string][] = [['var', 'Var'], ['az', 'Az'], ['yok', 'Bitti']];

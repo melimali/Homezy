@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -15,10 +16,12 @@ import { supabase } from '@/lib/supabase';
  */
 export const ENTITLEMENT = 'premium';
 
-const apiKey = Platform.select({
+const rawKey = Platform.select({
   ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
   android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
 });
+// RevenueCat "Test Store" anahtarı (test_...) yayın sürümünde uygulamayı açılışta çökertir; yayında yok sayılır.
+const apiKey = rawKey && !rawKey.includes('xxxx') && (__DEV__ || !rawKey.startsWith('test_')) ? rawKey : undefined;
 
 export const purchasesEnabled = Boolean(apiKey);
 
@@ -35,6 +38,8 @@ export type Premium = {
   until: number | null;
   willRenew: boolean;
   productId: string | null;
+  /** Ev sahibinin Premium'u ailede paylaşılıyor (kendi aboneliği yok). */
+  viaFamily?: boolean;
 };
 
 type RestoreResult = { ok: true; active: boolean } | { ok: false; error: string };
@@ -43,6 +48,8 @@ type BuyResult = { ok: true; active: boolean } | { ok: false; cancelled?: boolea
 type PurchasesCtx = {
   ready: boolean;
   premium: Premium;
+  /** Aile paylaşımı, ev sahibinin Premium'unu üyelere yansıtır. */
+  setFamilyPremium: (on: boolean) => void;
   /** Mağazanın gösterdiği fiyatlar (ör. "₺299,99"); okunamadıysa PREMIUM_PRICE. */
   prices: Record<Plan, string>;
   /** Yıllık planın aylığa düşen fiyatı (ör. "$5.00"); okunamadıysa null. */
@@ -95,8 +102,14 @@ function readPremium(info: CustomerInfo): Premium {
 export function PurchasesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [ready, setReady] = useState(false);
-  const [premium, setPremium] = useState<Premium>(none);
+  const [own, setPremium] = useState<Premium>(none);
+  const [familyPremium, setFamilyPremium] = useState(false);
+  const premium = useMemo<Premium>(
+    () => (own.active || !familyPremium ? own : { active: true, until: null, willRenew: false, productId: null, viaFamily: true }),
+    [own, familyPremium],
+  );
   const [pkgs, setPkgs] = useState<Packages>({ monthly: null, annual: null });
+  const [serverPremium, setServerPremium] = useState<Premium>(none);
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
 
@@ -109,9 +122,16 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!apiKey || configured.current) return;
     configured.current = true;
-    Purchases.configure({ apiKey, appUserID: user?.id ?? null });
+    try {
+      Purchases.configure({ apiKey, appUserID: user?.id ?? null });
+    } catch (e) {
+      console.warn('Homezy: RevenueCat başlatılamadı', e);
+      configured.current = false;
+      setReady(true);
+      return;
+    }
     Purchases.addCustomerInfoUpdateListener(apply);
-    Purchases.getCustomerInfo().then(apply).catch(() => {}).finally(() => setReady(true));
+    withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).then(() => setReady(true));
     loadPackages().then(setPkgs).catch(() => {});
     return () => {
       Purchases.removeCustomerInfoUpdateListener(apply);
@@ -141,8 +161,32 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     })();
   }, [user?.id, apply]);
 
+  // RevenueCat Premium görmüyorsa Supabase'deki `subscriptions` satırına bak (elle verilen Premium dahil).
+  useEffect(() => {
+    if (!supabase || !user) {
+      setServerPremium(none);
+      return;
+    }
+    let off = false;
+    supabase
+      .from('subscriptions')
+      .select('active, expires_at, will_renew, product_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (off) return;
+        const until = data?.expires_at ? Date.parse(data.expires_at) : null;
+        const ok = !!data?.active && (until == null || until > Date.now());
+        setServerPremium(ok ? { active: true, until, willRenew: !!data?.will_renew, productId: data?.product_id ?? null } : none);
+      }, () => {});
+    return () => {
+      off = true;
+    };
+  }, [user]);
+
   const buy = useCallback(async (plan: Plan): Promise<BuyResult> => {
     if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     try {
       let p = pkgs[plan];
       if (!p) {
@@ -163,6 +207,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
 
   const restore = useCallback(async (): Promise<RestoreResult> => {
     if (!apiKey) return { ok: false, error: 'Satın almalar bu sürümde henüz açık değil.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     try {
       const info = await Purchases.restorePurchases();
       apply(info);
@@ -188,8 +233,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
   const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
-    [ready, premium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
+    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -5,6 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, EmptyMsg, Field, Screen, SecHead, T } from '@/components/ui';
+import { checkinOf, journalMood } from '@/domain/mood';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
 import type { JournalEntry } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
@@ -14,12 +16,13 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { photoUrl, removePhoto, uploadPhoto } from '@/sync/photos';
 import { fonts, radius, useColors } from '@/theme';
+import { Squish } from '@/components/motion';
 
 const MOODS = ['😄', '🙂', '😐', '😔', '😴'];
 /** Ruh hali grafiği için puan: 5 çok iyi … 1 kötü. */
 const MOOD_SCORE: Record<string, number> = { '😄': 5, '🙂': 4, '😐': 3, '😴': 2, '😔': 1 };
-const fmtDay = (k: string) => new Date(dayTs(k)).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
-const fmtYear = (k: string) => new Date(dayTs(k)).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtDay = (k: string) => new Date(dayTs(k)).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtYear = (k: string) => new Date(dayTs(k)).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 /** Geçen yılın aynı günü (29 şubat → 28 şubat). */
 const lastYear = (k: string) => {
   const [y, m, d] = k.split('-').map(Number);
@@ -43,7 +46,7 @@ export default function Gunluk() {
   const P = S.play;
   const saved = P.journal[today];
   const [text, setText] = useState(saved?.text ?? '');
-  const [mood, setMood] = useState<string | null>(saved?.mood ?? null);
+  const [mood, setMood] = useState<string | null>(saved?.mood ?? journalMood(checkinOf(S.play)));
   const [photo, setPhoto] = useState<string | null>(saved?.photo ?? null);
   const done = awardedToday(P, 'gunluk', 'gunluk', now);
   const dirty = text.trim() !== (saved?.text ?? '') || mood !== (saved?.mood ?? null) || photo !== (saved?.photo ?? null);
@@ -127,9 +130,9 @@ export default function Gunluk() {
         {photo && (
           <View>
             <Image source={{ uri: photo }} style={styles.photo} resizeMode="cover" accessibilityLabel="Günün fotoğrafı" />
-            <Pressable onPress={() => setPhoto(null)} accessibilityRole="button" accessibilityLabel="Fotoğrafı kaldır" style={[styles.photoX, { backgroundColor: c.surface }]}>
+            <Squish onPress={() => setPhoto(null)} accessibilityRole="button" accessibilityLabel="Fotoğrafı kaldır" style={[styles.photoX, { backgroundColor: c.surface }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>✕</Text>
-            </Pressable>
+            </Squish>
           </View>
         )}
         {premium.active ? (

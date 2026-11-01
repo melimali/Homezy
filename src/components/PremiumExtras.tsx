@@ -1,5 +1,6 @@
+import { dateLocale } from '@/i18n/runtime';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { uid } from '@/domain/logic';
 import { weekOutfits } from '@/domain/outfits';
@@ -12,6 +13,7 @@ import { fonts, useColors } from '@/theme';
 import { PremiumLock } from './PremiumLock';
 import { useToast } from './Toast';
 import { Btn, Card, EmptyMsg, SecHead, T } from './ui';
+import { Squish } from './motion';
 
 /** Premium: mutfaktaki ürünlerle (Var / Az) yapılabilecek tarifler. Eksikler tek dokunuşla listeye eklenir. */
 export function Recipes({ rid }: { rid: string }) {
@@ -45,7 +47,7 @@ export function Recipes({ rid }: { rid: string }) {
       <SecHead title="Bugün ne pişirsem? 🍳" />
       {list.map(({ r, missing }, i) => (
         <View key={r.name} style={[styles.item, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-          <Pressable onPress={() => setOpen(open === r.name ? null : r.name)} accessibilityRole="button" style={styles.head}>
+          <Squish onPress={() => setOpen(open === r.name ? null : r.name)} accessibilityRole="button" style={styles.head}>
             <Text style={{ fontSize: 24 }}>{r.emoji}</Text>
             <View style={{ flex: 1 }}>
               <T v="bold">{r.name}</T>
@@ -54,7 +56,7 @@ export function Recipes({ rid }: { rid: string }) {
               </T>
             </View>
             <Text style={{ color: c.muted, fontSize: 18 }}>{open === r.name ? '⌃' : '⌄'}</Text>
-          </Pressable>
+          </Squish>
           {open === r.name && (
             <View style={{ gap: 8 }}>
               <T style={{ fontSize: 14 }}>{r.steps}</T>
@@ -82,7 +84,7 @@ export function OutfitPlan({ rid }: { rid: string }) {
       {plan.map((d, i) => (
         <View key={d.day} style={[styles.day, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
           <Text style={[styles.dayName, { color: i === 0 ? c.ok : c.muted }]}>
-            {i === 0 ? 'Bugün' : new Date(dayTs(d.day)).toLocaleDateString('tr-TR', { weekday: 'short' })}
+            {i === 0 ? 'Bugün' : new Date(dayTs(d.day)).toLocaleDateString(dateLocale(), { weekday: 'short' })}
           </Text>
           <T style={{ flex: 1, fontSize: 14 }}>{d.pieces.map(p => p.name).join(' + ')}</T>
         </View>

@@ -77,6 +77,8 @@ export function useCloudSync() {
   const { state, replace } = useStore();
   const userId = status === 'account' ? user?.id : undefined;
   const [linked, setLinked] = useState<string | null>(() => prefs.get('cloudUser'));
+  // İnternet gelince (uygulama öne gelince ya da 30 sn'de bir) bekleyen eşleşme ve yedek yeniden denenir.
+  const [tick, setTick] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(state);
   const dirty = useRef(false);
@@ -147,7 +149,7 @@ export function useCloudSync() {
     return () => {
       alive = false;
     };
-  }, [userId, linked, link, replace]);
+  }, [userId, linked, link, replace, tick]);
 
   const active = userId && linked === userId ? userId : undefined;
 
@@ -160,14 +162,25 @@ export function useCloudSync() {
       timer.current = null;
       pushHome(active, latest.current)
         .then(() => void (dirty.current = false))
-        .catch(e => console.warn('Layfapp: bulut yedeği yazılamadı', e));
+        .catch(e => {
+          console.warn('Homezy: bulut yedeği yazılamadı', e);
+          timer.current = setTimeout(() => setTick(t => t + 1), 30_000);
+        });
     }, DELAY);
-  }, [active, state]);
+  }, [active, state, tick]);
+
+  // Eşleşme internetsizlikten yapılamadıysa 30 sn'de bir tekrar dene.
+  useEffect(() => {
+    if (!userId || linked === userId) return;
+    const t = setInterval(() => setTick(x => x + 1), 30_000);
+    return () => clearInterval(t);
+  }, [userId, linked]);
 
   // Uygulama arka plana geçerken bekleyen yedeği hemen yaz.
   useEffect(() => {
     if (!active) return;
     const sub = RNAppState.addEventListener('change', s => {
+      if (s === 'active' && dirty.current) setTick(t => t + 1);
       if (s !== 'active' && dirty.current && latest.current.setup) {
         if (timer.current) clearTimeout(timer.current);
         timer.current = null;

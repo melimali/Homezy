@@ -59,7 +59,7 @@ export default function Bildirimler() {
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
-          Layfapp her sabah <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{"'"}da bunları telefonuna bildirim olarak gönderir.
+          Homezy her sabah <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{"'"}da bunları telefonuna bildirim olarak gönderir.
         </T>
       </View>
 
@@ -68,7 +68,7 @@ export default function Bildirimler() {
           <T v="bold">Bildirimler kapalı</T>
           <T style={{ fontSize: 14 }}>
             {perm === 'denied'
-              ? 'Sabah özetini alabilmek için telefonun ayarlarından Layfapp bildirimlerini aç.'
+              ? 'Sabah özetini alabilmek için telefonun ayarlarından Homezy bildirimlerini aç.'
               : 'Sabah özetini alabilmek için bildirim izni ver.'}
           </T>
           <Btn label={perm === 'denied' ? 'Ayarları aç' : 'İzin ver'} kind="primary" onPress={askPermission} />
@@ -142,6 +142,7 @@ export default function Bildirimler() {
       {premium.active ? (
         <Card>
           <Toggle
+            first
             label="Akıllı bildirimler 🧠"
             sub="Hatırlatmalar işlerini genelde yaptığın saate göre gelir; acil bir şey yoksa sabah özeti gelmez."
             value={s.smart}
@@ -181,10 +182,10 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   );
 }
 
-function Toggle({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, sub, value, onChange, first }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void; first?: boolean }) {
   const c = useColors();
   return (
-    <View style={[styles.setRow, { borderTopColor: c.line }]}>
+    <View style={[styles.setRow, { borderTopColor: c.line }, first && { borderTopWidth: 0 }]}>
       <View style={{ flex: 1 }}>
         <T v="bold" style={{ fontSize: 14 }}>{label}</T>
         <T v="small">{sub}</T>
@@ -204,9 +205,9 @@ function Toggle({ label, sub, value, onChange }: { label: string; sub: string; v
 }
 
 const styles = StyleSheet.create({
-  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: 18, borderWidth: 1.5 },
+  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
-  setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 1.5 },
+  setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 0 },
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

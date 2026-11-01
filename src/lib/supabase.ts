@@ -4,6 +4,8 @@ import 'expo-sqlite/localStorage/install';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
+import { fetchWithTimeout } from '@/lib/net';
+
 /**
  * Hesaplar, ev verisinin bulut yedeği ve abonelik durumu Supabase'de.
  * Adres ve anahtar `.env` dosyasından gelir (bkz. docs/hesap.md). Anahtarlar girilmemişse
@@ -15,6 +17,7 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 export const supabase: SupabaseClient | null =
   url && key
     ? createClient(url, key, {
+        global: { fetch: fetchWithTimeout(20_000) },
         auth: {
           storage: globalThis.localStorage,
           autoRefreshToken: true,

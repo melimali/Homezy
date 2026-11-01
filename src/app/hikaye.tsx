@@ -101,8 +101,8 @@ export default function Hikaye() {
 
   const frame = (
     <View ref={frameRef} collapsable={false} style={[styles.frame, { width: w, height: (w * 16) / 9, backgroundColor: c.bg, borderColor: c.line }]}>
-      <View style={[styles.logo, { backgroundColor: brand.navy }]}>
-        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Layfapp" />
+      <View style={[styles.logo, { backgroundColor: brand.mint }]}>
+        <Image source={require('../../assets/logo-yatay.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
       </View>
       {end ? (
         <View style={styles.endBox}>
@@ -115,7 +115,7 @@ export default function Hikaye() {
       <Animated.View style={{ width: '100%', transform: [{ translateX: shake }] }}>
         <House3D state={S} now={now} build={end ? { level: frames[0].level, idle: 0 } : f} theme={themeFor(S.settings.theme, premium.active)} labels={false} />
       </Animated.View>
-      <Text style={[styles.foot, { color: c.muted }]}>{end ? 'Layfapp · App Store ve Google Play' : ' '}</Text>
+      <Text style={[styles.foot, { color: c.muted }]}>{end ? 'Homezy · App Store ve Google Play' : ' '}</Text>
       {phase === 'count' && (
         <View style={[StyleSheet.absoluteFill, styles.countBox]}>
           <Text style={[styles.count, { color: c.ink }]}>{count}</Text>
@@ -138,7 +138,7 @@ export default function Hikaye() {
       <View style={{ alignSelf: 'stretch', paddingHorizontal: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Btn kind="primary" label={end ? '▶ Tekrar oynat' : '▶ Oynat'} onPress={start} style={{ flex: 1 }} />
-          {end && <Btn label="📤 Paylaş" onPress={() => void shareCard(frameRef, 'Seri bozulunca evim çöktü 😱 Layfapp ile her gün minik bir iş, evin büyüsün 🏡')} style={{ flex: 1 }} />}
+          {end && <Btn label="📤 Paylaş" onPress={() => void shareCard(frameRef, 'Seri bozulunca evim çöktü 😱 Homezy ile her gün minik bir iş, evin büyüsün 🏡')} style={{ flex: 1 }} />}
         </View>
         <Callout>
           <T v="small">🎬 Video yapmak için: telefonunun ekran kaydını aç, sonra Oynat’a bas. 3 saniyelik geri sayım var, oynarken düğmeler gizlenir.</T>

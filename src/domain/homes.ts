@@ -8,7 +8,7 @@ import type { AppState, HomeData, SavedHome } from './types';
  * açık ev listeye kaldırılır, seçilen ev üste çıkar. Puan, seri, günlük, spor ve ayarlar ortak.
  * Bildirimler sadece açık ev için zamanlanır.
  */
-const HOME_KEYS = ['cols', 'rows', 'cells', 'rooms', 'order', 'tasks', 'mod', 'home', 'mode', 'care', 'bills', 'warranties', 'seasonal'] as const;
+const HOME_KEYS = ['cols', 'rows', 'cells', 'cells2', 'rooms', 'order', 'tasks', 'mod', 'home', 'mode', 'care', 'bills', 'warranties', 'seasonal'] as const;
 
 /** Evin kendine ait kısmının kopyası. Ev profili, bakım, faturalar gibi sonradan eklenen alanlar eski kayıtlarda yoksa doldurulur. */
 export function homeData(S: AppState | SavedHome): HomeData {
@@ -19,6 +19,7 @@ export function homeData(S: AppState | SavedHome): HomeData {
   d.bills ??= [];
   d.warranties ??= [];
   d.seasonal ??= {};
+  d.cells2 ??= null;
   return d;
 }
 

@@ -19,13 +19,13 @@ export function PremiumLock({ title, text, emoji = '👑' }: { title: string; te
         </View>
       </View>
       <T v="small" style={{ fontSize: 13.5 }}>{text}</T>
-      <Btn kind="primary" small label="Premium'a bak ⭐" onPress={() => router.push('/premium')} style={{ alignSelf: 'flex-start' }} />
+      <Btn small label="Premium'a bak ⭐" onPress={() => router.push('/premium')} style={{ alignSelf: 'flex-start' }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box: { borderRadius: radius.card - 4, borderWidth: 1.5, padding: 14, gap: 8 },
+  box: { borderRadius: radius.card, borderWidth: 0, padding: 16, gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
   tagText: { fontFamily: fonts.bodyBlack, fontSize: 10.5, color: brand.navy },

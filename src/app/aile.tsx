@@ -7,7 +7,7 @@ import { displayName, useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn } from '@/components/ui';
-import { FAMILY_MAX } from '@/domain/family';
+import { FAMILY_MAX, GOAL_IDEAS, goalPct } from '@/domain/family';
 import { switchHome } from '@/domain/homes';
 import { useFamily } from '@/family/FamilyProvider';
 import { cloudEnabled } from '@/lib/supabase';
@@ -26,7 +26,8 @@ export default function Aile() {
   const { session, user } = useAuth();
   const { premium } = usePurchases();
   const { state: S, update } = useStore();
-  const { info, loading, sharedId, sharing, create, join, leave, kick } = useFamily();
+  const { info, loading, sharedId, sharing, create, join, leave, kick, goals, addGoal, logGoal, removeGoal } = useFamily();
+  const [adding, setAdding] = useState(false);
   const [code, setCode] = useState('');
   const [name, setName] = useState(displayName(user));
   const [busy, setBusy] = useState(false);
@@ -41,7 +42,7 @@ export default function Aile() {
   };
 
   const shareCode = async (k: string) => {
-    const msg = `Layfapp'te evimizi paylaşalım 🏡 Hesabım > Aile paylaşımı'na gir ve bu kodu yaz: ${k}`;
+    const msg = `Homezy'de evimizi paylaşalım 🏡 Hesabım > Aile paylaşımı'na gir ve bu kodu yaz: ${k}`;
     try {
       await Share.share({ message: msg });
     } catch {
@@ -87,7 +88,7 @@ export default function Aile() {
             <Card>
               <SecHead title="Davet kodu" />
               <Text style={[styles.code, { color: c.ink, backgroundColor: c.surface2 }]} selectable>{info.code}</Text>
-              <T v="small">Bu kodu evdekilere gönder. Layfapp{"'"}te Hesabım {'>'} Aile paylaşımı{"'"}ndan katılsınlar.</T>
+              <T v="small">Bu kodu evdekilere gönder. Homezy{"'"}de Hesabım {'>'} Aile paylaşımı{"'"}ndan katılsınlar.</T>
               <Btn kind="primary" label="Kodu gönder" onPress={() => shareCode(info.code!)} />
             </Card>
           )}
@@ -107,6 +108,54 @@ export default function Aile() {
             ))}
             <T v="small">İşleri bölüşmek için oda ekranında bir işin yanındaki 👤 düğmesine dokun.</T>
           </Card>
+          {info.active && (
+            <Card>
+              <SecHead title="Ortak hedefler 🎯" right={goals.length ? String(goals.length) : undefined} />
+              {info.role === 'member' && (
+                <T v="small">{info.ownerName} kişisinin Premium{"'"}u sayesinde senin de Premium avantajların açık ⭐</T>
+              )}
+              {goals.length === 0 && !adding && <T style={{ fontSize: 14 }}>Birlikte bir hedef koyun: kitap, spor, yemek… Herkes ilerlemesini ekler, çubuk birlikte dolar.</T>}
+              {goals.map(g => (
+                <View key={g.id} style={[styles.goal, { borderColor: c.line }]}>
+                  <View style={styles.row}>
+                    <Text style={{ fontSize: 24 }}>{g.done ? '🏆' : g.emoji}</Text>
+                    <View style={{ flex: 1 }}>
+                      <T v="bold">{g.title}</T>
+                      <T v="small">{g.total}/{g.target} {g.unit} · %{goalPct(g)}</T>
+                    </View>
+                    {(g.createdBy === session.user.id || info.role === 'owner') && (
+                      <XBtn label={`${g.title} hedefini sil`} onPress={() => run(() => removeGoal(g.id))} />
+                    )}
+                  </View>
+                  <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
+                    <View style={[styles.fill, { width: `${goalPct(g)}%`, backgroundColor: g.done ? c.accent : c.hi }]} />
+                  </View>
+                  <T v="small">
+                    {info.members.map(m => `${m.name.split(' ')[0]} ${g.byMember[m.id] ?? 0}`).join(' · ')}
+                  </T>
+                  {!g.done && (
+                    <Btn label={`+1 ${g.unit} ekle`} kind="primary" disabled={busy} onPress={() => run(() => logGoal(g.id, 1), g.total + 1 >= g.target ? 'Hedef tamam, hepinize tebrikler! 🏆' : undefined)} />
+                  )}
+                </View>
+              ))}
+              {adding ? (
+                <>
+                  {GOAL_IDEAS.map(i => (
+                    <Btn
+                      key={i.title}
+                      kind="ghost"
+                      label={`${i.emoji} ${i.title} (${i.target} ${i.unit})`}
+                      disabled={busy}
+                      onPress={() => { setAdding(false); run(() => addGoal(i), 'Hedef eklendi 🎯'); }}
+                    />
+                  ))}
+                  <Btn kind="ghost" label="Vazgeç" onPress={() => setAdding(false)} />
+                </>
+              ) : (
+                <Btn kind="ghost" label="Yeni hedef" onPress={() => setAdding(true)} />
+              )}
+            </Card>
+          )}
           {!sharing && sharedId && (S.others.some(h => h.id === sharedId)) && (
             <Btn kind="primary" label="Paylaşılan eve geç 🏡" onPress={() => { update(D => switchHome(D, sharedId)); router.navigate('/'); }} />
           )}
@@ -150,5 +199,8 @@ export default function Aile() {
 const styles = StyleSheet.create({
   code: { fontFamily: fonts.displayBold, fontSize: 34, letterSpacing: 6, textAlign: 'center', paddingVertical: 10, borderRadius: radius.card - 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  goal: { gap: 8, paddingVertical: 10, borderTopWidth: 1.5 },
+  bar: { height: 12, borderRadius: 6, overflow: 'hidden' },
+  fill: { height: 12, borderRadius: 6 },
   avatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
 });

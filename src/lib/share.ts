@@ -17,7 +17,7 @@ export async function shareCard(ref: RefObject<ComponentRef<typeof View> | null>
         return;
       }
     } catch (e) {
-      console.warn('Layfapp: kart görsel olarak paylaşılamadı, metin paylaşılıyor', e);
+      console.warn('Homezy: kart görsel olarak paylaşılamadı, metin paylaşılıyor', e);
     }
   }
   await Share.share({ message: text }).catch(() => {});

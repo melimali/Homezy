@@ -13,7 +13,7 @@ Kod: `src/ads/ads.ts` (başlatma, onay, reklam kimliği) ve `src/ads/AdBanner.ts
 ## Kurulum (Melih'in yapacakları)
 
 1. **AdMob hesabı aç:** https://admob.google.com (Google hesabıyla). Ödeme bilgisi ve vergi formu AdMob'da istenir.
-2. **İki uygulama ekle:** AdMob > Uygulamalar > Uygulama ekle > Android (`com.meikaidigital.layfapp`) ve iOS. Mağazada henüz yoksa "listelenmemiş" seçilir, yayından sonra bağlanır.
+2. **İki uygulama ekle:** AdMob > Uygulamalar > Uygulama ekle > Android (`com.meikai.homezy`) ve iOS. Mağazada henüz yoksa "listelenmemiş" seçilir, yayından sonra bağlanır.
 3. **Her uygulamada bir "Banner" reklam birimi** oluştur.
 4. **Kimlikleri gir.** Dört değer var: iki uygulama kimliği (`ca-app-pub-…~…`, `~` işaretli) ve iki banner birimi (`ca-app-pub-…/…`, `/` işaretli).
    - **Bilgisayarda (geliştirme / yerel derleme):** proje klasöründe `.env.local` dosyasına yaz. Bu dosya git'e girmez. `.env`'e yazma, o dosya git'te takip ediliyor.
@@ -29,6 +29,7 @@ Kod: `src/ads/ads.ts` (başlatma, onay, reklam kimliği) ve `src/ads/AdBanner.ts
      ```
      (dört değişken için tekrarla; `preview` ortamı için de istersen.)
    - `app.config.ts` uygulama kimliklerini `app.json`'daki eklentiye ekler; `src/ads/ads.ts` banner kimliğini okur. Girilmemişse Google'ın test kimlikleri kalır; yayında banner boşsa reklam çıkmaz.
+   - EAS `production` derlemesinde derlenen platformun uygulama kimliği ya da banner birimi eksikse derleme bilerek hata verir; test kimliğiyle mağazaya çıkılmaz.
    - Uygulama kimliği yerel koda girer: değiştirince yeniden derleme gerekir (Metro yeniden başlatmak yetmez).
 5. **AdMob > Gizlilik ve mesajlaşma > GDPR** mesajını oluştur ve yayınla (onay penceresi bu ayardan gelir). İsteğe bağlı olarak ABD eyalet mesajını da aç.
 6. **app-ads.txt:** AdMob'un verdiği satırı Meikai Digital sitesinin köküne (`app-ads.txt` adıyla) koy ve mağaza kaydında geliştirici web sitesi olarak bu siteyi göster.

@@ -1,0 +1,91 @@
+{
+  "_not": "Moka sahneleri. 'sheets': arka plan sayfalarının satır/sütunu ve kare adları (soldan sağa, yukarıdan aşağı). 'poses': her Moka pozunun durduğu arka plan. 'rooms': oda kartlarının sahnesi. x: Moka'nın yatay ortası (0-1), h: boyu (sahne yüksekliğine oran), flip: aynala. Ayrıntı: scripts/make-scenes.py",
+  "sheets": {
+    "kolaj": {
+      "rows": 5, "cols": 5,
+      "names": [
+        "salon_kanepe", "salon_tv", "mutfak_ada", "yemek_odasi", "mutfak_kose",
+        "yatak_odasi", "kitaplik", "makyaj_masasi", "antre_kapi", "antre_konsol",
+        "banyo_lavabo", "banyo_kuvet", "camasir_odasi", "banyo_dus", "banyo_tuvalet",
+        "calisma_masasi", "pencere_sedir", "kiler", "merdiven", "merdiven_alti",
+        "koridor", "balkon_kapi", "kahve_kosesi", "kedi_kosesi", "salon_gece"
+      ]
+    },
+    "cozy": {
+      "rows": 4, "cols": 5,
+      "names": [
+        "okuma_koltugu", "minder_yatak", "kahve_bari", "calisma_pencere", "yatak_gece",
+        "banyo_kopuk", "bitki_kosesi", "camasir_sepeti", "salon_kanepe2", "antre_kapi2",
+        "kedi_kutusu", "calisma_gece", "balkon_aksam", "piknik", "orman",
+        "battaniye_cadiri", "yagmurlu_pencere", "mutfak_ocak", "kamp", "yilbasi"
+      ]
+    }
+  },
+  "poses": {
+    "happy": "salon_kanepe",
+    "sleepy": "yatak_gece",
+    "shocked": "yemek_odasi",
+    "analyzing": "kitaplik",
+    "sassy": "makyaj_masasi",
+    "party": "salon_gece",
+    "cozy_plant": "bitki_kosesi",
+    "chef": "mutfak_ada",
+    "wink": "kahve_kosesi",
+    "panicked": "kiler",
+    "begging": "kahve_bari",
+    "blanket": "yagmurlu_pencere",
+    "sweeping": "antre_kapi",
+    "dusting": "salon_tv",
+    "laundry": "yatak_odasi",
+    "mirror": "banyo_lavabo",
+    "dishes": "mutfak_kose",
+    "maintenance": "merdiven_alti",
+    "plants": "balkon_kapi",
+    "trash": "antre_kapi2",
+    "rest": "pencere_sedir",
+    "checklist": "calisma_masasi",
+    "vacuuming": "salon_kanepe2",
+    "sparkling_complete": "salon_kanepe",
+    "cheers": "kahve_kosesi",
+    "thumbs_up": "salon_kanepe2",
+    "love": "pencere_sedir",
+    "nap": "yatak_odasi",
+    "amazed": "salon_tv",
+    "cookie": "kahve_bari",
+    "music": "minder_yatak",
+    "laptop": "calisma_pencere",
+    "reading": "kitaplik",
+    "sipping": "kahve_kosesi",
+    "scarf": "balkon_aksam",
+    "unimpressed": "kedi_kutusu",
+    "plaid_coffee": "okuma_koltugu",
+    "pizza": "yemek_odasi",
+    "bubble_bath": "banyo_kopuk",
+    "blanket_coffee": "battaniye_cadiri",
+    "shower": "banyo_dus",
+    "birthday": "salon_gece",
+    "sunny_plant": "bitki_kosesi",
+    "lazy_coffee": "minder_yatak",
+    "baking": "mutfak_ocak",
+    "scrubbing": "banyo_tuvalet",
+    "handyman": "merdiven",
+    "watering": "balkon_aksam",
+    "laundry_basket": "camasir_odasi",
+    "dustpan": "koridor",
+    "spray_clean": "mutfak_ada",
+    "trash_bag": "koridor",
+    "todo": "calisma_gece",
+    "iced_vacuum": "okuma_koltugu"
+  },
+  "rooms": {
+    "salon": { "bg": "salon_kanepe", "pose": "sipping" },
+    "mutfak": { "bg": "mutfak_kose", "pose": "dishes" },
+    "yatak": { "bg": "yatak_odasi", "pose": "blanket_coffee" },
+    "banyo": { "bg": "banyo_lavabo", "pose": "mirror" },
+    "calisma": { "bg": "calisma_masasi", "pose": "laptop" },
+    "antre": { "bg": "antre_kapi", "pose": "sweeping" },
+    "balkon": { "bg": "balkon_kapi", "pose": "watering" },
+    "camasir": { "bg": "camasir_odasi", "pose": "laundry_basket" },
+    "cocuk": { "bg": "cocuk_odasi", "pose": "birthday" }
+  }
+}

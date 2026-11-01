@@ -1,15 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, Platform, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, RadialGradient, Circle, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { MOKA_ASSETS } from '@/constants/moka';
 import { fonts, useColors } from '@/theme';
 
 /**
  * Açılış animasyonu, iki bölüm:
  * 1. Meikai Digital introsu: themeikai.com'daki CSS introsunun aynısı (süreler ve eğriler oradan).
- * 2. Zıplayan Layfapp logosu.
- * Her soğuk açılışta bir kez oynar (~3,3 sn), ekrana dokununca atlanır. Hareket azaltma açıksa
+ * 2. Moka yumuşakça belirir, "Homezy" yazısı yavaşça açılır (docs/skeleton-v3.md).
+ * Her soğuk açılışta bir kez oynar (~5 sn), ekrana dokununca atlanır. Hareket azaltma açıksa
  * sitede olduğu gibi hiç oynamaz. Android'de takılmasın diye sadece opacity ve transform
  * canlandırılıyor (useNativeDriver); sitedeki blur efektleri bu yüzden yok.
  */
@@ -33,7 +34,14 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     line: new Animated.Value(0),
     sub: new Animated.Value(0),
     meikai: new Animated.Value(1), // Meikai katmanı (1 → 0 çıkış)
-    logo: new Animated.Value(0),
+    sky: new Animated.Value(0),
+    house: new Animated.Value(0),
+    door: new Animated.Value(0),
+    moka: new Animated.Value(0),
+    steam: new Animated.Value(0),
+    hearts: new Animated.Value(0),
+    word: WORD.map(() => new Animated.Value(0)),
+    tag: new Animated.Value(0),
     all: new Animated.Value(1),
   }));
   const [dark, setDark] = useState(true); // durum çubuğu Meikai'nin siyah zemininde açık renk olsun
@@ -61,14 +69,18 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       at(900, v.shine, 900, Easing.inOut(Easing.quad)),
       at(1100, v.line, 800, expo),
       at(1300, v.sub, 800, Easing.out(Easing.quad)),
-      // Sitede 0,9 sn süren çıkış burada Layfapp'e geçiş olarak kısaldı.
+      // Sitede 0,9 sn süren çıkış burada Homezy'ye geçiş olarak kısaldı.
       at(2100, v.meikai, 500, exitEase, 0),
-      // 2. Layfapp logosu
-      Animated.sequence([
-        Animated.delay(2300),
-        Animated.spring(v.logo, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true }),
-      ]),
-      at(3000, v.all, 280, Easing.in(Easing.quad), 0),
+      // 2. Moka'nın evi
+      at(2100, v.sky, 700, Easing.out(Easing.quad)),
+      at(2400, v.hearts, 2000, Easing.out(Easing.quad)),
+      at(2100, v.house, 900, Easing.out(Easing.quad)), // ışık hâlesi
+      at(2250, v.moka, 800, expo),
+      at(2400, v.steam, 1900, Easing.inOut(Easing.sin)), // Moka'nın nefesi (tek yumuşak süzülme)
+      // Döngü (Animated.loop) paralelin bitişini bekletiyordu; buhar tek uzun yükselişle iki kez tüter.
+      ...v.word.map((l, i) => at(2750 + i * 60, l, 650, expo)),
+      at(3350, v.tag, 500, Easing.out(Easing.quad)),
+      at(4400, v.all, 300, Easing.in(Easing.quad), 0),
     ]);
     const t = setTimeout(() => alive && setDark(false), 2300);
 
@@ -95,16 +107,8 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.bg, opacity: v.all }]}>
       <StatusBar style={dark ? 'light' : 'auto'} />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
-        {/* 2. Layfapp logosu (altta, Meikai katmanı kaybolunca görünür) */}
-        <View style={st.center} pointerEvents="none">
-          <Animated.View
-            style={{
-              opacity: v.logo.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
-              transform: [{ scale: lerp(v.logo, 0.4, 1) }, { rotate: v.logo.interpolate({ inputRange: [0, 1], outputRange: ['-8deg', '0deg'] }) }],
-            }}>
-            <Image source={require('../../assets/logo-kare.png')} style={st.logo} resizeMode="contain" />
-          </Animated.View>
-        </View>
+        {/* 2. Moka'nın evi (altta, Meikai katmanı kaybolunca görünür) */}
+        <MokaHome v={v} lerp={lerp} />
 
         {/* 1. Meikai Digital introsu */}
         <Animated.View style={[st.center, { backgroundColor: M.bg, opacity: v.meikai }]} pointerEvents="none">
@@ -176,7 +180,18 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
 }
 
 const GLOW = 760; // sitede 520px daire + 120px blur
-const LOGO = 168;
+const STAGE = 300;
+const HOUSE = 150;
+const MOKA = 190;
+const HALO = 380;
+const GREEN = '#A8CBB0'; // düz pastel adaçayı yeşili (temadan bağımsız)
+const INK = '#2E4B3A';
+const SPARKS = [
+  { e: '🍃', x: 10, y: 55, s: 26, dx: 30, rot: 40 }, { e: '✨', x: 82, y: 40, s: 22, dx: -18, rot: 20 },
+  { e: '🌿', x: 20, y: 28, s: 24, dx: 20, rot: -35 }, { e: '✨', x: 68, y: 62, s: 18, dx: 12, rot: 15 },
+  { e: '🍃', x: 85, y: 70, s: 28, dx: -34, rot: -50 }, { e: '✨', x: 38, y: 20, s: 16, dx: 0, rot: 30 },
+];
+const WORD = 'Homezy'.split('');
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
 const st = StyleSheet.create({
@@ -191,5 +206,95 @@ const st = StyleSheet.create({
   letter: { color: M.fg, fontFamily: fonts.body, fontSize: 28, marginRight: 14 },
   line: { marginTop: 20, width: 160, height: 1 },
   sub: { marginTop: 16, paddingLeft: 7, color: M.muted, fontFamily: mono, fontSize: 11, letterSpacing: 6.7 },
-  logo: { width: LOGO, height: LOGO },
+  scene: { width: STAGE, height: STAGE * 0.92, alignItems: 'center' },
+  hill: { position: 'absolute', left: -80, bottom: -STAGE * 0.04 },
+  house: { position: 'absolute', bottom: STAGE * 0.2, left: STAGE * 0.08 },
+  door: { position: 'absolute', left: HOUSE * 0.41, top: HOUSE * 0.58, width: HOUSE * 0.2, height: HOUSE * 0.3, borderRadius: HOUSE * 0.1, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 },
+  moka: { width: MOKA, height: MOKA, marginBottom: 8 },
+  halo: { position: 'absolute', width: HALO, height: HALO, marginTop: -150 },
+  spark: { position: 'absolute' },
+  inkCh: { color: INK },
+  warmCh: { color: '#FFF8EE', textShadowColor: INK, textShadowRadius: 6, textShadowOffset: { width: 0, height: 2 } },
+  mokaImg: { width: MOKA, height: MOKA },
+  steam: { position: 'absolute', width: 12, height: 12, borderRadius: 6 },
+  heart: { position: 'absolute', fontSize: 22 },
+  word: { flexDirection: 'row', marginTop: 4 },
+  wordCh: { fontFamily: fonts.displayBold, fontSize: 52, lineHeight: 64, letterSpacing: -0.5 },
+  tag: { fontFamily: fonts.bodyBold, fontSize: 15.5, marginTop: 2 },
 });
+
+type V = {
+  sky: Animated.Value; house: Animated.Value; door: Animated.Value; moka: Animated.Value;
+  steam: Animated.Value; hearts: Animated.Value; word: Animated.Value[]; tag: Animated.Value;
+};
+
+/** İkinci bölüm: pastel baloncuklar yükselir, uykulu Moka zıplayıp göz kırpar, "Homezy" harfleri dalgayla belirir. */
+function MokaHome({ v, lerp }: { v: V; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number> }) {
+  return (
+    <View style={st.center} pointerEvents="none">
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: GREEN, opacity: v.sky }]} />
+
+      {/* Süzülen yapraklar ve parıltılar: tek seferlik yükselme */}
+      {SPARKS.map((p, i) => (
+        <Animated.Text
+          key={i}
+          style={[st.spark, {
+            left: `${p.x}%`, top: `${p.y}%`, fontSize: p.s,
+            opacity: v.hearts.interpolate({ inputRange: [0, 0.25, 0.8, 1], outputRange: [0, 0.95, 0.9, 0] }),
+            transform: [
+              { translateY: lerp(v.hearts, 30, -70 - (i % 3) * 25) },
+              { translateX: lerp(v.hearts, 0, p.dx) },
+              { rotate: v.hearts.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${p.rot}deg`] }) },
+              { scale: lerp(v.hearts, 0.5, 1) },
+            ],
+          }]}>
+          {p.e}
+        </Animated.Text>
+      ))}
+
+      {/* Işık hâlesi: Moka'nın arkasında yumuşakça açılır */}
+      <Animated.View style={[st.halo, {
+        opacity: v.house,
+        transform: [{ scale: v.house.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
+      }]}>
+        <Svg width={HALO} height={HALO}>
+          <Defs>
+            <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor="#FFF8EE" stopOpacity={0.9} />
+              <Stop offset="0.6" stopColor="#FFF8EE" stopOpacity={0.3} />
+              <Stop offset="1" stopColor="#FFF8EE" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Circle cx={HALO / 2} cy={HALO / 2} r={HALO / 2} fill="url(#halo)" />
+        </Svg>
+      </Animated.View>
+
+      {/* Moka: yumuşakça belirir, sonra hafifçe nefes alır */}
+      <Animated.View style={[st.moka, {
+        opacity: v.moka.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+        transform: [
+          { translateY: Animated.add(lerp(v.moka, 18, 0), v.steam.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -7, 0] })) },
+          { scale: Animated.multiply(lerp(v.moka, 0.88, 1), v.steam.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.025, 1] })) },
+        ],
+      }]}>
+        <Image source={MOKA_ASSETS.happy} style={st.mokaImg} resizeMode="contain" />
+      </Animated.View>
+
+      <View style={st.word}>
+        {WORD.map((ch, i) => (
+          <Animated.Text
+            key={i}
+            style={[st.wordCh, i < 4 ? st.inkCh : st.warmCh, {
+              opacity: v.word[i].interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+              transform: [{ translateY: Animated.add(lerp(v.word[i], 14, 0), v.hearts.interpolate({ inputRange: [0, 0.3 + i * 0.08, 0.4 + i * 0.08, 0.5 + i * 0.08, 1], outputRange: [0, 0, -9, 0, 0] })) }],
+            }]}>
+            {ch}
+          </Animated.Text>
+        ))}
+      </View>
+      <Animated.Text style={[st.tag, { color: INK, opacity: v.tag, transform: [{ translateY: lerp(v.tag, 8, 0) }] }]}>
+        Moka ile sıcacık bir ev ☕
+      </Animated.Text>
+    </View>
+  );
+}

@@ -2,10 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import type { FamilyInfo, SharedHome } from '@/domain/family';
+import type { FamilyGoal, FamilyInfo, SharedHome } from '@/domain/family';
 import { dropShared, forShare, homeData, mergeHome, openShared, sharedHomeId } from '@/domain/homes';
 import type { AppState, HomeData } from '@/domain/types';
+import { offlineMsg, online } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
+import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 
 /**
@@ -32,6 +34,11 @@ type FamilyCtx = {
   join: (code: string, name: string) => Promise<Result>;
   leave: () => Promise<Result>;
   kick: (userId: string) => Promise<Result>;
+  /** Ortak hedefler (…_aile_evi.sql çalışmadıysa boş). */
+  goals: FamilyGoal[];
+  addGoal: (g: { title: string; emoji: string; target: number; unit: string }) => Promise<Result>;
+  logGoal: (id: string, n: number) => Promise<Result>;
+  removeGoal: (id: string) => Promise<Result>;
 };
 
 const FamilyContext = createContext<FamilyCtx | null>(null);
@@ -41,15 +48,23 @@ const POLL = 30_000;
 
 const errText = (m: string) =>
   m.includes('owner not premium') ? 'Bu ailenin Premium üyeliği bitmiş, şu an katılınamıyor.'
+  : m.includes('too many goals') ? 'En fazla 20 açık hedef olabilir.'
   : m.includes('premium') ? 'Aile paylaşımı için Premium üyelik gerekiyor ⭐'
+  : m.includes('too many attempts') ? 'Çok fazla yanlış deneme. Biraz sonra tekrar dene.'
+  : m.includes('account required') ? 'Aileye katılmak için hesap açman gerekiyor (misafir katılamaz).'
+  : m.includes('rate limit') ? 'Çok hızlı gidiyorsun, biraz sonra tekrar dene.'
   : m.includes('bad code') ? 'Bu kodla bir aile bulunamadı. Kodu kontrol et.'
   : m.includes('full') ? 'Bu aile dolu (en fazla 6 kişi).'
   : m.includes('own family') ? 'Bu senin kendi ailenin kodu 🙂'
   : 'Bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';
 
+const NO_GOALS: FamilyGoal[] = [];
+
 export function FamilyProvider({ children }: { children: ReactNode }) {
   const { session, user } = useAuth();
   const { state, update, get } = useStore();
+  const { setFamilyPremium } = usePurchases();
+  const [goals, setGoals] = useState<FamilyGoal[]>([]);
   const [raw, setInfo] = useState<FamilyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const uid = session?.user.id;
@@ -80,6 +95,49 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       alive = false;
     };
   }, [fetchInfo]);
+
+  // Üye, ev sahibinin Premium'unu paylaşır (sunucu da aynısını uygular).
+  const viaOwner = !!info && info.role === 'member' && info.active;
+  useEffect(() => {
+    setFamilyPremium(viaOwner);
+  }, [viaOwner, setFamilyPremium]);
+
+  const loadGoals = useCallback(async () => {
+    if (!supabase || !uid) return;
+    const { data, error } = await supabase.rpc('goals_list');
+    if (!error && Array.isArray(data)) setGoals(data as FamilyGoal[]);
+  }, [uid]);
+  const goalsOn = !!info?.active;
+  useEffect(() => {
+    if (!goalsOn) return;
+    const first = setTimeout(loadGoals, 0);
+    const t = setInterval(loadGoals, POLL);
+    const sub = RNAppState.addEventListener('change', s => s === 'active' && loadGoals());
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+      sub.remove();
+    };
+  }, [goalsOn, loadGoals]);
+
+  const goalCall = useCallback(
+    async (fn: string, args: Record<string, unknown>): Promise<Result> => {
+      if (!supabase) return { ok: false, error: 'İnternet ve giriş gerekiyor.' };
+      if (!(await online())) return { ok: false, error: offlineMsg() };
+      const { data, error } = await supabase.rpc(fn, args);
+      if (error) return { ok: false, error: errText(error.message) };
+      if (Array.isArray(data)) setGoals(data as FamilyGoal[]);
+      return { ok: true };
+    },
+    [],
+  );
+  const addGoal = useCallback(
+    (g: { title: string; emoji: string; target: number; unit: string }) =>
+      goalCall('goal_add', { p_title: g.title, p_emoji: g.emoji, p_target: g.target, p_unit: g.unit, p_due: null }),
+    [goalCall],
+  );
+  const logGoal = useCallback((id: string, n: number) => goalCall('goal_log', { p_goal: id, p_n: n }), [goalCall]);
+  const removeGoal = useCallback((id: string) => goalCall('goal_delete', { p_goal: id }), [goalCall]);
 
   const sharedId = info ? (info.role === 'owner' ? info.homeId : sharedHomeId(info.ownerId)) : null;
   const sharing = !!info?.active && state.homeId === sharedId;
@@ -169,6 +227,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   const create = useCallback(async (): Promise<Result> => {
     if (!supabase || !uid) return { ok: false, error: 'Aile paylaşımı için internet ve giriş gerekiyor.' };
+    if (!(await online())) return { ok: false, error: offlineMsg() };
     const S = get();
     const { error } = await supabase.rpc('family_create', { p_home_id: S.homeId, p_name: displayName(user), p_state: forShare(S) });
     if (error) return { ok: false, error: errText(error.message) };
@@ -179,8 +238,11 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   const join = useCallback(
     async (code: string, name: string): Promise<Result> => {
       if (!supabase || !uid) return { ok: false, error: 'Aileye katılmak için internet ve giriş gerekiyor.' };
+      if (!(await online())) return { ok: false, error: offlineMsg() };
       const { data, error } = await supabase.rpc('family_join', { p_code: code.trim().toUpperCase(), p_name: name.trim() || displayName(user) });
       if (error) return { ok: false, error: errText(error.message) };
+      // Sunucu yanlış kod / çok deneme durumunu hata değil, {error} olarak döner (denemeler sayılabilsin diye).
+      if (data && typeof (data as { error?: unknown }).error === 'string') return { ok: false, error: errText((data as { error: string }).error) };
       const fi = data as FamilyInfo;
       const loaded = await supabase.rpc('family_load');
       if (loaded.error || !loaded.data) return { ok: false, error: errText(loaded.error?.message ?? '') };
@@ -214,9 +276,11 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  // Aile evi kapalıyken hedefler boş görünür; state'i effect içinde sıfırlamaya gerek yok.
+  const shownGoals = goalsOn ? goals : NO_GOALS;
   const value = useMemo(
-    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick }),
-    [info, loading, sharedId, sharing, refresh, create, join, leave, kick],
+    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals: shownGoals, addGoal, logGoal, removeGoal }),
+    [info, loading, sharedId, sharing, refresh, create, join, leave, kick, shownGoals, addGoal, logGoal, removeGoal],
   );
   return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;
 }

@@ -8,6 +8,7 @@ import { facadeOf, floorOf, spotOf, wallOf, winOf } from '@/domain/look';
 import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
+import { MokaPet } from '@/components/MokaPet';
 import { useNow } from '@/hooks/useNow';
 import { sfx, haptic } from '@/lib/sfx';
 import { useSky, type Sky } from '@/lib/weather';
@@ -1471,29 +1472,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
   }
 
-  // Minik 3D Moka maskotu evin salonunda veya çalışma odasında durur.
-  let mokaEls: ReactElement[] = [];
-  if (L >= 5) {
+  // Minik 3D Moka maskotu evin salonunda veya çalışma odasında dolaşır (MokaPet).
+  let moka: { cells: number[]; blocked: number } | null = null;
+  if (L >= 5 && floor === 0) {
     const mokaRoomId = S.order.find(id => S.rooms[id]?.type === 'salon') ?? S.order.find(id => S.rooms[id]?.type === 'calisma') ?? S.order[0];
-    if (mokaRoomId && props[mokaRoomId] !== undefined) {
-      const mi = props[mokaRoomId];
-      const mr = Math.floor(mi / cols), mcol = mi % cols;
-      const [mx, my] = P(mr + 0.5, mcol + 0.5, 0);
-      mokaEls = [
-        <G key="mini_moka_in_house">
-          <Ellipse cx={mx} cy={my + 1} rx={7} ry={3} fill="rgba(40,48,68,0.2)" />
-          <Circle cx={mx} cy={my - 7} r={6.5} fill="#D99B6A" />
-          <Circle cx={mx} cy={my - 7} r={4.5} fill="#FFF3E0" />
-          <Circle cx={mx} cy={my - 16} r={5.5} fill="#D99B6A" />
-          <Circle cx={mx - 4.5} cy={my - 20} r={2.2} fill="#A6683B" />
-          <Circle cx={mx + 4.5} cy={my - 20} r={2.2} fill="#A6683B" />
-          <Circle cx={mx - 1.8} cy={my - 16.5} r={0.8} fill="#283044" />
-          <Circle cx={mx + 1.8} cy={my - 16.5} r={0.8} fill="#283044" />
-          <Ellipse cx={mx} cy={my - 14.5} rx={2} ry={1.2} fill="#FFF3E0" />
-          <Circle cx={mx} cy={my - 15} r={0.7} fill="#283044" />
-        </G>,
-      ];
-    }
+    const mine: number[] = [];
+    cells.forEach((x, i) => x === mokaRoomId && mine.push(i));
+    if (mokaRoomId && mine.length) moka = { cells: mine, blocked: props[mokaRoomId] ?? -1 };
   }
 
   // Bahçe ve süsler (evin çevresinde, ev bitince açılır).
@@ -1676,7 +1661,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
-      {sc > 0 && mokaEls.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.03} dy={-1.5} ms={2600} reduce={reduce}>{mokaEls}</Drift>}
+      {sc > 0 && moka && <MokaPet vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} />}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}

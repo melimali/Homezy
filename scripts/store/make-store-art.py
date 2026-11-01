@@ -120,6 +120,40 @@ def phone(shot, pw):
     return body
 
 
+MOKA_PHONE = ROOT / "assets/store/moka-phone.png"
+PH_L, PH_R, SCR_L, SCR_R, SCR_T = 171, 1080, 223, 1026, 675  # moka-phone.png içindeki ölçüler
+
+
+def phone_moka(shot, outer_w):
+    """Moka telefonun üstünde otururken gerçek ekranı çerçevenin içine yerleştirir.
+    Döner: (görüntü, telefonun üst kenarının y'si). Görüntü ölçeklenmiş, sol kenar PH_L kadar boşluklu kırpılmış."""
+    A = Image.open(MOKA_PHONE).convert("RGBA")
+    sw = SCR_R - SCR_L + 1
+    sh = round(sw * shot.height / shot.width)
+    total = SCR_T + sh + 24
+    arr = A.copy()
+    canvas = Image.new("RGBA", (A.width, total), (0, 0, 0, 0))
+    canvas.paste(A, (0, 0))
+    last = A.crop((0, A.height - 1, A.width, A.height))
+    for y in range(A.height, total):          # kenar çubuklarını aşağı uzat
+        canvas.paste(last, (0, y))
+    # ekran maskesi: krem piksel (üst kısımdaki Moka hariç)
+    import numpy as np
+    a = np.array(canvas)
+    c = a[1000, 600, :3].astype(int)
+    m = (np.abs(a[:, :, :3].astype(int) - c).max(axis=2) < 10) & (a[:, :, 3] > 200)
+    m[:SCR_T - 20, :] = False
+    mask = Image.fromarray((m * 255).astype("uint8"))
+    scr = shot.convert("RGB").resize((sw, sh), Image.LANCZOS)
+    layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    layer.paste(scr, (SCR_L, SCR_T))
+    canvas = Image.composite(layer, canvas, mask)
+    canvas = canvas.crop((PH_L - 4, 0, PH_R + 4, total))
+    k = outer_w / (PH_R - PH_L + 8)
+    out = canvas.resize((outer_w, round(total * k)), Image.LANCZOS)
+    return out, round(SCR_T * k) - round(40 * k)
+
+
 def make(lang, name, pose, side, grad, accent, W, H, shot_name):
     img = gradient(W, H, *grad)
     img = blobs(img, grad)
@@ -140,24 +174,16 @@ def make(lang, name, pose, side, grad, accent, W, H, shot_name):
         w = d.textlength(ln, font=sf)
         d.text(((W - w) / 2, y), ln, font=sf, fill=MUTED)
         y += int(sf.size * 1.28)
-    # Moka telefonun üst kenarında oturur
-    mk_w = int(W * 0.27)
-    gap = int(mk_w * 0.80)
-    top = y + int(H * 0.012) + gap
-    pw = int(W * 0.80)
+    top = y + int(H * 0.010)
+    pw = int(W * 0.72)
     shot = Image.open(RAW / lang / f"{shot_name}.png")
-    body = phone(shot, pw)
+    body, edge = phone_moka(shot, pw)
     px = (W - pw) // 2
-    # gölge
     sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(sh).rounded_rectangle((px + 8, top + 22, px + pw + 8, H + 400), round(pw * 0.125), fill=(40, 48, 68, 90))
+    ImageDraw.Draw(sh).rounded_rectangle((px + 8, top + edge + 22, px + pw + 8, H + 400), round(pw * 0.125), fill=(40, 48, 68, 90))
     sh = sh.filter(ImageFilter.GaussianBlur(int(W * 0.022)))
     img = Image.alpha_composite(img, sh)
     img.alpha_composite(body, (px, top))
-    mk = Image.open(MOKA / f"moka_{pose}.png").convert("RGBA")
-    mk = mk.resize((mk_w, mk_w), Image.LANCZOS)
-    mx = px + pw - mk_w - int(pw * 0.06) if side == "R" else px + int(pw * 0.06)
-    img.alpha_composite(mk, (mx, top - int(mk_w * 0.80)))
     return img.convert("RGB")
 
 
@@ -183,11 +209,8 @@ def feature(lang):
     sf = B_FONT(26)
     for ln in wrap(d, sub, sf, 500):
         d.text((56, y), ln, font=sf, fill=MUTED); y += 34
-    pw = 300
-    body = phone(Image.open(RAW / lang / "home.png"), pw)
-    img.alpha_composite(body, (690, 70))
-    mk = Image.open(MOKA / "moka_happy.png").convert("RGBA").resize((190, 190), Image.LANCZOS)
-    img.alpha_composite(mk, (545, 330))
+    body, _ = phone_moka(Image.open(RAW / lang / "home.png"), 330)
+    img.alpha_composite(body, (660, 28))
     return img.convert("RGB").crop((0, 0, W, H))
 
 

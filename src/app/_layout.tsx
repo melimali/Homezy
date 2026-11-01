@@ -20,6 +20,7 @@ import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
+import { usePersona, usePersonaSync } from '@/profile/usePersona';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
@@ -73,6 +74,8 @@ function RootStack() {
   const c = useColors();
   useCloudSync();
   usePlaySync();
+  usePersonaSync();
+  const { seen: quizSeen } = usePersona();
   const sound = state.settings.sound;
   useEffect(() => setSfxEnabled(sound), [sound]);
 
@@ -89,6 +92,10 @@ function RootStack() {
     <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Protected guard={!introSeen}>
         <Stack.Screen name="tanitim" options={{ animation: 'fade' }} />
+      </Stack.Protected>
+      {/* Tanıtımdan sonra "seni tanıyalım" soruları (evi zaten kurulu olanlara sorulmaz). */}
+      <Stack.Protected guard={introSeen && !quizSeen && !state.setup}>
+        <Stack.Screen name="taniyalim" options={{ animation: 'fade' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && state.setup}>
         <Stack.Screen name="(tabs)" />
@@ -109,6 +116,7 @@ function RootStack() {
         <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bakim" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="yemek" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hafta" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="gunum" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
@@ -126,7 +134,7 @@ function RootStack() {
 }
 
 // Evi kurarken ve tanıtımda satın alma ekranı çıkmasın diye bu sayfalarda gizlenir.
-const CHOICE_WAIT = ['/tanitim', '/giris', '/kurulum', '/evim'];
+const CHOICE_WAIT = ['/tanitim', '/taniyalim', '/giris', '/kurulum', '/evim'];
 
 /**
  * Tanıtım ve ev kurulumundan sonra Ücretsiz / Premium seçimi. Bir kere seçilince bir daha çıkmaz;

@@ -10,6 +10,7 @@ import { Appear, Pulse, Squish } from '@/components/motion';
 import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
+import { MealCard } from '@/components/MealCard';
 import { Bar, Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
@@ -57,6 +58,8 @@ export default function Bugun() {
       ) : total > 0 ? (
         <EmptyMsg pose="party">Bugünlük her şey tamam. Harika iş!</EmptyMsg>
       ) : null}
+
+      <MealCard />
 
       {total > 0 && (
         <Appear index={1} style={[styles.progress, { backgroundColor: c.surface }]}>

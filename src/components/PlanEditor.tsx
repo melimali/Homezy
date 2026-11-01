@@ -9,6 +9,8 @@ import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeU
 import type { AppState } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
+import { PLAN } from '@/domain/persona';
+import { usePersona } from '@/profile/usePersona';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -30,6 +32,8 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { state: S, update } = useStore();
+  const { persona } = usePersona();
+  const recId = persona ? PLAN[persona].template : null;
   const toast = useToast();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
@@ -242,11 +246,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
               <Squish key={t.id} onPress={() => pickTemplate(t.id)} accessibilityLabel={`${t.label} şablonu`} style={[st.tpl, { backgroundColor: arm ? c.peach : c.surface }]}>
                 <Text style={{ fontSize: 26 }}>{t.emoji}</Text>
                 <Text style={[st.tplT, { color: c.ink }]}>{t.label}</Text>
-                <Text style={[st.tplS, { color: c.muted }]}>{arm ? 'Tekrar dokun' : t.sub}</Text>
+                <Text style={[st.tplS, { color: c.muted }]}>{arm ? 'Tekrar dokun' : t.id === recId && !rooms.length ? '⭐ Sana uygun' : t.sub}</Text>
               </Squish>
             );
           })}
         </ScrollView>
+        {persona && !rooms.length && <T v="tiny">{PLAN[persona].planTip}</T>}
         {tplArm && <T v="tiny">Şablon mevcut planın yerine geçer. Emin isen tekrar dokun.</T>}
       </View>
 

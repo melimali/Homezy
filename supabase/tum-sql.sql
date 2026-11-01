@@ -1164,3 +1164,6 @@ begin
 end;
 $$;
 revoke all on function public.chat_reserve(uuid) from public, anon, authenticated;
+
+-- 2026-11-01: "Seni taniyalim" cevaplari (kisilik tipi uygulamada hesaplanir, sunucuda tutulmaz).
+alter table public.profiles add column if not exists persona jsonb;

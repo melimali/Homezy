@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { planMeals, type Slot } from '@/domain/meals';
@@ -21,7 +21,7 @@ export function MealCard() {
   const top = planMeals(answers, kitchen ? S.mod[kitchen]?.stock ?? [] : [], slot, 1)[0];
   if (!done || !top) return null;
   return (
-    <Squish onPress={() => router.push('/yemek')} accessibilityRole="button" accessibilityLabel="Yemek önerisi">
+    <Squish onPress={() => router.push('/yemek' as Href)} accessibilityRole="button" accessibilityLabel="Yemek önerisi">
       <Card style={{ backgroundColor: c.peachSoft }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 34 }}>{top.meal.emoji}</Text>

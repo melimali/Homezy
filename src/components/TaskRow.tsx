@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -19,6 +19,9 @@ import { fonts, radius, useColors } from '@/theme';
 
 import { Appear, Burst, Float, Squish } from './motion';
 import { useToast } from './Toast';
+import { useTranslation } from '@/i18n/i18n';
+import { noteDone } from '@/play/rushGuard';
+import { awardKey, dayKey } from '@/domain/play';
 import { Btn, Field, Pill, Sheet, T } from './ui';
 
 export function findList(S: AppState, rid: string, list: TaskList): Task[] {
@@ -32,6 +35,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
   const { state, update, get } = useStore();
   const { award } = usePlay();
   const toast = useToast();
+  const { t: tr } = useTranslation();
   const now = useNow();
   // Tamamlayınca düğme zıplar, üstünden '+10 ⭐' süzülür, etrafa yıldız saçılır.
   const [bounce] = useState(() => new Animated.Value(1));
@@ -68,9 +72,13 @@ export function useTask(t: Task, rid: string, list: TaskList) {
     if (doneToday) return 0;
     const before = room ? roomClean(get(), rid) : 0;
     const label = `${plant ? '🪴' : place.emoji} ${place.name} · ${t.name}`;
+    const prev: { last?: number | null; snooze?: number | null; photo?: string } = {};
     const r = award('gorev', t.id, label, t.name, S => {
       const x = findList(S, rid, list).find(y => y.id === t.id);
       if (!x) return;
+      prev.last = x.last;
+      prev.snooze = x.snooze;
+      prev.photo = x.photo;
       x.last = Date.now();
       x.snooze = null;
       if (photo) x.photo = photo;
@@ -85,6 +93,38 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       setGain(r.points);
       rise.setValue(0);
       Animated.timing(rise, { toValue: 1, duration: 1100, useNativeDriver: true }).start(() => setGain(0));
+    }
+    if (r.awarded) {
+      const day = dayKey(Date.now());
+      const ask = noteDone(() =>
+        update(S => {
+          const x = findList(S, rid, list).find(y => y.id === t.id);
+          if (x) {
+            x.last = prev.last as number;
+            x.snooze = (prev.snooze ?? null) as number | null;
+            x.photo = prev.photo;
+          }
+          const P = S.play;
+          const key = awardKey('gorev', t.id);
+          if (P.awarded[key] === day) delete P.awarded[key];
+          P.points = Math.max(0, P.points - r.points);
+          const li = (P.log[day] || []).lastIndexOf(label);
+          if (li > -1) P.log[day].splice(li, 1);
+          const pi = P.pending.findIndex(e => e.kind === 'gorev' && e.ref === t.id && e.day === day);
+          if (pi > -1) P.pending.splice(pi, 1);
+          // Günün tek işiyse bugün "yapılan gün" sayılmasın.
+          if (!r.before.today && !Object.values(P.awarded).includes(day)) P.days = P.days.filter(d => d !== day);
+        }),
+      );
+      if (ask)
+        setTimeout(
+          () =>
+            Alert.alert(tr('Moka: Bir dakika ✋'), tr('Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?'), [
+              { text: tr('Geri al'), style: 'destructive', onPress: () => { ask(); toast(tr('Son işler geri alındı, puanları da çektim.')); } },
+              { text: tr('Evet, yaptım'), style: 'default' },
+            ]),
+          900,
+        );
     }
     // Tertemiz oda kutlaması (ayarlardan kapatılabilir).
     const after = get();

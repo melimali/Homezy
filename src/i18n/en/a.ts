@@ -1,5 +1,9 @@
 /** Otomatik üretildi: Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_A: Record<string, string> = {
+ "Moka: Bir dakika ✋": "Moka: Hold on ✋",
+ "Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?": "The goal is to build discipline. Did you really do all of these?",
+ "Evet, yaptım": "Yes, I did",
+ "Son işler geri alındı, puanları da çektim.": "Recent tasks undone and the points removed.",
  "Moka ile sohbet": "Chat with Moka",
  "Ev": "Home",
  "Bugün": "Today",

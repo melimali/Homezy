@@ -1,4 +1,4 @@
-import * as Clipboard from 'expo-clipboard';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Share, StyleSheet, Text, View } from 'react-native';
@@ -46,7 +46,7 @@ export default function Aile() {
     try {
       await Share.share({ message: msg });
     } catch {
-      await Clipboard.setStringAsync(k);
+      await (requireOptionalNativeModule('ExpoClipboard') ? (require('expo-clipboard') as typeof import('expo-clipboard')) : null)?.setStringAsync(k);
       toast('Kod kopyalandı.');
     }
   };

@@ -1,5 +1,5 @@
 import { Directory, File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -38,7 +38,7 @@ export default function Yasal() {
     setBusy(true);
     try {
       const json = JSON.stringify({ app: 'Homezy', exportedAt: new Date().toISOString(), data: state }, null, 2);
-      if (Platform.OS === 'web' || !(await Sharing.isAvailableAsync())) {
+      if (Platform.OS === 'web' || !requireOptionalNativeModule('ExpoSharing') || !(await (require('expo-sharing') as typeof import('expo-sharing')).isAvailableAsync())) {
         await Share.share({ message: json });
       } else {
         const dir = new Directory(Paths.cache, 'export');
@@ -47,7 +47,7 @@ export default function Yasal() {
         if (file.exists) file.delete();
         file.create();
         file.write(json);
-        await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Verilerimi dışa aktar' });
+        await (require('expo-sharing') as typeof import('expo-sharing')).shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Verilerimi dışa aktar' });
         file.delete();
       }
     } catch {

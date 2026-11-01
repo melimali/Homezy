@@ -1,6 +1,6 @@
 import { tx } from '@/i18n/runtime';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 
 import { LIMITS } from '@/domain/premium';
 import { SCAN_ACCOUNT_NEEDED } from '@/domain/chatGate';
@@ -93,6 +93,8 @@ const TIMEOUT = 120_000;
  */
 async function prepare(uri: string): Promise<string | null> {
   try {
+    if (!requireOptionalNativeModule('ExpoImageManipulator')) return null;
+    const { ImageManipulator, SaveFormat } = require('expo-image-manipulator') as typeof import('expo-image-manipulator'); // eslint-disable-line @typescript-eslint/no-require-imports
     const ref = await ImageManipulator.manipulate(uri, { maxWidth: MAX_SIDE, maxHeight: MAX_SIDE }).renderAsync();
     const big = Math.max(ref.width, ref.height);
     const img = big > MAX_SIDE

@@ -1,4 +1,4 @@
-import * as Clipboard from 'expo-clipboard';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 
 import { shopLine } from '@/domain/logic';
 import type { StockItem } from '@/domain/types';
@@ -12,7 +12,7 @@ export function ShopList({ items, title, h = 'h3' }: { items: StockItem[]; title
   if (!items.length) return null;
   const copy = async () => {
     try {
-      await Clipboard.setStringAsync(items.map(x => '- ' + shopLine(x)).join('\n'));
+      await (requireOptionalNativeModule('ExpoClipboard') ? (require('expo-clipboard') as typeof import('expo-clipboard')) : null)?.setStringAsync(items.map(x => '- ' + shopLine(x)).join('\n'));
       toast('Alışveriş listesi kopyalandı.');
     } catch {
       toast('Liste kopyalanamadı.');

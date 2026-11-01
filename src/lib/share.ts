@@ -1,7 +1,22 @@
 import type { ComponentRef, RefObject } from 'react';
-import { Platform, Share, View } from 'react-native';
-import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
+import { NativeModules, Platform, Share, TurboModuleRegistry, View } from 'react-native';
+import { requireOptionalNativeModule } from 'expo-modules-core';
+
+// Yerel modül bu derlemede yoksa içe aktarma ekranı kırmızıya boyar; kullanılırken güvenle yükle.
+function sharing() {
+  try {
+    return requireOptionalNativeModule('ExpoSharing') ? (require('expo-sharing') as typeof import('expo-sharing')) : null; // eslint-disable-line @typescript-eslint/no-require-imports
+  } catch {
+    return null;
+  }
+}
+function viewShot() {
+  try {
+    return (TurboModuleRegistry.get('RNViewShot') ?? NativeModules.RNViewShot) ? (require('react-native-view-shot') as typeof import('react-native-view-shot')) : null; // eslint-disable-line @typescript-eslint/no-require-imports
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Ekrandaki bir kartı görsel olarak paylaşır (Instagram, WhatsApp…). Görsel çekilemezse
@@ -11,8 +26,10 @@ import * as Sharing from 'expo-sharing';
 export async function shareCard(ref: RefObject<ComponentRef<typeof View> | null>, text: string) {
   if (Platform.OS !== 'web' && ref.current) {
     try {
-      if (await Sharing.isAvailableAsync()) {
-        const uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });
+      const Sharing = sharing();
+      const shot = viewShot();
+      if (Sharing && shot && (await Sharing.isAvailableAsync())) {
+        const uri = await shot.captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });
         await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Paylaş' });
         return;
       }

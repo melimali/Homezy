@@ -27,14 +27,14 @@ def hexrgb(h):
 
 # ad, moka pozu, moka tarafı, gradyan (üst, alt), ikinci satır rengi
 SLIDES = [
-    ("01-moka", "happy", "R", ("#FDEBDD", "#F6D2BD"), "#A5543E"),
-    ("02-plan", "checklist", "L", ("#E4F1E8", "#CBE3D3"), "#3F7A5A"),
-    ("03-bugun", "thumbs_up", "R", ("#E0ECF4", "#C4DAEA"), "#3F6F94"),
-    ("04-yemek", "chef", "L", ("#FCF0D2", "#F4DDA6"), "#A0701F"),
-    ("05-ev", "home_seated", "R", ("#E9E2F3", "#D6CBEA"), "#6B4FA0"),
-    ("06-bahce", "watering", "L", ("#DDEFE0", "#BFE0C6"), "#3B7A47"),
-    ("07-sohbet", "laptop", "R", ("#FDE6E1", "#F6CBC3"), "#B0493F"),
-    ("08-dolap", "mirror", "L", ("#E1EEF2", "#C3DDE5"), "#2F7488"),
+    ("01-moka", "coffee", "R", ("#FDEBDD", "#F6D2BD"), "#A5543E"),
+    ("02-plan", "wow", "L", ("#E4F1E8", "#CBE3D3"), "#3F7A5A"),
+    ("03-bugun", "sip", "R", ("#E0ECF4", "#C4DAEA"), "#3F6F94"),
+    ("04-yemek", "coffee", "L", ("#FCF0D2", "#F4DDA6"), "#A0701F"),
+    ("05-ev", "wow", "R", ("#E9E2F3", "#D6CBEA"), "#6B4FA0"),
+    ("06-bahce", "sip", "L", ("#DDEFE0", "#BFE0C6"), "#3B7A47"),
+    ("07-sohbet", "coffee", "R", ("#FDE6E1", "#F6CBC3"), "#B0493F"),
+    ("08-dolap", "sip", "L", ("#E1EEF2", "#C3DDE5"), "#2F7488"),
 ]
 SHOT = {"01-moka": "home", "02-plan": "tanisma", "03-bugun": "bugun", "04-yemek": "yemek",
         "05-ev": "ev3d", "06-bahce": "bahce", "07-sohbet": "moka", "08-dolap": "dolap"}
@@ -120,14 +120,14 @@ def phone(shot, pw):
     return body
 
 
-MOKA_PHONE = ROOT / "assets/store/moka-phone.png"
+MOKA_PHONE = lambda pose: ROOT / f"assets/store/moka-phone-{pose}.png"
 PH_L, PH_R, SCR_L, SCR_R, SCR_T = 171, 1080, 223, 1026, 675  # moka-phone.png içindeki ölçüler
 
 
-def phone_moka(shot, outer_w):
+def phone_moka(shot, outer_w, pose="coffee"):
     """Moka telefonun üstünde otururken gerçek ekranı çerçevenin içine yerleştirir.
     Döner: (görüntü, telefonun üst kenarının y'si). Görüntü ölçeklenmiş, sol kenar PH_L kadar boşluklu kırpılmış."""
-    A = Image.open(MOKA_PHONE).convert("RGBA")
+    A = Image.open(MOKA_PHONE(pose)).convert("RGBA")
     sw = SCR_R - SCR_L + 1
     sh = round(sw * shot.height / shot.width)
     total = SCR_T + sh + 24
@@ -177,7 +177,7 @@ def make(lang, name, pose, side, grad, accent, W, H, shot_name):
     top = y + int(H * 0.010)
     pw = int(W * 0.72)
     shot = Image.open(RAW / lang / f"{shot_name}.png")
-    body, edge = phone_moka(shot, pw)
+    body, edge = phone_moka(shot, pw, pose)
     px = (W - pw) // 2
     sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
     ImageDraw.Draw(sh).rounded_rectangle((px + 8, top + edge + 22, px + pw + 8, H + 400), round(pw * 0.125), fill=(40, 48, 68, 90))

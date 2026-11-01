@@ -2502,5 +2502,11 @@ export const EN_A: Record<string, string> = {
  "Premium her": "Premium renews every",
  "Haftalık": "Weekly",
  "Aylık özet": "Monthly summary",
- "Merhaba": "Hello"
+ "Merhaba": "Hello",
+ "Yatak odası: gardırop ve kombin özelliği için": "Bedroom: for the wardrobe and outfit feature",
+ "Mutfak: buzdolabı ve alışveriş takibi için": "Kitchen: for fridge and shopping tracking",
+ "Evin eksik kaldı 🏡": "Your home is missing rooms 🏡",
+ "Şunları çizmeden bu özellikler boşa gider:": "These features will go unused unless you draw:",
+ "Dönüp çizeyim": "Go back and draw",
+ "Yine de kaydet": "Save anyway",
 };

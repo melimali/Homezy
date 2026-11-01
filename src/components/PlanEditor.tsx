@@ -1,12 +1,13 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
 import { cellCount, emptyState, makeRoom, removeRoom } from '@/domain/logic';
 import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeUpper, resizeGrid, restoreSnap, snapOf, TEMPLATES, type Floor, type PlanSnap } from '@/domain/plan-templates';
 import type { AppState } from '@/domain/types';
+import { useTranslation } from '@/i18n/i18n';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { PLAN } from '@/domain/persona';
@@ -35,6 +36,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const { persona } = usePersona();
   const recId = persona ? PLAN[persona].template : null;
   const toast = useToast();
+  const { t: tr } = useTranslation();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
   const [clearArm, setClearArm] = useState(false);
@@ -162,7 +164,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
           ? { pose: 'happy' as const, title: 'Güzel başlangıç!', message: 'Bir odaya dokunup büyüt ya da yeni oda ekle.' }
           : { pose: 'love' as const, title: 'Evin çok tatlı oldu', message: 'Hazırsan kaydet. Sonra Ben > Ev planı\'ndan değiştirebilirsin.' };
 
-  const save = () => {
+  const doSave = () => {
     const first = !S.setup;
     const next = update(D => {
       for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
@@ -176,6 +178,23 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     setTool(null);
     sfx('pop');
     onSaved(first, next);
+  };
+
+  // Gardırop yatak odasına, buzdolabı takibi mutfağa bağlı: ikisi de yoksa kullanıcıyı uyar.
+  const save = () => {
+    const has = (type: string) => S.order.some(id => S.rooms[id]?.type === type && cellCount(S, id) > 0);
+    const missing: string[] = [];
+    if (!has('yatak')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
+    if (!has('mutfak')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
+    if (!missing.length || !S.order.length) return doSave();
+    Alert.alert(
+      tr('Evin eksik kaldı 🏡'),
+      tr('Şunları çizmeden bu özellikler boşa gider:') + '\n\n• ' + missing.join('\n• '),
+      [
+        { text: tr('Dönüp çizeyim'), style: 'default' },
+        { text: tr('Yine de kaydet'), style: 'cancel', onPress: doSave },
+      ],
+    );
   };
 
   const clear = () => {

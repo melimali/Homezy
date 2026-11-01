@@ -72,7 +72,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
     if (doneToday) return 0;
     const before = room ? roomClean(get(), rid) : 0;
     const label = `${plant ? '🪴' : place.emoji} ${place.name} · ${t.name}`;
-    const prev: { last?: number | null; snooze?: number | null; photo?: string } = {};
+    const prev: { last?: number | null; snooze?: number | null; photo?: string | null } = {};
     const r = award('gorev', t.id, label, t.name, S => {
       const x = findList(S, rid, list).find(y => y.id === t.id);
       if (!x) return;
@@ -102,7 +102,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
           if (x) {
             x.last = prev.last as number;
             x.snooze = (prev.snooze ?? null) as number | null;
-            x.photo = prev.photo;
+            x.photo = prev.photo as string;
           }
           const P = S.play;
           const key = awardKey('gorev', t.id);

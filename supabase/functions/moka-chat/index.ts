@@ -126,6 +126,16 @@ const TOOLS = [
   },
 ];
 
+/** Cevap dili zorunlu: uygulama dili İngilizce ise (ya da kullanıcı açıkça başka dilde yazıyorsa) o dilde cevap verilir. */
+function withLang(sys: string, lang: unknown) {
+  if (lang === 'en') {
+    const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in English. ALWAYS reply in English, in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
+    return `${rule}\n\n${sys}\n\n${rule}`;
+  }
+  const rule = 'DİL KURALI: Varsayılan dil Türkçe. Kullanıcı açıkça başka bir dilde yazıyorsa ya da o dili isterse o dilde cevap ver.';
+  return `${sys}\n\n${rule}`;
+}
+
 function system(ctx: Ctx) {
   return `Sen Moka'sın: kahve seven tatlı bir kakapo papağanı, Homezy uygulamasının maskotusun. Kullanıcının ev arkadaşısın.
 
@@ -224,7 +234,7 @@ Deno.serve(async req => {
     const res = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 500,
-      system: system(ctx) + (body.lang === 'en' ? '\n\nLANGUAGE (overrides every earlier language rule): the user uses the app in English. Always reply in English, and write any note text in English.' : ''),
+      system: withLang(system(ctx), body.lang),
       tools: TOOLS,
       tool_choice: { type: 'auto' },
       messages,

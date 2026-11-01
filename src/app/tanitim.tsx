@@ -24,12 +24,15 @@ import { sfx } from '@/lib/sfx';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
 
 // Web önizlemesinde yerel sürücü yok; orada kaydırma JS ile izlenir.
+const PAPER = '#FFFDF8';
 const native = Platform.OS !== 'web';
 
 type Page = {
   eyebrow: string;
   title: string;
   text: string;
+  /** Polaroid alt yazı şeridi. */
+  caption: string;
   scene: ImageSourcePropType;
   tint: (c: Colors) => string;
   /** Sahnenin altındaki küçük çıkartmalar: neyi anlattığını bir bakışta gösterir. */
@@ -38,124 +41,76 @@ type Page = {
   premium?: boolean;
 };
 
-// Moka kendini tanıtır, sonra her sayfayı tek cümleyle kendi anlatır (docs/skeleton-v3.md).
+// Her sayfa: kısa başlık + 1-2 cümle + özellik çipleri. Amaç: günlük disiplin (docs/skeleton-v3.md).
 const ALL_PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
-    title: 'Merhaba, ben Moka!',
-    text: 'Kahveye bayılan tombul bir kakapoyum. Evinin işlerini seninle, kendi hızında takip edeceğim.',
+    title: 'Evini düzenle, günü kazan',
+    text: 'Homezy, ev işlerini her gün küçük bir alışkanlığa çevirir. Ben Moka, yanında olacağım.',
+    caption: 'Merhaba, ben Moka ☕',
     scene: POSE_SCENES.happy!,
     tint: c => c.peachSoft,
-    chips: ['☕ Sakin', '🤍 Yargısız', '🏡 Senin hızında'],
+    chips: ['✅ Günlük disiplin', '🤍 Yargısız', '☕ Moka'],
   },
   {
     eyebrow: 'Evini çiz',
-    title: 'Önce evini birlikte çizelim',
-    text: 'Hazır bir plan seç ya da odaları parmağınla boya. Her odaya kendi işlerini ben eklerim.',
+    title: 'Evin planı cebinde',
+    text: 'Odaları parmağınla boya ya da hazır plan seç. Her odaya kendi işleri otomatik gelir.',
+    caption: 'Önce evini çizelim',
     scene: POSE_SCENES.handyman!,
     tint: c => c.sageSoft,
-    chips: ['🛏️ Yatak odası', '🍳 Mutfak', '🛁 Banyo'],
+    chips: ['🛏️ Odalar', '🍳 Mutfak', '🛁 Banyo', '🪴 Bitkiler'],
   },
   {
     eyebrow: 'Küçük işler',
-    title: 'Her iş evine bir iyilik',
-    text: 'Bir işi bitir, puan kazan; serin uzadıkça evin büyür. Kaçırdığın gün sorun değil, ertele ya da bu seferlik atla.',
+    title: 'İş yap, puan kazan, seri tut',
+    text: 'Her gün birkaç küçük iş bitir; puan kazan, serin uzasın. Aksattığın gün ertele ya da atla, sorun yok.',
+    caption: 'Her gün biraz',
     scene: POSE_SCENES.sweeping!,
     tint: c => c.roseSoft,
-    chips: ['✅ Tamamladım', '⭐ +10 puan', '🔥 Seri', '😴 Ertele'],
-  },
-  {
-    eyebrow: 'Her odanın kendi işi',
-    title: 'Dolap, buzdolabı, bitkiler',
-    text: 'Kirli çamaşırı, biten ürünü, sulanacak bitkiyi odası takip eder. Alışveriş listesi kendiliğinden çıkar.',
-    scene: POSE_SCENES.plants!,
-    tint: c => c.sageSoft,
-    chips: ['👕 Gardırop', '🥛 Stok', '🪴 Bitkiler', '🛒 Alışveriş'],
-  },
-  {
-    eyebrow: 'Fotoğrafla tara',
-    title: 'Buzdolabı ve dolap tek fotoğrafta',
-    text: 'Fotoğrafı çek, eksik ürünleri ve kıyafetlerini ben tanıyayım. Kombin önerisi internetsiz çalışır. Ücretsizde haftada 2 tarama hakkın var.',
-    scene: POSE_SCENES.analyzing!,
-    tint: c => c.lavenderSoft,
-    chips: ['🥛 Süt azaldı', '👕 3 kirli', '🧥 Kombin'],
+    chips: ['✅ Görevler', '⭐ Puan', '🔥 Seri', '😴 Ertele'],
   },
   {
     eyebrow: '3D evin',
-    title: 'Evin gerçekten canlanır',
-    text: 'Çevir, yakınlaştır; hava durumu ve saate göre gökyüzü değişir. Gerçek evin iki katlıysa 2. katı da ekleyebilirsin.',
+    title: 'Düzenin evini büyütür',
+    text: 'Seri tuttukça 3D evin gelişir; bıraktıkça toz tutar. Gökyüzü hava durumuna göre değişir.',
+    caption: 'Evin seninle büyür',
     scene: POSE_SCENES.amazed!,
     tint: c => c.peachSoft,
-    chips: ['🏡 3D ev', '🌦️ Gökyüzü', '🔼 Katlar', '✨ 2. kat'],
+    chips: ['🏡 3D ev', '🌦️ Gökyüzü', '🛋️ Eşyalar', '🔼 2. kat'],
     premium: true,
   },
   {
-    eyebrow: 'Evini kendine benzet',
-    title: 'Zemin, duvar, pencere, cephe',
-    text: 'Evim ekranından odalarının zeminini, duvarını ve pencerelerini seç; dış cepheyi değiştir, eşyalarını istediğin yere koy. Bazı seçenekler Premium’a özel.',
-    scene: POSE_SCENES.maintenance!,
-    tint: c => c.sageSoft,
-    chips: ['🪵 Zemin', '🎨 Duvar', '🪟 Pencere', '🛋️ Eşya'],
-    premium: true,
-  },
-  {
-    eyebrow: 'Moka ile sohbet, odak',
-    title: 'Takıldığında bana sor',
-    text: 'Bugün nereden başlasam? de; iş ekleyeyim, erteleyeyim, takvime not yazayım. Odak oturumunda lofi müzik eşliğinde tek işe sarıl. Ücretsizde günde 15, Premium’da 150 mesaj.',
-    scene: POSE_SCENES.laptop!,
-    tint: c => c.lavenderSoft,
-    chips: ['💬 Sohbet', '🎧 Lofi', '⏱️ Odak', '📅 Takvim notu'],
-  },
-  {
-    eyebrow: 'Bahçe ve mağaza',
-    title: 'Puanlar eşyaya, çiçeğe dönüşür',
-    text: 'Moka’nın bahçesini sula, mağazadan evine yeni eşyalar al. Seriyi bozarsan ev toz tutar; geri dönünce onarırsın. Akvaryum, şömine ve piyano Premium’da.',
+    eyebrow: 'Moka ve bahçe',
+    title: 'Moka eşlik eder, bahçe çiçek açar',
+    text: 'Moka’ya sor, odak oturumunda lofi ile tek işe sarıl. Puanlarınla bahçeni sula, mağazadan eşya al.',
+    caption: 'Moka’yla çalış',
     scene: POSE_SCENES.watering!,
     tint: c => c.sageSoft,
-    chips: ['🌱 Bahçe', '🛍️ Mağaza', '🐠 Akvaryum', '🎹 Piyano'],
-    premium: true,
+    chips: ['💬 Sohbet', '🎧 Odak', '🌱 Bahçe', '🛍️ Mağaza'],
   },
   {
     eyebrow: 'Kendin için',
-    title: 'Günlük, spor, ruh halin',
-    text: 'Günün nasıldı, yaz ve işaretle. Antrenmanını kaydet. Premium’da fotoğraf, grafikler ve “geçen yıl bugün” de var.',
+    title: 'Spor, günlük, ruh halin',
+    text: 'Antrenmanını kaydet, günün nasıldı yaz. Haftalık grafiklerle ne kadar yol aldığını gör.',
+    caption: 'Kendine de zaman ayır',
     scene: POSE_SCENES.reading!,
-    tint: c => c.roseSoft,
-    chips: ['📔 Günlük', '💛 Ruh hali', '🏃 Spor'],
-    premium: true,
-  },
-  {
-    eyebrow: 'Gelişimin',
-    title: 'Ne kadar yol aldığını gör',
-    text: 'Haftalık grafikler, seri takvimi ve paylaşılabilir “Günüm” ile haftalık özet kartları. Her sabah tek nazik bir özet bildirimi gelir, saatini sen seçersin.',
-    scene: POSE_SCENES.cheers!,
-    tint: c => c.peachSoft,
-    chips: ['📊 Haftan', '🌤️ Sabah özeti', '🔔 Hatırlatma', '📤 Paylaş'],
-  },
-  {
-    eyebrow: 'Zor günler, birlikte',
-    title: 'Yoğunsan, hastaysan, tatildeysen',
-    text: '“Ne kadar vaktin var?” de, sığan işleri göster. Misafir, tatil ve hasta modları işleri hafifletir; seri dondurma ile bir gün kaçırsan da evin yıkılmaz. Ev bakımı faturaları ve garantileri tutar, aile ile evi paylaşabilirsin.',
-    scene: POSE_SCENES.blanket!,
     tint: c => c.lavenderSoft,
-    chips: ['⏳ 10-60 dk', '🛋️ Modlar', '❄️ Seri dondur', '👨‍👩‍👧 Aile', '🔧 Ev bakımı'],
+    chips: ['🏃 Spor', '📔 Günlük', '💛 Ruh hali', '📊 Gelişim'],
   },
   {
     eyebrow: 'Premium',
     title: 'Evinin tadını çıkar',
-    text: 'Daha çok tarama ve sohbet, 2. kat, Premium eşyalar, ev temaları, 5 ev, aile paylaşımı, tarif ve kombin planı, reklamsız. İlk ay indirimli, istediğin zaman iptal.',
+    text: 'Daha çok yapay zekâ taraması, 2. kat, özel eşyalar, 5 ev ve aile paylaşımı. Reklamsız; istediğin zaman iptal.',
+    caption: 'İlk ay indirimli ✨',
     scene: POSE_SCENES.party!,
     tint: c => c.peachSoft,
-    chips: [`📸 Günde ${LIMITS.premium.scans} tarama`, `💬 ${LIMITS.premium.chats} mesaj`, `❄️ Ayda ${LIMITS.premium.freezes} dondurma`, '⭐ 1,5 kat puan'],
+    chips: [`📸 Günde ${LIMITS.premium.scans} tarama`, `💬 ${LIMITS.premium.chats} mesaj`, '🔼 2. kat', '⭐ 1,5 kat puan'],
     premium: true,
   },
 ];
 
-/**
- * İlk açılışta yalnızca 5 sayfa: tanışma, ev çizme, küçük işler, 3D ev, Premium. Gerisi
- * (tarama, bahçe, günlük...) uygulamada kendiliğinden keşfedilir; ilk değere (ilk iş) daha çabuk varılsın.
- */
-const SHORT = ['Tanışalım', 'Evini çiz', 'Küçük işler', '3D evin', 'Premium'];
+const SHORT = ['Tanışalım', 'Evini çiz', 'Küçük işler', '3D evin', 'Moka ve bahçe', 'Kendin için', 'Premium'];
 const PAGES = ALL_PAGES.filter(p => SHORT.includes(p.eyebrow));
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. */
@@ -277,27 +232,30 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
   const textY = x.interpolate({ inputRange: r, outputRange: [40, 0, 40], extrapolate: 'clamp' });
   const fade = x.interpolate({ inputRange: [r[0] + w * 0.3, r[1], r[2] - w * 0.3], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   // Küçük ekranda metne ve alttaki düğmeye yer kalsın diye kart yüksekliğe göre de küçülür.
-  const card = Math.max(200, Math.min(w - 48, 420, ((h - top - 70 - 150 - 250) * 4) / 3 + 20));
+  const card = Math.max(200, Math.min(w - 56, 400, ((h - top - 70 - 150 - 260) * 4) / 3 + 60));
 
   return (
     <View style={{ width: w, paddingTop: top + 70, paddingBottom: 150, paddingHorizontal: 24, alignItems: 'center' }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
-      <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }] }}>
-        <Squish quiet onPress={onPoke} accessibilityLabel="Moka'ya dokun" style={[st.polaroid, { width: card, backgroundColor: c.surface, shadowColor: c.shadow }]}>
+      <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }, { rotate: i % 2 ? '2.5deg' : '-2.5deg' }] }}>
+        <Squish quiet onPress={onPoke} accessibilityLabel="Moka'ya dokun" style={[st.polaroid, { width: card, backgroundColor: PAPER, shadowColor: c.shadow }]}>
           <View style={[st.tape, { backgroundColor: p.tint(c) }]} />
           {p.premium && (
             <View style={[st.badge, { backgroundColor: brand.navy }]}>
               <Text style={st.badgeT}>✨ Premium</Text>
             </View>
           )}
-          <Image source={p.scene} style={{ width: card - 20, height: ((card - 20) * 3) / 4, borderRadius: 22 }} resizeMode="cover" accessibilityIgnoresInvertColors />
-          <View style={st.chips}>
-            {p.chips.map((ch, k) => (
-              <Float key={ch} amp={2.5} dur={1900 + k * 300} delay={k * 200}>
-                <View style={[st.chip, { backgroundColor: p.tint(c) }]}>
-                  <Text style={[st.chipT, { color: c.ink }]}>{ch}</Text>
-                </View>
-              </Float>
-            ))}
+          <Image source={p.scene} style={{ width: card - 28, height: ((card - 28) * 3) / 4, borderRadius: 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+          <View style={st.strip}>
+            <Text style={[st.caption, { color: brand.navy }]} numberOfLines={1}>{p.caption}</Text>
+            <View style={st.chips}>
+              {p.chips.map((ch, k) => (
+                <Float key={ch} amp={2} dur={1900 + k * 300} delay={k * 200}>
+                  <View style={[st.chip, { backgroundColor: p.tint(c) }]}>
+                    <Text style={[st.chipT, { color: c.ink }]}>{ch}</Text>
+                  </View>
+                </Float>
+              ))}
+            </View>
           </View>
         </Squish>
       </Animated.View>
@@ -321,9 +279,11 @@ const st = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 14, height: 8, alignItems: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4 },
   polaroid: {
-    borderRadius: radius.card + 4, padding: 10, paddingBottom: 14, gap: 12,
-    shadowOffset: { width: 0, height: 14 }, shadowOpacity: 1, shadowRadius: 24, elevation: 6,
+    borderRadius: 6, padding: 14, paddingBottom: 12,
+    shadowOffset: { width: 0, height: 14 }, shadowOpacity: 1, shadowRadius: 24, elevation: 8,
   },
+  strip: { gap: 8, paddingTop: 12, paddingBottom: 2, alignItems: 'center' },
+  caption: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24 },
   tape: { position: 'absolute', top: -9, alignSelf: 'center', width: 70, height: 20, borderRadius: 7, zIndex: 2, opacity: 0.95, transform: [{ rotate: '-3deg' }] },
   badge: { position: 'absolute', top: 14, right: 14, zIndex: 3, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' },

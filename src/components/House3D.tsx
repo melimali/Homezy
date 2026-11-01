@@ -634,6 +634,170 @@ function Drift({ vb, scale, dx = 0, dy = 0, ms, restart, fade, reduce, children 
   );
 }
 
+type RoamNode = { x: number; y: number; nb: number[] };
+type RoamMode = 'walk' | 'sit' | 'sleep' | 'look';
+
+/** Evcil hayvan: odasındaki boş bloklarda gezer; yumuşak hızlanıp yavaşlar, yürürken zıplar, durur, bakar, oturur, uyur. */
+function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
+  vb: string; scale: number; nodes: RoamNode[]; start: number; home: Pt; kind: 'kedi' | 'kopek'; reduce: boolean; children: ReactElement | ReactElement[];
+}) {
+  const [x] = useState(() => new Animated.Value(0));
+  const [y] = useState(() => new Animated.Value(0));
+  const [bob] = useState(() => new Animated.Value(0));
+  const [mode, setMode] = useState<RoamMode>('sit');
+  const [flip, setFlip] = useState(false);
+  const live = useRef({ nodes, scale, cur: start, flip: false });
+  live.current.nodes = nodes;
+  live.current.scale = scale;
+  const sig = nodes.map(n => n.x.toFixed(0) + n.y.toFixed(0)).join('|') + ':' + scale.toFixed(2);
+  const dog = kind === 'kopek';
+
+  // Yerleşim (döndürme ya da ölçek değişince) mevcut bloğa oturt.
+  useEffect(() => {
+    const n = live.current.nodes[live.current.cur] ?? live.current.nodes[0];
+    if (!n) return;
+    x.setValue(n.x * scale);
+    y.setValue(n.y * scale);
+  }, [sig, x, y, scale]);
+
+  // Zıplama / nefes döngüsü kipe göre.
+  useEffect(() => {
+    if (reduce) return;
+    const period = mode === 'walk' ? (dog ? 170 : 240) : mode === 'sleep' ? 1500 : mode === 'sit' ? 1000 : 0;
+    bob.setValue(0);
+    if (!period) return;
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(bob, { toValue: 1, duration: period, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(bob, { toValue: 0, duration: period, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    a.start();
+    return () => a.stop();
+  }, [mode, bob, dog, reduce]);
+
+  // Davranış döngüsü.
+  useEffect(() => {
+    if (reduce) return;
+    let dead = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let anim: Animated.CompositeAnimation | undefined;
+    const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+    const wait = (ms: number, fn: () => void) => { timer = setTimeout(() => { if (!dead) fn(); }, ms); };
+    const face = (f: boolean) => { live.current.flip = f; setFlip(f); };
+
+    const path = (from: number, to: number): number[] => {
+      const ns = live.current.nodes;
+      const prev = new Map<number, number>([[from, -1]]);
+      const q = [from];
+      while (q.length) {
+        const u = q.shift()!;
+        if (u === to) break;
+        for (const v of ns[u]?.nb ?? []) if (!prev.has(v)) { prev.set(v, u); q.push(v); }
+      }
+      if (!prev.has(to)) return [];
+      const out: number[] = [];
+      for (let u = to; u !== -1; u = prev.get(u)!) out.unshift(u);
+      return out.slice(1);
+    };
+
+    const next = () => {
+      if (dead) return;
+      const ns = live.current.nodes;
+      const r = Math.random();
+      const canWalk = ns.length > 1;
+      if (canWalk && r < 0.5) return walk();
+      if (r < 0.7) { setMode('sit'); return wait(rnd(2500, 6000), next); }
+      if (r < 0.88) {
+        setMode('look');
+        face(!live.current.flip);
+        return wait(rnd(1200, 2400), () => { if (Math.random() < 0.6) face(!live.current.flip); next(); });
+      }
+      setMode('sleep');
+      wait(rnd(7000, 14000), () => { setMode('sit'); wait(rnd(800, 1600), next); });
+    };
+
+    const walk = () => {
+      const ns = live.current.nodes;
+      const sc = live.current.scale;
+      const from = Math.min(live.current.cur, ns.length - 1);
+      let to = Math.floor(Math.random() * ns.length);
+      if (to === from) to = (to + 1) % ns.length;
+      const p = path(from, to);
+      if (!p.length) return next();
+      // Önce yönüne dön, kısa bir an bekle.
+      const dx0 = ns[p[0]].x - ns[from].x;
+      const need = dx0 !== 0 && (dx0 < 0) !== live.current.flip;
+      setMode('look');
+      if (need) face(dx0 < 0);
+      wait(need ? 220 : 80, () => {
+        setMode('walk');
+        const speed = (dog ? 24 : 15) * rnd(0.75, 1.3); // vb birimi / sn
+        const legs = p.map((idx, k) => {
+          const a = k === 0 ? ns[from] : ns[p[k - 1]];
+          const b = ns[idx];
+          const ms = Math.max(350, (Math.hypot(b.x - a.x, b.y - a.y) / speed) * 1000);
+          const easing = p.length === 1 ? Easing.inOut(Easing.quad) : k === 0 ? Easing.in(Easing.quad) : k === p.length - 1 ? Easing.out(Easing.quad) : Easing.linear;
+          return Animated.parallel([
+            Animated.timing(x, { toValue: b.x * sc, duration: ms, easing, useNativeDriver: true }),
+            Animated.timing(y, { toValue: b.y * sc, duration: ms, easing, useNativeDriver: true }),
+          ]);
+        });
+        anim = Animated.sequence(legs);
+        // Yürürken dönüşler: yön değişince yüzü çevir.
+        let k = 0;
+        const turnWatch = () => {
+          if (dead) return;
+          const a = k === 0 ? ns[from] : ns[p[k - 1]];
+          const dx = ns[p[k]].x - a.x;
+          if (Math.abs(dx) > 0.5) face(dx < 0);
+        };
+        const total = p.map((_, i) => {
+          const a = i === 0 ? ns[from] : ns[p[i - 1]];
+          const b = ns[p[i]];
+          return Math.max(350, (Math.hypot(b.x - a.x, b.y - a.y) / speed) * 1000);
+        });
+        let acc = 0;
+        for (let i = 1; i < p.length; i++) {
+          acc += total[i - 1];
+          const idx = i;
+          setTimeout(() => { if (!dead) { k = idx; turnWatch(); } }, acc);
+        }
+        anim.start(({ finished }) => {
+          if (dead || !finished) return;
+          live.current.cur = to;
+          setMode('sit');
+          wait(rnd(1500, 5000), next);
+        });
+      });
+    };
+
+    wait(rnd(500, 3000), next);
+    return () => { dead = true; if (timer) clearTimeout(timer); anim?.stop(); };
+  }, [x, y, dog, reduce]);
+
+  const amp = (mode === 'walk' ? (dog ? 2.6 : 1.8) : mode === 'sit' ? 0.5 : mode === 'sleep' ? 0.35 : 0) * scale;
+  const lie = mode === 'sleep' ? 2.5 * scale : 0;
+  const [hx, hy] = home;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        { transform: [{ translateX: x }, { translateY: Animated.add(Animated.add(y, bob.interpolate({ inputRange: [0, 1], outputRange: [lie, lie - amp] })), 0) }] },
+      ]}
+    >
+      <Svg width="100%" height="100%" viewBox={vb}>
+        <G transform={flip ? `translate(${(2 * hx).toFixed(1)} 0) scale(-1 1)` : undefined}>{children}</G>
+        {mode === 'sleep' && (
+          <G>
+            <SvgText x={hx + 5} y={hy - 8} fontSize={5} fill="#8B786D" opacity={0.9}>z</SvgText>
+            <SvgText x={hx + 9} y={hy - 13} fontSize={7} fill="#8B786D" opacity={0.7}>Z</SvgText>
+          </G>
+        )}
+      </Svg>
+    </Animated.View>
+  );
+}
+
 /** Onarım ya da seviye atlama: evin ortasından yıldız halkası saçılır, solar. */
 function Burst({ vb, cx, cy, spread }: { vb: string; cx: number; cy: number; spread: number }) {
   const [v] = useState(() => new Animated.Value(0));
@@ -973,7 +1137,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   };
   const els: ReactElement[] = [];
   /** Gezen evcil hayvanlar: kendi katmanlarında odalarında volta atar. */
-  const pets: { id: string; el: ReactElement }[] = [];
+  const pets: { id: string; el: ReactElement; nodes: RoamNode[]; start: number; home: Pt }[] = [];
   const add = (f: Face) => els.push(renderFace({ strokeWidth: 0.8, ...f }));
   // Üstte canlandırılan ışıklar: oda glow'ları ve pencere huzmeleri (nefes), temiz oda parıltıları (twA / twB).
   const life = emptyLife();
@@ -1225,7 +1389,28 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     if (i === stairAt && L >= 4) stairs(k, r, col);
     if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c)}</G>);
     for (const item of itemAt[i] ?? []) {
-      if (item === 'kedi' || item === 'kopek') pets.push({ id: item, el: <G key={k + 'i' + item}>{itemShape(item, r, col, k + 'i' + item)}</G> });
+      if (item === 'kedi' || item === 'kopek') {
+        // Gezilebilir bloklar: odanın, mobilya / etiket / merdiven / başka eşya olmayan blokları.
+        const walk = cells.map((x, j) => x === id && (j === i || (j !== anchors[id] && j !== props[id] && j !== stairAt && !(itemAt[j] ?? []).some(o => o !== 'kedi' && o !== 'kopek'))));
+        const idxOf = new Map<number, number>();
+        const nodes: RoamNode[] = [];
+        const [ox, oy] = P(r + 0.5, col + 0.5, 0);
+        walk.forEach((ok, j) => {
+          if (!ok) return;
+          idxOf.set(j, nodes.length);
+          const [px, py] = P(Math.floor(j / cols) + 0.5, (j % cols) + 0.5, 0);
+          nodes.push({ x: px - ox, y: py - oy, nb: [] });
+        });
+        idxOf.forEach((ni, j) => {
+          const jr = Math.floor(j / cols), jc = j % cols;
+          for (const [rr, cc] of [[jr - 1, jc], [jr + 1, jc], [jr, jc - 1], [jr, jc + 1]]) {
+            if (rr < 0 || cc < 0 || cc >= cols) continue;
+            const nj = idxOf.get(rr * cols + cc);
+            if (nj !== undefined) nodes[ni].nb.push(nj);
+          }
+        });
+        pets.push({ id: item, el: <G key={k + 'i' + item}>{itemShape(item, r, col, k + 'i' + item)}</G>, nodes, start: idxOf.get(i) ?? 0, home: P(r + 0.5, col + 0.5, 14) });
+      }
       else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item)}</G>);
     }
 
@@ -1489,7 +1674,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
-      {sc > 0 && pets.map((pt, i) => <Drift key={'pet' + i} vb={vb} scale={sc} dx={vbW * (pt.id === 'kedi' ? 0.025 : 0.035)} dy={pt.id === 'kedi' ? 1 : -1} ms={pt.id === 'kedi' ? 3800 : 2300} reduce={reduce}>{pt.el}</Drift>)}
+      {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && mokaEls.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.03} dy={-1.5} ms={2600} reduce={reduce}>{mokaEls}</Drift>}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}

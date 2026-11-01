@@ -34,7 +34,7 @@ Kahve sever tombul kakapo Moka, birkaç soruyla seni ve evini tanır: yalnız m�
 Ana ekranda sıradaki iş ve günün özeti. "Tamamladım" de, puanı kap. Gecikenler kırmızı, bugünküler sıcak renkte. Yorgunsan ya da vaktin azsa 10, 20, 30 dakikalık işleri seç.
 
 🍽️ BU AKŞAM NE YESEK?
-Dolabındaki malzemelere göre pratik, cebe dostu ve sağlık puanlı yemek önerileri. Eksik malzemeler tek dokunuşla alışveriş listesine eklenir.
+Moka buzdolabındaki ürünleri Var / Az / Bitti diye takip eder ve elindekilere göre pratik, cebe dostu, sağlık puanlı yemek önerir. Eksik malzemeler tek dokunuşla alışveriş listesine eklenir.
 
 🏡 3B EVİN VE MOKA
 Evini bloklarla çiz, 3B evin canlansın. Moka evinde dolaşır, yaptığın her işle evin kat kat yükselir. Premium ile 2. kat çiz, puanlarınla eşya, zemin, duvar ve cephe seç.

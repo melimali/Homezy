@@ -33,7 +33,7 @@ Moka, a chubby coffee-loving kākāpō, learns about you and your home with a fe
 Your home screen shows the next task and the day at a glance. Tap "Done" and collect points. Overdue tasks are red, today's are warm-colored. Tired or short on time? Pick 10, 20 or 30 minute tasks.
 
 🍽️ WHAT'S FOR DINNER?
-Practical, budget-friendly recipe ideas with a health score, based on what you already have. Missing ingredients go to your shopping list in one tap.
+Moka tracks what's in your fridge (In stock / Low / Out) and suggests practical, budget-friendly recipes with a health score from what you already have. Missing ingredients go to your shopping list in one tap.
 
 🏡 YOUR 3D HOME AND MOKA
 Draw your home with blocks and watch it come to life in 3D. Moka roams your house, and every task you do helps it rise floor by floor. Add a second floor with Premium, and spend points on furniture, floors, walls and facades.

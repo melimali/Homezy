@@ -18,11 +18,14 @@ Kod tarafı kontrol edildi (`docs/yayin-kontrol-listesi.md`). Aşağıdakiler sa
 
 ## 1. Yasal sayfaları yayınla (Play ve Auth bunsuz ilerlemez) ⏱ 15 dk
 
-- [ ] Proje klasöründeki `themeikai-yasal/homezy/` (ya da repoda `docs/yasal/`) içindeki dosyaları themeikai.com sitenin köküne **`/homezy/`** altına yükle. Son adresler şunlar olmalı (tarayıcıda aç, çalıştığını gör):
+- [ ] Hazır paket: repoda `docs/yasal/site/` (proje klasöründe `themeikai-yasal/homezy/` aynısı). İçinde 6 klasör var: `gizlilik`, `kosullar`, `hesap-silme`, `eposta-onayi` (zorunlu 4) ve `privacy`, `terms` (İngilizce, sayfalardaki "English" bağlantısı için). Her klasörde `index.html` var; stil içinde, ek dosya gerekmez.
+- [ ] Yükle: themeikai.com hosting panelinde (Dosya Yöneticisi/FTP) site köküne `homezy` klasörü aç, 6 klasörü **klasör olarak** içine at (`.../homezy/gizlilik/index.html` gibi). Son adresler (tarayıcıda aç, çalıştığını gör):
   - https://themeikai.com/homezy/gizlilik
   - https://themeikai.com/homezy/kosullar
   - https://themeikai.com/homezy/hesap-silme
   - https://themeikai.com/homezy/eposta-onayi (e-posta onay linkinin düştüğü sayfa)
+  - (ek) /homezy/privacy ve /homezy/terms
+  Adres uzantısız açılmazsa hosting klasör yönlendirmesi kapalıdır; hosting desteğine sor.
 - [ ] Sayfalarda iletişim adresinin gerçek ve **okuduğun** bir kutu olduğunu doğrula (kodda `info@themeikai.com`). Farklıysa hem sayfalarda hem `src/lib/links.ts` `SUPPORT_EMAIL` içinde değiştir.
 - [ ] Sayfalarda yayıncı **Melih Tuğyan (şahıs)** yazıyor, "Meikai Digital" yayıncı olarak geçmiyor mu bak. Tarihi yayın gününe güncelle.
 

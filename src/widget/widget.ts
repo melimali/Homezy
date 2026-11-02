@@ -102,3 +102,15 @@ if (lib) {
     }
   });
 }
+
+/** Ana ekrana "Bugün" widget'ını ekletir (bazı telefonların araç seçicisi widget'ı listelemiyor). Eklenemezse false. */
+export async function pinTodayWidget(): Promise<boolean> {
+  if (!lib) return false;
+  try {
+    return await lib.W.requestPinWidget({ widgetName: lib.UI.WIDGET_NAME });
+  } catch {
+    return false;
+  }
+}
+
+export const widgetAvailable = () => lib != null;

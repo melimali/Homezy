@@ -8,6 +8,7 @@ import { MOKA_ASSETS } from '@/constants/moka';
 import { allTasks, doneToday } from '@/domain/logic';
 import { BUSY, checkinOf, dayPlan, FEELS, feelOf, needsCheckin, planTasks, saveCheckin, type DayBusy, type Feel } from '@/domain/mood';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
+import { useLaunchChoiceOpen } from '@/lib/launchChoice';
 import { sfx } from '@/lib/sfx';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
@@ -21,11 +22,12 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
   const c = useColors();
   const now = useNow();
   const { state: S, update } = useStore();
+  const choiceOpen = useLaunchChoiceOpen();
   // "Tekrar hoş geldin" açılacaksa o gün önce o çıksın; soru kapatılınca sonra gelir.
   const away = awayAhead(S.play, 0, now);
   const welcomeFirst = !progressOf(S.play, now).today && away != null && away >= AWAY_DAYS && S.play.welcomed !== dayKey(now);
   const auto = open === undefined;
-  const visible = auto ? needsCheckin(S.play, now) && !welcomeFirst : open;
+  const visible = auto ? needsCheckin(S.play, now) && !welcomeFirst && !choiceOpen : open;
   const prev = checkinOf(S.play, now);
   const [feel, setFeel] = useState<Feel | null>(prev && 'feel' in prev ? prev.feel : null);
   if (!visible) return null;

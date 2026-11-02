@@ -18,6 +18,7 @@ import type { ModeKind } from '@/domain/types';
 import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
+import { tx } from '@/i18n/runtime';
 import { fonts, radius, useColors } from '@/theme';
 
 export default function Bugun() {
@@ -69,7 +70,7 @@ export default function Bugun() {
               <T v="small">{doneN}/{total} tamamlandı</T>
             </View>
             <Pulse on={doneN}>
-              <Text style={[styles.pct, { color: c.ink }]}>%{Math.round((doneN / total) * 100)}</Text>
+              <Text style={[styles.pct, { color: c.ink }]}>{S.settings.language === 'en' ? `${Math.round((doneN / total) * 100)}%` : `%${Math.round((doneN / total) * 100)}`}</Text>
             </Pulse>
           </View>
           <Bar value={doneN / total} height={10} color={c.accent} />
@@ -80,7 +81,7 @@ export default function Bugun() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
           <FilterPill label={`Tümü (${total})`} on={!filt} onPress={() => setOnly(null)} />
           {places.map(([rid, p]) => (
-            <FilterPill key={rid} label={`${p.name} (${today.filter(x => x.rid === rid).length})`} on={filt === rid} onPress={() => setOnly(rid)} />
+            <FilterPill key={rid} label={`${tx(p.name)} (${today.filter(x => x.rid === rid).length})`} on={filt === rid} onPress={() => setOnly(rid)} />
           ))}
         </ScrollView>
       )}

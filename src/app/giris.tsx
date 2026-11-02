@@ -147,7 +147,7 @@ export default function Giris() {
             <Field
               value={email}
               onChangeText={setEmail}
-              placeholder="ornek@eposta.com"
+              placeholder={state.settings.language === 'en' ? 'name@example.com' : 'ornek@eposta.com'}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -202,9 +202,9 @@ export default function Giris() {
           <Text style={[st.legal, { color: c.muted }]}>
             Hesap oluşturarak{' '}
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))}>Kullanım koşulları</Text>
-            {"'nı ve "}
+            {state.settings.language === 'en' ? ' and the ' : "'nı ve "}
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))}>Gizlilik politikası</Text>
-            {"'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
+            {state.settings.language === 'en' ? ', and confirm you are over 13 years old.' : "'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
           </Text>
         )}
 

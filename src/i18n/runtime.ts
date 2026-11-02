@@ -54,7 +54,11 @@ const canon = new Map<string, string>();
 const patterns: { re: RegExp; out: string }[] = [];
 for (const [k, v] of Object.entries(EN)) {
   if (k.includes('{}')) {
-    patterns.push({ re: new RegExp('^' + esc(norm(k)).replace(/\{\}/g, '([^·\\n]+?)') + '$', 'i'), out: v });
+    // Sondaki {} boş kalabilir ("... blok" + boş ek).
+    const body = esc(norm(k));
+    const tail = body.endsWith('{}');
+    const head = tail ? body.slice(0, -2) : body;
+    patterns.push({ re: new RegExp('^' + head.replace(/\{\}/g, '([^·\\n]+?)') + (tail ? '([^·\\n]*?)' : '') + '$', 'i'), out: v });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;

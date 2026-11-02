@@ -8,7 +8,7 @@ import { agoText, daysSince, donateList, expiryText, laundryPlan, sortByDue, uid
 import { clothEmoji, itemEmoji } from '@/domain/icons';
 import type { ClothState, StockLevel, WardrobeFilter, WashType } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
-import { persistPhoto, pickPhoto } from '@/lib/photos';
+import { persistPhoto, photoExists, pickPhoto } from '@/lib/photos';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -222,7 +222,7 @@ export function Fridge({ rid }: { rid: string }) {
     <Card>
       <SecHead title="Buzdolabı" right={m.photoAt ? 'çekildi: ' + agoText(m.photoAt) : 'fotoğraf yok'} />
       <View style={[styles.fridge, { backgroundColor: c.surface2 }]}>
-        {m.photo ? (
+        {m.photo && photoExists(m.photo) ? (
           <Image source={{ uri: m.photo }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel="Buzdolabının son fotoğrafı" />
         ) : (
           <View style={{ alignItems: 'center', gap: 8 }}>

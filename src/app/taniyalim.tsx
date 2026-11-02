@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Float, Squish } from '@/components/motion';
@@ -17,7 +18,8 @@ import { fonts, radius, useColors } from '@/theme';
 export default function Taniyalim() {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const { update } = useStore();
+  const { state, update } = useStore();
+  const setupDone = state.setup;
   const { answers: saved } = usePersona();
   const [ans, setAns] = useState<Answers>({ ...DEFAULT_ANSWERS, ...saved, tastes: [] });
   const [step, setStep] = useState(0);
@@ -38,6 +40,7 @@ export default function Taniyalim() {
         if (!D.setup) D.settings.time = PLAN[p].morning;
       });
       savePersona(final, true);
+      if (setupDone && router.canGoBack()) router.back();
     }, 2600);
   };
 
@@ -117,7 +120,7 @@ export default function Taniyalim() {
       <View style={{ gap: 6 }}>
         {q.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
         {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} block />}
-        {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={skipPersona} block />}
+        {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} block />}
       </View>
     </View>
   );

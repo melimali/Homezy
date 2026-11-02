@@ -145,6 +145,7 @@ export default function Hesap() {
         { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
         { emoji: '🧊', label: 'Buzdolabı', sub: 'Ürünler, eksikler, tarifler', tint: c.sageSoft, href: '/buzdolabi' as Href },
         { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
+        { emoji: '🧡', label: 'Seni tanıyalım', sub: 'Yaşam tarzı ve yemek soruları', tint: c.lavenderSoft, href: '/taniyalim' },
         { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
         { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
         { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },

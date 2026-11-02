@@ -2,7 +2,7 @@ import { installTranslationPatch } from '@/i18n/patch';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { Stack, usePathname } from 'expo-router';
+import { Stack, router, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -90,6 +90,14 @@ function RootStack() {
     return () => clearTimeout(t);
   }, []);
 
+  // Evi zaten kurulu olanlara da sorular bir kere açılır (sonra Ben > Seni tanıyalım'dan tekrar).
+  const askOld = !loading && introSeen && (status === 'guest' || status === 'account') && state.setup && !quizSeen;
+  useEffect(() => {
+    if (!askOld) return;
+    const t = setTimeout(() => router.push('/taniyalim'), 1500);
+    return () => clearTimeout(t);
+  }, [askOld]);
+
   if (loading) return null;
   // Açılış sırası: açılış animasyonu → tanıtım (Moka) → giriş / hesap oluştur (ya da hesapsız devam) → evini kur → evle ilgili sorular → Ücretsiz / Premium seçimi (LaunchChoice) → ana ekran.
   const inside = introSeen && (status === 'guest' || status === 'account');
@@ -100,7 +108,7 @@ function RootStack() {
         <Stack.Screen name="tanitim" options={{ animation: 'fade' }} />
       </Stack.Protected>
       {/* Tanıtımdan sonra "seni tanıyalım" soruları (evi zaten kurulu olanlara sorulmaz). */}
-      <Stack.Protected guard={introSeen && !quizSeen && !state.setup}>
+      <Stack.Protected guard={introSeen && (state.setup || !quizSeen)}>
         <Stack.Screen name="taniyalim" options={{ animation: 'fade' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && state.setup}>

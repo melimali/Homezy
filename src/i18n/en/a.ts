@@ -1542,6 +1542,7 @@ export const EN_A: Record<string, string> = {
  "+{} iş daha · {}": "+{} more tasks · {}",
  "Bu hafta {} iş yaptın": "You did {} tasks this week",
  "Yatak odası": "Bedroom",
+ "Yatak": "Bedroom",
  "Odayı süpür ve sil": "Sweep and mop the room",
  "Çarşaf değişimi": "Change the sheets",
  "Toz alma": "Dusting",

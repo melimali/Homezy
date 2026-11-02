@@ -237,12 +237,16 @@ export default function Home() {
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
-        </Appear>
-        <Appear index={5} style={[styles.quick, { gap: 8 }]}>
           <Quick i={3} emoji="🛍️" label="Mağaza" sub={`${S.play.points} ⭐`} tint={c.peachSoft} onPress={() => router.push('/magaza' as Href)} />
-          {extrasUnlocked(S.play.days.length, now) ? <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} /> : <View style={{ flex: 1 }} />}
-          <View style={{ flex: 1 }} />
         </Appear>
+        {extrasUnlocked(S.play.days.length, now) && (
+          <Appear index={5} style={styles.quick}>
+            <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+            <View style={{ flex: 1 }} />
+            <View style={{ flex: 1 }} />
+            <View style={{ flex: 1 }} />
+          </Appear>
+        )}
       </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 

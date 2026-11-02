@@ -44,7 +44,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
   return (
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[st.bar, { backgroundColor: dark ? 'rgba(55,54,74,0.94)' : 'rgba(255,251,245,0.94)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
+      <View style={[st.bar, { backgroundColor: dark ? 'rgba(55,54,74,0.99)' : 'rgba(255,251,245,0.99)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
         <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>

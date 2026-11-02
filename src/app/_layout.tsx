@@ -11,6 +11,7 @@ import { LogBox, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
+import { CaptchaHost } from '@/auth/captcha';
 import { IntroSplash } from '@/components/IntroSplash';
 import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
@@ -57,6 +58,7 @@ export default function RootLayout() {
                 <StatusBar style="auto" />
                 <RootStack />
                 <LaunchChoice />
+                <CaptchaHost />
               </FamilyProvider>
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
               {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}

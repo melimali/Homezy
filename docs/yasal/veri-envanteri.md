@@ -13,6 +13,7 @@
 | Tarama fotoğrafı (buzdolabı / kıyafet) | Kullanıcı | Sunucuda saklanmaz; istek süresince bellekte | Anthropic | Anthropic politikası | – |
 | Moka sohbet mesajları + ev bağlamı (oda/iş adı-durumu, seviye, seri, tarih; son 12 mesaj) | Kullanıcı | Sunucuda saklanmaz; telefonda sadece açık oturumda bellekte | Anthropic | Anthropic politikası | Sohbeti temizle düğmesi |
 | Yaklaşık konum (2 ondalık) | Cihaz | Saklanmaz | Open-Meteo | – | – |
+| Robot doğrulaması (IP, tarayıcı/cihaz sinyalleri; sadece giriş, kayıt ve misafir oturumu açılırken, captcha açıksa) | Cloudflare Turnstile | Saklanmaz (Cloudflare işler) | Cloudflare | Cloudflare politikası | – |
 | Bildirim zamanlamaları | Uygulama | Telefon | – | – | İzin kapatma / uygulamayı silme |
 | Reklam kimliği, IP, cihaz bilgisi (ücretsiz plan) | AdMob SDK | AdMob | Google | Google politikası | Premium'a geçiş / reklam kimliğini sıfırlama |
 

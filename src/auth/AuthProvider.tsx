@@ -5,6 +5,7 @@ import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { removeAllPhotos } from '@/sync/photos';
 
+import { requestCaptcha } from './captcha';
 import { authErrorText } from './errors';
 
 /**
@@ -62,7 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Misafir olup anonim oturumu henüz açılamamışsa (ör. ilk açılışta internet yoktu) tekrar dene.
   useEffect(() => {
-    if (supabase && ready && guest && !session) supabase.auth.signInAnonymously().catch(() => {});
+    if (supabase && ready && guest && !session) {
+      requestCaptcha()
+        .then(captchaToken => supabase!.auth.signInAnonymously({ options: { captchaToken } }))
+        .catch(() => {});
+    }
   }, [ready, guest, session]);
 
   const user = session?.user ?? null;
@@ -88,10 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
+    const captchaToken = await requestCaptcha();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: name.trim() }, emailRedirectTo: EMAIL_CONFIRMED_URL },
+      options: { data: { name: name.trim() }, emailRedirectTo: EMAIL_CONFIRMED_URL, captchaToken },
     });
     if (error) return { ok: false, error: authErrorText(error) };
     // E-posta onayı açıksa oturum onaydan sonra, giriş yapınca açılır.
@@ -104,7 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const captchaToken = await requestCaptcha();
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password, options: { captchaToken } });
     if (error) return { ok: false, error: authErrorText(error) };
     setGuestFlag(false);
     return { ok: true };
@@ -114,14 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: EMAIL_CONFIRMED_URL });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: EMAIL_CONFIRMED_URL, captchaToken: await requestCaptcha() });
     if (error) return { ok: false, error: authErrorText(error) };
     return { ok: true };
   }, []);
 
   const continueAsGuest = useCallback(async () => {
     setGuestFlag(true);
-    if (supabase) await withTimeout(supabase.auth.signInAnonymously(), 5000, null);
+    if (supabase) {
+      const captchaToken = await requestCaptcha();
+      await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
+    }
   }, []);
 
   // Çıkış ve silme, uygulamayı ilk açılıştaki hâline döndürür: tanıtım yeniden görünür.

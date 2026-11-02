@@ -18,6 +18,8 @@ export function authErrorText(e: AuthError): string {
     case 'over_email_send_rate_limit':
     case 'over_request_rate_limit':
       return 'Çok fazla deneme oldu. Birkaç dakika sonra tekrar dene.';
+    case 'captcha_failed':
+      return 'Robot doğrulaması geçilemedi. İnternetini kontrol edip tekrar dene.';
     case 'signup_disabled':
       return 'Yeni hesap açma şu an kapalı.';
   }

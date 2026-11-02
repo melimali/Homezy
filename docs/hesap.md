@@ -37,6 +37,7 @@
 4. **Authentication > Emails**: onay ve şifre yenileme e-postalarını Türkçeye çevir (konu: "Homezy hesabını onayla", bağlantı metni: "E-postamı onayla").
 5. Tabloları kur: `supabase/migrations/` içindeki dosyaları sırayla SQL Editor'de çalıştır (`20261020210000_hesap.sql`, `20261020230000_delete_me.sql`, `20261021000000_puan.sql`), ya da Supabase CLI ile `supabase db push`. İkincisi uygulama içinden hesap silmeyi sağlayan `delete_me()` fonksiyonu, üçüncüsü puan, seri ve eşya mağazası (`play_award`, `play_buy`, `play_summary`). Üçüncüsü çalıştırılmadan puanlar sadece telefonda kalır, mağaza "Satın alınamadı" der.
 6. Abonelik fonksiyonları (`revenuecat-webhook`, `subscription-sync`): bkz. [odeme-kurulumu.md](odeme-kurulumu.md), 5. adım.
+7. **Captcha (isteğe bağlı, spam kaydına karşı):** Cloudflare > Turnstile'da widget aç (mod: Managed; izinli alan adı: `themeikai.com`). **Site key**'i `.env`'ye `EXPO_PUBLIC_TURNSTILE_SITE_KEY` olarak koy (EAS için `eas env:create` ile de). **Secret key**'i Supabase > Authentication > Attack Protection > Captcha'ya gir (provider: Turnstile) ve aç. Uygulama kodu (`src/auth/captcha.tsx`) giriş, kayıt, şifre yenileme ve misafir oturumunda token'ı gönderir; anahtar yoksa ya da `react-native-webview` derlemede yoksa token göndermez, yani Supabase'de captcha kapalıyken hiçbir şey değişmez. Widget başka alan adında çalışacaksa `EXPO_PUBLIC_TURNSTILE_ORIGIN` ver. Paket yeni olduğu için yeni derleme gerekir (Expo Go'da hazır).
 
 ### 2. RevenueCat ve mağazalar
 

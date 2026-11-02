@@ -162,7 +162,7 @@ export default function Home() {
 
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 26 }}>📅</Text>
+          <Text style={{ fontSize: 26 }}>🗓️</Text>
           <View style={{ flex: 1 }}>
             <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
             <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
@@ -195,6 +195,9 @@ export default function Home() {
           </View>
         } />
         <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        {hp.level < 1 && (
+          <Text style={[styles.mood, { color: c.muted }]}>🪵 Arsa hazır. İlk işini yap, evin temeli atılsın.</Text>
+        )}
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”

@@ -243,7 +243,7 @@ export function TaskRow({
         >
           <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
             <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted, textDecorationLine: 'line-through' }}>{t.name}</T>
-            <T v="small" numberOfLines={1} style={{ fontSize: 12.5, color: k.urgent ? tone : c.muted }}>{sub}</T>
+            <T v="small" numberOfLines={2} style={{ fontSize: 12.5, color: k.urgent ? tone : c.muted }}>{sub}</T>
             <Who k={k} t={t} />
           </View>
           {k.pose ? (

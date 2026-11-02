@@ -74,6 +74,8 @@ export function Screen({
         {header && <AppHeader />}
         {children}
       </ScrollView>
+      {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: c.bg, opacity: 0.94 }} />
     </View>
   );
 }

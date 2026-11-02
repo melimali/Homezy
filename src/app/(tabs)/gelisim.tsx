@@ -113,7 +113,7 @@ export default function Gelisim() {
       )}
 
       <Appear index={8} style={st.links}>
-        <LinkTile emoji="📅" label="Haftam" sub="Paylaşılabilir kart" tint={c.roseSoft} onPress={() => router.push('/hafta')} />
+        <LinkTile emoji="🗓️" label="Haftam" sub="Paylaşılabilir kart" tint={c.roseSoft} onPress={() => router.push('/hafta')} />
         <LinkTile emoji="🌤️" label="Günüm" sub="Moka ile paylaş" tint={c.roseSoft} onPress={() => router.push('/gunum')} />
         {extrasUnlocked(S.play.days.length, now) && <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />}
       </Appear>

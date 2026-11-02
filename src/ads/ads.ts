@@ -1,5 +1,5 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
 
 import { withTimeout } from '@/lib/net';
 
@@ -20,6 +20,7 @@ let mod: AdsModule | null | undefined;
 export function getAds(): AdsModule | null {
   if (mod !== undefined) return mod;
   if (Platform.OS === 'web' || Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return (mod = null);
+  if (!TurboModuleRegistry.get('RNGoogleMobileAdsModule')) return (mod = null);
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     mod = require('react-native-google-mobile-ads') as AdsModule;

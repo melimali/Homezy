@@ -237,7 +237,11 @@ export default function Home() {
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
-          {extrasUnlocked(S.play.days.length, now) && <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />}
+        </Appear>
+        <Appear index={5} style={[styles.quick, { gap: 8 }]}>
+          <Quick i={3} emoji="🛍️" label="Mağaza" sub={`${S.play.points} ⭐`} tint={c.peachSoft} onPress={() => router.push('/magaza' as Href)} />
+          {extrasUnlocked(S.play.days.length, now) ? <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} /> : <View style={{ flex: 1 }} />}
+          <View style={{ flex: 1 }} />
         </Appear>
       </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
@@ -380,7 +384,7 @@ const styles = StyleSheet.create({
   statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
   nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  quick: { flexDirection: 'row', justifyContent: 'space-between' },
+  quick: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   mood: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, textAlign: 'center', paddingHorizontal: 8 },

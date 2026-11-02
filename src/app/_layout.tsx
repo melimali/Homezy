@@ -142,7 +142,7 @@ function RootStack() {
         <Stack.Screen name="kurulum" options={{ animation: 'fade' }} />
       </Stack.Protected>
       {/* Misafir de buradan hesap açabilsin diye hesapla girmemiş herkese açık. */}
-      <Stack.Protected guard={introSeen && status !== 'account'}>
+      <Stack.Protected guard={introSeen && status !== 'account' && !(status === 'guest' && !state.setup)}>
         <Stack.Screen name="giris" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>

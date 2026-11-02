@@ -32,7 +32,7 @@ Kod: `src/ads/ads.ts` (başlatma, onay, reklam kimliği) ve `src/ads/AdBanner.ts
    - EAS `production` derlemesinde derlenen platformun uygulama kimliği ya da banner birimi eksikse derleme bilerek hata verir; test kimliğiyle mağazaya çıkılmaz.
    - Uygulama kimliği yerel koda girer: değiştirince yeniden derleme gerekir (Metro yeniden başlatmak yetmez).
 5. **AdMob > Gizlilik ve mesajlaşma > GDPR** mesajını oluştur ve yayınla (onay penceresi bu ayardan gelir). İsteğe bağlı olarak ABD eyalet mesajını da aç.
-6. **app-ads.txt:** AdMob'un verdiği satırı Meikai Digital sitesinin köküne (`app-ads.txt` adıyla) koy ve mağaza kaydında geliştirici web sitesi olarak bu siteyi göster.
+6. **app-ads.txt:** Dosya hazır: `docs/yasal/site/app-ads.txt` (`google.com, pub-6763724339604565, DIRECT, f08c47fec0942fa0`). themeikai.com sitesinin KÖK klasörüne (`/homezy/` altına değil) `app-ads.txt` adıyla yükle; https://themeikai.com/app-ads.txt açılmalı. Mağaza kaydında geliştirici web sitesi olarak themeikai.com gösterilmeli. AdMob'da doğrulama 24 saat sürebilir.
 7. Kendi telefonunda gerçek reklama tıklama (hesap kapanabilir). Test için telefonunu AdMob > Ayarlar > Test cihazları'na ekle; emülatör zaten test cihazı sayılır.
 
 ## Mağaza formları

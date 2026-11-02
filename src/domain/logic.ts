@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n/runtime';
+import { dateLocale, tx } from '@/i18n/runtime';
 import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
 import { baseCare, billStatus, dayDiff, emptyProfile, GUEST_ROOMS, seasonalNow, taskMin, warrantyStatus } from './home';
 import { defaultSettings, emptyPlay } from './play';
@@ -249,7 +249,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
           list,
           url: care ? '/bakim' : undefined,
           title: `${plant ? '🪴' : p.emoji} ${p.name} · ${t.name}`,
-          text: `${taskLine({ name: t.name, type: p.type, plant, k: s.k, key: t.id, now })} ${statusTail(s.k, s.diff, t.last == null)}`,
+          text: `${tx(taskLine({ name: t.name, type: p.type, plant, k: s.k, key: t.id, now }))} ${tx(statusTail(s.k, s.diff, t.last == null))}`,
         });
       });
   }

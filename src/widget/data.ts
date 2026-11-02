@@ -17,6 +17,10 @@ export type WidgetData = {
   /** Bugün bir şey yapıldı mı (seri bugün de sayıldı mı). */
   active: boolean;
   vacation: boolean;
+  /** Bugünkü toplam iş (biten + kalan). */
+  total: number;
+  /** Moka'nın ruh hali. */
+  mood: { emoji: string; line: string };
   tip: { emoji: string; text: string };
 };
 
@@ -25,6 +29,17 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
   const refs = allTasks(S, now);
   const due = vacation ? [] : refs.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
   const p = progressOf(S.play, now);
+  const doneN = refs.filter(x => doneToday(x.t, now)).length;
+  const lateN = due.filter(x => x.s.k === 'late').length;
+  const mood = vacation
+    ? { emoji: '😎', line: 'Tatil modu' }
+    : !due.length
+      ? { emoji: '🥰', line: 'Çok mutlu' }
+      : lateN > 2
+        ? { emoji: '🥺', line: 'Seni bekliyor' }
+        : doneN > 0
+          ? { emoji: '😄', line: 'Harika gidiyor' }
+          : { emoji: '🙂', line: 'Günaydın' };
   return {
     tasks: due.map(x => {
       const place = placeOf(S, x.rid);
@@ -42,6 +57,8 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
     streak: p.streak,
     active: p.today,
     vacation,
+    total: due.length + doneN,
+    mood,
     // Günün cümlesini Moka (kakapo) söylüyor.
     tip: { emoji: '🦜', text: tipOfDay(now).text },
   };

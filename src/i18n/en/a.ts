@@ -1213,6 +1213,7 @@ export const EN_A: Record<string, string> = {
  "+{} puan ⭐ {}!{}": "+{} points ⭐ {}!{}",
  "+{} puan ⭐ 🔥 {} günlük seri!{}": "+{} points ⭐ 🔥 {}-day streak!{}",
  "+{} puan ⭐ {} tamam.{}": "+{} points ⭐ {} done.{}",
+ "Yaşam tarzı ve yemek soruları": "Lifestyle and food questions",
  "+{} puan ⭐ {}!": "+{} points ⭐ {}!",
  "+{} puan ⭐ 🔥 {} günlük seri!": "+{} points ⭐ 🔥 {}-day streak!",
  "+{} puan ⭐ {} tamam.": "+{} points ⭐ {} done.",

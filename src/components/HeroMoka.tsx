@@ -64,8 +64,8 @@ function motionStyle(v: Animated.Value, m: HeroMotion) {
   switch (m) {
     case 'breath': return { transform: [{ translateY: I([0, -3]) }] };
     case 'bob': return { transform: [{ translateY: I([0, -6]) }] };
-    case 'sway': return { transform: [{ rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-1.5deg', '1.5deg'] }) }] };
-    case 'zoom': return { transform: [{ translateX: I([-3, 3]) }] };
+    case 'sway': return { transform: [{ translateY: I([0, -3]) }] };
+    case 'zoom': return { transform: [{ translateY: I([0, -3]) }] };
     case 'beat': return { transform: [{ translateY: I([0, -4]) }] };
   }
 }

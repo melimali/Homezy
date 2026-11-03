@@ -8,8 +8,14 @@ import { getNotifications, rescheduleMorningSummaries } from '@/notifications/sc
 import { limits } from '@/domain/premium';
 import type { AppState } from '@/domain/types';
 
-import { widgetData } from './data';
+import { addWater, hKey, waterMet, waterOf } from '@/domain/habits';
+import { addXp } from '@/domain/mokaLevel';
+import { awardLocal } from '@/domain/play';
+
+import { shopData, waterData, widgetData } from './data';
+import type * as ShopTypes from './ShopWidget';
 import type * as TodayTypes from './TodayWidget';
+import type * as WaterTypes from './WaterWidget';
 
 /**
  * Android ana ekran widget'ı ("Bugün"). Uygulama kapalıyken de çalışır: sistem widget'ı eklerken,
@@ -17,7 +23,7 @@ import type * as TodayTypes from './TodayWidget';
  * görevi çalıştırır. Veri telefondaki veritabanından okunur; uygulama açıksa store kullanılır.
  * Yerel modül Expo Go'da ve iOS'ta yok; o zaman bu dosya hiçbir şey yapmaz.
  */
-type Lib = { W: typeof WidgetTypes; UI: typeof TodayTypes };
+type Lib = { W: typeof WidgetTypes; UI: typeof TodayTypes; Water: typeof WaterTypes; Shop: typeof ShopTypes };
 
 function load(): Lib | null {
   if (Platform.OS !== 'android') return null;
@@ -25,8 +31,10 @@ function load(): Lib | null {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const W = require('react-native-android-widget') as typeof WidgetTypes;
     const UI = require('./TodayWidget') as typeof TodayTypes;
+    const Water = require('./WaterWidget') as typeof WaterTypes;
+    const Shop = require('./ShopWidget') as typeof ShopTypes;
     /* eslint-enable @typescript-eslint/no-require-imports */
-    return { W, UI };
+    return { W, UI, Water, Shop };
   } catch {
     // Eski geliştirme derlemesi ya da Expo Go: widget yok.
     return null;
@@ -60,6 +68,42 @@ export async function refreshWidgets(S: AppState, now = Date.now()) {
     widgetName: lib.UI.WIDGET_NAME,
     renderWidget: info => lib.UI.todayWidget(data, info.height),
   });
+  await lib.W.requestWidgetUpdate({ widgetName: lib.Water.WATER_WIDGET_NAME, renderWidget: () => lib.Water.waterWidget(waterData(S, now)) });
+  await lib.W.requestWidgetUpdate({
+    widgetName: lib.Shop.SHOP_WIDGET_NAME,
+    renderWidget: info => lib.Shop.shopWidget(shopData(S), info.height),
+  });
+}
+
+/** Uygulama açıksa store üzerinden, değilse veritabanında değiştirir. */
+async function mutate(fn: (D: AppState) => void): Promise<AppState | null> {
+  const live = liveStore();
+  if (live) return live.update(D => void fn(D));
+  const S = await loadState();
+  if (!S) return null;
+  fn(S);
+  await saveState(S);
+  return S;
+}
+
+/** Su widget'ı: bardak ekler / çıkarır; hedef tutarsa günde bir kez puan verir. */
+async function waterStep(k: number): Promise<AppState | null> {
+  const now = Date.now();
+  const mult = limits(lastPremium()).mult;
+  return mutate(D => {
+    const H = D.play.habits;
+    const day = hKey(now);
+    const willMeet = !waterMet(H, day) && k > 0 && waterOf(H, day) + k >= H.waterGoal;
+    addWater(H, day, k);
+    if (willMeet && awardLocal(D, 'gorev', 'alisk:su', '💧 Su hedefi', now, mult).awarded) addXp(D.play, 'saglik', 3, now);
+  });
+}
+
+/** Market widget'ı: ürünü alındı sayar (Var). */
+async function boughtItem(id: string): Promise<AppState | null> {
+  return mutate(D => {
+    for (const rid of D.order) for (const x of D.mod[rid]?.stock ?? []) if (x.id === id) x.lvl = 'var';
+  });
 }
 
 /** "✓" düğmesi: iş bildirimdeki "Yaptım" ile aynı yoldan tamamlanır (puan, seri, bildirimler). */
@@ -86,11 +130,24 @@ async function complete(tid: string): Promise<{ S: AppState | null; note: string
 
 if (lib) {
   lib.W.registerWidgetTaskHandler(async ({ widgetInfo, widgetAction, clickAction, clickActionData, renderWidget }) => {
-    if (widgetInfo.widgetName !== lib.UI.WIDGET_NAME || widgetAction === 'WIDGET_DELETED') return;
+    if (widgetAction === 'WIDGET_DELETED') return;
+    const name = widgetInfo.widgetName;
     try {
+      const click = widgetAction === 'WIDGET_CLICK';
+      if (name === lib.Water.WATER_WIDGET_NAME) {
+        const S = click && clickAction === lib.Water.WATER_ADD ? await waterStep(1) : click && clickAction === lib.Water.WATER_UNDO ? await waterStep(-1) : await loadState();
+        if (S) renderWidget(lib.Water.waterWidget(waterData(S)));
+        return;
+      }
+      if (name === lib.Shop.SHOP_WIDGET_NAME) {
+        const S = click && clickAction === lib.Shop.SHOP_BOUGHT && typeof clickActionData?.id === 'string' ? await boughtItem(clickActionData.id) : await loadState();
+        if (S) renderWidget(lib.Shop.shopWidget(shopData(S), widgetInfo.height));
+        return;
+      }
+      if (name !== lib.UI.WIDGET_NAME) return;
       let S: AppState | null;
       let note: string | null = null;
-      if (widgetAction === 'WIDGET_CLICK' && clickAction === lib.UI.DONE_ACTION && typeof clickActionData?.tid === 'string') {
+      if (click && clickAction === lib.UI.DONE_ACTION && typeof clickActionData?.tid === 'string') {
         ({ S, note } = await complete(clickActionData.tid));
       } else {
         S = await loadState();

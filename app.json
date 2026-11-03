@@ -118,6 +118,34 @@
               "resizeMode": "horizontal|vertical",
               "previewImage": "./assets/widget-preview.png",
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "Su",
+              "label": "Homezy · Su",
+              "description": "Su içme takibi: bir dokunuşla bardak ekle, günlük hedefi izle.",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "520dp",
+              "maxResizeHeight": "200dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "Market",
+              "label": "Homezy · Market",
+              "description": "Biten ve azalan ürünler. Aldıkça ✓ ile işaretle.",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 3,
+              "maxResizeWidth": "520dp",
+              "maxResizeHeight": "340dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview.png",
+              "updatePeriodMillis": 1800000
             }
           ]
         }

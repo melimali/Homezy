@@ -1,4 +1,5 @@
-import { allTasks, doneToday, placeOf } from '@/domain/logic';
+import { hKey, waterLine, waterMet, waterOf, waterPct } from '@/domain/habits';
+import { allTasks, doneToday, placeOf, shopItems } from '@/domain/logic';
 import { progressOf } from '@/domain/play';
 import { tipOfDay } from '@/domain/tips';
 import type { AppState } from '@/domain/types';
@@ -62,4 +63,18 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
     // Günün cümlesini Moka (kakapo) söylüyor.
     tip: { emoji: '🦜', text: tipOfDay(now).text },
   };
+}
+
+/** Su widget'ının verisi. */
+export type WaterData = { n: number; goal: number; pct: number; met: boolean; line: string };
+export function waterData(S: AppState, now = Date.now()): WaterData {
+  const H = S.play.habits;
+  const day = hKey(now);
+  return { n: waterOf(H, day), goal: H.waterGoal, pct: waterPct(H, day), met: waterMet(H, day), line: waterLine(H, day) };
+}
+
+/** Market widget'ının verisi: biten / azalan ürünler. */
+export type ShopData = { items: { id: string; name: string; low: boolean }[] };
+export function shopData(S: AppState): ShopData {
+  return { items: shopItems(S).map(({ x }) => ({ id: x.id, name: x.name, low: x.lvl === 'az' })) };
 }

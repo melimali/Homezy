@@ -60,12 +60,13 @@ function Particles({ fx, reduce, left: x0, top: y0 }: { fx: HeroFx; reduce: bool
 
 function motionStyle(v: Animated.Value, m: HeroMotion) {
   const I = (o: number[]) => v.interpolate({ inputRange: [0, 1], outputRange: o });
+  // Boyut sabit: hareketler çok hafif, Moka kadrajdan taşmaz, yakınlaşma yok.
   switch (m) {
-    case 'breath': return { transform: [{ scale: I([1.03, 1.055]) }] };
-    case 'bob': return { transform: [{ scale: 1.04 }, { translateY: I([2, -4]) }] };
-    case 'sway': return { transform: [{ scale: 1.06 }, { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-1.2deg', '1.2deg'] }) }] };
-    case 'zoom': return { transform: [{ scale: I([1.03, 1.1]) }, { translateX: I([-4, 4]) }] };
-    case 'beat': return { transform: [{ scale: I([1.03, 1.075]) }] };
+    case 'breath': return { transform: [{ translateY: I([0, -3]) }] };
+    case 'bob': return { transform: [{ translateY: I([0, -6]) }] };
+    case 'sway': return { transform: [{ rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['-1.5deg', '1.5deg'] }) }] };
+    case 'zoom': return { transform: [{ translateX: I([-3, 3]) }] };
+    case 'beat': return { transform: [{ translateY: I([0, -4]) }] };
   }
 }
 const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, zoom: 6500, beat: 700 };

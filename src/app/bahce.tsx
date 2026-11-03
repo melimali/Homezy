@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PlantArt } from '@/components/GardenArt';
+import { GardenGate } from '@/components/GardenGate';
 import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
@@ -79,6 +80,7 @@ export default function Bahce() {
   const albumTypesCount = Object.keys(G.album).length;
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen header={false} image={require('../../assets/bahce/bahce-arka.jpg')}>
       <BackLink />
       <Appear>
@@ -241,6 +243,8 @@ export default function Bahce() {
         </Sheet>
       )}
     </Screen>
+    <GardenGate title="Moka'nın bahçesi" greeting="Hoş geldin! Gel, çiçeklere bakalım 🌷" />
+    </View>
   );
 }
 

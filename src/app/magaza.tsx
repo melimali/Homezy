@@ -13,7 +13,8 @@ import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
-import { Squish } from '@/components/motion';
+import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
+import { sfx } from '@/lib/sfx';
 
 const CATEGORIES: [ItemCategory, string][] = [
   ['tum', '✨ Tümü'],
@@ -38,7 +39,12 @@ export default function Magaza() {
   const { premium } = usePurchases();
   const router = useRouter();
 
-  const filtered = cat === 'tum' ? ITEMS : ITEMS.filter(it => it.category === cat);
+  const [canBuy, setCanBuy] = useState(false);
+  const [bought, setBought] = useState(0);
+
+  const filtered = ITEMS.filter(it => (cat === 'tum' || it.category === cat) && (!canBuy || (!P.owned.includes(it.id) && it.price <= P.points)))
+    .sort((a, b) => Number(P.owned.includes(a.id)) - Number(P.owned.includes(b.id)) || a.price - b.price);
+  const ownedN = ITEMS.filter(it => P.owned.includes(it.id)).length;
 
   return (
     <Screen header={false}>
@@ -54,12 +60,16 @@ export default function Magaza() {
         </T>
       </View>
 
-      <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>
-        <Text style={{ fontSize: 28 }}>⭐</Text>
-        <Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text>
-        <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
-      </View>
+      <Appear index={1}>
+        <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>
+          <Float amp={3} dur={1800}><Text style={{ fontSize: 28 }}>⭐</Text></Float>
+          <Pulse on={P.points}><Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text></Pulse>
+          <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
+          <Text style={[styles.walletL, { color: c.muted, marginLeft: 'auto' }]}>{`🎁 ${ownedN}/${ITEMS.length}`}</Text>
+        </View>
+      </Appear>
 
+      <Appear index={2}>
       <Squish onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
         <Text style={{ fontSize: 30 }}>🌷</Text>
         <View style={{ flex: 1 }}>
@@ -68,23 +78,34 @@ export default function Magaza() {
         </View>
         <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
       </Squish>
+      </Appear>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ marginHorizontal: -24, paddingHorizontal: 24 }}>
         {CATEGORIES.map(([k, label]) => (
-          <Chip key={k} label={label} on={cat === k} onPress={() => setCat(k)} />
+          <Chip key={k} label={label} on={cat === k} onPress={() => { sfx('tap'); setCat(k); }} />
         ))}
       </ScrollView>
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <Chip label={canBuy ? '⭐ Alabileceklerim' : '⭐ Hepsini göster'} on={canBuy} onPress={() => { sfx('tap'); setCanBuy(!canBuy); }} />
+        <T v="small" style={{ flex: 1, textAlign: 'right' }}>{filtered.length} eşya</T>
+      </View>
+      {filtered.length === 0 && (
+        <T v="lead" style={{ textAlign: 'center' }}>Burada şimdilik bir şey yok. Biraz daha iş yap, puanlar birikir 🌱</T>
+      )}
 
       <View style={styles.grid}>
-        {filtered.map(it => (
-          <ItemCard key={it.id} item={it} selected={open === it.id} onPress={() => setOpen(open === it.id ? null : it.id)} />
+        {filtered.map((it, i) => (
+          <Appear key={it.id} index={i % 8} style={open === it.id ? { width: '100%' } : { width: '47.5%' }}>
+            <ItemCard item={it} selected={open === it.id} onBought={() => setBought(n => n + 1)} onPress={() => setOpen(open === it.id ? null : it.id)} />
+          </Appear>
         ))}
       </View>
+      <Burst fire={bought} />
     </Screen>
   );
 }
 
-function ItemCard({ item, selected, onPress }: { item: Item; selected: boolean; onPress: () => void }) {
+function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected: boolean; onPress: () => void; onBought: () => void }) {
   const c = useColors();
   const router = useRouter();
   const toast = useToast();
@@ -103,19 +124,32 @@ function ItemCard({ item, selected, onPress }: { item: Item; selected: boolean; 
     const r = await buy(item.id, firstRoom);
     setBusy(false);
     if (!r.ok) return toast(r.error);
+    sfx('coin');
+    onBought();
     toast(`${item.emoji} ${item.name} evinde! Hangi odada duracağını seçebilirsin.`);
   };
   const place = (rid: string | null) => update(D => void (D.play.placed[item.id] = rid));
 
   return (
-    <Card style={[styles.item, selected && { width: '100%' }]}>
+    <Card style={[styles.item, { width: '100%' }, owned && { opacity: selected ? 1 : 0.85 }]}>
       <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${item.price} puan`} style={{ alignItems: 'center', gap: 4 }}>
-        <Text style={{ fontSize: 40 }}>{item.emoji}</Text>
+        <View style={[styles.bubble, { backgroundColor: locked ? c.surface2 : c.peachSoft }]}>
+          <Text style={{ fontSize: 38 }}>{item.emoji}</Text>
+          {item.premium && <Text style={styles.crown}>👑</Text>}
+        </View>
         <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{item.name}</T>
         {owned ? (
           <Text style={[styles.tag, { color: c.ok }]}>✓ Senin {room && S.rooms[room] ? `· ${S.rooms[room].name}` : '· depoda'}</Text>
         ) : (
-          <Text style={[styles.tag, { color: locked ? c.warm : c.ink }]}>{item.premium ? '👑 ' : ''}⭐ {item.price}</Text>
+          <>
+            <Text style={[styles.tag, { color: locked ? c.warm : c.ink }]}>⭐ {item.price}</Text>
+            {!locked && short > 0 && (
+              <View style={[styles.meter, { backgroundColor: c.surface2 }]}>
+                <View style={[styles.meterFill, { width: `${Math.max(6, Math.min(100, (S.play.points / item.price) * 100))}%`, backgroundColor: c.today }]} />
+              </View>
+            )}
+            {!locked && short <= 0 && <Text style={[styles.tag, { color: c.ok }]}>Alabilirsin ✨</Text>}
+          </>
         )}
       </Squish>
 
@@ -157,7 +191,11 @@ const styles = StyleSheet.create({
   walletN: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 34 },
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-  item: { width: '47.5%', alignItems: 'center', padding: 14, gap: 10 },
+  item: { alignItems: 'center', padding: 14, gap: 10 },
+  bubble: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
+  crown: { position: 'absolute', top: -4, right: -4, fontSize: 16 },
+  meter: { width: 64, height: 6, borderRadius: 3, overflow: 'hidden' },
+  meterFill: { height: 6, borderRadius: 3 },
   tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
   garden: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18 },
   gardenT: { fontFamily: fonts.bodyBlack, fontSize: 16 },

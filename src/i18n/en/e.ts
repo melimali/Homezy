@@ -298,4 +298,10 @@ export const EN_E: Record<string, string> = {
  "Bu hafta sakin geçti. Yeni haftaya minik bir işle başlayalım, ben yanındayım ☕": "This week was quiet. Let's start the new week with one tiny chore, I'm with you ☕",
  "Biraz yorucu bir hafta olmuş ama {} iş yaptın. Kendine nazik ol 💛": "It was a tiring week, but you did {} chores. Be kind to yourself 💛",
  "{} iş": "{} chores",
+ "⭐ Alabileceklerim": "⭐ I can afford",
+ "⭐ Hepsini göster": "⭐ Show all",
+ "{} eşya": "{} items",
+ "Burada şimdilik bir şey yok. Biraz daha iş yap, puanlar birikir 🌱": "Nothing here yet. Do a few more chores and your points will grow 🌱",
+ "Alabilirsin ✨": "You can buy it ✨",
+ "Hoş geldin! Gel, çiçeklere bakalım 🌷": "Welcome! Let's go see the flowers 🌷",
 };

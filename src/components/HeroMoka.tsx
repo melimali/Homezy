@@ -119,8 +119,8 @@ export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, belo
           <Image source={background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
           {below}
           <Animated.View pointerEvents="none" style={[box, { opacity: pop }]}>
-            <Animated.View style={[StyleSheet.absoluteFill, mStyle]}>
-              <Image source={sticker} style={StyleSheet.absoluteFill} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
+            <Animated.View style={[{ width: size, height: size }, mStyle]}>
+              <Image source={sticker} style={{ width: size, height: size }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
             </Animated.View>
           </Animated.View>
           <Particles fx={def.fx} reduce={reduce} left={box.left + size * 0.62} top={h - bottom - size * 0.55} />

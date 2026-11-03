@@ -43,26 +43,42 @@ export function resetNavGuard() {
 }
 
 type BaseRouter = typeof baseRouter;
+type NavFn = (href: Href, options?: never) => void;
 
-function guarded<R extends BaseRouter>(r: R): R {
-  const wrap =
-    <A extends unknown[]>(fn: (...a: A) => void) =>
-    (...a: A) => {
-      if (allowNav(a[0])) fn(...a);
-    };
-  return {
-    ...r,
-    push: wrap(r.push.bind(r) as (href: Href, options?: never) => void),
-    navigate: wrap(r.navigate.bind(r) as (href: Href, options?: never) => void),
-    replace: wrap(r.replace.bind(r) as (href: Href, options?: never) => void),
-  } as unknown as R;
+const GUARDED = new Set(['push', 'navigate', 'replace']);
+
+/**
+ * Dikkat: expo-router'ın dışa verdiği `router` nesnesi ilk render bitene kadar "throwBeforeFirstRender" fonksiyonlarını
+ * taşır ve sonra yöntemleri YERİNDE değiştirir. Bu yüzden yöntemler modül yüklenirken kopyalanıp bağlanamaz
+ * (eskiden öyle yapılıyordu ve üretim derlemesi açılışta "The imperative router is unavailable before the first render
+ * has finished" ile çöküyordu). Her çağrıda güncel yöntem o anda `target`tan okunur.
+ */
+function guarded<R extends BaseRouter>(target: () => R): R {
+  return new Proxy({} as R, {
+    get(_, key: string) {
+      const t = target() as unknown as Record<string, unknown>;
+      const v = t[key];
+      if (GUARDED.has(key) && typeof v === 'function') {
+        return (href: Href, options?: never) => {
+          if (!allowNav(href)) return;
+          try {
+            (t[key] as NavFn)(href, options);
+          } catch (e) {
+            resetNavGuard(); // Başarısız çağrı kilit bırakmasın.
+            throw e;
+          }
+        };
+      }
+      return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(t) : v;
+    },
+  });
 }
 
 /** expo-router `useRouter`, çift dokunmaya karşı korumalı. Aynı kimlikte kalır (useEffect bağımlılığı olarak güvenli). */
 export function useRouter(): BaseRouter {
   const r = useBaseRouter();
-  return useMemo(() => guarded(r as BaseRouter), [r]);
+  return useMemo(() => guarded(() => r as BaseRouter), [r]);
 }
 
-/** expo-router `router`, çift dokunmaya karşı korumalı (bileşen dışı çağrılar için). */
-export const router: BaseRouter = guarded(baseRouter);
+/** expo-router `router`, çift dokunmaya karşı korumalı (bileşen dışı çağrılar için). İlk render öncesi çağrılırsa expo-router'ın kendi hatasını verir. */
+export const router: BaseRouter = guarded(() => baseRouter);

@@ -1,0 +1,23 @@
+/** Cilalama turunda eksik kalan metinler: Türkçe metin → İngilizce. */
+export const EN_H: Record<string, string> = {
+  "Moka'ya dokun, başka bir hâlini gör": "Tap Moka to see another mood",
+  "Kirli ya da ütülenecek parçalar plana girmez; durumları değişince plan yenilenir.": "Dirty or to-iron pieces are left out of the plan; it refreshes when their status changes.",
+  "Moka’nın haftalık raporu": "Moka's weekly report",
+  "Ruh hali geçmişi": "Mood history",
+  "Moka'nın Plak Çaları": "Moka's Record Player",
+  "Odayı sil": "Delete room",
+  "Bu işi sil": "Delete this chore",
+  "MOKA'NIN SEÇİMİ": "MOKA'S PICK",
+  "Robot olmadığını doğrula": "Verify you are not a robot",
+  "Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da evini toplasın 🏡": "Share the card on your Instagram story or WhatsApp so your friends tidy up too 🏡",
+  "Henüz not yok. Moka'ya \"yarın için not al: …\" de.": "No notes yet. Tell Moka \"take a note for tomorrow: …\".",
+  "Evin dışarıya bakan duvarları. \"Odanın rengi\" seçiliyse her oda kendi rengini dışarı da taşır.": "The outside walls of your house. If \"Room color\" is selected, each room carries its own color outside too.",
+  "İş yaptıkça puan kazanırsın; mağazadan koltuk, halı, kedi… al, sonra burada istediğin yere koy.": "You earn points as you do chores; buy a sofa, rug, cat… in the store, then place it anywhere here.",
+  "Liste boş. Moka’nın önerisinden ya da yukarıdan ekleyebilirsin.": "The list is empty. Add from Moka's pick or from above.",
+  "Video yapmak için: telefonunun ekran kaydını aç, sonra Oynat’a bas. 3 saniyelik geri sayım var, oynarken düğmeler gizlenir.": "To make a video: start your phone's screen recording, then press Play. There is a 3-second countdown and the buttons hide while it plays.",
+  "Moka'nın Hikayesi": "Moka's Story",
+  "Moka'nın bahçesi": "Moka's garden",
+  "Evin bu temayla başka görünür. İlerlemen ve eşyaların aynen kalır, istediğin zaman Gündüz'e dönebilirsin.": "Your home looks different with this theme. Your progress and items stay the same, and you can go back to Day any time.",
+  "Moka ve fotoğraf taraması yapay zekâ ile çalışır; cevapları hatalı olabilir. Moka tıbbi, psikolojik, hukuki ya da finansal tavsiye vermez ve bir uzmanın yerini tutmaz. Kendine zarar verme düşüncen ya da acil bir durum varsa Moka’ya değil hemen 112’yi (başka ülkedeysen oradaki acil numarayı) ara ya da bir uzmandan yardım iste. Homezy 13 yaş ve üzeri içindir.": "Moka and photo scanning use AI; answers may be wrong. Moka does not give medical, psychological, legal or financial advice and is no substitute for an expert. If you have thoughts of harming yourself or face an emergency, call your local emergency number (112 in Türkiye) right away instead of asking Moka, or reach out to a professional. Homezy is for ages 13 and over.",
+  "Arsa hazır. İlk işini yap, evin temeli atılsın.": "The plot is ready. Do your first chore to lay the foundation.",
+};

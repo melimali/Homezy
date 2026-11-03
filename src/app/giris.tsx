@@ -116,6 +116,15 @@ export default function Giris() {
           <T v="lead">{lead}</T>
         </View>
 
+        {!fromApp && mode !== 'sifre' && (
+          <View style={{ gap: 6 }}>
+            <Btn kind="ghost" label="Hesapsız devam et" onPress={guest} disabled={busy} />
+            <T v="small" style={{ textAlign: 'center' }}>
+              Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım sekmesinden hesap açabilirsin.
+            </T>
+          </View>
+        )}
+
         {mode !== 'sifre' && (
           <View style={[st.seg, { backgroundColor: c.surface2 }]} accessibilityRole="tablist">
             {(['kayit', 'giris'] as const).map(m => {
@@ -206,20 +215,6 @@ export default function Giris() {
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold }} onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))}>Gizlilik politikası</Text>
             {state.settings.language === 'en' ? ', and confirm you are over 13 years old.' : "'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
           </Text>
-        )}
-
-        {!fromApp && (
-          <View style={{ gap: 10 }}>
-            <View style={st.or}>
-              <View style={[st.orLine, { backgroundColor: c.line }]} />
-              <T v="small">ya da</T>
-              <View style={[st.orLine, { backgroundColor: c.line }]} />
-            </View>
-            <Btn kind="ghost" label="Hesapsız devam et" onPress={guest} disabled={busy} />
-            <T v="small" style={{ textAlign: 'center' }}>
-              Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım sekmesinden hesap açabilirsin.
-            </T>
-          </View>
         )}
 
         {!cloudEnabled && (

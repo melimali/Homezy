@@ -45,7 +45,8 @@ const noPhotos = (mod: AppState['mod']) =>
 function forCloud(S: AppState): AppState {
   const noCarePhotos = (care: AppState['care']) => (care || []).map(t => ({ ...t, photo: null }));
   return {
-    ...S, mod: noPhotos(S.mod), care: noCarePhotos(S.care),
+    // İlaç bilgisi sağlık verisi; sadece telefonda kalır.
+    ...S, meds: [], medLog: {}, mod: noPhotos(S.mod), care: noCarePhotos(S.care),
     others: (S.others ?? []).map(h => ({ ...h, mod: noPhotos(h.mod), care: noCarePhotos(h.care) })),
   };
 }
@@ -57,6 +58,8 @@ export function mergeFromCloud(remote: AppState, local: AppState): AppState {
     const l = local.mod[k];
     if (l?.photo) S.mod[k] = { ...m, photo: l.photo, photoAt: l.photoAt ?? null };
   }
+  S.meds = local.meds ?? [];
+  S.medLog = local.medLog ?? {};
   for (const t of S.care || []) {
     const l = local.care?.find(x => x.id === t.id);
     if (l?.photo) t.photo = l.photo;

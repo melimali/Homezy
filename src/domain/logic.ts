@@ -398,6 +398,8 @@ export function emptyState(): AppState {
     bills: [],
     warranties: [],
     seasonal: {},
+    meds: [],
+    medLog: {},
   };
 }
 

@@ -11,6 +11,7 @@ import { hKey, waterMet } from '@/domain/habits';
 import { eveningNudge, sportLine, summaryTail } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
+import { medNotifs } from '@/domain/meds';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
@@ -21,6 +22,7 @@ const DAYS_AHEAD = 7;
 const CHANNEL = 'sabah-ozeti';
 const NUDGE = 'hatirlatma';
 const TASKS = 'isler';
+const MEDS = 'ilac';
 /**
  * Günde en çok bu kadar iş ayrı bildirimle ("Yaptım" / "Yapmadım" düğmeleriyle) gelir, en acilleri;
  * gerisi sabah özetinde kalır. iOS aynı anda en çok 64 zamanlanmış bildirim tutuyor:
@@ -78,6 +80,10 @@ async function ensureChannel(N: NotificationsModule) {
     });
     await N.setNotificationChannelAsync(TASKS, {
       name: 'İş hatırlatmaları (Yaptım / Yapmadım)',
+      importance: N.AndroidImportance.DEFAULT,
+    });
+    await N.setNotificationChannelAsync(MEDS, {
+      name: 'İlaç hatırlatmaları',
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(FEEDBACK_CHANNEL, {
@@ -198,6 +204,13 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
     await N.scheduleNotificationAsync({
       content: { title: tx(n.title), body: tx(n.body), data: { url: n.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
+    });
+  // İlaç hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen doz atlanır.
+  for (const n of medNotifs(S, now))
+    await N.scheduleNotificationAsync({
+      identifier: n.id,
+      content: { title: tx(n.title), body: tx(n.body), data: { url: '/ilac' } },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: MEDS },
     });
 }
 

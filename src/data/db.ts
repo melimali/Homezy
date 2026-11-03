@@ -3,7 +3,7 @@ import * as SQLite from 'expo-sqlite';
 import { CARE, TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
 import type {
-  AppState, Bill, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
+  AppState, Bill, Med, MedLog, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
 } from '@/domain/types';
 
 /**
@@ -105,6 +105,8 @@ export async function loadState(): Promise<AppState | null> {
     bills: json<Bill[]>(m.bills, []),
     warranties: json<Warranty[]>(m.warranties, []),
     seasonal: json<Record<string, number>>(m.seasonal, {}),
+    meds: json<Med[]>(m.meds, []),
+    medLog: json<MedLog>(m.medLog, {}),
     // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
     cells2: json<(string | null)[] | null>(m.cells2, null),
   };
@@ -169,6 +171,8 @@ export async function saveState(S: AppState): Promise<void> {
       ['bills', JSON.stringify(S.bills)],
       ['warranties', JSON.stringify(S.warranties)],
       ['seasonal', JSON.stringify(S.seasonal)],
+      ['meds', JSON.stringify(S.meds ?? [])],
+      ['medLog', JSON.stringify(S.medLog ?? {})],
       ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],

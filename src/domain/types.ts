@@ -101,6 +101,8 @@ export type Settings = {
   bills: boolean;
   /** Buzdolabındaki ürünlerin son kullanma tarihleri. */
   expiry: boolean;
+  /** İlaç hatırlatmaları (vakit ve nazik ikinci hatırlatma). */
+  meds: boolean;
   /** Pazar akşamı haftalık özet. */
   weekly: boolean;
   /** Esnek zamanlama: zamanı geçen iş, sıklığının yarısı kadar gün daha gecikmiş sayılmaz. */
@@ -291,6 +293,12 @@ export type HomeData = {
 /** Premium: şu an açık olmayan diğer evler (yazlık, iş yeri…). */
 export type SavedHome = HomeData & { id: string; name: string; setup: boolean };
 
+/** İlaç takibi: sadece telefonda tutulur, buluta yedeklenmez (sağlık verisi). `days`: boşsa her gün, değilse 0 pazar … 6 cumartesi. */
+export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number };
+export type MedMark = { s: 'taken' | 'skipped'; at: number };
+/** Gün anahtarı → `ilacId@HH:MM` → işaret. */
+export type MedLog = Record<string, Record<string, MedMark>>;
+
 export type AppState = {
   v: 1;
   setup: boolean;
@@ -318,6 +326,8 @@ export type AppState = {
   warranties: Warranty[];
   /** Mevsimlik iş kimliği → en son yapıldığı yıl. */
   seasonal: Record<string, number>;
+  meds: Med[];
+  medLog: MedLog;
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

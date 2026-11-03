@@ -82,7 +82,7 @@ export default function Home() {
     taskPose: taskPose(lastDone ?? due[0]),
     modePose: S.mode ? moka.pose : undefined,
   };
-  const [heroKey, setHeroKey] = useState<HeroKey>(() => pickHero(heroCtx));
+  const [heroKey] = useState<HeroKey>(() => pickHero(heroCtx));
   // Moka sadece uygulama açılırken seçilir; dokununca ya da zamanla değişmez.
   // Arka plan sabit; sadece Moka çıkartması değişir.
   const heroSticker: ImageSourcePropType = heroKey === 'sofa' ? HOME_MOKA_SEATED

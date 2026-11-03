@@ -55,21 +55,30 @@ export default function Gunluk() {
   const dirty = text.trim() !== (saved?.text ?? '') || mood !== (saved?.mood ?? null) || photo !== (saved?.photo ?? null);
   const backup = premium.active && status === 'account' && user ? user.id : null;
 
-  // Defter: kapak açılışı ve sayfa çevirme.
+  // Defter: gerçekçi kapak açılışı ve sayfa çevirme (menteşe solda, gölgeli kıvrım).
   const [open, setOpen] = useState(false);
-  const cover = useRef(new Animated.Value(reduce ? 1 : 0)).current;
-  const flip = useRef(new Animated.Value(0)).current; // -1..1: sayfa dönüşü
+  const [bw, setBw] = useState(320); // kitap genişliği (kapak menteşesi için)
+  const [pw, setPw] = useState(280); // sayfa içeriği genişliği (sayfa menteşesi için)
+  const [cover] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  const [turn] = useState(() => new Animated.Value(0)); // -1: sayfa solda kapanmış, 0: düz
+  const [fade] = useState(() => new Animated.Value(1));
   const busy = useRef(false);
+  const opened = useRef(false);
+  const openBook = () => {
+    if (opened.current) return;
+    opened.current = true;
+    Animated.timing(cover, { toValue: 1, duration: 1100, easing: Easing.bezier(0.3, 0.1, 0.2, 1), useNativeDriver: true }).start(() => setOpen(true));
+  };
   useEffect(() => {
     if (reduce) {
       cover.setValue(1);
       setOpen(true);
       return;
     }
-    Animated.timing(cover, { toValue: 1, duration: 900, delay: 250, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-    const t = setTimeout(() => setOpen(true), 700);
+    const t = setTimeout(openBook, 1400); // dokunulmazsa kendiliğinden açılır
     return () => clearTimeout(t);
-  }, [cover, reduce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduce]);
 
   const load = (d: string) => {
     const e = P.journal[d];
@@ -80,18 +89,29 @@ export default function Gunluk() {
   };
   const go = (dir: -1 | 1) => {
     const next = addDays(day, dir);
-    if (busy.current || next > today) return;
+    if (busy.current || next > today || !open) return;
     // Kaydedilmemiş fotoğraf seçimi sayfa değişince bırakılır.
     if (photo && photo !== saved?.photo) deletePhoto(photo);
     if (reduce) return load(next);
     busy.current = true;
-    Animated.timing(flip, { toValue: dir, duration: 170, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
-      load(next);
-      flip.setValue(-dir);
-      Animated.timing(flip, { toValue: 0, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(() => {
-        busy.current = false;
+    const done = () => (busy.current = false);
+    if (dir === 1) {
+      // İleri: sayfa menteşeden sola kıvrılıp kapanır, altından yeni gün çıkar.
+      Animated.timing(turn, { toValue: -1, duration: 320, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => {
+        load(next);
+        turn.setValue(0);
+        fade.setValue(0);
+        Animated.timing(fade, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(done);
       });
-    });
+    } else {
+      // Geri: önceki sayfa solda kapalı beklerken içerik değişir, sonra menteşeden yayılarak düzleşir.
+      Animated.timing(fade, { toValue: 0, duration: 140, useNativeDriver: true }).start(() => {
+        load(next);
+        turn.setValue(-1);
+        fade.setValue(1);
+        Animated.spring(turn, { toValue: 0, friction: 8, tension: 55, useNativeDriver: true }).start(done);
+      });
+    }
   };
   const goRef = useRef(go);
   goRef.current = go;
@@ -145,12 +165,29 @@ export default function Gunluk() {
   const yearAgo = lastYear(today);
   const empty = !saved && !dayLog.length;
   const pageStyle = {
+    opacity: fade,
     transform: [
-      { perspective: 900 },
-      { rotateY: flip.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-80deg', '0deg', '80deg'] }) },
+      { perspective: 1200 },
+      { translateX: -pw / 2 },
+      { rotateY: turn.interpolate({ inputRange: [-1, 0], outputRange: ['-88deg', '0deg'] }) },
+      { translateX: pw / 2 },
+      { scale: fade.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
     ],
-    opacity: flip.interpolate({ inputRange: [-1, 0, 1], outputRange: [0.2, 1, 0.2] }),
   };
+  // Kıvrım gölgesi: sayfa kapandıkça koyulaşır.
+  const shade = turn.interpolate({ inputRange: [-1, -0.2, 0], outputRange: [0.5, 0.12, 0] });
+  const coverRot = cover.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-172deg'] });
+  const coverStyle = {
+    transform: [
+      { perspective: 1400 },
+      { translateX: -bw / 2 },
+      { rotateY: coverRot },
+      { translateX: bw / 2 },
+    ],
+  };
+  const frontOp = cover.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [1, 1, 0, 0] });
+  const insideOp = cover.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [0, 0, 1, 1] });
+  const bookShade = cover.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.5, 0.25, 0] });
 
   return (
     <Screen header={false}>
@@ -161,7 +198,7 @@ export default function Gunluk() {
         <T v="lead">Bugün neler yaptın? Birkaç satır yeter. Günün ilk yazısı +{POINTS.gunluk} puan ⭐</T>
       </View>
 
-      <View style={styles.book}>
+      <View style={styles.book} onLayout={e => setBw(e.nativeEvent.layout.width)}>
         <View style={[styles.paper, { backgroundColor: c.surface, borderColor: c.line }]} {...pan.panHandlers}>
           <View style={styles.nav}>
             <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki sayfa" style={[styles.arrow, { backgroundColor: c.surface2 }]}>
@@ -182,19 +219,12 @@ export default function Gunluk() {
             </Squish>
           </View>
 
-          <Animated.View style={[{ gap: 12 }, pageStyle]}>
+          <Animated.View style={[{ gap: 12 }, pageStyle]} onLayout={e => setPw(e.nativeEvent.layout.width)}>
+            <Animated.View pointerEvents="none" style={[styles.shade, { opacity: shade }]} />
             <T v="h3">{isToday ? 'Bugün nasılsın?' : 'O gün nasıldın?'}</T>
             <View style={styles.moods}>
               {MOODS.map(m => (
-                <Pressable
-                  key={m}
-                  onPress={() => setMood(mood === m ? null : m)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: mood === m }}
-                  style={[styles.mood, { backgroundColor: mood === m ? c.accentSoft : c.surface2, borderColor: mood === m ? c.hi : 'transparent' }]}
-                >
-                  <Text style={{ fontSize: 26 }}>{m}</Text>
-                </Pressable>
+                <MoodBtn key={m} emoji={m} on={mood === m} onPress={() => setMood(mood === m ? null : m)} />
               ))}
             </View>
             <Field
@@ -234,28 +264,23 @@ export default function Gunluk() {
           <T v="small" style={{ textAlign: 'center' }}>← sayfaları kaydırarak çevir →</T>
         </View>
 
-        {/* Kapak: açılışta sola doğru açılır, sonra kaybolur. */}
-        {!open || !reduce ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.cover,
-              { backgroundColor: c.ink, display: open ? 'none' : 'flex' },
-              {
-                transform: [
-                  { perspective: 1100 },
-                  { translateX: cover.interpolate({ inputRange: [0, 1], outputRange: [0, -140] }) },
-                  { rotateY: cover.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-100deg'] }) },
-                  { translateX: cover.interpolate({ inputRange: [0, 1], outputRange: [0, 140] }) },
-                ],
-                opacity: cover.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }),
-              },
-            ]}
-          >
-            <Text style={{ fontSize: 56 }}>📔</Text>
-            <Text style={[styles.coverTx, { color: c.bg }]}>Günlüğüm</Text>
+        {/* Kapak: menteşeden sola doğru açılır; önce dış yüz, 90°'den sonra iç yüz görünür. */}
+        {!open && (
+          <Animated.View style={[styles.cover, coverStyle]} pointerEvents={reduce ? 'none' : 'auto'}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={openBook} accessibilityRole="button" accessibilityLabel="Günlüğü aç">
+              <Animated.View style={[styles.face, { backgroundColor: c.ink, opacity: frontOp }]}>
+                <View style={[styles.spine, { backgroundColor: c.accent }]} />
+                <View style={[styles.label, { backgroundColor: c.bg }]}>
+                  <Text style={{ fontSize: 44 }}>📔</Text>
+                  <Text style={[styles.coverTx, { color: c.ink }]}>Günlüğüm</Text>
+                </View>
+                <Text style={[styles.hint, { color: c.bg }]}>açmak için dokun</Text>
+              </Animated.View>
+              <Animated.View style={[styles.face, { backgroundColor: c.surface2, opacity: insideOp }]} />
+            </Pressable>
           </Animated.View>
-        ) : null}
+        )}
+        {!open && <Animated.View pointerEvents="none" style={[styles.bookShade, { opacity: bookShade }]} />}
       </View>
 
       {premium.active ? (
@@ -353,7 +378,13 @@ function DoneList({ items, title, empty }: { items: string[]; title?: string; em
 const styles = StyleSheet.create({
   book: { position: 'relative' },
   paper: { borderRadius: 26, borderWidth: 1, padding: 14, paddingLeft: 22, gap: 12, borderLeftWidth: 8, overflow: 'hidden' },
-  cover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 26, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  cover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 26, elevation: 8, shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 4, height: 6 } },
+  face: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 26, alignItems: 'center', justifyContent: 'center', gap: 14, backfaceVisibility: 'hidden' },
+  spine: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 14, borderTopLeftRadius: 26, borderBottomLeftRadius: 26 },
+  label: { paddingHorizontal: 28, paddingVertical: 16, borderRadius: 18, alignItems: 'center', gap: 4 },
+  hint: { fontFamily: fonts.body, fontSize: 12, opacity: 0.7 },
+  shade: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', borderRadius: 18, zIndex: 5 },
+  bookShade: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', borderRadius: 26 },
   coverTx: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   nav: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   arrow: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
@@ -373,3 +404,34 @@ const styles = StyleSheet.create({
   doneTitle: { fontFamily: fonts.bodyBlack, fontSize: 13, marginBottom: 2 },
   doneItem: { fontFamily: fonts.body, fontSize: 14 },
 });
+
+/** Ruh hali yüzü: seçilince yaylanarak büyür ve hafifçe sallanır. */
+function MoodBtn({ emoji, on, onPress }: { emoji: string; on: boolean; onPress: () => void }) {
+  const c = useColors();
+  const reduce = useReduceMotion();
+  const [v] = useState(() => new Animated.Value(on ? 1 : 0));
+  useEffect(() => {
+    if (reduce) return v.setValue(on ? 1 : 0);
+    Animated.spring(v, { toValue: on ? 1 : 0, friction: 4, tension: 160, useNativeDriver: true }).start();
+  }, [on, reduce, v]);
+  return (
+    <Squish
+      onPress={onPress}
+      accessibilityLabel={emoji}
+      accessibilityState={{ selected: on }}
+      style={[styles.mood, { backgroundColor: on ? c.accentSoft : c.surface2, borderColor: on ? c.hi : 'transparent' }]}
+    >
+      <Animated.Text
+        style={{
+          fontSize: 26,
+          transform: [
+            { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) },
+            { rotate: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['0deg', '-14deg', '0deg'] }) },
+          ],
+        }}
+      >
+        {emoji}
+      </Animated.Text>
+    </Squish>
+  );
+}

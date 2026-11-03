@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   cloudR: { position: 'absolute', right: -20, top: '38%' },
   cloudM: { position: 'absolute', left: '28%', top: '60%' },
   flower: { position: 'absolute', bottom: '14%', fontSize: 44 },
-  center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 6 },
   title: { fontFamily: fonts.displayBold, fontSize: 28, color: '#283044', textAlign: 'center' },
   sub: { fontFamily: fonts.bodyBlack, fontSize: 15, color: '#283044', textAlign: 'center' },
 });

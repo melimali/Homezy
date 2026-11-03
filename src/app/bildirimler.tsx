@@ -1,4 +1,5 @@
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useFocusEffect, type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 

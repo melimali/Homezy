@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 
 import { PlanEditor } from '@/components/PlanEditor';
 import { useToast } from '@/components/Toast';

@@ -16,7 +16,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fmtShort, notifs } from '@/domain/logic';

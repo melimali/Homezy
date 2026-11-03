@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 
 import { MOKA_ASSETS } from '@/constants/moka';

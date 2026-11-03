@@ -1,4 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 

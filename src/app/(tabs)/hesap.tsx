@@ -1,5 +1,6 @@
 import { type BadgeArt } from '@/constants/badges';
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useFocusEffect, type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Share, StyleSheet, Text, View } from 'react-native';
 

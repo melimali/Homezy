@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Float, Squish } from '@/components/motion';

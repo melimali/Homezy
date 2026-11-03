@@ -1,5 +1,6 @@
 import type { NotificationResponse } from 'expo-notifications';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useEffect } from 'react';
 
 import { useToast } from '@/components/Toast';

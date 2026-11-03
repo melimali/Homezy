@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { StyleSheet, View } from 'react-native';
 
 import { RoomGrid } from '@/components/RoomGrid';

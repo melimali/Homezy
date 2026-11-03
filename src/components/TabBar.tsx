@@ -1,4 +1,5 @@
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, Text, View, type ColorValue } from 'react-native';

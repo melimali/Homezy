@@ -1,5 +1,6 @@
 import { tlText } from '@/i18n/runtime';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { Text, View } from 'react-native';
 
 import { planMeals, type Slot } from '@/domain/meals';

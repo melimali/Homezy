@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import type { View } from 'react-native';
 

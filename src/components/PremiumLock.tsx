@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { brand, fonts, radius, useColors } from '@/theme';

@@ -1,4 +1,5 @@
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 

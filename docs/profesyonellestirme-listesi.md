@@ -77,3 +77,15 @@ Yapılmadı (neden):
 - **15, 22**: hata metinleri ve `console.warn`'lar zaten etiketli ve kısa; ayrı iş çıkmadı.
 
 Yeni derleme gerektiren: `expo-store-review` (24). Başka yok.
+
+### İkinci tur (2026-11-03)
+
+- **13** `appAlert` (`src/components/AppAlert.tsx`, `AppAlertHost` kökte): `Alert.alert` ile aynı imza, temalı Moka kartı. 7 kullanım taşındı; host yoksa sistem Alert'ine düşer.
+- **20** `src/i18n/en/i.ts` (~50 eksik cümle: captcha, aile, tarama hataları, hikâye, widget, ipuçları…). Yemek fiyatları İngilizcede yaklaşık $ (`tlText`, 40 TL = 1 $). Tarama aracı: `GAPS_OUT=gaps.txt npx jest src/i18n`. Kalan: `growth.ts` kitap/film adları ve kelime anlamları (içerik, ayrı iş), `icons.ts` eşleme regex'leri (çeviri gerekmez).
+- **4** Moka çıkartmaları WebP: 8,0 MB → 3,4 MB, görünüm aynı (kalite 90, alfa kayıpsız). PNG kaynaklar `assets-src/moka/`; üretim scriptleri oraya yazar, `python scripts/moka-to-webp.py` ile `assets/moka/*.webp` üretilir. Sahneler (JPG, 11 MB) yeniden sıkıştırılmadı: kalite kaybı riski, ayrı karar.
+- **7** Sıcak gölge `warmShadow` belirteci (`src/theme`).
+- **18, 19** Tarandı, yapılacak bir şey yok: Stack geçişleri ekran bazında tanımlı, emoji-tek düğmelerin hepsinde `accessibilityLabel` var.
+- **3** Açılmadı. R8 yalnızca Java/Kotlin kodunu küçültür (JS paketi etkilenmez), kazanç birkaç MB; widget, RevenueCat, AdMob ile çökme riski var. Kapatma kararı verilmişse bir iç test derlemesiyle denenmeli, bu oturumda denenemedi.
+- **8, 9, 21** Kod incelendi: ortak bileşenler `ui.tsx`'te, boşluk/tipografi belirteçleri `theme`'de zaten var, listeler kısa (düzinelerce satır) olduğu için `FlatList` ve dosya bölme kazancı riske değmedi.
+
+Yeni derleme gerekmez (WebP ve AppAlert JS/asset). Tek yeni yerel modül hâlâ `expo-store-review`.

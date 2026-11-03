@@ -4,11 +4,12 @@ import { Platform } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask } from '@/domain/home';
-import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
+import { allTasks, doneToday, greet, notifs } from '@/domain/logic';
 import { firstOpenDay } from '@/lib/events';
 import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
-import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
+import { eveningNudge, sportLine, summaryTail } from '@/domain/messages';
+import { mokaWeek, mokaWeekBody } from '@/domain/report';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
@@ -247,7 +248,7 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       const at = new Date(base);
       at.setHours(WEEKLY_TIME[0], WEEKLY_TIME[1], 0, 0);
       // Özet, zamanlandığı andaki veriyle yazılır; veri değiştikçe yeniden zamanlanır.
-      if (at.getTime() > now) out.push({ at, title: '📅 Haftan nasıl geçti?', body: weeklyLine(weekSummary(S, now)), url: '/hafta' });
+      if (at.getTime() > now) out.push({ at, title: '🦜 Moka’nın haftalık raporu', body: mokaWeekBody(mokaWeek(S, now)), url: '/hafta' });
     }
     const away = awayAhead(S.play, d, now);
     const quiet = away != null && away >= AWAY_DAYS && away % 2 === 0;

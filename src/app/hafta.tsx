@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import type { View } from 'react-native';
 
+import { MokaWeekCard } from '@/components/MokaReport';
 import { HeatmapCard } from '@/components/HeatmapCard';
 import { BackLink, Btn, Screen, T } from '@/components/ui';
 import { WeekReportCard } from '@/components/WeekReportCard';
@@ -39,6 +40,7 @@ export default function Hafta() {
     <Screen header={false}>
       <BackLink />
       <T v="h1">Haftan 📅</T>
+      <MokaWeekCard />
       <WeekCard ref={card} state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} />
       <Btn kind="primary" label="📤 Paylaş" onPress={share} block />
       <HeatmapCard state={S} now={now} />

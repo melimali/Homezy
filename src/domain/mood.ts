@@ -1,7 +1,7 @@
 import type { MokaPose } from '@/constants/moka';
 
 import { quickPick } from './logic';
-import { dayKey } from './play';
+import { addDays, dayKey } from './play';
 import type { AppState, DayKey, Play, TaskRef } from './types';
 
 /**
@@ -13,7 +13,7 @@ import type { AppState, DayKey, Play, TaskRef } from './types';
 export type Feel = 'enerjik' | 'iyi' | 'yorgun' | 'bunalmis' | 'keyifsiz';
 export type DayBusy = 'evde' | 'biraz' | 'yogun';
 /** O günün cevabı. `skip`: kullanıcı soruyu atladı, o gün bir daha sorulmaz. */
-export type CheckIn = { feel: Feel; busy: DayBusy; at: number } | { skip: true; at: number };
+export type CheckIn = { feel: Feel; busy: DayBusy; at: number; note?: string } | { skip: true; at: number };
 
 export const FEELS: { id: Feel; emoji: string; label: string; pose: MokaPose }[] = [
   { id: 'enerjik', emoji: '🤩', label: 'Enerjik', pose: 'party' },
@@ -35,7 +35,7 @@ const JOURNAL_EMOJI: Record<Feel, string> = { enerjik: '😄', iyi: '🙂', yorg
 export const checkinOf = (P: Play, now = Date.now()): CheckIn | null => P.checkins?.[dayKey(now)] ?? null;
 /** Bugün sorulmalı mı: henüz cevap da yok, atlama da. */
 export const needsCheckin = (P: Play, now = Date.now()) => !checkinOf(P, now);
-export const answered = (c: CheckIn | null): c is { feel: Feel; busy: DayBusy; at: number } => !!c && !('skip' in c);
+export const answered = (c: CheckIn | null): c is { feel: Feel; busy: DayBusy; at: number; note?: string } => !!c && !('skip' in c);
 export const journalMood = (c: CheckIn | null) => (answered(c) ? JOURNAL_EMOJI[c.feel] : null);
 export const feelOf = (id: Feel) => FEELS.find(f => f.id === id)!;
 
@@ -91,4 +91,27 @@ export function saveCheckin(P: Play, c: CheckIn, now = Date.now()) {
   // Eski cevaplar birikmesin: son 120 gün.
   const keys = Object.keys(P.checkins).sort();
   for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete P.checkins[k as DayKey];
+}
+
+export const NOTE_MAX = 140;
+/** Notu kırpar; boşsa undefined (kayda yazılmaz). */
+export const cleanNote = (n: string) => n.trim().slice(0, NOTE_MAX) || undefined;
+
+/** Son `days` günün check-in geçmişi, yeniden eskiye. Sadece cevaplanmış günler. */
+export function moodHistory(P: Play, now = Date.now(), days = 30): { key: DayKey; feel: Feel; note?: string }[] {
+  const today = dayKey(now);
+  const out: { key: DayKey; feel: Feel; note?: string }[] = [];
+  for (let i = 0; i < days; i++) {
+    const key = addDays(today, -i);
+    const c = P.checkins?.[key] ?? null;
+    if (answered(c)) out.push({ key, feel: c.feel, note: c.note });
+  }
+  return out;
+}
+
+/** Bugünün notunu günceller (check-in yoksa orta yoğunlukla oluşturmaz, sadece varsa yazar). */
+export function setCheckinNote(P: Play, note: string, now = Date.now()) {
+  const k = dayKey(now);
+  const c = P.checkins?.[k];
+  if (c && answered(c)) P.checkins[k] = { ...c, note: cleanNote(note) };
 }

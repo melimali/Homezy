@@ -3,10 +3,10 @@ import { Image, Modal, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { TaskRow } from '@/components/TaskRow';
-import { Btn, T } from '@/components/ui';
+import { Btn, Field, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { allTasks, doneToday } from '@/domain/logic';
-import { BUSY, checkinOf, dayPlan, FEELS, feelOf, needsCheckin, planTasks, saveCheckin, type DayBusy, type Feel } from '@/domain/mood';
+import { BUSY, checkinOf, cleanNote, NOTE_MAX, dayPlan, FEELS, feelOf, needsCheckin, planTasks, saveCheckin, type DayBusy, type Feel } from '@/domain/mood';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
 import { sfx } from '@/lib/sfx';
 import { useNow } from '@/hooks/useNow';
@@ -28,6 +28,7 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
   const visible = auto ? needsCheckin(S.play, now) && !welcomeFirst : open;
   const prev = checkinOf(S.play, now);
   const [feel, setFeel] = useState<Feel | null>(prev && 'feel' in prev ? prev.feel : null);
+  const [note, setNote] = useState(prev && 'feel' in prev ? prev.note ?? '' : '');
   if (!visible) return null;
 
   const close = () => onClose?.();
@@ -38,7 +39,7 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
   const pick = (busy: DayBusy) => {
     if (!feel) return;
     sfx('done');
-    update(D => saveCheckin(D.play, { feel, busy, at: Date.now() }, now));
+    update(D => saveCheckin(D.play, { feel, busy, at: Date.now(), note: cleanNote(note) }, now));
     close();
   };
   const pose = feel ? feelOf(feel).pose : 'sipping';
@@ -67,6 +68,8 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
           ) : (
             <Appear key="busy" style={styles.step}>
               <T v="h1" style={styles.center}>Bugün için planın var mı?</T>
+              <Field value={note} onChangeText={setNote} maxLength={NOTE_MAX} placeholder="İstersen bir not bırak (isteğe bağlı)"
+                accessibilityLabel="Not" style={{ alignSelf: 'stretch' }} />
               <View style={{ gap: 8, alignSelf: 'stretch' }}>
                 {BUSY.map(b => (
                   <Squish key={b.id} onPress={() => pick(b.id)} accessibilityLabel={`${b.label}, ${b.sub}`}

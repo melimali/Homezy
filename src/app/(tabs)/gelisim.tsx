@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
+import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
@@ -113,6 +114,10 @@ export default function Gelisim() {
         <StreakDots dots={monthDots(S.play, now)} />
         <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
       </Card>
+
+      <MokaWeekCard index={5} />
+
+      <MoodWeekCard index={6} />
 
       <Card index={6}>
         <SecHead title="Ruh hali" h="h3" right="14 gün" />

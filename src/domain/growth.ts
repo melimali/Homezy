@@ -112,6 +112,17 @@ export const SUGGESTIONS: Suggestion[] = [
   S('f-babam', 'film', 'Babam ve Oğlum', 'Çağan Irmak', 'Aile üzerine dokunaklı bir klasik.', ['derin', 'aile']),
   S('f-sunshine', 'film', 'Küçük Miss Sunshine', 'Dayton & Faris', 'Tuhaf bir aile, büyük bir kalp.', ['hafif', 'aile']),
   S('f-cinema', 'film', 'Cinema Paradiso', 'Giuseppe Tornatore', 'Sinema aşkı ve nostalji.', ['sakin', 'derin']),
+  // Diziler
+  S('d-lasso', 'dizi', 'Ted Lasso', 'Apple TV+', 'Nazik olmanın gücü. Hafif ve moral verici.', ['hafif', 'ilham']),
+  S('d-bear', 'dizi', 'The Bear', 'FX', 'Mutfakta yoğun bir hayat; yemek sevenlere.', ['yemek', 'derin']),
+  S('d-midnight', 'dizi', 'Gece Yarısı Lokantası', 'Netflix', 'Küçük bir lokanta, sıcak hikâyeler. Çok sakin.', ['yemek', 'sakin']),
+  S('d-b99', 'dizi', 'Brooklyn Nine-Nine', 'NBC', 'Gülmek ve rahatlamak isteyen günler için.', ['hafif']),
+  S('d-gibi', 'dizi', 'Gibi', 'Gülse Birsel', 'Aile ve gündelik hayat, bol kahkaha.', ['hafif', 'aile']),
+  S('d-bir', 'dizi', 'Bir Başkadır', 'Netflix', 'İnsanı anlamak üzerine derin bir Türk dizisi.', ['derin']),
+  S('d-cernobil', 'dizi', 'Çernobil', 'HBO', 'Gerçek bir felaketin ağır ama öğretici hikâyesi.', ['derin', 'ogren']),
+  S('d-gambit', 'dizi', 'Vezirin Gambiti', 'Netflix', 'Tutku ve disiplinle yükselen bir hikâye.', ['ilham', 'derin']),
+  S('d-avatar', 'dizi', 'Avatar: Son Hava Bükücü', 'Nickelodeon', 'Aileyle izlenir; cesaret ve denge üzerine.', ['aile', 'ilham', 'sakin']),
+  S('d-blackmirror', 'dizi', 'Black Mirror', 'Charlie Brooker', 'Teknolojiyi düşündüren tekil bölümler.', ['derin', 'ogren']),
   // Belgeseller
   S('b-octopus', 'belgesel', 'Ahtapotum Öğretmenim', 'Pippa Ehrlich', 'Doğayla bağ kurmak üzerine huzurlu bir belgesel.', ['sakin', 'ilham']),
   S('b-planet', 'belgesel', 'Gezegenimiz', 'Netflix', 'Doğa manzaraları, rahatlamak için ideal.', ['sakin', 'ogren']),

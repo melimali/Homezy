@@ -77,7 +77,7 @@ export default function Home() {
     <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <HeroMoka scene={heroScene} ratio={0.95} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
+        <HeroMoka scene={heroScene} ratio={0.8} reserveTop={insets.top + 140} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Moka'nın konuşma baloncuğu */}
             <View style={styles.speechBubble}>

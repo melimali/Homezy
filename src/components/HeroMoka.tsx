@@ -76,8 +76,10 @@ const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, z
  * hareket eder (nefes, zıplama, sallanma, yaklaşma, kalp atışı). Poz uygulama açılırken bir kez seçilir.
  * Çıkartma tabandan hizalıdır: hareketler ayakları yerinden oynatmaz, boyut/yer ölçüden önce hesaplanır.
  */
-export function HeroMoka({ scene, ratio, marginTop, below, children }: {
+export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children }: {
   scene: HeroScene; ratio: number; marginTop: number;
+  /** Üstte konuşma balonuna ayrılan yükseklik (dp); Moka asla bu bölgeye girmez. */
+  reserveTop: number;
   /** Arka planın üstünde, Moka'nın ALTINDA kalan katmanlar (solma geçişleri). */
   below?: ReactNode;
   children?: ReactNode;
@@ -108,8 +110,8 @@ export function HeroMoka({ scene, ratio, marginTop, below, children }: {
   }, [def.motion, reduce, m]);
 
   const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
-  const size = Math.round(w * scene.size);
   const bottom = Math.round(h * scene.bottom);
+  const size = Math.max(0, Math.min(Math.round(w * scene.size), h - bottom - reserveTop));
   const box = { position: 'absolute' as const, left: Math.round(w * scene.x - size / 2), bottom, width: size, height: size };
 
   return (

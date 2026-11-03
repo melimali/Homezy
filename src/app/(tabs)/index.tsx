@@ -1,7 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
-import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Modal, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 
@@ -11,7 +11,7 @@ import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
-import { Fade, SceneImage } from '@/components/SceneImage';
+import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
@@ -27,10 +27,13 @@ import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
-import { CALM_POSES, mokaTip } from '@/domain/moka';
+import { mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_BAKING_SCENE, HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
-import type { HomeMokaPose } from '@/constants/home-moka';
+import { HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
+import { POSE_SCENES } from '@/constants/scenes';
+import { HeroMoka } from '@/components/HeroMoka';
+import { pickHero, type HeroCtx, type HeroFeel, type HeroKey } from '@/domain/heroMoka';
+import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
@@ -60,7 +63,6 @@ export default function Home() {
   const moka = useMokaState();
   // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
   const tip = mokaTip(now);
-  const pose = CALM_POSES.includes(moka.pose) ? tip.pose : moka.pose;
   const taskPose = (ref?: TaskRef): MokaPose | undefined => {
     if (!ref) return undefined;
     const room = S.rooms[ref.rid];
@@ -71,29 +73,32 @@ export default function Home() {
     if (room.type === 'calisma') return 'laptop';
     return ROOM_POSE[room.type];
   };
-  const homePose = (candidate?: MokaPose): HomeMokaPose => {
-    switch (candidate) {
-      case 'panicked': case 'laptop': case 'baking': case 'dishes': case 'thumbs_up': case 'happy': return candidate;
-      default: return 'happy';
-    }
+  const sky = useSky();
+  const feel: HeroFeel = due.length >= 5 ? 'busy' : lastDone && due.length < 3 ? 'proud' : due.length >= 3 ? 'busy' : new Date(now).getHours() >= 22 || new Date(now).getHours() < 6 ? 'tired' : 'calm';
+  const heroCtx: HeroCtx = {
+    hour: new Date(now).getHours(),
+    feel,
+    sky: sky.kind,
+    streak: hp.streak,
+    level: hp.level,
+    taskPose: taskPose(lastDone ?? due[0]),
+    modePose: S.mode ? moka.pose : undefined,
   };
-  const heroPose: HomeMokaPose = S.mode
-    ? homePose(moka.pose)
-    : due.length >= 5
-      ? 'panicked'
-      : lastDone
-        ? homePose(taskPose(lastDone) ?? 'thumbs_up')
-        : due.length >= 3
-          ? 'panicked'
-          : homePose(taskPose(due[0]) ?? pose);
-  const heroScene = heroPose === 'laptop'
-    ? HOME_MOKA_STUDY_SCENE
-    : heroPose === 'baking'
-      ? HOME_MOKA_BAKING_SCENE
-      : heroPose === 'dishes'
-        ? HOME_MOKA_KITCHEN_SCENE
-        : HOME_SOFA_BACKGROUND;
-  const showSofaMoka = heroPose !== 'laptop' && heroPose !== 'baking' && heroPose !== 'dishes';
+  const ctxRef = useRef(heroCtx);
+  ctxRef.current = heroCtx;
+  const [heroKey, setHeroKey] = useState<HeroKey>(() => pickHero(heroCtx));
+  const nextHero = useCallback(() => setHeroKey(pickHero(ctxRef.current)), []);
+  // Her 45 saniyede ve bir iş bitince Moka başka bir hâle geçer; dokununca da.
+  useEffect(() => {
+    const id = setInterval(nextHero, 45000);
+    return () => clearInterval(id);
+  }, [nextHero]);
+  const lastDoneAt = lastDone?.t.last;
+  useEffect(() => { if (lastDoneAt) nextHero(); }, [lastDoneAt, nextHero]);
+  const heroScene: ImageSourcePropType = heroKey === 'sofa' ? HOME_SOFA_BACKGROUND
+    : heroKey === 'kitchen' ? HOME_MOKA_KITCHEN_SCENE
+    : heroKey === 'study' ? HOME_MOKA_STUDY_SCENE
+    : POSE_SCENES[heroKey] ?? HOME_SOFA_BACKGROUND;
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -110,10 +115,9 @@ export default function Home() {
     <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <SceneImage source={heroScene} ratio={0.95} style={{ marginTop: -insets.top - 12 }}>
+        <HeroMoka sceneKey={heroKey} source={heroScene} ratio={0.95} marginTop={-insets.top - 12} onTap={() => { sfx('tap'); nextHero(); }} overlay={heroKey === 'sofa' ? <HomeMokaAnimation /> : undefined}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
-          {showSofaMoka && <HomeMokaAnimation />}
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Moka'nın konuşma baloncuğu */}
             <View style={styles.speechBubble}>
@@ -126,7 +130,7 @@ export default function Home() {
             </View>
             <IconBtn icon="🔔" label="Bildirimler" badge={bell} onPress={() => router.push('/bildirimler')} />
           </Appear>
-        </SceneImage>
+        </HeroMoka>
 
         <Appear index={1} style={[styles.mokaCard, { backgroundColor: c.surface }]}>
           <View style={styles.mokaRow}>

@@ -1,9 +1,10 @@
 import { type BadgeArt } from '@/constants/badges';
 import { useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
+import { BenTour, type TourStep } from '@/components/BenTour';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
@@ -19,6 +20,7 @@ import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import { isOwner } from '@/auth/owner';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
+import { prefs } from '@/lib/supabase';
 import { pinTodayWidget, widgetAvailable } from '@/widget/widget';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -34,6 +36,19 @@ function confirm(title: string, text: string, ok: string, onOk: () => void) {
   ]);
 }
 
+type Tgt = ComponentRef<typeof View>;
+const TOUR_KEY = 'tour.ben';
+const TOUR: TourStep[] = [
+  { key: 'profil', pose: 'happy', text: 'Selam, ben Moka! Burası senin sayfan: seviyen, serin ve rozetlerin burada.' },
+  { key: 'ilac', pose: 'happy', text: 'İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.' },
+  { key: 'gunluk', pose: 'reading', text: 'Günlük: bugün nasıldı? Birkaç satır yaz, ruh halini seç.' },
+  { key: 'buyume', pose: 'laptop', text: 'Kendini geliştir: sana göre kitap, film ve öğrenme önerileri.' },
+  { key: 'saglik', pose: 'love', down: true, text: 'Sağlık: ilaç, alışkanlık, ruh hali ve spor hep burada.' },
+  { key: 'plan', pose: 'cheers', down: true, text: 'Gelişim planın ve ev planın: evini çiz, odaları, dolabı ve bakımı yönet. Ev kartında.' },
+  { key: 'hesap', pose: 'sipping', down: true, text: 'Hesap: yedekleme, Premium ve giriş işlemleri burada.' },
+  { key: 'ayar', pose: 'wink', down: true, text: 'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!' },
+];
+
 /** Hesap ve üyelik: profil, bulut yedeği, Premium durumu, satın alımları geri yükleme, çıkış, hesap silme. */
 export default function Hesap() {
   const c = useColors();
@@ -46,6 +61,16 @@ export default function Hesap() {
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
   const [langOpen, setLangOpen] = useState(false);
   const [cat, setCat] = useState<string | null>(null);
+  const [tour, setTour] = useState(false);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [tg] = useState<{ current: Record<string, Tgt | null> }>(() => ({ current: {} }));
+  const mark = (k: string) => ({ ref: (v: Tgt | null) => { tg.current[k] = v; }, collapsable: false as const });
+  useEffect(() => {
+    if (prefs.get(TOUR_KEY) === '1') return;
+    const id = setTimeout(() => setTour(true), 900);
+    return () => clearTimeout(id);
+  }, []);
+  const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); };
   const account = status === 'account';
   const name = account ? displayName(user) : t('guest');
   const now = useNow();
@@ -231,6 +256,7 @@ export default function Hesap() {
     { key: 'hesap', emoji: '👤', title: 'Hesap', tint: c.lavenderSoft, sub: premium.active ? 'Premium ✓' : account ? 'Yedek açık' : 'Misafir', items: [] },
     { key: 'ayar', emoji: '⚙️', title: 'Ayarlar', tint: c.sageSoft, sub: 'Bildirim, dil, gizlilik', items: [
       { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
+      { emoji: '🧭', label: 'Turu tekrar göster', sub: 'Ben sayfasının tanıtımı', tint: c.peachSoft, onPress: () => setTimeout(() => setTour(true), 300) },
       { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
       { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
     ] },
@@ -244,9 +270,10 @@ export default function Hesap() {
   ];
 
   return (
-    <Screen header={false} tab tone="lavender">
+    <Screen header={false} tab tone="lavender" scrollRef={scroller}>
       <TitleBar title={t('profile')} right={<IconBtn icon="⚙️" label={t('settings')} onPress={() => setCat('ayar')} />} />
 
+      <View {...mark('profil')}>
       <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
         <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
           <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
@@ -265,25 +292,34 @@ export default function Hesap() {
           <T v="tiny">{`🔥 ${hp.streak} ${t('gün seri')} · 🏆 ${earned}/${badges.length}`}</T>
         </View>
       </Appear>
+      </View>
 
       <Appear index={2} style={st.pins}>
         {pins.map(x => (
-          <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pin}>
+          <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
+          <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
             <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
             <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
           </Squish>
+          </View>
         ))}
       </Appear>
 
       <Appear index={3} style={st.grid}>
         {cats.map(x => (
-          <Squish key={x.key} onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
+          <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)} style={st.tileWrap}>
+          <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
             <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
             <T v="h3" numberOfLines={1}>{x.title}</T>
             <T v="tiny" numberOfLines={1}>{x.sub}</T>
           </Squish>
+          </View>
         ))}
       </Appear>
+
+      {tour && (
+        <BenTour steps={TOUR} targets={tg} onDone={endTour} onScroll={down => (down ? scroller.current?.scrollToEnd({ animated: true }) : scroller.current?.scrollTo({ y: 0, animated: true }))} />
+      )}
 
       <Sheet open={!!open} onClose={() => setCat(null)} scroll>
         {open && (
@@ -349,12 +385,17 @@ export default function Hesap() {
 
 type Item = { emoji: string; label: string; sub: string; tint: string; href?: Href; onPress?: () => void };
 
+const PIN_KEY: Record<string, string> = { 'İlaçlarım': 'ilac', 'Günlük': 'gunluk', 'Kendini geliştir': 'buyume' };
+const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 'hesap', ayar: 'ayar' };
+
 const st = StyleSheet.create({
+  pinIn: { alignItems: 'center', gap: 6 },
+  tileWrap: { width: '48.5%' },
   pins: { flexDirection: 'row', gap: 8 },
   pin: { flex: 1, alignItems: 'center', gap: 6 },
   pinIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { width: '48.5%', borderRadius: radius.card, padding: 14, gap: 4 },
+  tile: { borderRadius: radius.card, padding: 14, gap: 4 },
   tileIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

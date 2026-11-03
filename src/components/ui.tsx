@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, ComponentRef, ReactNode, Ref } from 'react';
 import {
   Image,
   Modal,
@@ -56,8 +56,8 @@ function textStyle(v: Variant, c: Colors): TextStyle {
 /* ---------- ekran ---------- */
 
 export function Screen({
-  children, scrollEnabled = true, header = true, tone = 'peach', tab, image,
-}: { children: ReactNode; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
+  children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef,
+}: { children: ReactNode; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
@@ -66,6 +66,7 @@ export function Screen({
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}
         keyboardShouldPersistTaps="handled"

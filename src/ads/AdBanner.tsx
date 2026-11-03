@@ -28,11 +28,11 @@ export function AdBanner() {
   if (!show || !ok || failed || !ads || !unit) return null;
   const { BannerAd, BannerAdSize } = ads;
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { backgroundColor: c.surface }]}>
       <Text style={[styles.label, { color: c.muted }]}>Reklam · Premium{"'"}da reklam yok</Text>
       <BannerAd
         unitId={unit}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        size={BannerAdSize.BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
         onAdFailedToLoad={() => setFailed(true)}
       />
@@ -41,6 +41,6 @@ export function AdBanner() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 4, marginTop: 4 },
+  wrap: { alignItems: 'center', gap: 4, marginTop: 4, borderRadius: 22, paddingVertical: 8, overflow: 'hidden' },
   label: { fontFamily: fonts.bodyBold, fontSize: 11 },
 });

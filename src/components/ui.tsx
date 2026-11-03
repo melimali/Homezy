@@ -61,7 +61,7 @@ export function Screen({
   const c = useColors();
   const insets = useSafeAreaInsets();
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
-  const bottom = tab ? 118 : (header ? 42 : insets.bottom + 42);
+  const bottom = tab ? 156 : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
@@ -74,6 +74,8 @@ export function Screen({
         {header && <AppHeader />}
         {children}
       </ScrollView>
+      {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: c.bg, opacity: 0.94 }} />
     </View>
   );
 }

@@ -18,6 +18,7 @@ import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
+import { setLaunchChoiceOpen } from '@/lib/launchChoice';
 import { prefs } from '@/lib/supabase';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';

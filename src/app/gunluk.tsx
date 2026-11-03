@@ -127,7 +127,7 @@ export default function Gunluk() {
           maxLength={2000}
           style={[styles.text, { borderRadius: radius.card - 6 }]}
         />
-        {photo && (
+        {photo && photoExists(photo) && (
           <View>
             <Image source={{ uri: photo }} style={styles.photo} resizeMode="cover" accessibilityLabel="Günün fotoğrafı" />
             <Squish onPress={() => setPhoto(null)} accessibilityRole="button" accessibilityLabel="Fotoğrafı kaldır" style={[styles.photoX, { backgroundColor: c.surface }]}>

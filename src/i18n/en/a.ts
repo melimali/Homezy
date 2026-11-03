@@ -439,7 +439,7 @@ export const EN_A: Record<string, string> = {
  "Misafir": "Guest",
  "📤 Paylaş": "📤 Share",
  "Moka ile günüm 🏡 Homezy ile her gün minik bir iş, evin büyüsün.": "My day with Moka 🏡 One tiny task a day with Homezy and your home grows.",
- "Haftan 📅": "Your week 📅",
+ "Haftan 🗓️": "Your week 🗓️",
  "🎬 Evimin hikâyesi": "🎬 My home's story",
  "Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da evini toplasın 🏡": "Share the card on your Instagram story or WhatsApp so your friends tidy up too 🏡",
  "Her gün minik bir iş…\nevim böyle oldu ✨": "One tiny task a day…\nthis is how my home turned out ✨",

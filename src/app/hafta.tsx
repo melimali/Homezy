@@ -39,7 +39,7 @@ export default function Hafta() {
   return (
     <Screen header={false}>
       <BackLink />
-      <T v="h1">Haftan 📅</T>
+      <T v="h1">Haftan 🗓️</T>
       <MokaWeekCard />
       <WeekCard ref={card} state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} />
       <Btn kind="primary" label="📤 Paylaş" onPress={share} block />

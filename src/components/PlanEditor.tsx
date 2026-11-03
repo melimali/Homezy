@@ -4,7 +4,7 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
-import { cellCount, emptyState, makeRoom, removeRoom } from '@/domain/logic';
+import { cellCount, emptyState, makeRoom, removeRoom, staggerFirstDay } from '@/domain/logic';
 import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeUpper, resizeGrid, restoreSnap, snapOf, TEMPLATES, type Floor, type PlanSnap } from '@/domain/plan-templates';
 import type { AppState } from '@/domain/types';
 import { useTranslation } from '@/i18n/i18n';
@@ -170,6 +170,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
       if (D.cells2 && !D.cells2.some(Boolean)) D.cells2 = null;
       if (D.order.length) D.setup = true;
+      if (first) staggerFirstDay(D);
     });
     if (!next.order.length) {
       toast('Kaydetmek için en az bir oda çiz.');

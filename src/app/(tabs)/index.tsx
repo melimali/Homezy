@@ -166,7 +166,7 @@ export default function Home() {
 
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 26 }}>📅</Text>
+          <Text style={{ fontSize: 26 }}>🗓️</Text>
           <View style={{ flex: 1 }}>
             <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
             <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
@@ -199,6 +199,9 @@ export default function Home() {
           </View>
         } />
         <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        {hp.level < 1 && (
+          <Text style={[styles.mood, { color: c.muted }]}>🪵 Arsa hazır. İlk işini yap, evin temeli atılsın.</Text>
+        )}
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
@@ -241,12 +244,16 @@ export default function Home() {
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
-        </Appear>
-        <Appear index={5} style={[styles.quick, { gap: 8 }]}>
           <Quick i={3} emoji="🛍️" label="Mağaza" sub={`${S.play.points} ⭐`} tint={c.peachSoft} onPress={() => router.push('/magaza' as Href)} />
-          {extrasUnlocked(S.play.days.length, now) ? <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} /> : <View style={{ flex: 1 }} />}
-          <View style={{ flex: 1 }} />
         </Appear>
+        {extrasUnlocked(S.play.days.length, now) && (
+          <Appear index={5} style={styles.quick}>
+            <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+            <View style={{ flex: 1 }} />
+            <View style={{ flex: 1 }} />
+            <View style={{ flex: 1 }} />
+          </Appear>
+        )}
       </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 

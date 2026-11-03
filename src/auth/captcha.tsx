@@ -14,7 +14,8 @@ import { fonts, useColors } from '@/theme';
  */
 const SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
 const ORIGIN = process.env.EXPO_PUBLIC_TURNSTILE_ORIGIN || 'https://themeikai.com';
-const TIMEOUT_MS = 45000;
+const TIMEOUT_MS = 8000; // Görünmez doğrulama en çok bu kadar bekler
+const UI_TIMEOUT_MS = 25000; // Sınav kutusu açıksa kişiye bu kadar süre
 
 type Pending = { resolve: (t: string | undefined) => void };
 let listener: ((p: Pending) => void) | null = null;
@@ -84,23 +85,26 @@ export function CaptchaHost() {
 
   useEffect(() => {
     if (!job) return;
-    timer.current = setTimeout(() => done(undefined), TIMEOUT_MS);
+    timer.current = setTimeout(() => done(undefined), ui ? UI_TIMEOUT_MS : TIMEOUT_MS); // Sınav açılınca süre yenilenir; ekran asla takılı kalmaz
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job]);
+  }, [job, ui]);
 
   if (!job || !WebView || !SITE_KEY) return null;
   return (
     <View pointerEvents={ui ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, ui && { backgroundColor: 'rgba(0,0,0,0.45)' }, st.center]}>
-      <View style={[ui ? st.card : st.hidden, ui && { backgroundColor: c.surface }]}>
+      <View style={[st.card, !ui && st.ghost, ui && { backgroundColor: c.surface }]}>
         {ui && <Text style={{ fontFamily: fonts.bodyBold, color: c.ink, fontSize: 14, marginBottom: 8 }}>Robot olmadığını doğrula</Text>}
         <WebView
           source={{ html: html(SITE_KEY), baseUrl: ORIGIN }}
           originWhitelist={['*']}
           javaScriptEnabled
-          style={ui ? st.web : st.hiddenWeb}
+          style={st.web}
+          androidLayerType="hardware"
+          setSupportMultipleWindows={false}
+          domStorageEnabled
           backgroundColor="transparent"
           onMessage={e => {
             try {
@@ -113,7 +117,13 @@ export function CaptchaHost() {
             }
           }}
           onError={() => done(undefined)}
+          onRenderProcessGone={() => done(undefined)}
         />
+        {ui && (
+          <Text onPress={() => done(undefined)} accessibilityRole="button" style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13, textAlign: 'center', paddingTop: 8 }}>
+            Vazgeç
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -121,8 +131,8 @@ export function CaptchaHost() {
 
 const st = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
-  card: { borderRadius: 22, padding: 16, width: 330 },
+  card: { borderRadius: 22, padding: 16, width: 330, alignItems: 'center' },
+  // Görünmezken de tam boyutta durur (1x1'e küçülen WebView sınav kutusunu çizemiyor); sadece saydamdır.
+  ghost: { opacity: 0.01, padding: 0, width: 300 },
   web: { width: 300, height: 80, backgroundColor: 'transparent' },
-  hidden: { width: 1, height: 1, opacity: 0 },
-  hiddenWeb: { width: 300, height: 80, backgroundColor: 'transparent' },
 });

@@ -54,7 +54,7 @@ export default function Bugun() {
 
   return (
     <Screen header={false} tab tone="rose">
-      <TitleBar title="Bugün" right={<IconBtn icon="📅" label="Haftam" onPress={() => router.push('/hafta')} />} />
+      <TitleBar title="Bugün" right={<IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />} />
       {next ? (
         <NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} />
       ) : total > 0 ? (

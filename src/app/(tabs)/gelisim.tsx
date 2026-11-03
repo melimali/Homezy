@@ -10,6 +10,7 @@ import { allTasks, doneToday, homeScore } from '@/domain/logic';
 import { MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel';
 import { freezesUsed, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
+import { gKey, goalMet, goalPct, readMin, readStreak } from '@/domain/growth';
 import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from '@/domain/stats';
 import { extrasUnlocked } from '@/lib/events';
 import { useNow } from '@/hooks/useNow';
@@ -52,6 +53,20 @@ export default function Gelisim() {
           <T v="bold">{week ? `Bu hafta ${week} iyilik` : 'Yeni bir hafta'}</T>
           <T v="small" numberOfLines={3}>{weekLine(bars)}</T>
         </View>
+      </Appear>
+
+      <Appear index={2}>
+        <Squish onPress={() => router.push('/buyume')} accessibilityRole="link" accessibilityLabel="Kendini geliştir" style={[st.hero, { backgroundColor: c.sageSoft, shadowColor: c.shadow }]}>
+          <Ring pct={goalPct(S.play.growth, gKey(now))} size={64} stroke={9} color={c.sage} />
+          <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+            <T v="bold">📚 Kendini geliştir</T>
+            <T v="small" numberOfLines={2}>
+              {goalMet(S.play.growth, gKey(now))
+                ? `Okuma hedefi tamam${readStreak(S.play.growth, now) > 1 ? ` · 🔥 ${readStreak(S.play.growth, now)} gün` : ''}`
+                : `${readMin(S.play.growth, gKey(now))}/${S.play.growth.goalMin} dk · Moka bugün bir öneri bıraktı`}
+            </T>
+          </View>
+        </Squish>
       </Appear>
 
       <Card index={2}>

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
+import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
 import { Appear, Pulse, Squish } from '@/components/motion';
@@ -109,6 +110,7 @@ export default function Bugun() {
       <DailyGoals now={now} />
       <WeekStrip now={now} />
       <DayPlanCard />
+      <GrowthCard />
       <SelfCareCard />
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>

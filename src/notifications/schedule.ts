@@ -6,6 +6,7 @@ import { DAY } from '@/domain/constants';
 import { isPhotoTask } from '@/domain/home';
 import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
 import { firstOpenDay } from '@/lib/events';
+import { goalMet } from '@/domain/growth';
 import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
@@ -220,6 +221,12 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       const at = new Date(base);
       at.setHours(sh || 0, sm || 0, 0, 0);
       if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor' });
+    }
+    // Okuma hedefi: kitap ya da okuma kaydı olanlara akşam 21:00, o gün hedef tutulmadıysa.
+    if (set.read && (S.play.growth.books.length || S.play.growth.reads.length) && !(key === today && goalMet(S.play.growth, today))) {
+      const at = new Date(base);
+      at.setHours(21, 0, 0, 0);
+      if (at.getTime() > now) out.push({ at, title: '📖 Okuma vakti', body: `Bugün ${S.play.growth.goalMin} dakika okumaya ne dersin? Moka yanında ☕`, url: '/buyume' });
     }
     if (set.weekly && base.getDay() === 0) {
       const at = new Date(base);

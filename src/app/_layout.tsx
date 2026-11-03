@@ -127,6 +127,7 @@ function RootStack() {
         <Stack.Screen name="odak" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="buyume" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />

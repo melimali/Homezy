@@ -81,6 +81,8 @@ export type Settings = {
   streak: boolean;
   /** Spor hatırlatması. */
   sport: boolean;
+  /** Akşam okuma hedefi hatırlatması (kitap ya da okuma kaydı varsa). */
+  read: boolean;
   /** "HH:MM" */
   sportTime: string;
   /** Spor günleri: 0 pazar … 6 cumartesi. */
@@ -197,6 +199,34 @@ export type Play = {
   moka: MokaGrowth;
   /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */
   notes: MokaNote[];
+  /** Kişisel gelişim: kitaplık, izleme listesi, okuma hedefi, öğrenme (src/domain/growth.ts). */
+  growth: Growth;
+};
+
+/** Kitaplıktaki bir kitap. `read` okunan sayfa, `done` bittiği gün. */
+export type Book = { id: string; title: string; author: string; pages: number; read: number; added: number; done: DayKey | null; note?: string };
+export type WatchKind = 'film' | 'dizi' | 'belgesel' | 'podcast';
+/** İzleme listesindeki bir film, dizi, belgesel ya da podcast. `seen`: izlendiği gün. */
+export type Watch = { id: string; title: string; kind: WatchKind; added: number; seen: DayKey | null; rating?: number; note?: string };
+/** Bir okuma kaydı: dakika ve (varsa) sayfa. */
+export type ReadLog = { day: DayKey; min: number; pages: number; book: string | null };
+/** O gün yapılan öğrenme etkinlikleri. */
+export type LearnDay = { word?: boolean; lesson?: string; breath?: number };
+export type Growth = {
+  /** Günlük okuma hedefi, dakika. */
+  goalMin: number;
+  reads: ReadLog[];
+  books: Book[];
+  watch: Watch[];
+  /** Hedefin tutturulduğu günler (seriye ve rozetlere bakılır). */
+  goalDays: DayKey[];
+  /** Moka'nın bugünkü önerisi; `shuffles`: bugün kaç kez başka öneri istendi, `saved`: listeye eklendi. */
+  pick: { day: DayKey; id: string; shuffles: number; saved: boolean } | null;
+  learn: Record<DayKey, LearnDay>;
+  /** Kazanılan Moka rozetleri → kazanıldığı gün. */
+  badges: Record<string, DayKey>;
+  /** Kutlaması gösterilen son rozet sayısı olmasın diye: yeni rozetler bir kere söylenir. */
+  seenBadges: string[];
 };
 
 export type MokaNote = { id: string; day: DayKey; text: string; at: number };

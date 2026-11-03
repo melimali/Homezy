@@ -1,6 +1,7 @@
 import { DAY } from './constants';
 import { deviceLang } from '@/i18n/runtime';
 import type { Garden } from './garden';
+import { emptyGrowth } from './growth';
 import { emptyMoka, gainFromAward } from './mokaLevel';
 import { baseCare, emptyProfile } from './home';
 import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
@@ -34,12 +35,12 @@ export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
-  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [],
+  frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [], growth: emptyGrowth(),
 });
 
 export const defaultSettings = (): Settings => ({
   time: '09:00', routine: true, stock: true, laundry: true,
-  streak: true, sport: true, sportTime: '18:00', sportDays: [1, 3, 5],
+  streak: true, sport: true, read: true, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
   bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
   actions: true,
@@ -52,6 +53,7 @@ export function normalize(S: AppState): AppState {
   S.play = { ...emptyPlay(), ...(S.play || {}) };
   S.play.garden = { ...emptyGarden(), ...S.play.garden };
   S.play.moka = { ...emptyMoka(), ...S.play.moka };
+  S.play.growth = { ...emptyGrowth(), ...S.play.growth };
   S.homeId ||= 'ev1';
   S.homeName ||= 'Evim';
   S.others ||= [];

@@ -24,7 +24,7 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
-import { fonts, radius, space, type, useColors, type Colors } from '@/theme';
+import { fonts, warmShadow, radius, space, type, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
 import { ScreenBackground, type Tone } from './ScreenBackground';
@@ -422,14 +422,14 @@ export const styles = StyleSheet.create({
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {
     borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 20, elevation: 3,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 20, elevation: 3,
   },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
     paddingVertical: 16, paddingHorizontal: 24,
-    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 2,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 2,
   },
   btnSmall: { paddingVertical: 9, paddingHorizontal: 16, shadowOpacity: 0, elevation: 0 },
   chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },

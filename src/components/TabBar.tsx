@@ -8,7 +8,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors, useIsDark } from '@/theme';
+import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
 
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
@@ -182,7 +182,7 @@ const st = StyleSheet.create({
   label: { fontSize: 11 },
   plus: {
     width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -22, borderWidth: 4,
-    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
   },
   plusClip: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden', alignItems: 'center' },
   plusMoka: { width: 60, height: 60, marginTop: 4 },

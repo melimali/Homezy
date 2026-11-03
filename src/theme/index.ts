@@ -75,6 +75,9 @@ export const fonts = {
  */
 export const type = { h1: 36, h2: 23, h3: 18, lead: 16.5, bold: 16, body: 15, small: 13.5, tiny: 12, maxScale: 1.3 };
 
+/** Kartların altındaki sıcak gölge rengi (gölge her temada aynı tondan). */
+export const warmShadow = '#B9805F';
+
 export const radius = { card: 28, tile: 24, plan: 14, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */

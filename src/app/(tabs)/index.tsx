@@ -34,7 +34,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, space, useColors } from '@/theme';
+import { fonts, warmShadow, radius, space, useColors } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
 
 export default function Home() {
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   heroLead: { fontSize: 15, lineHeight: 21, marginTop: 2, maxWidth: 250 },
   mokaCard: {
     marginTop: -58, marginHorizontal: 18, borderRadius: radius.tile, padding: 16, gap: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)',
-    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 4,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 4,
   },
   mokaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   mokaTap: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },

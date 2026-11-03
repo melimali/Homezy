@@ -142,12 +142,22 @@ export function useTask(t: Task, rid: string, list: TaskList) {
   };
 
   const remove = () => {
+    const snap = { ...t };
+    let at = -1;
     update(S => {
       const arr = findList(S, rid, list);
       const i = arr.findIndex(y => y.id === t.id);
+      at = i;
       if (i > -1) arr.splice(i, 1);
     });
-    toast(`${t.name} silindi.`);
+    toast(`${t.name} silindi.`, {
+      label: tr('Geri al'),
+      onPress: () =>
+        update(S => {
+          const arr = findList(S, rid, list);
+          if (!arr.some(y => y.id === snap.id)) arr.splice(Math.max(0, Math.min(at, arr.length)), 0, snap);
+        }),
+    });
   };
 
   const shoot = async () => {

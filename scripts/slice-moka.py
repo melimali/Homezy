@@ -1,7 +1,7 @@
 """Moka sticker sayfalarını (soldan sağa, yukarıdan aşağı) tek tek saydam PNG'lere böler.
 İlk iki sayfa 4x3, üçüncü sayfa (koleksiyon) 6x5. Atlanacak sayfa için `-` yaz.
 
-Kullanım: python3 scripts/slice-moka.py <ifadeler.png> <temizlik.png> [<koleksiyon.png>] assets/moka
+Kullanım: python3 scripts/slice-moka.py <ifadeler.png> <temizlik.png> [<koleksiyon.png>] assets-src/moka
 Gerekli: pip install pillow numpy scipy
 """
 import sys, numpy as np

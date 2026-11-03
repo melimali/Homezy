@@ -1,3 +1,4 @@
+import { AppState as RNAppState } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { setLang } from '@/i18n/runtime';
@@ -19,12 +20,16 @@ const StoreContext = createContext<Store | null>(null);
 
 const clone = (S: AppState): AppState => JSON.parse(JSON.stringify(S));
 
-/** Kayıtları sıraya koyar; arka arkaya gelen değişikliklerde yalnızca en sonuncusu yazılır. */
-function createSaver() {
+/**
+ * Kayıtları sıraya koyar. Arka arkaya gelen değişiklikler (parmakla boyama, hızlı dokunuşlar)
+ * kısa bir süre toplanır ve yalnızca en sonuncusu yazılır; uygulama arka plana giderken `flush` ile hemen yazılır.
+ */
+function createSaver(delay = 300) {
   let pending: AppState | null = null;
   let running = false;
-  return async function save(S: AppState) {
-    pending = S;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  async function run() {
+    timer = null;
     if (running) return;
     running = true;
     try {
@@ -40,7 +45,17 @@ function createSaver() {
     } finally {
       running = false;
     }
+  }
+  const save = (S: AppState) => {
+    pending = S;
+    if (timer) return;
+    timer = setTimeout(() => void run(), delay);
   };
+  save.flush = () => {
+    if (timer) clearTimeout(timer);
+    return run();
+  };
+  return save;
 }
 
 export function AppStoreProvider({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
@@ -83,6 +98,14 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
     return () => {
       alive = false;
     };
+  }, [saver]);
+
+  // Arka plana geçerken bekleyen kaydı hemen yaz (uygulama sistem tarafından kapatılabilir).
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', st => {
+      if (st !== 'active') void saver.flush();
+    });
+    return () => sub.remove();
   }, [saver]);
 
   const update = useCallback(

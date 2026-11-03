@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { CaptchaHost } from '@/auth/captcha';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { IntroSplash } from '@/components/IntroSplash';
 import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
@@ -32,6 +33,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // Emülatörde Google Play hesabı olmadığı için RevenueCat her açılışta hata yazar; geliştirirken ekranı kaplamasın.
 if (__DEV__) LogBox.ignoreLogs(['[RevenueCat]']);
 configureNotifications();
+
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return <ErrorScreen error={error} retry={retry} />;
+}
 
 export default function RootLayout() {
   const c = useColors();

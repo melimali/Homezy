@@ -13,6 +13,7 @@
 | Aile evi (paylaşılan ev, üyeler, ortak hedefler, ilerleme kayıtları) | Kullanıcı | `families`, `family_members`, `shared_homes`, `family_goals`, `family_goal_logs` | Supabase | Hesap süresi | Cascade + `delete_me` (hedef ilerleme kayıtları) |
 | Tarama fotoğrafı (buzdolabı / kıyafet) | Kullanıcı | Sunucuda saklanmaz; istek süresince bellekte | Anthropic | Anthropic politikası | – |
 | Moka sohbet mesajları + ev bağlamı (oda/iş adı-durumu, seviye, seri, tarih; son 12 mesaj) | Kullanıcı | Sunucuda saklanmaz; telefonda sadece açık oturumda bellekte | Anthropic | Anthropic politikası | Sohbeti temizle düğmesi |
+| İlaç adı, doz, saat, "içtim" kayıtları (sağlık verisi) | Kullanıcı | Sadece telefon (expo-sqlite); bulut yedeğine, sohbete ve yapay zekâya gönderilmez (`src/sync/cloud.ts forCloud`) | – | Uygulamayı silene kadar | Uygulamayı silme / veri sıfırlama |
 | Yaklaşık konum (2 ondalık) | Cihaz | Saklanmaz | Open-Meteo | – | – |
 | Robot doğrulaması (IP, tarayıcı/cihaz sinyalleri; sadece giriş, kayıt ve misafir oturumu açılırken, captcha açıksa) | Cloudflare Turnstile | Saklanmaz (Cloudflare işler) | Cloudflare | Cloudflare politikası | – |
 | Bildirim zamanlamaları | Uygulama | Telefon | – | – | İzin kapatma / uygulamayı silme |

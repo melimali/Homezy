@@ -15,6 +15,7 @@ import { CaptchaHost } from '@/auth/captcha';
 import { AppAlertHost } from '@/components/AppAlert';
 import { ErrorScreen } from '@/components/ErrorScreen';
 import { IntroSplash } from '@/components/IntroSplash';
+import { MeikaiIntro } from '@/components/MeikaiIntro';
 import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
@@ -43,6 +44,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 export default function RootLayout() {
   const c = useColors();
   const [introDone, setIntroDone] = useState(false);
+  const [meikai, setMeikai] = useState<'play' | 'fade' | 'done'>('play');
   const [fontsLoaded, fontError] = useFonts({
     Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
   });
@@ -69,7 +71,9 @@ export default function RootLayout() {
                 <AppAlertHost />
               </FamilyProvider>
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
-              {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
+              {!introDone && meikai !== 'play' && <IntroSplash onDone={() => setIntroDone(true)} />}
+              {/* Önce Meikai Digital açılışı; solarken altta Homezy açılışı başlar. */}
+              {meikai !== 'done' && <MeikaiIntro onFade={() => setMeikai(m => (m === 'play' ? 'fade' : m))} onDone={() => setMeikai('done')} />}
             </ToastProvider>
           </AppStoreProvider>
         </PurchasesProvider>

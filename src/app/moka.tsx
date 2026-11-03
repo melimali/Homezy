@@ -48,6 +48,7 @@ export default function MokaChat() {
   const [items, setItems] = useState<Item[]>(memory);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const lv = mokaLevel(S.play.moka);
@@ -100,6 +101,7 @@ export default function MokaChat() {
       push(p => [...p, { id: nextId++, role: 'assistant', content: r.message, error: true, cta: r.account ? 'login' : r.premium ? 'premium' : undefined }]);
       return;
     }
+    if (r.limit != null && r.mlimit != null) setLeft({ day: Math.max(0, r.limit - r.used), month: Math.max(0, r.mlimit - (r.mused ?? 0)) });
     // Sunucu doğruladı; telefon yine kendi verisine göre doğrulayıp uygular.
     const done: string[] = [];
     const got: { focus?: { minutes: number; topic: string } } = {};
@@ -194,12 +196,17 @@ export default function MokaChat() {
         </ScrollView>
       )}
 
+      {left ? (
+        <Text style={{ textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted, paddingTop: 4, backgroundColor: c.bg }}>
+          {tx('Bugün kalan: {n}').replace('{n}', String(left.day))} · {tx('Bu ay kalan: {n}').replace('{n}', String(left.month))}
+        </Text>
+      ) : null}
       <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: c.bg }]}>
         <Field
           value={text}
           onChangeText={setText}
           placeholder="Moka'ya yaz…"
-          maxLength={600}
+          maxLength={400}
           returnKeyType="send"
           onSubmitEditing={() => send()}
           editable={!busy}

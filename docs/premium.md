@@ -212,5 +212,5 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 - Uygulama: `src/app/moka.tsx` (Ben → "Moka ile sohbet" ya da ortadaki Moka "+" menüsü), `src/lib/mokaChat.ts`, `src/domain/chat.ts` (bağlam ve eylemleri uygulama).
 - Sunucu: `supabase/functions/moka-chat/index.ts`. Model `CHAT_MODEL` (varsayılan `claude-haiku-5-5`). Sistem istemi Moka kişiliği + ev/rutin/odak konularıyla sınırlı; alan dışını nazikçe reddeder.
 - Araçlar: iş ekle, işi tamamla, yarına ertele, takvim notu, odak başlat. Sunucu çağrıyı şemaya ve uygulamanın gönderdiği oda/iş listesine göre doğrular; telefon aynısını yerel veriye göre tekrar doğrular. Mesajlar saklanmaz.
-- Sınır: ücretsiz günde 15, Premium günde 150 mesaj (`chat_usage`, `20261031120000_moka_chat.sql`; `LIMITS.*.chats` ile aynı).
+- Sınır: ücretsiz hesap sohbete erişemez (hazır metin). Premium günde 40, ayda 600 mesaj, dakikada 6 (`chat_usage`, `20261103000000_moka_aylik_limit.sql`; `LIMITS.premium.chats` / `chatsMonth` ile aynı). Mesaj en fazla 400 karakter, geçmiş 8 mesaj, cevap en fazla 500 token. Maliyet hesabı: `docs/moka-sohbet-maliyet.md`.
 - Kurulum: `supabase db push`, `supabase functions deploy moka-chat` (`ANTHROPIC_API_KEY` scan ile aynı).

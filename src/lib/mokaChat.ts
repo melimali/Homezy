@@ -9,9 +9,9 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Moka sohbeti. Mesajlar `moka-chat` sunucu fonksiyonuna gider (supabase/functions/moka-chat); API anahtarı
- * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 150 mesaj, dakikada 6).
+ * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 40, ayda 600 mesaj, dakikada 6).
  */
-type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; premium: boolean };
+type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
 type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean };
 
 const TIMEOUT = 45_000;
@@ -24,7 +24,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   const { data: auth } = await supabase.auth.getSession();
   if (!auth.session || auth.session.user.is_anonymous) return { ok: false, account: true, message: tx(CHAT_ACCOUNT_NEEDED) };
   const { data, error } = await supabase.functions.invoke('moka-chat', { body: { messages, ctx, lang: getLang() }, timeout: TIMEOUT });
-  if (!error) return { ok: true, reply: String(data.reply ?? ''), actions: Array.isArray(data.actions) ? data.actions : [], used: data.used, limit: data.limit, premium: !!data.premium };
+  if (!error) return { ok: true, reply: String(data.reply ?? ''), actions: Array.isArray(data.actions) ? data.actions : [], used: data.used, limit: data.limit, mused: data.mused, mlimit: data.mlimit, premium: !!data.premium };
 
   if (!(error instanceof FunctionsHttpError)) return { ok: false, message: tx('Bağlantıda bir sorun oldu. İnternetini kontrol edip tekrar dene.') };
   const status = error.context.status as number;
@@ -33,13 +33,16 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   if (status === 403 && body.error === 'premium_required') return { ok: false, premium: true, message: tx("Sohbet Premium'a özel ☕") };
   if (status === 413) return { ok: false, message: tx('Mesajın çok uzun. Biraz kısaltıp tekrar dene.') };
   if (status === 429 && body.error === 'rate') return { ok: false, message: tx('Çok hızlı yazıyorsun, bir dakika nefes alalım ☕ Birazdan tekrar dene.') };
+  if (status === 429 && body.error === 'limit_month') {
+    return { ok: false, limit: true, message: tx('Bu ayki sohbet hakkımızı doldurduk, çok keyifliydi ☕ Yeni ayda yine buradayım. İşlerin için uygulama hep açık 💛') };
+  }
   if (status === 429) {
     return {
       ok: false,
       limit: true,
       message: body.premium
-        ? `Bugünkü ${body.limit} mesajını kullandın. Yarın yine buradayım ☕`
-        : `Bugünkü mesaj hakkın doldu. Yarın yine buradayım ☕`,
+        ? tx('Bugünkü mesaj hakkımızı doldurduk, biraz dinlenelim ☕ Yarın yine buradayım 💛')
+        : tx('Bugünkü mesaj hakkın doldu. Yarın yine buradayım ☕'),
     };
   }
   if (status === 401) return { ok: false, message: tx('Oturumun kapanmış. Uygulamayı kapatıp açtıktan sonra tekrar dene.') };

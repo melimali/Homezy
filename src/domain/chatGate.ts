@@ -8,7 +8,7 @@ import { LIMITS } from './premium';
  * Sunucu aynı kuralları ayrıca zorlar (supabase/functions/moka-chat, scan). Metinlerin İngilizcesi src/i18n/en/b.ts'te.
  */
 export const CHAT_PREMIUM_INTRO =
-  `Selam, ben Moka ☕ Seninle sohbet etmeyi çok isterdim ama sohbet Premium'a özel! Premium'da benimle günde ${LIMITS.premium.chats} mesaj konuşabilir, iş ekletip yaptıklarını işaretletebilir, takvime not yazdırabilirsin. Üstüne günde ${LIMITS.premium.scans} yapay zekâ taraması, ikinci kat, 1,5 kat puan, ayda ${LIMITS.premium.freezes} seri dondurma, ev temaları, aile paylaşımı ve reklamsız kullanım da var. İstersen bir bak 💛`;
+  `Selam, ben Moka ☕ Seninle sohbet etmeyi çok isterdim ama sohbet Premium'a özel! Premium'da benimle günde ${LIMITS.premium.chats} (ayda ${LIMITS.premium.chatsMonth}) mesaj konuşabilir, iş ekletip yaptıklarını işaretletebilir, takvime not yazdırabilirsin. Üstüne günde ${LIMITS.premium.scans} yapay zekâ taraması, ikinci kat, 1,5 kat puan, ayda ${LIMITS.premium.freezes} seri dondurma, ev temaları, aile paylaşımı ve reklamsız kullanım da var. İstersen bir bak 💛`;
 
 export const CHAT_PREMIUM_NUDGE = "Sohbet Premium'a özel ☕ Premium'a geçersen seninle seve seve konuşurum. Tüm avantajlara aşağıdaki butondan bakabilirsin 💛";
 

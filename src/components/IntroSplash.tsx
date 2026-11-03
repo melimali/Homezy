@@ -102,6 +102,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     val.interpolate({ inputRange: [0, 1], outputRange: [from, to] });
 
   const RAY = Math.hypot(W, H) * 1.1;
+  const RAY_PX = 600;
   const wedge = (Math.PI * 2) / RAYS;
   const rayPath = Array.from({ length: RAYS / 2 }, (_, i) => {
     const a0 = i * 2 * wedge;
@@ -122,11 +123,15 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
           <Animated.View
             style={{
               position: 'absolute',
-              width: RAY * 2,
-              height: RAY * 2,
-              transform: [{ rotate: v.spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '40deg'] }) }],
+              width: RAY_PX,
+              height: RAY_PX,
+              transform: [
+                { rotate: v.spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '40deg'] }) },
+                { scale: (RAY * 2) / RAY_PX },
+              ],
             }}>
-            <Svg width={RAY * 2} height={RAY * 2}>
+            {/* Android çok büyük bitmap çizemez (5800x5800 px çökertiyordu): küçük çiz, ölçekle. */}
+            <Svg width={RAY_PX} height={RAY_PX} viewBox={`0 0 ${RAY * 2} ${RAY * 2}`}>
               <Path d={rayPath} fill={c.cream} opacity={0.35} />
             </Svg>
           </Animated.View>

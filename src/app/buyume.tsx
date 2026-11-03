@@ -18,7 +18,6 @@ import { limits } from '@/domain/premium';
 import type { WatchKind } from '@/domain/types';
 import { useGrow, useReadLog } from '@/hooks/useGrow';
 import { useNow } from '@/hooks/useNow';
-import { usePlay } from '@/play/usePlay';
 import { usePersona } from '@/profile/usePersona';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -69,7 +68,6 @@ function TodayTab() {
   const { state: S, update } = useStore();
   const { premium } = usePurchases();
   const { persona } = usePersona();
-  const grow = useGrow();
   const G = S.play.growth;
   const day = gKey(now);
   const ci = checkinOf(S.play, now);

@@ -1,11 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MOKA_ASSETS } from '@/constants/moka';
 import { MokaLive } from '@/components/MokaLive';
 import { reactMoka } from '@/lib/mokaReact';
-import { sfx } from '@/lib/sfx';
+import { haptic, sfx } from '@/lib/sfx';
+import { shareCard } from '@/lib/share';
+import { useNow } from '@/hooks/useNow';
+import { useStore } from '@/store/AppStore';
+import { HouseShareCard } from './HouseShareCard';
 import { fonts, radius, useColors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
@@ -17,9 +21,15 @@ import { Appear, Float, Squish } from './motion';
 export function DoneCelebration({ open, text, points, quote, onClose }: { open: boolean; text: string; points: number; quote: string; onClose: () => void }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const now = useNow();
+  const { state } = useStore();
+  const card = useRef<ComponentRef<typeof View>>(null);
+  const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     if (!open) return;
+    setShowCard(false);
     sfx('party');
+    haptic('success');
     const t = setTimeout(() => reactMoka('confetti'), 350);
     return () => clearTimeout(t);
   }, [open]);
@@ -53,6 +63,13 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
             <Text style={[st.mark, { color: c.onNight }]}>“</Text>
             <Text style={[st.quoteT, { color: c.onNight }]}>{quote}</Text>
           </Appear>
+          {showCard && <HouseShareCard ref={card} state={state} now={now} />}
+          <Squish
+            onPress={() => (showCard ? void shareCard(card, 'Moka\'yla evim büyüyor 🏡 Homezy ile her gün minik bir iş, evin büyüsün.') : setShowCard(true))}
+            accessibilityLabel="Evimi paylaş"
+            style={[st.btn, { backgroundColor: c.nightCard, marginTop: 0 }]}>
+            <Text style={[st.btnT, { color: c.onNight }]}>📤 Evimi paylaş</Text>
+          </Squish>
           <Squish onPress={onClose} accessibilityLabel="Devam et" style={[st.btn, { backgroundColor: c.cream }]}>
             <Text style={[st.btnT, { color: c.night }]}>Devam Et</Text>
           </Squish>

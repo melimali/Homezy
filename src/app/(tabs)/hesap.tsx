@@ -172,7 +172,7 @@ export default function Hesap() {
       ]} />
 
       <View style={{ gap: 12 }}>
-        <SecHead title={t('badges')} h="h3" right={`${badges.filter(b => b.on).length}/${badges.length}`} />
+        <SecHead title={t('badges')} h="h3" right={<Pressable onPress={() => router.push('/rozetler' as Href)} accessibilityLabel={t('Tümünü gör')}><T v="bold">{t('Tümünü gör')} ›</T></Pressable>} />
         <Appear index={6} style={st.badges}>
           {badges.map(b => (
             <View key={b.label} style={[st.badge, { backgroundColor: c.surface }]} accessibilityLabel={`${b.label}: ${b.on ? 'kazanıldı' : b.hint}`}>

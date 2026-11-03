@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Moka sohbeti. Mesajlar `moka-chat` sunucu fonksiyonuna gider (supabase/functions/moka-chat); API anahtarı
- * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 40, ayda 600 mesaj, dakikada 6).
+ * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 50, ayda 600 mesaj, dakikada 6).
  */
 type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
 type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean };

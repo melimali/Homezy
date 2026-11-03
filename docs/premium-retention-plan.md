@@ -24,7 +24,7 @@ Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an
 | Ek alanlar | 1 ev | 5 ev, ek oda, alternatif tasarım | Kısmen var |
 | Hedef planı | 1 plan | Birden fazla plan, esnek rutin, hedef önerisi | Yeni |
 | Bildirim | Sabit saat | Akıllı saat, gelişmiş hatırlatıcı | Var |
-| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 50 / 1,5× | Var |
+| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 10 / 1,5× | Var |
 
 Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme" sayılır mı?** Öneri: kalsın (ilerlemeyi kilitlemiyor, sadece hızlandırıyor/koruyor), ama seri **asla** paywall arkasında silinmesin: dondurma yoksa seri kırılır, bu doğal kuraldır; Premium bittiğinde eldeki seri ve ev korunur.
 

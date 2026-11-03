@@ -16,11 +16,10 @@ import { RoomGrid } from '@/components/RoomGrid';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { MoodCheckin } from '@/components/MoodCheckin';
-import { HomeMokaAnimation } from '@/components/HomeMokaAnimation';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
-import { ROOM_POSE, type MokaPose } from '@/constants/moka';
+import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
@@ -29,8 +28,7 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_KITCHEN_SCENE, HOME_MOKA_SEATED, HOME_MOKA_STUDY_SCENE, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
-import { POSE_SCENES } from '@/constants/scenes';
+import { HOME_MOKA_SEATED, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
 import { HeroMoka } from '@/components/HeroMoka';
 import { pickHero, type HeroCtx, type HeroFeel, type HeroKey } from '@/domain/heroMoka';
 import { useSky } from '@/lib/weather';
@@ -95,10 +93,10 @@ export default function Home() {
   }, [nextHero]);
   const lastDoneAt = lastDone?.t.last;
   useEffect(() => { if (lastDoneAt) nextHero(); }, [lastDoneAt, nextHero]);
-  const heroScene: ImageSourcePropType = heroKey === 'sofa' ? HOME_SOFA_BACKGROUND
-    : heroKey === 'kitchen' ? HOME_MOKA_KITCHEN_SCENE
-    : heroKey === 'study' ? HOME_MOKA_STUDY_SCENE
-    : POSE_SCENES[heroKey] ?? HOME_SOFA_BACKGROUND;
+  // Arka plan sabit; sadece Moka çıkartması değişir.
+  const heroSticker: ImageSourcePropType = heroKey === 'sofa' ? HOME_MOKA_SEATED
+    : heroKey === 'kitchen' ? MOKA_ASSETS.chef
+    : (MOKA_ASSETS as Record<string, ImageSourcePropType>)[heroKey] ?? HOME_MOKA_SEATED;
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -115,7 +113,7 @@ export default function Home() {
     <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <HeroMoka sceneKey={heroKey} source={heroScene} ratio={0.95} marginTop={-insets.top - 12} onTap={() => { sfx('tap'); nextHero(); }} overlay={heroKey === 'sofa' ? <HomeMokaAnimation /> : undefined}>
+        <HeroMoka sceneKey={heroKey} background={HOME_SOFA_BACKGROUND} sticker={heroSticker} ratio={0.95} marginTop={-insets.top - 12} onTap={() => { sfx('tap'); nextHero(); }}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>

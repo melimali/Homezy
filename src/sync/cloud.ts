@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Alert, AppState as RNAppState } from 'react-native';
+import { AppState as RNAppState } from 'react-native';
 
 import { useAuth } from '@/auth/AuthProvider';
 import type { AppState } from '@/domain/types';
 import { prefs, supabase } from '@/lib/supabase';
 import { useStore } from '@/store/AppStore';
+import { appAlert } from '@/components/AppAlert';
 
 /**
  * Ev verisinin bulut yedeği: Supabase'deki `homes` tablosunda kullanıcı başına tek satır (JSON).
@@ -125,7 +126,7 @@ export function useCloudSync() {
         replace(mergeFromCloud(remote.state, local));
         link(userId);
       } else {
-        Alert.alert(
+        appAlert(
           'Bu hesapta kayıtlı bir ev var',
           'Buluttaki evini mi kullanalım, yoksa bu telefondaki evi mi? Seçmediğin silinir.',
           [

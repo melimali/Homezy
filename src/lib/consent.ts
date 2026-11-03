@@ -1,6 +1,7 @@
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 import { prefs } from '@/lib/supabase';
+import { appAlert } from '@/components/AppAlert';
 
 /**
  * Yapay zekâ rızası. Fotoğraf taraması ve Moka sohbeti, içeriği yanıt üretmek için Anthropic'e iletir
@@ -36,7 +37,7 @@ export function ensureAiConsent(kind: 'scan' | 'chat'): Promise<boolean> {
     return Promise.resolve(ok);
   }
   return new Promise(resolve => {
-    Alert.alert(
+    appAlert(
       title,
       body,
       [

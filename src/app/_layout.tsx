@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { CaptchaHost } from '@/auth/captcha';
+import { AppAlertHost } from '@/components/AppAlert';
 import { ErrorScreen } from '@/components/ErrorScreen';
 import { IntroSplash } from '@/components/IntroSplash';
 import { PremiumChoice } from '@/components/PremiumChoice';
@@ -64,6 +65,7 @@ export default function RootLayout() {
                 <RootStack />
                 <LaunchChoice />
                 <CaptchaHost />
+                <AppAlertHost />
               </FamilyProvider>
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
               {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}

@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -23,6 +23,7 @@ import { useTranslation } from '@/i18n/i18n';
 import { noteDone } from '@/play/rushGuard';
 import { awardKey, dayKey } from '@/domain/play';
 import { Btn, Field, Pill, Sheet, T } from './ui';
+import { appAlert } from '@/components/AppAlert';
 
 export function findList(S: AppState, rid: string, list: TaskList): Task[] {
   if (list === 'care') return (S.care ||= []);
@@ -119,7 +120,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       if (ask)
         setTimeout(
           () =>
-            Alert.alert(tr('Moka: Bir dakika ✋'), tr('Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?'), [
+            appAlert(tr('Moka: Bir dakika ✋'), tr('Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?'), [
               { text: tr('Geri al'), style: 'destructive', onPress: () => { ask(); toast(tr('Son işler geri alındı, puanları da çektim.')); } },
               { text: tr('Evet, yaptım'), style: 'default' },
             ]),

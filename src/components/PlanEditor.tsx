@@ -1,6 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
@@ -20,6 +20,7 @@ import { Appear, Squish } from './motion';
 import { Plan } from './Plan';
 import { useToast } from './Toast';
 import { AppHeader, BackLink, Btn, Sheet, styles as ui, T } from './ui';
+import { appAlert } from '@/components/AppAlert';
 
 type Tool = string | 'erase' | null;
 
@@ -188,7 +189,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     if (!has('yatak')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
     if (!has('mutfak')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
     if (!missing.length || !S.order.length) return doSave();
-    Alert.alert(
+    appAlert(
       tr('Evin eksik kaldı 🏡'),
       tr('Şunları çizmeden bu özellikler odalarda görünmez:') + '\n\n• ' + missing.join('\n• ') + '\n\n' + tr('Ben sekmesindeki Gardırop ve Buzdolabı bölümlerinden yine de kullanabilirsin.'),
       [

@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
 
 import { PlanEditor } from '@/components/PlanEditor';
 import { useToast } from '@/components/Toast';
@@ -9,6 +8,7 @@ import { track } from '@/lib/events';
 import { getPermission, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
 import { useTranslation } from '@/i18n/i18n';
+import { appAlert } from '@/components/AppAlert';
 
 /** İlk açılış: evini bloklarla kur, sonra evle ilgili soruları cevapla (`/evim`). */
 export default function Kurulum() {
@@ -36,7 +36,7 @@ export default function Kurulum() {
             if (p !== 'undetermined') return;
             setTimeout(
               () =>
-                Alert.alert(
+                appAlert(
                   tr('Sabah özeti göndereyim mi? ☀️'),
                   tr('Her sabah o günün işlerini tek bildirimle hatırlatırım. Saati ve türleri Bildirimler sekmesinden değiştirebilirsin.'),
                   [

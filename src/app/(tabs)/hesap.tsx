@@ -1,7 +1,7 @@
 import { type BadgeArt } from '@/constants/badges';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
@@ -23,6 +23,7 @@ import { flush } from '@/sync/cloud';
 import { prefs } from '@/lib/supabase';
 import { pinTodayWidget, widgetAvailable } from '@/widget/widget';
 import { fonts, radius, useColors } from '@/theme';
+import { appAlert } from '@/components/AppAlert';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
 function confirm(title: string, text: string, ok: string, onOk: () => void) {
@@ -30,7 +31,7 @@ function confirm(title: string, text: string, ok: string, onOk: () => void) {
     if (globalThis.confirm?.(`${title}\n\n${text}`)) onOk();
     return;
   }
-  Alert.alert(title, text, [
+  appAlert(title, text, [
     { text: 'Vazgeç', style: 'cancel' },
     { text: ok, style: 'destructive', onPress: onOk },
   ]);

@@ -1,3 +1,4 @@
+import { tlText } from '@/i18n/runtime';
 import { useRouter, type Href } from 'expo-router';
 import { Text, View } from 'react-native';
 
@@ -28,7 +29,7 @@ export function MealCard() {
           <View style={{ flex: 1 }}>
             <T v="eyebrow" style={{ marginBottom: 0 }}>{slot === 'aksam' ? 'Bu gece' : 'Yarın sabah'}</T>
             <T v="bold">{top.meal.name}</T>
-            <T v="small">⏱ {top.meal.min} dk · ~{top.price} TL · {top.missing.length ? `🛒 ${top.missing.length} eksik` : '✓ hepsi dolapta'}</T>
+            <T v="small">⏱ {top.meal.min} dk · ~{tlText(top.price)} · {top.missing.length ? `🛒 ${top.missing.length} eksik` : '✓ hepsi dolapta'}</T>
           </View>
           <Text style={{ color: c.muted, fontSize: 22 }}>›</Text>
         </View>

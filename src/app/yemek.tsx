@@ -1,3 +1,4 @@
+import { isEn, tlText } from '@/i18n/runtime';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -84,7 +85,7 @@ export default function Yemek() {
               </Squish>
               <View style={st.badges}>
                 <Badge text={`🌿 ${p.meal.health}/5 ${healthLabel(p.meal.health)}`} bg={p.meal.health >= 4 ? c.accentSoft : c.surface2} fg={c.ink} />
-                <Badge text={`${TIER[p.tier]} · ~${p.price} TL`} bg={c.surface2} fg={c.ink} />
+                <Badge text={`${TIER[p.tier]} · ~${tlText(p.price)}`} bg={c.surface2} fg={c.ink} />
                 <Badge text={p.missing.length ? `🛒 ${p.missing.length} eksik` : '✓ Hepsi dolapta'} bg={p.missing.length ? c.peachSoft : c.accentSoft} fg={c.ink} />
               </View>
               {on && (
@@ -104,7 +105,7 @@ export default function Yemek() {
                   <T style={{ fontSize: 14 }}>{p.meal.steps}</T>
                   {p.missing.length > 0 && (
                     <>
-                      <T v="small">Eksikler yaklaşık {p.missingPrice} TL tutar. Fiyatlar tahminidir.</T>
+                      <T v="small">{isEn() ? `The missing items cost about ${tlText(p.missingPrice)}. Prices are estimates.` : `Eksikler yaklaşık ${p.missingPrice} TL tutar. Fiyatlar tahminidir.`}</T>
                       <Btn small kind="primary" label="Eksikleri listeye ekle 🛒" onPress={() => addMissing(p)} style={{ alignSelf: 'flex-start' }} />
                     </>
                   )}

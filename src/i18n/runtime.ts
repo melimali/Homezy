@@ -30,6 +30,8 @@ export function setLang(code: string | undefined) {
 }
 export const getLang = () => LANG;
 export const isEn = () => LANG === 'en';
+/** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
+export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
 export const dateLocale = () => (LANG === 'en' ? 'en-US' : 'tr-TR');
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);

@@ -76,8 +76,10 @@ const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, z
  * hareket eder (nefes, zıplama, sallanma, yaklaşma, kalp atışı). Poz uygulama açılırken bir kez seçilir.
  * Çıkartma tabandan hizalıdır: hareketler ayakları yerinden oynatmaz, boyut/yer ölçüden önce hesaplanır.
  */
-export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, children }: {
+export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, below, children }: {
   sceneKey: HeroKey; background: ImageSourcePropType; sticker: ImageSourcePropType; ratio: number; marginTop: number;
+  /** Arka planın üstünde, Moka'nın ALTINDA kalan katmanlar (solma geçişleri). */
+  below?: ReactNode;
   children?: ReactNode;
 }) {
   const reduce = useReduceMotion();
@@ -106,15 +108,16 @@ export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, chil
   }, [def.motion, reduce, m]);
 
   const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
-  const size = Math.round(w * 0.6);
-  const bottom = Math.round(h * 0.2);
-  const box = { position: 'absolute' as const, left: Math.round((w - size) / 2), bottom, width: size, height: size };
+  const size = Math.round(w * 0.54);
+  const bottom = Math.round(h * 0.27);
+  const box = { position: 'absolute' as const, left: Math.round(w * 0.64 - size / 2), bottom, width: size, height: size };
 
   return (
     <View onLayout={e => { const nw = Math.round(e.nativeEvent.layout.width); if (nw !== w) setW(nw); }} style={{ alignSelf: 'stretch', height: h || undefined, aspectRatio: h ? undefined : ratio, overflow: 'hidden', marginTop }}>
       {w > 0 && h > 0 && (
         <>
           <Image source={background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
+          {below}
           <Animated.View pointerEvents="none" renderToHardwareTextureAndroid style={[box, { opacity: pop }]}>
             <Animated.View style={[StyleSheet.absoluteFill, mStyle]}>
               <Image source={sticker} style={StyleSheet.absoluteFill} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />

@@ -137,6 +137,8 @@ export default function Bildirimler() {
           onChange={v => set('sport', v)}
         />
         <Toggle label="Okuma hatırlatması 📖" sub="Akşam 21:00, günlük okuma hedefin tutulmadıysa" value={s.read} onChange={v => set('read', v)} />
+        <Toggle label="Su hatırlatması 💧" sub="12:00 ve 17:00, günlük hedef tutulmadıysa" value={s.water} onChange={v => set('water', v)} />
+        <Toggle label="Uyku hatırlatması 🌙" sub="Yatış saatinden 30 dakika önce" value={s.sleepRemind} onChange={v => set('sleepRemind', v)} />
         <Btn label="Spor günlerini ve saatini seç" small onPress={() => router.push('/spor')} />
       </Card>
 

@@ -83,6 +83,10 @@ export type Settings = {
   sport: boolean;
   /** Akşam okuma hedefi hatırlatması (kitap ya da okuma kaydı varsa). */
   read: boolean;
+  /** Gün içinde su hatırlatması (12:00, 17:00), hedef tutulmadıysa. */
+  water: boolean;
+  /** Yatış saatinden 30 dk önce uyku hatırlatması. */
+  sleepRemind: boolean;
   /** "HH:MM" */
   sportTime: string;
   /** Spor günleri: 0 pazar … 6 cumartesi. */
@@ -201,6 +205,22 @@ export type Play = {
   notes: MokaNote[];
   /** Kişisel gelişim: kitaplık, izleme listesi, okuma hedefi, öğrenme (src/domain/growth.ts). */
   growth: Growth;
+  /** Alışkanlık paketleri, su ve uyku takibi (src/domain/habits.ts). */
+  habits: Habits;
+};
+
+/** Su (bardak), uyku (uyanılan gün → kayıt) ve eklenen alışkanlık paketleri. */
+export type Habits = {
+  water: Record<DayKey, number>;
+  waterGoal: number;
+
+  sleep: Record<DayKey, { bed: string; wake: string; min: number }>;
+  /** Hedef uyku süresi, saat. */
+  sleepGoal: number;
+  /** Son seçilen yatış ve kalkış saati "HH:MM". */
+  bedtime: string;
+  wake: string;
+  packs: string[];
 };
 
 /** Kitaplıktaki bir kitap. `read` okunan sayfa, `done` bittiği gün. */

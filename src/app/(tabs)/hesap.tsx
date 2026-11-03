@@ -154,6 +154,7 @@ export default function Hesap() {
       ]} />
       <Group index={3} title="Keyif" items={[
         { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
+        { emoji: '🌿', label: 'Alışkanlıklar', sub: 'Paketler, su, uyku', tint: c.sageSoft, href: '/aliskanlik' },
         { emoji: '🌷', label: "Moka'nın bahçesi", sub: 'Çiçek yetiştir', tint: c.sageSoft, href: '/bahce' },
         { emoji: '🛍️', label: 'Mağaza', sub: `${state.play.points} puanın var`, tint: c.peachSoft, href: '/magaza' },
         { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },

@@ -7,6 +7,7 @@ import { isPhotoTask } from '@/domain/home';
 import { allTasks, doneToday, greet, notifs, weekSummary } from '@/domain/logic';
 import { firstOpenDay } from '@/lib/events';
 import { goalMet } from '@/domain/growth';
+import { hKey, waterMet } from '@/domain/habits';
 import { eveningNudge, sportLine, summaryTail, weeklyLine } from '@/domain/messages';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
@@ -227,6 +228,20 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       const at = new Date(base);
       at.setHours(21, 0, 0, 0);
       if (at.getTime() > now) out.push({ at, title: '📖 Okuma vakti', body: `Bugün ${S.play.growth.goalMin} dakika okumaya ne dersin? Moka yanında ☕`, url: '/buyume' });
+    }
+    // Su: gün içinde iki kez, o günün hedefi tutulmadıysa. Uyku: yatıştan 30 dk önce.
+    if (set.water && !(key === today && waterMet(S.play.habits, hKey(now)))) {
+      for (const hr of [12, 17]) {
+        const at = new Date(base);
+        at.setHours(hr, 0, 0, 0);
+        if (at.getTime() > now) out.push({ at, title: '💧 Su molası', body: 'Bir bardak su iyi gelir. Moka da içiyor ☕', url: '/aliskanlik' });
+      }
+    }
+    if (set.sleepRemind && S.play.habits.sleep && Object.keys(S.play.habits.sleep).length) {
+      const [bh, bm] = S.play.habits.bedtime.split(':').map(n => parseInt(n, 10));
+      const at = new Date(base);
+      at.setHours(bh || 0, (bm || 0) - 30, 0, 0);
+      if (at.getTime() > now) out.push({ at, title: '🌙 Uyku vakti yaklaşıyor', body: 'Ekranı bırakıp günü yavaşça kapatalım mı?', url: '/aliskanlik' });
     }
     if (set.weekly && base.getDay() === 0) {
       const at = new Date(base);

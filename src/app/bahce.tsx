@@ -387,7 +387,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
       <Squish onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} detaylarını gör`}>
         <Sway deg={4} dur={2000 + (f.price % 5) * 300}><PlantArt flower={f} stage={5} size={44} /></Sway>
       </Squish>
-      <Squish onPress={() => onSelect(f)} style={{ flex: 1, gap: 2 }}>
+      <Squish onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} seç`} style={{ flex: 1, gap: 2 }}>
         <Text style={[styles.rowT, { color: month ? c.glowInk : c.ink }]}>{f.name}{f.premium ? ' 👑' : ''}</Text>
         <Text style={[styles.rowS, { color: month ? c.glowInk : c.muted }]}>
           {month ? '🌟 Ayın çiçeği · ' : ''}{f.grow} büyümede açar

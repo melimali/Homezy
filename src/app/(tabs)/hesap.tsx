@@ -1,6 +1,6 @@
 import { type BadgeArt } from '@/constants/badges';
-import { useRouter, type Href } from 'expo-router';
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
@@ -8,6 +8,7 @@ import { BenTour, type TourStep } from '@/components/BenTour';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
+import { useStep } from '@/lib/firstRun';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
@@ -67,12 +68,20 @@ export default function Hesap() {
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [tg] = useState<{ current: Record<string, Tgt | null> }>(() => ({ current: {} }));
   const mark = (k: string) => ({ ref: (v: Tgt | null) => { tg.current[k] = v; }, collapsable: false as const });
-  useEffect(() => {
-    if (prefs.get(TOUR_KEY) === '1') return;
-    const id = setTimeout(() => setTour(true), 900);
-    return () => clearTimeout(id);
-  }, []);
-  const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); };
+  // Tur, Ben sekmesi ilk kez açıldığında ve sırası gelince başlar; "Turu tekrar göster" doğrudan açar.
+  const [tourWanted, setTourWanted] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (prefs.get(TOUR_KEY) === '1') return;
+      const id = setTimeout(() => setTourWanted(true), 900);
+      return () => {
+        clearTimeout(id);
+        setTourWanted(false);
+      };
+    }, []),
+  );
+  const tourTurn = useStep('tour', tourWanted);
+  const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); setTourWanted(false); };
   const account = status === 'account';
   const name = account ? displayName(user) : t('guest');
   const now = useNow();
@@ -319,7 +328,7 @@ export default function Hesap() {
         ))}
       </Appear>
 
-      {tour && (
+      {(tour || tourTurn) && (
         <BenTour steps={TOUR} targets={tg} onDone={endTour} getY={() => scrollY.current} scrollTo={y => scroller.current?.scrollTo({ y: Math.max(0, y), animated: true })} />
       )}
 

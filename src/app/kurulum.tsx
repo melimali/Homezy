@@ -5,16 +5,13 @@ import { useToast } from '@/components/Toast';
 import { Btn } from '@/components/ui';
 import { cancelNewHome } from '@/domain/homes';
 import { track } from '@/lib/events';
-import { getPermission, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
+import { getPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
-import { useTranslation } from '@/i18n/i18n';
-import { appAlert } from '@/components/AppAlert';
 
 /** İlk açılış: evini bloklarla kur, sonra evle ilgili soruları cevapla (`/evim`). */
 export default function Kurulum() {
   const router = useRouter();
   const toast = useToast();
-  const { t: tr } = useTranslation();
   const { state: S, update } = useStore();
   const extra = S.others.length > 0;
   return (
@@ -25,28 +22,9 @@ export default function Kurulum() {
         if (!extra) track('onboarding_done');
         if (!extra) toast('Evin hazır 🏡 Bugün sekmesinden ilk işini yap, Moka sevinsin!');
         if (extra) toast(`${next.homeName} hazır 🏡 Evler arasında Hesabım > Evlerim'den geçebilirsin.`);
-        // Sabah özeti için izin: önce neden istediğimizi anlat, sonra sistem penceresi.
-        const enable = () =>
-          requestPermission()
-            .then(ok => (ok ? rescheduleMorningSummaries(next) : undefined))
-            .catch(() => {});
+        // Bildirim izni artık burada sorulmaz: ilk iş yapılınca sırayla sorulur (NotifAsk). İzin zaten varsa sadece zamanlanır.
         getPermission()
-          .then(p => {
-            if (p === 'granted') return enable();
-            if (p !== 'undetermined') return;
-            setTimeout(
-              () =>
-                appAlert(
-                  tr('Sabah özeti göndereyim mi? ☀️'),
-                  tr('Her sabah o günün işlerini tek bildirimle hatırlatırım. Saati ve türleri Bildirimler sekmesinden değiştirebilirsin.'),
-                  [
-                    { text: tr('Şimdi değil'), style: 'cancel' },
-                    { text: tr('Olur'), onPress: () => void enable() },
-                  ],
-                ),
-              1500,
-            );
-          })
+          .then(p => (p === 'granted' ? rescheduleMorningSummaries(next) : undefined))
           .catch(() => {});
       }}
       footer={

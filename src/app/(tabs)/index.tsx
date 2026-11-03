@@ -15,6 +15,9 @@ import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
+import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
+import { StepModal } from '@/components/StepModal';
+import { useStep } from '@/lib/firstRun';
 import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
@@ -222,9 +225,12 @@ export default function Home() {
 
       <Celebrate level={hp.level} />
       <StreakMoment />
-      <LevelUpPeek />
+      {/* Ekranı kaplayan pencereler src/lib/firstRun.ts sırasıyla, biri kapanınca öbürü açılır. */}
+      <FirstWelcome />
       <WelcomeBack />
       <MoodCheckin />
+      <NotifAsk />
+      <LevelUpPeek />
     </Screen>
   );
 }
@@ -302,24 +308,24 @@ function Celebrate({ level }: { level: number }) {
   const c = useColors();
   const { state: S, update } = useStore();
   const close = () => void update(D => void (D.play.celebrated = Math.max(D.play.celebrated, BUILT)));
-  const show = level >= BUILT && S.play.celebrated < BUILT;
+  const show = useStep('celebrate', level >= BUILT && S.play.celebrated < BUILT);
   useEffect(() => {
     if (show) sfx('party');
   }, [show]);
   if (!show) return null;
   return (
-    <Modal transparent animationType="fade" onRequestClose={close}>
-      <View style={[styles.modalBg, { backgroundColor: c.shadow }]}>
+    <StepModal onClose={close}>
+      {dismiss => (
         <View style={[styles.modal, { backgroundColor: c.surface }]}>
           <MokaMascot pose="party" size="lg" showBubble={false} style={styles.modalMoka} />
           <T v="h1" style={{ textAlign: 'center' }}>Tebrikler, evin inşa edildi!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             7 gün boyunca her gün evine vakit ayırdın. Seriyi sürdür, önümüzdeki ay evin daha da güzelleşsin 🌷
           </T>
-          <Btn kind="primary" label="Yaşasın!" onPress={close} block />
+          <Btn kind="primary" label="Yaşasın!" onPress={dismiss} block />
         </View>
-      </View>
-    </Modal>
+      )}
+    </StepModal>
   );
 }
 

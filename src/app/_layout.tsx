@@ -21,6 +21,7 @@ import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
+import { sessionNo, useStep } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
 import { usePersona, usePersonaSync } from '@/profile/usePersona';
@@ -176,8 +177,10 @@ function LaunchChoice() {
   const { status, introSeen } = useAuth();
   const path = usePathname();
   const [done, setDone] = useState(() => prefs.get('planChoice') != null);
-  const ready = introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
-  if (done || premium.active || !ready) return null;
+  // İlk açılışta (ve ilk oturumda) satın alma ekranı çıkmaz; kullanıcı önce evini görsün. İkinci açılıştan itibaren sırayla gelir.
+  const ready = sessionNo >= 2 && introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
+  const turn = useStep('choice', !done && !premium.active && ready);
+  if (!turn) return null;
   return (
     <View style={StyleSheet.absoluteFill}>
       <PremiumChoice

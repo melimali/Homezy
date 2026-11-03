@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { StepModal } from '@/components/StepModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { Btn, T } from '@/components/ui';
 import { allTasks, quickPick } from '@/domain/logic';
 import { taskMin } from '@/domain/home';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
+import { useStep } from '@/lib/firstRun';
 import { useNow } from '@/hooks/useNow';
 import { reactMoka } from '@/lib/mokaReact';
 import { useStore } from '@/store/AppStore';
@@ -30,7 +32,8 @@ export function WelcomeBack() {
     return { open, away, hurt: hp.idle >= 3, pick };
   });
   const { open, away, hurt, pick } = first;
-  const shown = open && S.play.welcomed !== today;
+  const wants = open && S.play.welcomed !== today;
+  const shown = useStep('welcomeBack', wants);
   useEffect(() => {
     if (!shown) return;
     const t = setTimeout(() => reactMoka('hug'), 500);
@@ -40,8 +43,8 @@ export function WelcomeBack() {
 
   const close = () => void update(D => void (D.play.welcomed = today));
   return (
-    <Modal transparent animationType="fade" onRequestClose={close}>
-      <View style={[styles.bg, { backgroundColor: c.shadow }]}>
+    <StepModal onClose={close}>
+      {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <MokaMascot pose={hp.today ? 'maintenance' : 'happy'} size="lg" showBubble={false} style={styles.moka} />
           <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
@@ -58,10 +61,10 @@ export function WelcomeBack() {
               <TaskRow t={pick.t} rid={pick.rid} list={pick.list} showRoom first />
             </View>
           )}
-          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Yaşasın!' : 'Sonra'} onPress={close} block />
+          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Yaşasın!' : 'Sonra'} onPress={dismiss} block />
         </View>
-      </View>
-    </Modal>
+      )}
+    </StepModal>
   );
 }
 

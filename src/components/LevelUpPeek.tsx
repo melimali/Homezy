@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { StepModal } from '@/components/StepModal';
 import { premiumHref } from '@/components/PaywallMoments';
 import { Btn, T } from '@/components/ui';
 import { ITEMS } from '@/domain/items';
 import { emptyPaywallMemory, markPaywallShown, shouldShowPaywall, type PaywallMemory } from '@/domain/paywall';
 import { progressOf } from '@/domain/play';
+import { useStep } from '@/lib/firstRun';
 import { track } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -31,17 +33,19 @@ export function LevelUpPeek() {
   // İlk açılışta mevcut seviye "görülmüş" sayılır; sadece sonraki atlamalarda çıkar.
   if (seenRaw == null && level > 0) prefs.set(LEVEL_KEY, String(level));
   const seen = Number(seenRaw ?? level);
-  const show = !premium.active && !closed && level > seen;
+  const wants = !premium.active && !closed && level > seen;
+  const show = useStep('levelUp', wants);
+  const go = useRef(false);
   const items = useMemo(() => ITEMS.filter(i => i.premium && !S.play.owned.includes(i.id)).slice(0, 3), [S.play.owned]);
   const offer = useMemo(() => {
-    if (!show) return false;
+    if (!wants) return false;
     try {
       const m = { ...emptyPaywallMemory(), ...(JSON.parse(prefs.get(MEM_KEY) ?? 'null') as PaywallMemory | null) };
       return shouldShowPaywall('levelup', m, false);
     } catch {
       return false;
     }
-  }, [show]);
+  }, [wants]);
 
   if (!show || !items.length) return null;
   const close = (go: boolean) => {
@@ -59,8 +63,8 @@ export function LevelUpPeek() {
     if (go) router.push(premiumHref('levelup'));
   };
   return (
-    <Modal transparent animationType="fade" onRequestClose={() => close(false)}>
-      <View style={[styles.bg, { backgroundColor: c.shadow }]}>
+    <StepModal onClose={() => close(go.current)}>
+      {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <T v="h1" style={{ textAlign: 'center' }}>Evin büyüdü! 🏡</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Yeni seviyeye ulaştın. Premium eşyalar da seni bekliyor:</T>
@@ -72,11 +76,11 @@ export function LevelUpPeek() {
               </View>
             ))}
           </View>
-          {offer && <Btn label="Premium'a bak ⭐" onPress={() => close(true)} block />}
-          <Btn kind="primary" label="Devam" onPress={() => close(false)} block />
+          {offer && <Btn label="Premium'a bak ⭐" onPress={() => { go.current = true; dismiss(); }} block />}
+          <Btn kind="primary" label="Devam" onPress={dismiss} block />
         </View>
-      </View>
-    </Modal>
+      )}
+    </StepModal>
   );
 }
 

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { DAY } from '../constants';
 import { emptyState, makeRoom, roomClean, seed, staggerFirstDay, statusIn } from '../logic';
 

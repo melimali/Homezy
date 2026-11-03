@@ -34,7 +34,7 @@ export const HERO_SCENES: readonly HeroScene[] = [
   { id: 'mutfak-ada', background: require('../../assets/arkaplan/mutfak_ada.jpg'), sticker: pose('chef'), x: 0.54, bottom: 0.26, size: 0.48, motion: 'sway', fx: 'steam' },
   { id: 'calisma-gece', background: require('../../assets/arkaplan/calisma_gece.jpg'), sticker: pose('laptop'), x: 0.42, bottom: 0.22, size: 0.50, motion: 'bob', fx: 'none' },
   { id: 'yagmurlu-pencere', background: require('../../assets/arkaplan/yagmurlu_pencere.jpg'), sticker: pose('plaid_coffee'), x: 0.52, bottom: 0.26, size: 0.50, motion: 'breath', fx: 'steam' },
-  { id: 'bitki-kosesi', background: require('../../assets/arkaplan/bitki_kosesi.jpg'), sticker: pose('watering'), x: 0.54, bottom: 0.22, size: 0.50, motion: 'sway', fx: 'leaves' },
+  { id: 'bitki-kosesi', background: require('../../assets/arkaplan/bitki_kosesi_zemin.jpg'), sticker: pose('watering'), x: 0.50, bottom: 0.19, size: 0.52, motion: 'sway', fx: 'leaves' },
   { id: 'battaniye-cadiri', background: require('../../assets/arkaplan/battaniye_cadiri.jpg'), sticker: pose('blanket'), x: 0.52, bottom: 0.24, size: 0.56, motion: 'breath', fx: 'zzz' },
 ];
 

@@ -6,7 +6,7 @@ import { sfx } from '@/lib/sfx';
 import { fonts } from '@/theme';
 
 /**
- * Bahçeye girerken: iki çit kapısı iki yana açılır, Moka "hoş geldin" der, sonra perde kalkar.
+ * Bahçeye girerken: bulutlar aralanır, çiçekler belirir, Moka "hoş geldin" der, sonra perde kalkar.
  * Hareketi azalt açıksa hiç gösterilmez. Ekrana her girişte bir kere oynar.
  */
 export function GardenGate({ greeting, title }: { greeting: string; title: string }) {
@@ -36,25 +36,40 @@ export function GardenGate({ greeting, title }: { greeting: string; title: strin
 
   if (reduce || done) return null;
   const half = width / 2;
+  const fade = { opacity: v.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }) };
   return (
-    <View pointerEvents="auto" style={StyleSheet.absoluteFill}>
-      <Animated.View
-        style={[styles.door, { left: 0, width: half, transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, -half] }) }] }]}
-      >
-        <Text style={[styles.leaf, { right: 14 }]}>🌿</Text>
+    <Animated.View pointerEvents="auto" style={[StyleSheet.absoluteFill, styles.sky, fade]}>
+      <Animated.View style={[styles.cloudL, { transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, -half - 80] }) }] }]}>
+        <Text style={styles.cloud}>☁️</Text>
       </Animated.View>
-      <Animated.View
-        style={[styles.door, { right: 0, width: half, transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, half] }) }] }]}
-      >
-        <Text style={[styles.leaf, { left: 14 }]}>🌿</Text>
+      <Animated.View style={[styles.cloudR, { transform: [{ translateX: v.interpolate({ inputRange: [0, 1], outputRange: [0, half + 80] }) }] }]}>
+        <Text style={styles.cloud}>☁️</Text>
       </Animated.View>
+      <Animated.View style={[styles.cloudM, { transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -300] }) }] }]}>
+        <Text style={styles.cloud}>☁️</Text>
+      </Animated.View>
+      {['🌸', '🌷', '🌼', '🌻', '🌺'].map((e, i) => (
+        <Animated.Text
+          key={i}
+          style={[
+            styles.flower,
+            {
+              left: `${8 + i * 19}%`,
+              opacity: hello.interpolate({ inputRange: [0, 0.4, 1, 2], outputRange: [0, 1, 1, 0] }),
+              transform: [{ translateY: hello.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) }, { scale: hello.interpolate({ inputRange: [0, 1, 2], outputRange: [0.3, 1, 1.3] }) }],
+            },
+          ]}
+        >
+          {e}
+        </Animated.Text>
+      ))}
       <Animated.View
         pointerEvents="none"
         style={[
           styles.center,
           {
             opacity: hello.interpolate({ inputRange: [0, 0.5, 1, 2], outputRange: [0, 1, 1, 0] }),
-            transform: [{ scale: hello.interpolate({ inputRange: [0, 1, 2], outputRange: [0.6, 1, 1.25] }) }],
+            transform: [{ scale: hello.interpolate({ inputRange: [0, 1, 2], outputRange: [0.6, 1, 1.15] }) }],
           },
         ]}
       >
@@ -62,14 +77,18 @@ export function GardenGate({ greeting, title }: { greeting: string; title: strin
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.sub}>{greeting}</Text>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  door: { position: 'absolute', top: 0, bottom: 0, backgroundColor: '#5E8A63', borderColor: '#46704B', borderWidth: 3, justifyContent: 'center' },
-  leaf: { position: 'absolute', fontSize: 44, top: '45%' },
+  sky: { backgroundColor: '#BFDDEF' },
+  cloud: { fontSize: 150 },
+  cloudL: { position: 'absolute', left: -20, top: '12%' },
+  cloudR: { position: 'absolute', right: -20, top: '38%' },
+  cloudM: { position: 'absolute', left: '28%', top: '60%' },
+  flower: { position: 'absolute', bottom: '14%', fontSize: 44 },
   center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  title: { fontFamily: fonts.displayBold, fontSize: 28, color: '#FFF8EC', textAlign: 'center' },
-  sub: { fontFamily: fonts.bodyBlack, fontSize: 15, color: '#FFF8EC', textAlign: 'center' },
+  title: { fontFamily: fonts.displayBold, fontSize: 28, color: '#283044', textAlign: 'center' },
+  sub: { fontFamily: fonts.bodyBlack, fontSize: 15, color: '#283044', textAlign: 'center' },
 });

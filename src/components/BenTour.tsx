@@ -131,7 +131,7 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
             style={[st.card, { top, backgroundColor: c.surface, opacity: bub, transform: [{ translateY: slide }] }]}
           >
             <View style={st.head}>
-              <View style={st.mokaBox}><Image source={MOKA_ASSETS[step.pose]} style={StyleSheet.absoluteFill} resizeMode="contain" accessibilityIgnoresInvertColors /></View>
+              <View style={st.mokaBox}><Image source={MOKA_ASSETS[step.pose]} style={st.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors /></View>
               <View style={{ flex: 1 }}><T v="body">{step.text}</T></View>
             </View>
             <View style={st.foot}>
@@ -154,7 +154,8 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
 const st = StyleSheet.create({
   card: { position: 'absolute', left: 14, right: 14, borderRadius: radius.card, padding: 16, gap: 14, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mokaBox: { width: 68, height: 68, flexShrink: 0, flexGrow: 0 },
+  mokaBox: { width: 72, height: 72, borderRadius: 36, overflow: 'hidden', flexShrink: 0, flexGrow: 0, alignItems: 'center', justifyContent: 'flex-end' },
+  mokaImg: { width: 64, height: 64 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { height: 7, borderRadius: 4 },

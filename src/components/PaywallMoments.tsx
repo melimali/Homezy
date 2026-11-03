@@ -11,6 +11,7 @@ import {
 import { progressOf } from '@/domain/play';
 import { THEMES } from '@/domain/premium';
 import { track } from '@/lib/events';
+import { maybeAskReview } from '@/lib/review';
 import { haptic, sfx } from '@/lib/sfx';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -70,6 +71,7 @@ export function StreakMoment() {
     if (offer) writeMem(markPaywallShown(readMem()));
     setClosed(true);
     if (toPremium) router.push(premiumHref('streak'));
+    else if (mark >= 7) setTimeout(() => void maybeAskReview(), 800);
   };
   return (
     <Modal transparent animationType="fade" onRequestClose={() => close(false)}>

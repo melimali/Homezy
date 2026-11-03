@@ -54,3 +54,26 @@ Taramada ölçülenler: 135 dosya/31 bin satır; 103 `Pressable` / 134 `accessib
 5. 3, 4, 5, 20, 21 (yeni derleme ve büyük işler; yurtdışı lansmandan önce)
 
 Yeni derleme gerektirenler: 1 (Sentry), 3, 4 (`expo-image` zaten varsa gerekmez), 24 (`expo-store-review`). Diğerleri JS ile çözülür.
+
+---
+
+## Uygulama durumu (2026-11-03)
+
+Yapıldı:
+- **6** Kurulumdan sonra bildirim izni: önce "Sabah özeti göndereyim mi?" açıklaması, sonra sistem penceresi (`src/app/kurulum.tsx`). Reddedilmişse Bildirimler ekranında "Ayarları aç" zaten vardı.
+- **14** `Toast` artık "Geri al" düğmesi alıyor (`useToast()(msg, {label, onPress})`, 5,5 sn). Görev silme geri alınabiliyor (`TaskRow.tsx`).
+- **1** `ErrorBoundary` (`src/app/_layout.tsx`, `src/components/ErrorScreen.tsx`): Moka'lı "Tekrar dene" + "Hata raporu gönder" (e-posta taslağı). Sentry eklenmedi (yeni derleme + gizlilik politikası güncellemesi gerekir).
+- **2** Kayıtlar 300 ms birleştirilir, uygulama arka plana gidince hemen yazılır (`src/store/AppStore.tsx`). Tablo-başına kısmi yazma yapılmadı.
+- **5** `npm test` (jest-expo) + `src/domain/__tests__/logic.test.ts` + `.github/workflows/ci.yml` (typecheck + test).
+- **10** Kapatma düğmesi dokunma alanı 50 dp, `Chip` en az 44 dp (`ui.tsx`).
+- **24** Mağaza puanlama istemi: `src/lib/review.ts`, 7+ günlük seri kutlamasından sonra, 90 günde 1, toplam 3. `expo-store-review` yerel modül; `requireOptionalNativeModule` ile korumalı, mevcut derlemede sessizce atlanır.
+
+Tarama sonrası zaten vardı (listede yanlış "eksik" dedim): 12 (`EmptyMsg`/`Loading` + Moka), 23 (`staggerFirstDay`: ilk gün 7 iş; paywall ilk 3 gün çıkmaz), 11 (`T` bileşeni `maxScale 1.3`), 16 (`sfx`/`haptic` ses ve titreşim ayarına bağlı), 17 (`motion.tsx`, `House3D`, `IntroSplash` reduce-motion dinliyor), 7 (185 hex'in 202'si `House3D`/`ScreenBackground`/`MokaPet`/`GardenArt` çizimlerinde; arayüzde sadece sıcak gölge `#B9805F` ve birkaç sabit).
+
+Yapılmadı (neden):
+- **3** Release küçültme: `proguard` kuralı yazılmış ama test edilmeden açmak çökme riski; derleme alıp denemek gerekir.
+- **4** WebP/`expo-image`: 38 MB görsel dönüşümü ve kalite kontrolü ayrı iş.
+- **8, 9, 13, 18, 19, 20, 21**: geniş ekran/kod değişikliği; tek tek istenirse yapılır.
+- **15, 22**: hata metinleri ve `console.warn`'lar zaten etiketli ve kısa; ayrı iş çıkmadı.
+
+Yeni derleme gerektiren: `expo-store-review` (24). Başka yok.

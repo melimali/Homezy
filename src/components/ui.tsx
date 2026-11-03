@@ -281,7 +281,7 @@ export function Btn({
 export function XBtn({ onPress, label }: { onPress: () => void; label: string }) {
   const c = useColors();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={6}
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={10}
       style={({ pressed }) => [styles.x, pressed && { backgroundColor: c.surface2 }]}>
       <Text style={{ color: c.muted, fontSize: 20, lineHeight: 22 }}>×</Text>
     </Pressable>
@@ -432,7 +432,7 @@ export const styles = StyleSheet.create({
     shadowColor: '#B9805F', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 2,
   },
   btnSmall: { paddingVertical: 9, paddingHorizontal: 16, shadowOpacity: 0, elevation: 0 },
-  chip: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
+  chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },
   tabBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

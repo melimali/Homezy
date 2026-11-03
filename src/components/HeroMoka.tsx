@@ -118,7 +118,7 @@ export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, belo
         <>
           <Image source={background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
           {below}
-          <Animated.View pointerEvents="none" renderToHardwareTextureAndroid style={[box, { opacity: pop }]}>
+          <Animated.View pointerEvents="none" style={[box, { opacity: pop }]}>
             <Animated.View style={[StyleSheet.absoluteFill, mStyle]}>
               <Image source={sticker} style={StyleSheet.absoluteFill} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
             </Animated.View>

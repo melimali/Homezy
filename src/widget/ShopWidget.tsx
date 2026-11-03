@@ -36,12 +36,14 @@ export function ShopWidget({ data, height, c }: { data: ShopData; height: number
         {shown.length ? (
           shown.map(it => (
             <FlexWidget key={it.id} {...OPEN} style={{ width: 'match_parent', height: 36, flexDirection: 'row', alignItems: 'center' }}>
-              <TextWidget
-                text={it.low ? `${it.name} (azaldı)` : it.name}
-                style={{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: it.low ? c.today : c.ink }}
-                maxLines={1}
-                truncate="END"
-              />
+              <FlexWidget style={{ flex: 1 }}>
+                <TextWidget
+                  text={it.low ? `${it.name} (azaldı)` : it.name}
+                  style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: it.low ? c.today : c.ink }}
+                  maxLines={1}
+                  truncate="END"
+                />
+              </FlexWidget>
               <FlexWidget
                 clickAction={SHOP_BOUGHT}
                 clickActionData={{ id: it.id }}

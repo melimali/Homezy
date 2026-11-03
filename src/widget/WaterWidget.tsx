@@ -29,7 +29,8 @@ export function WaterWidget({ data, c }: { data: WaterData; c: WColors }) {
         </FlexWidget>
       </FlexWidget>
       <FlexWidget style={{ width: 'match_parent', height: 8, borderRadius: 4, backgroundColor: c.accentSoft, marginTop: 8, marginBottom: 8, flexDirection: 'row' }}>
-        <FlexWidget style={{ width: `${bar}%` as `${number}%`, height: 8, borderRadius: 4, backgroundColor: c.accent }} />
+        <FlexWidget style={{ flex: Math.max(bar, 1), height: 8, borderRadius: 4, backgroundColor: c.accent }} />
+        <FlexWidget style={{ flex: Math.max(100 - bar, 0.001), height: 8 }} />
       </FlexWidget>
       <FlexWidget style={{ width: 'match_parent', flexDirection: 'row', alignItems: 'center' }}>
         <FlexWidget

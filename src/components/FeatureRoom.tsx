@@ -18,7 +18,7 @@ export function FeatureRoom({ mod }: { mod: 'gardirop' | 'buzdolabi' }) {
   return (
     <Card>
       <T v="h3">{mod === 'gardirop' ? 'Gardırop için oda çizmedin' : 'Buzdolabı için mutfak çizmedin'}</T>
-      <T v="small">Sorun değil, tek bloklu bir oda açalım. Sonra Ev planı'ndan büyütebilirsin.</T>
+      <T v="small">Sorun değil, tek bloklu bir oda açalım. Sonra Ev planı&apos;ndan büyütebilirsin.</T>
       <Btn kind="primary" label={mod === 'gardirop' ? '👕 Gardırobu aç' : '🧊 Buzdolabını aç'} onPress={open} block />
     </Card>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, useWindowDimensions } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
 import { sfx } from '@/lib/sfx';

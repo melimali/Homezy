@@ -94,7 +94,7 @@ export default function Gelisim() {
         </View>
         <View style={[st.ringCard, { backgroundColor: c.surface }]}>
           <Ring pct={score} color={c.sage} label="ev puanı" size={104} />
-          <T v="tiny">odaların ortalaması</T>
+          <T v="tiny">rutinlerin tazeliği</T>
         </View>
       </Appear>
 

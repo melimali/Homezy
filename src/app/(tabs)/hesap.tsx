@@ -1,11 +1,11 @@
-import { BADGE_ART, type BadgeArt } from '@/constants/badges';
+import { type BadgeArt } from '@/constants/badges';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { Appear, Squish } from '@/components/motion';
-import { Bar, Btn, IconBtn, Screen, SecHead, Sheet, T, TitleBar } from '@/components/ui';
+import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';

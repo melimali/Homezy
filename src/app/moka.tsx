@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
 import { MokaFace } from '@/components/MokaFace';
-import { Appear, Squish } from '@/components/motion';
+import { Appear, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
 import { mimikOf } from '@/constants/mimik';
@@ -22,6 +22,11 @@ import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
 type Item = ChatMsg & { id: number; done?: string[]; error?: boolean; cta?: 'premium' | 'login' };
+
+/** Cevap yazılma süresi (ms): kısa cevap hızlı, uzun cevap en çok 3,5 sn. Moka'nın ağzı bu sürece göre oynar. */
+const typeMs = (len: number) => Math.min(3500, 500 + len * 22);
+/** Bu oturumda yeni gelen, henüz harf harf yazılmamış cevaplar. */
+const fresh = new Set<number>();
 
 const HELLO: Item = {
   id: 0,
@@ -54,14 +59,18 @@ export default function MokaChat() {
   const lv = mokaLevel(S.play.moka);
   // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
   const last = [...items].reverse().find(i => i.role === 'assistant' && !i.error);
-  const mood = last && last.id !== 0 ? mimikOf(last.content) : 'happy';
+  const reduce = useReduceMotion();
+  const lastMood = last && last.id !== 0 ? mimikOf(last.content) : 'happy';
+  // Cevap beklerken kullanıcının son mesajı üzgünse Moka da üzgün dinler.
+  const mine = [...items].reverse().find(i => i.role === 'user');
+  const mood = busy && mine && mimikOf(mine.content) === 'sad' ? 'sad' : lastMood;
   const [speaking, setSpeaking] = useState(false);
   const lastId = last?.id;
   useEffect(() => {
     if (!lastId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSpeaking(true);
-    const t = setTimeout(() => setSpeaking(false), Math.min(4000, 800 + (last?.content.length ?? 0) * 25));
+    const t = setTimeout(() => setSpeaking(false), reduce || !fresh.has(lastId) ? 600 : typeMs(last?.content.length ?? 0));
     return () => clearTimeout(t);
   }, [lastId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -90,7 +99,9 @@ export default function MokaChat() {
         ? { content: tx(CHAT_ACCOUNT_NEEDED), cta: 'login' as const }
         : { content: tx(freeAsked++ === 0 ? CHAT_PREMIUM_INTRO : CHAT_PREMIUM_NUDGE), cta: 'premium' as const };
       sfx('tap');
-      setTimeout(() => push(p => [...p, { id: nextId++, role: 'assistant', ...gate }]), 500);
+      const gid = nextId++;
+      fresh.add(gid);
+      setTimeout(() => push(p => [...p, { id: gid, role: 'assistant', ...gate }]), 500);
       return;
     }
     setBusy(true);
@@ -116,7 +127,9 @@ export default function MokaChat() {
       }
     });
     if (done.length) sfx('done');
-    push(p => [...p, { id: nextId++, role: 'assistant', content: r.reply, done }]);
+    const rid = nextId++;
+    fresh.add(rid);
+    push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done }]);
     const f = got.focus;
     if (f) {
       setTimeout(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
@@ -145,7 +158,7 @@ export default function MokaChat() {
         <BackLink />
         <View style={st.head}>
           <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
-            <MokaFace size={st.avatarImg.width} mood={mood} talking={busy || speaking} />
+            <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
           </View>
           <View style={{ flex: 1 }}>
             <T v="h3">Moka</T>
@@ -172,17 +185,18 @@ export default function MokaChat() {
           <NotesList />
         </ScrollView>
       ) : (
-        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}>
           {items.map(i => (
             <Appear key={i.id}>
-              <Bubble item={i} />
+              <Bubble item={i} typed={!reduce && fresh.has(i.id)} />
             </Appear>
           ))}
           {busy && (
-            <View style={[st.bubble, st.moka, { backgroundColor: c.surface, flexDirection: 'row', gap: 8, alignItems: 'center' }]}>
-              <ActivityIndicator size="small" color={c.muted} />
-              <T v="small">Moka yazıyor…</T>
-            </View>
+            <Appear>
+              <View style={[st.bubble, st.moka, { backgroundColor: c.surface, flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 14 }]} accessibilityLabel="Moka yazıyor">
+                <TypingDots color={c.muted} />
+              </View>
+            </Appear>
           )}
           {items.length <= 1 && !busy && (
             <View style={st.ideas}>
@@ -220,14 +234,63 @@ export default function MokaChat() {
   );
 }
 
-function Bubble({ item }: { item: Item }) {
+/** Üç nokta sırayla zıplar (kendi aralarında gecikmeli). */
+function TypingDots({ color }: { color: string }) {
+  const reduce = useReduceMotion();
+  const [vals] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)));
+  useEffect(() => {
+    if (reduce) return;
+    const anims = vals.map((v, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(i * 160),
+          Animated.timing(v, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.timing(v, { toValue: 0, duration: 300, useNativeDriver: true }),
+          Animated.delay(480 - i * 160),
+        ]),
+      ),
+    );
+    anims.forEach(a => a.start());
+    return () => anims.forEach(a => a.stop());
+  }, [reduce, vals]);
+  return (
+    <>
+      {vals.map((v, i) => (
+        <Animated.View key={i} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }), transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) }] }} />
+      ))}
+    </>
+  );
+}
+
+/** Yeni cevap harf harf belirir (kısa sürede biter); bitince tam metin kalır. */
+function useTyped(text: string, on: boolean, done: () => void) {
+  const [n, setN] = useState(on ? 0 : text.length);
+  useEffect(() => {
+    if (!on) return;
+    const total = typeMs(text.length);
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      const k = Math.min(text.length, Math.ceil(((Date.now() - t0) / total) * text.length));
+      setN(k);
+      if (k >= text.length) {
+        clearInterval(iv);
+        done();
+      }
+    }, 40);
+    return () => clearInterval(iv);
+  }, [text, on]); // eslint-disable-line react-hooks/exhaustive-deps
+  return text.slice(0, n);
+}
+
+function Bubble({ item, typed }: { item: Item; typed: boolean }) {
   const c = useColors();
   const router = useRouter();
   const me = item.role === 'user';
+  const shown = useTyped(item.content, typed, () => fresh.delete(item.id));
   return (
     <View style={{ gap: 6, alignItems: me ? 'flex-end' : 'flex-start' }}>
       <View style={[st.bubble, me ? st.me : st.moka, { backgroundColor: me ? c.accent : item.error ? c.surface2 : c.surface }]}>
-        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: me ? c.onAccent : c.ink }}>{item.content}</Text>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: me ? c.onAccent : c.ink }}>{shown}</Text>
       </View>
       {item.cta && (
         <Btn small kind="primary" label={item.cta === 'login' ? 'Giriş yap / üye ol' : "Premium'a bak ⭐"} onPress={() => router.push(item.cta === 'login' ? '/giris' : '/premium')} />
@@ -266,8 +329,8 @@ function NotesList() {
 const st = StyleSheet.create({
   top: { paddingHorizontal: 16, gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 64, height: 64, borderRadius: 32, overflow: 'hidden', alignItems: 'center' },
-  avatarImg: { width: 66, height: 66, marginTop: 4 },
+  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'flex-end' },
+  avatarImg: { width: 80, height: 80 },
   pill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 8 },
   list: { padding: 16, gap: 10, flexGrow: 1 },
   bubble: { maxWidth: '86%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },

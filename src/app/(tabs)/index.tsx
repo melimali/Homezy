@@ -1,7 +1,7 @@
 import { useRouter, type Href } from 'expo-router';
 import { Animated, Image, Modal, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 
@@ -82,17 +82,8 @@ export default function Home() {
     taskPose: taskPose(lastDone ?? due[0]),
     modePose: S.mode ? moka.pose : undefined,
   };
-  const ctxRef = useRef(heroCtx);
-  ctxRef.current = heroCtx;
   const [heroKey, setHeroKey] = useState<HeroKey>(() => pickHero(heroCtx));
-  const nextHero = useCallback(() => setHeroKey(pickHero(ctxRef.current)), []);
-  // Her 45 saniyede ve bir iş bitince Moka başka bir hâle geçer; dokununca da.
-  useEffect(() => {
-    const id = setInterval(nextHero, 45000);
-    return () => clearInterval(id);
-  }, [nextHero]);
-  const lastDoneAt = lastDone?.t.last;
-  useEffect(() => { if (lastDoneAt) nextHero(); }, [lastDoneAt, nextHero]);
+  // Moka sadece uygulama açılırken seçilir; dokununca ya da zamanla değişmez.
   // Arka plan sabit; sadece Moka çıkartması değişir.
   const heroSticker: ImageSourcePropType = heroKey === 'sofa' ? HOME_MOKA_SEATED
     : heroKey === 'kitchen' ? MOKA_ASSETS.chef
@@ -113,7 +104,7 @@ export default function Home() {
     <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <HeroMoka sceneKey={heroKey} background={HOME_SOFA_BACKGROUND} sticker={heroSticker} ratio={0.95} marginTop={-insets.top - 12} onTap={() => { sfx('tap'); nextHero(); }}>
+        <HeroMoka sceneKey={heroKey} background={HOME_SOFA_BACKGROUND} sticker={heroSticker} ratio={0.95} marginTop={-insets.top - 12} onTap={() => {}}>
           <Fade edge="top" color={c.bg} size="45%" to={0.95} />
           <Fade edge="bottom" color={c.bg} size="38%" />
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>

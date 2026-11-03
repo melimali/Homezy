@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Animated, Easing, Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 
 import { HeroKey, heroDef, type HeroFx, type HeroMotion } from '@/domain/heroMoka';
 import { useReduceMotion } from './motion';
@@ -42,8 +42,8 @@ function Particles({ fx, reduce }: { fx: HeroFx; reduce: boolean }) {
         <Animated.Text
           key={i}
           style={{
-            position: 'absolute', left: left[i], top: '58%', fontSize: 20 + i * 2,
-            opacity: v.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 0.9, 0.5, 0] }),
+            position: 'absolute', left: left[i], top: '58%', fontSize: 16 + i * 2,
+            opacity: v.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 0.55, 0.3, 0] }),
             transform: [
               { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, fx === 'snow' || fx === 'rain' ? 36 : -70] }) },
               { translateX: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, i % 2 ? 8 : -8, 0] }) },
@@ -71,31 +71,30 @@ function motionStyle(v: Animated.Value, m: HeroMotion) {
 const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, zoom: 6500, beat: 700 };
 
 /**
- * Ana ekranın en üstündeki Moka sahnesi: sahne değişince yumuşakça geçer, sahneye göre
- * farklı hareket (nefes, zıplama, sallanma, yaklaşma, kalp atışı) ve süs yükselir.
- * Dokununca `onTap` çağrılır (yeni sahne seçmek için).
+ * Ana ekranın en üstü: arka plan SABİT (bir kez çizilir, hiç oynamaz); sadece saydam Moka çıkartması
+ * değişir (yumuşak geçiş) ve hareket eder (nefes, zıplama, sallanma, yaklaşma, kalp atışı).
+ * Dokununca `onTap` çağrılır (başka bir hâl seçmek için).
  */
-export function HeroMoka({ sceneKey, source, ratio, marginTop, onTap, children, overlay }: {
-  sceneKey: HeroKey; source: ImageSourcePropType; ratio: number; marginTop: number; onTap: () => void;
-  /** Sahnenin üstüne (yumuşak geçişin altına) çizilen ek katman, ör. koltuk Moka'sı. */
-  overlay?: ReactNode; children?: ReactNode;
+export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, onTap, children }: {
+  sceneKey: HeroKey; background: ImageSourcePropType; sticker: ImageSourcePropType; ratio: number; marginTop: number; onTap: () => void;
+  children?: ReactNode;
 }) {
   const reduce = useReduceMotion();
   const def = heroDef(sceneKey);
   const [w, setW] = useState(0);
   const h = w ? Math.round(w / ratio) : 0;
   const [prev, setPrev] = useState<ImageSourcePropType | null>(null);
-  const cur = useRef(source);
+  const cur = useRef(sticker);
   const fade = useRef(new Animated.Value(1)).current;
   const m = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (cur.current === source) return;
+    if (cur.current === sticker) return;
     setPrev(cur.current);
-    cur.current = source;
+    cur.current = sticker;
     fade.setValue(0);
-    Animated.timing(fade, { toValue: 1, duration: reduce ? 1 : 650, useNativeDriver: true }).start(() => setPrev(null));
-  }, [source, fade, reduce]);
+    Animated.timing(fade, { toValue: 1, duration: reduce ? 1 : 450, useNativeDriver: true }).start(() => setPrev(null));
+  }, [sticker, fade, reduce]);
 
   useEffect(() => {
     if (reduce) { m.setValue(0); return; }
@@ -109,16 +108,19 @@ export function HeroMoka({ sceneKey, source, ratio, marginTop, onTap, children, 
   }, [def.motion, reduce, m]);
 
   const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
-  const img = { position: 'absolute' as const, left: 0, top: 0, width: w, height: h };
+  const size = Math.round(w * 0.68);
+  const mk = { position: 'absolute' as const, left: Math.round((w - size) / 2), bottom: Math.round(h * 0.2), width: size, height: size };
 
   return (
     <View onLayout={e => setW(Math.round(e.nativeEvent.layout.width))} style={{ alignSelf: 'stretch', height: h || undefined, aspectRatio: h ? undefined : ratio, overflow: 'hidden', marginTop }}>
       {w > 0 && h > 0 && (
-        <Animated.View style={[StyleSheet.absoluteFill, mStyle]}>
-          {prev && <Animated.Image source={prev} style={[img, { opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]} resizeMode="cover" accessibilityIgnoresInvertColors />}
-          <Animated.Image source={source} style={[img, { opacity: prev ? fade : 1 }]} resizeMode="cover" accessibilityIgnoresInvertColors />
-          {overlay}
-        </Animated.View>
+        <>
+          <Image source={background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" accessibilityIgnoresInvertColors />
+          <Animated.View pointerEvents="none" style={[mk, mStyle]}>
+            {prev && <Animated.Image source={prev} style={[StyleSheet.absoluteFill, { opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]} resizeMode="contain" accessibilityIgnoresInvertColors />}
+            <Animated.Image source={sticker} style={[StyleSheet.absoluteFill, { opacity: prev ? fade : 1 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Animated.View>
+        </>
       )}
       <Pressable style={StyleSheet.absoluteFill} onPress={onTap} accessibilityRole="button" accessibilityLabel="Moka'ya dokun, başka bir hâlini gör" />
       <Particles fx={def.fx} reduce={reduce} />

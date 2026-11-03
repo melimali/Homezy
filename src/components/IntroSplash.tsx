@@ -4,6 +4,7 @@ import { AccessibilityInfo, Animated, Easing, Image, Pressable, StyleSheet, useW
 import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { MOKA_ASSETS } from '@/constants/moka';
+import { WM_PARTS, WORDMARK, type WmKey } from '@/constants/wordmark';
 import { fonts, useColors } from '@/theme';
 
 /**
@@ -193,30 +194,53 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
             <Image source={MOKA_ASSETS.happy} style={st.moka} resizeMode="contain" />
           </Animated.View>
 
-          {/* Homezy: harfler renk renk zıplar */}
-          <View style={st.word}>
-            {WORD.map((ch, i) => (
-              <Animated.Text
-                key={i}
-                style={[st.wordCh, {
-                  color: letterColors[i],
-                  opacity: v.word[i].interpolate({ inputRange: [0, 0.2], outputRange: [0, 1], extrapolate: 'clamp' }),
-                  transform: [
-                    { translateY: lerp(v.word[i], 70, 0) },
-                    { scale: lerp(v.word[i], 0.2, 1) },
-                    { rotate: v.word[i].interpolate({ inputRange: [0, 1], outputRange: [`${i % 2 ? 18 : -18}deg`, '0deg'] }) },
-                  ],
-                }]}>
-                {ch}
-              </Animated.Text>
-            ))}
-          </View>
+          {/* Homezy yazı logosu: harfler tek tek (logodan kırpıldı), sonra dalga çizgisi ve parıltılar */}
+          <Wordmark v={v.word} tag={v.tag} width={Math.min(W * 0.96, 420)} lerp={lerp} />
           <Animated.Text style={[st.tag, { color: c.ink, opacity: v.tag, transform: [{ translateY: lerp(v.tag, 10, 0) }] }]}>
             Moka ile sıcacık bir ev ☕
           </Animated.Text>
         </Animated.View>
       </Pressable>
     </Animated.View>
+  );
+}
+
+const LETTER_KEYS: WmKey[] = ['h', 'o', 'm', 'e', 'z', 'y'];
+
+function Wordmark({ v, tag, width, lerp }: { v: Animated.Value[]; tag: Animated.Value; width: number; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number> }) {
+  const k = width / WORDMARK.w;
+  const box = (key: WmKey) => {
+    const p = WM_PARTS[key];
+    return { position: 'absolute' as const, left: p.x * k, top: p.y * k, width: p.w * k, height: p.h * k };
+  };
+  return (
+    <View style={{ width, height: WORDMARK.h * k, marginTop: 2 }}>
+      {LETTER_KEYS.map((key, i) => (
+        <Animated.Image
+          key={key}
+          source={WM_PARTS[key].src}
+          resizeMode="contain"
+          style={[box(key), {
+            opacity: v[i].interpolate({ inputRange: [0, 0.2], outputRange: [0, 1], extrapolate: 'clamp' }),
+            transform: [
+              { translateY: lerp(v[i], 70 * k * 2, 0) },
+              { scale: lerp(v[i], 0.2, 1) },
+              { rotate: v[i].interpolate({ inputRange: [0, 1], outputRange: [`${i % 2 ? 16 : -16}deg`, '0deg'] }) },
+            ],
+          }]}
+        />
+      ))}
+      <Animated.Image
+        source={WM_PARTS.swoosh.src}
+        resizeMode="contain"
+        style={[box('swoosh'), { opacity: tag, transform: [{ scaleX: lerp(tag, 0.3, 1) }] }]}
+      />
+      <Animated.Image
+        source={WM_PARTS.spark.src}
+        resizeMode="contain"
+        style={[box('spark'), { opacity: tag, transform: [{ scale: tag.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1.3, 1] }) }, { rotate: tag.interpolate({ inputRange: [0, 1], outputRange: ['-40deg', '0deg'] }) }] }]}
+      />
+    </View>
   );
 }
 

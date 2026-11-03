@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Misafir olup anonim oturumu henüz açılamamışsa (ör. ilk açılışta internet yoktu) tekrar dene.
   useEffect(() => {
     if (supabase && ready && guest && !session) {
-      requestCaptcha()
+      requestCaptcha({ silent: true })
         .then(captchaToken => supabase!.auth.signInAnonymously({ options: { captchaToken } }))
         .catch(() => {});
     }

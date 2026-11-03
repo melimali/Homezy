@@ -17,7 +17,7 @@ const ORIGIN = process.env.EXPO_PUBLIC_TURNSTILE_ORIGIN || 'https://themeikai.co
 const TIMEOUT_MS = 8000; // Görünmez doğrulama en çok bu kadar bekler
 const UI_TIMEOUT_MS = 25000; // Sınav kutusu açıksa kişiye bu kadar süre
 
-type Pending = { resolve: (t: string | undefined) => void };
+type Pending = { resolve: (t: string | undefined) => void; silent: boolean };
 let listener: ((p: Pending) => void) | null = null;
 
 type WebViewModule = typeof import('react-native-webview');
@@ -36,9 +36,9 @@ function webview() {
 export const captchaEnabled = () => !!SITE_KEY && Platform.OS !== 'web' && !!webview();
 
 /** Captcha token'ı ister. Kapalıysa ya da çözülemezse undefined döner (istek yine denenir). */
-export function requestCaptcha(): Promise<string | undefined> {
+export function requestCaptcha(opts?: { silent?: boolean }): Promise<string | undefined> {
   if (!captchaEnabled() || !listener) return Promise.resolve(undefined);
-  return new Promise(resolve => listener!({ resolve }));
+  return new Promise(resolve => listener!({ resolve, silent: !!opts?.silent }));
 }
 
 const html = (key: string) => `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -101,17 +101,21 @@ export function CaptchaHost() {
           source={{ html: html(SITE_KEY), baseUrl: ORIGIN }}
           originWhitelist={['*']}
           javaScriptEnabled
-          style={st.web}
-          androidLayerType="hardware"
+          style={[st.web, ui && { backgroundColor: '#FFFFFF' }]}
+          androidLayerType="software"
           setSupportMultipleWindows={false}
           domStorageEnabled
-          backgroundColor="transparent"
+          backgroundColor={ui ? '#FFFFFF' : 'transparent'}
           onMessage={e => {
             try {
               const m = JSON.parse(e.nativeEvent.data) as { t?: string; e?: string; ui?: number };
               if (m.t) done(m.t);
               else if (m.e) done(undefined);
-              else if (m.ui != null) setUi(!!m.ui);
+              else if (m.ui != null) {
+                // Arka plandaki istek (ör. misafir oturumu yenileme) kullanıcıya sınav kutusu açmaz.
+                if (m.ui && job.silent) done(undefined);
+                else setUi(!!m.ui);
+              }
             } catch {
               // Beklenmeyen mesaj yok sayılır.
             }

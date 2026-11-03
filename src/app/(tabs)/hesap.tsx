@@ -45,6 +45,7 @@ export default function Hesap() {
   const { state, replace, update } = useStore();
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
   const [langOpen, setLangOpen] = useState(false);
+  const [cat, setCat] = useState<string | null>(null);
   const account = status === 'account';
   const name = account ? displayName(user) : t('guest');
   const now = useNow();
@@ -111,14 +112,140 @@ export default function Hesap() {
       },
     );
 
+  const accountPanel = (
+    <View style={{ gap: 12 }}>
+      {purchasesEnabled && (
+        <View style={[st.card, { backgroundColor: c.surface2 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ gap: 2, flex: 1 }}>
+              <T v="h3">Homezy Premium</T>
+              <T v="small">{premium.active ? 'Sınırsız ev, özel temalar ve fazlası açık' : 'Tüm özellikleri aç'}</T>
+            </View>
+            <Text style={{ fontSize: 32 }}>👑</Text>
+          </View>
+          {premium.active ? (
+            <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
+          ) : (
+            <Btn label={t('goPremium')} kind="primary" onPress={() => { setCat(null); router.push('/premium'); }} block />
+          )}
+          {!premium.active && (
+            <Squish onPress={doRestore} disabled={busy === 'restore'} accessibilityRole="button" accessibilityLabel={t('restorePurchases')} style={{ alignSelf: 'center', padding: 4 }}>
+              <T v="small" style={{ textDecorationLine: 'underline' }}>{busy === 'restore' ? 'Kontrol ediliyor…' : t('restorePurchases')}</T>
+            </Squish>
+          )}
+        </View>
+      )}
+
+      <View style={[st.card, { backgroundColor: c.surface2 }]}>
+        <T v="h3">{t('cloudBackup')}</T>
+        <T v="small">
+          {account
+            ? `Hesabın güvende (${user?.email}). Giriş yaptığın her cihazda evin seninle.`
+            : 'Şu an misafir olarak kullanıyorsun. Hesaba geç, evin ve serin kaybolmasın.'}
+        </T>
+        {account ? (
+          <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => { setCat(null); router.push('/giris'); }} block />
+        ) : (
+          <Btn label="Hesap aç veya giriş yap" kind="primary" onPress={() => { setCat(null); router.push('/giris'); }} block />
+        )}
+      </View>
+
+      {isOwner(user) && (
+        <View style={[st.card, { backgroundColor: c.surface2 }]}>
+          <T v="h3">Seviye atla (sadece sahip)</T>
+          <T v="small">{`Ev seviyesi: ${hp.level} / ${MAX_LEVEL}${state.play.debugLevel != null ? ' (elle)' : ''}`}</T>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Btn label="− Seviye" kind="soft" onPress={() => update(D => void (D.play.debugLevel = Math.max(0, hp.level - 1)))} style={{ flex: 1 }} />
+            <Btn label="+ Seviye" kind="primary" onPress={() => update(D => void (D.play.debugLevel = Math.min(MAX_LEVEL, hp.level + 1)))} style={{ flex: 1 }} />
+          </View>
+          <Btn label="Gerçek seviyeye dön" kind="soft" onPress={() => update(D => void (D.play.debugLevel = null))} block />
+        </View>
+      )}
+
+      <View style={[st.card, { backgroundColor: c.surface2 }]}>
+        <T v="h3">{t('about')}</T>
+        <View style={st.legal}>
+          <Squish onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
+            <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
+          </Squish>
+          <Text style={{ color: c.muted }}>•</Text>
+          <Squish onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
+            <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
+          </Squish>
+        </View>
+        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
+          Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Hava durumu: Open-Meteo.com. Konum yalnızca gökyüzü için kullanılır, saklanmaz. Tüm lisanslar: Gizlilik ve yasal.
+        </T>
+        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
+      </View>
+
+      <View style={{ gap: 8 }}>
+        <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
+        </Pressable>
+        <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+
+
+  const go = (x: Item) => { setCat(null); if (x.onPress) x.onPress(); else if (x.href) router.push(x.href); };
+  const earned = badges.filter(b => b.on).length;
+  const lockedItem: Item = { emoji: '🔒', label: 'Odak, Spor, Hikâye', sub: '3. günden sonra açılır', tint: c.lavenderSoft, onPress: () => toast('Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱') };
+
+  const cats: { key: string; emoji: string; title: string; tint: string; sub: string; items: Item[] }[] = [
+    { key: 'saglik', emoji: '💚', title: 'Sağlık', tint: c.sageSoft, sub: 'İlaç, alışkanlık, ruh hali', items: [
+      { emoji: '💊', label: 'İlaçlarım', sub: 'Hatırlatma ve günlük kayıt', tint: c.sageSoft, href: '/ilac' as Href },
+      { emoji: '🌿', label: 'Alışkanlıklar', sub: 'Paketler, su, uyku', tint: c.sageSoft, href: '/aliskanlik' },
+      { emoji: '😊', label: 'Ruh hali', sub: 'Bugün nasılsın?', tint: c.roseSoft, href: '/ruhhali' as Href },
+      ...(extras ? [{ emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' as Href }] : [lockedItem]),
+    ] },
+    { key: 'gelisim', emoji: '🌱', title: 'Gelişim', tint: c.lavenderSoft, sub: `${earned} / ${badges.length} rozet`, items: [
+      { emoji: '📚', label: 'Kendini geliştir', sub: 'Kitap, film, öğrenme önerileri', tint: c.lavenderSoft, href: '/buyume' as Href },
+      { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
+      { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${badges.length} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
+      ...(extras ? [
+        { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },
+        { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },
+      ] : []),
+    ] },
+    { key: 'ev', emoji: '🏠', title: 'Ev', tint: c.peachSoft, sub: 'Plan, dolap, bakım', items: [
+      { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
+      { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
+      { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
+      { emoji: '🧊', label: 'Buzdolabı', sub: 'Ürünler, eksikler, tarifler', tint: c.sageSoft, href: '/buzdolabi' as Href },
+      { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
+      { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
+      { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
+      { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
+      ...(widgetAvailable() ? [{ emoji: '📌', label: "Ana ekran widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy.')); } }] : []),
+    ] },
+    { key: 'moka', emoji: '🐦', title: 'Moka', tint: c.roseSoft, sub: 'Sohbet, bahçe, mağaza', items: [
+      { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
+      { emoji: '🌷', label: "Moka'nın bahçesi", sub: 'Çiçek yetiştir', tint: c.sageSoft, href: '/bahce' },
+      { emoji: '🛍️', label: 'Mağaza', sub: `${state.play.points} puanın var`, tint: c.peachSoft, href: '/magaza' },
+      { emoji: '🧡', label: 'Seni tanıyalım', sub: 'Yaşam tarzı ve yemek soruları', tint: c.lavenderSoft, href: '/taniyalim' },
+    ] },
+    { key: 'hesap', emoji: '👤', title: 'Hesap', tint: c.lavenderSoft, sub: premium.active ? 'Premium ✓' : account ? 'Yedek açık' : 'Misafir', items: [] },
+    { key: 'ayar', emoji: '⚙️', title: 'Ayarlar', tint: c.sageSoft, sub: 'Bildirim, dil, gizlilik', items: [
+      { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
+      { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
+      { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
+    ] },
+  ];
+  const open = cats.find(x => x.key === cat);
+  const pins: Item[] = [
+    { emoji: '📔', label: 'Günlük', sub: '', tint: c.roseSoft, href: '/gunluk' },
+    { emoji: '💊', label: 'İlaçlarım', sub: '', tint: c.sageSoft, href: '/ilac' as Href },
+    { emoji: '📚', label: 'Kendini geliştir', sub: '', tint: c.lavenderSoft, href: '/buyume' as Href },
+    { emoji: '🛍️', label: 'Mağaza', sub: '', tint: c.peachSoft, href: '/magaza' },
+  ];
+
   return (
     <Screen header={false} tab tone="lavender">
-      <TitleBar
-        title={t('profile')}
-        right={
-          <IconBtn icon="⚙️" label={t('settings')} onPress={() => router.push('/bildirimler')} />
-        }
-      />
+      <TitleBar title={t('profile')} right={<IconBtn icon="⚙️" label={t('settings')} onPress={() => setCat('ayar')} />} />
 
       <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
         <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
@@ -135,60 +262,51 @@ export default function Hesap() {
             </View>
             <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} style={{ flex: 1 }} />
           </View>
-          <T v="tiny" style={{ textAlign: 'right' }}>{next ? `${hp.level} / ${next.level} gün · ${next.emoji} ${next.name}` : 'Rüya evin tamam ⭐'}</T>
+          <T v="tiny">{`🔥 ${hp.streak} ${t('gün seri')} · 🏆 ${earned}/${badges.length}`}</T>
         </View>
       </Appear>
 
-      {/* Her şey kategorilerde; sayılar ve grafikler Gelişim sekmesinde (docs/skeleton-v3.md). */}
-      <Group index={2} title="Evim" items={[
-        { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
-        { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
-        { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
-        { emoji: '🧊', label: 'Buzdolabı', sub: 'Ürünler, eksikler, tarifler', tint: c.sageSoft, href: '/buzdolabi' as Href },
-        { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
-        { emoji: '🧡', label: 'Seni tanıyalım', sub: 'Yaşam tarzı ve yemek soruları', tint: c.lavenderSoft, href: '/taniyalim' },
-        ...(widgetAvailable() ? [{ emoji: '📌', label: "Ana ekran widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy.')); } }] : []),
-        { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
-        { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
-        { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
-      ]} />
-      <Group index={3} title="Keyif" items={[
-        { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
-        { emoji: '🌿', label: 'Alışkanlıklar', sub: 'Paketler, su, uyku', tint: c.sageSoft, href: '/aliskanlik' },
-        { emoji: '💊', label: 'İlaçlarım', sub: 'Hatırlatma ve günlük kayıt', tint: c.sageSoft, href: '/ilac' as Href },
-        { emoji: '🌷', label: "Moka'nın bahçesi", sub: 'Çiçek yetiştir', tint: c.sageSoft, href: '/bahce' },
-        { emoji: '🛍️', label: 'Mağaza', sub: `${state.play.points} puanın var`, tint: c.peachSoft, href: '/magaza' },
-        { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
-        ...(extras ? [
-          { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },
-          { emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' as Href },
-          { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },
-        ] : [
-          { emoji: '🔒', label: 'Odak, Spor, Hikâye', sub: '3. günden sonra açılır', tint: c.lavenderSoft, onPress: () => toast('Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱') },
-        ]),
-      ]} />
-      <Group index={4} title="Ayarlar" items={[
-        { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
-        { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
-        { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
-      ]} />
+      <Appear index={2} style={st.pins}>
+        {pins.map(x => (
+          <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pin}>
+            <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
+            <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
+          </Squish>
+        ))}
+      </Appear>
 
-      <View style={{ gap: 12 }}>
-        <SecHead title={t('badges')} h="h3" right={<Pressable onPress={() => router.push('/rozetler' as Href)} accessibilityLabel={t('Tümünü gör')}><T v="bold">{t('Tümünü gör')} ›</T></Pressable>} />
-        <Appear index={6} style={st.badges}>
-          {badges.map(b => (
-            <View key={b.label} style={[st.badge, { backgroundColor: c.surface }]} accessibilityLabel={`${b.label}: ${b.on ? 'kazanıldı' : b.hint}`}>
-              <View style={[st.badgeIcon, !b.on && { opacity: 0.3 }]}>
-                <Image source={BADGE_ART[b.art]} style={st.badgeImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+      <Appear index={3} style={st.grid}>
+        {cats.map(x => (
+          <Squish key={x.key} onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
+            <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
+            <T v="h3" numberOfLines={1}>{x.title}</T>
+            <T v="tiny" numberOfLines={1}>{x.sub}</T>
+          </Squish>
+        ))}
+      </Appear>
+
+      <Sheet open={!!open} onClose={() => setCat(null)} scroll>
+        {open && (
+          <View style={{ gap: 12, paddingVertical: 6 }}>
+            <T v="h2">{`${open.emoji} ${open.title}`}</T>
+            {open.key === 'hesap' ? accountPanel : (
+              <View style={[st.group, { backgroundColor: c.surface2 }]}>
+                {open.items.map((x, i) => (
+                  <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
+                    <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 20 }}>{x.emoji}</Text></View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
+                      {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
+                    </View>
+                    <Text style={[st.chev, { color: c.muted }]}>›</Text>
+                  </Squish>
+                ))}
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <T v="bold" style={!b.on && { opacity: 0.5 }} numberOfLines={1}>{b.label}</T>
-                <T v="tiny" numberOfLines={1}>{b.on ? 'Kazanıldı ✓' : b.hint}</T>
-              </View>
-            </View>
-          ))}
-        </Appear>
-      </View>
+            )}
+            <Btn label={t('close')} kind="soft" onPress={() => setCat(null)} block />
+          </View>
+        )}
+      </Sheet>
 
       {/* Dil Seçme Modalı */}
       <Sheet open={langOpen} onClose={() => setLangOpen(false)}>
@@ -225,116 +343,19 @@ export default function Hesap() {
           <Btn label={t('close')} onPress={() => setLangOpen(false)} block style={{ marginTop: 6 }} />
         </View>
       </Sheet>
-
-      {purchasesEnabled && (
-        <Appear index={4} style={[st.card, { backgroundColor: c.surface }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ gap: 2 }}>
-              <T v="h3">Homezy Premium</T>
-              <T v="small">{premium.active ? 'Sınırsız ev, özel temalar ve fazlası açık' : 'Tüm özellikleri aç'}</T>
-            </View>
-            <Text style={{ fontSize: 32 }}>👑</Text>
-          </View>
-          {premium.active ? (
-            <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
-          ) : (
-            <Btn label={t('goPremium')} kind="primary" onPress={() => router.push('/premium')} block />
-          )}
-          {!premium.active && (
-            <Squish onPress={doRestore} disabled={busy === 'restore'} accessibilityRole="button" accessibilityLabel={t('restorePurchases')} style={{ alignSelf: 'center', padding: 4 }}>
-              <T v="small" style={{ textDecorationLine: 'underline' }}>{busy === 'restore' ? 'Kontrol ediliyor…' : t('restorePurchases')}</T>
-            </Squish>
-          )}
-        </Appear>
-      )}
-
-      <Appear index={5} style={[st.card, { backgroundColor: c.surface }]}>
-        <T v="h3">{t('cloudBackup')}</T>
-        <T v="small">
-          {account
-            ? `Hesabın güvende (${user?.email}). Giriş yaptığın her cihazda evin seninle.`
-            : 'Şu an misafir olarak kullanıyorsun. Hesaba geç, evin ve serin kaybolmasın.'}
-        </T>
-        {account ? (
-          <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => router.push('/giris')} block />
-        ) : (
-          <Btn label="Hesap aç veya giriş yap" kind="primary" onPress={() => router.push('/giris')} block />
-        )}
-      </Appear>
-
-      {isOwner(user) && (
-        <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
-          <T v="h3">Seviye atla (sadece sahip)</T>
-          <T v="small">{`Ev seviyesi: ${hp.level} / ${MAX_LEVEL}${state.play.debugLevel != null ? ' (elle)' : ''}`}</T>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Btn label="− Seviye" kind="soft" onPress={() => update(D => void (D.play.debugLevel = Math.max(0, hp.level - 1)))} style={{ flex: 1 }} />
-            <Btn label="+ Seviye" kind="primary" onPress={() => update(D => void (D.play.debugLevel = Math.min(MAX_LEVEL, hp.level + 1)))} style={{ flex: 1 }} />
-          </View>
-          <Btn label="Gerçek seviyeye dön" kind="soft" onPress={() => update(D => void (D.play.debugLevel = null))} block />
-        </Appear>
-      )}
-
-      <Appear index={6} style={[st.card, { backgroundColor: c.surface }]}>
-        <T v="h3">{t('about')}</T>
-        <View style={st.legal}>
-          <Squish onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
-            <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
-          </Squish>
-          <Text style={{ color: c.muted }}>•</Text>
-          <Squish onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
-            <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
-          </Squish>
-        </View>
-        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
-          Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Hava durumu: Open-Meteo.com. Konum yalnızca gökyüzü için kullanılır, saklanmaz. Tüm lisanslar: Gizlilik ve yasal.
-        </T>
-        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
-      </Appear>
-
-      <Appear index={7} style={st.danger}>
-        <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
-        </Pressable>
-        <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
-        </Pressable>
-      </Appear>
     </Screen>
   );
 }
 
 type Item = { emoji: string; label: string; sub: string; tint: string; href?: Href; onPress?: () => void };
 
-/** Kategori: başlık ve altında ikon baloncuklu, yuvarlak satırlar tek kartta. */
-function Group({ title, items, index }: { title: string; items: Item[]; index: number }) {
-  const c = useColors();
-  const router = useRouter();
-  return (
-    <Appear index={index} style={{ gap: 8 }}>
-      <T v="eyebrow" style={{ marginLeft: 6, marginBottom: 0 }}>{title}</T>
-      <View style={[st.group, { backgroundColor: c.surface }]}>
-        {items.map((x, i) => (
-          <Squish
-            key={x.label}
-            onPress={() => (x.onPress ? x.onPress() : x.href && router.push(x.href))}
-            accessibilityRole="button"
-            accessibilityLabel={x.label}
-            style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}
-          >
-            <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 20 }}>{x.emoji}</Text></View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
-              {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
-            </View>
-            <Text style={[st.chev, { color: c.muted }]}>›</Text>
-          </Squish>
-        ))}
-      </View>
-    </Appear>
-  );
-}
-
 const st = StyleSheet.create({
+  pins: { flexDirection: 'row', gap: 8 },
+  pin: { flex: 1, alignItems: 'center', gap: 6 },
+  pinIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tile: { width: '48.5%', borderRadius: radius.card, padding: 14, gap: 4 },
+  tileIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: 60, height: 60, marginTop: 6 },

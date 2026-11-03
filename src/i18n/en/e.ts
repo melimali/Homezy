@@ -1,5 +1,13 @@
 /** Kişisel gelişim (Kendini geliştir) ekranı: Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_E: Record<string, string> = {
+ "İlaç, alışkanlık, ruh hali": "Meds, habits, mood",
+ "Kitap, film, öğrenme önerileri": "Books, films, learning ideas",
+ "Plan, dolap, bakım": "Plan, wardrobe, care",
+ "Sohbet, bahçe, mağaza": "Chat, garden, shop",
+ "Yedek açık": "Backup on",
+ "Bildirim, dil, gizlilik": "Notifications, language, privacy",
+ "Rozetler": "Badges",
+ "Premium ✓": "Premium ✓",
  "Tümünü gör": "See all",
  "{} / {} rozet kazandın": "You earned {} / {} badges",
  "Kazanıldı ✓": "Earned ✓",

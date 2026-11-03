@@ -304,4 +304,11 @@ export const EN_E: Record<string, string> = {
  "Burada şimdilik bir şey yok. Biraz daha iş yap, puanlar birikir 🌱": "Nothing here yet. Do a few more chores and your points will grow 🌱",
  "Alabilirsin ✨": "You can buy it ✨",
  "Hoş geldin! Gel, çiçeklere bakalım 🌷": "Welcome! Let's go see the flowers 🌷",
+ "O gün nasıldın?": "How were you that day?",
+ "O gün yaptıkların": "What you did that day",
+ "Önceki sayfa": "Previous page",
+ "Sonraki sayfa": "Next page",
+ "Bu sayfa boş. İstersen o günü şimdi yaz…": "This page is empty. Write about that day now if you like…",
+ "Bu günde kayıt yok. Sayfayı çevirebilir ya da şimdi yazabilirsin 📖": "Nothing on this day. Turn the page or write something now 📖",
+ "← sayfaları kaydırarak çevir →": "← swipe to turn pages →",
 };

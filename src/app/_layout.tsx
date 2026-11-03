@@ -23,6 +23,7 @@ import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
+import { needsCheckin } from '@/domain/mood';
 import { sessionNo, useStep } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
@@ -171,6 +172,8 @@ function RootStack() {
 
 // Evi kurarken ve tanıtımda satın alma ekranı çıkmasın diye bu sayfalarda gizlenir.
 const CHOICE_WAIT = ['/tanitim', '/taniyalim', '/giris', '/kurulum', '/evim'];
+// Seçim ekranı rota değil, üstüne binen bir katman: sadece sekme sayfalarında çıkar (yoksa derin bağlantıyla açılan sayfa altında kalır).
+const CHOICE_TABS = ['/', '/bugun', '/gelisim', '/odalar', '/hesap'];
 
 /**
  * Tanıtım ve ev kurulumundan sonra Ücretsiz / Premium seçimi. Bir kere seçilince bir daha çıkmaz;
@@ -183,7 +186,7 @@ function LaunchChoice() {
   const path = usePathname();
   const [done, setDone] = useState(() => prefs.get('planChoice') != null);
   // İlk açılışta (ve ilk oturumda) satın alma ekranı çıkmaz; kullanıcı önce evini görsün. İkinci açılıştan itibaren sırayla gelir.
-  const ready = sessionNo >= 2 && introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
+  const ready = sessionNo >= 2 && introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path) && CHOICE_TABS.includes(path) && !needsCheckin(state.play);
   const turn = useStep('choice', !done && !premium.active && ready);
   if (!turn) return null;
   return (

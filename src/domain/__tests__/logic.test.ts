@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { DAY } from '../constants';
-import { emptyState, makeRoom, roomClean, seed, staggerFirstDay, statusIn } from '../logic';
+import { applyTemplate, TEMPLATES } from '../plan-templates';
+import { allTasks, emptyState, makeRoom, roomClean, seed, staggerFirstDay, statusIn } from '../logic';
 
 const NOON = new Date('2026-11-03T12:00:00').getTime();
 
@@ -21,6 +22,17 @@ describe('staggerFirstDay', () => {
       .flat()
       .filter(t => t.last == null || NOON - t.last >= t.every * DAY);
     expect(due.length).toBeLessThanOrEqual(10);
+  });
+});
+
+describe('ilk gün şablonlar', () => {
+  it('her şablonda ilk gün en fazla 8 iş bekler', () => {
+    for (const t of TEMPLATES) {
+      const S = emptyState();
+      applyTemplate(S, t);
+      staggerFirstDay(S, NOON);
+      expect(allTasks(S, NOON).filter(x => x.s.k !== 'ok').length).toBeLessThanOrEqual(8);
+    }
   });
 });
 

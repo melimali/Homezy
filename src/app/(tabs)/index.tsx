@@ -164,11 +164,23 @@ export default function Home() {
         } />
         {/* Önizleme: sabit ölçek, kutudan taşmaz (büyütme sadece Evim ekranında). */}
         <View style={{ overflow: 'hidden' }}>
+          {hp.level < 1 && (
+            <Squish
+              onPress={() => router.push('/bugun' as Href)}
+              accessibilityRole="button"
+              accessibilityLabel="İlk işini yap"
+              style={[styles.plot, { backgroundColor: c.surface }]}
+            >
+              <Text style={{ fontSize: 22 }}>🪵</Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <T v="bold">Arsa hazır</T>
+                <T v="small">İlk işini yap, evin temeli atılsın.</T>
+              </View>
+              <Text style={[styles.chev, { color: c.muted }]}>›</Text>
+            </Squish>
+          )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         </View>
-        {hp.level < 1 && (
-          <Text style={[styles.mood, { color: c.muted }]}>🪵 Arsa hazır. İlk işini yap, evin temeli atılsın.</Text>
-        )}
         {hp.level >= 5 && (
           <Text style={[styles.mood, { color: c.muted }]}>
             <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
@@ -368,6 +380,7 @@ const styles = StyleSheet.create({
   quick: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
+  plot: { position: 'absolute', zIndex: 2, left: 12, right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 14 },
   mood: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, textAlign: 'center', paddingHorizontal: 8 },
   q: { flex: 1, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },

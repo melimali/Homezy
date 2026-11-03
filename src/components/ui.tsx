@@ -61,7 +61,7 @@ export function Screen({
   const c = useColors();
   const insets = useSafeAreaInsets();
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
-  const bottom = tab ? 156 : (header ? 42 : insets.bottom + 42);
+  const bottom = tab ? 148 + insets.bottom : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}

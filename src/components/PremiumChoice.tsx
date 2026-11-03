@@ -122,7 +122,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         {ROWS.map(r => (
           <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
             <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
-            <T v="bold" style={{ flex: 1, fontSize: 13.5 }}>{r.label}</T>
+            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13 }}>{r.label}</T>
             <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
             <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
           </View>
@@ -200,6 +200,6 @@ const styles = StyleSheet.create({
   table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
-  cell: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12.5 },
+  cell: { width: 62, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
   check: { fontSize: 20 },
 });

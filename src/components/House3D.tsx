@@ -973,6 +973,8 @@ type Props = {
   zoom?: number;
   /** Gökyüzü zemini ev kutusunun dışına da taşar (tam ekran görünüm). */
   bleed?: boolean;
+  /** İki parmakla büyütme sadece tam ekran ev görünümünde (Evim); ana ekrandaki önizlemede kapalı. */
+  pinchZoom?: boolean;
   mood?: Mood;
   /**
    * Gösterilen kat (dubleks). 0: zemin kat (üst kat gizli, içi görünsün). 1: üst kat; zemin kat
@@ -981,7 +983,7 @@ type Props = {
   floor?: Floor;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0 }: Props) {
+export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0 }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1615,6 +1617,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     <Animated.View
       onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
       onTouchMove={e => {
+        if (!pinchZoom) return;
         const t = e.nativeEvent.touches;
         if (t.length < 2) return;
         const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);

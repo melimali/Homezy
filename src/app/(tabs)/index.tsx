@@ -161,7 +161,10 @@ export default function Home() {
             )}
           </View>
         } />
-        <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        {/* Önizleme: sabit ölçek, kutudan taşmaz (büyütme sadece Evim ekranında). */}
+        <View style={{ overflow: 'hidden' }}>
+          <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
+        </View>
         {hp.level < 1 && (
           <Text style={[styles.mood, { color: c.muted }]}>🪵 Arsa hazır. İlk işini yap, evin temeli atılsın.</Text>
         )}
@@ -275,7 +278,7 @@ function HouseViewer({
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
           <View style={styles.viewerModel}>
-            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed labels={false} />
+            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed pinchZoom labels={false} />
           </View>
         </Animated.View>
         <Pressable

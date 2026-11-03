@@ -1,5 +1,5 @@
 import { useRouter, type Href } from 'expo-router';
-import { Animated, Image, Modal, type ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
@@ -19,7 +19,6 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
-import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
@@ -28,16 +27,15 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_SEATED, HOME_SOFA_BACKGROUND } from '@/constants/curated-scenes';
+import { HOME_MOKA_SEATED } from '@/constants/curated-scenes';
 import { HeroMoka } from '@/components/HeroMoka';
-import { pickHero, type HeroCtx, type HeroFeel, type HeroKey } from '@/domain/heroMoka';
-import { useSky } from '@/lib/weather';
+import { sessionHeroScene } from '@/domain/heroScenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, space, useColors } from '@/theme';
-import type { AppState, HouseTheme, TaskRef } from '@/domain/types';
+import type { AppState, HouseTheme } from '@/domain/types';
 
 export default function Home() {
   const c = useColors();
@@ -61,33 +59,8 @@ export default function Home() {
   const moka = useMokaState();
   // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
   const tip = mokaTip(now);
-  const taskPose = (ref?: TaskRef): MokaPose | undefined => {
-    if (!ref) return undefined;
-    const room = S.rooms[ref.rid];
-    if (!room) return 'maintenance';
-    if (room.type === 'mutfak') {
-      return /yemek|pişir|hazırla|fırın|ocak|kahvaltı|hamur|tarif/.test(ref.t.name.toLocaleLowerCase('tr-TR')) ? 'baking' : 'dishes';
-    }
-    if (room.type === 'calisma') return 'laptop';
-    return ROOM_POSE[room.type];
-  };
-  const sky = useSky();
-  const feel: HeroFeel = due.length >= 5 ? 'busy' : lastDone && due.length < 3 ? 'proud' : due.length >= 3 ? 'busy' : new Date(now).getHours() >= 22 || new Date(now).getHours() < 6 ? 'tired' : 'calm';
-  const heroCtx: HeroCtx = {
-    hour: new Date(now).getHours(),
-    feel,
-    sky: sky.kind,
-    streak: hp.streak,
-    level: hp.level,
-    taskPose: taskPose(lastDone ?? due[0]),
-    modePose: S.mode ? moka.pose : undefined,
-  };
-  const [heroKey] = useState<HeroKey>(() => pickHero(heroCtx));
-  // Moka sadece uygulama açılırken seçilir; dokununca ya da zamanla değişmez.
-  // Arka plan sabit; sadece Moka çıkartması değişir.
-  const heroSticker: ImageSourcePropType = heroKey === 'sofa' ? HOME_MOKA_SEATED
-    : heroKey === 'kitchen' ? MOKA_ASSETS.chef
-    : (MOKA_ASSETS as Record<string, ImageSourcePropType>)[heroKey] ?? HOME_MOKA_SEATED;
+  // Ana ekran sahnesi: 10 sabit sahneden biri, uygulama açılışında rastgele; oturum boyunca değişmez.
+  const [heroScene] = useState(sessionHeroScene);
   const { premium } = usePurchases();
   const lim = limits(premium.active);
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
@@ -104,7 +77,7 @@ export default function Home() {
     <Screen header={false} tab tone="peach">
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap}>
-        <HeroMoka sceneKey={heroKey} background={HOME_SOFA_BACKGROUND} sticker={heroSticker} ratio={0.95} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
+        <HeroMoka scene={heroScene} ratio={0.95} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Moka'nın konuşma baloncuğu */}
             <View style={styles.speechBubble}>

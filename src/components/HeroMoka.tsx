@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, Image, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
-import { HeroKey, heroDef, type HeroFx, type HeroMotion } from '@/domain/heroMoka';
+import type { HeroFx, HeroMotion, HeroScene } from '@/domain/heroScenes';
 import { useReduceMotion } from './motion';
 
 const FX: Record<Exclude<HeroFx, 'none'>, string[]> = {
@@ -76,14 +76,14 @@ const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, z
  * hareket eder (nefes, zıplama, sallanma, yaklaşma, kalp atışı). Poz uygulama açılırken bir kez seçilir.
  * Çıkartma tabandan hizalıdır: hareketler ayakları yerinden oynatmaz, boyut/yer ölçüden önce hesaplanır.
  */
-export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, below, children }: {
-  sceneKey: HeroKey; background: ImageSourcePropType; sticker: ImageSourcePropType; ratio: number; marginTop: number;
+export function HeroMoka({ scene, ratio, marginTop, below, children }: {
+  scene: HeroScene; ratio: number; marginTop: number;
   /** Arka planın üstünde, Moka'nın ALTINDA kalan katmanlar (solma geçişleri). */
   below?: ReactNode;
   children?: ReactNode;
 }) {
   const reduce = useReduceMotion();
-  const def = heroDef(sceneKey);
+  const def = scene;
   const [w, setW] = useState(0);
   const h = w ? Math.round(w / ratio) : 0;
   const m = useRef(new Animated.Value(0)).current;
@@ -108,19 +108,19 @@ export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, belo
   }, [def.motion, reduce, m]);
 
   const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
-  const size = Math.round(w * 0.54);
-  const bottom = Math.round(h * 0.27);
-  const box = { position: 'absolute' as const, left: Math.round(w * 0.64 - size / 2), bottom, width: size, height: size };
+  const size = Math.round(w * scene.size);
+  const bottom = Math.round(h * scene.bottom);
+  const box = { position: 'absolute' as const, left: Math.round(w * scene.x - size / 2), bottom, width: size, height: size };
 
   return (
     <View onLayout={e => { const nw = Math.round(e.nativeEvent.layout.width); if (nw !== w) setW(nw); }} style={{ alignSelf: 'stretch', height: h || undefined, aspectRatio: h ? undefined : ratio, overflow: 'hidden', marginTop }}>
       {w > 0 && h > 0 && (
         <>
-          <Image source={background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
+          <Image source={scene.background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
           {below}
           <Animated.View pointerEvents="none" style={[box, { opacity: pop }]}>
             <Animated.View style={[{ width: size, height: size }, mStyle]}>
-              <Image source={sticker} style={{ width: size, height: size }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
+              <Image source={scene.sticker} style={{ width: size, height: size }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
             </Animated.View>
           </Animated.View>
           <Particles fx={def.fx} reduce={reduce} left={box.left + size * 0.62} top={h - bottom - size * 0.55} />

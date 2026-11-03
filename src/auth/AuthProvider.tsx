@@ -5,7 +5,7 @@ import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { removeAllPhotos } from '@/sync/photos';
 
-import { requestCaptcha } from './captcha';
+import { captchaEnabled, requestCaptcha } from './captcha';
 import { authErrorText } from './errors';
 
 /**
@@ -27,7 +27,7 @@ type Auth = {
   signUp: (name: string, email: string, password: string) => Promise<Result>;
   signIn: (email: string, password: string) => Promise<Result>;
   resetPassword: (email: string) => Promise<Result>;
-  continueAsGuest: () => Promise<void>;
+  continueAsGuest: () => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<Result>;
 };
@@ -127,11 +127,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const continueAsGuest = useCallback(async () => {
-    setGuestFlag(true);
     if (supabase) {
       const captchaToken = await requestCaptcha();
+      // Captcha açıksa doğrulama şart: token yoksa misafir girişi yapılmaz, kişi tekrar dener.
+      if (captchaEnabled() && !captchaToken) {
+        return { ok: false, error: 'Robot olmadığını doğrulayamadık. Kutudaki doğrulamayı tamamlayıp "Hesapsız devam et"e tekrar dokun.' };
+      }
+      setGuestFlag(true);
       await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
+    } else {
+      setGuestFlag(true);
     }
+    return { ok: true };
   }, []);
 
   // Çıkış ve silme, uygulamayı ilk açılıştaki hâline döndürür: tanıtım yeniden görünür.

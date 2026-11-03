@@ -84,8 +84,13 @@ export default function Giris() {
 
   const guest = async () => {
     setBusy(true);
-    await continueAsGuest();
+    setError(null);
+    const r = await continueAsGuest();
     setBusy(false);
+    if (!r.ok) {
+      setError(r.error ?? 'Doğrulama olmadı, tekrar dene.');
+      return;
+    }
     router.replace(state.setup ? '/' : '/kurulum');
   };
 
@@ -119,6 +124,7 @@ export default function Giris() {
         {!fromApp && mode !== 'sifre' && (
           <View style={{ gap: 6 }}>
             <Btn kind="ghost" label="Hesapsız devam et" onPress={guest} disabled={busy} />
+            {error && <Note color={c.late} bg={c.lateSoft} text={error} />}
             <T v="small" style={{ textAlign: 'center' }}>
               Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım sekmesinden hesap açabilirsin.
             </T>

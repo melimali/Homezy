@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
@@ -37,7 +38,9 @@ export default function Ilac() {
   const allDone = doses.length > 0 && doses.every(d => d.mark);
   const hist = history(S, 7, now);
   const pct = adherence(hist);
-  const [open, setOpen] = useState(false);
+  // Bugün sekmesindeki "+ İlaç ekle" doğrudan ekleme penceresini açar (/ilac?add=1).
+  const { add } = useLocalSearchParams<{ add?: string }>();
+  const [open, setOpen] = useState(add === '1');
 
   const mark = (d: Dose, s: 'taken' | 'skipped' | null) => update(D => void markDose(D, today, d.key, s));
 

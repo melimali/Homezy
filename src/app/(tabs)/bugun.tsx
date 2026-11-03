@@ -12,6 +12,7 @@ import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { MealCard } from '@/components/MealCard';
+import { MedsToday } from '@/components/MedsToday';
 import { Bar, Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
@@ -107,6 +108,7 @@ export default function Bugun() {
           {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
         </EmptyMsg>
       )}
+      <MedsToday />
       <DailyGoals now={now} />
       <WeekStrip now={now} />
       <DayPlanCard />

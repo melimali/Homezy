@@ -41,7 +41,7 @@ Kurallar:
 ## Premium kuralları
 
 - **Ev kurmak** için kişinin **kendi** aboneliği gerekir (`is_premium_own`). Üyelikten gelen Premium ile yeni aile kurulamaz, yoksa zincirleme paylaşım olurdu.
-- **Üye**, ev sahibi Premium olduğu sürece Premium avantajlarını alır: günde 10 tarama, 1,5 kat puan, reklamsızlık, Premium eşyalar (`is_premium` ev sahibinin aboneliğine bakar). Ayrılınca ya da çıkarılınca avantaj biter.
+- **Üye**, ev sahibi Premium olduğu sürece Premium avantajlarını alır: günde 5 tarama, 1,5 kat puan, reklamsızlık, Premium eşyalar (`is_premium` ev sahibinin aboneliğine bakar). Ayrılınca ya da çıkarılınca avantaj biter.
 - Uygulamada üyenin `premium.active` değeri `true` olur ve `viaFamily` işaretlenir; abonelik yönetimi ekranında kendi aboneliği yok görünür.
 - Gelir etkisi: bir abonelik en çok 6 kişiyi kapsar. Fiyat/gelir hesabı için `docs/premium.md`'ye bakılacak (6 kişilik kullanım maliyeti: tarama hakkı kişi başı ayrı sayılır).
 

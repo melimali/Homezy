@@ -1,7 +1,7 @@
 /** Denetimde eksik çıkan metinlerin İngilizcesi. a.ts'te olan anahtar a.ts'ten gelir. */
 export const EN_B: Record<string, string> = {
   // Yapay zeka kapısı (src/domain/chatGate.ts)
-  "Selam, ben Moka ☕ Seninle sohbet etmeyi çok isterdim ama sohbet Premium'a özel! Premium'da benimle günde 50 (ayda 600) mesaj konuşabilir, iş ekletip yaptıklarını işaretletebilir, takvime not yazdırabilirsin. Üstüne günde 10 yapay zekâ taraması, ikinci kat, 1,5 kat puan, ayda 3 seri dondurma, ev temaları, aile paylaşımı ve reklamsız kullanım da var. İstersen bir bak 💛": "Hi, I'm Moka ☕ I'd love to chat with you, but chatting is a Premium feature! With Premium you can talk to me up to 50 messages a day (600 a month), have me add tasks, tick off what you've done and write calendar notes. You also get 10 AI scans a day, a second floor, 1.5x points, 3 streak freezes a month, home themes, family sharing and no ads. Take a look if you like 💛",
+  "Selam, ben Moka ☕ Seninle sohbet etmeyi çok isterdim ama sohbet Premium'a özel! Premium'da benimle günde 10 (ayda 300) mesaj konuşabilir, iş ekletip yaptıklarını işaretletebilir, takvime not yazdırabilirsin. Üstüne günde 5 yapay zekâ taraması, ikinci kat, 1,5 kat puan, ayda 3 seri dondurma, ev temaları, aile paylaşımı ve reklamsız kullanım da var. İstersen bir bak 💛": "Hi, I'm Moka ☕ I'd love to chat with you, but chatting is a Premium feature! With Premium you can talk to me up to 10 messages a day (300 a month), have me add tasks, tick off what you've done and write calendar notes. You also get 5 AI scans a day, a second floor, 1.5x points, 3 streak freezes a month, home themes, family sharing and no ads. Take a look if you like 💛",
   "Sohbet Premium'a özel ☕ Premium'a geçersen seninle seve seve konuşurum. Tüm avantajlara aşağıdaki butondan bakabilirsin 💛": "Chatting is Premium-only ☕ If you go Premium I'll happily talk with you. You can see all the perks with the button below 💛",
   'Moka ile sohbet etmek için üye olman gerekiyor. E-posta ile ücretsiz hesap açıp giriş yapınca burada olacağım ☕': "You need an account to chat with Moka. Sign up free with your email and I'll be right here ☕",
   'Yapay zekâ taraması için üye olman gerekiyor. E-posta ile ücretsiz hesap açıp giriş yap, sonra tekrar dene. Listeyi elle de güncelleyebilirsin.': 'You need an account for AI scanning. Sign up free with your email, then try again. You can also update the list by hand.',
@@ -193,4 +193,6 @@ export const EN_B: Record<string, string> = {
   '💧 Suladım': '💧 Watered',
   '📸 Çek': '📸 Snap',
   '{}, ayrıntı': '{}, details',
+ "💬 Günde {} Moka mesajı · 📸 {} fotoğraf taraması": "💬 {} Moka messages a day · 📸 {} photo scans a day",
+ "Ücretsizde fotoğraf taraması haftada {}; sohbet Premium'a özel.": "Free plan: {} photo scans a week; chat is Premium only.",
 };

@@ -63,13 +63,13 @@ Kombi bakımı, duman dedektörü, mevsimlik işler, fatura son günleri ve gara
 Her sabah seçtiğin saatte günün işleri tek bildirimde. Hangi hatırlatmaları istediğini sen seçersin.
 
 ⭐ PREMIUM
-Moka ile günlük sohbet, günde 10 yapay zekâ taraması, 2. kat, ayda 3 seri dondurma, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı ve reklamsız kullanım. Evin temel işleri her zaman ücretsiz.
+Moka ile günde 10 sohbet mesajı, günde 5 yapay zekâ taraması, 2. kat, ayda 3 seri dondurma, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı ve reklamsız kullanım. Evin temel işleri her zaman ücretsiz.
 
 Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart bilgilerin bize hiç gelmez. Yapay zekâ taramalarında fotoğrafın sadece tanıma için işlenir, saklanmaz.
 
 ## Premium açıklaması (abonelik ekranı için, App Store inceleme notu)
 
-Homezy Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 10 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/homezy/gizlilik · Kullanım koşulları: https://themeikai.com/homezy/kosullar
+Homezy Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 5 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/homezy/gizlilik · Kullanım koşulları: https://themeikai.com/homezy/kosullar
 
 ## İnceleme ekibine not
 

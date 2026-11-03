@@ -6,9 +6,9 @@ import type { HouseTheme } from './types';
  * (supabase/migrations/…_premium.sql) bunlarla aynı olmalı.
  */
 export const LIMITS = {
-  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_scan_premium_10.sql). `picks`: Moka'nın gelişim önerisinde günde kaç kez "başka öner" denir (src/domain/growth.ts); `chats`: Moka sohbet mesajı, her gün; sınırı `…_moka_chat.sql` tutar. */
+  /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_ai_limits.sql). `picks`: Moka'nın gelişim önerisinde günde kaç kez "başka öner" denir (src/domain/growth.ts); `chats`: Moka sohbet mesajı, her gün; sınırı `…_ai_limits.sql` tutar. */
   free: { freezes: 1, homes: 1, mult: 1, scans: 2, chats: 0, chatsMonth: 0, picks: 1 },
-  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 10, chats: 50, chatsMonth: 600, picks: 6 },
+  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 5, chats: 10, chatsMonth: 300, picks: 6 },
 } as const;
 
 export const limits = (premium: boolean) => (premium ? LIMITS.premium : LIMITS.free);
@@ -32,7 +32,7 @@ export const FEATURES: { emoji: string; label: string; free: string; premium: st
   { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
   { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
   { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
-  { emoji: '💬', label: 'Moka ile sohbet (her gün)', free: '—', premium: `Günde ${LIMITS.premium.chats}, ayda ${LIMITS.premium.chatsMonth} mesaj` },
+  { emoji: '💬', label: 'Moka ile sohbet (her gün)', free: '—', premium: `Günde ${LIMITS.premium.chats} mesaj` },
   { emoji: '📚', label: 'Kişisel gelişim: günlük öneri, kitaplık, hedef', free: 'Günde 1 öneri', premium: `Günde ${LIMITS.premium.picks} öneri + aylık grafik` },
   { emoji: '❄️', label: 'Seri dondurma (gün kaçırınca ev yıkılmaz)', free: 'Ayda 1', premium: 'Ayda 3' },
   { emoji: '⭐', label: 'Görevlerden kazanılan puan', free: '1 kat', premium: '1,5 kat' },

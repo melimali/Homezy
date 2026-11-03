@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
-import { FEATURES } from '@/domain/premium';
+import { FEATURES, LIMITS } from '@/domain/premium';
 import { track } from '@/lib/events';
 import { legalUrl } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
@@ -66,6 +66,13 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         <Text style={{ fontSize: 48 }}>🏡</Text>
         <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
         <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar."}</T>
+      </View>
+
+      <View style={[styles.limits, { backgroundColor: c.surface, borderColor: c.line }]}>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14.5, color: c.ink, textAlign: 'center' }}>
+          💬 Günde {LIMITS.premium.chats} Moka mesajı · 📸 {LIMITS.premium.scans} fotoğraf taraması
+        </Text>
+        <T v="tiny" style={{ textAlign: 'center' }}>Ücretsizde fotoğraf taraması haftada {LIMITS.free.scans}; sohbet Premium'a özel.</T>
       </View>
 
       <View style={styles.plans}>
@@ -180,6 +187,7 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
 }
 
 const styles = StyleSheet.create({
+  limits: { borderRadius: 18, borderWidth: 1.5, paddingVertical: 12, paddingHorizontal: 14, gap: 4, alignItems: 'center' },
   planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },

@@ -1,13 +1,36 @@
--- Moka sohbet: Premium gunluk ust sinir 40 -> 50 (Melih, 2026-11-04).
--- Premium: gunde 50, ayda 600 mesaj, dakikada 6. Ay = Europe/Istanbul takvim ayi.
--- src/domain/premium.ts LIMITS.premium.chats / chatsMonth ile ayni tutulmali.
+-- Premium yapay zeka sinirlari (Melih, 2026-11-04): foto taramasi gunde 5, Moka sohbeti gunde 10 mesaj (ayda 300, dakikada 6).
+-- Ucretsiz hala haftada 2 tarama. Sinirlar uygulamadaki src/domain/premium.ts (LIMITS) ile ayni olmali.
+
+create or replace function public.scan_reserve(p_user uuid, p_kind text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  prem boolean := public.is_premium(p_user);
+  today date := (now() at time zone 'Europe/Istanbul')::date;
+  per date := case when prem then today else date_trunc('week', today)::date end;
+  lim int := case when prem then 5 else 2 end;
+  used int;
+begin
+  insert into public.scan_usage as u (user_id, period, n, fridge, look)
+  values (p_user, per, 1, (p_kind = 'fridge')::int, (p_kind = 'look')::int)
+  on conflict (user_id, period) do update
+    set n = u.n + 1, fridge = u.fridge + excluded.fridge, look = u.look + excluded.look
+    where u.n < lim
+  returning n into used;
+  if used is null then
+    return jsonb_build_object('ok', false, 'premium', prem, 'period', per, 'used', lim, 'limit', lim);
+  end if;
+  return jsonb_build_object('ok', true, 'premium', prem, 'period', per, 'used', used, 'limit', lim);
+end;
+$$;
+revoke all on function public.scan_reserve(uuid, text) from public, anon, authenticated;
+
 create or replace function public.chat_reserve(p_user uuid) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
   prem boolean := public.is_premium(p_user);
   today date := (now() at time zone 'Europe/Istanbul')::date;
-  lim int := 50;
-  mlim int := 600;
+  lim int := 10;
+  mlim int := 300;
   burst_lim int := 6;
   used int;
   mused int;

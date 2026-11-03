@@ -1496,10 +1496,10 @@ revoke all on function public.chat_reserve(uuid) from public, anon, authenticate
 
 
 -- =====================================================================
--- 20261104000000_scan_premium_10.sql
+-- 20261104000000_ai_limits.sql
 -- =====================================================================
--- Premium tarama sınırı günde 50'den günde 10'a indi (Melih, 2026-11-04). Ücretsiz hâlâ haftada 2.
--- Sınırlar uygulamadaki src/domain/premium.ts (LIMITS.*.scans) ile aynı olmalı. Ayrıntılar: docs/premium.md.
+-- Premium yapay zeka sinirlari (Melih, 2026-11-04): foto taramasi gunde 5, Moka sohbeti gunde 10 mesaj (ayda 300, dakikada 6).
+-- Ucretsiz hala haftada 2 tarama. Sinirlar uygulamadaki src/domain/premium.ts (LIMITS) ile ayni olmali.
 
 create or replace function public.scan_reserve(p_user uuid, p_kind text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -1507,7 +1507,7 @@ declare
   prem boolean := public.is_premium(p_user);
   today date := (now() at time zone 'Europe/Istanbul')::date;
   per date := case when prem then today else date_trunc('week', today)::date end;
-  lim int := case when prem then 10 else 2 end;
+  lim int := case when prem then 5 else 2 end;
   used int;
 begin
   insert into public.scan_usage as u (user_id, period, n, fridge, look)
@@ -1524,20 +1524,13 @@ end;
 $$;
 revoke all on function public.scan_reserve(uuid, text) from public, anon, authenticated;
 
-
--- =====================================================================
--- 20261104000100_moka_chat_50.sql
--- =====================================================================
--- Moka sohbet: Premium gunluk ust sinir 40 -> 50 (Melih, 2026-11-04).
--- Premium: gunde 50, ayda 600 mesaj, dakikada 6. Ay = Europe/Istanbul takvim ayi.
--- src/domain/premium.ts LIMITS.premium.chats / chatsMonth ile ayni tutulmali.
 create or replace function public.chat_reserve(p_user uuid) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
   prem boolean := public.is_premium(p_user);
   today date := (now() at time zone 'Europe/Istanbul')::date;
-  lim int := 50;
-  mlim int := 600;
+  lim int := 10;
+  mlim int := 300;
   burst_lim int := 6;
   used int;
   mused int;

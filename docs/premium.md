@@ -9,7 +9,7 @@ Uygulamadaki karşılaştırma tablosu ve kilitler tek yerden gelir: `src/domain
 | Özellik | Ücretsiz | Premium | Nerede, nasıl korunuyor |
 |---|---|---|---|
 | Ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar | ✓ | ✓ | |
-| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 10 | Sunucu (`scan_usage`, aşağıda) |
+| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 5 | Sunucu (`scan_usage`, aşağıda) |
 | Seri dondurma: gün kaçırınca seri bozulmaz, ev tozlanmaz | Ayda 1 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
 | Görev puanı | 1 kat | 1,5 kat (seri bonusu dahil) | Sunucu `play_award` |
 | Premium eşyalar (akvaryum, şömine, piyano) | — | ✓ | Sunucu `play_buy` |
@@ -86,10 +86,10 @@ Onay listesini göster  ◄──────────  6. JSON'u telefona d�
 | Gardırop, stok, bitkiler, alışveriş listesi | ✓ | ✓ |
 | Kombin önerisi (telefondaki kurallar) | ✓ | ✓ |
 | Buzdolabı fotoğrafı saklama (taramasız) | ✓ | ✓ |
-| Yapay zekâ ile buzdolabı ya da kıyafet taraması | **Haftada 2** (iki tür ortak) | **Günde 10** (iki tür ortak) |
+| Yapay zekâ ile buzdolabı ya da kıyafet taraması | **Haftada 2** (iki tür ortak) | **Günde 5** (iki tür ortak) |
 
 - Ücretsiz üyelikte haftada 2 tarama var, pazartesi yenilenir. Özelliği tanıtır ve haftalık buzdolabı kontrolüne yeter. Maliyeti kullanıcı başına ayda en fazla ≈ 9 tarama ≈ 0,01 $ (Haiku).
-- Premium'da günde 10 tarama var (Melih, 2026-11-04; 2026-10-25'te günde 50'ye çıkmıştı, önce günde 2 idi); buzdolabı ya da kıyafet, kullanıcı istediği gibi dağıtır. Sınır `20261025120000_scan_premium_50.sql` ile.
+- Premium'da günde 5 tarama var (Melih, 2026-11-04; arada günde 10 idi; 2026-10-25'te günde 50'ye çıkmıştı, önce günde 2 idi); buzdolabı ya da kıyafet, kullanıcı istediği gibi dağıtır. Sınır `20261025120000_scan_premium_50.sql` ile.
 - Premium hakkı gece yarısı (Türkiye saati) yenilenir, kullanılmayan hak ertesi güne devretmez.
 - **Sadece başarılı tarama hak yer.** Hata, iptal ya da "fotoğraf okunamadı" sonucu sayılmaz.
 
@@ -129,7 +129,7 @@ Sınır telefonda değil **sunucuda** tutulur; telefondaki sayaç sadece göster
 
 ## Gelir ve gider hesabı
 
-Senaryo: **aylık 6,99 $** (yıllık 59,99 $; mağazalar fiyatı ,99 ile bitirir), Premium kullanıcı günde 10 tarama yapabiliyor (ayda en fazla **1.500**), ama aşağıdaki tablolar gerçekçi kullanım için günde 2 (ayda 60) ile hesaplandı; sınırı dolduran kullanıcının maliyeti "Model önerisi" altında. Ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
+Senaryo: **aylık 6,99 $** (yıllık 59,99 $; mağazalar fiyatı ,99 ile bitirir), Premium kullanıcı günde 5 tarama yapabiliyor (ayda en fazla **1.500**), ama aşağıdaki tablolar gerçekçi kullanım için günde 2 (ayda 60) ile hesaplandı; sınırı dolduran kullanıcının maliyeti "Model önerisi" altında. Ücretsiz kullanıcı haftada 2. Kur varsayımı **1 $ ≈ 42 TL**. Fiyatlar 20 Ekim 2026 itibarıyla.
 
 ### Kullanıcı başına
 
@@ -193,7 +193,7 @@ Notlar:
 
 Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 
-**Günde 10 sınırıyla en kötü durum:** her gün 10 tarama yapan bir Premium kullanıcı ayda 1.500 tarama eder. Haiku'da bu ≈ 1,50 $ (elimize geçen 4,95 $'ın ≈ %30'u), Sonnet'te ≈ 18–30 $, yani zarar. Bu yüzden günde 50 sınırı Haiku ile birlikte düşünülmeli; Sonnet'e dönülürse sınır da düşürülmeli. Anthropic Console'daki aylık harcama tavanı yine son güvence.
+**Günde 5 sınırıyla en kötü durum:** her gün 5 tarama yapan bir Premium kullanıcı ayda 1.500 tarama eder. Haiku'da bu ≈ 1,50 $ (elimize geçen 4,95 $'ın ≈ %30'u), Sonnet'te ≈ 18–30 $, yani zarar. Bu yüzden günde 50 sınırı Haiku ile birlikte düşünülmeli; Sonnet'e dönülürse sınır da düşürülmeli. Anthropic Console'daki aylık harcama tavanı yine son güvence.
 
 ---
 
@@ -212,5 +212,5 @@ Model sunucuda seçildiği için bu karar uygulama güncellemesi gerektirmez.
 - Uygulama: `src/app/moka.tsx` (Ben → "Moka ile sohbet" ya da ortadaki Moka "+" menüsü), `src/lib/mokaChat.ts`, `src/domain/chat.ts` (bağlam ve eylemleri uygulama).
 - Sunucu: `supabase/functions/moka-chat/index.ts`. Model `CHAT_MODEL` (varsayılan `claude-haiku-5-5`). Sistem istemi Moka kişiliği + ev/rutin/odak konularıyla sınırlı; alan dışını nazikçe reddeder.
 - Araçlar: iş ekle, işi tamamla, yarına ertele, takvim notu, odak başlat. Sunucu çağrıyı şemaya ve uygulamanın gönderdiği oda/iş listesine göre doğrular; telefon aynısını yerel veriye göre tekrar doğrular. Mesajlar saklanmaz.
-- Sınır: ücretsiz hesap sohbete erişemez (hazır metin). Premium günde 50, ayda 600 mesaj, dakikada 6 (`chat_usage`, `20261103000000_moka_aylik_limit.sql`; `LIMITS.premium.chats` / `chatsMonth` ile aynı). Mesaj en fazla 400 karakter, geçmiş 8 mesaj, cevap en fazla 500 token. Maliyet hesabı: `docs/moka-sohbet-maliyet.md`.
+- Sınır: ücretsiz hesap sohbete erişemez (hazır metin). Premium günde 10, ayda 300 mesaj, dakikada 6 (`chat_usage`, `20261103000000_moka_aylik_limit.sql`; `LIMITS.premium.chats` / `chatsMonth` ile aynı). Mesaj en fazla 400 karakter, geçmiş 8 mesaj, cevap en fazla 500 token. Maliyet hesabı: `docs/moka-sohbet-maliyet.md`.
 - Kurulum: `supabase db push`, `supabase functions deploy moka-chat` (`ANTHROPIC_API_KEY` scan ile aynı).

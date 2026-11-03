@@ -5,7 +5,7 @@
 // - Kapsam: sistem istemi Moka kişiliği + ev işleri / rutin / odak ile sınırlı; alan dışını nazikçe reddeder.
 // - Araç çağrıları burada şemaya ve uygulamanın gönderdiği listeye göre doğrulanır (kimlikler listede olmalı,
 //   sayılar aralıkta, metinler kısa). Geçersiz çağrı atılır. Uygulama da aynı doğrulamayı tekrar yapar.
-// - Sadece üyelik (anonim misafir reddedilir) + Premium. `chat_reserve`: günde 50, ayda 600 mesaj, dakikada 6. Cevap alınamazsa hak geri verilir.
+// - Sadece üyelik (anonim misafir reddedilir) + Premium. `chat_reserve`: günde 10, ayda 300 mesaj, dakikada 6. Cevap alınamazsa hak geri verilir.
 // - Mesajlar ve ev verisi sunucuda saklanmaz.
 //
 // Gizli değişken: ANTHROPIC_API_KEY. İsteğe bağlı: CHAT_MODEL (varsayılan claude-haiku-5-5).

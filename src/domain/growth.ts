@@ -33,6 +33,14 @@ export const WATCH_KINDS: { id: WatchKind; emoji: string; name: string }[] = [
 ];
 export const kindEmoji = (k: WatchKind | 'kitap') => (k === 'kitap' ? '📖' : WATCH_KINDS.find(x => x.id === k)?.emoji ?? '🎬');
 
+/** Listede görünen ilerleme: dizide "Sezon 2 · Bölüm 5", diğerlerinde "%50". */
+export function watchProgress(w: { kind: WatchKind; season?: number; ep?: number; pct?: number }): string | null {
+  if (w.kind === 'dizi') return w.ep || w.season ? `Sezon ${w.season ?? 1} · Bölüm ${w.ep ?? 0}` : null;
+  return w.pct ? `%${w.pct}` : null;
+}
+/** Kitabın yüzdesi. */
+export const bookPct = (b: { read: number; pages: number }) => Math.round((100 * b.read) / Math.max(1, b.pages));
+
 /* ---------- günlük hedef ve okuma ---------- */
 
 export const readMin = (G: Growth, day: DayKey) => G.reads.filter(r => r.day === day).reduce((a, r) => a + r.min, 0);

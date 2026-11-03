@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { MokaMascot } from '@/components/MokaMascot';
-import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
+import { GrowthLog } from '@/components/GrowthLog';
+import { BackLink, Btn, Card, Chip, Screen, SecHead, Sheet, T } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { addFocus, focusToday, focusXp, mokaLevel } from '@/domain/mokaLevel';
 import { scheduleFocusEnd, cancelFocusEnd } from '@/notifications/focus';
@@ -12,7 +13,7 @@ import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
 const MINUTES = [15, 25, 45, 60];
-const TOPICS = ['📚 Ders', '📖 Okuma', '💻 İş', '✏️ Proje', '🧘 Diğer'];
+const TOPICS = ['📚 Ders', '📖 Okuma', '🎬 İzleme', '💻 İş', '✏️ Proje', '🧘 Diğer'];
 const pad = (n: number) => String(n).padStart(2, '0');
 
 type Run = { endsAt: number; min: number; topic: string };
@@ -28,6 +29,7 @@ export default function Odak() {
   const [topic, setTopic] = useState(() => (TOPICS.includes(String(params.topic)) ? String(params.topic) : TOPICS[0]));
   const [run, setRun] = useState<Run | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [logFor, setLogFor] = useState<{ mode: 'oku' | 'izle'; min: number } | null>(null);
 
   const finish = useCallback(
     (r: Run, minutes: number) => {
@@ -43,6 +45,7 @@ export default function Odak() {
           D.play.moka.seen = lv;
         }
       });
+      if (minutes >= 5 && (r.topic.includes('Okuma') || r.topic.includes('İzleme'))) setLogFor({ mode: r.topic.includes('Okuma') ? 'oku' : 'izle', min: minutes });
       if (gained) sfx(up ? 'party' : 'done');
       toast(up ? `🎉 Moka ${up}. seviye oldu! +${gained} Zeka` : gained ? `🧠 +${gained} Zeka · ${minutes} dk odak` : 'Kısa oturum, exp için en az 10 dk lazım 🤍');
     },
@@ -116,6 +119,9 @@ export default function Odak() {
         <T v="bold">🧠 Moka seviye {lv.level}</T>
         <T v="small">Bugün {today} dk odak · sonraki seviyeye {lv.need - lv.into} exp</T>
       </Card>
+      <Sheet open={!!logFor} onClose={() => setLogFor(null)} pose="reading" scroll>
+        {logFor && <GrowthLog mode={logFor.mode} minutes={logFor.min} onDone={() => setLogFor(null)} />}
+      </Sheet>
     </Screen>
   );
 }

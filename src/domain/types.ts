@@ -207,7 +207,11 @@ export type Play = {
 export type Book = { id: string; title: string; author: string; pages: number; read: number; added: number; done: DayKey | null; note?: string };
 export type WatchKind = 'film' | 'dizi' | 'belgesel' | 'podcast';
 /** İzleme listesindeki bir film, dizi, belgesel ya da podcast. `seen`: izlendiği gün. */
-export type Watch = { id: string; title: string; kind: WatchKind; added: number; seen: DayKey | null; rating?: number; note?: string };
+export type Watch = {
+  id: string; title: string; kind: WatchKind; added: number; seen: DayKey | null; rating?: number; note?: string;
+  /** Dizi: kaldığın sezon ve son izlediğin bölüm. Film / belgesel / podcast: `pct` kaldığın yer (%). */
+  season?: number; ep?: number; pct?: number;
+};
 /** Bir okuma kaydı: dakika ve (varsa) sayfa. */
 export type ReadLog = { day: DayKey; min: number; pages: number; book: string | null };
 /** O gün yapılan öğrenme etkinlikleri. */

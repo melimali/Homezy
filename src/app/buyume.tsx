@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
+import { WatchProgress } from '@/components/GrowthLog';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Appear, Squish, useReduceMotion } from '@/components/motion';
 import { PremiumLock } from '@/components/PremiumLock';
@@ -8,14 +9,14 @@ import { useToast } from '@/components/Toast';
 import { Ring, WeekBars } from '@/components/charts';
 import { BackLink, Bar, Btn, Card, Chip, EmptyMsg, Field, Screen, SecHead, T, Tabs, XBtn } from '@/components/ui';
 import {
-  addRead, BADGES, ensurePick, GOALS, gKey, goalMet, goalPct, grantBadges, growthTitle, kindEmoji, learnOf, lessonOf, markLearn,
+  BADGES, bookPct, ensurePick, GOALS, gKey, goalMet, goalPct, growthTitle, kindEmoji, learnOf, lessonOf, markLearn,
   monthLine, monthRows, openBooks, readMin, readStreak, reshuffle, saveSuggestion, shufflesLeft, suggestionById, WATCH_KINDS, wordOf,
 } from '@/domain/growth';
 import { uid } from '@/domain/logic';
 import { answered, checkinOf } from '@/domain/mood';
-import { addXp } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
-import type { AppState, MokaStat, WatchKind } from '@/domain/types';
+import type { WatchKind } from '@/domain/types';
+import { useGrow, useReadLog } from '@/hooks/useGrow';
 import { useNow } from '@/hooks/useNow';
 import { usePlay } from '@/play/usePlay';
 import { usePersona } from '@/profile/usePersona';
@@ -59,21 +60,6 @@ export default function Buyume() {
   );
 }
 
-/** Puan veren bir gelişim adımı: günde bir kez, Zeka (ya da Sağlık) exp'si ve rozet kontrolüyle. */
-function useGrow() {
-  const toast = useToast();
-  const { award } = usePlay();
-  return (ref: string, label: string, what: string, xp: number, mutate?: (D: AppState) => void, stat: MokaStat = 'zeka') => {
-    let fresh: string[] = [];
-    award('gorev', `buyume:${ref}`, label, what, D => {
-      mutate?.(D);
-      addXp(D.play, stat, xp);
-      fresh = grantBadges(D.play.growth).map(b => `${b.emoji} ${b.name}`);
-    });
-    if (fresh.length) setTimeout(() => toast(`Yeni Moka rozeti: ${fresh.join(', ')}!`), 1900);
-  };
-}
-
 /* ---------- Bugün ---------- */
 
 function TodayTab() {
@@ -106,26 +92,9 @@ function TodayTab() {
   const pct = goalPct(G, day);
   const streak = readStreak(G, now);
 
+  const readLog = useReadLog();
   const log = () => {
-    const p = Math.max(0, Math.min(2000, parseInt(pages, 10) || 0));
-    const book = bookId ? G.books.find(b => b.id === bookId) : undefined;
-    const willMeet = !goalMet(G, day) && mins + min >= G.goalMin;
-    const willFinish = !!book && !book.done && p > 0 && book.read + p >= book.pages;
-    let done = false;
-    const run = (D: AppState) => {
-      if (done) return;
-      done = true;
-      addRead(D.play.growth, { min, pages: p, book: bookId });
-    };
-    if (willFinish && book) {
-      grow(`kitap:${book.id}`, `📖 ${book.title} bitti`, 'Kitap', 5, run);
-      if (willMeet) grow('okuma', `📖 ${G.goalMin} dk okuma`, 'Okuma hedefi', 3);
-    } else if (willMeet) {
-      grow('okuma', `📖 ${G.goalMin} dk okuma`, 'Okuma hedefi', 3, run);
-    } else {
-      update(run);
-      toast(`+${min} dk okuma kaydedildi 📖`);
-    }
+    readLog(min, Math.max(0, Math.min(2000, parseInt(pages, 10) || 0)), bookId);
     setPages('');
   };
 
@@ -262,7 +231,12 @@ function BooksTab() {
               <XBtn label="Sil" onPress={() => update(D => void (D.play.growth.books = D.play.growth.books.filter(x => x.id !== b.id)))} />
             </View>
             <Bar value={b.read / Math.max(1, b.pages)} />
-            <T v="tiny">{b.read} / {b.pages} sayfa</T>
+            <T v="tiny">%{bookPct(b)} · {b.read} / {b.pages} sayfa{b.read ? ` · kaldığın yer: s. ${b.read}` : ''}</T>
+            <View style={st.wrap}>
+              {[10, 25, 50].map(n => (
+                <Chip key={n} label={`+${n} sayfa`} on={false} onPress={() => (b.read + n >= b.pages ? finish(b.id) : update(D => { const x = D.play.growth.books.find(y => y.id === b.id); if (x) x.read = Math.min(x.pages, x.read + n); }))} />
+              ))}
+            </View>
             <Btn small label="Bitirdim 🎉" onPress={() => finish(b.id)} style={{ alignSelf: 'flex-start' }} />
           </Card>
         </Appear>
@@ -334,6 +308,7 @@ function WatchTab() {
               <T v="bold" style={{ flex: 1 }} numberOfLines={2}>{w.title}</T>
               <XBtn label="Sil" onPress={() => update(D => void (D.play.growth.watch = D.play.growth.watch.filter(x => x.id !== w.id)))} />
             </View>
+            {open !== w.id && <WatchProgress id={w.id} />}
             {open === w.id ? (
               <>
                 <View style={st.wrap}>{[1, 2, 3, 4, 5].map(n => <Chip key={n} label={'⭐'.repeat(n)} on={rating === n} onPress={() => setRating(n)} />)}</View>

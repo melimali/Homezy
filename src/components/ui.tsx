@@ -56,8 +56,8 @@ function textStyle(v: Variant, c: Colors): TextStyle {
 /* ---------- ekran ---------- */
 
 export function Screen({
-  children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef,
-}: { children: ReactNode; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
+  children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef, onScrollY,
+}: { children: ReactNode; onScrollY?: (y: number) => void; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
@@ -67,6 +67,8 @@ export function Screen({
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       <ScrollView
         ref={scrollRef}
+        onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined}
+        scrollEventThrottle={16}
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}
         keyboardShouldPersistTaps="handled"

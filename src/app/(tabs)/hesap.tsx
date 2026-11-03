@@ -43,10 +43,10 @@ const TOUR: TourStep[] = [
   { key: 'ilac', pose: 'happy', text: 'İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.' },
   { key: 'gunluk', pose: 'reading', text: 'Günlük: bugün nasıldı? Birkaç satır yaz, ruh halini seç.' },
   { key: 'buyume', pose: 'laptop', text: 'Kendini geliştir: sana göre kitap, film ve öğrenme önerileri.' },
-  { key: 'saglik', pose: 'love', down: true, text: 'Sağlık: ilaç, alışkanlık, ruh hali ve spor hep burada.' },
-  { key: 'plan', pose: 'cheers', down: true, text: 'Gelişim planın ve ev planın: evini çiz, odaları, dolabı ve bakımı yönet. Ev kartında.' },
-  { key: 'hesap', pose: 'sipping', down: true, text: 'Hesap: yedekleme, Premium ve giriş işlemleri burada.' },
-  { key: 'ayar', pose: 'wink', down: true, text: 'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!' },
+  { key: 'saglik', pose: 'love', text: 'Sağlık: ilaç, alışkanlık, ruh hali ve spor hep burada.' },
+  { key: 'plan', pose: 'cheers', text: 'Gelişim planın ve ev planın: evini çiz, odaları, dolabı ve bakımı yönet. Ev kartında.' },
+  { key: 'hesap', pose: 'sipping', text: 'Hesap: yedekleme, Premium ve giriş işlemleri burada.' },
+  { key: 'ayar', pose: 'wink', text: 'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!' },
 ];
 
 /** Hesap ve üyelik: profil, bulut yedeği, Premium durumu, satın alımları geri yükleme, çıkış, hesap silme. */
@@ -62,6 +62,7 @@ export default function Hesap() {
   const [langOpen, setLangOpen] = useState(false);
   const [cat, setCat] = useState<string | null>(null);
   const [tour, setTour] = useState(false);
+  const scrollY = useRef(0);
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [tg] = useState<{ current: Record<string, Tgt | null> }>(() => ({ current: {} }));
   const mark = (k: string) => ({ ref: (v: Tgt | null) => { tg.current[k] = v; }, collapsable: false as const });
@@ -270,7 +271,7 @@ export default function Hesap() {
   ];
 
   return (
-    <Screen header={false} tab tone="lavender" scrollRef={scroller}>
+    <Screen header={false} tab tone="lavender" scrollRef={scroller} onScrollY={y => { scrollY.current = y; }}>
       <TitleBar title={t('profile')} right={<IconBtn icon="⚙️" label={t('settings')} onPress={() => setCat('ayar')} />} />
 
       <View {...mark('profil')}>
@@ -318,7 +319,7 @@ export default function Hesap() {
       </Appear>
 
       {tour && (
-        <BenTour steps={TOUR} targets={tg} onDone={endTour} onScroll={down => (down ? scroller.current?.scrollToEnd({ animated: true }) : scroller.current?.scrollTo({ y: 0, animated: true }))} />
+        <BenTour steps={TOUR} targets={tg} onDone={endTour} getY={() => scrollY.current} scrollTo={y => scroller.current?.scrollTo({ y: Math.max(0, y), animated: true })} />
       )}
 
       <Sheet open={!!open} onClose={() => setCat(null)} scroll>

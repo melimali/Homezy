@@ -1,5 +1,6 @@
-import { useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Platform,
@@ -20,6 +21,7 @@ import { useStore } from '@/store/AppStore';
 import { Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
 import { LIMITS } from '@/domain/premium';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
 import { brand, fonts, radius, useColors, type Colors } from '@/theme';
@@ -121,8 +123,15 @@ export default function Tanitim() {
   const { finishIntro } = useAuth();
   const { state: appState, update } = useStore();
   const lang = appState.settings.language === 'tr' ? 'tr' : 'en';
+  const [switching, setSwitching] = useState(false);
+  const langTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => langTimers.current.forEach(clearTimeout), []);
   const pickLang = (l: 'tr' | 'en') => {
-    if (l !== lang) update(d => void (d.settings.language = l));
+    if (l === lang || switching) return;
+    setSwitching(true);
+    // Önce yükleme ekranı çizilsin, sonra dil değişsin; çeviri oturunca kapat.
+    langTimers.current.push(setTimeout(() => update(d => void (d.settings.language = l)), 80));
+    langTimers.current.push(setTimeout(() => setSwitching(false), 900));
   };
   const reduce = useReduceMotion();
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
@@ -210,6 +219,12 @@ export default function Tanitim() {
         )}
       </View>
 
+      {switching && (
+        <View style={[StyleSheet.absoluteFill, st.langLoad, { backgroundColor: c.bg }]} accessibilityLiveRegion="polite">
+          <Image source={MOKA_ASSETS.happy} style={{ width: 120, height: 120 }} resizeMode="contain" />
+          <ActivityIndicator color={c.ink} style={{ marginTop: 14 }} />
+        </View>
+      )}
       <View pointerEvents="none" style={st.burst}><Burst fire={pop} /></View>
 
       {/* Alt: hap şeklinde sayfa göstergesi ve buton */}
@@ -286,6 +301,7 @@ const st = StyleSheet.create({
   top: { position: 'absolute', left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 96, height: 32 },
+  langLoad: { alignItems: 'center', justifyContent: 'center', zIndex: 50 },
   langPill: { flexDirection: 'row', borderRadius: radius.pill, padding: 3 },
   langOpt: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill },
   skip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill },

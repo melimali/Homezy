@@ -23,7 +23,7 @@ import { isOwner } from '@/auth/owner';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { prefs } from '@/lib/supabase';
-import { pinTodayWidget, widgetAvailable } from '@/widget/widget';
+import { pinMiniWidget, pinTodayWidget, widgetAvailable } from '@/widget/widget';
 import { fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
@@ -257,7 +257,10 @@ export default function Hesap() {
       { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
       { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
       { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
-      ...(widgetAvailable() ? [{ emoji: '📌', label: "Ana ekran widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy.')); } }] : []),
+      ...(widgetAvailable() ? [
+        { emoji: '📌', label: 'Mini widget', sub: 'Su, ilaç, market ve görev tek küçük kutuda', tint: c.sageSoft, onPress: () => { pinMiniWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Mini.')); } },
+        { emoji: '📋', label: "Bugün widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Bugün.')); } },
+      ] : []),
     ] },
     { key: 'moka', emoji: '🐦', title: 'Moka', tint: c.roseSoft, sub: 'Sohbet, bahçe, mağaza', items: [
       { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },

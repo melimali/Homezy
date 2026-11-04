@@ -186,4 +186,14 @@ export async function pinTodayWidget(): Promise<boolean> {
   }
 }
 
+/** Ana ekrana "Mini" widget'ını (su, ilaç, market, görev) ekletir. Eklenemezse false. */
+export async function pinMiniWidget(): Promise<boolean> {
+  if (!lib) return false;
+  try {
+    return await lib.W.requestPinWidget({ widgetName: lib.Mini.MINI_WIDGET_NAME });
+  } catch {
+    return false;
+  }
+}
+
 export const widgetAvailable = () => lib != null;

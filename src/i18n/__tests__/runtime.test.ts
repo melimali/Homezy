@@ -11,7 +11,7 @@ it('ek yuvası harfle başlayan sözcüğe uymaz ("işaretlersin" ≠ "iş" + ek
 });
 
 it('Ben turu ilaç adımı çevrilir', () => {
-  expect(tx('İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.')).toMatch(/medicines/);
+  expect(tx('İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.')).toMatch(/medication/);
 });
 
 it('iş sayıları çevrilir, boş ek de olur', () => {

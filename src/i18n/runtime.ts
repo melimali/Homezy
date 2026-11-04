@@ -134,7 +134,8 @@ export function tx<T>(s: T): T {
   if (LANG !== 'en' || typeof s !== 'string') return s;
   const hit = cache.get(s);
   if (hit !== undefined) return hit as T;
-  const r = translate(s);
+  // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%.
+  const r = translate(s).replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2%');
   if (cache.size > 4000) cache.clear();
   cache.set(s, r);
   return r as T;

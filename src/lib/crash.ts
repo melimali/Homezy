@@ -30,8 +30,9 @@ export function initCrashReporting() {
       attachViewHierarchy: false,
       maxBreadcrumbs: 20,
       beforeSend(event) {
-        delete event.user;
-        delete event.request;
+        const e = event as { user?: unknown; request?: unknown };
+        e.user = undefined;
+        e.request = undefined;
         return event;
       },
     });

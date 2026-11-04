@@ -53,7 +53,7 @@ const split = (s: string) => {
 };
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
-const patterns: { re: RegExp; out: string }[] = [];
+const patterns: { re: RegExp; out: string; lit: number }[] = [];
 for (const [k, v] of Object.entries(EN)) {
   if (k.includes('{}')) {
     // Sondaki {} boş kalabilir ("... blok" + boş ek).
@@ -67,15 +67,15 @@ for (const [k, v] of Object.entries(EN)) {
     // Ek yuvası boş olabilir ("{} iş bitti{}." + "3 iş bitti."), diğer {} en az bir karakter ister.
     const headRe = head.split('{}').map((part, i, arr) => (i < arr.length - 1 ? part + slot(part) + (isSlot(part) ? '([^\\n]*?)' : '([^·\\n]+?)') : part)).join('');
     const tailRe = tail ? slot(head) + '([^·\\n]*?)' : '';
-    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v });
+    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v, lit: k.replace(/{}/g, '').length });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;
     if (c) canon.set(lower(c), split(v).core || v);
   }
 }
-// Daha uzun (daha belirgin) kalıplar önce denensin.
-patterns.sort((a, b) => b.re.source.length - a.re.source.length);
+// Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
+patterns.sort((a, b) => b.lit - a.lit);
 
 const cache = new Map<string, string>();
 

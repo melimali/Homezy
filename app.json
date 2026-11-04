@@ -95,6 +95,7 @@
         }
       ],
       "expo-sharing",
+      "@sentry/react-native",
       [
         "react-native-android-widget",
         {

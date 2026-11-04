@@ -1,3 +1,4 @@
+import { initCrashReporting } from '@/lib/crash';
 import { installTranslationPatch } from '@/i18n/patch';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
@@ -33,6 +34,7 @@ import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
 import { useColors } from '@/theme';
 
+initCrashReporting();
 installTranslationPatch();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 // Emülatörde Google Play hesabı olmadığı için RevenueCat her açılışta hata yazar; geliştirirken ekranı kaplamasın.

@@ -25,4 +25,5 @@
 - **Supabase yedekleri:** Projenin otomatik veritabanı yedekleri (plana bağlı) silinen verileri bir süre taşıyabilir.
 - **Erişim / taşınabilirlik:** uygulamadaki "Verilerimi dışa aktar" ev verisini verir. Sunucuya özgü kayıtlar (sayaçlar, alımlar) için e-posta talebi 30 gün içinde yanıtlanır.
 - **Analytics / çökme raporu yok.** `src/lib/events.ts` yalnızca yerel olaylar içindir (kontrol et: sunucuya gönderen kod eklenirse bu belge ve politika güncellenmeli).
-- **Yurt dışı aktarım:** Anthropic (ABD), RevenueCat (ABD), Google (ABD/İrlanda). Rıza: ilk sohbet/taramada.
+- **Çökme raporu (Sentry, ABD):** yayın derlemesinde uygulama çökerse hata mesajı, yığın izi, cihaz modeli, işletim sistemi ve uygulama sürümü Sentry'ye gider. Kullanıcı kimliği, IP, fotoğraf ve ev verisi gönderilmez (`src/lib/crash.ts`). Politikaya ve Play Data Safety'ye (Crash logs / Diagnostics) eklenmeli.
+- **Yurt dışı aktarım:** Anthropic (ABD), RevenueCat (ABD), Sentry (ABD), Google (ABD/İrlanda). Rıza: ilk sohbet/taramada.

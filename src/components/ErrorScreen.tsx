@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { Image, Linking, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { reportError } from '@/lib/crash';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { useColors } from '@/theme';
 
@@ -12,6 +14,7 @@ import { Btn, T } from './ui';
  */
 export function ErrorScreen({ error, retry }: { error: Error; retry: () => void }) {
   const c = useColors();
+  useEffect(() => reportError(error), [error]);
   const report = () => {
     const body = encodeURIComponent(`Homezy hata raporu\n\n${String(error?.message ?? error).slice(0, 600)}\n\n${String(error?.stack ?? '').slice(0, 1200)}`);
     Linking.openURL(`mailto:info@themeikai.com?subject=${encodeURIComponent('Homezy hata raporu')}&body=${body}`).catch(() => {});

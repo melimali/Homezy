@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
+import { useStore } from '@/store/AppStore';
 import { Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
 import { LIMITS } from '@/domain/premium';
@@ -118,6 +119,11 @@ export default function Tanitim() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { finishIntro } = useAuth();
+  const { state: appState, update } = useStore();
+  const lang = appState.settings.language === 'tr' ? 'tr' : 'en';
+  const pickLang = (l: 'tr' | 'en') => {
+    if (l !== lang) update(d => void (d.settings.language = l));
+  };
   const reduce = useReduceMotion();
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
   const [page, setPage] = useState(0);
@@ -189,6 +195,13 @@ export default function Tanitim() {
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
         <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
           <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+        </View>
+        <View style={[st.langPill, { backgroundColor: c.surface }]} accessibilityRole="radiogroup">
+          {(['tr', 'en'] as const).map(l => (
+            <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
+              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
+            </Pressable>
+          ))}
         </View>
         {!last && (
           <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={10} style={({ pressed }) => [st.skip, { backgroundColor: c.surface }, pressed && { opacity: 0.6 }]}>
@@ -273,6 +286,8 @@ const st = StyleSheet.create({
   top: { position: 'absolute', left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   wordmark: { width: 96, height: 32 },
+  langPill: { flexDirection: 'row', borderRadius: radius.pill, padding: 3 },
+  langOpt: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill },
   skip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill },
   burst: { position: 'absolute', top: '35%', alignSelf: 'center' },
   bottom: { position: 'absolute', left: 24, right: 24, bottom: 0, gap: 16, alignItems: 'center', maxWidth: 440, alignSelf: 'center' },

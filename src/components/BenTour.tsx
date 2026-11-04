@@ -142,7 +142,7 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
               </View>
               <View style={{ flex: 1 }} />
               {!last && <Btn label="Atla" kind="soft" small onPress={finish} />}
-              <Btn label={last ? 'Bitti' : 'İleri'} kind="primary" small onPress={() => (last ? finish() : setI(i + 1))} />
+              <Btn label={last ? 'Başlayalım' : 'İleri'} kind="primary" small onPress={() => (last ? finish() : setI(i + 1))} />
             </View>
           </Animated.View>
         )}

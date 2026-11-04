@@ -9,6 +9,7 @@ import { cellCount, emptyState, makeRoom, removeRoom, staggerFirstDay } from '@/
 import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeUpper, resizeGrid, restoreSnap, snapOf, TEMPLATES, type Floor, type PlanSnap } from '@/domain/plan-templates';
 import type { AppState } from '@/domain/types';
 import { useTranslation } from '@/i18n/i18n';
+import { tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { PLAN } from '@/domain/persona';
@@ -41,6 +42,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const { t: tr } = useTranslation();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
+  const [nameFocus, setNameFocus] = useState(false);
   const [clearArm, setClearArm] = useState(false);
   const [tplArm, setTplArm] = useState<string | null>(null);
   const [history, setHistory] = useState<PlanSnap[]>([]);
@@ -378,7 +380,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
           <>
             <T v="h2">{ROOM_EMOJI[er.type]} Odayı düzenle</T>
             <TextInput
-              value={er.name}
+              // Varsayılan ad ("Salon 2") kayıtta Türkçe durur; yazılmıyorken ekranda dile göre çevrilir.
+              value={nameFocus ? er.name : tx(er.name)}
+              onFocus={() => setNameFocus(true)}
+              onBlur={() => setNameFocus(false)}
               accessibilityLabel="Oda adı"
               maxLength={40}
               onChangeText={v => update(D => void (D.rooms[editId].name = v || TYPES[D.rooms[editId].type].label))}

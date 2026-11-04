@@ -27,7 +27,7 @@ const pose = (p: MokaPose) => MOKA_ASSETS[p];
 
 export const HERO_SCENES: readonly HeroScene[] = [
   { id: 'salon-kanepe', background: require('../../assets/arkaplan/salon_kanepe2.jpg'), sticker: HOME_MOKA_SEATED, x: 0.58, bottom: 0.27, size: 0.56, motion: 'breath', fx: 'steam' },
-  { id: 'salon-gece', background: require('../../assets/arkaplan/salon_gece.jpg'), sticker: pose('blanket_coffee'), x: 0.56, bottom: 0.25, size: 0.48, motion: 'breath', fx: 'steam' },
+  { id: 'salon-gece', background: require('../../assets/arkaplan/salon_gece.jpg'), sticker: pose('blanket_coffee'), x: 0.54, bottom: 0.27, size: 0.48, motion: 'breath', fx: 'steam' },
   { id: 'pencere-sedir', background: require('../../assets/arkaplan/pencere_sedir.jpg'), sticker: pose('reading'), x: 0.55, bottom: 0.30, size: 0.46, motion: 'breath', fx: 'none' },
   { id: 'yatak-gece', background: require('../../assets/arkaplan/yatak_gece.jpg'), sticker: pose('sleepy'), x: 0.52, bottom: 0.22, size: 0.50, motion: 'breath', fx: 'zzz' },
   { id: 'balkon-aksam', background: require('../../assets/arkaplan/balkon_aksam.jpg'), sticker: pose('cheers'), x: 0.58, bottom: 0.19, size: 0.50, motion: 'bob', fx: 'sparkle' },

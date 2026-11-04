@@ -44,9 +44,9 @@
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**"
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**\n-keep class com.facebook.react.** { *; }\n-keep class com.facebook.hermes.** { *; }\n-keep class com.swmansion.reanimated.** { *; }\n-keep class expo.modules.** { *; }\n-keep class com.revenuecat.purchases.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.ump.** { *; }\n-keep class com.reactnativeandroidwidget.** { *; }\n-keep class com.meikai.homezy.** { *; }\n-dontwarn com.revenuecat.**\n-dontwarn com.google.android.gms.**"
           }
         }
       ],

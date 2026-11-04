@@ -38,7 +38,12 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
-      ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz."
+        }
+      ],
       "expo-font",
       [
         "expo-build-properties",
@@ -121,31 +126,17 @@
               "updatePeriodMillis": 1800000
             },
             {
-              "name": "Su",
-              "label": "Homezy · Su",
-              "description": "Su içme takibi: bir dokunuşla bardak ekle, günlük hedefi izle.",
-              "minWidth": "180dp",
+              "name": "Mini",
+              "label": "Homezy · Mini",
+              "description": "Su, ilaç, market ve aktif görev tek küçük widget'ta. Dokunarak bardak ekle, ilacı ve işi tamamla.",
+              "minWidth": "250dp",
               "minHeight": "110dp",
-              "targetCellWidth": 3,
+              "targetCellWidth": 4,
               "targetCellHeight": 2,
-              "maxResizeWidth": "520dp",
-              "maxResizeHeight": "200dp",
-              "resizeMode": "horizontal|vertical",
-              "previewImage": "./assets/widget-preview.png",
-              "updatePeriodMillis": 1800000
-            },
-            {
-              "name": "Market",
-              "label": "Homezy · Market",
-              "description": "Biten ve azalan ürünler. Aldıkça ✓ ile işaretle.",
-              "minWidth": "180dp",
-              "minHeight": "110dp",
-              "targetCellWidth": 3,
-              "targetCellHeight": 3,
               "maxResizeWidth": "520dp",
               "maxResizeHeight": "340dp",
               "resizeMode": "horizontal|vertical",
-              "previewImage": "./assets/widget-preview.png",
+              "previewImage": "./assets/widget-preview-mini.png",
               "updatePeriodMillis": 1800000
             }
           ]

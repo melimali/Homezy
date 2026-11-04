@@ -10,12 +10,14 @@ import type { AppState } from '@/domain/types';
 
 import { addWater, hKey, waterMet, waterOf } from '@/domain/habits';
 import { addXp } from '@/domain/mokaLevel';
-import { awardLocal } from '@/domain/play';
+import { awardLocal, dayKey } from '@/domain/play';
 
-import { shopData, waterData, widgetData } from './data';
-import type * as ShopTypes from './ShopWidget';
+import { setLang } from '@/i18n/runtime';
+import { markDose } from '@/domain/meds';
+
+import { miniData, widgetData } from './data';
+import type * as MiniTypes from './MiniWidget';
 import type * as TodayTypes from './TodayWidget';
-import type * as WaterTypes from './WaterWidget';
 
 /**
  * Android ana ekran widget'ı ("Bugün"). Uygulama kapalıyken de çalışır: sistem widget'ı eklerken,
@@ -23,7 +25,7 @@ import type * as WaterTypes from './WaterWidget';
  * görevi çalıştırır. Veri telefondaki veritabanından okunur; uygulama açıksa store kullanılır.
  * Yerel modül Expo Go'da ve iOS'ta yok; o zaman bu dosya hiçbir şey yapmaz.
  */
-type Lib = { W: typeof WidgetTypes; UI: typeof TodayTypes; Water: typeof WaterTypes; Shop: typeof ShopTypes };
+type Lib = { W: typeof WidgetTypes; UI: typeof TodayTypes; Mini: typeof MiniTypes };
 
 function load(): Lib | null {
   if (Platform.OS !== 'android') return null;
@@ -31,10 +33,9 @@ function load(): Lib | null {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const W = require('react-native-android-widget') as typeof WidgetTypes;
     const UI = require('./TodayWidget') as typeof TodayTypes;
-    const Water = require('./WaterWidget') as typeof WaterTypes;
-    const Shop = require('./ShopWidget') as typeof ShopTypes;
+    const Mini = require('./MiniWidget') as typeof MiniTypes;
     /* eslint-enable @typescript-eslint/no-require-imports */
-    return { W, UI, Water, Shop };
+    return { W, UI, Mini };
   } catch {
     // Eski geliştirme derlemesi ya da Expo Go: widget yok.
     return null;
@@ -63,15 +64,15 @@ export function rememberPremium(active: boolean) {
 /** Uygulama açıkken veri değişince çağrılır: ekrandaki bütün "Bugün" widget'larını yeniler. */
 export async function refreshWidgets(S: AppState, now = Date.now()) {
   if (!lib) return;
+  setLang(S.settings?.language);
   const data = widgetData(S, now);
   await lib.W.requestWidgetUpdate({
     widgetName: lib.UI.WIDGET_NAME,
     renderWidget: info => lib.UI.todayWidget(data, info.height),
   });
-  await lib.W.requestWidgetUpdate({ widgetName: lib.Water.WATER_WIDGET_NAME, renderWidget: () => lib.Water.waterWidget(waterData(S, now)) });
   await lib.W.requestWidgetUpdate({
-    widgetName: lib.Shop.SHOP_WIDGET_NAME,
-    renderWidget: info => lib.Shop.shopWidget(shopData(S), info.height),
+    widgetName: lib.Mini.MINI_WIDGET_NAME,
+    renderWidget: info => lib.Mini.miniWidget(miniData(S, now), info.height),
   });
 }
 
@@ -106,6 +107,14 @@ async function boughtItem(id: string): Promise<AppState | null> {
   });
 }
 
+/** İlaç karosu: dozu "alındı" işaretler ve bildirimleri yeniden zamanlar (vakti gelen hatırlatma susar). */
+async function takeDose(key: string): Promise<AppState | null> {
+  const now = Date.now();
+  const S = await mutate(D => markDose(D, dayKey(now), key, 'taken', now));
+  if (S && getNotifications()) await rescheduleMorningSummaries(S, lastPremium()).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
+  return S;
+}
+
 /** "✓" düğmesi: iş bildirimdeki "Yaptım" ile aynı yoldan tamamlanır (puan, seri, bildirimler). */
 async function complete(tid: string): Promise<{ S: AppState | null; note: string | null }> {
   const now = Date.now();
@@ -134,14 +143,20 @@ if (lib) {
     const name = widgetInfo.widgetName;
     try {
       const click = widgetAction === 'WIDGET_CLICK';
-      if (name === lib.Water.WATER_WIDGET_NAME) {
-        const S = click && clickAction === lib.Water.WATER_ADD ? await waterStep(1) : click && clickAction === lib.Water.WATER_UNDO ? await waterStep(-1) : await loadState();
-        if (S) renderWidget(lib.Water.waterWidget(waterData(S)));
-        return;
-      }
-      if (name === lib.Shop.SHOP_WIDGET_NAME) {
-        const S = click && clickAction === lib.Shop.SHOP_BOUGHT && typeof clickActionData?.id === 'string' ? await boughtItem(clickActionData.id) : await loadState();
-        if (S) renderWidget(lib.Shop.shopWidget(shopData(S), widgetInfo.height));
+      if (name === lib.Mini.MINI_WIDGET_NAME) {
+        const M = lib.Mini;
+        const key = typeof clickActionData?.key === 'string' ? clickActionData.key : '';
+        let S: AppState | null;
+        let note: string | null = null;
+        if (click && clickAction === M.MINI_WATER) S = await waterStep(1);
+        else if (click && clickAction === M.MINI_MED && key) S = await takeDose(key);
+        else if (click && clickAction === M.MINI_SHOP && typeof clickActionData?.id === 'string') S = await boughtItem(clickActionData.id);
+        else if (click && clickAction === M.MINI_TASK && typeof clickActionData?.tid === 'string') ({ S, note } = await complete(clickActionData.tid));
+        else S = await loadState();
+        if (S) {
+          setLang(S.settings?.language);
+          renderWidget(M.miniWidget(miniData(S), widgetInfo.height, note));
+        }
         return;
       }
       if (name !== lib.UI.WIDGET_NAME) return;
@@ -153,6 +168,7 @@ if (lib) {
         S = await loadState();
       }
       if (!S) return;
+      setLang(S.settings?.language);
       renderWidget(lib.UI.todayWidget(widgetData(S), widgetInfo.height, note));
     } catch (e) {
       console.warn('Homezy: widget çizilemedi', e);

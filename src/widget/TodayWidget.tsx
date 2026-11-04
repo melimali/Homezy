@@ -1,5 +1,6 @@
 import { FlexWidget, TextWidget, type ColorProp } from 'react-native-android-widget';
 
+import { tx } from '@/i18n/runtime';
 import { fonts, palettes, type Colors } from '@/theme';
 
 import type { WidgetData, WidgetTask } from './data';
@@ -31,8 +32,8 @@ const rowsFor = (height: number) => Math.max(1, Math.min(4, Math.floor((height -
 export function TodayWidget({ data, height, note, c }: Props) {
   const shown = data.tasks.slice(0, rowsFor(height));
   const more = data.tasks.length - shown.length;
-  const title = data.vacation ? 'Tatildesin' : data.left ? `Bugün ${data.left} iş` : 'Her şey tamam';
-  const sub = note ?? (more > 0 ? `+${more} iş daha` : data.total ? `${Math.min(data.done, data.total)}/${data.total} bitti` : 'Homezy');
+  const title = data.vacation ? tx('Tatildesin') : data.left ? tx(`Bugün ${data.left} iş`) : tx('Her şey tamam');
+  const sub = note ?? (more > 0 ? `+${more} ${tx('iş daha')}` : data.total ? tx(`${Math.min(data.done, data.total)}/${data.total} bitti`) : 'Homezy');
 
   return (
     <FlexWidget
@@ -53,7 +54,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
           shown.map(t => <Row key={t.id} t={t} c={c} />)
         ) : (
           <TextWidget
-            text={data.vacation ? '🏖️ Rutinler dondu, iyi dinlen.' : '🎉 Bugünlük tamam!'}
+            text={data.vacation ? tx('🏖️ Rutinler dondu, iyi dinlen.') : tx('🎉 Bugünlük tamam!')}
             style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ok }}
             maxLines={2}
           />
@@ -68,13 +69,13 @@ function Row({ t, c }: { t: WidgetTask; c: WColors }) {
     <FlexWidget {...OPEN} style={{ width: 'match_parent', height: 40, flexDirection: 'row', alignItems: 'center' }}>
       <TextWidget text={t.emoji} style={{ fontSize: 18, marginRight: 10 }} />
       <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
-        <TextWidget text={t.name} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }} maxLines={1} truncate="END" />
-        <TextWidget text={`${t.room} · ${t.label}`} style={{ fontFamily: fonts.body, fontSize: 10, color: t.late ? c.late : c.muted }} maxLines={1} truncate="END" />
+        <TextWidget text={tx(t.name)} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }} maxLines={1} truncate="END" />
+        <TextWidget text={tx(`${t.room} · ${t.label}`)} style={{ fontFamily: fonts.body, fontSize: 10, color: t.late ? c.late : c.muted }} maxLines={1} truncate="END" />
       </FlexWidget>
       <FlexWidget
         clickAction={DONE_ACTION}
         clickActionData={{ tid: t.id }}
-        accessibilityLabel={`${t.name}: yaptım`}
+        accessibilityLabel={`${t.name}: ${tx('yaptım')}`}
         style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}
       >
         <TextWidget text="✓" style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.accent }} />

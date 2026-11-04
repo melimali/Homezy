@@ -8,6 +8,7 @@ import { EN_G } from './g';
 import { EN_H } from './h';
 import { EN_I } from './i';
 import { EN_J } from './j';
+import { EN_K } from './k';
 
 /** Türkçe metin → İngilizce. `{}` değişken yeridir (sırayla). a.ts önce gelir, b.ts yalnızca eksikleri tamamlar. */
-export const EN: Record<string, string> = { ...EN_J, ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_I, ...EN_A };
+export const EN: Record<string, string> = { ...EN_K, ...EN_J, ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_I, ...EN_A };

@@ -53,22 +53,22 @@ const split = (s: string) => {
 };
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
-const patterns: { re: RegExp; out: string }[] = [];
+const patterns: { re: RegExp; out: string; lit: number }[] = [];
 for (const [k, v] of Object.entries(EN)) {
   if (k.includes('{}')) {
     // Sondaki {} boş kalabilir ("... blok" + boş ek).
     const body = esc(norm(k));
     const tail = body.endsWith('{}');
     const head = tail ? body.slice(0, -2) : body;
-    patterns.push({ re: new RegExp('^' + head.replace(/\{\}/g, '([^·\\n]+?)') + (tail ? '([^·\\n]*?)' : '') + '$', 'i'), out: v });
+    patterns.push({ re: new RegExp('^' + head.replace(/\{\}/g, '([^·\\n]+?)') + (tail ? '([^·\\n]*?)' : '') + '$', 'i'), out: v, lit: k.replace(/\{\}/g, '').length });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;
     if (c) canon.set(lower(c), split(v).core || v);
   }
 }
-// Daha uzun (daha belirgin) kalıplar önce denensin.
-patterns.sort((a, b) => b.re.source.length - a.re.source.length);
+// Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
+patterns.sort((a, b) => b.lit - a.lit);
 
 const cache = new Map<string, string>();
 

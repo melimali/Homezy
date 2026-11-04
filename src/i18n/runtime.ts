@@ -60,7 +60,14 @@ for (const [k, v] of Object.entries(EN)) {
     const body = esc(norm(k));
     const tail = body.endsWith('{}');
     const head = tail ? body.slice(0, -2) : body;
-    patterns.push({ re: new RegExp('^' + head.replace(/\{\}/g, '([^·\\n]+?)') + (tail ? '([^·\\n]*?)' : '') + '$', 'i'), out: v });
+    // Harfe bitişik {} ("iş{}") bir ek yuvasıdır; harfle başlayan metin ("işaretlersin") eşleşmesin.
+    const LETTER = 'A-Za-zÇĞİÖŞÜçğıöşü';
+    const isSlot = (before: string) => new RegExp('[' + LETTER + ']$').test(before);
+    const slot = (before: string) => (isSlot(before) ? '(?![' + LETTER + '])' : '');
+    // Ek yuvası boş olabilir ("{} iş bitti{}." + "3 iş bitti."), diğer {} en az bir karakter ister.
+    const headRe = head.split('{}').map((part, i, arr) => (i < arr.length - 1 ? part + slot(part) + (isSlot(part) ? '([^\\n]*?)' : '([^·\\n]+?)') : part)).join('');
+    const tailRe = tail ? slot(head) + '([^·\\n]*?)' : '';
+    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;

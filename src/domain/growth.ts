@@ -258,11 +258,57 @@ export const WORDS: Word[] = [
   { w: 'reluctant', tr: 'İsteksiz, gönülsüz', ex: 'I was reluctant at first, then I loved it.' },
   { w: 'astonish', tr: 'Şaşırtmak', ex: 'The view will astonish you.' },
 ];
+export type TrWord = { w: string; en: string; ex: string; exEn: string };
+/** İngilizce modda Öğren sekmesinde gösterilen Türkçe kelimeler (kelime ve örnek Türkçe, anlam ve çeviri İngilizce). */
+export const TR_WORDS: TrWord[] = [
+  { w: 'merhaba', en: 'hello', ex: 'Merhaba, nasılsın?', exEn: 'Hello, how are you?' },
+  { w: 'teşekkürler', en: 'thank you', ex: 'Çok teşekkürler, harikaydı.', exEn: 'Thank you very much, it was great.' },
+  { w: 'güzel', en: 'beautiful, nice', ex: 'Bugün hava çok güzel.', exEn: 'The weather is lovely today.' },
+  { w: 'ev', en: 'home, house', ex: 'Evim küçük ama sıcak.', exEn: 'My home is small but warm.' },
+  { w: 'arkadaş', en: 'friend', ex: 'Arkadaşımla kahve içtik.', exEn: 'I had coffee with my friend.' },
+  { w: 'kahve', en: 'coffee', ex: 'Sabahları bir kahve içerim.', exEn: 'I drink a coffee in the mornings.' },
+  { w: 'sevgi', en: 'love, affection', ex: 'Sevgi her şeyin başıdır.', exEn: 'Love is the start of everything.' },
+  { w: 'huzur', en: 'peace, calm', ex: 'Evde huzur buldum.', exEn: 'I found peace at home.' },
+  { w: 'hoş geldin', en: 'welcome', ex: 'Eve hoş geldin!', exEn: 'Welcome home!' },
+  { w: 'afiyet olsun', en: 'enjoy your meal', ex: 'Yemek hazır, afiyet olsun.', exEn: 'Dinner is ready, enjoy your meal.' },
+  { w: 'kolay gelsin', en: 'may your work go easy', ex: 'İşin başındayım. Kolay gelsin!', exEn: 'Good luck with your work!' },
+  { w: 'geçmiş olsun', en: 'get well soon', ex: 'Geçmiş olsun, çabuk iyileş.', exEn: 'Get well soon, recover quickly.' },
+  { w: 'mutlu', en: 'happy', ex: 'Bugün çok mutluyum.', exEn: 'I am very happy today.' },
+  { w: 'yavaş', en: 'slow, slowly', ex: 'Yavaş yavaş ilerliyoruz.', exEn: 'We are moving forward little by little.' },
+  { w: 'hadi', en: 'come on, let\'s go', ex: 'Hadi, bir çay içelim.', exEn: 'Come on, let\'s have a tea.' },
+  { w: 'çay', en: 'tea', ex: 'Çay demlendi.', exEn: 'The tea has been brewed.' },
+  { w: 'komşu', en: 'neighbor', ex: 'Komşum bana kek getirdi.', exEn: 'My neighbor brought me a cake.' },
+  { w: 'sabah', en: 'morning', ex: 'Sabah erken kalktım.', exEn: 'I woke up early in the morning.' },
+  { w: 'akşam', en: 'evening', ex: 'Akşam yürüyüşe çıkarız.', exEn: 'We go for a walk in the evening.' },
+  { w: 'gece', en: 'night', ex: 'İyi geceler, tatlı rüyalar.', exEn: 'Good night, sweet dreams.' },
+  { w: 'yarın', en: 'tomorrow', ex: 'Yarın yeni bir gün.', exEn: 'Tomorrow is a new day.' },
+  { w: 'bugün', en: 'today', ex: 'Bugün ne yapıyoruz?', exEn: 'What are we doing today?' },
+  { w: 'su', en: 'water', ex: 'Bir bardak su alabilir miyim?', exEn: 'Could I have a glass of water?' },
+  { w: 'ekmek', en: 'bread', ex: 'Fırından sıcak ekmek aldım.', exEn: 'I bought warm bread from the bakery.' },
+  { w: 'pencere', en: 'window', ex: 'Pencereyi açar mısın?', exEn: 'Could you open the window?' },
+  { w: 'kitap', en: 'book', ex: 'Bu kitabı çok sevdim.', exEn: 'I really liked this book.' },
+  { w: 'güneş', en: 'sun', ex: 'Güneş doğdu.', exEn: 'The sun has risen.' },
+  { w: 'yağmur', en: 'rain', ex: 'Yağmur yağıyor.', exEn: 'It is raining.' },
+  { w: 'kedi', en: 'cat', ex: 'Kedim kucağımda uyuyor.', exEn: 'My cat is sleeping in my lap.' },
+  { w: 'köpek', en: 'dog', ex: 'Köpeği gezmeye çıkardım.', exEn: 'I took the dog out for a walk.' },
+  { w: 'çiçek', en: 'flower', ex: 'Balkonda çiçekler açtı.', exEn: 'Flowers have bloomed on the balcony.' },
+  { w: 'sağ ol', en: 'thanks, thank you', ex: 'Yardımın için sağ ol.', exEn: 'Thanks for your help.' },
+  { w: 'lütfen', en: 'please', ex: 'Lütfen kapıyı kapat.', exEn: 'Please close the door.' },
+  { w: 'özür dilerim', en: 'I am sorry', ex: 'Geç kaldım, özür dilerim.', exEn: 'I am late, I am sorry.' },
+  { w: 'tamam', en: 'okay, all right', ex: 'Tamam, hemen geliyorum.', exEn: 'Okay, I am coming right away.' },
+  { w: 'hayat', en: 'life', ex: 'Hayat küçük anlardan oluşur.', exEn: 'Life is made of small moments.' },
+  { w: 'zaman', en: 'time', ex: 'Zaman çok çabuk geçiyor.', exEn: 'Time passes very quickly.' },
+  { w: 'gülümsemek', en: 'to smile', ex: 'Bana gülümsedi.', exEn: 'They smiled at me.' },
+  { w: 'temiz', en: 'clean', ex: 'Mutfak pırıl pırıl temiz.', exEn: 'The kitchen is spotlessly clean.' },
+  { w: 'keyif', en: 'pleasure, enjoyment', ex: 'Kahvemi keyifle içtim.', exEn: 'I enjoyed my coffee.' },
+  { w: 'canım', en: 'my dear', ex: 'Canım, yardım eder misin?', exEn: 'My dear, could you help me?' },
+];
 const dayIndex = (day: DayKey) => {
   const [y, m, d] = day.split('-').map(Number);
   return Math.floor(new Date(y, m - 1, d, 12).getTime() / 86400000);
 };
 export const wordOf = (day: DayKey): Word => WORDS[dayIndex(day) % WORDS.length];
+export const trWordOf = (day: DayKey): TrWord => TR_WORDS[dayIndex(day) % TR_WORDS.length];
 
 export type Lesson = { id: string; emoji: string; title: string; steps: string[]; try: string };
 export const LESSONS: Lesson[] = [

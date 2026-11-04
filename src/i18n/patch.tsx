@@ -32,14 +32,14 @@ export function installTranslationPatch() {
   const OrigText = RN.Text as unknown as ComponentType<Record<string, unknown>>;
   const OrigInput = RN.TextInput as unknown as ComponentType<Record<string, unknown>>;
 
-  const PText = ({ children, ...props }: Record<string, unknown>) =>
+  const PText = ({ children, noTx, ...props }: Record<string, unknown>) =>
     createElement(
       OrigText,
       {
         ...props,
         ...(typeof props.accessibilityLabel === 'string' ? { accessibilityLabel: tx(props.accessibilityLabel) } : null),
       },
-      translateChildren(children) as ReactNode,
+      (noTx ? children : translateChildren(children)) as ReactNode,
     );
   const PInput = (props: Record<string, unknown>) =>
     createElement(OrigInput, {

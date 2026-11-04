@@ -33,7 +33,7 @@ import { ScreenBackground, type Tone } from './ScreenBackground';
 
 type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'bold' | 'small' | 'tiny' | 'eyebrow' | 'lead';
 
-export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant }) {
+export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant; /** Metin çevrilmesin (ör. Türkçe öğrenilen kelime). */ noTx?: boolean }) {
   const c = useColors();
   return <Text maxFontSizeMultiplier={type.maxScale} {...rest} style={[textStyle(v, c), style]} />;
 }

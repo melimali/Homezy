@@ -10,7 +10,7 @@ import { Ring, WeekBars } from '@/components/charts';
 import { BackLink, Bar, Btn, Card, Chip, EmptyMsg, Field, Screen, SecHead, T, Tabs, XBtn } from '@/components/ui';
 import {
   BADGES, bookPct, ensurePick, GOALS, gKey, goalMet, goalPct, growthTitle, kindEmoji, learnOf, lessonOf, markLearn,
-  monthLine, monthRows, openBooks, readMin, readStreak, reshuffle, saveSuggestion, shufflesLeft, suggestionById, WATCH_KINDS, wordOf,
+  monthLine, monthRows, openBooks, readMin, readStreak, reshuffle, saveSuggestion, shufflesLeft, suggestionById, trWordOf, WATCH_KINDS, wordOf,
 } from '@/domain/growth';
 import { uid } from '@/domain/logic';
 import { answered, checkinOf } from '@/domain/mood';
@@ -343,21 +343,24 @@ function LearnTab() {
   const G = S.play.growth;
   const day = gKey(now);
   const L = learnOf(G, day);
+  const en = S.settings.language !== 'tr';
   const w = wordOf(day);
+  const tw = trWordOf(day);
   const lesson = lessonOf(day);
   const [step, setStep] = useState(0);
   return (
     <>
       <Card>
-        <SecHead title="Günün kelimesi" h="h3" right="🇬🇧" />
-        <T v="h2">{w.w}</T>
-        <T v="bold">{w.tr}</T>
-        <T v="small">“{w.ex}”</T>
+        <SecHead title="Günün kelimesi" h="h3" right={en ? '🇹🇷' : '🇬🇧'} />
+        <T v="h2" noTx>{en ? tw.w : w.w}</T>
+        <T v="bold" noTx>{en ? tw.en : w.tr}</T>
+        <T v="small" noTx>“{en ? tw.ex : w.ex}”</T>
+        {en && <T v="small" noTx>{tw.exEn}</T>}
         <Btn
           small
           kind={L.word ? 'soft' : 'primary'}
           label={L.word ? '✓ Öğrendin' : 'Öğrendim'}
-          onPress={() => !L.word && grow('kelime', `🇬🇧 ${w.w}`, 'Kelime', 1, D => markLearn(D.play.growth, day, { word: true }))}
+          onPress={() => !L.word && grow('kelime', `${en ? '🇹🇷' : '🇬🇧'} ${en ? tw.w : w.w}`, 'Kelime', 1, D => markLearn(D.play.growth, day, { word: true }))}
           style={{ alignSelf: 'flex-start' }}
         />
       </Card>

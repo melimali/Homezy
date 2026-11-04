@@ -9,6 +9,7 @@ import { useNow } from '@/hooks/useNow';
 import { flag, useStep } from '@/lib/firstRun';
 import { getPermission, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
+import { prefs } from '@/lib/supabase';
 import { radius, useColors } from '@/theme';
 
 /** Evi kurduktan sonra ana ekranda Moka'nın tek seferlik karşılaması. Sıradaki ilk pencere. */
@@ -45,7 +46,8 @@ export function NotifAsk() {
   const now = useNow();
   const { state: S } = useStore();
   const [perm, setPerm] = useState<string | null>(null);
-  const [done, setDone] = useState(() => flag.has('notif'));
+  // "Şimdi değil" denirse bir kez, en erken ertesi gün tekrar sorulur.
+  const [done, setDone] = useState(() => flag.has('notif') || (flag.has('notif1') && prefs.get('fr.notifDay') === new Date().toDateString()));
   const yes = useRef(false);
   const earned = progressOf(S.play, now).today;
   useEffect(() => {
@@ -63,7 +65,11 @@ export function NotifAsk() {
   const shown = useStep('notif', !done && earned && perm === 'undetermined');
   if (!shown) return null;
   const finish = () => {
-    flag.set('notif');
+    if (yes.current || flag.has('notif1')) flag.set('notif');
+    else {
+      flag.set('notif1');
+      prefs.set('fr.notifDay', new Date().toDateString());
+    }
     setDone(true);
     if (yes.current)
       requestPermission()

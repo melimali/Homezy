@@ -17,21 +17,18 @@ describe('staggerFirstDay', () => {
   it('ilk günde en fazla `keep` iş bugün kalır', () => {
     const S = emptyState();
     for (const t of ['yatak', 'mutfak', 'banyo', 'salon', 'balkon', 'antre'] as const) makeRoom(S, t);
-    staggerFirstDay(S, NOON, 7);
-    const due = Object.values(S.tasks)
-      .flat()
-      .filter(t => t.last == null || NOON - t.last >= t.every * DAY);
-    expect(due.length).toBeLessThanOrEqual(10);
+    staggerFirstDay(S, NOON, 6);
+    expect(allTasks(S, NOON).filter(x => x.s.k !== 'ok').length).toBeLessThanOrEqual(6);
   });
 });
 
 describe('ilk gün şablonlar', () => {
-  it('her şablonda ilk gün en fazla 8 iş bekler', () => {
+  it('her şablonda ilk gün en fazla 6 iş bekler', () => {
     for (const t of TEMPLATES) {
       const S = emptyState();
       applyTemplate(S, t);
       staggerFirstDay(S, NOON);
-      expect(allTasks(S, NOON).filter(x => x.s.k !== 'ok').length).toBeLessThanOrEqual(8);
+      expect(allTasks(S, NOON).filter(x => x.s.k !== 'ok').length).toBeLessThanOrEqual(6);
     }
   });
 });

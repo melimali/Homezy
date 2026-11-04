@@ -99,7 +99,8 @@ export function freshness(t: Task, now = Date.now()) {
 /** Odanın temizlik yüzdesi (0-100). Tatilde, tatile çıkılan andaki hali. Rutini yoksa 100. */
 export function roomClean(S: AppState, rid: string, now = Date.now()) {
   const at = S.mode?.k === 'tatil' ? S.mode.since : now;
-  const ts = S.tasks[rid] || [];
+  // Hiç yapılmamış işler puana girmez (yeni evde 0 iş = %50 gibi tutarsız sonuç çıkmasın).
+  const ts = (S.tasks[rid] || []).filter(t => t.last != null);
   if (!ts.length) return 100;
   return Math.round((100 * ts.reduce((a, t) => a + freshness(t, at), 0)) / ts.length);
 }
@@ -371,11 +372,15 @@ export function makeRoom(S: AppState, type: RoomType) {
  * İlk kayıtta hiç yapılmamış işler hepsi birden "bugün" olmasın (30 iş ürkütücü): en sık işlerden `keep`
  * tanesi bugün kalır, gerisi önümüzdeki günlere dağıtılır (son yapılma tarihi geriye kurulur).
  */
-export function staggerFirstDay(S: AppState, now = Date.now(), keep = 7) {
+export function staggerFirstDay(S: AppState, now = Date.now(), keep = 6) {
   const fresh = S.order.flatMap(rid => (S.tasks[rid] || []).filter(t => t.last == null && t.snooze == null));
   fresh.sort((a, b) => a.every - b.every);
   fresh.slice(keep).forEach((t, i) => {
-    if (t.every < 2) return;
+    if (t.every < 2) {
+      // Günlük iş bugün kalmasın: yarına ertele (sonra her gün gelir).
+      t.snooze = sod(now) + DAY * (1 + (i % 2));
+      return;
+    }
     const d = 1 + (i % Math.min(t.every - 1, 7));
     t.last = ago(t.every - d, now);
   });

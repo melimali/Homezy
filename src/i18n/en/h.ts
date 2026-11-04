@@ -21,4 +21,5 @@ export const EN_H: Record<string, string> = {
   "Moka ve fotoğraf taraması yapay zekâ ile çalışır; cevapları hatalı olabilir. Moka tıbbi, psikolojik, hukuki ya da finansal tavsiye vermez ve bir uzmanın yerini tutmaz. Kendine zarar verme düşüncen ya da acil bir durum varsa Moka’ya değil hemen 112’yi (başka ülkedeysen oradaki acil numarayı) ara ya da bir uzmandan yardım iste. Homezy 13 yaş ve üzeri içindir.": "Moka and photo scanning use AI; answers may be wrong. Moka does not give medical, psychological, legal or financial advice and is no substitute for an expert. If you have thoughts of harming yourself or face an emergency, call your local emergency number (112 in Türkiye) right away instead of asking Moka, or reach out to a professional. Homezy is for ages 13 and over.",
   "Arsa hazır. İlk işini yap, evin temeli atılsın.": "The plot is ready. Do your first chore to lay the foundation.",
   "rutinlerin tazeliği": "how fresh your routines are",
+  "ilk işini yapınca başlar": "starts after your first chore",
 };

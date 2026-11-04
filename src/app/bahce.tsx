@@ -84,16 +84,18 @@ export default function Bahce() {
     <Screen header={false} image={require('../../assets/bahce/bahce-arka.jpg')}>
       <BackLink />
       <Appear>
-        <T v="eyebrow">Puanla bahçe</T>
-        <T v="h1">Moka&apos;nın bahçesi 🌷</T>
-        <T v="lead">Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
+        <Glass scrim style={{ gap: 6 }}>
+          <T v="eyebrow" style={{ color: '#E6C9BD', letterSpacing: 1.2 }}>PUANLA BAHÇE</T>
+          <T v="h1" style={{ color: '#EBF5EE' }}>Moka&apos;nın bahçesi 🌷</T>
+          <T v="lead" style={{ color: '#D5E3DA' }}>Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
+        </Glass>
       </Appear>
 
       <Appear index={1}>
-        <Glass style={styles.wallet}>
+        <Glass scrim style={styles.wallet}>
           <Float amp={3} dur={1800}><Text style={{ fontSize: 26 }}>⭐</Text></Float>
-          <Pulse on={P.points}><Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text></Pulse>
-          <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
+          <Pulse on={P.points}><Text style={[styles.walletN, { color: '#FFFFFF' }]}>{P.points}</Text></Pulse>
+          <Text style={[styles.walletL, { color: '#E6C9BD' }]}>puanın var</Text>
         </Glass>
       </Appear>
 
@@ -103,18 +105,18 @@ export default function Bahce() {
       </Appear>
 
       <Appear index={3}>
-      <Glass style={styles.statsCard}>
+      <Glass scrim style={styles.statsCard}>
         <View style={styles.statsRow}>
           <View style={{ flex: 1 }}>
-            <T v="tiny" style={{ color: c.muted }}>BAHÇE SEVİYESİ</T>
-            <T v="bold" style={{ color: c.ink, fontSize: 16 }}>{rank.title}</T>
+            <T v="tiny" style={{ color: '#B9C7BF' }}>BAHÇE SEVİYESİ</T>
+            <T v="bold" style={{ color: '#FFFFFF', fontSize: 16 }}>{rank.title}</T>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <T v="tiny" style={{ color: c.muted }}>KOLEKSİYON</T>
-            <T v="bold" style={{ color: c.today, fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
+            <T v="tiny" style={{ color: '#B9C7BF' }}>KOLEKSİYON</T>
+            <T v="bold" style={{ color: '#E6C9BD', fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
           </View>
         </View>
-        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2, marginTop: 4 }]}>
+        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: 'rgba(235,245,238,0.18)', marginTop: 4 }]}>
           <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
         </View>
       </Glass>

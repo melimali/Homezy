@@ -29,13 +29,16 @@ type Props = {
   children?: React.ReactNode;
   intensity?: number;
   style?: StyleProp<ViewStyle>;
+  /** Okunurluk için koyu, daha opak zemin (açık ya da koyu temada sabit). */
+  scrim?: boolean;
 };
 
 /** Buzlu cam kart: arkadaki renkleri bulanıklaştırır, ince açık kenar ve yumuşak gölge. Web'de düz yarı saydam yüzey. */
-export function Glass({ children, intensity = 40, style }: Props) {
+export function Glass({ children, intensity = 40, style, scrim }: Props) {
   const c = useColors();
   const dark = useIsDark();
   const tint = dark ? 'rgba(51,58,79,0.45)' : 'rgba(255,254,250,0.55)';
+  const bg = scrim ? 'rgba(40,48,68,0.82)' : tint;
   const edge = dark ? 'rgba(235,245,238,0.18)' : 'rgba(255,255,255,0.75)';
   return (
     <View style={[styles.wrap, { borderColor: edge, shadowColor: c.shadow }, style]}>
@@ -50,7 +53,7 @@ export function Glass({ children, intensity = 40, style }: Props) {
           />
         </Safe>
       )}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint }]} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: bg }]} />
       {children}
     </View>
   );

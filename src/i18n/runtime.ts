@@ -67,7 +67,7 @@ for (const [k, v] of Object.entries(EN)) {
     // Ek yuvası boş olabilir ("{} iş bitti{}." + "3 iş bitti."), diğer {} en az bir karakter ister.
     const headRe = head.split('{}').map((part, i, arr) => (i < arr.length - 1 ? part + slot(part) + (isSlot(part) ? '([^\\n]*?)' : '([^·\\n]+?)') : part)).join('');
     const tailRe = tail ? slot(head) + '([^·\\n]*?)' : '';
-    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v, lit: k.replace(/{}/g, '').length });
+    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v, lit: k.split('{}').join('').length });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;

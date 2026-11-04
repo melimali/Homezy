@@ -117,7 +117,6 @@ export const EN_J: Record<string, string> = {
   'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!': "Settings: notification time, language and privacy. You can replay this tour here. Let's get started!",
   'Selam, ben Moka! Burası senin sayfan: seviyen, serin ve rozetlerin burada.': "Hi, I'm Moka! This is your page: your level, your streak and your badges live here.",
   'İleri': 'Next',
-  'İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.': "Track your medicines here. You get a reminder, and you tick it off when you've taken it.",
   'Arsa hazır': 'Plot ready',
   'İlk işini yap, evin temeli atılsın.': 'Do your first task and lay the foundation of your home.',
   'İlk işini yap': 'Do your first task',

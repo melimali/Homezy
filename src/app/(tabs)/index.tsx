@@ -47,7 +47,6 @@ export default function Home() {
   const { state: S } = useStore();
   const [houseOpen, setHouseOpen] = useState(false);
   const [lofiOpen, setLofiOpen] = useState(false);
-  const [showMore, setShowMore] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
   const { status, user } = useAuth();
@@ -55,6 +54,7 @@ export default function Home() {
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
+  const lastDone = all.filter(x => isDoneToday(x.t, now)).sort((a, b) => (b.t.last ?? 0) - (a.t.last ?? 0))[0];
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
   // Günün mod cevabı varsa selamın altındaki cümle ona göre.
@@ -128,21 +128,6 @@ export default function Home() {
         {!due.length && <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>}
       </Card>
 
-      <Squish
-        onPress={() => setShowMore(v => !v)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: showMore }}
-        style={[styles.moreToggle, { backgroundColor: c.surface }]}
-      >
-        <View style={{ flex: 1 }}>
-          <T v="bold">{showMore ? 'Daha az göster' : 'Daha fazlası'}</T>
-          {!showMore && <T v="tiny">Odalar, haftalık özet, bahçe ve diğer araçlar</T>}
-        </View>
-        <Text style={[styles.chev, { color: c.muted }]}>{showMore ? '⌃' : '⌄'}</Text>
-      </Squish>
-
-      {showMore && <>
-
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
           <Text style={{ fontSize: 26 }}>🗓️</Text>
@@ -163,7 +148,6 @@ export default function Home() {
         } />
         <RoomGrid state={S} now={now} start={3} row />
       </View>
-      </>}
 
       <View style={{ gap: 12 }}>
         <SecHead title="Evim" h="h3" right={
@@ -233,7 +217,7 @@ export default function Home() {
         />
       )}
 
-      {showMore && <><View style={{ gap: 12 }}>
+      <View style={{ gap: 12 }}>
         <SecHead title="Moka ile keyif" h="h3" />
         <Appear index={4} style={styles.quick}>
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
@@ -250,7 +234,6 @@ export default function Home() {
           </Appear>
         )}
       </View>
-      </>}
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
       <PremiumEndedCard />
@@ -391,7 +374,6 @@ const styles = StyleSheet.create({
   mokaImg: { width: 58, height: 58, marginTop: 8 },
   mokaFoot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22, lineHeight: 24 },
-  moreToggle: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
   nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },

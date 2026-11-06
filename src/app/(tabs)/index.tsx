@@ -23,6 +23,7 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
+import { CATS, catOf, disciplineLevel, pickForLevel, type Cat } from '@/domain/discipline';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
@@ -75,6 +76,8 @@ export default function Home() {
   const doneN = all.filter(x => isDoneToday(x.t, now)).length;
   const bell = notifs(S, now).length;
   const next = nextStage(hp.level);
+  const lv = disciplineLevel(hp.streak);
+  const shown = pickForLevel(due, lv);
   const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
 
   return (
@@ -125,11 +128,21 @@ export default function Home() {
         </Squish>
       )}
       <Card bare index={2}>
-        <SecHead title="Sıradaki işler" h="h3" right={due.length > 3 ? (
-          <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - 3} ›</T></Squish>
+        <SecHead title="Sıradaki işler" h="h3" right={due.length > shown.length ? (
+          <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
+        {!!due.length && <T v="small" style={{ marginBottom: 6 }}>{lv.name} · gün {hp.streak}. {lv.goal}</T>}
         <View>
-          {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
+          {(['sabah', 'oda', 'ev'] as Cat[]).map(cat => {
+            const rows = shown.filter(x => catOf(x) === cat);
+            if (!rows.length) return null;
+            return (
+              <View key={cat}>
+                <T v="bold" style={{ marginTop: 6 }}>{CATS[cat].title} <T v="tiny">· {CATS[cat].hint}</T></T>
+                {rows.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
+              </View>
+            );
+          })}
         </View>
         {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
         {!due.length && <EmptyMsg pose="sparkling_complete">{doneN > 0 ? `Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿` : 'Bugünlük her şey tamam. Biraz dinlen.'}</EmptyMsg>}

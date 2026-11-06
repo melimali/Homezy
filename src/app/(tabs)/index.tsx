@@ -117,6 +117,13 @@ export default function Home() {
         </Appear>
       </View>
 
+      {!!S.settings.solo && S.rooms[S.settings.solo] && (
+        <Squish onPress={() => router.push('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ fontSize: 22 }}>🚪</Text>
+          <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>Tek oda modu: {S.rooms[S.settings.solo].name}</Text>
+          <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
+        </Squish>
+      )}
       <Card bare index={2}>
         <SecHead title="Sıradaki işler" h="h3" right={due.length > 3 ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - 3} ›</T></Squish>

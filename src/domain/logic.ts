@@ -256,7 +256,8 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
         });
       });
   }
-  if (set.bills) {
+  const solo = set.solo && S.rooms[set.solo] ? set.solo : null;
+  if (set.bills && !solo) {
     for (const b of S.bills || []) {
       const st = billStatus(b, now);
       if (st.paid || st.k === 'ok') continue;
@@ -278,6 +279,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
     if (left) ns.push({ k: 'today', rid: CARE, url: '/bugun', title: '✨ Bayram temizliği', text: `${left} iş kaldı. Bugün birkaçını bitirelim mi? 💪` });
   }
   for (const rid of S.order) {
+    if (solo && rid !== solo) continue;
     const m = S.mod[rid] || {};
     const room = S.rooms[rid].name;
     const fridge = TYPES[S.rooms[rid].type].mod === 'buzdolabi';

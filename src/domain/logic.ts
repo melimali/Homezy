@@ -247,6 +247,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
         if (care && !set.bills) return;
         ns.push({
           k: s.k,
+          diff: s.diff,
           rid,
           tid: t.id,
           list,
@@ -261,7 +262,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
     for (const b of S.bills || []) {
       const st = billStatus(b, now);
       if (st.paid || st.k === 'ok') continue;
-      ns.push({ k: st.k, rid: CARE, url: '/bakim', title: `🧾 ${b.name} faturası`, text: st.k === 'late' ? `Son ödeme günü ${-st.diff} gün önceydi. Ödediysen işaretle ✓` : st.diff === 0 ? 'Son ödeme günü bugün 📅' : `Son ödeme gününe ${st.diff} gün kaldı 📅` });
+      ns.push({ k: st.k, diff: st.diff, rid: CARE, url: '/bakim', title: `🧾 ${b.name} faturası`, text: st.k === 'late' ? `Son ödeme günü ${-st.diff} gün önceydi. Ödediysen işaretle ✓` : st.diff === 0 ? 'Son ödeme günü bugün 📅' : `Son ödeme gününe ${st.diff} gün kaldı 📅` });
     }
     for (const w of S.warranties || []) {
       const st = warrantyStatus(w, now);

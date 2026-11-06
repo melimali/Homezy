@@ -346,4 +346,6 @@ export type Notice = {
   k: StatusKind; rid: string; title: string; text: string; url?: string;
   /** Rutin ya da bitki hatırlatmasıysa işin kimliği ve listesi (bildirimden "Yaptım" için). */
   tid?: string; list?: TaskList;
+  /** Gün farkı (negatif = gecikmiş). Varsa bildirim satırında okunur zaman olarak gösterilir. */
+  diff?: number;
 };

@@ -5,7 +5,8 @@ import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 're
 
 import { BackLink, Btn, Card, EmptyMsg, Screen, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
-import type { Settings } from '@/domain/types';
+import { prefs } from '@/lib/supabase';
+import type { Notice, Settings } from '@/domain/types';
 import { PremiumLock } from '@/components/PremiumLock';
 import { fmtMinute, getPermission, notificationsAvailable, requestPermission, rescheduleMorningSummaries, smartTimes } from '@/notifications/schedule';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -52,7 +53,18 @@ export default function Bildirimler() {
     if (ok) rescheduleMorningSummaries(S, premium.active).catch(() => {});
   };
 
-  const color = { late: c.late, today: c.warm, ok: c.hi };
+  const [readSet, setRead] = useState<Set<string>>(() => loadRead());
+  const unread = ns.filter(n => !readSet.has(keyOf(n))).length;
+  const save = (r: Set<string>) => {
+    setRead(r);
+    prefs.set('notifRead', JSON.stringify([...r].slice(-300)));
+  };
+  const open = (n: Notice) => {
+    save(new Set(readSet).add(keyOf(n)));
+    if (n.url) router.push(n.url as Href);
+    else router.push({ pathname: '/oda/[id]', params: { id: n.rid } });
+  };
+  const markAll = () => save(new Set([...readSet, ...ns.map(keyOf)]));
 
   return (
     <Screen header={false}>
@@ -76,27 +88,7 @@ export default function Bildirimler() {
         </Card>
       )}
 
-      <View style={{ gap: 8 }}>
-        {ns.map((n, i) => (
-          <Pressable
-            key={i}
-            accessibilityRole="button"
-            onPress={() => (n.url ? router.push(n.url as Href) : router.push({ pathname: '/oda/[id]', params: { id: n.rid } }))}
-            style={({ pressed }) => [styles.notif, { backgroundColor: c.surface, borderColor: c.line }, pressed && { transform: [{ translateY: 1 }] }]}
-          >
-            <View style={[styles.dot, { backgroundColor: color[n.k] }]} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <T v="bold" style={{ fontSize: 14 }}>{n.title}</T>
-              <T v="small" style={{ fontSize: 13 }}>{n.text}</T>
-            </View>
-          </Pressable>
-        ))}
-        {!ns.length && (
-          <Card>
-            <EmptyMsg>Bildirim yok. Evde her şey yolunda.</EmptyMsg>
-          </Card>
-        )}
-      </View>
+      <Inbox ns={ns} onOpen={open} onAllRead={markAll} readSet={readSet} unread={unread} />
 
       <Card>
         <T v="h2">Bildirim ayarları</T>
@@ -177,6 +169,103 @@ export default function Bildirimler() {
   );
 }
 
+const keyOf = (n: Notice) => `${n.k}|${n.title}`;
+
+function loadRead(): Set<string> {
+  try {
+    return new Set(JSON.parse(prefs.get('notifRead') || '[]') as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+/** Okunur zaman: "3 gün gecikti", "Bugün", "Yarın", "5 gün kaldı". */
+function whenLabel(n: Notice): string {
+  const d = n.diff;
+  if (d == null) return n.k === 'late' ? 'Gecikti' : n.k === 'today' ? 'Bugün' : 'Yaklaşıyor';
+  if (d < 0) return `${-d} gün gecikti`;
+  if (d === 0) return 'Bugün';
+  if (d === 1) return 'Yarın';
+  return `${d} gün kaldı`;
+}
+
+const emojiOf = (n: Notice) => {
+  const m = n.title.match(/^\p{Extended_Pictographic}\uFE0F?/u);
+  return m ? m[0] : '🔔';
+};
+const bare = (n: Notice) => n.title.replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, '');
+
+function Inbox({ ns, onOpen, onAllRead, readSet, unread }: { ns: Notice[]; onOpen: (n: Notice) => void; onAllRead: () => void; readSet: Set<string>; unread: number }) {
+  const c = useColors();
+  const [showRead, setShowRead] = useState(false);
+  if (!ns.length)
+    return (
+      <Card>
+        <EmptyMsg pose="wink">Bildirim yok. Evde her şey yolunda, Moka da rahat 🌿</EmptyMsg>
+      </Card>
+    );
+  const fresh = ns.filter(n => !readSet.has(keyOf(n)));
+  const old = ns.filter(n => readSet.has(keyOf(n)));
+  const groups = [
+    { id: 'late', title: '🔴 Önemli', sub: 'Geciken işler', items: fresh.filter(n => n.k === 'late'), col: c.late },
+    { id: 'today', title: '🟠 Bugün', sub: 'Bugün bakılacaklar', items: fresh.filter(n => n.k === 'today'), col: c.warm },
+    { id: 'ok', title: '🔵 Yaklaşan', sub: 'Acelesi yok', items: fresh.filter(n => n.k === 'ok'), col: c.hi },
+  ].filter(g => g.items.length);
+  const colOf = (k: Notice['k']) => (k === 'late' ? c.late : k === 'today' ? c.warm : c.hi);
+  const row = (n: Notice, i: number, isRead: boolean) => (
+    <Pressable
+      key={`${keyOf(n)}${i}`}
+      accessibilityRole="button"
+      accessibilityLabel={`${isRead ? '' : 'Okunmadı. '}${n.title}. ${n.text}`}
+      onPress={() => onOpen(n)}
+      style={({ pressed }) => [styles.notif, { backgroundColor: c.surface, borderColor: colOf(n.k), opacity: isRead ? 0.65 : 1 }, pressed && { transform: [{ translateY: 1 }] }]}
+    >
+      <View style={[styles.icon, { backgroundColor: colOf(n.k) + '22' }]}>
+        <Text style={{ fontSize: 22 }}>{emojiOf(n)}</Text>
+      </View>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <View style={styles.head}>
+          <T v="bold" style={{ fontSize: 14, flex: 1 }}>{bare(n)}</T>
+          {!isRead && <View style={[styles.dot, { backgroundColor: colOf(n.k) }]} />}
+        </View>
+        <T v="small" style={{ fontSize: 13 }}>{n.text}</T>
+        <Text style={[styles.when, { color: colOf(n.k) }]}>{whenLabel(n)}</Text>
+      </View>
+    </Pressable>
+  );
+  return (
+    <View style={{ gap: 14 }}>
+      <View style={styles.sumRow}>
+        <T v="bold" style={{ fontSize: 14, flex: 1 }}>{unread ? `${unread} okunmamış bildirim` : 'Hepsini okudun 🎉'}</T>
+        {unread > 0 && (
+          <Pressable onPress={onAllRead} accessibilityRole="button" hitSlop={8}>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: c.hi }}>Hepsini okundu yap</Text>
+          </Pressable>
+        )}
+      </View>
+      {groups.map(g => (
+        <View key={g.id} style={{ gap: 8 }}>
+          <View style={styles.head}>
+            <T v="bold" style={{ fontSize: 15 }}>{g.title}</T>
+            <Text style={[styles.count, { backgroundColor: g.col + '22', color: g.col }]}>{g.items.length}</Text>
+            <T v="small" style={{ flex: 1, textAlign: 'right' }}>{g.sub}</T>
+          </View>
+          {g.items.map((n, i) => row(n, i, false))}
+        </View>
+      ))}
+      {old.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Pressable onPress={() => setShowRead(v => !v)} accessibilityRole="button" style={styles.head}>
+            <T v="bold" style={{ fontSize: 15, flex: 1 }}>⚪ Eski · okunanlar ({old.length})</T>
+            <Text style={{ fontFamily: fonts.bodyBlack, color: c.muted }}>{showRead ? '▲' : '▼'}</Text>
+          </Pressable>
+          {showRead && old.map((n, i) => row(n, i, true))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: () => void }) {
   const c = useColors();
   return (
@@ -210,8 +299,13 @@ function Toggle({ label, sub, value, onChange, first }: { label: string; sub: st
 }
 
 const styles = StyleSheet.create({
-  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 0 },
-  dot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
+  notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 1.5 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  icon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sumRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  count: { fontFamily: fonts.bodyBlack, fontSize: 12, paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, overflow: 'hidden' },
+  when: { fontFamily: fonts.bodyBlack, fontSize: 12, marginTop: 2 },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 0 },
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },

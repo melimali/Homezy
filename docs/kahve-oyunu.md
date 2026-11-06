@@ -70,3 +70,18 @@ Oyun mantığı saf TS (`logic.ts`: tarif doğrulama, seviye tablosu, puan) + Je
 - Neden 2D: üretim ucuz (sticker tarzı Moka ile uyumlu, Gemini/ChatGPT ile üretilir), 3D'ye göre hızlı, düşük telefonlarda sorunsuz, dokunma hedefleri net. Yeni native paket gerekmez.
 - Teknik: React Native View + Image katmanları, Reanimated yok (mevcut motion.tsx). Katman listesi tek tabloda (`LAYERS: {level, asset, x, y}`).
 - Görsel ihtiyaç listesi (onaydan sonra çıkarılır): 1 arka plan, ~8 ekipman katmanı, ~25 bardak/yiyecek durumu, müşteri 6-8 çeşit.
+
+## 12. Süt kaynatma mekaniği (Melih kararı)
+- Süt pitcher'ı sürüklenip kaynatıcının (buhar kolu) üstüne bırakılır, kendi kendine ısınır. Basılı tutmak yok.
+- Pitcher üstünde sıcaklık göstergesi (soğuk mavi > ideal yeşil bölge > aşırı kırmızı). İdeal bölgede oyuncu pitcher'ı kaynatıcıdan alır (geri sürükler/dokunur).
+- Erken alınca: ılık süt (puan düşer). Geç alınca: yanık süt (süt yenilenir, +süre kaybı).
+- Süreler ideal bölgeye göre; bölge genişliği (tolerans) seviyeyle daralır:
+| Ürün | Kaynama süresi (ideal) | Not |
+|---|---|---|
+| Cappuccino | kısa, ~3 sn | köpüklü |
+| Latte | orta, ~5 sn | |
+| Flat White | uzun, ~7 sn | |
+| Sıcak çikolata / Matcha / Chai latte | orta, ~5 sn | |
+- Aynı anda ikinci pitcher (Sv 6+): iki süt aynı anda kaynar, oyuncu zamanı paylaşır.
+- Soğuk süt (Iced Latte vb.) kaynatılmaz, sadece dökülür.
+- Açık: bölge toleransı Sv1'de ±1 sn, Sv10'da ±0.4 sn önerisi.

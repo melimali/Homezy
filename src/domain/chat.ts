@@ -35,7 +35,7 @@ export type ChatCtx = {
 export function chatCtx(S: AppState, now = Date.now()): ChatCtx {
   const refs = allTasks(S, now);
   // Önce acil işler; sunucu en fazla 80 iş alıyor.
-  const sorted = [...refs].sort((a, b) => a.s.diff - b.s.diff).slice(0, 80);
+  const sorted = [...refs].sort((a, b) => a.s.diff - b.s.diff).slice(0, 40);
   return {
     today: dayKey(now),
     rooms: S.order.filter(id => S.rooms[id]).map(id => ({ id, name: S.rooms[id].name })),

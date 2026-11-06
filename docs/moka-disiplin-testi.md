@@ -1,16 +1,33 @@
 # Moka Disiplin Testi (tasarım, ilk tur)
 
-Durum: sadece tasarım, kod yok. Dal: integration/tum-pr. Mevcut "Seni tanıyalım" (`src/domain/persona.ts`, `src/app/taniyalim.tsx`) bu testin **A bölümü** olur; kişilik tipi artık gösterilir.
+Durum: sadece tasarım, kod yok. Dal: integration/tum-pr. "Seni tanıyalım" (`src/domain/persona.ts`, `src/app/taniyalim.tsx`) ve kişilik testi **tek akışta birleşti** (2026-11-06): tek soru listesi, kişilik tipi sonda gösterilir.
 
-## 0. Akış
-Moka tanıtımı → **Amaç ekranı** → A bölümü (ev, 6-7 soru) → B bölümü (disiplin, 10 soru + dallanan 2 soru) → Moka "notlarını alıyor" → **Tip ekranı** → **Plan ekranı** → ev kurulumu.
-Toplam ≈ 17-19 soru, tek dokunuş, ilerleme çubuğu, geri tuşu, "Atla" (varsayılan tip: Dengeli Moka). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
+## 0. Akış (tek akış: önce tanı, sonra tip, sonra plan)
+Moka tanıtımı → **Amaç ekranı** → **Seni tanıyalım** (tek soru listesi, aşağıda) → Moka "notlarını alıyor" → **Tip ekranı** → **Plan ekranı** → ev kurulumu.
+"Ev" ve "disiplin" soruları artık iki ayrı bölüm değil, **tek numaralı liste** (Q1-Q17). Kullanıcı bölüm adı görmez; sadece "Moka seni tanıyor" ve ilerleme çubuğu (örn. 7/17). Aynı cevaplar hem ev planını/yemeği (persona) hem tipi/planı besler, hiçbir soru iki kez sorulmaz. Tip adları (8) değişmez.
+Toplam 17 soru (+ B1'de seçilen alan başına 1 dallanan soru, en çok 3) , tek dokunuş, geri tuşu, "Atla" (varsayılan tip: Dengeli Moka). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
 
-## 1. Sorular
-### A. Ev (mevcut, değişmez)
-`who, rhythm, cook, effort(sadece cook≠sevmem), tastes, budget, style` → persona, yemek, ev planı, sabah saati. Disiplin skoruna katkısı: `style=duzenli` → Düzen +2; `rhythm=yogun` → Enerji kısıtı (günlük süre ≤ 30 dk varsayılanı).
+**İlk indirmede sorulmayanlar (Melih, 2026-11-06):** "Bugün nasıl hissediyorsun?" ve "Bugün evde misin / planın var mı?" (`MoodCheckin`, `src/domain/mood.ts`) tanıma akışında ve ilk açılışta **sorulmaz**. Kullanıcı ilk gün doğrudan tanıma → tip → plan → ev kurulumu görür.
 
-### B. Disiplin (yeni)
+**Günlük açılış sorusu (ayrı kural):** "Bugün nasılsın?" (+ "bugün için planın var mı?") **ertesi günden itibaren**, o günün ilk açılışında bir kez sorulur (mevcut `MoodCheckin` davranışı; "Atla" ile o gün bir daha sorulmaz). Uygulama kuralı: kurulum günü (`setup` tarihi) için `checkIn` istenmez; `dayKey(now) > kurulum günü` olunca açılır. Tanıma testi bu soruyla karışmaz: biri kalıcı kişilik, diğeri günlük ruh hali.
+
+## 1. Sorular (tek liste)
+Numaralar sunum sırası. "Besler" sütunu ev (persona/yemek/plan) ya da disiplin (tip/plan) tarafını gösterir. Eski adlar parantezde.
+
+| Q | Soru | Besler |
+|---|---|---|
+| Q1 | Evde kimlerle yaşıyorsun? (`who`) | ev planı, persona |
+| Q2 | Günün genelde nasıl geçiyor? (`rhythm`) | persona; `yogun` → günlük süre ≤ 30 dk |
+| Q3 | Yemek yapmayı sever misin? (`cook`) | yemek |
+| Q4 | Mutfakta ne kadar uğraşırsın? (`effort`, sadece Q3≠sevmem) | yemek |
+| Q5 | Neler yemeyi seversin? (`tastes`) | yemek |
+| Q6 | Yemek bütçen nasıl? (`budget`) | yemek |
+| Q7 | Evi nasıl tutarsın? (`style`) | persona; `duzenli` → Düzen +2 |
+| Q8-Q17 | B1-B10 (aşağıdaki tablo; B1 → Q8 … B10 → Q17) | tip + plan |
+
+Kısaltma: soru sayısı fazla gelirse zorunlu 12 (Q1, Q2, Q3, Q5, Q7, Q8-Q14), kalanı "Daha iyi tanıyalım" opsiyonel.
+
+### Disiplin soruları (Q8-Q17)
 | # | Soru | Seçenekler | Besler |
 |---|---|---|---|
 | B1 | Hangi alanlarda disiplin istiyorsun? (en çok 3) | 🏠 Ev düzeni · 💼 İş / kariyer · 📚 Ders / sınav · 🏋️ Spor · 😴 Sağlık / uyku · 🌱 Kişisel gelişim · 💰 Para · 🧘 Ruh hali | `areas` (plan modülleri) |
@@ -31,7 +48,7 @@ Dallanan sorular (sadece B1'de seçilen alan için, alan başına 1, en çok 3):
 - 😴 Sağlık: "Uyku saatin?" (<6 / 6-7 / 8+) → akşam rutini.
 - 🌱 Gelişim: "Ne öğrenmek?" (okuma / dil / beceri / meditasyon).
 - 💰 Para: "Takip ediyor musun?" (hayır / kafamda / not alıyorum).
-- 🏠 Ev ve 🧘 Ruh: ek soru yok (A bölümü + mood kaydı yeter).
+- 🏠 Ev ve 🧘 Ruh: ek soru yok (Q1-Q7 + günlük mood kaydı yeter).
 
 ## 2. Skor ve tip
 Beş eksen, her biri 0-10 (başlangıç 5). Cevap puanları:
@@ -100,7 +117,7 @@ Alan sınırı: ilk hafta en çok 3 alan, 2'den fazlaysa her gün en çok 1 gör
 | # | Ekran | İçerik | Moka (mevcut poz / yeni) |
 |---|---|---|---|
 | E1 | **Amaç** (tanıtımın son sayfası) | "Moka sana özel bir disiplin planı hazırlayacak." Alt: "Birkaç soru, 2 dakika." Buton "Hadi başlayalım" · "Şimdi değil" | `moka_checklist` / `moka_thumbs_up`; yeni: Moka gözlük + defter (**yeni**, "plan yapan Moka") |
-| E2 | Soru ekranı (A+B) | Üstte ilerleme (örn. 7/17), büyük emoji kartlar, alt-geri tuşu; B bölümü başında kısa geçiş "Şimdi seni biraz daha yakından tanıyayım" | `moka_analyzing`; her cevapta kısa tepki (`moka_wink`, `moka_amazed`) |
+| E2 | Soru ekranı (Q1-Q17) | Üstte ilerleme (örn. 7/17), büyük emoji kartlar, alt-geri tuşu; Q8 öncesi kısa geçiş yok, akış kesintisiz (tek liste) | `moka_analyzing`; her cevapta kısa tepki (`moka_wink`, `moka_amazed`) |
 | E3 | Alan seçimi (B1) | 8 büyük kare, en çok 3 | `moka_todo` |
 | E4 | Notlarını alıyor | Yükleme: "Moka notlarını alıyor…" 2-3 sn | `moka_laptop` |
 | E5 | **Tip ekranı** | Büyük tip kartı, tip emojisi + adı, "Moka senin için böyle düşünüyor:" + 2 cümlelik yorum, 5 eksen küçük çubuklar (Düzen, Başlama, Odak, Dayanıklılık, İçsel güdü), yan renk. Paylaş (Premium'sız da) | Tip başına bir poz (aşağıda) |
@@ -111,7 +128,7 @@ Tip görselleri: her tip için ayrı ChatGPT görseli, bkz. bölüm 6.
 Hareket: `Appear` ile kart beliriş, tip açıklanırken `Burst`, çubuklar sırayla dolar. "Hareketi azalt" saygı gösterilir.
 
 ## 5. Açık kararlar (Melih)
-1. Soru sayısı 17-19 çok mu? Öneri: zorunlu 12 (A'dan 5 + B'den 7), geri kalanı "Daha iyi tanıyalım" opsiyonel.
+1. Soru sayısı 17 çok mu? Öneri: zorunlu 12 (bkz. bölüm 1), geri kalanı "Daha iyi tanıyalım" opsiyonel.
 2. Tip adları/emojileri (8 tip) ve Moka cümleleri uygun mu? Gerekirse İngilizce karşılıklar ayrıca yazılır.
 3. Test sadece yeni kullanıcıya mı, mevcut kullanıcılara da "Moka seni tanıyor" kartıyla mı sunulsun? (Öneri: ikisi de.)
 4. Tip paylaşım görseli ilk sürümde olsun mu? (Öneri: evet, düşük maliyet.)

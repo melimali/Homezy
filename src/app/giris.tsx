@@ -21,7 +21,8 @@ import { cloudEnabled } from "@/lib/supabase";
 import { legalUrl } from "@/lib/links";
 import { useStore } from "@/store/AppStore";
 import { brand, fonts, radius, useColors } from "@/theme";
-import { Squish } from "@/components/motion";
+import { Appear, Float, Squish } from "@/components/motion";
+import { MOKA_ASSETS } from "@/constants/moka";
 
 type Mode = "kayit" | "giris" | "sifre";
 
@@ -144,15 +145,25 @@ export default function Giris() {
           )}
         </View>
 
-        <View>
-          <T v="eyebrow">
-            {tx(
-              mode === "sifre" ? "Şifremi unuttum" : "Hesap",
-            ).toLocaleUpperCase(dateLocale())}
-          </T>
-          <T v="h1">{title}</T>
-          <T v="lead">{lead}</T>
-        </View>
+        <Appear index={1} style={[st.hero, { backgroundColor: c.accentSoft }]}>
+          <Float amp={3} dur={2800}>
+            <View style={[st.mokaBubble, { backgroundColor: c.surface }]}>
+              <Image
+                source={MOKA_ASSETS[mode === "kayit" ? "sipping" : mode === "giris" ? "happy" : "reading"]}
+                style={st.moka}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+          </Float>
+          <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+            <T v="eyebrow">
+              {tx(mode === "sifre" ? "Şifremi unuttum" : "Hesap").toLocaleUpperCase(dateLocale())}
+            </T>
+            <T v="h2">{title}</T>
+          </View>
+        </Appear>
+        <T v="lead" style={{ paddingHorizontal: 6, marginTop: -6 }}>{lead}</T>
 
         {mode !== "sifre" && (
           <View
@@ -184,7 +195,7 @@ export default function Giris() {
           </View>
         )}
 
-        <Card style={{ gap: 10 }}>
+        <Card style={{ gap: 14, padding: 18 }}>
           {mode === "kayit" && (
             <Label text="Adın">
               <Field
@@ -336,11 +347,16 @@ export default function Giris() {
       {!fromApp && mode !== "sifre" && (
         <View
           style={{
-            gap: 6,
+            gap: 8,
             paddingHorizontal: 18,
-            paddingTop: 10,
-            paddingBottom: insets.bottom + 12,
-            backgroundColor: c.bg,
+            paddingTop: 14,
+            paddingBottom: insets.bottom + 14,
+            backgroundColor: c.surface,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            width: "100%",
+            maxWidth: 480,
+            alignSelf: "center",
           }}
         >
           <Btn
@@ -350,7 +366,7 @@ export default function Giris() {
             disabled={busy}
           />
           {error && <Note color={c.late} bg={c.lateSoft} text={error} />}
-          <T v="small" style={{ textAlign: "center" }}>
+          <T v="small" style={{ textAlign: "center", paddingHorizontal: 8 }}>
             Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım
             sekmesinden hesap açabilirsin.
           </T>
@@ -436,6 +452,9 @@ const st = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
+  hero: { flexDirection: "row", alignItems: "center", gap: 14, borderRadius: radius.card, padding: 16 },
+  mokaBubble: { width: 92, height: 92, borderRadius: 46, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  moka: { width: 84, height: 84, marginTop: 6 },
   wordmark: { width: 96, height: 32 },
   seg: { flexDirection: "row", borderRadius: radius.pill, padding: 4 },
   segBtn: {

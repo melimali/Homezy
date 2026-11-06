@@ -28,6 +28,8 @@ const B = 14;
 const SLAB = 10;
 const WALL_H = 34;
 const INNER_H = 20;
+/** Balkonun dışa bakan kenarı: korkuluk yüksekliği (evin duvarı değil). */
+const RAIL_H = 9;
 const FRONT_H = 8;
 const T = 0.12;
 
@@ -1342,13 +1344,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     const winOn = (parity: number) => wm === 2 || (wm === 1 && (r + col) % 2 === parity);
     const winFill = isNight && p >= 70 ? '#FFF2B2' : c.hi;
     if (n !== id && L >= 2) {
-      const h = wallH(n ? INNER_H : WALL_H);
+      const balc = S.rooms[id]?.type === 'balkon';
+      const h = wallH(n ? INNER_H : balc ? RAIL_H : WALL_H);
       if (L === 2) frame(k + 'n', r, col, T * 0.7, 1, h);
       else {
         wall(k + 'n', r, col, T, 1, h, wallTint(id, !n));
         if (L >= 5 && doors.has(i + 'n')) door(k + 'n', r, col, 'n', false);
         if (L >= 5 && entrance === i + 'n') door(k + 'n', r, col, 'n', true);
-        else if (!n && L >= 5 && winOn(0)) {
+        else if (!n && !balc && L >= 5 && winOn(0)) {
           add({ key: k + 'nw', fill: winFill, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + T + 0.1, col + 0.5, 19);
@@ -1361,7 +1364,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         }
         if (idle >= 2 && (r + col) % 2 === 1)
           crack(k + 'nc', [P(r + T, col + 0.5, h - 2), P(r + T, col + 0.6, h - 7), P(r + T, col + 0.47, h - 11), P(r + T, col + 0.58, h - 16)]);
-        if (!n && L >= 26)
+        if (!n && !balc && L >= 26)
           for (const v of [0.2, 0.5, 0.8]) {
             const [x, y] = P(r, col + v, WALL_H + 3);
             els.push(<Circle key={k + 'li' + v} cx={x} cy={y} r={1.8} fill={GOLD} />);
@@ -1369,14 +1372,15 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       }
     }
     if (w !== id && L >= 2) {
-      const h = wallH(w ? INNER_H : WALL_H);
+      const balc = S.rooms[id]?.type === 'balkon';
+      const h = wallH(w ? INNER_H : balc ? RAIL_H : WALL_H);
       const r0 = n !== id ? r + T : r;
       if (L === 2) frame(k + 'w', r, col, 1, T * 0.7, h);
       else {
         wall(k + 'w', r0, col, r + 1 - r0, T, h, wallTint(id, !w));
         if (L >= 5 && doors.has(i + 'w')) door(k + 'w', r, col, 'w', false);
         if (L >= 5 && entrance === i + 'w') door(k + 'w', r, col, 'w', true);
-        else if (!w && L >= 5 && winOn(1)) {
+        else if (!w && !balc && L >= 5 && winOn(1)) {
           add({ key: k + 'ww', fill: winFill, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + 0.5, col + T + 0.1, 19);

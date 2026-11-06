@@ -70,11 +70,13 @@ export const everyText = (every: number) => (every === 1 ? 'her gün' : `${every
 
 export function allTasks(S: AppState, now = Date.now()): TaskRef[] {
   const out: TaskRef[] = [];
+  const solo = S.settings.solo && S.rooms[S.settings.solo] ? S.settings.solo : null;
   for (const rid of S.order) {
+    if (solo && rid !== solo) continue;
     (S.tasks[rid] || []).forEach(t => out.push({ t, rid, list: 'tasks', s: statusIn(S, t, now) }));
     (S.mod[rid]?.plants || []).forEach(t => out.push({ t, rid, list: 'plants', s: statusIn(S, t, now) }));
   }
-  (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
+  if (!solo) (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
   return out;
 }
 

@@ -1,6 +1,6 @@
 import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
-import { Animated, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
@@ -14,6 +14,7 @@ import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
+import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
@@ -32,7 +33,6 @@ import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf }
 import { limits, themeFor } from '@/domain/premium';
 import { mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
-import { HOME_MOKA_SEATED } from '@/constants/curated-scenes';
 import { HeroMoka } from '@/components/HeroMoka';
 import { sessionHeroScene } from '@/domain/heroScenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -78,6 +78,9 @@ export default function Home() {
   const next = nextStage(hp.level);
   const lv = disciplineLevel(hp.streak);
   const shown = pickForLevel(due, lv);
+  // Moka'nın hali: iş bitince kutlama, gece ya da hiç iş yokken uykulu, aksi hâlde mutlu.
+  const hr = new Date(now).getHours();
+  const spriteAnim: SpriteAnim = !due.length && doneN > 0 ? 'party' : hr >= 23 || hr < 6 || (!due.length && !doneN) ? 'sleepy' : 'happy';
   const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
 
   return (
@@ -103,7 +106,7 @@ export default function Home() {
           <View style={styles.mokaRow}>
             <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <Image source={HOME_MOKA_SEATED} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+                <MokaSprite anim={spriteAnim} size={54} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>
@@ -145,7 +148,12 @@ export default function Home() {
           })}
         </View>
         {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
-        {!due.length && <EmptyMsg pose="sparkling_complete">{doneN > 0 ? `Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿` : 'Bugünlük her şey tamam. Biraz dinlen.'}</EmptyMsg>}
+        {!due.length && (doneN > 0 ? (
+          <View style={{ alignItems: 'center', gap: 6 }}>
+            <MokaSprite anim="party" size={120} />
+            <T v="bold" style={{ textAlign: 'center' }}>{`Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿`}</T>
+          </View>
+        ) : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
       </Card>
 
       {weekReady && (

@@ -1,5 +1,5 @@
 import { dateLocale, tx } from '@/i18n/runtime';
-import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
+import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, roomEmoji, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
 import { baseCare, billStatus, dayDiff, emptyProfile, GUEST_ROOMS, seasonalNow, taskMin, warrantyStatus } from './home';
 import { defaultSettings, emptyPlay } from './play';
 import { laundryLine, photoLine, statusTail, stockLine, stockTitle, taskLine } from './messages';
@@ -83,7 +83,7 @@ export function allTasks(S: AppState, now = Date.now()): TaskRef[] {
 /** Görünen ad ve emoji: oda ya da "Ev bakımı". */
 export function placeOf(S: AppState, rid: string) {
   const r = S.rooms[rid];
-  return r ? { name: r.name, emoji: ROOM_EMOJI[r.type], type: r.type as RoomType | null } : { name: 'Ev bakımı', emoji: '🔧', type: null };
+  return r ? { name: r.name, emoji: roomEmoji(r.type, S.order.slice(0, S.order.indexOf(rid)).filter(x => S.rooms[x]?.type === r.type).length), type: r.type as RoomType | null } : { name: 'Ev bakımı', emoji: '🔧', type: null };
 }
 
 /* ---------- canlı ev haritası: temizlik yüzdesi ---------- */

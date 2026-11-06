@@ -6,7 +6,7 @@ import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
-import { Appear, Squish } from '@/components/motion';
+import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { useStep } from '@/lib/firstRun';
@@ -289,10 +289,12 @@ export default function Hesap() {
       <TitleBar title={t('profile')} right={<IconBtn icon="⚙️" label={t('settings')} onPress={() => setCat('ayar')} />} />
 
       <View {...mark('profil')}>
-      <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
-        <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
-          <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
-        </View>
+      <Appear index={1} style={[st.hero, { backgroundColor: c.accentSoft }]}>
+        <Float amp={3} dur={2800}>
+          <View style={[st.avatar, { backgroundColor: c.surface }]}>
+            <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </View>
+        </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
           <View>
             <T v="h2" numberOfLines={1}>{name}</T>
@@ -302,9 +304,9 @@ export default function Hesap() {
             <View style={[st.level, { backgroundColor: c.hi }]}>
               <Text style={[st.levelT, { color: c.onBadge }]}>{t('level')} {hp.level}</Text>
             </View>
-            <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} style={{ flex: 1 }} />
+            <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} height={10} style={{ flex: 1 }} />
           </View>
-          <T v="tiny">{`🔥 ${hp.streak} ${t('gün seri')} · 🏆 ${earned}/${badges.length}`}</T>
+          <T v="tiny" numberOfLines={1}>{next ? `Sonraki: ${next.emoji} ${next.name}` : 'En üst seviyedesin 🎉'}</T>
         </View>
       </Appear>
       </View>
@@ -317,8 +319,8 @@ export default function Hesap() {
           { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },
         ]).map(x => (
           <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
-            <Text style={{ fontSize: 18 }}>{x.e}</Text>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>{x.n}</Text>
+            <Text style={{ fontSize: 22 }}>{x.e}</Text>
+            <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{x.n}</Text>
             <T v="tiny" numberOfLines={1}>{x.l}</T>
           </View>
         ))}
@@ -326,11 +328,11 @@ export default function Hesap() {
 
       <Appear index={3} style={{ gap: 8 }}>
         <T v="h3" style={st.sec}>⚡ Hızlı erişim</T>
-        <View style={st.pins}>
+        <View style={[st.pinsCard, { backgroundColor: c.surface }]}>
           {pins.map(x => (
             <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
               <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
-                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
+                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 26 }}>{x.emoji}</Text></View>
                 <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
               </Squish>
             </View>
@@ -341,13 +343,16 @@ export default function Hesap() {
       {SECTIONS.map((sec, si) => (
         <Appear key={sec.title} index={4 + si} style={{ gap: 8 }}>
           <T v="h3" style={st.sec}>{sec.title}</T>
-          <View style={st.grid}>
-            {sec.keys.map(k => cats.find(x => x.key === k)!).map(x => (
-              <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)} style={st.tileWrap}>
-                <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
-                  <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
-                  <T v="h3" numberOfLines={1}>{x.title}</T>
-                  <T v="tiny" numberOfLines={2}>{x.sub}</T>
+          <View style={[st.group, { backgroundColor: c.surface }]}>
+            {sec.keys.map(k => cats.find(x => x.key === k)!).map((x, i) => (
+              <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)}>
+                <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
+                  <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <T v="h3" numberOfLines={1}>{x.title}</T>
+                    <T v="tiny" numberOfLines={1}>{x.sub}</T>
+                  </View>
+                  <Text style={[st.chev, { color: c.muted }]}>›</Text>
                 </Squish>
               </View>
             ))}
@@ -433,7 +438,9 @@ const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 
 
 const st = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 8 },
-  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 10, alignItems: 'center', gap: 1 },
+  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2 },
+  hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  pinsCard: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 8, flexDirection: 'row', gap: 4 },
   sec: { paddingHorizontal: 4 },
   pinIn: { alignItems: 'center', gap: 6 },
   tileWrap: { width: '48.5%' },
@@ -444,8 +451,8 @@ const st = StyleSheet.create({
   tile: { borderRadius: radius.card, padding: 14, gap: 4 },
   tileIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarImg: { width: 60, height: 60, marginTop: 6 },
+  avatar: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: 80, height: 80, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   level: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
   levelT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, textTransform: 'uppercase' },

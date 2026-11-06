@@ -12,8 +12,8 @@ export const MED_DISCLAIMER = 'Homezy tıbbi tavsiye vermez. İlaç ve dozları 
 
 export const doseKey = (id: string, time: string) => `${id}@${time}`;
 
-export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now()): Med => ({
-  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now,
+export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now(), kind: 'ilac' | 'takviye' = 'ilac'): Med => ({
+  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now, kind,
 });
 
 export type Dose = { med: Med; time: string; key: string; mark?: MedMark };

@@ -294,7 +294,9 @@ export type HomeData = {
 export type SavedHome = HomeData & { id: string; name: string; setup: boolean };
 
 /** İlaç takibi: sadece telefonda tutulur, buluta yedeklenmez (sağlık verisi). `days`: boşsa her gün, değilse 0 pazar … 6 cumartesi. */
-export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number };
+export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number;
+  /** 'takviye': vitamin, mineral vb. Yoksa ilaç. */
+  kind?: 'ilac' | 'takviye' };
 export type MedMark = { s: 'taken' | 'skipped'; at: number };
 /** Gün anahtarı → `ilacId@HH:MM` → işaret. */
 export type MedLog = Record<string, Record<string, MedMark>>;

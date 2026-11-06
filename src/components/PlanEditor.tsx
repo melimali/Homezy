@@ -235,7 +235,11 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     setTplArm(null);
     setTool(null);
     remember();
-    update(D => applyTemplate(D, t));
+    update(D => {
+      applyTemplate(D, t);
+      // "Sadece odam": tek oda modu da açılır.
+      D.settings.solo = t.id === 'tek' ? D.order[0] ?? null : null;
+    });
     setFloor(0);
     sfx('pop');
     toast(`${t.label} çizildi. Odalara dokunup düzenleyebilirsin.`);

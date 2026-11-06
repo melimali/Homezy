@@ -148,21 +148,29 @@ Hareket: `Appear` ile kart beliriş, tip açıklanırken `Burst`, çubuklar sır
 6. Para modülü ilk sürümde sadece hatırlatma mı kalsın? (Öneri: evet.)
 7. Yeni görseller ChatGPT ile üretilecek (bölüm 6); 8 tip görseli gelene kadar mevcut pozlar yedek olsun mu? (Öneri: evet.)
 
-## 6. ChatGPT görsel prompt'ları (8 tip)
-Kullanım: önce ChatGPT'ye mevcut Moka çıkartmalarından 1-2 tanesini (ör. `assets/moka/moka_happy.webp`) yükle, **ortak başlığı** yapıştır, sonra tipin satırını ekle. Her tip için ayrı sohbet açma, aynı sohbette sırayla iste (tutarlılık artar). Çıktıyı `scripts/clean-moka-edges.py` ile temizle.
+## 6. Görsel prompt'ları: 8 tip, tek sayfa, 4K
+Hedef: **tek bir görsel**, 3840x2160 (4K, 16:9), 4 sütun x 2 satır ızgara, her hücrede bir tip. Sonra `scripts/slice-moka.py` ile hücrelere kesilir ve `scripts/clean-moka-edges.py` ile temizlenir. Dosyalar: `assets/moka/tip/moka_<planli|atik|sakin|odakli|dalgin|hirsli|tembel|dengeli>.webp`.
 
-**Ortak başlık (hepsinde aynı):**
-> Yüklediğim görseldeki Moka karakterini birebir koru: tombul, yuvarlak hatlı, yumuşak gölgeli kahveci kakapo papağanı; aynı yeşil-sarı tüy renkleri, aynı yüz ve göz stili, aynı oran ve çizgi kalınlığı. Stil: sevimli çıkartma (sticker), kabarık 3D-vari pastel çizim, krem beyaz kalın kenarlık, şeffaf arka plan, kare 1024x1024, karakter ortada ve tam görünür. Aşağıda yalnızca poz, ifade ve küçük aksesuar değişsin, karakterin tasarımı değişmesin. Yazı ekleme.
+Kullanım: ChatGPT'ye mevcut Moka çıkartmalarından 2-3 tanesini yükle (ör. `assets/moka/moka_happy.webp`, `moka_checklist.webp`, `moka_lazy_coffee.webp`), aşağıdaki **tek prompt'u** yapıştır. 8 karakter tek görselde tutarsız çıkarsa: aynı sohbette önce 4'lü iki satır iste ya da her hücreyi ayrı iste (hücre prompt'ları aşağıda ayrı).
 
-| Tip | Moka'nın hâli | Prompt (başlığın sonuna ekle) |
-|---|---|---|
-| 📋 **Planlı Moka** (planlayıcı, düzenli) | Filtre kahve, plan defteri | Moka, elinde açık kareli plan defteri ve kalem, yanında cam filtre kahve demliği, küçük yuvarlak gözlük; kendinden emin hafif gülümseme. |
-| ⚡ **Atik Moka** (hızlı başlayan) | Minik espresso fincanı, zıplıyor | Moka, elinde minik beyaz espresso fincanı, havaya zıplıyor, arkada küçük hız çizgileri ve kıvılcımlar; heyecanlı, kararlı geniş gülümseme. |
-| 🧊 **Sakin Moka** (sabırlı, istikrarlı) | Buzlu kahve, sakin | Moka, elinde buz küplü uzun cam soğuk kahve, yavaş ve sakin duruyor, gözler yarı kapalı huzurlu; yanında küçük bir kum saati. |
-| 🎯 **Odaklı Moka** (odaklı) | Cezve ve küçük fincan | Moka, bakır cezve ve küçük süslü Türk kahvesi fincanıyla, keskin odaklı bakış, dik duruş; yanında içinde ok olan küçük bir hedef tahtası. |
-| 🎨 **Dalgın Moka** (dağınık ama yaratıcı) | Köpük sanatı, renkli noktalar | Moka, elinde kalp latte-art'lı cappuccino fincanı, etrafında uçuşan minik yıldız, nota ve boya lekeleri; meraklı, neşeli, hafif şaşkın ifade. |
-| 🔥 **Hırslı Moka** (ya hep ya hiç, enerjik) | Çift shot, buharlı | Moka, iki küçük espresso fincanını birden tutuyor, fincanlardan yükselen buhar hafif alev gibi; hırslı, tutkulu ifade, kaşlar hafif çatık ama sevimli. |
-| 🥛 **Tembel Moka** (özgür, kendi hızında) | Battaniye, sütlü kahve | Moka, yumuşak battaniyeye sarılmış, büyük süt köpüklü latte kupası, rahat bir yastıkta oturuyor; yarı kapalı keyifli gözler, rahat gülümseme. |
-| ☕ **Dengeli Moka** (dengeli) | Moka'nın kendisi | Moka, klasik hâliyle, iki kanadı yana açık, sıcak dengeli gülümseme, yanında küçük bir kahve fincanı ve yeşil yaprak; sade, huzurlu. |
+### 6.1 Tek sayfa ana prompt (kopyala-yapıştır)
+> Yüklediğim görsellerdeki Moka karakterini birebir koru: tombul, yuvarlak hatlı, yumuşak gölgeli kahveci kakapo papağanı; aynı yeşil-sarı tüy renkleri, aynı yüz ve göz stili, aynı oran ve çizgi kalınlığı. Bana 3840x2160 piksel (4K, 16:9) tek bir görsel çiz: 4 sütun x 2 satır eşit ızgara, toplam 8 hücre, her hücrede Moka'nın farklı bir kişilik hâli. Hücreler arası sabit boşluk, her hücrenin kendi arka planı düz yumuşak pastel renk, hücre köşeleri yuvarlak, hücre içinde karakter ortada ve tam görünür (kesilmesin), karakter hücrenin yaklaşık %75'i. Stil: sevimli çıkartma, kabarık 3D-vari pastel çizim, krem beyaz kalın kenarlık, yumuşak gölge, tüm hücrelerde aynı ışık ve çizgi kalınlığı. Görselde hiçbir yazı, rakam ya da logo olmasın. Hücreler soldan sağa, yukarıdan aşağıya şu sırada:
+> 1) Planlı Moka: elinde açık kareli plan defteri ve kalem, yanında cam filtre kahve demliği, küçük yuvarlak gözlük, kendinden emin hafif gülümseme. Arka plan kahve tonu.
+> 2) Atik Moka: elinde minik beyaz espresso fincanı, havaya zıplıyor, arkada küçük hız çizgileri ve kıvılcımlar, heyecanlı kararlı geniş gülümseme. Arka plan turuncu.
+> 3) Sakin Moka: elinde buz küplü uzun cam soğuk kahve, yavaş ve sakin duruyor, gözler yarı kapalı huzurlu, yanında küçük kum saati. Arka plan açık mavi.
+> 4) Odaklı Moka: bakır cezve ve küçük süslü Türk kahvesi fincanıyla, keskin odaklı bakış, dik duruş, yanında içinde ok olan küçük hedef tahtası. Arka plan lacivert.
+> 5) Dalgın Moka: elinde kalp latte-art'lı cappuccino fincanı, etrafında uçuşan minik yıldız, nota ve boya lekeleri, meraklı neşeli hafif şaşkın ifade. Arka plan pembe.
+> 6) Hırslı Moka: iki küçük espresso fincanını birden tutuyor, fincanlardan yükselen buhar hafif alev gibi, hırslı tutkulu ifade, kaşlar hafif çatık ama sevimli. Arka plan kırmızı-turuncu.
+> 7) Tembel Moka: yumuşak battaniyeye sarılmış, büyük süt köpüklü latte kupası, rahat bir yastıkta oturuyor, yarı kapalı keyifli gözler, rahat gülümseme. Arka plan krem.
+> 8) Dengeli Moka: klasik hâliyle, iki kanadı yana açık, sıcak dengeli gülümseme, yanında küçük kahve fincanı ve yeşil yaprak, sade huzurlu. Arka plan mint.
 
-Not: tip kartı arka plan rengi: Planlı kahve, Atik turuncu, Sakin mavi, Odaklı lacivert, Dalgın pembe, Hırslı kırmızı-turuncu, Tembel krem, Dengeli mint. Dosya adı önerisi: `assets/moka/tip/moka_<planli|atik|sakin|odakli|dalgin|hirsli|tembel|dengeli>.webp`.
+Kontrol listesi (üretimden sonra): 8 hücre var mı · karakter her hücrede aynı mı · hiç yazı yok mu · karakter hücreden taşmıyor mu · çözünürlük 3840x2160. Olmazsa "sadece 3. ve 6. hücreyi aynı stilde yeniden çiz" diye düzelttir.
+
+### 6.2 Tek tek hücre prompt'u (yedek, 4K kare 2160x2160)
+Ortak başlık (her hücrede aynı):
+> Yüklediğim görseldeki Moka karakterini birebir koru: tombul, yuvarlak hatlı, yumuşak gölgeli kahveci kakapo papağanı; aynı yeşil-sarı tüy renkleri, aynı yüz ve göz stili, aynı oran ve çizgi kalınlığı. Stil: sevimli çıkartma, kabarık 3D-vari pastel çizim, krem beyaz kalın kenarlık, şeffaf arka plan, kare 2160x2160, karakter ortada ve tam görünür. Yalnızca poz, ifade ve aksesuar değişsin. Yazı ekleme.
+
+Sonra tipin satırı: yukarıdaki 6.1 listesindeki ilgili madde (arka plan rengi hariç; arka plan şeffaf kalır).
+
+Tip kartı arka plan renkleri (uygulamada): Planlı kahve, Atik turuncu, Sakin mavi, Odaklı lacivert, Dalgın pembe, Hırslı kırmızı-turuncu, Tembel krem, Dengeli mint.
+

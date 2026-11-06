@@ -20,6 +20,7 @@ import { fonts, radius, useColors } from '@/theme';
 import { MokaMascot } from './MokaMascot';
 import { Appear, Squish } from './motion';
 import { Plan } from './Plan';
+import { StartChoice } from './StartChoice';
 import { useToast } from './Toast';
 import { AppHeader, BackLink, Btn, Sheet, styles as ui, T } from './ui';
 import { appAlert } from '@/components/AppAlert';
@@ -274,11 +275,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       contentContainerStyle={[ui.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }]}
     >
       {editing ? <BackLink /> : <AppHeader />}
-      <View>
-        <T v="eyebrow">{editing ? 'Ev planı' : ask ? 'Başlayalım' : 'Adım 1 / 2'}</T>
-        <T v="h1">{editing ? 'Evini düzenle' : ask ? 'Nerede yaşıyorsun?' : 'Planını kontrol et'}</T>
-        {ask && <T v="small">Küçük adımlar, uzun soluklu disiplin.</T>}
-      </View>
+      {!ask && (
+        <View>
+          <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
+          <T v="h1">{editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
+        </View>
+      )}
 
       {!ask && (
         <Appear index={1}>
@@ -287,13 +289,16 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       )}
 
       {ask && (
-        <Appear index={2} style={{ gap: 12 }}>
-          <Btn label="👨‍👩‍👧 Aile evi" block onPress={() => setAsk(false)} />
-          <Btn label="🏠 Kişisel ev" block onPress={() => setAsk(false)} />
-          <Btn label="🛏️ Sadece odam" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
-          <Btn label="🎓 Yurt" block onPress={() => { setAsk(false); pickTemplate('tek'); update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; }); }} />
-          <T v="tiny" style={{ textAlign: 'center' }}>Oda ve Yurt: sadece kendi odanın işleri görünür. Sonra değiştirebilirsin.</T>
-        </Appear>
+        <StartChoice
+          onPick={k => {
+            setAsk(false);
+            if (k === 'oda') pickTemplate('tek');
+            if (k === 'yurt') {
+              pickTemplate('tek');
+              update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; });
+            }
+          }}
+        />
       )}
 
       {/* 1. Hazır şablon */}

@@ -5,7 +5,7 @@ import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
 import { Bar, T } from '@/components/ui';
 import { ROOM_ART } from '@/constants/room-art';
-import { ROOM_EMOJI } from '@/domain/constants';
+import { roomEmoji } from '@/domain/constants';
 import { allTasks, roomClean, roomCounts } from '@/domain/logic';
 import type { AppState } from '@/domain/types';
 import { fonts, useColors } from '@/theme';
@@ -20,7 +20,7 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
   const refs = allTasks(S, now);
   const rooms = S.order
     .map(id => ({ id, r: S.rooms[id], rc: roomCounts(S, id, now), clean: roomClean(S, id, now), mine: refs.filter(x => x.rid === id) }))
-    .filter(x => x.r)
+    .filter(x => x.r && (!S.settings.solo || !S.rooms[S.settings.solo] || x.id === S.settings.solo))
     .sort((a, b) => b.rc.late - a.rc.late || b.rc.today - a.rc.today);
   const open = (id: string) => router.push({ pathname: '/oda/[id]', params: { id } });
 
@@ -43,7 +43,7 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
               ) : (
                 <View style={[styles.noScene, styles.photo, { backgroundColor: c.room[r.type] }]}>
                   <Float amp={n ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
-                    <Text style={{ fontSize: 46, lineHeight: 56 }}>{ROOM_EMOJI[r.type]}</Text>
+                    <Text style={{ fontSize: 46, lineHeight: 56 }}>{roomEmoji(r.type, S.order.slice(0, S.order.indexOf(id)).filter(x => S.rooms[x]?.type === r.type).length)}</Text>
                   </Float>
                 </View>
               )}

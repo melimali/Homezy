@@ -60,3 +60,11 @@ export const ROOM_EMOJI: Record<RoomType, string> = {
   yatak: '🛏️', mutfak: '🍳', banyo: '🛁', salon: '🛋️', calisma: '💻',
   cocuk: '🧸', antre: '🚪', balkon: '🌿', camasir: '🧺',
 };
+
+/** Aynı türden 2. 3. oda için farklı simgeler: odalar birbirine benzemesin. */
+const ROOM_ALT: Record<RoomType, string[]> = {
+  yatak: ['🛌', '🌙'], mutfak: ['🥘', '☕'], banyo: ['🚿', '🧼'], salon: ['📺', '🪴'], calisma: ['📚', '🖊️'],
+  cocuk: ['🎨', '🚂'], antre: ['👟', '🧥'], balkon: ['🌤️', '🌸'], camasir: ['👕', '🫧'],
+};
+/** `n`: bu türden kaçıncı oda (0 = ilk). */
+export const roomEmoji = (type: RoomType, n = 0) => (n > 0 ? ROOM_ALT[type][(n - 1) % ROOM_ALT[type].length] : ROOM_EMOJI[type]);

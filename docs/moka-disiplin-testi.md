@@ -174,3 +174,35 @@ Sonra tipin satırı: yukarıdaki 6.1 listesindeki ilgili madde (arka plan rengi
 
 Tip kartı arka plan renkleri (uygulamada): Planlı kahve, Atik turuncu, Sakin mavi, Odaklı lacivert, Dalgın pembe, Hırslı kırmızı-turuncu, Tembel krem, Dengeli mint.
 
+### 6.3 İlk deneme sonucu (2026-11-06) ve düzeltme
+İlk çıktı (`Kahve Seven Sevimli Papağanın Sekiz Hali.png`) 1672x941 geldi: **4K değil** (ChatGPT görseli bu boyutta verir; 4K için sonradan büyütme gerekir, bkz. 6.5). Izgara (4x2, 8 hücre), yazısızlık ve renk sırası doğru. Sorunlar:
+1. **Moka'ya uyum zayıf:** referansta ince koyu kahve kontur, açık zeytin-krem tüy, küçük gri-kahve gaga, yuvarlak kapalı/küçük gözler var; çıktıda kalın siyah kontur, koyu zeytin tüy, iri pembe gaga, belirgin kaşlar/büyük gözler, daha "anime" yüz. Hücrelerde karakter Moka'dan çok "başka bir kakapo".
+2. **Fazladan efekt ve nesneler:** 1, 3, 6, 8'de başın üstünde yay çizgiler; 2'de bulut ve hız çizgileri, 7'de duman bulutu; **5'te mavi kar tanesi gibi leke** (boya lekesi istenmişti) ve palet + fırça + latte birden; 6'da turuncu alev kıvrımları gaga ve fincanı örtüyor.
+3. **Taşma:** 4'te hedef tahtası sağ kenara, 1'de defter alt kenara çok yakın; karakter hücrenin %75'inden büyük, hücre kenarı sticker kenarlığına değiyor.
+4. **Tutarsızlık:** boyut ve kafa oranı hücreler arasında değişiyor (2 ve 8'de gövde farklı), gaga rengi/şekli aynı değil, ifadeler birbirine çok benzer (hep kaşlı-açık ağız).
+5. **Arka plan:** renkli hücre arka planı sticker'ı kesmeyi zorlaştırır (renk kenarlıkta kalır).
+
+### 6.4 Düzeltilmiş prompt (v2, kopyala-yapıştır)
+Aynı sohbette önce referans `moka_happy.webp` + `moka_checklist.webp` + `moka_lazy_coffee.webp` yüklenir, sonra:
+```
+Yüklediğim Moka'yı BİREBİR kopyala, yeniden tasarlama: açık zeytin-yeşil ve krem tüy, küçük kısa gri-kahve gaga (pembe ya da iri değil), yuvarlak küçük gözler ya da kapalı gülen gözler, kaş YOK, kalın siyah kontur YOK; ince koyu kahve (#5a3f33) kontur, yumuşak boyalı doku, sade 2D çıkartma çizimi (anime ya da parlak 3D değil). Karakter her hücrede aynı boyda ve aynı vücut oranında olsun.
+Tek bir görsel: 4 sütun x 2 satır, 8 eşit hücre, hücreler arası boşluk, hücre arka planı tamamen düz tek renk #FFFFFF (beyaz); renk yok, desen yok, gölge hücre içinde sadece karakterin altında küçük yumuşak oval. Karakter hücrenin ortasında, hücrenin en çok %65'i; hiçbir parça kenara değmesin. Görselde yazı, rakam, logo, parıltı, yıldız, hız çizgisi, buhar, duman, bulut, kıvılcım, alev, kar tanesi, nota ve leke OLMASIN. Her hücrede yalnızca belirtilen nesneler olsun, başka nesne ekleme. Sırayla:
+1) Planlı: elinde sadece açık kareli plan defteri, yanında bir cam filtre kahve demliği, küçük yuvarlak gözlük, sakin hafif gülümseme.
+2) Atik: tek elinde küçük beyaz espresso fincanı, zıplıyor (ayaklar yerden kalkmış), kapalı gülen gözler, geniş gülümseme.
+3) Sakin: elinde buzlu uzun kahve bardağı ve pipet, yanında küçük kum saati, yarı kapalı huzurlu gözler.
+4) Odaklı: iki elinde küçük bakır cezve, önünde küçük fincan, dik bakış; hedef tahtası yok, ok yok.
+5) Dalgın: elinde kalp latte-art'lı fincan, gözler yukarıda dalgın, ağız hafif açık; palet, fırça, nota ve leke YOK.
+6) Hırslı: iki küçük espresso fincanını iki elinde tutuyor, kararlı ve gururlu bakış, buhar ya da alev YOK.
+7) Tembel: yumuşak ekose battaniyeye sarılmış, elinde süt köpüklü latte kupası, yastığa yaslanmış, kapalı gülen gözler, duman YOK.
+8) Dengeli: klasik Moka, iki kanadı yana açık, gülen kapalı gözler, yanında küçük kahve fincanı ve bir yeşil yaprak.
+```
+Not: arka plan beyaz olduğu için hücre renkleri uygulamada kod ile verilir (tip kartı arka plan renkleri yukarıda). Tipin duygusu (ör. Hırslı) artık yüz ifadesi ve nesnelerle verilir, efektle değil.
+
+### 6.5 Bozuk hücreyi tek başına yeniden çizdirme
+Aynı sohbette, v2 ortak metni (ilk paragraf + "tek hücre, kare 2160x2160, beyaz düz arka plan, ortada") ve şunlardan biri:
+- **5 Dalgın:** "Sadece Dalgın Moka: elinde kalp latte-art'lı fincan, gözler yukarıda dalgın. Başka hiçbir nesne, leke, nota ya da yıldız olmasın."
+- **6 Hırslı:** "Sadece Hırslı Moka: iki espresso fincanı, kararlı bakış; buhar ve alev olmasın."
+- **4 Odaklı:** "Sadece Odaklı Moka: cezve ve fincan; hedef tahtası olmasın, hiçbir parça kenara değmesin."
+- **Yüz uyumsuzsa (herhangi hücre):** "Yüzü yüklediğim moka_happy ile aynı yap: küçük gri-kahve gaga, kaşsız, ince kahve kontur."
+
+4K: ChatGPT çıktısını 4K'ya büyütmek için `scripts/` altında bir büyütme adımı eklenebilir (örn. Real-ESRGAN/Lanczos); ya da hücreleri tek tek 2160 kare iste. Uygulamada tip pozu en çok 1024 px gösterilir, yani 2160 hücre fazlasıyla yeter.

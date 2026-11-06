@@ -10,6 +10,7 @@ import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
 import { Appear, Float, Pulse, Squish } from '@/components/motion';
+import { MokaReact } from '@/components/MokaReact';
 import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';

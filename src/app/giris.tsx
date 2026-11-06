@@ -1,5 +1,6 @@
 import { useRouter } from "@/lib/nav";
 import { useState } from "react";
+import { MokaReact } from "@/components/MokaReact";
 import {
   Image,
   KeyboardAvoidingView,
@@ -143,6 +144,8 @@ export default function Giris() {
             />
           )}
         </View>
+
+        <MokaReact anim="happy" size={96} style={{ alignSelf: 'center' }} />
 
         <View>
           <T v="eyebrow">

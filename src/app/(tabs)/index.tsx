@@ -132,7 +132,7 @@ export default function Home() {
           {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </View>
         {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
-        {!due.length && <EmptyMsg pose="sparkling_complete">{doneN > 0 ? 'Bugün iş kalmadı. Harikasın, biraz dinlen 🌿' : 'Bugünlük her şey tamam. Biraz dinlen.'}</EmptyMsg>}
+        {!due.length && <EmptyMsg pose="sparkling_complete">{doneN > 0 ? `Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿` : 'Bugünlük her şey tamam. Biraz dinlen.'}</EmptyMsg>}
       </Card>
 
       {weekReady && (

@@ -195,7 +195,8 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     const missing: string[] = [];
     if (!has('yatak')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
     if (!has('mutfak')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
-    if (!missing.length || !S.order.length) return doSave();
+    // Tek oda modunda eksik oda uyarısı yok: kullanıcı bilerek tek oda seçti.
+    if (S.settings.solo || !missing.length || !S.order.length) return doSave();
     appAlert(
       tr('Evin eksik kaldı 🏡'),
       tr('Şunları çizmeden bu özellikler odalarda görünmez:') + '\n\n• ' + missing.join('\n• ') + '\n\n' + tr('Ben sekmesindeki Gardırop ve Buzdolabı bölümlerinden yine de kullanabilirsin.'),

@@ -4,7 +4,7 @@ Durum: sadece tasarım, kod yok. Dal: integration/tum-pr. Mevcut "Seni tanıyal�
 
 ## 0. Akış
 Moka tanıtımı → **Amaç ekranı** → A bölümü (ev, 6-7 soru) → B bölümü (disiplin, 10 soru + dallanan 2 soru) → Moka "notlarını alıyor" → **Tip ekranı** → **Plan ekranı** → ev kurulumu.
-Toplam ≈ 17-19 soru, tek dokunuş, ilerleme çubuğu, geri tuşu, "Atla" (varsayılan tip: Dengeli). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
+Toplam ≈ 17-19 soru, tek dokunuş, ilerleme çubuğu, geri tuşu, "Atla" (varsayılan tip: Moka Kakapo). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
 
 ## 1. Sorular
 ### A. Ev (mevcut, değişmez)
@@ -50,16 +50,16 @@ Sonuç sınırlandırılır 0-10. Eşik: yüksek ≥ 7, orta 4-6, düşük ≤ 3
 Önce özel kural, yoksa en yakın eşleşme (sıra önemli):
 | Tip | Kural | Moka diyor ki |
 |---|---|---|
-| 🏗️ **Mimar** | D≥7 ve B≥5 | "Senin için planı sen çizersin. Ben sadece saati tutarım." |
-| 🚀 **Atılgan** | B≥7 ve Y≤5 | "Hızlı başlarsın, güzel! Ben seni yolda tutarım." |
-| 🐢 **Sabırlı Kaplumbağa** | Y≥7 ve B≤5 | "Geç başlarsın ama bırakmazsın. Küçük adımlar sana yeter." |
-| 🎯 **Nişancı** | O≥7 ve D≥4 | "Odaklanınca dağları aşarsın. Sana derin çalışma blokları kuruyorum." |
-| 🦋 **Kelebek** | O≤3 veya B5=dikkat dağılıyor | "Aklın çok yerde, bu güzel bir şey. Seni kısa turlarla toplayacağım." |
-| 🔥 **Ateş Topu** | B5=hepsini bırakırım ve G≤5 | "Ya hep ya hiç. Bir gün aksarsa dert değil, seri dondurma var." |
-| 🌿 **Kendi Yolunda** | G≥7 ve D≤5 | "Sana kimse baskı yapmasın. Esnek, kendi hızında bir plan yaptım." |
-| ⚖️ **Dengeli** | Hiçbiri (varsayılan, "Atla" da buraya) | "Her şeyden biraz. Birlikte neyin sana uyduğunu bulacağız." |
+| 🦫 **Moka Kunduz** | D≥7 ve B≥5 | "Senin için planı sen çizersin. Ben sadece saati tutarım." |
+| 🐯 **Moka Kaplan** | B≥7 ve Y≤5 | "Hızlı başlarsın, güzel! Ben seni yolda tutarım." |
+| 🐢 **Moka Kaplumbağa** | Y≥7 ve B≤5 | "Geç başlarsın ama bırakmazsın. Küçük adımlar sana yeter." |
+| 🦅 **Moka Şahin** | O≥7 ve D≥4 | "Odaklanınca dağları aşarsın. Sana derin çalışma blokları kuruyorum." |
+| 🦋 **Moka Kelebek** | O≤3 veya B5=dikkat dağılıyor | "Aklın çok yerde, bu güzel bir şey. Seni kısa turlarla toplayacağım." |
+| 🐲 **Moka Ejderha** | B5=hepsini bırakırım ve G≤5 | "Ya hep ya hiç. Bir gün aksarsa dert değil, seri dondurma var." |
+| 🐱 **Moka Kedi** | G≥7 ve D≤5 | "Sana kimse baskı yapmasın. Esnek, kendi hızında bir plan yaptım." |
+| 🦜 **Moka Kakapo** | Hiçbiri (varsayılan, "Atla" da buraya) | "Her şeyden biraz. Birlikte neyin sana uyduğunu bulacağız." |
 
-Birden fazla tip tutarsa sıra: Kelebek > Ateş Topu > Mimar > Atılgan > Nişancı > Kaplumbağa > Kendi Yolunda > Dengeli. Her tip için 2. bir "yan renk" (ikinci en yüksek eksen) gösterilir: "Biraz da Nişancı gibisin". Tip kaydı: `AppState.persona.discipline = {type, axes, answers, at}` (şema sürümü artar). Test 90 günde bir yeniden yapılabilir (Ben → Moka'nın notları).
+Birden fazla tip tutarsa sıra: Kelebek > Ejderha > Kunduz > Kaplan > Şahin > Kaplumbağa > Kedi > Kakapo. Her tip için 2. bir "yan renk" (ikinci en yüksek eksen) gösterilir: "Biraz da Moka Şahin gibisin". Tip kaydı: `AppState.persona.discipline = {type, axes, answers, at}` (şema sürümü artar). Test 90 günde bir yeniden yapılabilir (Ben → Moka'nın notları).
 
 ## 3. Plan üretim kuralları
 Plan = **modüller** (B1 alanlarından) + **gün şablonu** (tipten) + **ayarlar** (cevaplardan). Her modül mevcut parçalara bağlanır (rutin, `growth.ts`, `workout.ts`, `meds.ts`, Günlük, Bugün).
@@ -73,14 +73,14 @@ Ayarlar:
 Tip şablonları:
 | Tip | Biçim | Hatırlatma | Seri/ödül |
 |---|---|---|---|
-| Mimar | Saatlik program, haftalık plan ekranı | Sabah planı + akşam gözden geçirme | Haftalık rapor vurgusu |
-| Atılgan | Günde 3 hedef, her hafta zorluk +1 | Az bildirim | Zorluk rozetleri |
-| Kaplumbağa | Günde 1-2 mikro görev (5 dk), her 7 günde +1 | Nazik, akşam | "Bugün de oldu" kutlaması |
-| Nişancı | 1 ana derin çalışma bloğu + 2 ufak | Blok başlangıcında | Odak dakikası grafiği |
-| Kelebek | 10-15 dk'lık mini görevler, sık değişen çeşitlilik | Kısa, çok değil | Anında yıldız, oyunlaştırma |
-| Ateş Topu | Küçük zafer + "yarım yaptım" sayılır, kaçırınca suçluluk yok | Kaçırılan günde "devam et" mesajı | Seri dondurma önerisi, ilk hafta 2 dondurma |
-| Kendi Yolunda | Haftada hedef (günlere dağıt), saat yok | Yok / kullanıcı seçer | Kendi hedef notu, Günlük |
-| Dengeli | Her alandan 1 görev, 3 gün sonra uyarlanır | Standart | Standart |
+| Moka Kunduz | Saatlik program, haftalık plan ekranı | Sabah planı + akşam gözden geçirme | Haftalık rapor vurgusu |
+| Moka Kaplan | Günde 3 hedef, her hafta zorluk +1 | Az bildirim | Zorluk rozetleri |
+| Moka Kaplumbağa | Günde 1-2 mikro görev (5 dk), her 7 günde +1 | Nazik, akşam | "Bugün de oldu" kutlaması |
+| Moka Şahin | 1 ana derin çalışma bloğu + 2 ufak | Blok başlangıcında | Odak dakikası grafiği |
+| Moka Kelebek | 10-15 dk'lık mini görevler, sık değişen çeşitlilik | Kısa, çok değil | Anında yıldız, oyunlaştırma |
+| Moka Ejderha | Küçük zafer + "yarım yaptım" sayılır, kaçırınca suçluluk yok | Kaçırılan günde "devam et" mesajı | Seri dondurma önerisi, ilk hafta 2 dondurma |
+| Moka Kedi | Haftada hedef (günlere dağıt), saat yok | Yok / kullanıcı seçer | Kendi hedef notu, Günlük |
+| Moka Kakapo | Her alandan 1 görev, 3 gün sonra uyarlanır | Standart | Standart |
 
 Modül örnekleri (B1 → ne eklenir):
 - 🏠 Ev: mevcut ev planı + A cevapları.
@@ -107,7 +107,7 @@ Alan sınırı: ilk hafta en çok 3 alan, 2'den fazlaysa her gün en çok 1 gör
 | E6 | **Plan ekranı** | "Senin planın" özeti: alanlar, günlük süre, saat, ilk hafta hedefi. Buton "Planı başlat" · "Değiştir" (alan/saat) | `moka_checklist`, kutlama `moka_sparkling_complete` |
 | E7 | Ben → Moka'nın notları | Tip kartı + testi yeniden yap | tip pozu |
 
-Tip pozları: Mimar `moka_checklist`, Atılgan `moka_party`, Kaplumbağa `moka_blanket`, Nişancı `moka_laptop`, Kelebek `moka_music`, Ateş Topu `moka_panicked` → yeni "ateşli Moka", Kendi Yolunda `moka_sunny_plant`, Dengeli `moka_happy`. **Yeni çizim ihtiyacı:** (1) gözlük + defter Moka, (2) ateşli/enerjik Moka, (3) 8 tip için ortak "kart çerçevesi" arka planı (pastel, tip rengi). Mevcut pozlar yetiyorsa yeni çizim opsiyonel.
+Tip görselleri: her tip için ayrı ChatGPT görseli, bkz. bölüm 6.
 Hareket: `Appear` ile kart beliriş, tip açıklanırken `Burst`, çubuklar sırayla dolar. "Hareketi azalt" saygı gösterilir.
 
 ## 5. Açık kararlar (Melih)
@@ -117,4 +117,23 @@ Hareket: `Appear` ile kart beliriş, tip açıklanırken `Burst`, çubuklar sır
 4. Tip paylaşım görseli ilk sürümde olsun mu? (Öneri: evet, düşük maliyet.)
 5. Sadelik planı (1.0.2): başlangıçta 3 alan sınırı korunsun mu? (Öneri: evet.)
 6. Para modülü ilk sürümde sadece hatırlatma mı kalsın? (Öneri: evet.)
-7. Yeni Moka çizimleri (gözlük/defter, ateşli) Melih tarafından mı üretilecek? Yoksa mevcut pozlarla mı başlayalım?
+7. Yeni görseller ChatGPT ile üretilecek (bölüm 6); 8 tip görseli gelene kadar mevcut pozlar yedek olsun mu? (Öneri: evet.)
+
+## 6. ChatGPT görsel prompt'ları (8 tip)
+Kullanım: önce ChatGPT'ye mevcut Moka çıkartmalarından 1-2 tanesini (ör. `assets/moka/moka_happy.webp`) yükle, **ortak başlığı** yapıştır, sonra tipin satırını ekle. Her tip için ayrı sohbet açma, aynı sohbette sırayla iste (tutarlılık artar). Çıktıyı `scripts/clean-moka-edges.py` ile temizle.
+
+**Ortak başlık (hepsinde aynı):**
+> Yüklediğim görseldeki Moka karakterini birebir koru: tombul, yuvarlak hatlı, yumuşak gölgeli kahveci kakapo papağanı; aynı yeşil-sarı tüy renkleri, aynı yüz ve göz stili, aynı oran ve çizgi kalınlığı. Stil: sevimli çıkartma (sticker), kabarık 3D-vari pastel çizim, krem beyaz kalın kenarlık, şeffaf arka plan, kare 1024x1024, karakter ortada ve tam görünür. Aşağıda yalnızca poz, ifade ve küçük aksesuar değişsin, karakterin tasarımı değişmesin. Yazı ekleme.
+
+| Tip | Moka'nın hâli | Prompt (başlığın sonuna ekle) |
+|---|---|---|
+| 🦫 **Moka Kunduz** (planlayıcı, düzenli) | Kunduz kulak bandı, elinde plan defteri | Moka, başında küçük kunduz kulaklı bir bando, bir elinde açık kareli plan defteri, diğer elinde kalem; gözlüklü, kendinden emin hafif gülümseme; yanında küçük bir takvim sticker'ı. |
+| 🐯 **Moka Kaplan** (hızlı başlayan) | Kaplan şapkası, atılan zıplama | Moka, turuncu-siyah çizgili küçük kaplan kapüşonu giymiş, bir kanadı havada yumruk gibi, ileri atılırken zıplıyor; gözler heyecanlı ve kararlı, geniş gülümseme; arkada küçük hız çizgileri. |
+| 🐢 **Moka Kaplumbağa** (sabırlı, istikrarlı) | Sırtında yeşil kabuk, yavaş ve huzurlu | Moka, sırtında küçük yeşil kaplumbağa kabuğu sırt çantası, elinde kahve fincanı, yavaş yürüyor; gözler yarı kapalı huzurlu, yumuşak gülümseme; ayaklarının yanında küçük bir yıldız. |
+| 🦅 **Moka Şahin** (odaklı) | Şahin gözlükleri, hedef tahtası | Moka, başında küçük kahverengi şahin tüyü ve ince pilot gözlüğü, bir kanadı ileri bir hedef tahtasını işaret ediyor; keskin, odaklı bakış, dik duruş; yanında içinde ok olan bir hedef. |
+| 🦋 **Moka Kelebek** (dağınık ama yaratıcı) | Kelebek kanatları, etrafında renkli noktalar | Moka, sırtında pastel renkli küçük kelebek kanatları, etrafında uçuşan minik yıldız, kalp ve not simgeleri; meraklı, neşeli, hafif şaşkın ifade, bir ayağı havada dans eder gibi. |
+| 🐲 **Moka Ejderha** (ya hep ya hiç, enerjik) | Küçük ejderha kanatları, minik alev | Moka, sırtında küçük kırmızı-turuncu ejderha kanatları ve kuyruğu, ağzından çok küçük sevimli bir alev, kanatlar açık; hırslı, tutkulu ifade, kaşlar hafif çatık ama yine sevimli. |
+| 🐱 **Moka Kedi** (özgür, kendi hızında) | Kedi kulakları, battaniye ve kahve | Moka, başında küçük kedi kulaklı bando, yumuşak battaniyeye sarılmış, elinde sıcak kahve fincanı, rahat bir yastıkta oturuyor; yarı kapalı keyifli gözler, rahat gülümseme. |
+| 🦜 **Moka Kakapo** (dengeli, klasik) | Moka'nın kendisi, aksesuarsız | Moka, kendi klasik hâliyle, iki kanadı yana açık, sıcak ve dengeli gülümseme, yanında küçük bir kahve fincanı ve küçük bir yeşil yaprak; sade, huzurlu. |
+
+Not: tip kartı arka plan rengi: Kunduz kahve, Kaplan turuncu, Kaplumbağa yeşil, Şahin lacivert, Kelebek pembe, Ejderha kırmızı-turuncu, Kedi mor-gri, Kakapo mint. Dosya adı önerisi: `assets/moka/tip/moka_<kunduz|kaplan|kaplumbaga|sahin|kelebek|ejderha|kedi|kakapo>.webp`.

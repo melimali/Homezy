@@ -1,7 +1,7 @@
 import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
@@ -42,7 +42,6 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const { t: tr } = useTranslation();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
-  const [nameFocus, setNameFocus] = useState(false);
   const [clearArm, setClearArm] = useState(false);
   /** İlk kurulumda sade görünüm: hazır plan seç, bitti. Oda paleti, kat, silgi, boyut "Ayrıntılı düzenle" ile açılır. */
   const [adv, setAdv] = useState(false);
@@ -406,16 +405,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         {er && editId && (
           <>
             <T v="h2">{ROOM_EMOJI[er.type]} Odayı düzenle</T>
-            <TextInput
-              // Varsayılan ad ("Salon 2") kayıtta Türkçe durur; yazılmıyorken ekranda dile göre çevrilir.
-              value={nameFocus ? er.name : tx(er.name)}
-              onFocus={() => setNameFocus(true)}
-              onBlur={() => setNameFocus(false)}
-              accessibilityLabel="Oda adı"
-              maxLength={40}
-              onChangeText={v => update(D => void (D.rooms[editId].name = v || TYPES[D.rooms[editId].type].label))}
-              style={[st.rename, { color: c.ink, backgroundColor: c.surface2 }]}
-            />
+            <T v="bold">{tx(er.name)}</T>
             <T v="small">{TYPES[er.type].label} · {cellCount(S, editId)} blok · ~{cellCount(S, editId) * 2} m²</T>
             <View style={st.actions}>
               <Btn

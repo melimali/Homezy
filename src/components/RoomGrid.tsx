@@ -37,7 +37,6 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
               accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
               style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadow, transform: [{ rotate: i % 2 ? '1.2deg' : '-1.2deg' }] }]}
             >
-              <View style={[styles.tape, { backgroundColor: c.room[r.type] }]} />
               {scene ? (
                 <View style={styles.photo}><SceneImage source={scene} height={116} /></View>
               ) : (
@@ -78,14 +77,13 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 20, marginTop: 4 },
   cell: { width: '48%' },
-  bleed: { marginHorizontal: -22 },
-  row: { gap: 14, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 18 },
+  bleed: { marginHorizontal: 0 },
+  row: { gap: 14, paddingHorizontal: 6, paddingTop: 8, paddingBottom: 18 },
   rowCell: { width: 158 },
   card: { borderRadius: 22, padding: 8, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4 },
   photo: { borderRadius: 16, overflow: 'hidden' },
-  tape: { position: 'absolute', top: -7, alignSelf: 'center', width: 54, height: 16, borderRadius: 6, opacity: 0.85, zIndex: 2, transform: [{ rotate: '-3deg' }] },
   noScene: { height: 116, alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 6, gap: 8 },
+  body: { paddingHorizontal: 8, paddingTop: 12, paddingBottom: 8, gap: 10 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: { position: 'absolute', top: 10, right: 10, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },

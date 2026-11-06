@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   stats: { flexDirection: 'row', gap: 10 },
   stat: { flex: 1, alignItems: 'center', gap: 0, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 4 },
-  sec: { gap: 12, padding: 16 },
+  sec: { gap: 12, padding: 16, overflow: 'hidden' },
   quick: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },

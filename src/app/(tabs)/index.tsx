@@ -14,7 +14,6 @@ import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
-import { RestGame } from '@/components/RestGame';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
@@ -126,7 +125,7 @@ export default function Home() {
           {due.slice(0, 3).map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
         </View>
         {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
-        {!due.length && (doneN > 0 ? <RestGame /> : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
+        {!due.length && <EmptyMsg pose="sparkling_complete">{doneN > 0 ? 'Bugün iş kalmadı. Harikasın, biraz dinlen 🌿' : 'Bugünlük her şey tamam. Biraz dinlen.'}</EmptyMsg>}
       </Card>
 
       {weekReady && (

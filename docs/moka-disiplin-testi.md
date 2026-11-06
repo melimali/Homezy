@@ -206,3 +206,33 @@ Aynı sohbette, v2 ortak metni (ilk paragraf + "tek hücre, kare 2160x2160, beya
 - **Yüz uyumsuzsa (herhangi hücre):** "Yüzü yüklediğim moka_happy ile aynı yap: küçük gri-kahve gaga, kaşsız, ince kahve kontur."
 
 4K: ChatGPT çıktısını 4K'ya büyütmek için `scripts/` altında bir büyütme adımı eklenebilir (örn. Real-ESRGAN/Lanczos); ya da hücreleri tek tek 2160 kare iste. Uygulamada tip pozu en çok 1024 px gösterilir, yani 2160 hücre fazlasıyla yeter.
+
+### 6.6 v2 sonucu ve tipe özgü kıyafet (v3 prompt)
+v2 çıktısı (`ChatGPT Gorseli v2.png`, 1672x941) Moka'ya çok daha yakın: ince kontur, küçük gri gaga, beyaz zemin, efekt yok, kenara taşma yok. Ama **tipleri ayıran tek şey elindeki nesne**; kıyafet ve aksesuar yok, ifadeler benzer (2/8 ve 5/6 hemen hemen aynı). Çözüm: her tipe kendi renginde bir kıyafet/aksesuar (siluette okunacak kadar büyük) ve belirgin bir yüz ifadesi.
+
+| Tip | Kıyafet / aksesuar (renk) | İfade |
+|---|---|---|
+| 📋 Planlı | kahverengi örgü kazak, yuvarlak gözlük, kulağında kalem | sakin, hafif gülümseme |
+| ⚡ Atik | kırmızı beyzbol şapka, bileğinde spor bandı | kapalı gülen gözler, geniş gülümseme |
+| 🧊 Sakin | açık mavi hafif hırka | yarı kapalı huzurlu gözler |
+| 🎯 Odaklı | siyah bere, lacivert atkı | dik, odaklı bakış |
+| 🎨 Dalgın | pembe-mor yıldız desenli şal, başında küçük pembe bere | gözler yukarıda, ağız hafif açık |
+| 🔥 Hırslı | kırmızı atkı, alında kırmızı bandana | kararlı, gururlu bakış |
+| 🥛 Tembel | krem uyku bonesi, ekose battaniye, pembe pofuduk terlik | kapalı gülen gözler |
+| ☕ Dengeli | yeşil sade yelek | sıcak gülümseme |
+
+Kıyafet sadece sembolik ve sade; tüy ve yüz hâlâ referans Moka. Efekt yasağı (parıltı, buhar, alev, nota, leke...) kalır.
+
+```
+Yüklediğim Moka'yı BİREBİR koru (yüz, gaga, tüy rengi ve dokusu, ince koyu kahve kontur, sade 2D çıkartma stili, aynı beden oranı), sadece aşağıdaki kıyafet, aksesuar ve ifadeyi ekle. Kıyafetler sade, düz renk, silüette net okunsun, Moka'nın yüzünü ve gagasını örtmesin.
+Tek bir görsel, mümkün olan en yüksek çözünürlük (hedef 3840x2160): 4 sütun x 2 satır, 8 eşit hücre, hücre arka planı tamamen düz beyaz #FFFFFF, desen ve renk yok, karakterin altında sadece küçük yumuşak gölge. Karakter hücrenin ortasında, hücrenin en çok %65'i, hiçbir parça kenara değmesin, her hücrede aynı boyda. Yazı, rakam, logo, parıltı, yıldız çizgisi, hız çizgisi, buhar, duman, bulut, kıvılcım, alev, kar tanesi, nota ve boya lekesi OLMASIN; belirtilenden başka nesne ekleme. Sırayla:
+1) Planlı Moka: kahverengi örgü kazak giymiş, yuvarlak gözlük, kulağının arkasında kalem, elinde açık kareli plan defteri, yanında cam filtre kahve demliği, sakin hafif gülümseme.
+2) Atik Moka: kırmızı beyzbol şapka, bileğinde beyaz spor bandı, tek elinde küçük beyaz espresso fincanı, zıplıyor (ayaklar yerden kalkmış), kapalı gülen gözler, geniş gülümseme.
+3) Sakin Moka: açık mavi hafif hırka giymiş, elinde buzlu uzun kahve bardağı ve pipet, yanında küçük kum saati, yarı kapalı huzurlu gözler.
+4) Odaklı Moka: siyah bere ve lacivert atkı, iki elinde küçük bakır cezve, önünde küçük fincan, dik odaklı bakış; hedef tahtası yok.
+5) Dalgın Moka: pembe-mor yıldız desenli şal, başında küçük pembe bere, elinde kalp latte-art'lı fincan, gözler yukarıda dalgın, ağız hafif açık; palet, fırça, nota yok.
+6) Hırslı Moka: kırmızı atkı ve alnında kırmızı bandana, iki elinde küçük espresso fincanı, kararlı ve gururlu bakış, buhar ya da alev yok.
+7) Tembel Moka: krem uyku bonesi, ekose battaniyeye sarılmış, ayaklarında pembe pofuduk terlik, elinde süt köpüklü latte kupası, yastığa yaslanmış, kapalı gülen gözler, duman yok.
+8) Dengeli Moka: yeşil sade yelek giymiş, iki kanadı yana açık, gülen kapalı gözler, yanında küçük kahve fincanı ve bir yeşil yaprak.
+```
+Sonra kontrol: 8 hücrede de farklı bir kıyafet silueti var mı · yüz referansla aynı mı · efekt yok mu. Olmayan hücre için 6.5'teki gibi tek hücre iste ("Sadece Hırslı Moka, kırmızı atkı ve kırmızı bandana ile, düz beyaz zemin, efekt yok").

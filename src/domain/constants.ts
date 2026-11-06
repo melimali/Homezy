@@ -4,12 +4,12 @@ export const DAY = 864e5;
 
 /** Oda türleri ve varsayılan rutinleri: [ad, kaç günde bir, tahmini dakika]. */
 export const TYPES: Record<RoomType, { label: string; mod: RoomModule; tasks: [string, number, number][] }> = {
-  yatak: { label: 'Yatak odası', mod: 'gardirop', tasks: [['Odayı süpür ve sil', 7, 20], ['Çarşaf değişimi', 7, 15], ['Toz alma', 7, 10], ['Havalandırma', 1, 5], ['Yastık ve yorgan havalandırma', 30, 10]] },
+  yatak: { label: 'Yatak odası', mod: 'gardirop', tasks: [['Yatağını topla', 1, 2], ['Yerdeki eşyaları topla', 1, 5], ['Odayı süpür ve sil', 7, 20], ['Çarşaf değişimi', 7, 15], ['Toz alma', 7, 10], ['Havalandırma', 1, 5], ['Yastık ve yorgan havalandırma', 30, 10]] },
   mutfak: { label: 'Mutfak', mod: 'buzdolabi', tasks: [['Bulaşık', 1, 20], ['Tezgah silme', 1, 5], ['Çöpü çıkar', 2, 5], ['Buzdolabı temizliği', 30, 30], ['Fırın temizliği', 30, 30], ['Yer silme', 7, 15]] },
   banyo: { label: 'Banyo', mod: 'stok', tasks: [['Lavabo ve ayna', 3, 10], ['Klozet', 3, 10], ['Duş / küvet', 7, 15], ['Havlu değişimi', 4, 5], ['Yer silme', 7, 10]] },
   salon: { label: 'Salon', mod: 'bitki', tasks: [['Süpürme', 3, 15], ['Toz alma', 7, 15], ['Koltuk minderleri', 14, 10], ['Cam silme', 30, 40]] },
   calisma: { label: 'Çalışma odası', mod: null, tasks: [['Masa düzeni', 7, 10], ['Toz alma', 7, 10], ['Kablo ve şarj düzeni', 30, 15]] },
-  cocuk: { label: 'Çocuk odası', mod: 'gardirop', tasks: [['Oyuncak toplama', 1, 10], ['Çarşaf değişimi', 7, 15], ['Süpürme', 3, 10]] },
+  cocuk: { label: 'Çocuk odası', mod: 'gardirop', tasks: [['Yatağını topla', 1, 2], ['Oyuncak toplama', 1, 10], ['Çarşaf değişimi', 7, 15], ['Süpürme', 3, 10]] },
   antre: { label: 'Antre', mod: null, tasks: [['Ayakkabılık düzeni', 7, 10], ['Yer silme', 7, 10]] },
   balkon: { label: 'Balkon', mod: 'bitki', tasks: [['Süpürme', 7, 10], ['Cam ve korkuluk', 30, 30]] },
   camasir: { label: 'Çamaşır odası', mod: 'stok', tasks: [['Çamaşır yıkama', 3, 10], ['Makine filtresi', 30, 15], ['Ütü', 7, 30]] },

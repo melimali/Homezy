@@ -40,7 +40,7 @@ Seviye sütunu: ürünün oyunda açıldığı seviye. Adımlar sırayla yapıl�
 Limonata (B, buz, limon, su, şeker), Buzlu çay (B, buz, çay, limon), Smoothie (blender: meyve, süt/yoğurt, blender, B), Taze portakal suyu (sık, B'ye dök), Su / soda (B, buz opsiyonel). Sv 3-7.
 
 ## 5. ŞURUPLAR (ayrı kategori, her içeceğe eklenebilir)
-Kural: espresso/çayın ARDINDAN, süt/buzdan ÖNCE. Pompa sayısı sipariş edilir (1 küçük, 2 büyük, +3 sn/pompa). Aynı siparişte en çok 2 şurup.
+Kural: espresso/çayın ARDINDAN, süt/buzdan ÖNCE. Pompa sayısı BAŞTA SORULMAZ (hep 1 pompa). Zorlaştıkça açılır: Sv 7-8 1 pompa, Sv 9-10 2 pompa, Sv 11+ 3 pompa (+3 sn/pompa). Aynı siparişte en çok 2 şurup.
 | Şurup | Sv |
 |---|---|
 | Vanilya | 7 |
@@ -52,7 +52,7 @@ Kural: espresso/çayın ARDINDAN, süt/buzdan ÖNCE. Pompa sayısı sipariş edi
 | Lavanta | 9 |
 | Tarçın | 9 |
 | Sezon: balkabağı (sonbahar), zencefilli kurabiye (kış), şeftali (yaz) | etkinlik |
-Örnek sipariş: "Büyük Vanilyalı Iced Latte (2 pompa)".
+Örnek: Sv 7 "Vanilyalı Latte"; Sv 10 "Vanilyalı Iced Latte, 2 pompa"; Sv 12 "3 pompa karamel".
 
 ## 6. Yiyecekler
 | Ürün | Adımlar | Sv |
@@ -86,4 +86,3 @@ Espresso makinesi, süt kaynatıcı, buzluk, blender, shaker, tost makinesi, vit
 ## Açık sorular
 1. Alkollü kokteyller olsun mu (yaş derecelendirme riski), sadece alkolsüz mü?
 2. Menü bu kadar büyük, ilk sürüm hangi seviyelere (1-6) kadar olsun?
-3. Şurup sipariş detayı (pompa sayısı) çok mu karmaşık?

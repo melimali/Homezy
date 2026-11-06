@@ -9,7 +9,10 @@ Toplam 17 soru (+ B1'de seçilen alan başına 1 dallanan soru, en çok 3) , tek
 
 **İlk indirmede sorulmayanlar (Melih, 2026-11-06):** "Bugün nasıl hissediyorsun?" ve "Bugün evde misin / planın var mı?" (`MoodCheckin`, `src/domain/mood.ts`) tanıma akışında ve ilk açılışta **sorulmaz**. Kullanıcı ilk gün doğrudan tanıma → tip → plan → ev kurulumu görür.
 
-**Günlük açılış sorusu (ayrı kural):** "Bugün nasılsın?" (+ "bugün için planın var mı?") **ertesi günden itibaren**, o günün ilk açılışında bir kez sorulur (mevcut `MoodCheckin` davranışı; "Atla" ile o gün bir daha sorulmaz). Uygulama kuralı: kurulum günü (`setup` tarihi) için `checkIn` istenmez; `dayKey(now) > kurulum günü` olunca açılır. Tanıma testi bu soruyla karışmaz: biri kalıcı kişilik, diğeri günlük ruh hali.
+**Günlük açılış soruları (ayrı kural, Melih 2026-11-06):** Kurulum gününden **sonraki** her gün iki ayrı soru, iki ayrı açılışta sorulur:
+1. O günün **ilk** açılışı: "Bugün nasılsın?" (`feel`).
+2. O günün **ikinci** açılışı: "Bugün evde misin?" (`busy`: Evdeyim / Biraz işim var / Yoğun bir gün).
+Üçüncü ve sonraki açılışlarda soru yok. Kurulum günü (ilk indirme) hiçbiri sorulmaz; ikinci soru ertesi günün ikinci açılışından itibaren başlar. Her soruda "Atla" var: atlanan soru o gün bir daha sorulmaz (ikinci soruyu atlamak birinciyi etkilemez). Uygulama notu: bugün şu an tek ekranda iki soru soran `MoodCheckin`/`CheckIn` ikiye bölünür; günlük açılış sayacı (`opens`, `dayKey`) ve ayrı `feel`/`busy` kayıtları gerekir. Tanıma testi bu sorularla karışmaz: biri kalıcı kişilik, diğeri günlük ruh hali.
 
 ## 1. Sorular (tek liste)
 Numaralar sunum sırası. "Besler" sütunu ev (persona/yemek/plan) ya da disiplin (tip/plan) tarafını gösterir. Eski adlar parantezde.

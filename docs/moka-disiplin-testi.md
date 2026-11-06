@@ -236,3 +236,11 @@ Tek bir görsel, mümkün olan en yüksek çözünürlük (hedef 3840x2160): 4 s
 8) Dengeli Moka: yeşil sade yelek giymiş, iki kanadı yana açık, gülen kapalı gözler, yanında küçük kahve fincanı ve bir yeşil yaprak.
 ```
 Sonra kontrol: 8 hücrede de farklı bir kıyafet silueti var mı · yüz referansla aynı mı · efekt yok mu. Olmayan hücre için 6.5'teki gibi tek hücre iste ("Sadece Hırslı Moka, kırmızı atkı ve kırmızı bandana ile, düz beyaz zemin, efekt yok").
+
+### 6.7 v3 sonucu (2026-11-06): kabul
+`moka-tipler-v3.png` (1672x941, saydam arka plan): 8 tip kıyafetle net ayrışıyor (kazak+gözlük, kırmızı şapka, mavi hırka, siyah bere+lacivert atkı, yıldızlı şal+pembe bere, kırmızı atkı+bandana, uyku bonesi+battaniye+terlik, yeşil yelek). Yüz, gaga, tüy ve kontur Moka'ya uyuyor, taşma ve efekt yok. **Hiçbir hücre baştan çizilmez.**
+Kalan işler (görsel değil, temizlik):
+1. Karakter altındaki gri zemin gölgesi ovalinin kenarında kırmızı/sarı hâle (arka plan kaldırma artığı) var: `scripts/clean-moka-edges.py` ile temizle ya da gölge ovalini sil.
+2. 8 hücreyi `scripts/slice-moka.py` ile kes, `assets/moka/tip/moka_<tip>.webp` olarak kaydet.
+3. İsteğe bağlı: 4 (Odaklı) ve 6 (Hırslı) yüzleri benzer (ikisi de çatık kaşlı). Hırslı'yı tekrar çizdirmek istersen: "Sadece Hırslı Moka, aynı kıyafet, kaşsız, gururlu geniş gülümseme, düz beyaz zemin, zemin gölgesi ve efekt yok."
+4. Referansta kaşsız yüz var; 3, 4, 6'daki küçük kaşlar kabul edildi.

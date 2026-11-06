@@ -130,6 +130,15 @@ Alan sınırı: ilk hafta en çok 3 alan, 2'den fazlaysa her gün en çok 1 gör
 Tip görselleri: her tip için ayrı ChatGPT görseli, bkz. bölüm 6.
 Hareket: `Appear` ile kart beliriş, tip açıklanırken `Burst`, çubuklar sırayla dolar. "Hareketi azalt" saygı gösterilir.
 
+### 4b. Quiz görsel yönü (cazip + cozy, Melih 2026-11-06)
+- **Zemin ve renk:** kahve teması. Krem/sütlü kahve zemin (`useColors()` yüzeyleri, renk kodu yazma), kil ve kahve vurgular, koyu temada sıcak koyu kahve. Üstte yumuşak degrade, köşelerde buhar/kahve çekirdeği süsü (çok hafif, sabit).
+- **Kartlar:** büyük, yuvarlak (~22px), yumuşak gölgeli, kabarık; seçenek kartında büyük emoji + kısa metin. Seçince `Squish` ile esner, seçili kart kil dolgu + küçük ✓ ile belirir. Kartlar `Appear` ile sırayla gelir.
+- **Moka her soruda:** sol-üstte küçük Moka (`MokaReact`/`MokaSprite`), soruyu konuşma baloncuğunda söyler. Cevap verince 1 sn'lik küçük tepki: kahve sorusunda `happy`, ağır cevapta (yoruluyorum, bırakırım) `blanket`/destek cümlesi, güçlü cevapta `party`, ara sıra `wink`. Tepki seçilen cevaba göre bir satır ("Anladım, not aldım ☕").
+- **İlerleme çubuğu:** kahve fincanı doluyor: üstte yatay çubuk, ucunda küçük fincan; her cevapta dolar (örn. 7/17), son soruda fincan taşar ve buhar çıkar. Geri tuşu ve "Atla" sönük yazı.
+- **Geçişler:** soru kayarak değişir (kısa, yaylı), tip ekranında `Burst`. "Hareketi azalt" açıksa kayma/yaylanma ve buhar kapanır, sadece solma kalır.
+- **Performans:** ek paket yok, `Animated` + native sürücü, ekranda en çok bir Moka animasyonu, resimler mevcut `assets/moka`.
+- **Tip ekranı:** tipin arka plan rengi (bölüm 6 notu), büyük tip pozu, kahve fincanı üstünde eksen çubukları; paylaşım kartı aynı görsel dilde.
+
 ## 5. Açık kararlar (Melih)
 1. Soru sayısı 17 çok mu? Öneri: zorunlu 12 (bkz. bölüm 1), geri kalanı "Daha iyi tanıyalım" opsiyonel.
 2. Tip adları/emojileri (8 tip) ve Moka cümleleri uygun mu? Gerekirse İngilizce karşılıklar ayrıca yazılır.

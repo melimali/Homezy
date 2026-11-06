@@ -63,3 +63,10 @@ Oyun mantığı saf TS (`logic.ts`: tarif doğrulama, seviye tablosu, puan) + Je
 5. Can sistemi mi, sadece süre/gün hedefi mi?
 6. Premium/reklam: oyun ücretsiz mi kalsın?
 7. Giriş noktası (Ev, Moka sekmesi, Ben) ne zaman, onaydan sonra neresi?
+
+## 11. Görsel yön: 2D, sabit tezgâh (öneri)
+- Tek sabit 2D arka plan: kafe tezgâhı yandan/önden. Kamera hareket etmez.
+- Level atladıkça tezgâha yeni 2D katmanlar eklenir (PNG, üst üste): Sv 3 türk ocağı, Sv 4 süt kaynatıcı, Sv 6 blender, Sv 7 şurup rafı, Sv 9 vitrin, Sv 11 shaker/bar rafı. Katman = yeni ürün/istasyon açılışı, oyuncu görerek ilerlemeyi hisseder.
+- Neden 2D: üretim ucuz (sticker tarzı Moka ile uyumlu, Gemini/ChatGPT ile üretilir), 3D'ye göre hızlı, düşük telefonlarda sorunsuz, dokunma hedefleri net. Yeni native paket gerekmez.
+- Teknik: React Native View + Image katmanları, Reanimated yok (mevcut motion.tsx). Katman listesi tek tabloda (`LAYERS: {level, asset, x, y}`).
+- Görsel ihtiyaç listesi (onaydan sonra çıkarılır): 1 arka plan, ~8 ekipman katmanı, ~25 bardak/yiyecek durumu, müşteri 6-8 çeşit.

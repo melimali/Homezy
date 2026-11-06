@@ -44,6 +44,8 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const [painting, setPainting] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
   const [clearArm, setClearArm] = useState(false);
+  /** İlk kurulumda sade görünüm: hazır plan seç, bitti. Oda paleti, kat, silgi, boyut "Ayrıntılı düzenle" ile açılır. */
+  const [adv, setAdv] = useState(false);
   const [tplArm, setTplArm] = useState<string | null>(null);
   const [history, setHistory] = useState<PlanSnap[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
@@ -293,6 +295,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         {tplArm && <T v="tiny">Şablon mevcut planın yerine geçer. Emin isen tekrar dokun.</T>}
       </View>
 
+      {!(adv || S.setup) && (
+        <Btn kind="ghost" label="✏️ Kendim çizeyim (ayrıntılı)" onPress={() => setAdv(true)} block />
+      )}
+      {(adv || S.setup) && (<>
       {/* 2. Oda paleti */}
       <View style={{ gap: 8 }}>
         <T v="h3">Oda ekle</T>
@@ -325,15 +331,16 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         <ToolPill on={false} disabled={!history.length} label="↩️ Geri al" onPress={undo} />
       </View>
 
+      </>)}
       {/* 3. Plan */}
       <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
         <Plan state={view} edit activeId={tool} onPaint={paint} onPaintingChange={setPainting} />
       </View>
 
-      <View style={st.sizeRow}>
+      {(adv || S.setup) && <View style={st.sizeRow}>
         <Stepper label="Genişlik" n={S.cols} min={GRID.minCols} max={GRID.maxCols} onStep={d => resize(d, 0)} />
         <Stepper label="Uzunluk" n={S.rows} min={GRID.minRows} max={GRID.maxRows} onStep={d => resize(0, d)} />
-      </View>
+      </View>}
       <T v="small" style={{ textAlign: 'center' }}>
         {rooms.length} oda · ~{blocks * 2} m² · {S.cols} × {S.rows} blok{upper ? ' · 2 kat' : ''}
       </T>

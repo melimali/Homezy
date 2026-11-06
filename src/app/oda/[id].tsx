@@ -55,6 +55,9 @@ export default function RoomScreen() {
             })}
           </ScrollView>
         )}
+        <Squish onPress={() => router.push({ pathname: '/oda3d', params: { id: r.id } })} accessibilityLabel="Odayı 3D gör" style={[styles.hop, { backgroundColor: c.surface }]}>
+          <Text style={{ fontSize: 20 }}>🧊</Text>
+        </Squish>
       </View>
 
       {ROOM_SCENES[r.type] && (

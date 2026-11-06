@@ -23,8 +23,8 @@ import { fonts, useColors, useIsDark, type Colors } from '@/theme';
  */
 
 /** Bir bloğun ekrandaki yarı genişliği ve yarı yüksekliği (2:1 izometrik). */
-const A = 34;
-const B = 14;
+export const A = 34;
+export const B = 14;
 const SLAB = 10;
 const WALL_H = 34;
 const INNER_H = 20;
@@ -36,22 +36,22 @@ const T = 0.12;
 type Pt = [number, number];
 let projectionAngle = 0;
 let projectionCenter: [number, number] = [0, 0];
-const setProjection = (angle: number, r: number, c: number) => {
+export const setProjection = (angle: number, r: number, c: number) => {
   projectionAngle = angle;
   projectionCenter = [r, c];
 };
 /** Izgara koordinatından (satır, sütun, yükseklik) ekran noktasına. */
-const P = (r: number, c: number, z = 0): Pt => {
+export const P = (r: number, c: number, z = 0): Pt => {
   const dr = r - projectionCenter[0], dc = c - projectionCenter[1];
   const cos = Math.cos(projectionAngle), sin = Math.sin(projectionAngle);
   const worldR = dr * cos + dc * sin;
   const worldC = dc * cos - dr * sin;
   return [(worldC - worldR) * A, (worldC + worldR) * B - z];
 };
-const pts = (ps: Pt[]) => ps.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+export const pts = (ps: Pt[]) => ps.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 
 /** Rengi siyaha (amt < 0) ya da beyaza (amt > 0) doğru karıştırır. */
-function shade(hex: string, amt: number) {
+export function shade(hex: string, amt: number) {
   const n = parseInt(hex.slice(1), 16);
   const to = amt < 0 ? 0 : 255, k = Math.abs(amt);
   const ch = (v: number) => Math.round(v + (to - v) * k);
@@ -69,7 +69,7 @@ function mix(a: string, b: string, t: number) {
 type Face = { key: string; points: string; fill: string; stroke?: string; strokeWidth?: number; strokeOpacity?: number; onPress?: () => void; edge?: boolean };
 
 /** Yüzü çizer. `edge` yüzler dolgusuz ışık kenarıdır (üst kenar ve öne bakan köşe). */
-const renderFace = (f: Face) =>
+export const renderFace = (f: Face) =>
   f.edge ? (
     <Polyline key={f.key} points={f.points} fill="none" stroke="#FFFFFF" strokeWidth={f.strokeWidth ?? 0.9} strokeOpacity={f.strokeOpacity ?? 0.5} strokeLinecap="round" strokeLinejoin="round" />
   ) : (
@@ -80,7 +80,7 @@ const renderFace = (f: Face) =>
  * Kutunun görünen 3 yüzü: Back-Face Culling ile sadece kameraya bakan 2 yan duvar ve üst yüz çizilir.
  * `hl` > 0 ise üst yüzün öne bakan iki kenarına ve öndeki dikey köşeye o saydamlıkta ışık çizgisi eklenir.
  */
-function box(key: string, r0: number, c0: number, dr: number, dc: number, z0: number, h: number, color: string, hl = 0): Face[] {
+export function box(key: string, r0: number, c0: number, dr: number, dc: number, z0: number, h: number, color: string, hl = 0): Face[] {
   const r1 = r0 + dr, c1 = c0 + dc, z1 = z0 + h;
   const sin = Math.sin(projectionAngle), cos = Math.cos(projectionAngle);
   const faces: Face[] = [];
@@ -112,7 +112,7 @@ const LEAF = '#7FB28A';
 const POT = '#C8826B';
 
 /** Odanın türüne göre minik eşya. Koordinatlar blok içinde 0–1 arası. */
-function furniture(type: RoomType, r: number, c: number, k: string, col: Colors): ReactElement[] {
+export function furniture(type: RoomType, r: number, c: number, k: string, col: Colors): ReactElement[] {
   const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
     box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
   const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string) => {
@@ -1151,7 +1151,9 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const painted = L >= 4;
   const wallColor = painted ? wallFace : BRICK;
   const capColor = painted ? cap : shade(BRICK, -0.15);
-  const wallH = (h: number) => (L === 3 ? Math.round(h * 0.55) : h);
+  // Seviye yükseldikçe duvarlar yükselir: 4. seviyede %78, 100'de tam boy.
+  const grow = 0.78 + 0.22 * Math.min(1, Math.max(0, L - 4) / (MAX_LEVEL - 4));
+  const wallH = (h: number) => (L === 3 ? Math.round(h * 0.55) : Math.round(h * grow));
   const wall = (key: string, r0: number, c0: number, dr: number, dc: number, h: number, color = wallColor) =>
     box(key, r0, c0, dr, dc, 0, h, color, 0.6).forEach(f => {
       if (f.key.endsWith('t')) {
@@ -1306,7 +1308,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     // Taban. Damalı olsun diye her ikinci blok çok hafif koyu. 4. seviyeye kadar çıplak kalas.
     const p = clean[id] ?? 100;
     const fl = floorOf(S, id);
-    const floorHex = fl ? ((r + col) % 2 && fl.alt ? fl.alt : fl.color) : '#D3B99A';
+    const balcFloor = S.rooms[id]?.type === 'balkon';
+    const floorHex = balcFloor ? ((r + col) % 2 ? '#C9C2B8' : '#D6D0C6') : fl ? ((r + col) % 2 && fl.alt ? fl.alt : fl.color) : '#D3B99A';
     const base = painted ? mix(dark ? shade(floorHex, -0.2) : floorHex, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
     add({ key: k + 'f', fill: base, points: tile, onPress: open, stroke: base, strokeWidth: 0.2 });
     // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
@@ -1431,7 +1434,20 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
 
     // Ön duvarlar: dışarıya bakan kenarlarda alçak bir parapet, içi görünsün.
-    if (L >= 3) {
+    if (L >= 3 && S.rooms[id]?.type === 'balkon') {
+      // Balkon evin dışında: dış kenarlarda korkuluk (üst çubuk + direkler).
+      const rail = (key: string, a: Pt, b: Pt) => {
+        const [x1, y1] = [a[0], a[1] - RAIL_H], [x2, y2] = [b[0], b[1] - RAIL_H];
+        els.push(<Line key={key} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#8B786D" strokeWidth={1.6} strokeLinecap="round" />);
+        for (const t of [0, 0.34, 0.67, 1]) {
+          const px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
+          els.push(<Line key={key + t} x1={px} y1={py} x2={px} y2={py - RAIL_H} stroke="#A99486" strokeWidth={1.1} />);
+        }
+      };
+      if (!at(r + 1, col)) rail(k + 'rs', P(r + 1, col), P(r + 1, col + 1));
+      if (!at(r, col + 1)) rail(k + 'rx', P(r, col + 1), P(r + 1, col + 1));
+    }
+    else if (L >= 3) {
       if (!at(r + 1, col)) wall(k + 's', r + 1 - T, col, T, 1, FRONT_H, wallTint(id, true));
       if (!at(r, col + 1)) wall(k + 'x', r, col + 1 - T, 1, T, FRONT_H, wallTint(id, true));
     } else if (L === 2) {
@@ -1649,7 +1665,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
           { translateY: floatY },
           { translateX: swayX },
           { rotate: tilt },
-          { scale: zoom },
+          { scale: zoom * (0.92 + 0.08 * Math.min(1, L / MAX_LEVEL)) },
           { scale: pinch },
           { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
         ],

@@ -139,6 +139,7 @@ function RootStack() {
         <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="magaza" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bahce" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="oda3d" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="dekor" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="odak" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />

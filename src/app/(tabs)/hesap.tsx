@@ -2,13 +2,13 @@ import { type BadgeArt } from '@/constants/badges';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { MokaReact } from '@/components/MokaReact';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
-import { MOKA_ASSETS } from '@/constants/moka';
 import { useStep } from '@/lib/firstRun';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
@@ -291,7 +291,7 @@ export default function Hesap() {
       <View {...mark('profil')}>
       <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
         <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
-          <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+          <MokaReact anim={hp.streak > 0 ? 'happy' : 'yawn'} size={64} />
         </View>
         <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
           <View>

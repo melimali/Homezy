@@ -15,6 +15,7 @@ import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
 import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
+import { MokaReact } from '@/components/MokaReact';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
@@ -103,7 +104,7 @@ export default function Home() {
           <View style={styles.mokaRow}>
             <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <MokaSprite anim={spriteAnim} size={54} />
+                <MokaReact anim={spriteAnim} size={54} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>

@@ -8,6 +8,7 @@ import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
 import { Appear, Pulse, Squish } from '@/components/motion';
+import { MokaReact } from '@/components/MokaReact';
 import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
@@ -71,6 +72,7 @@ export default function Bugun() {
               <T v="bold">Bugünkü ilerleme</T>
               <T v="small">{doneN}/{total} tamamlandı</T>
             </View>
+            <MokaReact anim={doneN === total ? 'party' : new Date(now).getHours() >= 23 ? 'sleepy' : 'happy'} size={48} />
             <Pulse on={doneN}>
               <Text style={[styles.pct, { color: c.ink }]}>{S.settings.language === 'en' ? `${Math.round((doneN / total) * 100)}%` : `%${Math.round((doneN / total) * 100)}`}</Text>
             </Pulse>

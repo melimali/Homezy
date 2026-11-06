@@ -46,6 +46,8 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const [clearArm, setClearArm] = useState(false);
   /** İlk kurulumda sade görünüm: hazır plan seç, bitti. Oda paleti, kat, silgi, boyut "Ayrıntılı düzenle" ile açılır. */
   const [adv, setAdv] = useState(false);
+  /** İlk kurulumda en baştaki soru: sadece kendi odam mı, tüm ev mi. */
+  const [ask, setAsk] = useState(() => !S.setup && S.order.length === 0);
   const [tplArm, setTplArm] = useState<string | null>(null);
   const [history, setHistory] = useState<PlanSnap[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
@@ -280,8 +282,17 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         <MokaMascot pose={help.pose} title={help.title} message={help.message} size="sm" />
       </Appear>
 
+      {ask && (
+        <Appear index={2} style={{ gap: 10 }}>
+          <T v="h3">Neyi temizlemek istiyorsun?</T>
+          <Btn kind="primary" label="🛏️ Sadece kendi odam" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
+          <T v="tiny" style={{ marginTop: -4 }}>Yurt, kiralık ya da ailenle yaşıyorsan: sadece odanın işleri görünür.</T>
+          <Btn label="🏠 Tüm evi" block onPress={() => setAsk(false)} />
+        </Appear>
+      )}
+
       {/* 1. Hazır şablon */}
-      <View style={{ gap: 8 }}>
+      {!ask && <View style={{ gap: 8 }}>
         <T v="h3">Hazır plan</T>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.row} style={st.bleed}>
           {TEMPLATES.map(t => {
@@ -297,9 +308,9 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         </ScrollView>
         {persona && !rooms.length && <T v="tiny">{PLAN[persona].planTip}</T>}
         {tplArm && <T v="tiny">Şablon mevcut planın yerine geçer. Emin isen tekrar dokun.</T>}
-      </View>
+      </View>}
 
-      {!(adv || S.setup) && (
+      {!ask && !(adv || S.setup) && (
         <Btn kind="ghost" label="✏️ Kendim çizeyim (ayrıntılı)" onPress={() => setAdv(true)} block />
       )}
       {(adv || S.setup) && (<>

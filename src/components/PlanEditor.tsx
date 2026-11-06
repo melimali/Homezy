@@ -275,22 +275,24 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     >
       {editing ? <BackLink /> : <AppHeader />}
       <View>
-        <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
-        <T v="h1">{editing ? 'Evini düzenle' : 'Evini birlikte çizelim'}</T>
+        <T v="eyebrow">{editing ? 'Ev planı' : ask ? 'Başlayalım' : 'Adım 1 / 2'}</T>
+        <T v="h1">{editing ? 'Evini düzenle' : ask ? 'Nerede yaşıyorsun?' : 'Planını kontrol et'}</T>
+        {ask && <T v="small">Küçük adımlar, uzun soluklu disiplin.</T>}
       </View>
 
-      <Appear index={1}>
-        <MokaMascot pose={help.pose} title={help.title} message={help.message} size="sm" />
-      </Appear>
+      {!ask && (
+        <Appear index={1}>
+          <MokaMascot pose={help.pose} title={help.title} message={help.message} size="sm" />
+        </Appear>
+      )}
 
       {ask && (
-        <Appear index={2} style={{ gap: 10 }}>
-          <T v="h3">Nerede yaşıyorsun?</T>
+        <Appear index={2} style={{ gap: 12 }}>
           <Btn label="👨‍👩‍👧 Aile evi" block onPress={() => setAsk(false)} />
           <Btn label="🏠 Kişisel ev" block onPress={() => setAsk(false)} />
-          <Btn kind="primary" label="🛏️ Oda" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
-          <Btn kind="primary" label="🎓 Yurt" block onPress={() => { setAsk(false); pickTemplate('tek'); update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; }); }} />
-          <T v="tiny">Oda ve Yurt: sadece kendi odanın işleri görünür. Aile evi ve Kişisel ev: tüm ev.</T>
+          <Btn label="🛏️ Sadece odam" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
+          <Btn label="🎓 Yurt" block onPress={() => { setAsk(false); pickTemplate('tek'); update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; }); }} />
+          <T v="tiny" style={{ textAlign: 'center' }}>Oda ve Yurt: sadece kendi odanın işleri görünür. Sonra değiştirebilirsin.</T>
         </Appear>
       )}
 
@@ -351,17 +353,17 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
 
       </>)}
       {/* 3. Plan */}
-      <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
+      {!ask && <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
         <Plan state={view} edit activeId={tool} onPaint={paint} onPaintingChange={setPainting} />
-      </View>
+      </View>}
 
       {(adv || S.setup) && <View style={st.sizeRow}>
         <Stepper label="Genişlik" n={S.cols} min={GRID.minCols} max={GRID.maxCols} onStep={d => resize(d, 0)} />
         <Stepper label="Uzunluk" n={S.rows} min={GRID.minRows} max={GRID.maxRows} onStep={d => resize(0, d)} />
       </View>}
-      <T v="small" style={{ textAlign: 'center' }}>
+      {!ask && <T v="small" style={{ textAlign: 'center' }}>
         {rooms.length} oda · ~{blocks * 2} m² · {S.cols} × {S.rows} blok{upper ? ' · 2 kat' : ''}
-      </T>
+      </T>}
 
       {/* Odalar: dokun → çiz, kalem → adı / sil */}
       {rooms.length > 0 && (
@@ -394,10 +396,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         </View>
       )}
 
-      <View style={st.actions}>
+      {!ask && <View style={st.actions}>
         <Btn label={clearArm ? 'Emin misin?' : 'Temizle'} kind={clearArm ? 'danger' : 'ghost'} onPress={clear} style={{ flex: 1 }} />
         <Btn label={editing ? 'Kaydet' : 'Evimi kaydet 🏡'} kind="primary" onPress={save} style={{ flex: 1.6 }} />
-      </View>
+      </View>}
       {footer}
 
       <Sheet open={!!er} onClose={() => setEditId(null)} pose="handyman">

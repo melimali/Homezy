@@ -4,7 +4,7 @@ Durum: sadece tasarım, kod yok. Dal: integration/tum-pr. Mevcut "Seni tanıyal�
 
 ## 0. Akış
 Moka tanıtımı → **Amaç ekranı** → A bölümü (ev, 6-7 soru) → B bölümü (disiplin, 10 soru + dallanan 2 soru) → Moka "notlarını alıyor" → **Tip ekranı** → **Plan ekranı** → ev kurulumu.
-Toplam ≈ 17-19 soru, tek dokunuş, ilerleme çubuğu, geri tuşu, "Atla" (varsayılan tip: Moka Klasik). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
+Toplam ≈ 17-19 soru, tek dokunuş, ilerleme çubuğu, geri tuşu, "Atla" (varsayılan tip: Dengeli Moka). Hepsi telefonda hesaplanır, yapay zekâ yok, internet gerekmez.
 
 ## 1. Sorular
 ### A. Ev (mevcut, değişmez)
@@ -50,16 +50,16 @@ Sonuç sınırlandırılır 0-10. Eşik: yüksek ≥ 7, orta 4-6, düşük ≤ 3
 Önce özel kural, yoksa en yakın eşleşme (sıra önemli):
 | Tip | Kural | Moka diyor ki |
 |---|---|---|
-| 📋 **Moka Filtre** | D≥7 ve B≥5 | "Senin için planı sen çizersin. Ben sadece saati tutarım." |
-| ⚡ **Moka Espresso** | B≥7 ve Y≤5 | "Hızlı başlarsın, güzel! Ben seni yolda tutarım." |
-| 🧊 **Moka Cold Brew** | Y≥7 ve B≤5 | "Geç başlarsın ama bırakmazsın. Küçük adımlar sana yeter." |
-| 🎯 **Moka Türk Kahvesi** | O≥7 ve D≥4 | "Odaklanınca dağları aşarsın. Sana derin çalışma blokları kuruyorum." |
-| 🎨 **Moka Cappuccino** | O≤3 veya B5=dikkat dağılıyor | "Aklın çok yerde, bu güzel bir şey. Seni kısa turlarla toplayacağım." |
-| 🔥 **Moka Doppio** | B5=hepsini bırakırım ve G≤5 | "Ya hep ya hiç. Bir gün aksarsa dert değil, seri dondurma var." |
-| 🥛 **Moka Latte** | G≥7 ve D≤5 | "Sana kimse baskı yapmasın. Esnek, kendi hızında bir plan yaptım." |
-| ☕ **Moka Klasik** | Hiçbiri (varsayılan, "Atla" da buraya) | "Her şeyden biraz. Birlikte neyin sana uyduğunu bulacağız." |
+| 📋 **Planlı Moka** | D≥7 ve B≥5 | "Senin için planı sen çizersin. Ben sadece saati tutarım." |
+| ⚡ **Atik Moka** | B≥7 ve Y≤5 | "Hızlı başlarsın, güzel! Ben seni yolda tutarım." |
+| 🧊 **Sakin Moka** | Y≥7 ve B≤5 | "Geç başlarsın ama bırakmazsın. Küçük adımlar sana yeter." |
+| 🎯 **Odaklı Moka** | O≥7 ve D≥4 | "Odaklanınca dağları aşarsın. Sana derin çalışma blokları kuruyorum." |
+| 🎨 **Dalgın Moka** | O≤3 veya B5=dikkat dağılıyor | "Aklın çok yerde, bu güzel bir şey. Seni kısa turlarla toplayacağım." |
+| 🔥 **Hırslı Moka** | B5=hepsini bırakırım ve G≤5 | "Ya hep ya hiç. Bir gün aksarsa dert değil, seri dondurma var." |
+| 🥛 **Tembel Moka** | G≥7 ve D≤5 | "Sana kimse baskı yapmasın. Esnek, kendi hızında bir plan yaptım." |
+| ☕ **Dengeli Moka** | Hiçbiri (varsayılan, "Atla" da buraya) | "Her şeyden biraz. Birlikte neyin sana uyduğunu bulacağız." |
 
-Birden fazla tip tutarsa sıra: Cappuccino > Doppio > Filtre > Espresso > Türk Kahvesi > Cold Brew > Latte > Klasik. Her tip için 2. bir "yan renk" (ikinci en yüksek eksen) gösterilir: "Biraz da Moka Türk Kahvesi gibisin". Tip kaydı: `AppState.persona.discipline = {type, axes, answers, at}` (şema sürümü artar). Test 90 günde bir yeniden yapılabilir (Ben → Moka'nın notları).
+Birden fazla tip tutarsa sıra: Dalgın > Hırslı > Planlı > Atik > Odaklı > Sakin > Tembel > Dengeli. Her tip için 2. bir "yan renk" (ikinci en yüksek eksen) gösterilir: "Biraz da Odaklı Moka gibisin". Tip kaydı: `AppState.persona.discipline = {type, axes, answers, at}` (şema sürümü artar). Test 90 günde bir yeniden yapılabilir (Ben → Moka'nın notları).
 
 ## 3. Plan üretim kuralları
 Plan = **modüller** (B1 alanlarından) + **gün şablonu** (tipten) + **ayarlar** (cevaplardan). Her modül mevcut parçalara bağlanır (rutin, `growth.ts`, `workout.ts`, `meds.ts`, Günlük, Bugün).
@@ -73,14 +73,14 @@ Ayarlar:
 Tip şablonları:
 | Tip | Biçim | Hatırlatma | Seri/ödül |
 |---|---|---|---|
-| Moka Filtre | Saatlik program, haftalık plan ekranı | Sabah planı + akşam gözden geçirme | Haftalık rapor vurgusu |
-| Moka Espresso | Günde 3 hedef, her hafta zorluk +1 | Az bildirim | Zorluk rozetleri |
-| Moka Cold Brew | Günde 1-2 mikro görev (5 dk), her 7 günde +1 | Nazik, akşam | "Bugün de oldu" kutlaması |
-| Moka Türk Kahvesi | 1 ana derin çalışma bloğu + 2 ufak | Blok başlangıcında | Odak dakikası grafiği |
-| Moka Cappuccino | 10-15 dk'lık mini görevler, sık değişen çeşitlilik | Kısa, çok değil | Anında yıldız, oyunlaştırma |
-| Moka Doppio | Küçük zafer + "yarım yaptım" sayılır, kaçırınca suçluluk yok | Kaçırılan günde "devam et" mesajı | Seri dondurma önerisi, ilk hafta 2 dondurma |
-| Moka Latte | Haftada hedef (günlere dağıt), saat yok | Yok / kullanıcı seçer | Kendi hedef notu, Günlük |
-| Moka Klasik | Her alandan 1 görev, 3 gün sonra uyarlanır | Standart | Standart |
+| Planlı Moka | Saatlik program, haftalık plan ekranı | Sabah planı + akşam gözden geçirme | Haftalık rapor vurgusu |
+| Atik Moka | Günde 3 hedef, her hafta zorluk +1 | Az bildirim | Zorluk rozetleri |
+| Sakin Moka | Günde 1-2 mikro görev (5 dk), her 7 günde +1 | Nazik, akşam | "Bugün de oldu" kutlaması |
+| Odaklı Moka | 1 ana derin çalışma bloğu + 2 ufak | Blok başlangıcında | Odak dakikası grafiği |
+| Dalgın Moka | 10-15 dk'lık mini görevler, sık değişen çeşitlilik | Kısa, çok değil | Anında yıldız, oyunlaştırma |
+| Hırslı Moka | Küçük zafer + "yarım yaptım" sayılır, kaçırınca suçluluk yok | Kaçırılan günde "devam et" mesajı | Seri dondurma önerisi, ilk hafta 2 dondurma |
+| Tembel Moka | Haftada hedef (günlere dağıt), saat yok | Yok / kullanıcı seçer | Kendi hedef notu, Günlük |
+| Dengeli Moka | Her alandan 1 görev, 3 gün sonra uyarlanır | Standart | Standart |
 
 Modül örnekleri (B1 → ne eklenir):
 - 🏠 Ev: mevcut ev planı + A cevapları.
@@ -127,13 +127,13 @@ Kullanım: önce ChatGPT'ye mevcut Moka çıkartmalarından 1-2 tanesini (ör. `
 
 | Tip | Moka'nın hâli | Prompt (başlığın sonuna ekle) |
 |---|---|---|
-| 📋 **Moka Filtre** (planlayıcı, düzenli) | Filtre kahve, plan defteri | Moka, elinde açık kareli plan defteri ve kalem, yanında cam filtre kahve demliği, küçük yuvarlak gözlük; kendinden emin hafif gülümseme. |
-| ⚡ **Moka Espresso** (hızlı başlayan) | Minik espresso fincanı, zıplıyor | Moka, elinde minik beyaz espresso fincanı, havaya zıplıyor, arkada küçük hız çizgileri ve kıvılcımlar; heyecanlı, kararlı geniş gülümseme. |
-| 🧊 **Moka Cold Brew** (sabırlı, istikrarlı) | Buzlu kahve, sakin | Moka, elinde buz küplü uzun cam soğuk kahve, yavaş ve sakin duruyor, gözler yarı kapalı huzurlu; yanında küçük bir kum saati. |
-| 🎯 **Moka Türk Kahvesi** (odaklı) | Cezve ve küçük fincan | Moka, bakır cezve ve küçük süslü Türk kahvesi fincanıyla, keskin odaklı bakış, dik duruş; yanında içinde ok olan küçük bir hedef tahtası. |
-| 🎨 **Moka Cappuccino** (dağınık ama yaratıcı) | Köpük sanatı, renkli noktalar | Moka, elinde kalp latte-art'lı cappuccino fincanı, etrafında uçuşan minik yıldız, nota ve boya lekeleri; meraklı, neşeli, hafif şaşkın ifade. |
-| 🔥 **Moka Doppio** (ya hep ya hiç, enerjik) | Çift shot, buharlı | Moka, iki küçük espresso fincanını birden tutuyor, fincanlardan yükselen buhar hafif alev gibi; hırslı, tutkulu ifade, kaşlar hafif çatık ama sevimli. |
-| 🥛 **Moka Latte** (özgür, kendi hızında) | Battaniye, sütlü kahve | Moka, yumuşak battaniyeye sarılmış, büyük süt köpüklü latte kupası, rahat bir yastıkta oturuyor; yarı kapalı keyifli gözler, rahat gülümseme. |
-| ☕ **Moka Klasik** (dengeli) | Moka'nın kendisi | Moka, klasik hâliyle, iki kanadı yana açık, sıcak dengeli gülümseme, yanında küçük bir kahve fincanı ve yeşil yaprak; sade, huzurlu. |
+| 📋 **Planlı Moka** (planlayıcı, düzenli) | Filtre kahve, plan defteri | Moka, elinde açık kareli plan defteri ve kalem, yanında cam filtre kahve demliği, küçük yuvarlak gözlük; kendinden emin hafif gülümseme. |
+| ⚡ **Atik Moka** (hızlı başlayan) | Minik espresso fincanı, zıplıyor | Moka, elinde minik beyaz espresso fincanı, havaya zıplıyor, arkada küçük hız çizgileri ve kıvılcımlar; heyecanlı, kararlı geniş gülümseme. |
+| 🧊 **Sakin Moka** (sabırlı, istikrarlı) | Buzlu kahve, sakin | Moka, elinde buz küplü uzun cam soğuk kahve, yavaş ve sakin duruyor, gözler yarı kapalı huzurlu; yanında küçük bir kum saati. |
+| 🎯 **Odaklı Moka** (odaklı) | Cezve ve küçük fincan | Moka, bakır cezve ve küçük süslü Türk kahvesi fincanıyla, keskin odaklı bakış, dik duruş; yanında içinde ok olan küçük bir hedef tahtası. |
+| 🎨 **Dalgın Moka** (dağınık ama yaratıcı) | Köpük sanatı, renkli noktalar | Moka, elinde kalp latte-art'lı cappuccino fincanı, etrafında uçuşan minik yıldız, nota ve boya lekeleri; meraklı, neşeli, hafif şaşkın ifade. |
+| 🔥 **Hırslı Moka** (ya hep ya hiç, enerjik) | Çift shot, buharlı | Moka, iki küçük espresso fincanını birden tutuyor, fincanlardan yükselen buhar hafif alev gibi; hırslı, tutkulu ifade, kaşlar hafif çatık ama sevimli. |
+| 🥛 **Tembel Moka** (özgür, kendi hızında) | Battaniye, sütlü kahve | Moka, yumuşak battaniyeye sarılmış, büyük süt köpüklü latte kupası, rahat bir yastıkta oturuyor; yarı kapalı keyifli gözler, rahat gülümseme. |
+| ☕ **Dengeli Moka** (dengeli) | Moka'nın kendisi | Moka, klasik hâliyle, iki kanadı yana açık, sıcak dengeli gülümseme, yanında küçük bir kahve fincanı ve yeşil yaprak; sade, huzurlu. |
 
-Not: tip kartı arka plan rengi: Filtre kahve, Espresso turuncu, Cold Brew mavi, Türk Kahvesi lacivert, Cappuccino pembe, Doppio kırmızı-turuncu, Latte krem, Klasik mint. Dosya adı önerisi: `assets/moka/tip/moka_<filtre|espresso|coldbrew|turk|cappuccino|doppio|latte|klasik>.webp`.
+Not: tip kartı arka plan rengi: Planlı kahve, Atik turuncu, Sakin mavi, Odaklı lacivert, Dalgın pembe, Hırslı kırmızı-turuncu, Tembel krem, Dengeli mint. Dosya adı önerisi: `assets/moka/tip/moka_<planli|atik|sakin|odakli|dalgin|hirsli|tembel|dengeli>.webp`.

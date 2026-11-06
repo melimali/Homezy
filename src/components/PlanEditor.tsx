@@ -284,10 +284,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
 
       {ask && (
         <Appear index={2} style={{ gap: 10 }}>
-          <T v="h3">Neyi temizlemek istiyorsun?</T>
-          <Btn kind="primary" label="🛏️ Sadece kendi odam" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
-          <T v="tiny" style={{ marginTop: -4 }}>Yurt, kiralık ya da ailenle yaşıyorsan: sadece odanın işleri görünür.</T>
-          <Btn label="🏠 Tüm evi" block onPress={() => setAsk(false)} />
+          <T v="h3">Nerede yaşıyorsun?</T>
+          <Btn label="👨‍👩‍👧 Aile evi" block onPress={() => setAsk(false)} />
+          <Btn label="🏠 Kişisel ev" block onPress={() => setAsk(false)} />
+          <Btn kind="primary" label="🛏️ Oda" block onPress={() => { setAsk(false); pickTemplate('tek'); }} />
+          <Btn kind="primary" label="🎓 Yurt" block onPress={() => { setAsk(false); pickTemplate('tek'); update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; }); }} />
+          <T v="tiny">Oda ve Yurt: sadece kendi odanın işleri görünür. Aile evi ve Kişisel ev: tüm ev.</T>
         </Appear>
       )}
 

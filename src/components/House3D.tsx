@@ -1195,10 +1195,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   // Kapılar: iki oda arasındaki her duvarda bir kapı (en arkadaki ortak blokta), giriş kapısı antrede.
   const doors = new Set<string>();
   const seenPair = new Set<string>();
+  // Antre (koridor) varsa odalar sadece antreye açılır; odalar arası kapı yok.
+  const hallway = cells.some(cid => cid && S.rooms[cid]?.type === 'antre');
   for (const i of order) {
     const id = cells[i]!, r = Math.floor(i / cols), col = i % cols;
     for (const [dir, nb] of [['n', at(r - 1, col)], ['w', at(r, col - 1)]] as const) {
       if (!nb || nb === id) continue;
+      if (hallway && S.rooms[id]?.type !== 'antre' && S.rooms[nb]?.type !== 'antre') continue;
       const pair = [id, nb].sort().join('|');
       if (seenPair.has(pair)) continue;
       seenPair.add(pair);

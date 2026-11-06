@@ -48,12 +48,12 @@ type Page = {
 const ALL_PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
-    title: 'Evini düzenle, günü kazan',
-    text: 'Homezy, ev işlerini her gün küçük bir alışkanlığa çevirir. Ben Moka, yanında olacağım.',
+    title: 'Küçük adımlar, uzun soluklu disiplin',
+    text: 'Bir oda toplayarak başla; spora, sonra kendini geliştirmeye uzan. Homezy her gün yanında, ben Moka da.',
     caption: 'Merhaba, ben Moka ☕',
     scene: POSE_SCENES.happy!,
     tint: c => c.peachSoft,
-    chips: ['✅ Günlük disiplin', '🤍 Yargısız', '☕ Moka'],
+    chips: ['🧹 Oda toplama', '🏃 Spor', '🌱 Kişisel gelişim'],
   },
   {
     eyebrow: 'Evini çiz',
@@ -94,12 +94,12 @@ const ALL_PAGES: Page[] = [
   },
   {
     eyebrow: 'Kendin için',
-    title: 'Spor, günlük, ruh halin',
-    text: 'Antrenmanını kaydet, günün nasıldı yaz. Haftalık grafiklerle ne kadar yol aldığını gör.',
+    title: 'Spora ve kendine uzan',
+    text: 'Oda düzeninle kurduğun alışkanlığı spora ve kişisel gelişime taşı: antrenman, günlük, kitap ve film önerileri. Grafiklerle yolunu gör.',
     caption: 'Kendine de zaman ayır',
     scene: POSE_SCENES.reading!,
     tint: c => c.lavenderSoft,
-    chips: ['🏃 Spor', '📔 Günlük', '💛 Ruh hali', '📊 Gelişim'],
+    chips: ['🏃 Spor', '📔 Günlük', '📚 Kendini geliştir', '📊 Gelişim'],
   },
   {
     eyebrow: 'Premium',

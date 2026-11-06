@@ -1,89 +1,47 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
+import { AccessibilityInfo, Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MOKA_ASSETS } from '@/constants/moka';
-import { WM_PARTS, WORDMARK, type WmKey } from '@/constants/wordmark';
 import { fonts, useColors } from '@/theme';
 
 /**
- * Açılış animasyonu (~2,7 sn): çizgi film "splash pop".
- * Dönen ışın deseni, konfeti patlaması, Moka yukarıdan düşüp ezilip esner (squash & stretch),
- * "Homezy" harfleri renk renk yaylanarak zıplar. Dokununca atlanır; her soğuk açılışta bir kez.
- * Sadece opacity ve transform canlandırılır (useNativeDriver). Döngü yok, hepsi sonlu.
+ * Açılış (~1,8 sn): sade ve sakin. Düz zemin, Moka yumuşakça belirir,
+ * altında "Homezy" ve slogan. Dokununca ya da "Geç" ile atlanır; her soğuk açılışta bir kez.
+ * Sadece opacity ve transform (useNativeDriver). Döngü yok.
  */
 
-const MOKA = 210;
-const WORD = 'Homezy'.split('');
-const RAYS = 14;
-const CONFETTI = 26;
-
-type Shape = 'dot' | 'square' | 'bar';
-const SHAPES: Shape[] = ['dot', 'square', 'bar'];
+const MOKA = 150;
 
 export function IntroSplash({ onDone }: { onDone: () => void }) {
   const c = useColors();
-  const { width: W, height: H } = useWindowDimensions();
   const [v] = useState(() => ({
-    bg: new Animated.Value(0),
-    spin: new Animated.Value(0),
-    ring: new Animated.Value(0),
-    burst: new Animated.Value(0),
-    pop: new Animated.Value(0),
-    word: WORD.map(() => new Animated.Value(0)),
+    moka: new Animated.Value(0),
+    word: new Animated.Value(0),
     tag: new Animated.Value(0),
     all: new Animated.Value(1),
-    out: new Animated.Value(0),
   }));
   const [ending, setEnding] = useState(false);
-
-  const palette = [c.rose, c.lavender, c.sage, c.glow, c.hi, c.peach, c.clay];
-  const letterColors = [c.accent, c.warm, c.late, c.hi, c.accent, c.warm];
-
-  const confetti = useState(() =>
-    Array.from({ length: CONFETTI }, (_, i) => {
-      const a = (i / CONFETTI) * Math.PI * 2 + (i % 2) * 0.13;
-      return {
-        a,
-        d: 120 + ((i * 53) % 100) + (i % 3) * 30,
-        size: 9 + ((i * 7) % 10),
-        shape: SHAPES[i % 3],
-        rot: ((i * 97) % 360) - 180,
-        color: i % palette.length,
-      };
-    }),
-  )[0];
 
   const skip = () => {
     if (ending) return;
     setEnding(true);
-    Animated.timing(v.all, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => onDone());
+    Animated.timing(v.all, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => onDone());
   };
 
   useEffect(() => {
     let alive = true;
-    const at = (delay: number, val: Animated.Value, duration: number, easing: (t: number) => number, toValue = 1) =>
-      Animated.sequence([Animated.delay(delay), Animated.timing(val, { toValue, duration, easing, useNativeDriver: true })]);
-
+    const at = (delay: number, val: Animated.Value, duration: number, toValue = 1) =>
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(val, { toValue, duration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]);
     const anim = Animated.parallel([
-      at(0, v.bg, 260, Easing.out(Easing.quad)),
-      at(0, v.spin, 2700, Easing.linear),
-      at(350, v.ring, 700, Easing.out(Easing.back(2))),
-      at(500, v.pop, 950, Easing.linear),
-      at(780, v.burst, 1100, Easing.out(Easing.cubic)),
-      ...v.word.map((w, i) =>
-        Animated.sequence([
-          Animated.delay(1050 + i * 70),
-          Animated.spring(w, { toValue: 1, friction: 4, tension: 150, useNativeDriver: true }),
-        ]),
-      ),
-      at(1550, v.tag, 400, Easing.out(Easing.quad)),
-      // Eve geçiş: büyüyüp erir
-      at(2400, v.out, 300, Easing.in(Easing.quad)),
-      at(2400, v.all, 300, Easing.in(Easing.quad), 0),
+      at(0, v.moka, 500),
+      at(300, v.word, 450),
+      at(700, v.tag, 450),
+      at(1500, v.all, 300, 0),
     ]);
-
     AccessibilityInfo.isReduceMotionEnabled()
       .catch(() => false)
       .then((reduce) => {
@@ -102,163 +60,34 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const lerp = (val: Animated.Value, from: number, to: number) =>
     val.interpolate({ inputRange: [0, 1], outputRange: [from, to] });
 
-  const RAY = Math.hypot(W, H) * 1.1;
-  const RAY_PX = 600;
-  const wedge = (Math.PI * 2) / RAYS;
-  const rayPath = Array.from({ length: RAYS / 2 }, (_, i) => {
-    const a0 = i * 2 * wedge;
-    const a1 = a0 + wedge;
-    const p = (a: number) => `${RAY + Math.cos(a) * RAY} ${RAY + Math.sin(a) * RAY}`;
-    return `M${RAY} ${RAY} L${p(a0)} L${p(a1)} Z`;
-  }).join(' ');
-
-  const popIn = [0, 0.3, 0.5, 0.7, 1];
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.peach, opacity: v.all }]}>
-      <StatusBar style="dark" />
+    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.bg, opacity: v.all }]}>
+      <StatusBar style="auto" />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
-        <Animated.View
-          style={[st.center, { opacity: v.bg, transform: [{ scale: lerp(v.out, 1, 1.15) }] }]}
-          pointerEvents="none">
-          {/* Dönen güneş ışınları */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              width: RAY_PX,
-              height: RAY_PX,
-              transform: [
-                { rotate: v.spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '40deg'] }) },
-                { scale: (RAY * 2) / RAY_PX },
-              ],
-            }}>
-            {/* Android çok büyük bitmap çizemez (5800x5800 px çökertiyordu): küçük çiz, ölçekle. */}
-            <Svg width={RAY_PX} height={RAY_PX} viewBox={`0 0 ${RAY * 2} ${RAY * 2}`}>
-              <Path d={rayPath} fill={c.cream} opacity={0.35} />
-            </Svg>
-          </Animated.View>
-
-          {/* Moka'nın arkasında parlayan halka */}
-          <Animated.View style={{ position: 'absolute', opacity: v.ring, transform: [{ scale: lerp(v.ring, 0.2, 1) }, { translateY: -40 }] }}>
-            <Svg width={340} height={340}>
-              <Defs>
-                <RadialGradient id="r" cx="50%" cy="50%" r="50%">
-                  <Stop offset="0" stopColor={c.cream} stopOpacity={0.95} />
-                  <Stop offset="0.7" stopColor={c.cream} stopOpacity={0.5} />
-                  <Stop offset="1" stopColor={c.cream} stopOpacity={0} />
-                </RadialGradient>
-              </Defs>
-              <Circle cx={170} cy={170} r={170} fill="url(#r)" />
-            </Svg>
-          </Animated.View>
-
-          {/* Konfeti patlaması */}
-          {confetti.map((p, i) => {
-            const dx = Math.cos(p.a) * p.d;
-            const dy = Math.sin(p.a) * p.d - 40;
-            return (
-              <Animated.View
-                key={i}
-                style={[
-                  st.piece,
-                  p.shape === 'dot' && { width: p.size, height: p.size, borderRadius: p.size / 2 },
-                  p.shape === 'square' && { width: p.size, height: p.size, borderRadius: 3 },
-                  p.shape === 'bar' && { width: p.size * 1.8, height: p.size * 0.5, borderRadius: p.size },
-                  {
-                    backgroundColor: palette[p.color],
-                    opacity: v.burst.interpolate({ inputRange: [0, 0.05, 0.75, 1], outputRange: [0, 1, 1, 0] }),
-                    transform: [
-                      { translateX: lerp(v.burst, 0, dx) },
-                      { translateY: v.burst.interpolate({ inputRange: [0, 1], outputRange: [0, dy + 50] }) },
-                      { rotate: v.burst.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${p.rot * 2}deg`] }) },
-                      { scale: v.burst.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1.2, 0.8] }) },
-                    ],
-                  },
-                ]}
-              />
-            );
-          })}
-
-          {/* Moka: yukarıdan düşer, ezilir, esner, oturur */}
-          <Animated.View
-            style={{
-              width: MOKA,
-              height: MOKA,
-              marginTop: -70,
-              opacity: v.pop.interpolate({ inputRange: [0, 0.05, 1], outputRange: [0, 1, 1] }),
-              transform: [
-                { translateY: v.pop.interpolate({ inputRange: popIn, outputRange: [-H * 0.45, 0, -34, 0, 0] }) },
-                { scaleX: v.pop.interpolate({ inputRange: [0, 0.28, 0.3, 0.42, 0.5, 0.7, 0.8, 1], outputRange: [0.8, 0.8, 1.3, 0.92, 0.95, 1.06, 0.98, 1] }) },
-                { scaleY: v.pop.interpolate({ inputRange: [0, 0.28, 0.3, 0.42, 0.5, 0.7, 0.8, 1], outputRange: [1.25, 1.25, 0.72, 1.1, 1.08, 0.94, 1.02, 1] }) },
-              ],
-            }}>
-            <Image source={MOKA_ASSETS.happy} style={st.moka} resizeMode="contain" />
-          </Animated.View>
-
-          {/* Homezy yazı logosu: harfler tek tek (logodan kırpıldı), sonra dalga çizgisi ve parıltılar */}
-          <Wordmark v={v.word} tag={v.tag} width={Math.min(W * 0.96, 420)} lerp={lerp} />
-          <Animated.Text style={[st.tag, { color: c.ink, opacity: v.tag, transform: [{ translateY: lerp(v.tag, 10, 0) }] }]}>
-            Moka ile sıcacık bir ev ☕
+        <View style={st.center} pointerEvents="none">
+          <Animated.Image
+            source={MOKA_ASSETS.happy}
+            resizeMode="contain"
+            style={{ width: MOKA, height: MOKA, opacity: v.moka, transform: [{ translateY: lerp(v.moka, 12, 0) }, { scale: lerp(v.moka, 0.94, 1) }] }}
+          />
+          <Animated.Text style={[st.word, { color: c.ink, opacity: v.word, transform: [{ translateY: lerp(v.word, 8, 0) }] }]}>
+            Homezy
           </Animated.Text>
-        </Animated.View>
+          <Animated.Text style={[st.tag, { color: c.muted, opacity: v.tag }]}>
+            Küçük adımlar, uzun soluklu disiplin
+          </Animated.Text>
+        </View>
+        <Text style={[st.skip, { color: c.muted }]}>Geç</Text>
       </Pressable>
     </Animated.View>
-  );
-}
-
-const LETTER_KEYS: WmKey[] = ['h', 'o', 'm', 'e', 'z', 'y'];
-
-function Wordmark({ v, tag, width, lerp }: { v: Animated.Value[]; tag: Animated.Value; width: number; lerp: (val: Animated.Value, from: number, to: number) => Animated.AnimatedInterpolation<number> }) {
-  const k = width / WORDMARK.w;
-  const box = (key: WmKey) => {
-    const p = WM_PARTS[key];
-    return { position: 'absolute' as const, left: p.x * k, top: p.y * k, width: p.w * k, height: p.h * k };
-  };
-  return (
-    <View style={{ width, height: WORDMARK.h * k, marginTop: 2 }}>
-      {LETTER_KEYS.map((key, i) => (
-        <Animated.Image
-          key={key}
-          source={WM_PARTS[key].src}
-          resizeMode="contain"
-          style={[box(key), {
-            opacity: v[i].interpolate({ inputRange: [0, 0.2], outputRange: [0, 1], extrapolate: 'clamp' }),
-            transform: [
-              { translateY: lerp(v[i], 70 * k * 2, 0) },
-              { scale: lerp(v[i], 0.2, 1) },
-              { rotate: v[i].interpolate({ inputRange: [0, 1], outputRange: [`${i % 2 ? 16 : -16}deg`, '0deg'] }) },
-            ],
-          }]}
-        />
-      ))}
-      <Animated.Image
-        source={WM_PARTS.swoosh.src}
-        resizeMode="contain"
-        style={[box('swoosh'), { opacity: tag, transform: [{ scaleX: lerp(tag, 0.3, 1) }] }]}
-      />
-      <Animated.Image
-        source={WM_PARTS.spark.src}
-        resizeMode="contain"
-        style={[box('spark'), { opacity: tag, transform: [{ scale: tag.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1.3, 1] }) }, { rotate: tag.interpolate({ inputRange: [0, 1], outputRange: ['-40deg', '0deg'] }) }] }]}
-      />
-    </View>
   );
 }
 
 const st = StyleSheet.create({
   root: { zIndex: 100, elevation: 100 },
   fill: { flex: 1 },
-  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  piece: { position: 'absolute' },
-  moka: { width: MOKA, height: MOKA },
-  word: { flexDirection: 'row', marginTop: 6 },
-  wordCh: {
-    fontFamily: fonts.displayBold,
-    fontSize: 62,
-    lineHeight: 74,
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(255,248,238,0.9)',
-    textShadowRadius: 0,
-    textShadowOffset: { width: 0, height: 3 },
-  },
-  tag: { fontFamily: fonts.bodyBold, fontSize: 16, marginTop: 2 },
+  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  word: { fontFamily: fonts.displayBold, fontSize: 44, lineHeight: 54, marginTop: 8, letterSpacing: -0.5 },
+  tag: { fontFamily: fonts.body, fontSize: 15, marginTop: 4, textAlign: 'center' },
+  skip: { position: 'absolute', right: 24, bottom: 40, fontFamily: fonts.bodyBold, fontSize: 14 },
 });

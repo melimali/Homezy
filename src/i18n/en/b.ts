@@ -47,6 +47,8 @@ export const EN_B: Record<string, string> = {
   'Işıl ışıl': 'Sparkling',
   'Rozetlerin 🏆': 'Your badges 🏆',
   'Moka ile sıcacık bir ev ☕': 'A cozy home with Moka ☕',
+  'Küçük adımlar, uzun soluklu disiplin': 'Small steps, lasting discipline',
+  'Geç': 'Skip',
   'Evin büyüdü! 🏡': 'Your home grew! 🏡',
   'Yeni seviyeye ulaştın. Premium eşyalar da seni bekliyor:': 'You reached a new level. Premium items are waiting for you too:',
   'Temizlik yaparken veya dinlenirken ruhunu dinlendirecek huzurlu ASMR ve Lo-Fi sesler.': 'Peaceful ASMR and Lo-Fi sounds to relax you while cleaning or resting.',

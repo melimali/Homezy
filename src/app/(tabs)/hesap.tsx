@@ -248,7 +248,7 @@ export default function Hesap() {
         { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },
       ] : []),
     ] },
-    { key: 'ev', emoji: '🏠', title: 'Ev', tint: c.peachSoft, sub: 'Plan, dolap, bakım', items: [
+    { key: 'ev', emoji: '🏠', title: 'Evim', tint: c.peachSoft, sub: 'Plan, dolap, bakım, buzdolabı', items: [
       { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
       { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
       { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
@@ -309,28 +309,51 @@ export default function Hesap() {
       </Appear>
       </View>
 
-      <Appear index={2} style={st.pins}>
-        {pins.map(x => (
-          <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
-          <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
-            <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
-            <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
-          </Squish>
+      <Appear index={2} style={st.stats}>
+        {([
+          { e: '🔥', n: hp.streak, l: 'gün seri', tint: c.peachSoft },
+          { e: '⭐', n: state.play.points, l: 'puan', tint: c.lavenderSoft },
+          { e: '✅', n: weekDone, l: 'bu hafta', tint: c.sageSoft },
+          { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },
+        ]).map(x => (
+          <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
+            <Text style={{ fontSize: 18 }}>{x.e}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>{x.n}</Text>
+            <T v="tiny" numberOfLines={1}>{x.l}</T>
           </View>
         ))}
       </Appear>
 
-      <Appear index={3} style={st.grid}>
-        {cats.map(x => (
-          <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)} style={st.tileWrap}>
-          <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
-            <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
-            <T v="h3" numberOfLines={1}>{x.title}</T>
-            <T v="tiny" numberOfLines={1}>{x.sub}</T>
-          </Squish>
-          </View>
-        ))}
+      <Appear index={3} style={{ gap: 8 }}>
+        <T v="h3" style={st.sec}>⚡ Hızlı erişim</T>
+        <View style={st.pins}>
+          {pins.map(x => (
+            <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
+              <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
+                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
+                <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
+              </Squish>
+            </View>
+          ))}
+        </View>
       </Appear>
+
+      {SECTIONS.map((sec, si) => (
+        <Appear key={sec.title} index={4 + si} style={{ gap: 8 }}>
+          <T v="h3" style={st.sec}>{sec.title}</T>
+          <View style={st.grid}>
+            {sec.keys.map(k => cats.find(x => x.key === k)!).map(x => (
+              <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)} style={st.tileWrap}>
+                <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
+                  <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
+                  <T v="h3" numberOfLines={1}>{x.title}</T>
+                  <T v="tiny" numberOfLines={2}>{x.sub}</T>
+                </Squish>
+              </View>
+            ))}
+          </View>
+        </Appear>
+      ))}
 
       {(tour || tourTurn) && (
         <BenTour steps={TOUR} targets={tg} onDone={endTour} getY={() => scrollY.current} scrollTo={y => scroller.current?.scrollTo({ y: Math.max(0, y), animated: true })} />
@@ -400,10 +423,18 @@ export default function Hesap() {
 
 type Item = { emoji: string; label: string; sub: string; tint: string; href?: Href; onPress?: () => void };
 
+const SECTIONS = [
+  { title: '🌿 Kendim', keys: ['saglik', 'gelisim'] },
+  { title: '🏡 Evim ve Moka', keys: ['ev', 'moka'] },
+  { title: '🔑 Hesabım', keys: ['hesap', 'ayar'] },
+];
 const PIN_KEY: Record<string, string> = { 'İlaçlarım': 'ilac', 'Günlük': 'gunluk', 'Kendini geliştir': 'buyume' };
 const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 'hesap', ayar: 'ayar' };
 
 const st = StyleSheet.create({
+  stats: { flexDirection: 'row', gap: 8 },
+  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 10, alignItems: 'center', gap: 1 },
+  sec: { paddingHorizontal: 4 },
   pinIn: { alignItems: 'center', gap: 6 },
   tileWrap: { width: '48.5%' },
   pins: { flexDirection: 'row', gap: 8 },

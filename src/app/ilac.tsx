@@ -163,6 +163,11 @@ function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => voi
         <Chip label="💊 İlaç" on={kind === 'ilac'} onPress={() => setKind('ilac')} />
         <Chip label="🌿 Takviye" on={kind === 'takviye'} onPress={() => setKind('takviye')} />
       </View>
+      {kind === 'takviye' && (
+        <View style={st.wrap}>
+          {['D vitamini', 'C vitamini', 'Omega-3', 'Magnezyum', 'Demir', 'Probiyotik'].map(n => <Chip key={n} label={n} on={name === n} onPress={() => setName(n)} />)}
+        </View>
+      )}
       <Field value={name} onChangeText={setName} placeholder={kind === 'takviye' ? 'Takviye adı (ör. D vitamini)' : 'İlaç adı'} maxLength={40} accessibilityLabel="Ad" />
       <Field value={dose} onChangeText={setDose} placeholder="Doz (ör. 1 tablet, 5 ml)" maxLength={30} accessibilityLabel="Doz" />
       <T v="h3">Hangi vakitler?</T>

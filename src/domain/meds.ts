@@ -104,8 +104,8 @@ export function mokaMedLine(missed: Dose[], dueNow: Dose[], allDone: boolean): s
       ? `☕ Moka usulca soruyor: ${n} vakti geçmiş gibi. Aldıysan işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`
       : `☕ Moka usulca soruyor: ${missed.length} ilacın vakti geçmiş gibi. Aldıklarını işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`;
   }
-  if (dueNow.length) return `💊 ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
-  if (allDone) return '🌟 Bugünkü ilaçların tamam. Moka seninle gurur duyuyor!';
+  if (dueNow.length) return `${dueNow[0].med.kind === 'takviye' ? '🌿' : '💊'} ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
+  if (allDone) return '🌟 Bugünkü ilaç ve takviyelerin tamam. Moka seninle gurur duyuyor!';
   return '☕ Moka bugünkü ilaçlarını hatırlayacak.';
 }
 

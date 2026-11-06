@@ -8,8 +8,8 @@ import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, doneToday, homeScore } from '@/domain/logic';
-import { MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel';
-import { freezesUsed, progressOf } from '@/domain/play';
+import { DAILY_XP_CAP, MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel';
+import { dayKey, freezesUsed, progressOf } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import { gKey, goalMet, goalPct, readMin, readStreak } from '@/domain/growth';
 import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from '@/domain/stats';
@@ -80,7 +80,9 @@ export default function Gelisim() {
             <View key={m.id} style={{ gap: 4 }}>
               <T v="bold">{m.emoji} {m.name} · sv. {sl.level}</T>
               <Bar value={sl.pct / 100} />
-              <T v="tiny">{m.hint}</T>
+              <T v="tiny">{m.hint}. Bugün {S.play.moka.today.day === dayKey(now) ? S.play.moka.today.xp[m.id] : 0}/{DAILY_XP_CAP[m.id]} exp.</T>
+              <T v="tiny">{m.why}</T>
+              <T v="tiny" style={{ fontStyle: 'italic' }}>💛 {m.care}</T>
             </View>
           );
         })}

@@ -89,7 +89,33 @@ export const type = { h1: 28, h2: 20, h3: 17, lead: 15.5, bold: 16, body: 15, sm
 /** Kartların altındaki sıcak gölge rengi (gölge her temada aynı tondan). */
 export const warmShadow = '#B9805F';
 
-export const radius = { card: 20, tile: 16, plan: 14, btn: 14, pill: 999 };
+/**
+ * Tasarım sistemi (tek yer). Yeni ekran ya da bileşen yazarken sayı yazma, buradan al.
+ * - `space`: 4'lük ızgara. `screen` / `section` / `card` eski adlar, aynı değerler.
+ * - `radius`: kart 22 (CLAUDE.md "yaklaşık 22px"), karo 16, buton hap.
+ * - `elevation`: üç gölge seviyesi; hepsi aynı sıcak tondan.
+ * - `hit`: en küçük dokunma alanı (WCAG / Apple HIG 44pt).
+ * - `motion`: süreler ve yay ayarları; hepsi `useNativeDriver` ile kullanılır.
+ */
+export const radius = { xs: 8, sm: 12, md: 16, card: 22, tile: 16, plan: 14, btn: 999, pill: 999, sheet: 30 };
 
-/** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
-export const space = { screen: 18, section: 18, card: 16 };
+export const space = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32, screen: 20, section: 20, card: 16 };
+
+export const hit = 44;
+
+export const elevation = {
+  none: { shadowOpacity: 0, elevation: 0 },
+  sm: { shadowColor: warmShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 1 },
+  md: { shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 14, elevation: 3 },
+  lg: { shadowColor: warmShadow, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 8 },
+} as const;
+
+export const motion = {
+  fast: 120,
+  base: 220,
+  slow: 360,
+  /** Basınca esneme, sekme zıplaması. */
+  spring: { friction: 6, tension: 180 },
+  /** Beliriş. */
+  enter: { friction: 8, tension: 70 },
+} as const;

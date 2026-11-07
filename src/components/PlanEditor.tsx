@@ -489,9 +489,9 @@ function Stepper({ label, n, min, max, onStep }: { label: string; n: number; min
 const st = StyleSheet.create({
   bleed: { marginHorizontal: -22 },
   row: { gap: 10, paddingHorizontal: 22, paddingVertical: 4 },
-  tpl: { width: 92, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 12 },
-  tplT: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  tplS: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
+  tpl: { width: 104, alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 6 },
+  tplT: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20, minHeight: 40, textAlign: 'center', textAlignVertical: 'center' },
+  tplS: { fontFamily: fonts.bodyBold, fontSize: 11.5, textAlign: 'center' },
   pal: { width: 72, alignItems: 'center', gap: 6 },
   palIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
   palPlus: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },

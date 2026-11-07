@@ -28,6 +28,7 @@ import { brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme
 
 // Web önizlemesinde yerel sürücü yok; orada kaydırma JS ile izlenir.
 const PAPER = '#FFFDF8';
+const DECO_H = 120;
 const native = Platform.OS !== 'web';
 
 type Page = {
@@ -246,7 +247,7 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
   const textY = x.interpolate({ inputRange: r, outputRange: [40, 0, 40], extrapolate: 'clamp' });
   const fade = x.interpolate({ inputRange: [r[0] + w * 0.3, r[1], r[2] - w * 0.3], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   // Küçük ekranda metne ve alttaki düğmeye yer kalsın diye kart yüksekliğe göre de küçülür.
-  const card = Math.max(200, Math.min(w - 56, 400, ((h - top - 70 - 150 - 260) * 4) / 3 + 60));
+  const card = Math.max(200, Math.min(w - 56, 400, ((h - top - 70 - 150 - 260 - DECO_H + 40) * 4) / 3 + 60));
 
   return (
     <View style={{ width: w, paddingTop: top + 70, paddingBottom: 150, paddingHorizontal: 24, alignItems: 'center' }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
@@ -260,14 +261,15 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
         </Squish>
       </Animated.View>
 
-      <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], maxWidth: 440, width: '100%', marginTop: 26 }}>
+      <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], width: Math.min(440, w - 48), marginTop: 26 }}>
         <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${tx(p.eyebrow)}`.toLocaleUpperCase(dateLocale())}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
       </Animated.View>
-      <Animated.View style={{ flex: 1, width: '100%', opacity: fade }}>
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 24, right: 24, bottom: 128, height: DECO_H, opacity: fade }}>
         <IntroDeco kind={p.deco} />
       </Animated.View>
+      
     </View>
   );
 }

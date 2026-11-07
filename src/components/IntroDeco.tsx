@@ -29,13 +29,6 @@ const step = (t: Animated.Value, a: number, b: number) =>
 const pulse = (t: Animated.Value, a: number, m: number, b: number) =>
   t.interpolate({ inputRange: [0, a, m, Math.min(1, b), 1], outputRange: [0, 0, 1, 0, 0], extrapolate: 'clamp' });
 
-function Bob({ t, emoji, size = 44, delay = 0, amp = 14 }: { t: Animated.Value; emoji: string; size?: number; delay?: number; amp?: number }) {
-  // Her emoji kendi fazında iki kez zıplar (döngü sürekli).
-  const y = t.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: delay ? [-amp, 0, -amp, 0, -amp] : [0, -amp, 0, -amp, 0] });
-  const r = t.interpolate({ inputRange: [0, 0.5, 1], outputRange: delay ? ['6deg', '-6deg', '6deg'] : ['-6deg', '6deg', '-6deg'] });
-  return <Animated.Text style={{ fontSize: size, transform: [{ translateY: y }, { rotate: r }] }}>{emoji}</Animated.Text>;
-}
-
 const GRID: [number, number, string][] = [];
 // 6×4 mini ev planı: odalar sırayla boyanır.
 const ROOMS = ['#E9B7A3', '#A9C7B1', '#C9BEE6', '#F2D49B'];
@@ -46,7 +39,7 @@ export function IntroDeco({ kind }: { kind: DecoKind }) {
   const t = useLoop(kind === 'draw' ? 5200 : kind === 'tasks' ? 4800 : 3600);
 
   if (kind === 'draw') {
-    const cell = 30;
+    const cell = 26;
     return (
       <View style={st.box} pointerEvents="none">
         <View style={[st.grid, { width: cell * 6 + 10, backgroundColor: c.surface }]}>
@@ -75,31 +68,41 @@ export function IntroDeco({ kind }: { kind: DecoKind }) {
           const done = step(t, a + 0.14, a + 0.2);
           return (
             <Animated.View key={i} style={[st.card, { backgroundColor: c.surface, opacity: o, transform: [{ translateY: o.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }]}>
-              <View style={[st.dotE, { backgroundColor: col }]}><Text style={{ fontSize: 22 }}>{e}</Text></View>
+              <View style={[st.dotE, { backgroundColor: col }]}><Text style={st.em}>{e}</Text></View>
               <View style={[st.bar, { backgroundColor: c.line }]}><Animated.View style={{ height: 8, borderRadius: 4, backgroundColor: col, width: '100%', opacity: done }} /></View>
-              <Animated.Text style={{ fontSize: 22, opacity: done, transform: [{ scale: done.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }}>✅</Animated.Text>
+              <Animated.Text style={[st.em, st.tick, { opacity: done, transform: [{ scale: done.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }]}>✅</Animated.Text>
             </Animated.View>
           );
         })}
-        <Animated.Text style={{ fontSize: 30, opacity: step(t, 0.78, 0.84), transform: [{ scale: step(t, 0.78, 0.86).interpolate({ inputRange: [0, 1], outputRange: [0.3, 1.1] }) }] }}>⭐ ⭐ ⭐</Animated.Text>
       </View>
     );
   }
 
   if (kind === 'house') {
-    const lvl = (n: number) => step(t, 0.12 + n * 0.22, 0.2 + n * 0.22);
+    // Seri uzadıkça kulübe → ev → bahçeli ev → köşk; sayaç yükselir, toz silinir.
+    const H = ['🏚️', '🏠', '🏡', '🏰'];
+    const at = (n: number) => 0.05 + n * 0.23;
+    const show = (n: number) => (n === 3 ? step(t, at(n), at(n) + 0.04) : pulse(t, at(n), at(n) + 0.04, at(n + 1)));
     return (
       <View style={st.box} pointerEvents="none">
-        <View style={st.row}>
-          <Animated.Text style={{ fontSize: 26, opacity: pulse(t, 0.05, 0.3, 0.7), transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [10, -30] }) }] }}>☁️</Animated.Text>
-          <Animated.Text style={{ fontSize: 26, transform: [{ scale: t.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.2, 1] }) }] }}>🔥</Animated.Text>
+        <View style={st.counter}>
+          <Text style={st.em}>🔥</Text>
+          <View style={st.num}>
+            {[1, 2, 3, 4].map((n, i) => (
+              <Animated.Text key={n} style={[st.numT, { color: c.ink, opacity: show(i) }]}>{n}</Animated.Text>
+            ))}
+          </View>
         </View>
-        <View style={st.row}>
-          {['⛺', '🛖', '🏡', '🏰'].map((e, n) => (
-            <Animated.Text key={e} style={{ fontSize: 30 + n * 8, opacity: n === 0 ? 1 : lvl(n - 1), transform: [{ scale: n === 0 ? 1 : lvl(n - 1).interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }}>{e}</Animated.Text>
-          ))}
+        <View style={st.stage}>
+          {H.map((e, n) => {
+            const o = show(n);
+            return (
+              <Animated.Text key={e} style={[st.big, { opacity: o, transform: [{ scale: o.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1 + n * 0.08] }) }] }]}>{e}</Animated.Text>
+            );
+          })}
+          <Animated.Text style={[st.big, { fontSize: 28, left: 40, opacity: pulse(t, 0, 0.05, 0.28) }]}>💨</Animated.Text>
+          <Animated.Text style={[st.big, { fontSize: 28, left: -40, opacity: pulse(t, 0, 0.05, 0.28), transform: [{ translateX: t.interpolate({ inputRange: [0, 0.07, 0.14, 0.21, 0.28], outputRange: [0, 40, 0, 40, 0] }) }] }]}>🧹</Animated.Text>
         </View>
-        <Animated.Text style={{ fontSize: 20, opacity: pulse(t, 0.6, 0.8, 1) }}>✨ ✨ ✨</Animated.Text>
       </View>
     );
   }
@@ -111,37 +114,63 @@ export function IntroDeco({ kind }: { kind: DecoKind }) {
     return (
       <View style={st.box} pointerEvents="none">
         <Animated.Text style={{ fontSize: 28, transform: [{ translateY: t.interpolate({ inputRange: [0, 0.5, 1], outputRange: [-6, 6, -6] }) }] }}>💧 💧</Animated.Text>
-        <View style={{ height: 70, alignItems: 'center', justifyContent: 'center' }}>
-          {g(0.0, '🌱', 34)}{g(0.26, '🌿', 46)}{g(0.5, '🌷', 58)}{g(0.74, '🌻', 66)}
-        </View>
-        <View style={st.row}>
-          <Bob t={t} emoji="🦋" size={26} amp={10} />
-          <Bob t={t} emoji="🐝" size={22} delay={1} amp={8} />
+        <View style={{ height: 56, alignItems: 'center', justifyContent: 'center' }}>
+          {g(0.0, '🌱', 30)}{g(0.26, '🌿', 38)}{g(0.5, '🌷', 46)}{g(0.74, '🌻', 52)}
         </View>
       </View>
     );
   }
 
-  const items = kind === 'self' ? ['📖', '💪', '🧘', '🌙'] : ['☕', '🏠', '⭐', '🌱'];
+  if (kind === 'self') {
+    const E = ['💪', '📖', '🧘'];
+    return (
+      <View style={st.box} pointerEvents="none">
+        <View style={st.row}>
+          {E.map((e, i) => {
+            const k = step(t, 0.1 + i * 0.25, 0.18 + i * 0.25);
+            return (
+              <View key={e} style={[st.chip, { backgroundColor: c.surface }]}>
+                <Text style={st.big2}>{e}</Text>
+                <Animated.Text style={[st.check, { opacity: k, transform: [{ scale: k.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }]}>✅</Animated.Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }
+
+  // hello: Moka'nın selamı ve tüten kahve
   return (
     <View style={st.box} pointerEvents="none">
       <View style={st.row}>
-        {items.map((e, i) => (
-          <Bob key={e} t={t} emoji={e} size={46} delay={i % 2} amp={12 + (i % 2) * 6} />
-        ))}
+        <Animated.Text style={[st.big, { position: 'relative', transform: [{ rotate: t.interpolate({ inputRange: [0, 0.15, 0.3, 0.45, 0.6, 1], outputRange: ['0deg', '20deg', '-10deg', '20deg', '0deg', '0deg'] }) }] }]}>👋</Animated.Text>
+        <View style={{ alignItems: 'center' }}>
+          <Animated.Text style={{ fontSize: 22, opacity: pulse(t, 0, 0.5, 1), transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [6, -10] }) }] }}>♨️</Animated.Text>
+          <Text style={st.big2}>☕</Text>
+        </View>
       </View>
-      <View style={[st.glow, { backgroundColor: c.surface }]} />
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  box: { flex: 1, minHeight: 90, alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10, overflow: 'hidden' },
+  counter: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 30 },
+  num: { width: 22, height: 28 },
+  numT: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontSize: 22, lineHeight: 28 },
+  stage: { width: 160, height: 70, alignItems: 'center', justifyContent: 'center' },
+  big: { position: 'absolute', fontSize: 50, lineHeight: 62, textAlign: 'center', includeFontPadding: false },
+  big2: { fontSize: 36, lineHeight: 44, textAlign: 'center', includeFontPadding: false },
+  chip: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  check: { position: 'absolute', right: -4, bottom: -4, fontSize: 20 },
+  box: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', padding: 5, borderRadius: radius.card },
   brush: { position: 'absolute', fontSize: 30 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, width: 240 },
-  dotE: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16, width: 230 },
+  em: { fontSize: 20, lineHeight: 26, width: 28, height: 26, textAlign: 'center', includeFontPadding: false },
+  tick: { width: 28 },
+  dotE: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   bar: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   glow: { width: 150, height: 10, borderRadius: 5, opacity: 0.5 },
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { Btn, Chip, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { askable, DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
 import { savePersona, skipPersona, usePersona } from '@/profile/usePersona';
+import { saveNickname, useNickname } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -25,6 +26,9 @@ export default function Taniyalim() {
   const [step, setStep] = useState(0);
   const [chosen, setChosen] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+  const nick = useNickname();
+  const [nameDone, setNameDone] = useState(!!nick);
+  const [nm, setNm] = useState('');
 
   const steps = QUESTIONS.filter(q => askable(q.k, ans));
   const q = steps[Math.min(step, steps.length - 1)];
@@ -67,6 +71,40 @@ export default function Taniyalim() {
     });
 
   if (saving) return <Notes />;
+
+  // İlk adım: Moka adını sorar; boş geçilebilir.
+  if (!nameDone) {
+    const go = () => { saveNickname(nm); setNameDone(true); };
+    return (
+      <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+        <Appear style={{ flex: 1, gap: 14 }}>
+          <View style={st.head}>
+            <Float amp={4} dur={2200}>
+              <Image source={MOKA_ASSETS.happy} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
+            </Float>
+            <View style={{ flex: 1 }}>
+              <T v="eyebrow">Seni tanıyalım</T>
+              <T v="h2">Sana nasıl seslenelim?</T>
+              <T v="small">Moka seni adınla karşılasın.</T>
+            </View>
+          </View>
+          <TextInput
+            value={nm}
+            onChangeText={setNm}
+            placeholder="Adın"
+            placeholderTextColor={c.muted}
+            maxLength={20}
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={go}
+            accessibilityLabel="Adın"
+            style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderColor: c.line, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: 16, paddingVertical: 14 }}
+          />
+        </Appear>
+        <Btn kind="primary" label={nm.trim() ? 'Devam' : 'Adsız devam'} onPress={go} block />
+      </View>
+    );
+  }
 
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>

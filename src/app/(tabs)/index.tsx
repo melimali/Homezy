@@ -4,7 +4,6 @@ import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
-import { displayName, useAuth } from '@/auth/AuthProvider';
 
 import { House3D } from '@/components/House3D';
 import { HouseFloors } from '@/components/HouseFloors';
@@ -23,21 +22,23 @@ import { StepModal } from '@/components/StepModal';
 import { useStep } from '@/lib/firstRun';
 import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
-import { Appear, Float, Squish } from '@/components/motion';
+import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
 import { CATS, catOf, disciplineLevel, pickForLevel, type Cat } from '@/domain/discipline';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
-import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf } from '@/domain/play';
-import { limits, themeFor } from '@/domain/premium';
-import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
+import { addDays, BUILT, dayKey, houseLine, nextStage, progressOf } from '@/domain/play';
+import { themeFor } from '@/domain/premium';
+import { FLOWER, growth, houseMood } from '@/domain/garden';
 import { HeroMoka } from '@/components/HeroMoka';
 import { sessionHeroScene } from '@/domain/heroScenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
+import { useTranslation } from '@/i18n/i18n';
+import { ownTitle, useHomeWord, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, space, useColors } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
@@ -50,8 +51,9 @@ export default function Home() {
   const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
-  const { status, user } = useAuth();
-  const name = status === 'account' ? displayName(user) : null;
+  const name = useName();
+  const homeWord = useHomeWord();
+  const { lang } = useTranslation();
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
@@ -64,8 +66,6 @@ export default function Home() {
   // Ana ekran sahnesi: 10 sabit sahneden biri, uygulama açılışında rastgele; oturum boyunca değişmez.
   const [heroScene] = useState(sessionHeroScene);
   const { premium } = usePurchases();
-  const lim = limits(premium.active);
-  const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
   // Pazar ve pazartesi "haftalık özetin hazır" şeridi; kart açılınca o hafta için kalkar.
   const wd = new Date(now).getDay();
   const weekReady = (wd === 0 || wd === 1) && !(S.play.weekSeen && S.play.weekSeen >= addDays(dayKey(now), wd === 0 ? 0 : -1));
@@ -148,7 +148,6 @@ export default function Home() {
         <SecHead title="📋 Bugünün işleri" h="h3" right={due.length > shown.length ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
-        {!!due.length && <T v="small" style={{ marginBottom: 6 }}>{lv.name} · gün {hp.streak}. {lv.goal}</T>}
         <View>
           {(['sabah', 'oda', 'ev'] as Cat[]).map(cat => {
             const rows = shown.filter(x => catOf(x) === cat);
@@ -161,7 +160,6 @@ export default function Home() {
             );
           })}
         </View>
-        {!!due.length && S.play.days.length === 0 && <T v="tiny" style={{ marginTop: 8, textAlign: 'center' }}>İpucu: Bir işe dokun = yaptım ✨</T>}
         {!due.length && (doneN > 0 ? (
           <View style={{ alignItems: 'center', gap: 6 }}>
             <MokaSprite anim="party" size={120} />
@@ -171,10 +169,10 @@ export default function Home() {
       </Card>
 
       <Card index={3} style={styles.sec}>
-        <SecHead title="🏡 Evim" h="h3" right={
+        <SecHead title={`🏡 ${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
-              <T v="small">🎨 Evini düzenle</T>
+              <T v="small">🎨 Düzenle</T>
             </Squish>
             {S.others.length > 0 && (
               <Squish onPress={() => router.push('/evler')} accessibilityRole="button" hitSlop={8}>
@@ -202,11 +200,6 @@ export default function Home() {
           )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         </View>
-        {hp.level >= 5 && (
-          <Text style={[styles.mood, { color: c.muted }]}>
-            <Text style={{ color: c.ink }}>🏠 {MOOD_NAME[mood]} · </Text>“{moodLine(mood, personaOf(S.play))}”
-          </Text>
-        )}
         <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
           <View style={[styles.nextIcon, { backgroundColor: c.surface2 }]}>
             <Text style={{ fontSize: 24 }}>{warn ? '🏚️' : next?.emoji ?? '🏡'}</Text>
@@ -223,9 +216,6 @@ export default function Home() {
           </View>
           <Text style={[styles.chev, { color: c.muted }]}>›</Text>
         </Squish>
-        {warn && hp.level > 0 && (
-          <T v="tiny" style={{ textAlign: 'center' }}>❄️ Bu ay {freezeLeft}/{lim.freezes} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.</T>
-        )}
       </Card>
 
       {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
@@ -249,18 +239,15 @@ export default function Home() {
       )}
 
       <View style={{ gap: 12 }}>
-        <SecHead title="☕ Keyif köşesi" h="h3" />
+        <SecHead title="Keyif köşesi" h="h3" />
         <Appear index={5} style={styles.quick}>
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
-          <Quick i={3} emoji="🛍️" label="Mağaza" sub={`${S.play.points} ⭐`} tint={c.peachSoft} onPress={() => router.push('/magaza' as Href)} />
+          {extrasUnlocked(S.play.days.length, now) && (
+            <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+          )}
         </Appear>
-        {extrasUnlocked(S.play.days.length, now) && (
-          <Appear index={6} style={styles.quick}>
-            <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
-          </Appear>
-        )}
       </View>
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
@@ -384,13 +371,11 @@ function Stat({ emoji, value, label, tint, onPress }: { emoji: string; value: st
   );
 }
 
-function Quick({ emoji, label, sub, tint, onPress, i }: { emoji: string; label: string; sub: string; tint: string; onPress: () => void; i: number }) {
+function Quick({ emoji, label, sub, tint, onPress }: { emoji: string; label: string; sub: string; tint: string; onPress: () => void; i?: number }) {
   const c = useColors();
   return (
     <Squish onPress={onPress} accessibilityLabel={label} style={[styles.q, { backgroundColor: tint }]}>
-      <Float amp={3} dur={1800 + i * 200} delay={i * 150}>
-        <Text style={{ fontSize: 30 }}>{emoji}</Text>
-      </Float>
+      <Text style={{ fontSize: 30 }}>{emoji}</Text>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
       <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{sub}</Text>
     </Squish>
@@ -423,7 +408,6 @@ const styles = StyleSheet.create({
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   plot: { position: 'absolute', zIndex: 2, left: 12, right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 14 },
-  mood: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, textAlign: 'center', paddingHorizontal: 8 },
   q: { flex: 1, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4 },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },

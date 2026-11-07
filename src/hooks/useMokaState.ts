@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { MOKA_ASSETS } from '@/constants/moka';
-import { displayName, useAuth } from '@/auth/AuthProvider';
+import { useName } from '@/profile/useName';
 import { CALM_POSES, mokaStatus, pickMoka, type MokaHouseStatus, type MokaPayload } from '@/domain/moka';
 import { personaLine } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
@@ -14,8 +14,7 @@ import { useStore } from '@/store/AppStore';
  */
 export function useMokaState(roomId?: string | null): MokaPayload & { status: MokaHouseStatus; next: () => void } {
   const { state: S } = useStore();
-  const { user } = useAuth();
-  const name = displayName(user);
+  const name = useName();
   const { persona } = usePersona();
   const now = useNow();
   const [shift, setShift] = useState(0);
@@ -29,7 +28,7 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     }
     // Üç günden birinde Moka söze adla başlar (misafirde hitap yok).
     const day = Number(status.day.replace(/\D/g, '')) + shift;
-    if (name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
+    if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     return { ...q, message: `${name}, ${q.message.charAt(0).toLocaleLowerCase('tr')}${q.message.slice(1)}` };
   }, [status, shift, name, persona, roomId]);
   const next = useCallback(() => setShift(x => x + 1), []);

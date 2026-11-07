@@ -54,7 +54,10 @@ const split = (s: string) => {
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
 const patterns: { re: RegExp; out: string; lit: number }[] = [];
-for (const [k, v] of Object.entries(EN)) {
+for (const [k0, v0] of Object.entries(EN)) {
+  // Baştaki/sondaki boşluk eşleşmeyi bozmasın: çeviri çekirdek metin üzerinden aranır.
+  const k = k0.trim() || k0;
+  const v = k === k0 ? v0 : v0.trim();
   if (k.includes('{}')) {
     // Sondaki {} boş kalabilir ("... blok" + boş ek).
     const body = esc(norm(k));

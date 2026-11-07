@@ -19,6 +19,7 @@ import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
 import { StepModal } from '@/components/StepModal';
+import { useTabTour } from '@/components/useTabTour';
 import { useStep } from '@/lib/firstRun';
 import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
@@ -42,6 +43,13 @@ import { ownTitle, useHomeWord, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, space, useColors } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
+
+const TOUR = [
+  { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası evin: her gün buradan başlarız.' },
+  { key: 'stats', pose: 'cheers', text: 'Serin, puanın ve ev seviyen. Her gün bir iş yaparsan evin büyür.' },
+  { key: 'isler', pose: 'cozy_plant', text: 'Bugünün işleri burada. Dokun, yap, işaretle.' },
+  { key: 'evim', pose: 'love', text: 'Evim: evini buradan düzenle, odalarına gir. Hadi başlayalım!' },
+] as const;
 
 export default function Home() {
   const c = useColors();
@@ -80,10 +88,12 @@ export default function Home() {
   const spriteAnim: SpriteAnim = !due.length && doneN > 0 ? 'party' : hr >= 23 || hr < 6 || (!due.length && !doneN) ? 'sleepy' : 'happy';
   const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
 
+  const tour = useTabTour('ev', [...TOUR]);
+  const mark = tour.mark;
   return (
-    <Screen header={false} tab tone="peach">
+    <Screen header={false} tab tone="peach" {...tour.screen}>
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
-      <View style={styles.heroWrap}>
+      <View style={styles.heroWrap} {...mark('hero')}>
         <HeroMoka scene={heroScene} ratio={0.8} reserveTop={insets.top + 140} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
           <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
             {/* Moka'nın konuşma baloncuğu */}
@@ -120,11 +130,11 @@ export default function Home() {
       </View>
 
       {/* Üç küçük rakam: seri, puan, ev seviyesi. Dokununca ilgili ekran. */}
-      <Appear index={2} style={styles.stats}>
+      <View {...mark('stats')}><Appear index={2} style={styles.stats}>
         <Stat emoji="🔥" value={String(hp.streak)} label="gün seri" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
         <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.sageSoft} onPress={() => router.push('/magaza' as Href)} />
         <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />
-      </Appear>
+      </Appear></View>
 
       {!!S.settings.solo && S.rooms[S.settings.solo] && (
         <Squish onPress={() => router.push('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
@@ -144,7 +154,7 @@ export default function Home() {
         </Squish>
       )}
 
-      <Card bare index={2}>
+      <View {...mark('isler')}><Card bare index={2}>
         <SecHead title="📋 Bugünün işleri" h="h3" right={due.length > shown.length ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
@@ -166,9 +176,9 @@ export default function Home() {
             <T v="bold" style={{ textAlign: 'center' }}>{`Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿`}</T>
           </View>
         ) : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
-      </Card>
+      </Card></View>
 
-      <Card index={3} style={styles.sec}>
+      <View {...mark('evim')}><Card index={3} style={styles.sec}>
         <SecHead title={`🏡 ${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
@@ -216,7 +226,7 @@ export default function Home() {
           </View>
           <Text style={[styles.chev, { color: c.muted }]}>›</Text>
         </Squish>
-      </Card>
+      </Card></View>
 
       {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
       <Card index={4} style={styles.sec}>
@@ -262,6 +272,7 @@ export default function Home() {
       <MoodCheckin />
       <NotifAsk />
       <LevelUpPeek />
+      {tour.node}
     </Screen>
   );
 }

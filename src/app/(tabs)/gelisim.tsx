@@ -5,6 +5,7 @@ import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/comp
 import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Appear, Squish } from '@/components/motion';
+import { useTabTour } from '@/components/useTabTour';
 import { Bar, Btn, Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, doneToday, homeScore } from '@/domain/logic';
@@ -23,6 +24,13 @@ import { radius, useColors } from '@/theme';
  * Gelişim sekmesi (docs/skeleton-v3.md): yüzeyde dört sayı, altında tatlı grafikler.
  * Her grafiğin altında Moka'nın kısa, suçlamayan yorumu.
  */
+const TOUR = [
+  { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası Gelişim: küçük adımların burada büyür.' },
+  { key: 'moka', pose: 'cheers', text: 'Moka seviyen ve becerilerin. İş yaptıkça deneyim kazanırsın.' },
+  { key: 'hafta', pose: 'cozy_plant', text: 'Haftalık işlerin ve seri takvimin. Seriyi bozma, ev büyüsün.' },
+  { key: 'ruh', pose: 'love', text: 'Ruh halin ve oda puanların da burada. Hadi başlayalım!' },
+] as const;
+
 export default function Gelisim() {
   const c = useColors();
   const router = useRouter();
@@ -44,17 +52,18 @@ export default function Gelisim() {
   const ml = mokaLevel(S.play.moka);
   const pose = week >= 10 ? 'party' : week ? 'thumbs_up' : 'sipping';
 
+  const tour = useTabTour('gelisim', [...TOUR]);
   return (
-    <Screen header={false} tab tone="sky">
+    <Screen header={false} tab tone="sky" {...tour.screen}>
       <TitleBar title="Gelişim" sub="Küçük adımların, büyüyen evin" />
 
-      <Appear index={1} style={[st.hero, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
+      <View {...tour.mark('hero')}><Appear index={1} style={[st.hero, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
         <MokaMascot pose={pose} size="sm" showBubble={false} />
         <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
           <T v="bold">{week ? `Bu hafta ${week} iyilik` : 'Yeni bir hafta'}</T>
           <T v="small" numberOfLines={3}>{weekLine(bars)}</T>
         </View>
-      </Appear>
+      </Appear></View>
 
       <Appear index={2}>
         <Squish onPress={() => router.push('/buyume')} accessibilityRole="link" accessibilityLabel="Kendini geliştir" style={[st.hero, { backgroundColor: c.sageSoft, shadowColor: c.shadow }]}>
@@ -70,7 +79,7 @@ export default function Gelisim() {
         </Squish>
       </Appear>
 
-      <Card index={2}>
+      <View {...tour.mark('moka')}><Card index={2}>
         <SecHead title={`Moka seviye ${ml.level}`} h="h3" right={mokaTitle(ml.level)} />
         <Bar value={ml.pct / 100} />
         <T v="tiny">Sonraki seviyeye {ml.need - ml.into} exp</T>
@@ -87,7 +96,7 @@ export default function Gelisim() {
           );
         })}
         {extrasUnlocked(S.play.days.length, now) && <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />}
-      </Card>
+      </Card></View>
 
       <Appear index={2} style={st.rings}>
         <View style={[st.ringCard, { backgroundColor: c.surface }]}>
@@ -106,7 +115,7 @@ export default function Gelisim() {
         <StatPill emoji="🏠" n={hp.level} label="seviye" tint={c.sageSoft} />
       </Appear>
 
-      <Card index={4}>
+      <View {...tour.mark('hafta')}><Card index={4}>
         <SecHead title="Bu hafta" h="h3" right={`${week} iş`} />
         <WeekBars bars={bars} />
       </Card>
@@ -117,15 +126,16 @@ export default function Gelisim() {
         <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
       </Card>
 
+      </View>
       <MokaWeekCard index={5} />
 
       <MoodWeekCard index={6} />
 
-      <Card index={6}>
+      <View {...tour.mark('ruh')}><Card index={6}>
         <SecHead title="Ruh hali" h="h3" right="14 gün" />
         <MoodLine points={mood} />
         <T v="small">{moodLineOf(mood)}</T>
-      </Card>
+      </Card></View>
 
       {rooms.length > 0 && (
         <Card index={7}>
@@ -139,6 +149,7 @@ export default function Gelisim() {
         <LinkTile emoji="🌤️" label="Günüm" sub="Moka ile paylaş" tint={c.roseSoft} onPress={() => router.push('/gunum')} />
         {extrasUnlocked(S.play.days.length, now) && <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />}
       </Appear>
+      {tour.node}
     </Screen>
   );
 }

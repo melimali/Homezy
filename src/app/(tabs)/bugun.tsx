@@ -16,6 +16,7 @@ import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { MealCard } from '@/components/MealCard';
 import { MedsToday } from '@/components/MedsToday';
+import { useTabTour } from '@/components/useTabTour';
 import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
@@ -26,6 +27,13 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { tx } from '@/i18n/runtime';
 import { fonts, radius, useColors } from '@/theme';
+
+const TOUR = [
+  { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası Bugün: sadece bugünün işleri.' },
+  { key: 'next', pose: 'cheers', text: 'Sıradaki iş en üstte. Dokun, adımları izle, bitir.' },
+  { key: 'liste', pose: 'cozy_plant', text: 'Gecikenler, bugün ve bu hafta burada. Yaptıkça işaretle.' },
+  { key: 'daha', pose: 'wink', text: 'Yemek, kendine zaman ve büyüme de bir dokunuş uzakta. Hadi başlayalım!' },
+] as const;
 
 export default function Bugun() {
   const c = useColors();
@@ -59,12 +67,13 @@ export default function Bugun() {
   const [more, setMore] = useState(false);
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
+  const tour = useTabTour('bugun', [...TOUR]);
   return (
-    <Screen header={false} tab tone="rose">
+    <Screen header={false} tab tone="rose" {...tour.screen}>
       <TitleBar title="Bugün" right={<IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />} />
       <WeekStrip now={now} />
-      <Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} />
-      {next && <NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} />}
+      <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
+      {next && <View {...tour.mark('next')}><NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} /></View>}
 
       {places.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
@@ -76,6 +85,7 @@ export default function Bugun() {
       )}
 
       {!S.home.asked && <ProfilePrompt />}
+      <View {...tour.mark('liste')}>
       {visible.map(([label, hint, arr], gi) => {
         const rows = filt ? arr.filter(x => x.rid === filt) : arr;
         if (!rows.length) return null;
@@ -96,13 +106,14 @@ export default function Bugun() {
           {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
         </EmptyMsg>
       )}
+      </View>
       <MedsToday />
       <DailyGoals now={now} />
-      <Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
+      <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
         <Text style={{ fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>
         <T v="bold" style={{ flex: 1 }}>{more ? 'Daha az göster' : 'Yemek, kendine zaman, büyüme'}</T>
         <T v="small">{more ? '' : 'Aç ›'}</T>
-      </Squish>
+      </Squish></View>
       {more && (
         <>
           <MealCard />
@@ -130,6 +141,7 @@ export default function Bugun() {
       <ModeCard now={now} />
       <TimeBudget now={now} />
       <AdBanner />
+      {tour.node}
     </Screen>
   );
 }

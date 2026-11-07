@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 
+import { TabIntro } from '@/components/TabIntro';
 import { TabBar } from '@/components/TabBar';
 import { useNotificationSync } from '@/notifications/useNotificationSync';
 import { useWidgetSync } from '@/widget/useWidgetSync';
@@ -18,6 +19,7 @@ export default function TabLayout() {
   return (
     <View style={{ flex: 1 }}>
       <TabsNav bg={c.bg} />
+      <TabIntro />
     </View>
   );
 }

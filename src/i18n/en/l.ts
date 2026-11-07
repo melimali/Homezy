@@ -1,5 +1,10 @@
 /** Son boşluk taraması: İngilizcede Türkçe kalan ya da yarım çevrilen metinler. Bu dosya en son gelir, öncekileri ezer. */
 export const EN_L: Record<string, string> = {
+  'Burası evin. Odalarına dokun, bekleyen işleri gör.': 'This is your home. Tap a room to see its pending tasks.',
+  'Bugünün işleri burada. Dokun, yap, işaretle.': "Today's tasks are here. Tap, do, check off.",
+  'Serini, puanını ve haftalık ilerlemeni buradan takip et.': 'Track your streak, points and weekly progress here.',
+  'Anladım': 'Got it',
+
   'Nerede yaşıyorsun?': 'Where do you live?',
   'Aile evi': 'Family home',
   'Kişisel ev': 'Personal home',

@@ -136,8 +136,8 @@ export default function Home() {
       {/* Üç küçük rakam: seri, puan, ev seviyesi. Dokununca ilgili ekran. */}
       <View {...mark('stats')}><Appear index={2} style={styles.stats}>
         <Stat emoji="🔥" value={String(hp.streak)} label="gün seri" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
-        <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.sageSoft} onPress={() => router.push('/magaza' as Href)} />
-        <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />
+        <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.surface} onPress={() => router.push('/magaza' as Href)} />
+        <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.surface} onPress={() => router.push('/hikaye')} />
       </Appear></View>
 
       {!!S.settings.solo && S.rooms[S.settings.solo] && (
@@ -159,7 +159,7 @@ export default function Home() {
       )}
 
       <View {...mark('isler')}><Card bare index={2}>
-        <SecHead title="📋 Bugünün işleri" h="h3" right={due.length > shown.length ? (
+        <SecHead title="Bugünün işleri" h="h3" right={due.length > shown.length ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
         <View>
@@ -183,10 +183,10 @@ export default function Home() {
       </Card></View>
 
       <View {...mark('evim')}><Card index={3} style={styles.sec}>
-        <SecHead title={`🏡 ${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
+        <SecHead title={`${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
-              <T v="small">🎨 Düzenle</T>
+              <T v="small">Düzenle</T>
             </Squish>
             {S.others.length > 0 && (
               <Squish onPress={() => router.push('/evler')} accessibilityRole="button" hitSlop={8}>
@@ -214,8 +214,8 @@ export default function Home() {
           )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         </View>
-        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: c.surface }]}>
-          <View style={[styles.nextIcon, { backgroundColor: c.surface2 }]}>
+        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: c.surface2 }]}>
+          <View style={[styles.nextIcon, { backgroundColor: c.surface }]}>
             <Text style={{ fontSize: 24 }}>{warn ? '😴' : next?.emoji ?? '🏡'}</Text>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
@@ -234,9 +234,9 @@ export default function Home() {
 
       {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
       <Card index={4} style={styles.sec}>
-        <SecHead title="🚪 Odalarım" h="h3" right={
+        <SecHead title="Odalarım" h="h3" right={
           <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
-            <T v="small">✏️ Planı düzenle</T>
+            <T v="small">Planı düzenle</T>
           </Squish>
         } />
         <RoomGrid state={S} now={now} start={3} row />
@@ -255,11 +255,11 @@ export default function Home() {
       <View style={{ gap: 12 }}>
         <SecHead title="Keyif köşesi" h="h3" />
         <Appear index={5} style={styles.quick}>
-          <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
-          <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
-          <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
+          <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.surface} onPress={() => router.push('/bahce' as Href)} />
+          <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.surface} onPress={() => setLofiOpen(true)} />
+          <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.surface} onPress={() => router.push('/gunluk')} />
           {extrasUnlocked(S.play.days.length, now) && (
-            <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
+            <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.surface} onPress={() => router.push('/spor')} />
           )}
         </Appear>
       </View>

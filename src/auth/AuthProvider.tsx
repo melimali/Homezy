@@ -141,11 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
-  // Çıkış ve silme, uygulamayı ilk açılıştaki hâline döndürür: tanıtım yeniden görünür.
+  // Çıkış ve silme oturumu kapatır ve giriş ekranına döner.
   const signOut = useCallback(async () => {
+    // Tanıtım tekrar gösterilmez: çıkınca doğrudan giriş ekranı açılır (kurulum sorusu çıkmaz).
     setGuestFlag(false);
-    prefs.set('intro', null);
-    setIntroSeen(false);
     if (supabase) await withTimeout(supabase.auth.signOut({ scope: 'local' }).catch(() => null), 4000, null);
     setSession(null);
   }, []);

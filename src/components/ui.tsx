@@ -1,5 +1,6 @@
-import type { ComponentProps, ComponentRef, ReactNode, Ref } from 'react';
+import { useEffect, useRef, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
+  Animated,
   Image,
   Modal,
   Pressable,
@@ -185,9 +186,19 @@ export function IconBtn({
 export function Bar({ value, color, track, height = 8, style }: { value: number; color?: string; track?: string; height?: number; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
   const v = Math.max(0, Math.min(1, value || 0));
+  const w = useRef(new Animated.Value(v)).current;
+  // Değer değişince çubuk yumuşakça dolar.
+  useEffect(() => {
+    Animated.timing(w, { toValue: v, duration: 450, useNativeDriver: false }).start();
+  }, [v, w]);
   return (
     <View style={[{ height, borderRadius: height / 2, overflow: 'hidden', backgroundColor: track ?? c.surface2 }, style]}>
-      <View style={{ width: `${v * 100}%`, height: '100%', borderRadius: height / 2, backgroundColor: color ?? c.hi }} />
+      <Animated.View
+        style={{
+          width: w.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+          height: '100%', borderRadius: height / 2, backgroundColor: color ?? c.hi,
+        }}
+      />
     </View>
   );
 }
@@ -270,6 +281,7 @@ export function Btn({
         block && { alignSelf: 'stretch' },
         { backgroundColor: kind === 'ghost' ? c.surface : bg },
         kind === 'ghost' && { shadowOpacity: 0, elevation: 0 },
+        kind === 'primary' && !small && { shadowColor: c.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.32, shadowRadius: 10, elevation: 5 },
         style,
       ]}
     >
@@ -295,7 +307,7 @@ export function Chip({ label, on, onPress }: { label: string; on: boolean; onPre
     <Squish
       onPress={onPress}
       accessibilityState={{ selected: on }}
-      style={[styles.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: c.line }]}
+      style={[styles.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.line }, on && styles.lift]}
     >
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{label}</Text>
     </Squish>
@@ -321,7 +333,7 @@ export function Tabs<K extends string>({
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             accessibilityLabel={it.badge ? `${it.label}, ${it.badge}` : it.label}
-            style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }]}
+            style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }, on && styles.lift]}
           >
             <Text style={{ fontSize: 24 }}>{it.emoji}</Text>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
@@ -422,7 +434,7 @@ export const styles = StyleSheet.create({
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {
     borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: brand.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 3,
   },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
@@ -432,6 +444,7 @@ export const styles = StyleSheet.create({
     shadowColor: brand.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 4, elevation: 2,
   },
   btnSmall: { paddingVertical: 9, paddingHorizontal: 16, minHeight: 40, shadowOpacity: 0, elevation: 0 },
+  lift: { shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },

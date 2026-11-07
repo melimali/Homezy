@@ -1,5 +1,15 @@
 /** Son boşluk taraması: İngilizcede Türkçe kalan ya da yarım çevrilen metinler. Bu dosya en son gelir, öncekileri ezer. */
 export const EN_L: Record<string, string> = {
+  '{} küçük iş var. Birini seç, başlayalım.': '{} small tasks left. Pick one and let\'s start.',
+  '1 küçük iş var. Birini seç, başlayalım.': '1 small task left. Pick one and let\'s start.',
+  '{} iş bitti, {} kaldı. Devam!': '{} done, {} to go. Keep going!',
+  'Bugünlük iş yok. Keyfine bak ☕': 'No tasks today. Enjoy yourself ☕',
+  'Bugünlük hepsi tamam. Harika iş!': 'All done for today. Great job!',
+  'Bugünlük hepsi tamam': 'All done for today',
+  'Bugünlük': 'For today',
+  '{}/{} tamamlandı': '{}/{} completed',
+  '{} iş seni bekliyor': '{} tasks are waiting for you',
+  'iş seni bekliyor': 'tasks are waiting for you',
   'Burası evin. Odalarına dokun, bekleyen işleri gör.': 'This is your home. Tap a room to see its pending tasks.',
   'Bugünün işleri burada. Dokun, yap, işaretle.': "Today's tasks are here. Tap, do, check off.",
   'Serini, puanını ve haftalık ilerlemeni buradan takip et.': 'Track your streak, points and weekly progress here.',

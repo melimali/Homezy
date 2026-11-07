@@ -106,7 +106,7 @@ export function Plan({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd
             const n = rc.late + rc.today;
             if (n)
               badge = (
-                <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>
+                <View style={[styles.badge, { backgroundColor: c.warm }]}>
                   <Text style={[styles.badgeText, { color: c.onBadge }]}>{n}</Text>
                 </View>
               );

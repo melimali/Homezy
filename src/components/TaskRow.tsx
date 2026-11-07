@@ -210,12 +210,12 @@ export function TaskRow({
   const router = useRouter();
   const k = useTask(t, rid, list);
   const [open, setOpen] = useState(false);
-  const tone = k.doneToday ? c.ok : k.s.k === 'late' ? c.late : k.s.k === 'today' ? c.today : c.muted;
+  const tone = k.doneToday ? c.ok : k.s.k !== 'ok' ? c.today : c.muted; // gecikmiş de sakin sıcak ton (kırmızı suçluluk yaratır)
   const sub = [showRoom ? `${k.plant ? '🪴' : k.place.emoji} ${k.place.name}` : null, k.doneToday ? 'Bugün yapıldı' : k.s.label, `${k.min} dk`].filter(Boolean).join(' · ');
   const detail = () => router.push({ pathname: '/is' as any, params: { rid, list, id: t.id } });
 
   return (
-    <View style={[styles.rowWrap, { backgroundColor: k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface, shadowColor: c.shadow, borderLeftColor: tone }, !first && { marginTop: 10 }]}>
+    <View style={[styles.rowWrap, { backgroundColor: k.doneToday ? c.okSoft : k.s.k !== 'ok' ? c.todaySoft : c.surface, shadowColor: c.shadow, borderLeftColor: tone }, !first && { marginTop: 10 }]}>
       {k.doneToday && (
         <Appear style={[styles.stamp, { borderColor: c.ok }]}>
           <Text style={{ fontFamily: fonts.displayBold, fontSize: 12, letterSpacing: 1.5, color: c.ok }}>YAPILDI</Text>
@@ -330,9 +330,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
   const [open, setOpen] = useState(false);
   const tone = k.doneToday
     ? { bg: c.okSoft, fg: c.ok }
-    : k.s.k === 'late'
-    ? { bg: c.lateSoft, fg: c.late }
-    : k.s.k === 'today'
+    : k.s.k !== 'ok'
     ? { bg: c.todaySoft, fg: c.today }
     : { bg: c.surface, fg: c.muted };
   const label = k.doneToday ? 'Yapıldı ✓' : k.s.label;

@@ -42,7 +42,7 @@ export default function RoomScreen() {
               if (!x) return null;
               const on = rid === r.id;
               const rc = roomCounts(S, rid, now);
-              const dot = rc.late ? c.late : rc.today ? c.today : null;
+              const dot = rc.late || rc.today ? c.today : null;
               return (
                 <Squish
                   key={rid}

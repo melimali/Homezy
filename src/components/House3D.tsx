@@ -1587,7 +1587,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         </SvgText>
         {nTask > 0 && (
           <G>
-            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={rc.late ? c.late : c.warm} />
+            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={c.warm} />
             <SvgText x={cardX + w - 11} y={cardY + TAG_H / 2 + 3.5} fontSize={9.5} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
               {nTask}
             </SvgText>

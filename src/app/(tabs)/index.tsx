@@ -25,7 +25,9 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
-import { CATS, catOf, disciplineLevel, pickForLevel, type Cat } from '@/domain/discipline';
+import { CATS, catOf, type Cat } from '@/domain/discipline';
+import { dailyCap } from '@/domain/ramp';
+import { taskMin } from '@/domain/home';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
@@ -81,8 +83,9 @@ export default function Home() {
   const doneN = all.filter(x => isDoneToday(x.t, now)).length;
   const bell = notifs(S, now).length;
   const next = nextStage(hp.level);
-  const lv = disciplineLevel(hp.streak);
-  const shown = pickForLevel(due, lv);
+  // Kademeli başlangıç: aşamaya göre bugün en çok `cap` iş, en kısa işler önde (bugün bitenler sayılır).
+  const capLeft = Math.max(0, dailyCap(S, now) - doneN);
+  const shown = [...due].sort((a, b) => taskMin(a.t) - taskMin(b.t) || a.s.diff - b.s.diff).slice(0, capLeft);
   // Moka'nın hali: iş bitince kutlama, gece ya da hiç iş yokken uykulu, aksi hâlde mutlu.
   const hr = new Date(now).getHours();
   const spriteAnim: SpriteAnim = !due.length && doneN > 0 ? 'party' : hr >= 23 || hr < 6 || (!due.length && !doneN) ? 'sleepy' : 'happy';
@@ -103,7 +106,7 @@ export default function Home() {
               <View style={[styles.bubbleTail, { backgroundColor: c.surface }]} />
               <T v="h1" style={{ fontSize: 23, lineHeight: 28 }}>{greet(new Date(now), name)}</T>
               <T v="bold" style={[styles.heroLead, { color: c.ink, fontSize: 13.5, lineHeight: 18 }]}>
-                {due.length ? `Bugün ${due.length} iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
+                {shown.length ? `Bugün ${shown.length} küçük iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
               </T>
             </View>
             <IconBtn icon="🔔" label="Bildirimler" badge={bell} onPress={() => router.push('/bildirimler')} />

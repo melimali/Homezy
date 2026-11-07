@@ -17,6 +17,7 @@ import { gKey, goalMet, goalPct, readMin, readStreak } from '@/domain/growth';
 import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from '@/domain/stats';
 import { extrasUnlocked } from '@/lib/events';
 import { useNow } from '@/hooks/useNow';
+import { bestStreak, weekGoal } from '@/domain/ramp';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors, warmShadow } from '@/theme';
@@ -39,6 +40,8 @@ export default function Gelisim() {
   const { state: S } = useStore();
   const { premium } = usePurchases();
   const hp = progressOf(S.play, now);
+  const best = bestStreak(S.play);
+  const wk = weekGoal(S, now);
   const bars = dayBars(S.play, now);
   const week = bars.reduce((a, b) => a + b.n, 0);
   const mood = moodSeries(S.play, now);
@@ -131,8 +134,8 @@ export default function Gelisim() {
 
       <Appear index={3} style={st.pills}>
         <StatPill emoji="🔥" n={hp.streak} label="gün seri" tint={c.peachSoft} />
-        <StatPill emoji="⭐" n={S.play.points} label="puan" tint={c.lavenderSoft} />
-        <StatPill emoji="🏠" n={hp.level} label="seviye" tint={c.sageSoft} />
+        <StatPill emoji="📅" n={S.play.days.length} label="toplam gün" tint={c.lavenderSoft} />
+        <StatPill emoji="🏅" n={Math.max(best, hp.streak)} label="en iyi seri" tint={c.sageSoft} />
       </Appear>
 
       <View {...tour.mark('hafta')}><Card index={4}>
@@ -142,6 +145,7 @@ export default function Gelisim() {
 
       <Card index={5}>
         <SecHead title="Seri takvimi" h="h3" right={`❄️ ${freezeLeft}/${lim.freezes}`} />
+        <T v="small">{`Bu hafta hedefin ${wk.goal} gün: ${Math.min(wk.done, wk.goal)}/${wk.goal} ✓ Toplam ${S.play.days.length} günün hiç silinmez.`}</T>
         <StreakDots dots={monthDots(S.play, now)} />
         <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
       </Card>

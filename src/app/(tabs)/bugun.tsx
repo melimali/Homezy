@@ -19,8 +19,10 @@ import { MealCard } from '@/components/MealCard';
 import { MedsToday } from '@/components/MedsToday';
 import { useTabTour } from '@/components/useTabTour';
 import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
-import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
+import { taskMin, bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
+import { dailyCap } from '@/domain/ramp';
+import { RampCard } from '@/components/RampCard';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
 import type { ModeKind } from '@/domain/types';
 import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
@@ -57,12 +59,25 @@ export default function Bugun() {
   const later = all.filter(x => x.s.k === 'ok' && x.s.diff > 7).length;
   const shop = shopItems(S).map(s => s.x);
   // Tatilde rutinler dondu; liste boş görünsün.
-  const visible = S.mode?.k === 'tatil' ? [] : groups.filter(g => g[2].length);
+  const visibleAll = S.mode?.k === 'tatil' ? [] : groups.filter(g => g[2].length);
+  // Kademeli başlangıç (src/domain/ramp.ts): aşamaya göre bugün en çok `cap` iş görünür, en kısa işler önde.
+  // Bugün bitenler her zaman görünür; gerisi "İstersen biraz daha" ile açılır.
+  const [showAll, setShowAll] = useState(false);
+  const cap = dailyCap(S, now);
+  const flat = visibleAll.flatMap(g => g[2]);
+  const undone = flat.filter(x => !isDoneToday(x.t, now));
+  const rank = [...undone].sort((a, b) => taskMin(a.t) - taskMin(b.t) || a.s.diff - b.s.diff);
+  const room = showAll ? Infinity : Math.max(0, cap - (flat.length - undone.length));
+  const allowed = new Set(rank.slice(0, room).map(x => x.t.id));
+  const hiddenN = undone.length - allowed.size;
+  const visible = visibleAll
+    .map(([l, h, arr]): [string, string, typeof all] => [l, h, arr.filter(x => isDoneToday(x.t, now) || allowed.has(x.t.id))])
+    .filter(g => g[2].length);
   // Filtre hapları: Tümü ve iş olan yerler (oda / bitkiler / ev bakımı).
   const today = visible.flatMap(g => g[2]);
   const total = today.length;
   const doneN = today.filter(x => isDoneToday(x.t, now)).length;
-  const next = today.find(x => !isDoneToday(x.t, now));
+  const next = rank.find(x => allowed.has(x.t.id));
   const places = [...new Map(today.map(x => [x.rid, placeOf(S, x.rid)])).entries()];
   const [only, setOnly] = useState<string | null>(null);
   const [more, setMore] = useState(false);
@@ -74,6 +89,7 @@ export default function Bugun() {
       <TitleBar title="Bugün" right={<IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />} />
       <WeekStrip now={now} />
       <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
+      <RampCard />
       {next && <View {...tour.mark('next')}><NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} /></View>}
 
       {places.length > 1 && (
@@ -108,6 +124,9 @@ export default function Bugun() {
         </EmptyMsg>
       )}
       </View>
+      {hiddenN > 0 && S.mode?.k !== 'tatil' && (
+        <Btn kind="soft" block label={total === doneN ? `Bugünlük tamam 🎉 İstersen biraz daha (${hiddenN} iş)` : `${hiddenN} iş daha var · İstersen göster`} onPress={() => setShowAll(true)} />
+      )}
       {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
       <MedsToday />
       <DailyGoals now={now} />

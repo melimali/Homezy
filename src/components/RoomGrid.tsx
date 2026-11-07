@@ -54,12 +54,12 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
               <View style={styles.body}>
                 <T v="h3" numberOfLines={1}>{r.name}</T>
                 <View style={styles.foot}>
-                  <Bar value={mine.length ? okN / mine.length : 1} color={rc.late ? c.late : c.hi} height={6} style={{ flex: 1 }} />
+                  <Bar value={mine.length ? okN / mine.length : 1} color={c.hi} height={6} style={{ flex: 1 }} />
                   <T v="tiny">{okN}/{mine.length}</T>
                 </View>
               </View>
               {n > 0 && (
-                <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.today }]}>
+                <View style={[styles.badge, { backgroundColor: c.today }]}>
                   <Text style={[styles.badgeT, { color: c.onBadge }]}>{n}</Text>
                 </View>
               )}

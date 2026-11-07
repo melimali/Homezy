@@ -51,7 +51,7 @@ export function WelcomeBack() {
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
               ? 'Dönmek en güzel adım 💛 Evin her gün bir parça daha büyüyecek. Yarın da minik bir işle devam edelim.'
-              : `${away} gündür yoktun, ev seni bekledi, hiçbir şey kaybolmadı 💛 Kaldığın yerden devam ediyoruz.`}
+              : `${away} gündür yoktun, ev seni bekledi 💛 Yeni seri bugün başlıyor, ${S.play.days.length} günün hâlâ duruyor. Kaldığın yerden devam ediyoruz.`}
           </T>
           {!hp.today && pick && (
             <View style={{ alignSelf: 'stretch', gap: 6 }}>

@@ -77,7 +77,7 @@ export function taskLine(o: { name: string; type: RoomType | null; plant: boolea
 
 /** Durumu kısa ve yumuşak anlatan ek. */
 export function statusTail(k: StatusKind, diff: number, never: boolean) {
-  if (k === 'late') return diff <= -7 ? `${-diff} gündür bekliyor 🥺` : `${-diff} gündür seni bekliyor 🤍`;
+  if (k === 'late') return `${-diff} gündür hazır, vaktin olunca 🤍`;
   if (never) return 'Hadi ilk kez yapalım 🌟';
   return 'Bugün yapılacak 📅';
 }

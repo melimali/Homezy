@@ -4,7 +4,6 @@ import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 
-import { displayName, useAuth } from '@/auth/AuthProvider';
 
 import { House3D } from '@/components/House3D';
 import { HouseFloors } from '@/components/HouseFloors';
@@ -38,6 +37,7 @@ import { sessionHeroScene } from '@/domain/heroScenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
+import { useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, space, useColors } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
@@ -50,8 +50,7 @@ export default function Home() {
   const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
-  const { status, user } = useAuth();
-  const name = status === 'account' ? displayName(user) : null;
+  const name = useName();
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);

@@ -40,4 +40,11 @@ export const EN_O: Record<string, string> = {
   'Telefon yok, 5 dakika.': 'No phone, 5 minutes.',
   'Beklettiğin küçük işi hemen yap': 'Do that small task you have been putting off',
   '2 dakikadan kısa olanı.': 'One that takes under 2 minutes.',
+  'tek oda': 'single room',
+  '✏️ Kendim çizeyim (ayrıntılı)': '✏️ Draw it myself (detailed)',
+  'Kendim çizeyim': 'Draw it myself',
+  "Hazırsan kaydet. Sonra Ben > Ev planı'ndan değiştirebilirsin.": 'Save when you are ready. You can change it later from Me > Home plan.',
+  'Yurt odam': 'My dorm room',
+  'Evini bloklarla kur': 'Build your home with blocks',
+  'Sadece kendi odanı temizlemek istiyorsan "Sadece odam" yeter. Ortak alanlar için 2+1 de var.': 'If you only want to clean your own room, "Just my room" is enough. There is also 2+1 for shared areas.',
 };

@@ -435,8 +435,8 @@ function DailyGoals({ now }: { now: number }) {
 const styles = StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16, ...elevation.md },
   moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, ...elevation.md },
-  week: { flexDirection: 'row', justifyContent: 'space-between' },
-  day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
+  week: { flexDirection: 'row', justifyContent: 'space-between', gap: 2 },
+  day: { alignItems: 'center', gap: 2, flex: 1, maxWidth: 46, minHeight: 56, paddingVertical: 10, borderRadius: 18 },
   dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
   dayN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
   progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6, ...elevation.md },

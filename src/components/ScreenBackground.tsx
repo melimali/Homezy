@@ -17,6 +17,18 @@ const TONES: Record<Tone, { light: [string, string, string]; dark: [string, stri
   sky: { light: ['#ECEFEC', '#F7F2EA', '#F4ECE1'], dark: ['#202B3C', '#1C2230', '#1A202D'], dot: '#B9D2E3' },
 };
 
+/**
+ * Aşağı kaydırdıkça zeminin döndüğü daha koyu, doygun ton (Screen kaydırmayla bu renge geçer).
+ * Kart içi yazılar kartın kendi zemininde durduğu için kontrast bozulmaz; sayfa yazısı (ink / muted) bu tonlarda da AA.
+ */
+export const DEEP: Record<Tone, { light: string; dark: string }> = {
+  peach: { light: '#F0DCC9', dark: '#2A2431' },
+  sage: { light: '#DCE6D5', dark: '#1D2A2B' },
+  lavender: { light: '#E3DBEC', dark: '#242238' },
+  rose: { light: '#F0D8D5', dark: '#2C2231' },
+  sky: { light: '#D8E3EA', dark: '#192637' },
+};
+
 // Sabit parçacık düzeni: [x%, boyut, süre ms, gecikme ms, yol]
 const DOTS: [number, number, number, number, number][] = [
   [8, 10, 9000, 0, 90], [24, 6, 12000, 2000, 120], [42, 14, 10500, 800, 70], [58, 7, 13000, 4000, 130],

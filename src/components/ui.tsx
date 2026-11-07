@@ -26,10 +26,10 @@ import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import Svg, { Path } from 'react-native-svg';
-import { elevation, fonts, hit, warmShadow, radius, space, type, useColors, type Colors } from '@/theme';
+import { elevation, fonts, hit, warmShadow, radius, space, type, useColors, useIsDark, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
-import { ScreenBackground, type Tone } from './ScreenBackground';
+import { DEEP, ScreenBackground, type Tone } from './ScreenBackground';
 
 /* ---------- metin ---------- */
 
@@ -61,15 +61,28 @@ export function Screen({
   children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef, onScrollY,
 }: { children: ReactNode; onScrollY?: (y: number) => void; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
   const c = useColors();
+  const dark = useIsDark();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  // Aşağı kaydırdıkça zemin yavaşça sekmenin koyu tonuna geçer (yerel sürücü, her kare JS'e uğramaz).
+  const [y] = useState(() => new Animated.Value(0));
+  const [onScroll] = useState(() => Animated.event([{ nativeEvent: { contentOffset: { y } } }], { useNativeDriver: true }));
+  useEffect(() => {
+    if (!onScrollY) return;
+    const id = y.addListener(({ value }) => onScrollY(value));
+    return () => y.removeListener(id);
+  }, [y, onScrollY]);
+  const deep = DEEP[tone][dark ? 'dark' : 'light'];
+  const shift = y.interpolate({ inputRange: [0, Math.max(400, height * 1.2)], outputRange: [0, 1], extrapolate: 'clamp' });
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
   const bottom = tab ? 148 + insets.bottom : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
-      <ScrollView
-        ref={scrollRef}
-        onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined}
+      {!image && <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
+      <Animated.ScrollView
+        ref={scrollRef as never}
+        onScroll={onScroll}
         scrollEventThrottle={16}
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}
@@ -78,9 +91,12 @@ export function Screen({
       >
         {header && <AppHeader />}
         {children}
-      </ScrollView>
-      {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın. */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, backgroundColor: c.bg, opacity: 0.94 }} />
+      </Animated.ScrollView>
+      {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın; şerit de zeminle birlikte renk değiştirir. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top }}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, opacity: 0.94 }]} />
+        {!image && <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
+      </View>
     </View>
   );
 }

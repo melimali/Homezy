@@ -22,7 +22,7 @@ import { cloudEnabled } from "@/lib/supabase";
 import { legalUrl } from "@/lib/links";
 import { useStore } from "@/store/AppStore";
 import { brand, fonts, radius, useColors } from "@/theme";
-import { Appear, Float, Squish } from "@/components/motion";
+import { Appear, Squish } from "@/components/motion";
 
 type Mode = "kayit" | "giris" | "sifre";
 
@@ -121,43 +121,41 @@ export default function Giris() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
           st.wrap,
-          { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 },
+          { paddingTop: insets.top + 10, paddingBottom: 20 },
         ]}
       >
-        <View style={[st.hero, { backgroundColor: brand.navy }]}>
-          <View style={[st.bubble, { width: 120, height: 120, top: -30, right: -30, backgroundColor: brand.blue }]} />
-          <View style={[st.bubble, { width: 70, height: 70, bottom: 20, left: -20, backgroundColor: brand.clay }]} />
-          <View style={[st.bubble, { width: 28, height: 28, top: 60, left: 40, backgroundColor: brand.cocoa }]} />
-          <View style={st.head}>
-            <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
-              <Image
-                source={require("../../assets/logo-yatay.png")}
-                style={st.wordmark}
-                resizeMode="contain"
-                accessibilityLabel="Homezy"
-              />
-            </View>
-            {fromApp && (
-              <XBtn
-                label="Kapat"
-                onPress={() =>
-                  router.canGoBack()
-                    ? router.back()
-                    : router.replace(state.setup ? "/" : "/kurulum")
-                }
-              />
-            )}
+        <View style={st.head}>
+          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+            <Image
+              source={require("../../assets/logo-yatay.png")}
+              style={st.wordmark}
+              resizeMode="contain"
+              accessibilityLabel="Homezy"
+            />
           </View>
-          <Float amp={5} dur={2200} style={{ alignSelf: "center" }}>
-            <MokaReact anim="happy" size={104} />
-          </Float>
-          <Text style={[st.heroEyebrow, { color: brand.clay }]}>
+          {fromApp && (
+            <XBtn
+              label="Kapat"
+              onPress={() =>
+                router.canGoBack()
+                  ? router.back()
+                  : router.replace(state.setup ? "/" : "/kurulum")
+              }
+            />
+          )}
+        </View>
+
+        <View style={st.hero}>
+          <View style={[st.mokaWrap, { backgroundColor: c.surface2 }]}>
+            <MokaReact anim="happy" size={84} />
+          </View>
+          <Text style={[st.heroEyebrow, { color: c.muted }]}>
             {tx(
               mode === "sifre" ? "Şifremi unuttum" : "Hesap",
             ).toLocaleUpperCase(dateLocale())}
           </Text>
-          <Text style={[st.heroTitle, { color: brand.mint }]}>{title}</Text>
-          <Text style={[st.heroLead, { color: brand.mint }]}>{lead}</Text>
+          <Text style={[st.heroTitle, { color: c.ink }]}>{title}</Text>
+          <Text style={[st.heroLead, { color: c.muted }]}>{lead}</Text>
         </View>
 
         {mode !== "sifre" && (
@@ -173,13 +171,13 @@ export default function Giris() {
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   onPress={() => switchTo(m)}
-                  style={[st.segBtn, on && { backgroundColor: c.surface }]}
+                  style={[st.segBtn, on && { backgroundColor: c.accent }]}
                 >
                   <Text
                     style={{
                       fontFamily: fonts.bodyBlack,
                       fontSize: 14,
-                      color: on ? c.ink : c.muted,
+                      color: on ? c.onAccent : c.muted,
                     }}
                   >
                     {m === "kayit" ? "Hesap oluştur" : "Giriş yap"}
@@ -347,12 +345,14 @@ export default function Giris() {
             gap: 6,
             paddingHorizontal: 18,
             paddingTop: 10,
-            paddingBottom: insets.bottom + 12,
+            paddingBottom: insets.bottom + 10,
             backgroundColor: c.bg,
+            borderTopWidth: 1,
+            borderTopColor: c.line,
           }}
         >
           <Btn
-            kind="ghost"
+            kind="soft"
             label="Hesapsız devam et"
             onPress={guest}
             disabled={busy}
@@ -429,22 +429,24 @@ function Note({
 const st = StyleSheet.create({
   wrap: {
     paddingHorizontal: 18,
-    gap: 18,
+    gap: 16,
     width: "100%",
     maxWidth: 480,
     alignSelf: "center",
   },
-  hero: {
-    borderRadius: 32,
-    padding: 16,
-    paddingBottom: 22,
-    gap: 6,
+  hero: { alignItems: "center", gap: 6 },
+  mokaWrap: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    alignItems: "center",
+    justifyContent: "center",
     overflow: "hidden",
+    marginBottom: 6,
   },
-  bubble: { position: "absolute", borderRadius: 999, opacity: 0.25 },
-  heroEyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.2, textAlign: "center" },
-  heroTitle: { fontFamily: fonts.display, fontSize: 28, textAlign: "center" },
-  heroLead: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20, textAlign: "center", opacity: 0.85, paddingHorizontal: 8 },
+  heroEyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.4, textAlign: "center" },
+  heroTitle: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, textAlign: "center" },
+  heroLead: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20, textAlign: "center", paddingHorizontal: 6 },
   head: {
     flexDirection: "row",
     alignItems: "center",

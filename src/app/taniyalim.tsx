@@ -143,7 +143,7 @@ function TaniyalimInner() {
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 10, paddingBottom: insets.bottom + 16 }]}>
       <View style={st.topRow}>
-        <View style={{ width: 96 }}>
+        <View style={st.topSide}>
           {page > 0 && <Btn kind="ghost" label="‹ Geri" onPress={back} />}
         </View>
         <View style={st.topMid}>
@@ -152,8 +152,12 @@ function TaniyalimInner() {
           </View>
           <T v="small">{`Adım ${page + 1} / ${total}`}</T>
         </View>
-        <View style={{ width: 96, alignItems: 'flex-end' }}>
-          {page <= 1 && <Btn kind="ghost" label="Şimdilik geç" onPress={skip} />}
+        <View style={[st.topSide, { alignItems: 'flex-end' }]}>
+          {page <= 1 && (
+            <Squish onPress={skip} accessibilityRole="button" accessibilityLabel="Şimdilik geç">
+              <Text numberOfLines={1} style={[st.skip, { color: c.muted }]}>Şimdilik geç</Text>
+            </Squish>
+          )}
         </View>
       </View>
       <View accessibilityRole="progressbar" accessibilityLabel={`Adım ${page + 1} / ${total}`} style={[st.track, { backgroundColor: c.line }]}>
@@ -323,7 +327,9 @@ function Notes() {
 const st = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 20, gap: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
+  topRow: { flexDirection: 'row', alignItems: 'center', height: 72 },
+  topSide: { width: 110, justifyContent: 'center' },
+  skip: { fontFamily: fonts.bodyBold, fontSize: 14, paddingVertical: 10, paddingHorizontal: 6, textAlign: 'right' },
   topMid: { flex: 1, alignItems: 'center', gap: 2 },
   mokaMini: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   mokaMiniImg: { width: 32, height: 32 },

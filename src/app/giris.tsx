@@ -135,7 +135,7 @@ function GirisBody(p: {
   const router = useRouter();
   const { state } = useStore();
   const en = state.settings.language === "en";
-  const heroH = insets.top + 210;
+  const heroH = insets.top + 226;
 
   return (
     <KeyboardAvoidingView

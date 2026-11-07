@@ -407,7 +407,7 @@ export const styles = StyleSheet.create({
   screen: { paddingHorizontal: space.screen, gap: space.section, width: '100%', maxWidth: 520, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headMokaRing: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
+  headMokaRing: { width: 52, height: 52, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
   headMoka: { width: 50, height: 50, marginTop: 6 },
   brandWord: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 22, letterSpacing: -0.3 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
@@ -417,7 +417,7 @@ export const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   emptyMoka: { width: 132, height: 132 },
   sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
-  bell: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth },
+  bell: { width: 48, height: 48, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {

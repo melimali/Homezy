@@ -396,7 +396,7 @@ function DailyGoals({ now }: { now: number }) {
 const styles = StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16 },
   heroMoka: { width: 84, height: 84 },
-  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 24, paddingVertical: 14, paddingHorizontal: 16 },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
   day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
   dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
@@ -407,16 +407,16 @@ const styles = StyleSheet.create({
   pills: { gap: 8, paddingHorizontal: 24 },
   fpill: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   modeHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 24 },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.tile },
   check: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
-  bar: { height: 8, borderRadius: 999, overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: 999 },
+  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: radius.pill },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   dueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });
 
 const goalStyle = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: radius.tile },
   label: { flex: 1, fontFamily: fonts.bodyBlack, fontSize: 15 },
   pts: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
 });

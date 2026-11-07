@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { router } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,13 +12,13 @@ import { DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/dom
 import { savePersona, skipPersona, usePersona, type Disc } from '@/profile/usePersona';
 import { saveNickname, useNickname } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { ForceScheme, fonts, radius, useColors } from '@/theme';
 
 /**
  * Tanıtımdan sonra "seni tanıyalım" soruları. Cevaplar kişilik tipine çevrilir (gösterilmez),
  * Moka "notlarını alıyor" yükleme ekranıyla bitirir. Ev kurulumundan önce açılır.
  */
-export default function Taniyalim() {
+function TaniyalimInner() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { state, update } = useStore();
@@ -207,6 +208,16 @@ export default function Taniyalim() {
 
       {footer}
     </View>
+  );
+}
+
+/** Quiz her zaman açık krem temada; durum çubuğu koyu simgeli. */
+export default function Taniyalim() {
+  return (
+    <ForceScheme scheme="light">
+      <StatusBar style="dark" />
+      <TaniyalimInner />
+    </ForceScheme>
   );
 }
 

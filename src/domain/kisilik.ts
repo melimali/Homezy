@@ -14,37 +14,37 @@ export const DISC_QUESTIONS: DQ[] = [
     { v: 'spor', emoji: '🏋️', label: 'Spor' }, { v: 'saglik', emoji: '😴', label: 'Sağlık / uyku' }, { v: 'gelisim', emoji: '🌱', label: 'Kişisel gelişim' },
     { v: 'para', emoji: '💰', label: 'Para' }, { v: 'ruh', emoji: '🧘', label: 'Ruh hali' },
   ] },
-  { k: 'level', q: 'Şu an neredesin?', hint: 'Planın zorluğunu buna göre ayarlarım.', opts: [
+  { k: 'level', q: 'Şu an düzenin nasıl?', hint: 'Planın zorluğunu buna göre ayarlarım.', opts: [
     { v: 'sifir', emoji: '🌱', label: 'Sıfırdan başlıyorum' }, { v: 'bozuldu', emoji: '🔧', label: 'Vardı ama bozuldu' }, { v: 'iyi', emoji: '🚀', label: 'İyiyim, daha iyi olmak istiyorum', pts: { B: 1 } },
   ] },
-  { k: 'chrono', q: 'En verimli olduğun zaman?', hint: 'Görevleri o saate koyarım.', opts: [
+  { k: 'chrono', q: 'Günün hangi saatinde en verimlisin?', hint: 'Görevleri o saate koyarım.', opts: [
     { v: 'sabah', emoji: '🌅', label: 'Sabah' }, { v: 'ogle', emoji: '☀️', label: 'Öğlen' }, { v: 'aksam', emoji: '🌆', label: 'Akşam' }, { v: 'gece', emoji: '🌙', label: 'Gece' },
   ] },
-  { k: 'start', q: 'Bir işe başlamak sana nasıl gelir?', hint: 'Dürüst ol, yargılamam.', opts: [
+  { k: 'start', q: 'Bir işe nasıl başlarsın?', hint: 'Dürüst ol, yargılamam.', opts: [
     { v: 'hemen', emoji: '⚡', label: 'Hemen başlarım', pts: { B: 3 } }, { v: 'isinma', emoji: '☕', label: 'Isınmam gerekir' },
     { v: 'birazdan', emoji: '🐌', label: 'Hep "birazdan" derim', pts: { B: -3 } }, { v: 'birakamam', emoji: '🔥', label: 'Başlayınca bırakamam', pts: { B: 2 } },
   ] },
-  { k: 'quit', q: 'Bir alışkanlığı en çok neden bırakırsın?', hint: 'Ana riskini bileyim.', opts: [
+  { k: 'quit', q: 'Bir alışkanlığı en çok neden bırakırsın?', hint: 'Sana uygun desteği seçeyim.', opts: [
     { v: 'unutur', emoji: '🤷', label: 'Unutuyorum', pts: { Y: -1 } }, { v: 'yorulur', emoji: '😴', label: 'Yoruluyorum', pts: { Y: -1 } },
     { v: 'sikilir', emoji: '🥱', label: 'Sıkılıyorum', pts: { Y: -1 } }, { v: 'hepsi', emoji: '💥', label: 'Bir gün aksayınca hepsini bırakırım', pts: { Y: -3 } },
     { v: 'dikkat', emoji: '🎨', label: 'Dikkatim dağılıyor', pts: { O: -2 } },
   ] },
-  { k: 'drive', q: 'Seni ne harekete geçirir?', hint: 'Moka seni buradan motive etsin.', opts: [
+  { k: 'drive', q: 'Seni ne harekete geçirir?', hint: 'Moka seni buna göre motive eder.', opts: [
     { v: 'puan', emoji: '⭐', label: 'Puan ve seri', pts: { G: 1 } }, { v: 'soz', emoji: '🤝', label: 'Birine söz vermek', pts: { G: -1 } },
     { v: 'odul', emoji: '🎁', label: 'Ödül', pts: { G: -1 } }, { v: 'baski', emoji: '⏰', label: 'Son tarih / baskı' }, { v: 'hedef', emoji: '🎯', label: 'Kendi hedefim', pts: { G: 3 } },
   ] },
-  { k: 'plan', q: 'Plan nasıl olsun?', hint: 'Biçimini buna göre kurarım.', opts: [
+  { k: 'plan', q: 'Planın nasıl olsun?', hint: 'Biçimini buna göre kurarım.', opts: [
     { v: 'detay', emoji: '📋', label: 'Saatlik detaylı program', pts: { D: 3 } }, { v: 'kisa', emoji: '✅', label: 'Kısa günlük liste', pts: { D: 1 } }, { v: 'esnek', emoji: '🌊', label: 'Esnek, ruhuma göre', pts: { D: -2 } },
   ] },
   { k: 'focus', q: 'Kesintisiz ne kadar odaklanırsın?', hint: 'Odak bloklarını buna göre kurarım.', opts: [
     { v: '10', emoji: '⏱️', label: '10 dk', pts: { O: -2 } }, { v: '25', emoji: '⏱️', label: '25 dk' }, { v: '45', emoji: '⏱️', label: '45 dk', pts: { O: 2 } }, { v: '90', emoji: '⏱️', label: '90 dk', pts: { O: 3 } },
   ] },
-  { k: 'budget', q: 'Günde bu hedeflere ne kadar vakit ayırabilirsin?', hint: 'Hiçbir gün bunu aşmam.', opts: [
+  { k: 'budget', q: 'Günde hedeflerine ne kadar vakit ayırabilirsin?', hint: 'Günlük planı bu süreyi aşmayacak şekilde kurarım.', opts: [
     { v: '15', emoji: '🕐', label: '15 dk' }, { v: '30', emoji: '🕑', label: '30 dk' }, { v: '60', emoji: '🕒', label: '60 dk' }, { v: '120', emoji: '🕓', label: '120+ dk' },
   ] },
-  { k: 'streak', q: 'Son 30 günde bir alışkanlığı en çok ne kadar sürdürdün?', hint: 'Başlangıç hedefini buna göre koyarım.', opts: [
+  { k: 'streak', q: 'Son 30 günde bir alışkanlığı en fazla kaç gün sürdürdün?', hint: 'Başlangıç hedefini buna göre koyarım.', opts: [
     { v: 'hic', emoji: '🌫️', label: 'Hiç', pts: { Y: -2, D: -1 } }, { v: '3', emoji: '🌱', label: '1-3 gün', pts: { Y: -1 } },
-    { v: '7', emoji: '🌿', label: '1 hafta', pts: { Y: 1, D: 1 } }, { v: '14', emoji: '🌳', label: '2 hafta+', pts: { Y: 3, D: 2 } },
+    { v: '7', emoji: '🌿', label: '1 hafta', pts: { Y: 1, D: 1 } }, { v: '14', emoji: '🌳', label: '2 hafta ve üstü', pts: { Y: 3, D: 2 } },
   ] },
 ];
 

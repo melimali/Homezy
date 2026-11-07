@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Easing, Image, type ImageSourcePropType, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Float, Squish } from '@/components/motion';
-import { Btn, Chip, T } from '@/components/ui';
+import { Btn, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { AXIS_NAMES, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
 import { askable, DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
@@ -103,18 +103,9 @@ export default function Taniyalim() {
   if (!nameDone) {
     const go = () => { saveNickname(nm); setNameDone(true); };
     return (
-      <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
-        <Appear style={{ flex: 1, gap: 14 }}>
-          <View style={st.head}>
-            <Float amp={4} dur={2200}>
-              <Image source={MOKA_ASSETS.happy} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
-            </Float>
-            <View style={{ flex: 1 }}>
-              <T v="eyebrow">Seni tanıyalım</T>
-              <T v="h2">Sana nasıl seslenelim?</T>
-              <T v="small">Moka seni adınla karşılasın.</T>
-            </View>
-          </View>
+      <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+        <Appear style={{ flex: 1, gap: 20 }}>
+          <Header image={MOKA_ASSETS.happy} eyebrow="Seni tanıyalım" title="Sana nasıl seslenelim?" hint="Moka seni adınla karşılasın." />
           <TextInput
             value={nm}
             onChangeText={setNm}
@@ -125,7 +116,7 @@ export default function Taniyalim() {
             returnKeyType="done"
             onSubmitEditing={go}
             accessibilityLabel="Adın"
-            style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderColor: c.line, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: 16, paddingVertical: 14 }}
+            style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderColor: c.line, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: 18, paddingVertical: 16 }}
           />
         </Appear>
         <Btn kind="primary" label={nm.trim() ? 'Devam' : 'Adsız devam'} onPress={go} block />
@@ -133,83 +124,101 @@ export default function Taniyalim() {
     );
   }
 
-  return (
-    <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
-      <View style={st.cupRow} accessibilityLabel={`Soru ${step + 1} / ${steps.length}`}>
-        <View style={[st.cupTrack, { backgroundColor: c.line }]}>
-          <View style={[st.cupFill, { backgroundColor: c.accent, width: `${((step + 1) / steps.length) * 100}%` }]} />
-        </View>
-        <Text style={{ fontSize: 20 }}>{step + 1 >= steps.length ? '☕✨' : '☕'}</Text>
-      </View>
-      <Appear key={q?.k ?? dq?.k} style={{ flex: 1, gap: 14 }}>
-        <View style={st.head}>
-          <Float amp={4} dur={2200}>
-            <Image source={MOKA_ASSETS[dq ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'areas' ? 'checklist' : 'analyzing') : q!.k === 'budget' ? 'checklist' : q!.k === 'cook' || q!.k === 'effort' || q!.k === 'tastes' ? 'chef' : 'happy']} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
-          </Float>
-          <View style={{ flex: 1 }}>
-            <T v="eyebrow">Seni tanıyalım</T>
-            <T v="h2">{(q ?? dq)!.q}</T>
-            <T v="small">{(q ?? dq)!.hint}</T>
-          </View>
-        </View>
+  const mokaFor = dq
+    ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'areas' ? 'checklist' : 'analyzing')
+    : q!.k === 'budget' ? 'checklist' : q!.k === 'cook' || q!.k === 'effort' || q!.k === 'tastes' ? 'chef' : 'happy';
+  const cur = (q ?? dq)!;
+  const pct = ((step + 1) / steps.length) * 100;
+  const discSel = dq ? ((disc[dq.k] as string[] | string | undefined) ?? (dq.multi ? [] : undefined)) : undefined;
 
-        {dq ? (
+  return (
+    <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 10, paddingBottom: insets.bottom + 16 }]}>
+      <View style={st.topRow}>
+        <View style={{ width: 84 }}>
+          {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} />}
+        </View>
+        <T v="small" style={{ flex: 1, textAlign: 'center' }}>{`Adım ${step + 1} / ${steps.length}`}</T>
+        <View style={{ width: 84, alignItems: 'flex-end' }}>
+          {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} />}
+        </View>
+      </View>
+      <View accessibilityRole="progressbar" accessibilityLabel={`Adım ${step + 1} / ${steps.length}`} style={[st.track, { backgroundColor: c.line }]}>
+        <View style={[st.fill, { backgroundColor: c.accent, width: `${pct}%` }]} />
+      </View>
+
+      <Appear key={cur.k} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ gap: 18, paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
+          <Header image={MOKA_ASSETS[mokaFor]} eyebrow="Seni tanıyalım" title={cur.q} hint={cur.hint} />
           <View style={{ gap: 10 }}>
-            {dq.opts.map(o => {
-              const sel = dq.multi ? ((disc[dq.k] as string[] | undefined) ?? []).includes(o.v) : disc[dq.k] === o.v;
-              return (
-                <Squish
-                  key={o.v}
-                  onPress={() => pickDisc(o.v)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: sel }}
-                  accessibilityLabel={o.label}
-                  style={[st.opt, { backgroundColor: sel ? c.accentSoft : c.surface, borderColor: sel ? c.accent : c.line }]}
-                >
-                  <Text style={{ fontSize: 28 }}>{o.emoji}</Text>
-                  <Text style={{ flex: 1, fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{o.label}</Text>
-                  {sel && <Text style={{ fontSize: 18 }}>✓</Text>}
-                </Squish>
-              );
-            })}
+            {dq
+              ? dq.opts.map(o => (
+                  <Option
+                    key={o.v}
+                    emoji={o.emoji}
+                    label={o.label}
+                    multi={!!dq.multi}
+                    on={dq.multi ? (discSel as string[]).includes(o.v) : discSel === o.v}
+                    onPress={() => pickDisc(o.v)}
+                  />
+                ))
+              : q!.multi
+                ? q!.opts.map(o => (
+                    <Option key={o.v} emoji={o.emoji} label={o.label} multi on={ans.tastes.includes(o.v)} onPress={() => toggle(o.v)} />
+                  ))
+                : (q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => (
+                    <Option key={String(o.v)} emoji={o.emoji} label={o.label} sub={o.sub} on={chosen[q!.k] === o.v} onPress={() => pick(o.v)} />
+                  ))}
           </View>
-        ) : q!.multi ? (
-          <View style={st.chips}>
-            {q!.opts.map(o => (
-              <Chip key={o.v} label={`${o.emoji} ${o.label}`} on={ans.tastes.includes(o.v)} onPress={() => toggle(o.v)} />
-            ))}
-          </View>
-        ) : (
-          <View style={{ gap: 10 }}>
-            {(q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => {
-              const on = chosen[q!.k] === o.v;
-              return (
-                <Squish
-                  key={String(o.v)}
-                  onPress={() => pick(o.v)}
-                  accessibilityRole="button"
-                  accessibilityLabel={o.label}
-                  style={[st.opt, { backgroundColor: on ? c.accentSoft : c.surface, borderColor: c.line }]}
-                >
-                  <Text style={{ fontSize: 28 }}>{o.emoji}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{o.label}</Text>
-                    {!!o.sub && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.muted }}>{o.sub}</Text>}
-                  </View>
-                </Squish>
-              );
-            })}
-          </View>
-        )}
+        </ScrollView>
       </Appear>
 
-      <View style={{ gap: 6 }}>
-        {q?.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
-        {dq?.multi && <Btn kind="primary" label={((disc[dq.k] as string[] | undefined) ?? []).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />}
-        {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} block />}
-        {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} block />}
+      {q?.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
+      {dq?.multi && <Btn kind="primary" label={(discSel as string[]).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />}
+    </View>
+  );
+}
+
+/** Soru başlığı: Moka resmi, küçük üst etiket, soru ve ipucu. */
+function Header({ image, eyebrow, title, hint }: { image: ImageSourcePropType; eyebrow: string; title: string; hint: string }) {
+  const c = useColors();
+  return (
+    <View style={st.head}>
+      <View style={[st.mokaBadge, { backgroundColor: c.surface2 }]}>
+        <Float amp={3} dur={2200}>
+          <Image source={image} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
+        </Float>
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <T v="eyebrow">{eyebrow}</T>
+        <T v="h2">{title}</T>
+        <T v="small">{hint}</T>
       </View>
     </View>
+  );
+}
+
+/** Seçenek kartı: emoji rozeti, başlık, isteğe bağlı alt yazı, seçili işareti. */
+function Option({ emoji, label, sub, on, multi, onPress }: { emoji: string; label: string; sub?: string; on: boolean; multi?: boolean; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Squish
+      onPress={onPress}
+      accessibilityRole={multi ? 'checkbox' : 'button'}
+      accessibilityState={{ selected: on, checked: on }}
+      accessibilityLabel={label}
+      style={[st.opt, { backgroundColor: on ? c.accentSoft : c.surface, borderColor: on ? c.accent : c.line }]}
+    >
+      <View style={[st.emojiBadge, { backgroundColor: on ? c.surface : c.surface2 }]}>
+        <Text style={{ fontSize: 24 }}>{emoji}</Text>
+      </View>
+      <View style={{ flex: 1, gap: 1 }}>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
+        {!!sub && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.muted }}>{sub}</Text>}
+      </View>
+      <View style={[st.mark, multi ? st.markSq : st.markRound, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : 'transparent' }]}>
+        {on && <Text style={{ color: c.onAccent, fontSize: 13, fontFamily: fonts.bodyBlack }}>✓</Text>}
+      </View>
+    </Squish>
   );
 }
 
@@ -220,26 +229,28 @@ function TypeScreen({ r, onDone }: { r: Disc; onDone: () => void }) {
   const t = TYPES[r.type];
   const side = r.side ? TYPES[r.side] : null;
   return (
-    <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
-      <Appear style={{ flex: 1, gap: 12 }}>
-        <View style={[st.typeCard, { backgroundColor: t.bg }]}>
-          <Float amp={5} dur={1800}>
-            <Image source={t.img} style={{ width: 190, height: 190 }} resizeMode="contain" accessibilityIgnoresInvertColors />
-          </Float>
-          <Text style={[st.typeName, { color: '#283044' }]}>{t.emoji} {t.name}</Text>
-          <Text style={[st.typeSays, { color: '#283044' }]}>{t.says}</Text>
-        </View>
-        {side && <T v="small" style={{ textAlign: 'center' }}>{`Biraz da ${side.name} gibisin ${side.emoji}`}</T>}
-        <View style={{ gap: 8 }}>
-          {(Object.keys(AXIS_NAMES) as (keyof Axes)[]).map(k => (
-            <View key={k} style={st.axisRow}>
-              <T v="small" style={{ width: 100 }}>{AXIS_NAMES[k]}</T>
-              <View style={[st.cupTrack, { backgroundColor: c.line, flex: 1 }]}>
-                <View style={[st.cupFill, { backgroundColor: c.accent, width: `${r.axes[k] * 10}%` }]} />
+    <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+      <Appear style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
+          <View style={[st.typeCard, { backgroundColor: t.bg }]}>
+            <Float amp={5} dur={1800}>
+              <Image source={t.img} style={{ width: 190, height: 190 }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            </Float>
+            <Text style={[st.typeName, { color: '#283044' }]}>{t.emoji} {t.name}</Text>
+            <Text style={[st.typeSays, { color: '#283044' }]}>{t.says}</Text>
+          </View>
+          {side && <T v="small" style={{ textAlign: 'center' }}>{`Biraz da ${side.name} gibisin ${side.emoji}`}</T>}
+          <View style={[st.axisCard, { backgroundColor: c.surface, borderColor: c.line }]}>
+            {(Object.keys(AXIS_NAMES) as (keyof Axes)[]).map(k => (
+              <View key={k} style={st.axisRow}>
+                <T v="small" style={{ width: 104 }}>{AXIS_NAMES[k]}</T>
+                <View style={[st.track, { backgroundColor: c.line, flex: 1 }]}>
+                  <View style={[st.fill, { backgroundColor: c.accent, width: `${r.axes[k] * 10}%` }]} />
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        </ScrollView>
       </Appear>
       <Btn kind="primary" label="Devam" onPress={onDone} block />
     </View>
@@ -266,7 +277,7 @@ function Notes() {
           <Image source={MOKA_ASSETS.checklist} style={{ width: 170, height: 170 }} resizeMode="contain" accessibilityIgnoresInvertColors />
         </Float>
         <T v="h3" style={{ textAlign: 'center' }}>{NOTES[i]}</T>
-        <View style={[st.track, { backgroundColor: c.line }]}>
+        <View style={[st.track, { backgroundColor: c.line, width: 220 }]}>
           <Animated.View style={[st.fill, { backgroundColor: c.accent, width: bar.interpolate({ inputRange: [0, 1], outputRange: ['6%', '100%'] }) }]} />
         </View>
       </View>
@@ -277,17 +288,20 @@ function Notes() {
 const st = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 20, gap: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  cupRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cupTrack: { height: 12, flex: 1, borderRadius: 6, overflow: 'hidden' },
-  cupFill: { height: 12, borderRadius: 6 },
-  typeCard: { borderRadius: 26, padding: 18, alignItems: 'center', gap: 6 },
-  typeName: { fontFamily: fonts.bodyBlack, fontSize: 24 },
-  typeSays: { fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'center' },
-  axisRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  moka: { width: 84, height: 84 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  opt: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.tile, borderWidth: 1.5 },
-  track: { width: 220, height: 10, borderRadius: 5, overflow: 'hidden' },
-  fill: { height: 10, borderRadius: 5 },
+  topRow: { flexDirection: 'row', alignItems: 'center', minHeight: 40 },
+  track: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  fill: { height: 8, borderRadius: 4 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  mokaBadge: { width: 84, height: 84, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  moka: { width: 68, height: 68 },
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile, borderWidth: 1.5, minHeight: 64 },
+  emojiBadge: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  mark: { width: 24, height: 24, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  markRound: { borderRadius: 12 },
+  markSq: { borderRadius: 8 },
+  typeCard: { borderRadius: 28, padding: 20, alignItems: 'center', gap: 6 },
+  typeName: { fontFamily: fonts.bodyBlack, fontSize: 24, textAlign: 'center' },
+  typeSays: { fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'center', lineHeight: 21 },
+  axisCard: { borderRadius: radius.tile, borderWidth: 1, padding: 16, gap: 12 },
+  axisRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });

@@ -444,7 +444,7 @@ export function seed(now = Date.now()): AppState {
     Y: [5, 9, 7, 0, 12], M: [1, 0, 3, 26, 40, 4], B: [2, 5, 9, 4, 3], A: [3, 8], S: [3, 7, 6, 31], L: [10, 12],
   };
   for (const k of Object.keys(map) as (keyof typeof map)[])
-    S.tasks[map[k]].forEach((t, i) => (t.last = ago(agos[k][i], now)));
+    S.tasks[map[k]].forEach((t, i) => (t.last = agos[k][i] == null ? null : ago(agos[k][i], now)));
   S.care.forEach((t, i) => (t.last = ago([12, 20, 25][i] ?? 10, now)));
   const w = (name: string, cat: string, state: 'temiz' | 'kirli' | 'utu', wash: WashType) =>
     ({ id: uid(), name, cat, state, wash, added: now, worn: state === 'kirli' ? now : null });

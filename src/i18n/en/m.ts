@@ -1,5 +1,8 @@
 /** Kişilik / disiplin testi (src/domain/kisilik.ts, src/app/taniyalim.tsx): Türkçe metin → İngilizce. */
 export const EN_M: Record<string, string> = {
+  // Quiz: ad sorusu
+  'Sana nasıl seslenelim?': 'What should we call you?',
+  'Moka seni adınla karşılasın.': 'Moka will greet you by name.',
   // Gelişim: yetenekler (src/domain/mokaLevel.ts, src/app/(tabs)/gelisim.tsx)
   'Bugün {}/{} exp': 'Today {}/{} XP',
   'Pomodoro odak oturumlarında artar: her 25 dakikalık oturum yaklaşık 2 exp (en az 10 dk).': 'Grows with Pomodoro focus sessions: each 25-minute session gives about 2 XP (at least 10 min).',

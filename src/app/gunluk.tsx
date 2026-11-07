@@ -202,7 +202,7 @@ export default function Gunluk() {
         <View style={[styles.paper, { backgroundColor: c.surface, borderColor: c.line }]} {...pan.panHandlers}>
           <View style={styles.nav}>
             <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki sayfa" style={[styles.arrow, { backgroundColor: c.surface2 }]}>
-              <Text style={[styles.arrowTx, { color: c.ink }]}>‹</Text>
+              <Chevron color={c.ink} />
             </Squish>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={[styles.date, { color: c.ink }]}>{isToday ? fmtDay(day) : fmtYear(day)}</Text>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
+import { BackLink, Btn, Card, Divider, ListRow, Screen, T } from '@/components/ui';
 import { aiConsent, locationOk } from '@/lib/consent';
 import { LEGAL, legalUrl } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
@@ -56,8 +56,8 @@ export default function Yasal() {
     setBusy(false);
   };
 
-  const link = (label: string, url: string) => (
-    <Btn kind="soft" label={label} onPress={() => Linking.openURL(url)} block />
+  const link = (label: string, url: string, icon: string) => (
+    <ListRow icon={icon} title={label} onPress={() => Linking.openURL(url)} accessibilityLabel={label} />
   );
 
   return (
@@ -67,9 +67,13 @@ export default function Yasal() {
 
       <Card>
         <T v="h3">Belgeler</T>
-        {link('Gizlilik Politikası', legalUrl('privacy', lang))}
-        {link('Kullanım Koşulları', legalUrl('terms', lang))}
-        {link('Hesap ve veri silme sayfası', LEGAL.deletion)}
+        <View>
+          {link('Gizlilik Politikası', legalUrl('privacy', lang), '🔒')}
+          <Divider inset={54} />
+          {link('Kullanım Koşulları', legalUrl('terms', lang), '📄')}
+          <Divider inset={54} />
+          {link('Hesap ve veri silme sayfası', LEGAL.deletion, '🗑️')}
+        </View>
       </Card>
 
       <Card>

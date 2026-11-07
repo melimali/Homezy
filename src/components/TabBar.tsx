@@ -11,6 +11,8 @@ import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
 
+import { haptic } from '@/lib/sfx';
+
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
 import { Chip, Sheet, T } from './ui';
@@ -36,6 +38,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     const o = descriptors[r.key].options;
     const focused = state.index === i;
     const press = () => {
+      if (!focused) haptic('light');
       const e = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
       if (!focused && !e.defaultPrevented) navigateToTab(r.key);
     };
@@ -47,7 +50,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.06)' : c.line, shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
-        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
+        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle: Moka sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
             <Image source={MOKA_ASSETS.happy} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
@@ -115,7 +118,7 @@ function Tab({ name, label, focused, onPress }: { name: IconName; label: string;
     <Squish onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} quiet style={st.tabOuter}>
       <Animated.View style={[st.tab, focused && { backgroundColor: c.accentSoft }, { transform: [{ scale: v }] }]}>
         <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
-        <Text numberOfLines={1} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
+        <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
       </Animated.View>
     </Squish>
   );
@@ -177,9 +180,9 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', borderRadius: 28, paddingVertical: 6, paddingHorizontal: 6, gap: 2,
     borderWidth: StyleSheet.hairlineWidth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.6, shadowRadius: 14, elevation: 6,
   },
-  opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 16, paddingHorizontal: 18, minHeight: 72 },
   tabOuter: { flex: 1 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 1, paddingVertical: 6, borderRadius: 22 },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 50, paddingVertical: 6, paddingHorizontal: 4, borderRadius: 22 },
   label: { fontSize: 12 },
   plus: {
     width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -16, borderWidth: 3,

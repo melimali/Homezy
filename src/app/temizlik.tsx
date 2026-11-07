@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
 import { useTask } from '@/components/TaskRow';
-import { Bar, IconBtn, Pill, T } from '@/components/ui';
+import { Bar, IconBtn, Pill, T, Chevron } from '@/components/ui';
 import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { roomMokaScene, HOME_MOKA_SCENE } from '@/constants/curated-scenes';
 import { ROOM_SCENES } from '@/constants/scenes';
@@ -64,7 +64,7 @@ export default function Clean() {
       {shown === 'room' && (
         <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32, paddingHorizontal: space.screen, gap: 14 }}>
           <View style={st.top}>
-            <IconBtn icon={<Text style={[st.x, { color: c.ink }]}>‹</Text>} label="Geri" onPress={back} />
+            <IconBtn icon={<Chevron color={c.ink} />} label="Geri" onPress={back} />
           </View>
           <Appear style={{ alignItems: 'center', gap: 6 }}>
             <Float amp={4}>

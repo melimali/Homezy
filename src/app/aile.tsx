@@ -6,7 +6,7 @@ import { Share, StyleSheet, Text, View } from 'react-native';
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn } from '@/components/ui';
+import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn, EmptyMsg } from '@/components/ui';
 import { FAMILY_MAX, GOAL_IDEAS, goalPct } from '@/domain/family';
 import { switchHome } from '@/domain/homes';
 import { useFamily } from '@/family/FamilyProvider';
@@ -57,8 +57,9 @@ export default function Aile() {
         <BackLink />
         <T v="h1">Aile paylaşımı 👨‍👩‍👧</T>
         <Card>
-          <T>Aile paylaşımı için önce hesap oluştur ya da giriş yap.</T>
-          <Btn kind="primary" label="Hesap oluştur ya da giriş yap" onPress={() => router.push('/giris')} />
+          <EmptyMsg pose="happy" title="Evi birlikte paylaşın" action="Hesap oluştur ya da giriş yap" onAction={() => router.push('/giris')}>
+            Aile paylaşımı için önce hesap oluştur ya da giriş yap.
+          </EmptyMsg>
         </Card>
       </Screen>
     );

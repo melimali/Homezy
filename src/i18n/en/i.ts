@@ -56,4 +56,11 @@ export const EN_I: Record<string, string> = {
   '{} detaylarını gör': 'See {} details',
   '{} seç': 'Choose {}',
   'Moka’nın son cevabı uygunsuz, yanlış ya da zararlı mıydı? Bize e-posta ile bildir; cevap metni mesaja eklenir.': "Was Moka's last answer inappropriate, wrong or harmful? Tell us by email; the answer text is added to the message.",
+  'Hazır bir plan seç': 'Choose a ready-made plan',
+  'Evine benzeyen bir plana dokun. Hepsini sonra değiştirebilirsin.': 'Tap a plan that looks like your home. You can change everything later.',
+  'Odayı boya': 'Paint the room',
+  '"Kendim çizeyim"e dokun, bir oda seç, kutulara dokun ya da parmağını sürükle. Yanlış olursa silgi ya da geri al var.': 'Tap "Draw it myself", pick a room, then tap the squares or drag your finger. Made a mistake? Use the eraser or undo.',
+  'Evin hazır olunca en alttaki düğmeye bas. Planı istediğin zaman yeniden düzenleyebilirsin.': 'When your home is ready, press the button at the bottom. You can edit the plan again anytime.',
+  'Anladım': 'Got it',
+  '❓ Nasıl çizilir?': '❓ How to draw?',
 };

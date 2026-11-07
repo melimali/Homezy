@@ -1,5 +1,6 @@
 import { useRouter } from "@/lib/nav";
 import { useState } from "react";
+import { MokaReact } from "@/components/MokaReact";
 import {
   Image,
   KeyboardAvoidingView,
@@ -21,7 +22,7 @@ import { cloudEnabled } from "@/lib/supabase";
 import { legalUrl } from "@/lib/links";
 import { useStore } from "@/store/AppStore";
 import { brand, fonts, radius, useColors } from "@/theme";
-import { Squish } from "@/components/motion";
+import { Appear, Float, Squish } from "@/components/motion";
 
 type Mode = "kayit" | "giris" | "sifre";
 
@@ -123,35 +124,40 @@ export default function Giris() {
           { paddingTop: insets.top + 14, paddingBottom: insets.bottom + 28 },
         ]}
       >
-        <View style={st.head}>
-          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
-            <Image
-              source={require("../../assets/logo-yatay.png")}
-              style={st.wordmark}
-              resizeMode="contain"
-              accessibilityLabel="Homezy"
-            />
+        <View style={[st.hero, { backgroundColor: brand.navy }]}>
+          <View style={[st.bubble, { width: 120, height: 120, top: -30, right: -30, backgroundColor: brand.blue }]} />
+          <View style={[st.bubble, { width: 70, height: 70, bottom: 20, left: -20, backgroundColor: brand.clay }]} />
+          <View style={[st.bubble, { width: 28, height: 28, top: 60, left: 40, backgroundColor: brand.cocoa }]} />
+          <View style={st.head}>
+            <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
+              <Image
+                source={require("../../assets/logo-yatay.png")}
+                style={st.wordmark}
+                resizeMode="contain"
+                accessibilityLabel="Homezy"
+              />
+            </View>
+            {fromApp && (
+              <XBtn
+                label="Kapat"
+                onPress={() =>
+                  router.canGoBack()
+                    ? router.back()
+                    : router.replace(state.setup ? "/" : "/kurulum")
+                }
+              />
+            )}
           </View>
-          {fromApp && (
-            <XBtn
-              label="Kapat"
-              onPress={() =>
-                router.canGoBack()
-                  ? router.back()
-                  : router.replace(state.setup ? "/" : "/kurulum")
-              }
-            />
-          )}
-        </View>
-
-        <View>
-          <T v="eyebrow">
+          <Float amp={5} dur={2200} style={{ alignSelf: "center" }}>
+            <MokaReact anim="happy" size={104} />
+          </Float>
+          <Text style={[st.heroEyebrow, { color: brand.clay }]}>
             {tx(
               mode === "sifre" ? "Şifremi unuttum" : "Hesap",
             ).toLocaleUpperCase(dateLocale())}
-          </T>
-          <T v="h1">{title}</T>
-          <T v="lead">{lead}</T>
+          </Text>
+          <Text style={[st.heroTitle, { color: brand.mint }]}>{title}</Text>
+          <Text style={[st.heroLead, { color: brand.mint }]}>{lead}</Text>
         </View>
 
         {mode !== "sifre" && (
@@ -184,6 +190,7 @@ export default function Giris() {
           </View>
         )}
 
+        <Appear index={1}>
         <Card style={{ gap: 10 }}>
           {mode === "kayit" && (
             <Label text="Adın">
@@ -299,6 +306,7 @@ export default function Giris() {
             </Squish>
           )}
         </Card>
+        </Appear>
 
         {mode === "kayit" && (
           <Text style={[st.legal, { color: c.muted }]}>
@@ -426,6 +434,17 @@ const st = StyleSheet.create({
     maxWidth: 480,
     alignSelf: "center",
   },
+  hero: {
+    borderRadius: 32,
+    padding: 16,
+    paddingBottom: 22,
+    gap: 6,
+    overflow: "hidden",
+  },
+  bubble: { position: "absolute", borderRadius: 999, opacity: 0.25 },
+  heroEyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.2, textAlign: "center" },
+  heroTitle: { fontFamily: fonts.display, fontSize: 28, textAlign: "center" },
+  heroLead: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20, textAlign: "center", opacity: 0.85, paddingHorizontal: 8 },
   head: {
     flexDirection: "row",
     alignItems: "center",

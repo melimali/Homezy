@@ -1,20 +1,24 @@
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ring } from '@/components/charts';
+import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
 import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
-import { Appear, Pulse, Squish } from '@/components/motion';
+import { Appear, Float, Pulse, Squish } from '@/components/motion';
+import { MokaReact } from '@/components/MokaReact';
 import { NextUp } from '@/components/NextUp';
 import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { MealCard } from '@/components/MealCard';
 import { MedsToday } from '@/components/MedsToday';
-import { Bar, Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
+import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
 import { bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
+import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
 import type { ModeKind } from '@/domain/types';
 import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
@@ -34,50 +38,33 @@ export default function Bugun() {
   const all = sorted.filter(x => !guest.includes(x));
   const doneNow = all.filter(x => x.s.k === 'ok' && isDoneToday(x.t, now));
   // Gecikenler ve bugünküler tek listede (gecikenlerin üstünde kırmızı rozet var); bugün bitenler altta, üstü çizili.
-  const groups: [string, typeof all][] = [
-    ['Misafir gelmeden', guest],
-    ['Bugün', [...all.filter(x => x.s.k !== 'ok'), ...doneNow]],
+  const open = [...all.filter(x => x.s.k !== 'ok'), ...doneNow];
+  const groups: [string, string, typeof all][] = [
+    ['👋 Misafir gelmeden', 'Misafirin göreceği odalar', guest],
+    ...(['sabah', 'oda', 'ev'] as Cat[]).map((k): [string, string, typeof all] => [CATS[k].title, CATS[k].hint, open.filter(x => catOf(x) === k)]),
   ];
   const week = all.filter(x => x.s.k === 'ok' && x.s.diff <= 7 && !isDoneToday(x.t, now));
   const [showWeek, setShowWeek] = useState(false);
   const later = all.filter(x => x.s.k === 'ok' && x.s.diff > 7).length;
   const shop = shopItems(S).map(s => s.x);
   // Tatilde rutinler dondu; liste boş görünsün.
-  const visible = S.mode?.k === 'tatil' ? [] : groups.filter(g => g[1].length);
+  const visible = S.mode?.k === 'tatil' ? [] : groups.filter(g => g[2].length);
   // Filtre hapları: Tümü ve iş olan yerler (oda / bitkiler / ev bakımı).
-  const today = visible.flatMap(g => g[1]);
+  const today = visible.flatMap(g => g[2]);
   const total = today.length;
   const doneN = today.filter(x => isDoneToday(x.t, now)).length;
   const next = today.find(x => !isDoneToday(x.t, now));
   const places = [...new Map(today.map(x => [x.rid, placeOf(S, x.rid)])).entries()];
   const [only, setOnly] = useState<string | null>(null);
+  const [more, setMore] = useState(false);
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
   return (
     <Screen header={false} tab tone="rose">
       <TitleBar title="Bugün" right={<IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />} />
-      {next ? (
-        <NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} />
-      ) : total > 0 ? (
-        <EmptyMsg pose="party">Bugünlük her şey tamam. Harika iş!</EmptyMsg>
-      ) : null}
-
-      <MealCard />
-
-      {total > 0 && (
-        <Appear index={1} style={[styles.progress, { backgroundColor: c.surface }]}>
-          <View style={styles.progHead}>
-            <View style={{ flex: 1 }}>
-              <T v="bold">Günlük İlerleme</T>
-              <T v="small">{doneN}/{total} tamamlandı</T>
-            </View>
-            <Pulse on={doneN}>
-              <Text style={[styles.pct, { color: c.ink }]}>{S.settings.language === 'en' ? `${Math.round((doneN / total) * 100)}%` : `%${Math.round((doneN / total) * 100)}`}</Text>
-            </Pulse>
-          </View>
-          <Bar value={doneN / total} height={10} color={c.accent} />
-        </Appear>
-      )}
+      <WeekStrip now={now} />
+      <Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} />
+      {next && <NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} />}
 
       {places.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
@@ -89,12 +76,13 @@ export default function Bugun() {
       )}
 
       {!S.home.asked && <ProfilePrompt />}
-      {visible.map(([label, arr], gi) => {
+      {visible.map(([label, hint, arr], gi) => {
         const rows = filt ? arr.filter(x => x.rid === filt) : arr;
         if (!rows.length) return null;
         return (
           <Card bare key={label} index={gi + 2}>
-            {visible.length > 1 && <SecHead title={label} h="h3" right={String(rows.length)} />}
+            <SecHead title={label} h="h3" right={`${rows.filter(x => isDoneToday(x.t, now)).length}/${rows.length}`} />
+            <T v="small" style={{ marginTop: -6, marginBottom: 4 }}>{hint}</T>
             <View>
               {rows.map((x, i) => (
                 <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom={!filt} first={i === 0} />
@@ -110,10 +98,19 @@ export default function Bugun() {
       )}
       <MedsToday />
       <DailyGoals now={now} />
-      <WeekStrip now={now} />
-      <DayPlanCard />
-      <GrowthCard />
-      <SelfCareCard />
+      <Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
+        <Text style={{ fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>
+        <T v="bold" style={{ flex: 1 }}>{more ? 'Daha az göster' : 'Yemek, kendine zaman, büyüme'}</T>
+        <T v="small">{more ? '' : 'Aç ›'}</T>
+      </Squish>
+      {more && (
+        <>
+          <MealCard />
+          <DayPlanCard />
+          <GrowthCard />
+          <SelfCareCard />
+        </>
+      )}
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>
           <Squish onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
@@ -134,6 +131,37 @@ export default function Bugun() {
       <TimeBudget now={now} />
       <AdBanner />
     </Screen>
+  );
+}
+
+/** Üstte büyük panel: Moka, ilerleme halkası ve duruma göre tek cümle. */
+function Hero({ total, done, left, tatil }: { total: number; done: number; left: number; tatil: boolean }) {
+  const c = useColors();
+  const pct = total ? Math.round((done / total) * 100) : 100;
+  const all = total > 0 && left === 0;
+  const pose: MokaPose = tatil ? 'blanket' : all || !total ? 'party' : done === 0 ? 'wink' : 'happy';
+  const line = tatil
+    ? 'Tatildesin, iyi dinlen. Ev seni bekler.'
+    : !total
+      ? 'Bugünlük iş yok. Keyfine bak ☕'
+      : all
+        ? 'Bugünlük hepsi tamam. Harika iş!'
+        : done === 0
+          ? `${left} küçük iş var. Birini seç, başlayalım.`
+          : `${done} iş bitti, ${left} kaldı. Devam!`;
+  return (
+    <Appear index={1} style={[styles.hero, { backgroundColor: c.accentSoft }]}>
+      <Float amp={3} dur={2800}>
+        <Image source={MOKA_ASSETS[pose]} style={styles.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+      </Float>
+      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+        <T v="h2" style={{ fontSize: 20, lineHeight: 26 }}>{line}</T>
+        <T v="small">{total ? `${done}/${total} tamamlandı` : 'Dinlenme günü'}</T>
+      </View>
+      <Pulse on={done}>
+        <Ring pct={pct} size={84} stroke={11} color={c.accent} label={total ? undefined : '✓'} />
+      </Pulse>
+    </Appear>
   );
 }
 
@@ -366,7 +394,10 @@ function DailyGoals({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
-  week: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -10 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16 },
+  heroMoka: { width: 84, height: 84 },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 24, paddingVertical: 14, paddingHorizontal: 16 },
+  week: { flexDirection: 'row', justifyContent: 'space-between' },
   day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
   dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
   dayN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },

@@ -15,6 +15,7 @@ import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
 import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
+import { MokaReact } from '@/components/MokaReact';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
@@ -31,7 +32,6 @@ import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, freezesUsed, houseLine, nextStage, progressOf } from '@/domain/play';
 import { limits, themeFor } from '@/domain/premium';
-import { mokaTip } from '@/domain/moka';
 import { FLOWER, MOOD_NAME, growth, houseMood, moodLine, personaOf } from '@/domain/garden';
 import { HeroMoka } from '@/components/HeroMoka';
 import { sessionHeroScene } from '@/domain/heroScenes';
@@ -55,15 +55,12 @@ export default function Home() {
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
-  const lastDone = all.filter(x => isDoneToday(x.t, now)).sort((a, b) => (b.t.last ?? 0) - (a.t.last ?? 0))[0];
   const toToday = () => router.navigate('/bugun');
   const hp = progressOf(S.play, now);
   // Günün mod cevabı varsa selamın altındaki cümle ona göre.
   const line = dayPlan(checkinOf(S.play, now))?.hello ?? greeting(new Date(now)).line;
   const mood = houseMood(hp, S.play, S.mode, now);
   const moka = useMokaState();
-  // Moka günün cümlesini de söyler; ev sakinse cümleye uyan pozu alır.
-  const tip = mokaTip(now);
   // Ana ekran sahnesi: 10 sabit sahneden biri, uygulama açılışında rastgele; oturum boyunca değişmez.
   const [heroScene] = useState(sessionHeroScene);
   const { premium } = usePurchases();
@@ -106,7 +103,7 @@ export default function Home() {
           <View style={styles.mokaRow}>
             <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
               <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <MokaSprite anim={spriteAnim} size={54} />
+                <MokaReact anim={spriteAnim} size={54} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>
@@ -119,9 +116,15 @@ export default function Home() {
             <Bar value={doneN / Math.max(1, doneN + due.length)} color={c.accent} height={7} style={{ flex: 1 }} />
             <T v="tiny">{doneN}/{doneN + due.length}</T>
           </View>
-          <T v="tiny" style={{ color: c.hi }} numberOfLines={3}>💬 {tip.text}</T>
         </Appear>
       </View>
+
+      {/* Üç küçük rakam: seri, puan, ev seviyesi. Dokununca ilgili ekran. */}
+      <Appear index={2} style={styles.stats}>
+        <Stat emoji="🔥" value={String(hp.streak)} label="gün seri" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
+        <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.sageSoft} onPress={() => router.push('/magaza' as Href)} />
+        <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />
+      </Appear>
 
       {!!S.settings.solo && S.rooms[S.settings.solo] && (
         <Squish onPress={() => router.push('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
@@ -130,8 +133,19 @@ export default function Home() {
           <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
         </Squish>
       )}
+      {weekReady && (
+        <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ fontSize: 26 }}>🗓️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
+          </View>
+          <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+        </Squish>
+      )}
+
       <Card bare index={2}>
-        <SecHead title="Sıradaki işler" h="h3" right={due.length > shown.length ? (
+        <SecHead title="📋 Bugünün işleri" h="h3" right={due.length > shown.length ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
         {!!due.length && <T v="small" style={{ marginBottom: 6 }}>{lv.name} · gün {hp.streak}. {lv.goal}</T>}
@@ -156,29 +170,8 @@ export default function Home() {
         ) : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
       </Card>
 
-      {weekReady && (
-        <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 26 }}>🗓️</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
-          </View>
-          <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
-        </Squish>
-      )}
-
-      {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
-      <View style={{ gap: 10 }}>
-        <SecHead title="Odalarım" h="h3" right={
-          <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
-            <T v="small">✏️ Planı düzenle</T>
-          </Squish>
-        } />
-        <RoomGrid state={S} now={now} start={3} row />
-      </View>
-
-      <View style={{ gap: 12 }}>
-        <SecHead title="Evim" h="h3" right={
+      <Card index={3} style={styles.sec}>
+        <SecHead title="🏡 Evim" h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
               <T v="small">🎨 Evini düzenle</T>
@@ -191,7 +184,7 @@ export default function Home() {
           </View>
         } />
         {/* Önizleme: sabit ölçek, kutudan taşmaz (büyütme sadece Evim ekranında). */}
-        <View style={{ overflow: 'hidden' }}>
+        <View style={{ overflow: 'hidden', borderRadius: radius.tile }}>
           {hp.level < 1 && (
             <Squish
               onPress={() => router.push('/bugun' as Href)}
@@ -233,7 +226,17 @@ export default function Home() {
         {warn && hp.level > 0 && (
           <T v="tiny" style={{ textAlign: 'center' }}>❄️ Bu ay {freezeLeft}/{lim.freezes} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.</T>
         )}
-      </View>
+      </Card>
+
+      {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
+      <Card index={4} style={styles.sec}>
+        <SecHead title="🚪 Odalarım" h="h3" right={
+          <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
+            <T v="small">✏️ Planı düzenle</T>
+          </Squish>
+        } />
+        <RoomGrid state={S} now={now} start={3} row />
+      </Card>
 
       {houseOpen && (
         <HouseViewer
@@ -246,19 +249,16 @@ export default function Home() {
       )}
 
       <View style={{ gap: 12 }}>
-        <SecHead title="Moka ile keyif" h="h3" />
-        <Appear index={4} style={styles.quick}>
+        <SecHead title="☕ Keyif köşesi" h="h3" />
+        <Appear index={5} style={styles.quick}>
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.sageSoft} onPress={() => router.push('/bahce' as Href)} />
           <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.lavenderSoft} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.roseSoft} onPress={() => router.push('/gunluk')} />
           <Quick i={3} emoji="🛍️" label="Mağaza" sub={`${S.play.points} ⭐`} tint={c.peachSoft} onPress={() => router.push('/magaza' as Href)} />
         </Appear>
         {extrasUnlocked(S.play.days.length, now) && (
-          <Appear index={5} style={styles.quick}>
+          <Appear index={6} style={styles.quick}>
             <Quick i={4} emoji="🏃" label="Spor" sub="Hareket" tint={c.peachSoft} onPress={() => router.push('/spor')} />
-            <View style={{ flex: 1 }} />
-            <View style={{ flex: 1 }} />
-            <View style={{ flex: 1 }} />
           </Appear>
         )}
       </View>
@@ -373,6 +373,17 @@ function Celebrate({ level }: { level: number }) {
   );
 }
 
+function Stat({ emoji, value, label, tint, onPress }: { emoji: string; value: string; label: string; tint: string; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${value} ${label}`} style={[styles.stat, { backgroundColor: tint }]}>
+      <Text style={{ fontSize: 22 }}>{emoji}</Text>
+      <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{value}</Text>
+      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{label}</Text>
+    </Squish>
+  );
+}
+
 function Quick({ emoji, label, sub, tint, onPress, i }: { emoji: string; label: string; sub: string; tint: string; onPress: () => void; i: number }) {
   const c = useColors();
   return (
@@ -405,6 +416,9 @@ const styles = StyleSheet.create({
   statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
   nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
   nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  stats: { flexDirection: 'row', gap: 10 },
+  stat: { flex: 1, alignItems: 'center', gap: 0, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 4 },
+  sec: { gap: 12, padding: 16 },
   quick: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },

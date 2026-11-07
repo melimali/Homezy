@@ -53,4 +53,5 @@ export const EN_N: Record<string, string> = {
   'Sakin bir ev': 'A calm home', 'Daha az stres': 'Less stress', 'Kendimle gurur duymak': 'Feeling proud of myself', 'Ailem için': 'For my family', 'Sadece düzen': 'Just order',
   'Günün hangi anında kısa bir mola verirsin?': 'When do you usually take a short break?', 'Hatırlatmayı o ana koyarım.': 'I will set the reminder for that moment.',
   'Sabah kahvesi': 'Morning coffee', 'İşten sonra': 'After work', 'Akşam yemeğinden sonra': 'After dinner', 'Yatmadan önce': 'Before bed',
+  '🫖 Hafif gün': '🫖 Light day', '🫖 Hafif günü kapat': '🫖 End light day',
 };

@@ -3,8 +3,9 @@ import { Image, StyleSheet, View } from 'react-native';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { WHY_LINE } from '@/domain/kisilik';
 import { dayKey } from '@/domain/play';
-import { nextStageOf, pendingStage, stageFor, weekGoal } from '@/domain/ramp';
+import { isLightDay, nextStageOf, pendingStage, stageFor, weekGoal } from '@/domain/ramp';
 import { useNow } from '@/hooks/useNow';
+import { track } from '@/lib/events';
 import { tx } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
@@ -28,7 +29,8 @@ export function RampCard() {
   const st = stageFor(days);
   const next = nextStageOf(st);
   const wk = weekGoal(S, now);
-  const light = S.settings.lightDay === dayKey(now);
+  const light = isLightDay(S, now);
+  const toggleLight = () => update(D => void (D.settings.lightDay = D.settings.lightDay === dayKey(now) ? null : dayKey(now)));
 
   if (pending) {
     return (
@@ -42,7 +44,7 @@ export function RampCard() {
             <T v="bold">{tx(pending.moka)}</T>
           </View>
         </View>
-        <Btn kind="primary" label="Harika!" block onPress={() => update(D => void (D.settings.rampSeen = pending.n))} />
+        <Btn kind="primary" label="Harika!" block onPress={() => { track('stage_up', String(pending.n)); update(D => void (D.settings.rampSeen = pending.n)); }} />
       </Card>
     );
   }
@@ -77,7 +79,10 @@ export function RampCard() {
         ))}
         <T v="tiny" style={{ marginLeft: 6 }}>{`Bu hafta ${Math.min(wk.done, wk.goal)}/${wk.goal} gün`}</T>
       </View>
-      {next && <Btn small kind="ghost" label="Hepsini aç" onPress={() => update(D => void (D.settings.rampOff = true))} />}
+      <View style={styles.dots}>
+        {S.settings.lightDay !== dayKey(now) && light ? null : <Btn small kind="soft" label={S.settings.lightDay === dayKey(now) ? '🫖 Hafif günü kapat' : '🫖 Hafif gün'} onPress={() => { if (S.settings.lightDay !== dayKey(now)) track('light_day'); toggleLight(); }} />}
+        {next && <Btn small kind="ghost" label="Hepsini aç" onPress={() => { track('ramp_skip'); update(D => void (D.settings.rampOff = true)); }} />}
+      </View>
     </Card>
   );
 }

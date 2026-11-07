@@ -10,7 +10,7 @@ import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
-import { track } from '@/lib/events';
+import { track, trackActiveDay } from '@/lib/events';
 import { offlineMsg, online } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -158,6 +158,7 @@ export function usePlay() {
         prefs.set('firstTask', '1');
         track('first_task_done');
       }
+      if (r.awarded && !r.before.today) trackActiveDay(r.before.resting);
       if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
       toast(out.up ? `🎉 Moka ${out.up}. seviye oldu! ${awardToast(r, what)}` : awardToast(r, what));
       return out.r!;

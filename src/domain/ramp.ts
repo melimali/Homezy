@@ -1,3 +1,4 @@
+import { answered } from './mood';
 import { addDays, dayKey } from './play';
 import type { AppState, DayKey, Play } from './types';
 
@@ -21,12 +22,22 @@ export const stageFor = (activeDays: number): Stage => [...STAGES].reverse().fin
 
 export const nextStageOf = (st: Stage): Stage | null => STAGES[st.n] ?? null;
 
+/**
+ * Hafif gün: kişi "Hafif gün" dediyse ya da sabah sorusunda yorgun / bunalmış / keyifsiz ya da çok yoğun dediyse.
+ * Bugün sadece 1-2 iş görünür; gün yine de sayılır (seri ve toplam gün).
+ */
+export function isLightDay(S: AppState, now = Date.now()): boolean {
+  const k = dayKey(now);
+  if (S.settings.lightDay === k) return true;
+  const c = S.play.checkins?.[k] ?? null;
+  return answered(c) && (c.feel === 'yorgun' || c.feel === 'bunalmis' || c.feel === 'keyifsiz' || c.busy === 'yogun');
+}
+
 /** Bugün gösterilecek en çok iş sayısı. Atlayanlar ve tatil dışında bütün işler için `Infinity`. */
 export function dailyCap(S: AppState, now = Date.now()): number {
   if (S.settings.rampOff) return Infinity;
   const cap = stageFor(S.play.days.length).cap;
-  const light = S.settings.lightDay === dayKey(now);
-  const c = light ? Math.min(cap, 2) : cap;
+  const c = isLightDay(S, now) ? Math.min(cap, 2) : cap;
   return c >= 99 ? Infinity : c;
 }
 

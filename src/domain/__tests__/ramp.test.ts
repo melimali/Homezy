@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { emptyState } from '../logic';
-import { bestStreak, dailyCap, pendingStage, stageFor, weekGoal } from '../ramp';
+import { bestStreak, dailyCap, isLightDay, pendingStage, stageFor, weekGoal } from '../ramp';
 
 const NOON = new Date(2026, 10, 11, 12).getTime(); // çarşamba
 
@@ -38,5 +38,12 @@ describe('ramp', () => {
     expect(pendingStage(S)?.n).toBe(2);
     S.settings.rampSeen = 2;
     expect(pendingStage(S)).toBeNull();
+  });
+  it('yorgun sabah cevabı hafif gün sayılır', () => {
+    const S = emptyState();
+    S.play.days = Array.from({ length: 20 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    S.play.checkins = { '2026-11-11': { feel: 'yorgun', busy: 'evde', at: NOON } };
+    expect(isLightDay(S, NOON)).toBe(true);
+    expect(dailyCap(S, NOON)).toBe(2);
   });
 });

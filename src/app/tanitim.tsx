@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
 import { useStore } from '@/store/AppStore';
 import { Burst, Squish, useReduceMotion } from '@/components/motion';
@@ -24,89 +23,87 @@ import { IntroDeco, type DecoKind } from '@/components/IntroDeco';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
-import { brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
+import { ForceScheme, brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
 
 // Web önizlemesinde yerel sürücü yok; orada kaydırma JS ile izlenir.
 const PAPER = '#FFFDF8';
-const DECO_H = 120;
+const DECO_H = 130;
+const BOTTOM = 132; // noktalar + düğme
 const native = Platform.OS !== 'web';
 
-type Page = {
-  eyebrow: string;
-  title: string;
-  text: string;
-  /** Polaroid alt yazı şeridi. */
-  caption: string;
-  scene: ImageSourcePropType;
-  tint: (c: Colors) => string;
-  deco: DecoKind;
-};
+type Copy = { eyebrow: string; title: string; text: string; /** Polaroid alt yazı şeridi. */ caption: string };
+type Page = { tr: Copy; en: Copy; scene: ImageSourcePropType; tint: (c: Colors) => string; deco: DecoKind };
+type Lang = 'tr' | 'en';
 
-// 6 sayfa, her biri: başlık + tek kısa cümle. Amaç: günlük disiplin, küçük adımlarla (docs/skeleton-v3.md).
+// Hikâye: küçük günlük işler → ev büyür (ihmalde toz, dönünce parlar) → bahçe → kendin için.
+// Her sayfa: kısa başlık + başlığı tekrar etmeyen iki cümle. Metinler iki dilde ayrı yazılır, dil karışmaz.
 const PAGES: Page[] = [
   {
-    eyebrow: 'Tanışalım',
-    title: 'Merhaba, ben Moka',
-    text: 'Homezy ev işlerini küçük günlük adımlara böler. Her gün biraz yaptıkça düzenin oturur ve evin seninle birlikte büyür.',
-    caption: 'Hazır mısın?',
+    tr: { eyebrow: 'Tanışalım', title: 'Merhaba, ben Moka', text: 'Ev işlerini küçük, kolay adımlara bölerim. Sen her gün biraz yaparsın, gerisini birlikte hallederiz.', caption: 'Hazır mısın?' },
+    en: { eyebrow: 'Say hello', title: 'Hi, I’m Moka', text: 'I break housework into small, easy steps. You do a little each day, and we handle the rest together.', caption: 'Ready?' },
     scene: POSE_SCENES.happy!,
     deco: 'hello',
     tint: c => c.peachSoft,
   },
   {
-    eyebrow: 'Plan',
-    title: 'Evini çiz',
-    text: 'Odalarını bloklarla boya; her odanın işleri kendiliğinden gelir. Ne yapacağını düşünmezsin, sadece başlarsın.',
-    caption: 'Önce planı çizelim',
+    tr: { eyebrow: 'Plan', title: 'Evini çiz', text: 'Odalarını birkaç dokunuşla yerleştir. Her odanın işleri kendiliğinden hazırlanır.', caption: 'Önce planı çizelim' },
+    en: { eyebrow: 'Plan', title: 'Draw your home', text: 'Place your rooms with a few taps. Each room gets its own chores, ready to go.', caption: 'Let’s sketch it first' },
     scene: POSE_SCENES.handyman!,
     deco: 'draw',
     tint: c => c.sageSoft,
   },
   {
-    eyebrow: 'Günlük işler',
-    title: 'Günde birkaç iş',
-    text: 'Bugünün işlerini tek tek bitir ve puan kazan. Seri tuttukça alışkanlık oluşur; küçük işler büyük düzeni getirir.',
-    caption: 'Süpürge hazır',
+    tr: { eyebrow: 'Her gün', title: 'Günde birkaç iş', text: 'Bugün ne yapacağını tek listede gör, bitirdikçe işaretle. Küçük adımlar zamanla alışkanlığa dönüşür.', caption: 'Süpürge hazır' },
+    en: { eyebrow: 'Every day', title: 'A few tasks a day', text: 'See today’s to-dos in one list and tick them off. Small steps quietly turn into habits.', caption: 'Broom ready' },
     scene: POSE_SCENES.sweeping!,
     deco: 'tasks',
     tint: c => c.roseSoft,
   },
   {
-    eyebrow: '3D evin',
-    title: 'Evin seninle büyür',
-    text: 'Düzenli yaptığın her iş evine yeni bir parça katar ve seri uzadıkça ev seviye atlar. Aksatırsan toz tutar, geri dönünce yeniden parlar.',
-    caption: 'Vay, ne büyüdü!',
+    tr: { eyebrow: 'Evin', title: 'Evin seninle büyür', text: 'Düzenli kaldıkça evine yeni katlar eklenir. Ara verirsen toz tutar; döndüğünde yeniden parlar.', caption: 'Vay, ne büyüdü!' },
+    en: { eyebrow: 'Your home', title: 'Your home grows', text: 'Stay consistent and new floors appear. Take a break and dust settles; come back and it shines again.', caption: 'Wow, look at it!' },
     scene: POSE_SCENES.amazed!,
     deco: 'house',
     tint: c => c.peachSoft,
   },
   {
-    eyebrow: 'Moka ve bahçe',
-    title: 'Moka yanında',
-    text: 'Takıldığında Moka’ya sor, odaklanma sayacıyla çalış. Bitirdiğin her iş bahçendeki çiçekleri büyütür.',
-    caption: 'Birlikte çalışalım',
+    tr: { eyebrow: 'Bahçe', title: 'Bahçen çiçek açar', text: 'Bitirdiğin her iş bahçene yeni bir çiçek ekler. İstikrarlı oldukça bahçen renklenir.', caption: 'Birlikte sulayalım' },
+    en: { eyebrow: 'Garden', title: 'Your garden blooms', text: 'Every task you finish plants a new flower. The steadier you are, the more colorful it gets.', caption: 'Let’s water it' },
     scene: POSE_SCENES.watering!,
     deco: 'garden',
     tint: c => c.sageSoft,
   },
   {
-    eyebrow: 'Kendin için',
-    title: 'Sıra sende',
-    text: 'Odan toparlanınca spor ve günlükle kendine zaman ayır. Disiplin evden başlar, günlük yaşamına yayılır.',
-    caption: 'Sen de değerlisin',
+    tr: { eyebrow: 'Kendin için', title: 'Sıra sende', text: 'Evin düzene girince spor, günlük ve huzur için vakit ayır. Disiplin evde başlar, hayatına yayılır.', caption: 'Sen de değerlisin' },
+    en: { eyebrow: 'For you', title: 'Now it’s your turn', text: 'Once home is in order, make time for workouts, journaling and calm. Discipline starts at home and spreads to everything.', caption: 'You matter too' },
     scene: POSE_SCENES.reading!,
     deco: 'self',
     tint: c => c.lavenderSoft,
   },
 ];
 
-/** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. */
+const UI = {
+  tr: { skip: 'Atla', next: 'Devam', start: 'Hadi başlayalım', page: 'Sayfa', hintStart: 'Hesap ekranına geçer', hintNext: 'Sonraki sayfaya geçer', poke: 'Moka’ya dokun' },
+  en: { skip: 'Skip', next: 'Continue', start: 'Let’s begin', page: 'Page', hintStart: 'Opens the account screen', hintNext: 'Goes to the next page', poke: 'Tap Moka' },
+};
+
+/** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. Her zaman krem (açık) temada. */
 export default function Tanitim() {
+  return (
+    <ForceScheme scheme="light">
+      <TanitimInner />
+    </ForceScheme>
+  );
+}
+
+function TanitimInner() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { finishIntro } = useAuth();
   const { state: appState, update } = useStore();
-  const lang = appState.settings.language === 'tr' ? 'tr' : 'en';
+  const code = appState.settings.language;
+  // i18n/runtime.setLang ile aynı kural: ayar yoksa ya da tr ise Türkçe, başka her şey İngilizce.
+  const lang: Lang = !code || code === 'tr' ? 'tr' : 'en';
   const [switching, setSwitching] = useState(false);
   const langTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => langTimers.current.forEach(clearTimeout), []);
@@ -139,6 +136,8 @@ export default function Tanitim() {
   });
 
   const last = page === PAGES.length - 1;
+  // Logo ortada; soldaki dil seçici ve sağdaki Atla ile çakışmasın.
+  const logoW = Math.max(84, Math.min(156, w - 252));
   const next = () => {
     if (last) finishIntro();
     else scroll.current?.scrollTo({ x: (page + 1) * w, animated: !reduce });
@@ -149,7 +148,7 @@ export default function Tanitim() {
       {/* Zemin: sayfanın tonuna kayan yumuşak renk */}
       {w > 0 && PAGES.map((p, i) => (
         <Animated.View
-          key={p.eyebrow}
+          key={p.deco}
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { backgroundColor: p.tint(c), opacity: x.interpolate({ inputRange: [(i - 1) * w, i * w, (i + 1) * w], outputRange: [0, 1, 0], extrapolate: 'clamp' }) }]}
         />
@@ -168,13 +167,16 @@ export default function Tanitim() {
         >
           {PAGES.map((p, i) => (
             <PageView
-              key={p.eyebrow}
+              key={p.deco}
               p={p}
               i={i}
               w={w}
               h={h}
               x={x}
               top={insets.top}
+              bottom={insets.bottom}
+              active={page === i}
+              lang={lang}
               c={c}
               onPoke={() => {
                 sfx('pop');
@@ -196,12 +198,12 @@ export default function Tanitim() {
         </View>
         <View pointerEvents="none" style={st.logoCenter}>
           <View style={[st.logoPill, dark && { backgroundColor: brand.mint }]}>
-            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+            <Image source={require('../../assets/logo-yatay.png')} style={{ width: logoW, height: logoW / 3 }} resizeMode="contain" accessibilityLabel="Homezy" />
           </View>
         </View>
         {!last && (
           <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={10} style={({ pressed }) => [st.skip, { backgroundColor: c.surface }, pressed && { opacity: 0.6 }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.muted }}>Atla</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.muted }}>{UI[lang].skip}</Text>
           </Pressable>
         )}
       </View>
@@ -217,7 +219,7 @@ export default function Tanitim() {
       {/* Alt: hap şeklinde sayfa göstergesi ve buton */}
       <View pointerEvents="box-none" style={[st.bottom, { paddingBottom: insets.bottom + 18 }]}>
         {w > 0 && (
-          <View style={st.dots} accessibilityLabel={`Sayfa ${page + 1} / ${PAGES.length}`}>
+          <View style={st.dots} accessibilityLabel={`${UI[lang].page} ${page + 1} / ${PAGES.length}`}>
             {PAGES.map((_, i) => {
               const r = [(i - 1) * w, i * w, (i + 1) * w];
               const scaleX = x.interpolate({ inputRange: r, outputRange: [1, 3, 1], extrapolate: 'clamp' });
@@ -227,18 +229,19 @@ export default function Tanitim() {
           </View>
         )}
         <Btn
-          label={last ? 'Hadi başlayalım' : 'Devam'}
+          label={last ? UI[lang].start : UI[lang].next}
           kind="primary"
           onPress={next}
           style={{ alignSelf: 'stretch', paddingVertical: 16 }}
-          accessibilityHint={last ? 'Hesap ekranına geçer' : 'Sonraki tanıtım sayfasına geçer'}
+          accessibilityHint={last ? UI[lang].hintStart : UI[lang].hintNext}
         />
       </View>
     </View>
   );
 }
 
-function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: number; h: number; x: Animated.Value; top: number; c: Colors; onPoke: () => void }) {
+function PageView({ p: page, i, w, h, x, top, bottom, active, lang, c, onPoke }: { p: Page; lang: Lang; i: number; w: number; h: number; x: Animated.Value; top: number; bottom: number; active: boolean; c: Colors; onPoke: () => void }) {
+  const p = { ...page, ...page[lang] };
   const r = [(i - 1) * w, i * w, (i + 1) * w];
   // Kaydırırken sahne metinden yavaş kayar (parallax) ve hafifçe döner; gelen sayfa büyüyerek belirir.
   const sceneX = x.interpolate({ inputRange: r, outputRange: [w * 0.35, 0, -w * 0.35], extrapolate: 'clamp' });
@@ -247,29 +250,34 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
   const textY = x.interpolate({ inputRange: r, outputRange: [40, 0, 40], extrapolate: 'clamp' });
   const fade = x.interpolate({ inputRange: [r[0] + w * 0.3, r[1], r[2] - w * 0.3], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   // Küçük ekranda metne ve alttaki düğmeye yer kalsın diye kart yüksekliğe göre de küçülür.
-  const card = Math.max(200, Math.min(w - 56, 400, ((h - top - 70 - 150 - 260 - DECO_H + 40) * 4) / 3 + 60));
+  const padB = BOTTOM + bottom;
+  // Kart: üstte logo, altta metin (~150), sahne (DECO_H) ve düğmeler için yer bırakır.
+  // Kart yüksekliği ≈ 0,75·genişlik + 51; metin ~155, sahne en az 90 kalsın.
+  const card = Math.max(150, Math.min(w - 64, 380, (h - top - 70 - padB - 51 - 22 - 155 - 90) / 0.75));
 
   return (
-    <View style={{ width: w, paddingTop: top + 70, paddingBottom: 150, paddingHorizontal: 24, alignItems: 'center' }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
+    <View style={{ width: w, height: h, paddingTop: top + 70, paddingBottom: padB, paddingHorizontal: 24, alignItems: 'center' }} accessible accessibilityLabel={`${p.eyebrow}. ${p.title}. ${p.text}`}>
       <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }, { rotate: i % 2 ? '2.5deg' : '-2.5deg' }] }}>
-        <Squish quiet onPress={onPoke} accessibilityLabel="Moka'ya dokun" style={[st.polaroid, { width: card, backgroundColor: PAPER, shadowColor: c.shadow }]}>
+        <Squish quiet onPress={onPoke} accessibilityLabel={UI[lang].poke} style={[st.polaroid, { width: card, backgroundColor: PAPER, shadowColor: c.shadow }]}>
           <View style={[st.tape, { backgroundColor: p.tint(c) }]} />
           <Image source={p.scene} style={{ width: card - 28, height: ((card - 28) * 3) / 4, borderRadius: 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
           <View style={st.strip}>
-            <Text style={[st.caption, { color: brand.navy }]} numberOfLines={1}>{p.caption}</Text>
+            <Text style={[st.caption, { color: brand.navy }, card < 230 && { fontSize: 15.5, lineHeight: 20 }]}>{p.caption}</Text>
           </View>
         </Squish>
       </Animated.View>
 
-      <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], width: Math.min(440, w - 48), marginTop: 26 }}>
-        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${tx(p.eyebrow)}`.toLocaleUpperCase(dateLocale())}</Text>
+      <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], width: Math.min(440, w - 48), marginTop: 22 }}>
+        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US')}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
       </Animated.View>
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 24, right: 24, bottom: 128, height: DECO_H, opacity: fade }}>
-        <IntroDeco kind={p.deco} />
+      {/* Sahne metnin hemen altında, kalan boşluğun ortasında; düğmelere yapışmaz. */}
+      <Animated.View pointerEvents="none" style={{ flex: 1, alignSelf: 'stretch', minHeight: 70, marginTop: 8, justifyContent: 'center', opacity: fade }}>
+        <View style={{ flex: 1, maxHeight: DECO_H }}>
+          <IntroDeco kind={p.deco} active={active} />
+        </View>
       </Animated.View>
-      
     </View>
   );
 }
@@ -278,7 +286,6 @@ const st = StyleSheet.create({
   top: { position: 'absolute', left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logoCenter: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
-  wordmark: { width: 128, height: 42 },
   langLoad: { alignItems: 'center', justifyContent: 'center', zIndex: 50 },
   langPill: { flexDirection: 'row', borderRadius: radius.pill, padding: 3 },
   langOpt: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill },

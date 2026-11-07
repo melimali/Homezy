@@ -20,6 +20,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useStore } from '@/store/AppStore';
 import { Burst, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
+import { IntroDeco, type DecoKind } from '@/components/IntroDeco';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
@@ -37,8 +38,7 @@ type Page = {
   caption: string;
   scene: ImageSourcePropType;
   tint: (c: Colors) => string;
-  /** Sayfada Premium'a özel bir parça var: köşede rozet çıkar. */
-  premium?: boolean;
+  deco: DecoKind;
 };
 
 // 6 sayfa, her biri: başlık + tek kısa cümle. Amaç: günlük disiplin, küçük adımlarla (docs/skeleton-v3.md).
@@ -46,50 +46,55 @@ const PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
     title: 'Küçük adımlar, uzun soluklu disiplin',
-    text: 'Homezy, her gün biraz yapmanı sağlar.',
+    text: 'Her gün yaptığın küçük bir iş, evini ve düzenini adım adım büyütür.',
     caption: 'Merhaba, ben Moka ☕',
     scene: POSE_SCENES.happy!,
+    deco: 'hello',
     tint: c => c.peachSoft,
   },
   {
     eyebrow: 'Evini çiz',
     title: 'Evini çiz',
-    text: 'Odalarını boya, işleri kendiliğinden gelsin.',
+    text: 'Evinin planını çiz, odalarını boya. Her odanın işleri kendiliğinden listene gelir.',
     caption: 'Önce evini çizelim',
     scene: POSE_SCENES.handyman!,
+    deco: 'draw',
     tint: c => c.sageSoft,
   },
   {
     eyebrow: 'Küçük işler',
     title: 'Her gün birkaç iş',
-    text: 'Bitir, puan kazan, serini koru.',
+    text: 'Günde birkaç kısa işi bitir, puan kazan. Aksatmadıkça serin uzar, disiplinin oturur.',
     caption: 'Her gün biraz',
     scene: POSE_SCENES.sweeping!,
+    deco: 'tasks',
     tint: c => c.roseSoft,
   },
   {
     eyebrow: '3D evin',
     title: 'Düzenin evini büyütür',
-    text: 'Seri tuttukça evin gelişir.',
+    text: 'Düzenli yaptığın her iş evini büyütür: seri uzadıkça ev gelişir, aksatırsan tozlanır.',
     caption: 'Evin seninle büyür',
     scene: POSE_SCENES.amazed!,
+    deco: 'house',
     tint: c => c.peachSoft,
-    premium: true,
   },
   {
     eyebrow: 'Moka ve bahçe',
     title: 'Moka hep yanında',
-    text: 'Sor, odaklan, bahçeni çiçeklendir.',
+    text: 'Moka sorularını yanıtlar, odaklanmana eşlik eder. Çalıştıkça bahçen çiçeklenir.',
     caption: 'Moka’yla çalış',
     scene: POSE_SCENES.watering!,
+    deco: 'garden',
     tint: c => c.sageSoft,
   },
   {
     eyebrow: 'Kendin için',
     title: 'Odadan kendine',
-    text: 'Önce oda, sonra spor ve gelişim.',
+    text: 'Önce odanı toparla, sonra spor ve günlükle kendine dön. Disiplin evden başlar, sana uzanır.',
     caption: 'Kendine de zaman ayır',
     scene: POSE_SCENES.reading!,
+    deco: 'self',
     tint: c => c.lavenderSoft,
   },
 ];
@@ -245,11 +250,6 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
       <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }, { rotate: i % 2 ? '2.5deg' : '-2.5deg' }] }}>
         <Squish quiet onPress={onPoke} accessibilityLabel="Moka'ya dokun" style={[st.polaroid, { width: card, backgroundColor: PAPER, shadowColor: c.shadow }]}>
           <View style={[st.tape, { backgroundColor: p.tint(c) }]} />
-          {p.premium && (
-            <View style={[st.badge, { backgroundColor: brand.navy }]}>
-              <Text style={st.badgeT}>✨ Premium</Text>
-            </View>
-          )}
           <Image source={p.scene} style={{ width: card - 28, height: ((card - 28) * 3) / 4, borderRadius: 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
           <View style={st.strip}>
             <Text style={[st.caption, { color: brand.navy }]} numberOfLines={1}>{p.caption}</Text>
@@ -261,6 +261,9 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
         <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${tx(p.eyebrow)}`.toLocaleUpperCase(dateLocale())}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
+      </Animated.View>
+      <Animated.View style={{ flex: 1, width: '100%', opacity: fade }}>
+        <IntroDeco kind={p.deco} />
       </Animated.View>
     </View>
   );

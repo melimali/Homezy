@@ -13,9 +13,9 @@ export const brand = {
 
 const light = {
   // Pastel sıcak: krem zemin, şeftali / adaçayı / lavanta / gül vurguları (docs/tasarim-finch.md).
-  bg: '#FBF4EA', surface: '#FFFBF5', surface2: '#F6E6DA', ink: '#3B3345', muted: '#625869', line: '#EEDFD0',
-  wall: '#3B3345', hatch: 'rgba(59,51,69,0.10)', shadow: 'rgba(150,100,90,0.16)', lift: 'rgba(150,100,90,0.10)',
-  accent: '#4F7A5E', onAccent: '#FFFBF5', accentSoft: '#E3EEE4', hi: '#9BB5C9', warm: '#86573F', clay: brand.clay,
+  bg: brand.mint, surface: '#FFFFFF', surface2: '#DCE9E1', ink: brand.navy, muted: '#4A5468', line: '#D3E0D8',
+  wall: brand.navy, hatch: 'rgba(40,48,68,0.10)', shadow: 'rgba(40,48,68,0.14)', lift: 'rgba(40,48,68,0.08)',
+  accent: '#4F7A5E', onAccent: '#FFFBF5', accentSoft: '#DCE9E1', hi: brand.blue, warm: '#7A5A3E', clay: brand.clay,
   onBadge: '#FFFFFF',
   fashion: '#F8E9E2', fashionSurface: '#FFF7F2', fashionInk: '#5A4650', fashionAccent: '#9A4A5E', fashionLine: '#F0D8D4',
   late: '#A5473D', lateSoft: '#F8E0DB', today: '#8A5530', todaySoft: '#FBE6D6', ok: '#3C6F5A', okSoft: '#DDEBE0',
@@ -78,7 +78,7 @@ export const type = { h1: 36, h2: 23, h3: 18, lead: 16.5, bold: 16, body: 15, sm
 /** Kartların altındaki sıcak gölge rengi (gölge her temada aynı tondan). */
 export const warmShadow = '#B9805F';
 
-export const radius = { card: 28, tile: 24, plan: 14, pill: 999 };
+export const radius = { card: 24, tile: 20, plan: 14, btn: 14, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
 export const space = { screen: 22, section: 24, card: 20 };

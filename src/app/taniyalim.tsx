@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Animated, Easing, Image, type ImageSourcePropType, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,6 +29,30 @@ export default function Taniyalim() {
   const [saving, setSaving] = useState(false);
   const nick = useNickname();
   const [nameDone, setNameDone] = useState(!!nick);
+  // Sayfa geçişi: mevcut soru yukarı kayıp solar, yenisi aşağıdan ortaya gelir (geri dönüşte ters yön).
+  const [slide] = useState(() => new Animated.Value(0));
+  const [fade] = useState(() => new Animated.Value(1));
+  const busy = useRef(false);
+  const reduce = useRef(false);
+  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(v => { reduce.current = v; }).catch(() => {}); }, []);
+  /** `swap` geçiş ortasında çalışır; dir 1 = ileri, -1 = geri. */
+  const transition = (dir: 1 | -1, swap: () => void) => {
+    if (busy.current) return;
+    if (reduce.current) { swap(); return; }
+    busy.current = true;
+    Animated.parallel([
+      Animated.timing(slide, { toValue: -dir * 56, duration: 170, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(fade, { toValue: 0, duration: 170, useNativeDriver: true }),
+    ]).start(() => {
+      swap();
+      slide.setValue(dir * 56);
+      Animated.parallel([
+        Animated.timing(slide, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 1, duration: 260, useNativeDriver: true }),
+      ]).start(() => { busy.current = false; });
+    });
+  };
+  const goStep = (n: number) => transition(n >= step ? 1 : -1, () => setStep(n));
   const [nm, setNm] = useState('');
   const [disc, setDisc] = useState<DiscAnswers>({});
   const [result, setResult] = useState<Disc | null>(null);
@@ -64,7 +88,7 @@ export default function Taniyalim() {
   const next = (a: Answers, d: DiscAnswers = disc) => {
     const total = home.length + DISC_QUESTIONS.length;
     if (step + 1 >= total) finish(a, d);
-    else setStep(step + 1);
+    else goStep(step + 1);
   };
 
   const pickDisc = (v: string) => {
@@ -95,95 +119,104 @@ export default function Taniyalim() {
   }} />;
   if (saving) return <Notes />;
 
-  // İlk adım: Moka adını sorar; boş geçilebilir.
-  if (!nameDone) {
-    const go = () => { saveNickname(nm); setNameDone(true); };
-    return (
-      <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
-        <Appear style={{ flex: 1, gap: 20 }}>
-          <Header image={MOKA_ASSETS.happy} eyebrow="Seni tanıyalım" title="Sana nasıl seslenelim?" hint="Moka seni adınla karşılasın." />
-          <TextInput
-            value={nm}
-            onChangeText={setNm}
-            placeholder="Adın"
-            placeholderTextColor={c.muted}
-            maxLength={20}
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={go}
-            accessibilityLabel="Adın"
-            style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderColor: c.line, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: 18, paddingVertical: 16 }}
-          />
-        </Appear>
-        <Btn kind="primary" label={nm.trim() ? 'Devam' : 'Adsız devam'} onPress={go} block />
-      </View>
-    );
-  }
-
-  const mokaFor = dq
-    ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'plan' ? 'checklist' : 'analyzing')
-    : 'happy';
+  const mokaFor = !nameDone
+    ? 'happy'
+    : dq
+      ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'plan' ? 'checklist' : 'analyzing')
+      : 'happy';
+  const total = steps.length + 1; // nick sorusu dahil
+  const page = nameDone ? step + 1 : 0;
+  const pct = ((page + 1) / total) * 100;
   const cur = (q ?? dq)!;
-  const pct = ((step + 1) / steps.length) * 100;
   const discSel = dq ? ((disc[dq.k] as string[] | string | undefined) ?? (dq.multi ? [] : undefined)) : undefined;
+  const goNick = () => { saveNickname(nm); transition(1, () => { setNameDone(true); setStep(0); }); };
+  const back = () => (step > 0 ? goStep(step - 1) : transition(-1, () => setNameDone(false)));
+  const skip = () => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); };
+
+  const footer = !nameDone
+    ? <Btn kind="primary" label={nm.trim() ? 'Devam' : 'Adsız devam'} onPress={goNick} block />
+    : dq?.multi
+      ? <Btn kind="primary" label={(discSel as string[]).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />
+      : null;
 
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 10, paddingBottom: insets.bottom + 16 }]}>
       <View style={st.topRow}>
-        <View style={{ width: 124 }}>
-          {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} />}
+        <View style={{ width: 96 }}>
+          {page > 0 && <Btn kind="ghost" label="‹ Geri" onPress={back} />}
         </View>
-        <T v="small" style={{ flex: 1, textAlign: 'center' }}>{`Adım ${step + 1} / ${steps.length}`}</T>
-        <View style={{ width: 124, alignItems: 'flex-end' }}>
-          {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} />}
+        <View style={st.topMid}>
+          <View style={[st.mokaMini, { backgroundColor: c.surface2 }]}>
+            <Image source={MOKA_ASSETS[mokaFor]} style={st.mokaMiniImg} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </View>
+          <T v="small">{`Adım ${page + 1} / ${total}`}</T>
+        </View>
+        <View style={{ width: 96, alignItems: 'flex-end' }}>
+          {page <= 1 && <Btn kind="ghost" label="Şimdilik geç" onPress={skip} />}
         </View>
       </View>
-      <View accessibilityRole="progressbar" accessibilityLabel={`Adım ${step + 1} / ${steps.length}`} style={[st.track, { backgroundColor: c.line }]}>
+      <View accessibilityRole="progressbar" accessibilityLabel={`Adım ${page + 1} / ${total}`} style={[st.track, { backgroundColor: c.line }]}>
         <View style={[st.fill, { backgroundColor: c.accent, width: `${pct}%` }]} />
       </View>
 
-      <Appear key={cur.k} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ gap: 18, paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
-          <Header image={MOKA_ASSETS[mokaFor]} eyebrow="Seni tanıyalım" title={cur.q} hint={cur.hint} />
-          <View style={{ gap: 10 }}>
-            {dq
-              ? dq.opts.map(o => (
-                  <Option
-                    key={o.v}
-                    emoji={o.emoji}
-                    label={o.label}
-                    multi={!!dq.multi}
-                    on={dq.multi ? (discSel as string[]).includes(o.v) : discSel === o.v}
-                    onPress={() => pickDisc(o.v)}
-                  />
-                ))
-              : (q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => (
-                    <Option key={String(o.v)} emoji={o.emoji} label={o.label} sub={o.sub} on={chosen[q!.k] === o.v} onPress={() => pick(o.v)} />
-                  ))}
-          </View>
+      <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: slide }] }}>
+        <ScrollView
+          contentContainerStyle={st.center2}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {!nameDone ? (
+            <View style={st.block}>
+              <Question eyebrow="Seni tanıyalım" title="Sana nasıl seslenelim?" hint="Moka seni adınla karşılasın." />
+              <TextInput
+                value={nm}
+                onChangeText={setNm}
+                placeholder="Adın"
+                placeholderTextColor={c.muted}
+                maxLength={20}
+                returnKeyType="done"
+                onSubmitEditing={goNick}
+                accessibilityLabel="Adın"
+                style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderColor: c.line, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: 18, paddingVertical: 16 }}
+              />
+            </View>
+          ) : (
+            <View style={st.block}>
+              <Question eyebrow="Seni tanıyalım" title={cur.q} hint={cur.hint} />
+              <View style={{ gap: 10 }}>
+                {dq
+                  ? dq.opts.map(o => (
+                      <Option
+                        key={o.v}
+                        emoji={o.emoji}
+                        label={o.label}
+                        multi={!!dq.multi}
+                        on={dq.multi ? (discSel as string[]).includes(o.v) : discSel === o.v}
+                        onPress={() => pickDisc(o.v)}
+                      />
+                    ))
+                  : (q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => (
+                      <Option key={String(o.v)} emoji={o.emoji} label={o.label} sub={o.sub} on={chosen[q!.k] === o.v} onPress={() => pick(o.v)} />
+                    ))}
+              </View>
+            </View>
+          )}
         </ScrollView>
-      </Appear>
+      </Animated.View>
 
-      {dq?.multi && <Btn kind="primary" label={(discSel as string[]).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />}
+      {footer}
     </View>
   );
 }
 
-/** Soru başlığı: Moka resmi, küçük üst etiket, soru ve ipucu. */
-function Header({ image, eyebrow, title, hint }: { image: ImageSourcePropType; eyebrow: string; title: string; hint: string }) {
-  const c = useColors();
+/** Soru başlığı: ortalı küçük üst etiket, soru ve ipucu. */
+function Question({ eyebrow, title, hint }: { eyebrow: string; title: string; hint: string }) {
   return (
-    <View style={st.head}>
-      <View style={[st.mokaBadge, { backgroundColor: c.surface2 }]}>
-        <Float amp={3} dur={2200}>
-          <Image source={image} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
-        </Float>
-      </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <T v="eyebrow">{eyebrow}</T>
-        <T v="h2">{title}</T>
-        <T v="small">{hint}</T>
-      </View>
+    <View style={{ alignItems: 'center', gap: 4, paddingHorizontal: 8 }}>
+      <T v="eyebrow" style={{ textAlign: 'center' }}>{eyebrow}</T>
+      <T v="h2" style={{ textAlign: 'center' }}>{title}</T>
+      <T v="small" style={{ textAlign: 'center' }}>{hint}</T>
     </View>
   );
 }
@@ -279,7 +312,12 @@ function Notes() {
 const st = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 20, gap: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  topRow: { flexDirection: 'row', alignItems: 'center', minHeight: 40 },
+  topRow: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
+  topMid: { flex: 1, alignItems: 'center', gap: 2 },
+  mokaMini: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  mokaMiniImg: { width: 32, height: 32 },
+  center2: { flexGrow: 1, justifyContent: 'center', paddingVertical: 12 },
+  block: { gap: 22 },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 14 },

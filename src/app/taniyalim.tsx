@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Btn, Chip, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
+import { AXIS_NAMES, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
 import { askable, DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
-import { savePersona, skipPersona, usePersona } from '@/profile/usePersona';
+import { savePersona, skipPersona, usePersona, type Disc } from '@/profile/usePersona';
 import { saveNickname, useNickname } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -29,11 +30,17 @@ export default function Taniyalim() {
   const nick = useNickname();
   const [nameDone, setNameDone] = useState(!!nick);
   const [nm, setNm] = useState('');
+  const [disc, setDisc] = useState<DiscAnswers>({});
+  const [result, setResult] = useState<Disc | null>(null);
 
-  const steps = QUESTIONS.filter(q => askable(q.k, ans));
-  const q = steps[Math.min(step, steps.length - 1)];
+  const home = QUESTIONS.filter(x => askable(x.k, ans));
+  // Tek liste: önce ev soruları (Q1-Q7), sonra disiplin soruları (Q8-Q17).
+  const steps: { k: string }[] = [...home, ...DISC_QUESTIONS];
+  const inDisc = step >= home.length;
+  const q = inDisc ? undefined : home[Math.min(step, home.length - 1)];
+  const dq = inDisc ? DISC_QUESTIONS[Math.min(step - home.length, DISC_QUESTIONS.length - 1)] : undefined;
 
-  const finish = (a: Answers) => {
+  const finish = (a: Answers, d: DiscAnswers = disc) => {
     const final: Answers = a.cook === 'sevmem' ? { ...a, effort: 15 } : a;
     setAns(final);
     setSaving(true);
@@ -43,15 +50,30 @@ export default function Taniyalim() {
       update(D => {
         if (!D.setup) D.settings.time = PLAN[p].morning;
       });
-      savePersona(final, true);
-      if (setupDone && router.canGoBack()) router.back();
+      const axes = axesOf(d, final.style);
+      const type = typeOf(axes, d);
+      const r: Disc = { type, side: sideOf(axes, d, type), axes, answers: d, at: Date.now() };
+      setResult(r);
     }, 2600);
   };
 
-  const next = (a: Answers) => {
-    const rest = QUESTIONS.filter(x => askable(x.k, a));
-    if (step + 1 >= rest.length) finish(a);
+  const next = (a: Answers, d: DiscAnswers = disc) => {
+    const total = QUESTIONS.filter(x => askable(x.k, a)).length + DISC_QUESTIONS.length;
+    if (step + 1 >= total) finish(a, d);
     else setStep(step + 1);
+  };
+
+  const pickDisc = (v: string) => {
+    if (!dq) return;
+    if (dq.multi) {
+      const cur = (disc[dq.k] as string[] | undefined) ?? [];
+      const nx = cur.includes(v) ? cur.filter(x => x !== v) : cur.length < (dq.max ?? 99) ? [...cur, v] : cur;
+      setDisc(d => ({ ...d, [dq.k]: nx }));
+      return;
+    }
+    const d = { ...disc, [dq.k]: v };
+    setDisc(d);
+    next(ans, d);
   };
 
   const pick = (v: unknown) => {
@@ -70,6 +92,11 @@ export default function Taniyalim() {
       return { ...a, tastes: t };
     });
 
+  if (result) return <TypeScreen r={result} onDone={() => {
+    // Kayıt "Devam"da yapılır: yeni kullanıcıda kayıt, ekranı korumadan düşürür ve akış devam eder.
+    savePersona(ans, true, result);
+    if (setupDone && router.canGoBack()) router.back();
+  }} />;
   if (saving) return <Notes />;
 
   // İlk adım: Moka adını sorar; boş geçilebilir.
@@ -108,33 +135,54 @@ export default function Taniyalim() {
 
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
-      <View style={st.dots} accessibilityLabel={`Soru ${step + 1} / ${steps.length}`}>
-        {steps.map((s, i) => (
-          <View key={s.k} style={[st.dot, { backgroundColor: i <= step ? c.accent : c.line }]} />
-        ))}
+      <View style={st.cupRow} accessibilityLabel={`Soru ${step + 1} / ${steps.length}`}>
+        <View style={[st.cupTrack, { backgroundColor: c.line }]}>
+          <View style={[st.cupFill, { backgroundColor: c.accent, width: `${((step + 1) / steps.length) * 100}%` }]} />
+        </View>
+        <Text style={{ fontSize: 20 }}>{step + 1 >= steps.length ? '☕✨' : '☕'}</Text>
       </View>
-      <Appear key={q.k} style={{ flex: 1, gap: 14 }}>
+      <Appear key={q?.k ?? dq?.k} style={{ flex: 1, gap: 14 }}>
         <View style={st.head}>
           <Float amp={4} dur={2200}>
-            <Image source={MOKA_ASSETS[q.k === 'budget' ? 'checklist' : q.k === 'cook' || q.k === 'effort' || q.k === 'tastes' ? 'chef' : 'happy']} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <Image source={MOKA_ASSETS[dq ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'areas' ? 'checklist' : 'analyzing') : q!.k === 'budget' ? 'checklist' : q!.k === 'cook' || q!.k === 'effort' || q!.k === 'tastes' ? 'chef' : 'happy']} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </Float>
           <View style={{ flex: 1 }}>
             <T v="eyebrow">Seni tanıyalım</T>
-            <T v="h2">{q.q}</T>
-            <T v="small">{q.hint}</T>
+            <T v="h2">{(q ?? dq)!.q}</T>
+            <T v="small">{(q ?? dq)!.hint}</T>
           </View>
         </View>
 
-        {q.multi ? (
+        {dq ? (
+          <View style={{ gap: 10 }}>
+            {dq.opts.map(o => {
+              const sel = dq.multi ? ((disc[dq.k] as string[] | undefined) ?? []).includes(o.v) : disc[dq.k] === o.v;
+              return (
+                <Squish
+                  key={o.v}
+                  onPress={() => pickDisc(o.v)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: sel }}
+                  accessibilityLabel={o.label}
+                  style={[st.opt, { backgroundColor: sel ? c.accentSoft : c.surface, borderColor: sel ? c.accent : c.line }]}
+                >
+                  <Text style={{ fontSize: 28 }}>{o.emoji}</Text>
+                  <Text style={{ flex: 1, fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{o.label}</Text>
+                  {sel && <Text style={{ fontSize: 18 }}>✓</Text>}
+                </Squish>
+              );
+            })}
+          </View>
+        ) : q!.multi ? (
           <View style={st.chips}>
-            {q.opts.map(o => (
+            {q!.opts.map(o => (
               <Chip key={o.v} label={`${o.emoji} ${o.label}`} on={ans.tastes.includes(o.v)} onPress={() => toggle(o.v)} />
             ))}
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            {(q.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => {
-              const on = chosen[q.k] === o.v;
+            {(q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => {
+              const on = chosen[q!.k] === o.v;
               return (
                 <Squish
                   key={String(o.v)}
@@ -156,10 +204,44 @@ export default function Taniyalim() {
       </Appear>
 
       <View style={{ gap: 6 }}>
-        {q.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
+        {q?.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
+        {dq?.multi && <Btn kind="primary" label={((disc[dq.k] as string[] | undefined) ?? []).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />}
         {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} block />}
         {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} block />}
       </View>
+    </View>
+  );
+}
+
+/** Tip ekranı: büyük tip kartı, Moka'nın yorumu, 5 eksen çubuğu, yan renk. */
+function TypeScreen({ r, onDone }: { r: Disc; onDone: () => void }) {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  const t = TYPES[r.type];
+  const side = r.side ? TYPES[r.side] : null;
+  return (
+    <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+      <Appear style={{ flex: 1, gap: 12 }}>
+        <View style={[st.typeCard, { backgroundColor: t.bg }]}>
+          <Float amp={5} dur={1800}>
+            <Image source={t.img} style={{ width: 190, height: 190 }} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Float>
+          <Text style={[st.typeName, { color: '#283044' }]}>{t.emoji} {t.name}</Text>
+          <Text style={[st.typeSays, { color: '#283044' }]}>{t.says}</Text>
+        </View>
+        {side && <T v="small" style={{ textAlign: 'center' }}>{`Biraz da ${side.name} gibisin ${side.emoji}`}</T>}
+        <View style={{ gap: 8 }}>
+          {(Object.keys(AXIS_NAMES) as (keyof Axes)[]).map(k => (
+            <View key={k} style={st.axisRow}>
+              <T v="small" style={{ width: 100 }}>{AXIS_NAMES[k]}</T>
+              <View style={[st.cupTrack, { backgroundColor: c.line, flex: 1 }]}>
+                <View style={[st.cupFill, { backgroundColor: c.accent, width: `${r.axes[k] * 10}%` }]} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </Appear>
+      <Btn kind="primary" label="Devam" onPress={onDone} block />
     </View>
   );
 }
@@ -195,8 +277,13 @@ function Notes() {
 const st = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 20, gap: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  dots: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
-  dot: { height: 6, flex: 1, maxWidth: 40, borderRadius: 3 },
+  cupRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cupTrack: { height: 12, flex: 1, borderRadius: 6, overflow: 'hidden' },
+  cupFill: { height: 12, borderRadius: 6 },
+  typeCard: { borderRadius: 26, padding: 18, alignItems: 'center', gap: 6 },
+  typeName: { fontFamily: fonts.bodyBlack, fontSize: 24 },
+  typeSays: { fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'center' },
+  axisRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   moka: { width: 84, height: 84 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

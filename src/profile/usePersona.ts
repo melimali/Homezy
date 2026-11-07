@@ -2,13 +2,16 @@ import { useEffect, useSyncExternalStore } from 'react';
 
 import { useAuth } from '@/auth/AuthProvider';
 import { DEFAULT_ANSWERS, personaOf, type Answers, type Persona } from '@/domain/persona';
+import type { Axes, DiscAnswers, TypeId } from '@/domain/kisilik';
 import { prefs, supabase } from '@/lib/supabase';
 
 /**
  * "Seni tanıyalım" cevapları. Önce telefonda (prefs) tutulur; hesap açılınca / girilince
  * Supabase `profiles.persona` sütununa eşlenir. Misafirken yalnız yerelde kalır.
  */
-export type Saved = { answers: Answers; done: boolean; at: number; skipped?: boolean };
+/** Disiplin testi sonucu (src/domain/kisilik.ts): tip, 5 eksen, yan renk ve ham cevaplar. */
+export type Disc = { type: TypeId; side: TypeId | null; axes: Axes; answers: DiscAnswers; at: number };
+export type Saved = { answers: Answers; done: boolean; at: number; skipped?: boolean; disc?: Disc };
 
 const KEY = 'persona';
 const norm = (a: Partial<Answers> | undefined): Answers => ({ ...DEFAULT_ANSWERS, ...a, tastes: a?.tastes ?? [] });
@@ -18,7 +21,7 @@ function read(): Saved | null {
     const raw = prefs.get(KEY);
     if (!raw) return null;
     const j = JSON.parse(raw) as Saved;
-    return { answers: norm(j.answers), done: !!j.done, at: j.at || 0, skipped: !!j.skipped };
+    return { answers: norm(j.answers), done: !!j.done, at: j.at || 0, skipped: !!j.skipped, disc: j.disc };
   } catch {
     return null;
   }
@@ -29,8 +32,8 @@ const subs = new Set<() => void>();
 const emit = () => subs.forEach(f => f());
 
 /** Cevapları kaydeder (yerelde); hesap varsa senkron hook'u buluta yazar. */
-export function savePersona(answers: Answers, done = true) {
-  cur = { answers: norm(answers), done, at: Date.now() };
+export function savePersona(answers: Answers, done = true, disc?: Disc) {
+  cur = { answers: norm(answers), done, at: Date.now(), disc: disc ?? cur?.disc };
   prefs.set(KEY, JSON.stringify(cur));
   emit();
 }
@@ -48,11 +51,11 @@ const subscribe = (f: () => void) => {
 };
 
 /** Kayıtlı cevaplar ve kişilik tipi (kullanıcıya gösterilmez). */
-export function usePersona(): { saved: Saved | null; answers: Answers; persona: Persona | null; done: boolean; seen: boolean } {
+export function usePersona(): { saved: Saved | null; answers: Answers; persona: Persona | null; done: boolean; seen: boolean; disc: Disc | null } {
   const saved = useSyncExternalStore(subscribe, () => cur, () => cur);
   const done = !!saved?.done;
   const answers = saved?.answers ?? DEFAULT_ANSWERS;
-  return { saved, answers, done, seen: done || !!saved?.skipped, persona: done ? personaOf(answers) : null };
+  return { saved, answers, done, seen: done || !!saved?.skipped, persona: done ? personaOf(answers) : null, disc: saved?.disc ?? null };
 }
 
 /** Hesapla giriş yapılmışsa cevapları buluta yazar; bulutta daha yeni kayıt varsa onu alır. */
@@ -71,7 +74,7 @@ export function usePersonaSync() {
       if (off || error || !data?.persona) return;
       const r = data.persona as Saved;
       if (r?.done && (r.at ?? 0) > (cur?.at ?? 0)) {
-        cur = { answers: norm(r.answers), done: true, at: r.at };
+        cur = { answers: norm(r.answers), done: true, at: r.at, disc: r.disc };
         prefs.set(KEY, JSON.stringify(cur));
         emit();
       }

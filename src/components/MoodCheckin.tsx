@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
@@ -6,7 +6,7 @@ import { TaskRow } from '@/components/TaskRow';
 import { Btn, Field, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { allTasks, doneToday } from '@/domain/logic';
-import { BUSY, checkinOf, cleanNote, NOTE_MAX, dayPlan, FEELS, feelOf, needsCheckin, planTasks, saveCheckin, type DayBusy, type Feel } from '@/domain/mood';
+import { answerBusy, answerFeel, BUSY, checkinOf, cleanNote, countOpen, NOTE_MAX, dayPlan, FEELS, feelOf, planTasks, saveCheckin, skipBusy, skipFeel, stageOf, type DayBusy, type Feel } from '@/domain/mood';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
 import { useStep } from '@/lib/firstRun';
 import { StepModal } from '@/components/StepModal';
@@ -19,6 +19,8 @@ import { fonts, radius, useColors } from '@/theme';
  * Günün ilk açılışında Moka'nın iki sorusu. `open` verilmezse kendisi karar verir (bugün cevap yoksa açılır);
  * Bugün sekmesindeki "Değiştir" ile `open` ve `onClose` verilerek yeniden açılır.
  */
+let counted = false; // Bu uygulama oturumunda açılış bir kere sayılır.
+
 export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const c = useColors();
   const now = useNow();
@@ -27,7 +29,14 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
   const away = awayAhead(S.play, 0, now);
   const welcomeFirst = !progressOf(S.play, now).today && away != null && away >= AWAY_DAYS && S.play.welcomed !== dayKey(now);
   const auto = open === undefined;
-  const wantsAuto = auto && needsCheckin(S.play, now) && !welcomeFirst;
+  // Otomatik: açılış sayılır, sonra sadece sırası gelen tek soru sorulur (1. açılış nasılsın, 2. açılış evde misin).
+  useEffect(() => {
+    if (!auto || counted) return;
+    counted = true;
+    update(D => countOpen(D.play, now));
+  }, [auto, update, now]);
+  const stage = stageOf(S.play, now);
+  const wantsAuto = auto && stage != null && !welcomeFirst;
   // Otomatik açılış sıradan geçer (karşılama → ruh hali); Bugün'deki "Değiştir" doğrudan açar.
   const turn = useStep('mood', wantsAuto);
   const visible = auto ? turn : open;
@@ -40,21 +49,29 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
   const close = () => onClose?.();
   const skip = (dismiss: () => void) => {
     after.current = () => {
-      if (auto || !prev) update(D => saveCheckin(D.play, { skip: true, at: Date.now() }, now));
+      if (auto) update(D => (stage === 'busy' ? skipBusy(D.play, now) : skipFeel(D.play, now)));
+      else if (!prev) update(D => saveCheckin(D.play, { skip: true, at: Date.now() }, now));
       close();
     };
+    dismiss();
+  };
+  const pickFeel = (f: Feel, dismiss: () => void) => {
+    sfx('tap');
+    if (!auto) { setFeel(f); return; }
+    after.current = () => { update(D => answerFeel(D.play, f, now)); close(); };
     dismiss();
   };
   const pick = (busy: DayBusy, dismiss: () => void) => {
-    if (!feel) return;
+    if (!auto && !feel) return;
     sfx('done');
     after.current = () => {
-      update(D => saveCheckin(D.play, { feel, busy, at: Date.now(), note: cleanNote(note) }, now));
+      update(D => (auto || !feel ? answerBusy(D.play, busy, now) : saveCheckin(D.play, { feel, busy, at: Date.now(), note: cleanNote(note) }, now)));
       close();
     };
     dismiss();
   };
-  const pose = feel ? feelOf(feel).pose : 'sipping';
+  const showBusy = auto ? stage === 'busy' : !!feel;
+  const pose = feel && !auto ? feelOf(feel).pose : 'sipping';
 
   return (
     <StepModal onClose={() => after.current()}>
@@ -63,13 +80,13 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
           <Float amp={4} dur={2400} style={styles.moka}>
             <Image source={MOKA_ASSETS[pose]} style={styles.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
           </Float>
-          {!feel ? (
+          {!showBusy ? (
             <Appear key="feel" style={styles.step}>
               <T v="h1" style={styles.center}>Bugün nasıl hissediyorsun?</T>
               <T v="small" style={styles.center}>Günün planını sana göre ayarlayayım.</T>
               <View style={styles.feels}>
                 {FEELS.map(f => (
-                  <Squish key={f.id} onPress={() => { sfx('tap'); setFeel(f.id); }} accessibilityLabel={f.label}
+                  <Squish key={f.id} onPress={() => pickFeel(f.id, dismiss)} accessibilityLabel={f.label}
                     style={[styles.feel, { backgroundColor: c.surface2 }]}>
                     <Text style={styles.emoji}>{f.emoji}</Text>
                     <Text style={[styles.feelTxt, { color: c.ink }]}>{f.label}</Text>
@@ -80,8 +97,8 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
           ) : (
             <Appear key="busy" style={styles.step}>
               <T v="h1" style={styles.center}>Bugün için planın var mı?</T>
-              <Field value={note} onChangeText={setNote} maxLength={NOTE_MAX} placeholder="İstersen bir not bırak (isteğe bağlı)"
-                accessibilityLabel="Not" style={{ alignSelf: 'stretch' }} />
+              {!auto && <Field value={note} onChangeText={setNote} maxLength={NOTE_MAX} placeholder="İstersen bir not bırak (isteğe bağlı)"
+                accessibilityLabel="Not" style={{ alignSelf: 'stretch' }} />}
               <View style={{ gap: 8, alignSelf: 'stretch' }}>
                 {BUSY.map(b => (
                   <Squish key={b.id} onPress={() => pick(b.id, dismiss)} accessibilityLabel={`${b.label}, ${b.sub}`}
@@ -94,7 +111,7 @@ export function MoodCheckin({ open, onClose }: { open?: boolean; onClose?: () =>
                   </Squish>
                 ))}
               </View>
-              <Btn kind="ghost" small label="‹ Geri" onPress={() => setFeel(null)} />
+              {!auto && <Btn kind="ghost" small label="‹ Geri" onPress={() => setFeel(null)} />}
             </Appear>
           )}
           <Btn kind="ghost" small label={auto ? 'Bugün sorma' : 'Kapat'} onPress={() => skip(dismiss)} />

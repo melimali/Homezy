@@ -1,6 +1,6 @@
 import type { Garden } from './garden';
 import type { PersonaId } from './items';
-import type { CheckIn } from './mood';
+import type { CheckIn, DailyAsk } from './mood';
 import type { HouseLook } from './look';
 export type RoomType =
   | 'yatak'
@@ -203,6 +203,8 @@ export type Play = {
   persona: PersonaId;
   /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
   checkins: Record<DayKey, CheckIn>;
+  /** Günlük iki soru: 1. açılış "nasılsın", 2. açılış "evde misin" (src/domain/mood.ts `stageOf`). */
+  ask?: DailyAsk;
   /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
   moka: MokaGrowth;
   /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */

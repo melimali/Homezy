@@ -43,7 +43,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const planName = useName();
   const recId = persona ? PLAN[persona].template : null;
   const toast = useToast();
-  const { t: tr } = useTranslation();
+  const { t: tr, lang } = useTranslation();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
   const [nameFocus, setNameFocus] = useState(false);
@@ -281,7 +281,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       {!ask && (
         <View>
           <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
-          <T v="h1">{ownTitle(planName, 'Plan', '') ? `${ownTitle(planName, 'Plan', '')}${editing ? ' · düzenle' : ' · kontrol et'}` : editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
+          <T v="h1">{ownTitle(planName, 'Plan', '', lang) ? `${ownTitle(planName, 'Plan', '', lang)}${editing ? ' · düzenle' : ' · kontrol et'}` : editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
         </View>
       )}
 

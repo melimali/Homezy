@@ -3,7 +3,7 @@ import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { MokaReact } from '@/components/MokaReact';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
@@ -13,6 +13,7 @@ import { useStep } from '@/lib/firstRun';
 import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
+import { saveNickname, useName } from '@/profile/useName';
 import { homeScore, emptyState } from '@/domain/logic';
 import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
@@ -84,7 +85,9 @@ export default function Hesap() {
   const tourTurn = useStep('tour', tourWanted);
   const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); setTourWanted(false); };
   const account = status === 'account';
-  const name = account ? displayName(user) : t('guest');
+  const nick = useName();
+  const name = nick ?? (account ? displayName(user) : t('guest'));
+  const [editNick, setEditNick] = useState<string | null>(null);
   const now = useNow();
   const extras = extrasUnlocked(state.play.days.length, now);
   const hp = progressOf(state.play, now);
@@ -297,7 +300,25 @@ export default function Hesap() {
         </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
           <View>
-            <T v="h2" numberOfLines={1}>{name}</T>
+            {editNick === null ? (
+              <Pressable onPress={() => setEditNick(nick ?? '')} accessibilityRole="button" accessibilityLabel={`Adını değiştir: ${name}`} hitSlop={6}>
+                <T v="h2" numberOfLines={1}>{name} ✏️</T>
+              </Pressable>
+            ) : (
+              <TextInput
+                value={editNick}
+                onChangeText={setEditNick}
+                onSubmitEditing={() => { saveNickname(editNick); setEditNick(null); }}
+                onBlur={() => { saveNickname(editNick); setEditNick(null); }}
+                placeholder="Adın"
+                placeholderTextColor={c.muted}
+                maxLength={20}
+                autoFocus
+                returnKeyType="done"
+                accessibilityLabel="Adın"
+                style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, padding: 0 }}
+              />
+            )}
             <T v="tiny" numberOfLines={1}>{account ? user?.email : `${state.homeName} · ${t('noAccount')}`}</T>
           </View>
           <View style={st.levelRow}>

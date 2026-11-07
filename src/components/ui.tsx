@@ -41,15 +41,15 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant; /**
 
 function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
-    case 'h1': return { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 42, color: c.ink, letterSpacing: -0.8 };
-    case 'h2': return { fontFamily: fonts.displayBold, fontSize: 23, lineHeight: 29, color: c.ink, letterSpacing: -0.3 };
-    case 'h3': return { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 24, color: c.ink };
+    case 'h1': return { fontFamily: fonts.displayBold, fontSize: type.h1, lineHeight: 34, color: c.ink, letterSpacing: -0.4 };
+    case 'h2': return { fontFamily: fonts.displayBold, fontSize: type.h2, lineHeight: 26, color: c.ink, letterSpacing: -0.2 };
+    case 'h3': return { fontFamily: fonts.displayBold, fontSize: type.h3, lineHeight: 22, color: c.ink };
     case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: type.bold, lineHeight: 22, color: c.ink };
     case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
     case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: type.tiny, lineHeight: 16, color: c.muted };
     case 'eyebrow':
       return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.warm, marginBottom: 4 };
-    case 'lead': return { fontFamily: fonts.bodyBold, fontSize: 16.5, lineHeight: 24, color: c.muted, marginTop: 6 };
+    case 'lead': return { fontFamily: fonts.bodyBold, fontSize: type.lead, lineHeight: 22, color: c.muted, marginTop: 2 };
     default: return { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: c.ink };
   }
 }
@@ -111,7 +111,7 @@ export function AppHeader() {
             hitSlop={6}
             style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, borderColor: c.line }, pressed && { transform: [{ scale: 0.96 }] }]}
           >
-            <Text style={{ fontSize: 19 }}>🔔</Text>
+            <Text style={{ fontSize: 17 }}>🔔</Text>
             {n > 0 && (
               <View style={[styles.badge, { backgroundColor: c.late }]}>
                 <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' }}>{n}</Text>
@@ -335,7 +335,7 @@ export function Tabs<K extends string>({
             accessibilityLabel={it.badge ? `${it.label}, ${it.badge}` : it.label}
             style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }, on && styles.lift]}
           >
-            <Text style={{ fontSize: 24 }}>{it.emoji}</Text>
+            <Text style={{ fontSize: 20 }}>{it.emoji}</Text>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
             {!!it.badge && (
               <View style={[styles.tabBadge, { backgroundColor: c.late }]}>
@@ -419,40 +419,40 @@ export const styles = StyleSheet.create({
   screen: { paddingHorizontal: space.screen, gap: space.section, width: '100%', maxWidth: 520, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headMokaRing: { width: 52, height: 52, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
-  headMoka: { width: 50, height: 50, marginTop: 6 },
-  brandWord: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 22, letterSpacing: -0.3 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  headMokaRing: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  headMoka: { width: 38, height: 38, marginTop: 4 },
+  brandWord: { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 19, letterSpacing: -0.2 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   titleBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  heroRing: { width: 112, height: 112, borderRadius: 56, alignItems: 'center', justifyContent: 'center' },
-  heroMoka: { width: 104, height: 104 },
+  heroRing: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
+  heroMoka: { width: 82, height: 82 },
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
-  emptyMoka: { width: 132, height: 132 },
+  emptyMoka: { width: 104, height: 104 },
   sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
-  bell: { width: 48, height: 48, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth },
+  bell: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 0 },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {
-    borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 3,
+    borderRadius: radius.card, padding: space.card, gap: 12, borderWidth: 0,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 1,
   },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.btn,
-    paddingVertical: 15, paddingHorizontal: 24, minHeight: 50,
+    paddingVertical: 13, paddingHorizontal: 22, minHeight: 48,
     shadowColor: brand.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 4, elevation: 2,
   },
   btnSmall: { paddingVertical: 9, paddingHorizontal: 16, minHeight: 40, shadowOpacity: 0, elevation: 0 },
   lift: { shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
-  chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
+  chip: { minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minWidth: 76, paddingVertical: 9, paddingHorizontal: 12, borderRadius: radius.tile },
   tabBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   x: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   pill: { borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 4, alignSelf: 'flex-start' },
   sheetBg: { flex: 1 },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: space.card, paddingTop: 12, gap: 16, maxWidth: 520, alignSelf: 'center', width: '100%' },
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: space.card, paddingTop: 12, gap: 16, maxWidth: 520, alignSelf: 'center', width: '100%' },
   grab: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 4 },
   field: {
     flex: 1, minWidth: 0, borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 13,

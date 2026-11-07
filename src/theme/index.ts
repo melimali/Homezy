@@ -35,14 +35,14 @@ const light = {
 export type Colors = typeof light;
 
 const dark: Colors = {
-  bg: '#2B2A35', surface: '#37364A', surface2: '#44425A', ink: '#FBF4EA', muted: '#BDB6C6', line: '#4E4B64',
+  bg: '#1C2230', surface: '#262E41', surface2: '#313A50', ink: '#EEF3EF', muted: '#A9B3C3', line: '#364058',
   wall: '#FBF4EA', hatch: 'rgba(251,244,234,0.14)', shadow: 'rgba(10,8,18,0.45)', lift: 'rgba(10,8,18,0.35)',
   accent: '#BFD8C4', onAccent: '#232230', accentSoft: '#3C5045', hi: '#9BB5C9', warm: '#E3B9A0', clay: brand.clay,
   onBadge: '#232230',
   fashion: '#4A3C43', fashionSurface: '#40353D', fashionInk: '#F6E4DC', fashionAccent: '#E3A3B0', fashionLine: '#5E4A53',
   late: '#E8A199', lateSoft: '#5A3B40', today: '#E3B9A0', todaySoft: '#54433F', ok: '#A9CBB6', okSoft: '#3A5048',
   glow: '#5E4A3E', glowInk: '#F6D9B0',
-  night: '#211F2B', nightCard: '#37364A', onNight: '#FBF4EA', cream: '#F3EAE0',
+  night: '#161B27', nightCard: '#262E41', onNight: '#FBF4EA', cream: '#F3EAE0',
   peach: '#B98672', peachSoft: '#4F3E3E', sage: '#6E8F78', sageSoft: '#34463D',
   lavender: '#8F82B5', lavenderSoft: '#403B58', rose: '#B5798A', roseSoft: '#4E3A46',
   room: {
@@ -73,12 +73,12 @@ export const fonts = {
  * Yazı rengi olan muted / warm / late / today / ok renkleri WCAG AA (4.5:1) için denendi.
  * Büyük yazı tipi ayarında taşmasın diye `T` yazıyı en çok 1.3 kat büyütür.
  */
-export const type = { h1: 36, h2: 23, h3: 18, lead: 16.5, bold: 16, body: 15, small: 13.5, tiny: 12, maxScale: 1.3 };
+export const type = { h1: 28, h2: 20, h3: 17, lead: 15.5, bold: 16, body: 15, small: 13.5, tiny: 12, maxScale: 1.3 };
 
 /** Kartların altındaki sıcak gölge rengi (gölge her temada aynı tondan). */
 export const warmShadow = '#B9805F';
 
-export const radius = { card: 24, tile: 20, plan: 14, btn: 14, pill: 999 };
+export const radius = { card: 20, tile: 16, plan: 14, btn: 14, pill: 999 };
 
 /** Boşluklar: ekran kenarı, bölümler arası, kart içi. */
-export const space = { screen: 22, section: 24, card: 20 };
+export const space = { screen: 18, section: 18, card: 16 };

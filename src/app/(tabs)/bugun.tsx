@@ -418,5 +418,5 @@ const styles = StyleSheet.create({
 const goalStyle = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24 },
   label: { flex: 1, fontFamily: fonts.bodyBlack, fontSize: 15 },
-  pts: { fontFamily: fonts.bodyBlack, fontSize: 13 },
+  pts: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
 });

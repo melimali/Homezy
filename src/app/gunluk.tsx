@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   bar: { width: '100%', borderRadius: 4 },
   dot: { width: 4, height: 4, borderRadius: 2 },
   done: { borderRadius: 16, padding: 12, gap: 3 },
-  doneTitle: { fontFamily: fonts.bodyBlack, fontSize: 13, marginBottom: 2 },
+  doneTitle: { fontFamily: fonts.bodyBlack, fontSize: 13.5, marginBottom: 2 },
   doneItem: { fontFamily: fonts.body, fontSize: 14 },
 });
 

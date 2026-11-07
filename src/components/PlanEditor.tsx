@@ -401,7 +401,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
                     <Text style={[st.roomM, { color: c.muted }]}>{n * 2} m²</Text>
                   </Squish>
                   <Squish onPress={() => setEditId(id)} hitSlop={8} accessibilityLabel={`${r.name} düzenle`} style={[st.pen, { backgroundColor: c.surface2 }]}>
-                    <Text style={{ fontSize: 11 }}>✏️</Text>
+                    <Text style={{ fontSize: 12 }}>✏️</Text>
                   </Squish>
                 </View>
               );
@@ -491,7 +491,7 @@ const st = StyleSheet.create({
   row: { gap: 10, paddingHorizontal: 22, paddingVertical: 4 },
   tpl: { width: 104, alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 6 },
   tplT: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20, minHeight: 40, textAlign: 'center', textAlignVertical: 'center' },
-  tplS: { fontFamily: fonts.bodyBold, fontSize: 11.5, textAlign: 'center' },
+  tplS: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center' },
   pal: { width: 72, alignItems: 'center', gap: 6 },
   palIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
   palPlus: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
@@ -506,13 +506,13 @@ const st = StyleSheet.create({
   stepB: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   stepBT: { fontFamily: fonts.bodyBlack, fontSize: 20, lineHeight: 24 },
   stepN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  stepL: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  stepL: { fontFamily: fonts.bodyBold, fontSize: 12 },
   roomWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   roomChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 2, maxWidth: '100%' },
   roomMain: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   roomT: { fontFamily: fonts.bodyBlack, fontSize: 13.5, flexShrink: 1 },
-  roomM: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
+  roomM: { fontFamily: fonts.bodyBold, fontSize: 12 },
   pen: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   rename: { fontFamily: fonts.bodyBold, fontSize: 16, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 16 },
   actions: { flexDirection: 'row', gap: 10 },

@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   crown: { position: 'absolute', top: -4, right: -4, fontSize: 16 },
   meter: { width: 64, height: 6, borderRadius: 3, overflow: 'hidden' },
   meterFill: { height: 6, borderRadius: 3 },
-  tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  tag: { fontFamily: fonts.bodyBlack, fontSize: 13.5, textAlign: 'center' },
   garden: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18 },
   gardenT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   rooms: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

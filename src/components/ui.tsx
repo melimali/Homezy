@@ -113,7 +113,7 @@ export function AppHeader() {
             <Text style={{ fontSize: 19 }}>🔔</Text>
             {n > 0 && (
               <View style={[styles.badge, { backgroundColor: c.late }]}>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{n}</Text>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' }}>{n}</Text>
               </View>
             )}
           </Pressable>
@@ -174,7 +174,7 @@ export function IconBtn({
       {typeof icon === 'string' ? <Text style={{ fontSize: size * 0.4 }}>{icon}</Text> : icon}
       {!!badge && (
         <View style={[styles.badge, { backgroundColor: c.late }]}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{badge > 99 ? '99+' : badge}</Text>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' }}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       )}
     </Squish>
@@ -324,10 +324,10 @@ export function Tabs<K extends string>({
             style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }]}
           >
             <Text style={{ fontSize: 24 }}>{it.emoji}</Text>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
             {!!it.badge && (
               <View style={[styles.tabBadge, { backgroundColor: c.late }]}>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: '#fff' }}>{it.badge}</Text>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' }}>{it.badge}</Text>
               </View>
             )}
           </Squish>
@@ -354,7 +354,7 @@ export function Pill({ k, label }: { k: StatusKind | 'neutral' | 'rose' | 'laven
   const [bg, fg] = map[k];
   return (
     <View style={[styles.pill, { backgroundColor: k === 'neutral' ? c.surface2 : bg }]}>
-      <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: 11.5 }}>{label}</Text>
+      <Text style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: 12 }}>{label}</Text>
     </View>
   );
 }

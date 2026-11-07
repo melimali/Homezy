@@ -67,5 +67,5 @@ const st = StyleSheet.create({
   badge: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   emoji: { fontSize: 32, lineHeight: 40 },
   title: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 24, textAlign: 'center' },
-  sub: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, textAlign: 'center', opacity: 0.8 },
+  sub: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 17, textAlign: 'center', opacity: 0.8 },
 });

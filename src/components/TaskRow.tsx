@@ -254,7 +254,7 @@ export function TaskRow({
         >
           <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
             <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted, textDecorationLine: 'line-through' }}>{t.name}</T>
-            <T v="small" numberOfLines={2} style={{ fontSize: 12.5, color: k.urgent ? tone : c.muted }}>{sub}</T>
+            <T v="small" numberOfLines={2} style={{ fontSize: 12, color: k.urgent ? tone : c.muted }}>{sub}</T>
             <Who k={k} t={t} />
           </View>
           {k.pose ? (
@@ -281,7 +281,7 @@ function Who({ k, t }: { k: TaskApi; t: Task }) {
   return (
     <Pressable onPress={k.nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
       style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
     </Pressable>
   );
 }
@@ -356,7 +356,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
           </Float>
           <Text numberOfLines={2} style={[styles.tileName, { color: k.doneToday ? c.muted : c.ink }]}>{t.name}</Text>
           <View style={[styles.tileTag, { backgroundColor: k.doneToday || k.s.k !== 'ok' ? c.surface : c.surface2 }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: tone.fg }}>{label}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: tone.fg }}>{label}</Text>
           </View>
           {k.doneToday && <Text style={styles.tileCheck}>✅</Text>}
         </Squish>
@@ -414,7 +414,7 @@ export function StepBtn({ label, a11y, onPress, disabled }: { label: string; a11
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.accentSoft }, (pressed || disabled) && { opacity: 0.5 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   tileWrap: { width: '48%' },
   tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0 },
   tileEmoji: { fontSize: 40, lineHeight: 48 },
-  tileName: { fontFamily: fonts.bodyBlack, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  tileName: { fontFamily: fonts.bodyBlack, fontSize: 15, lineHeight: 19, textAlign: 'center' },
   tileTag: { borderRadius: radius.pill, paddingVertical: 3, paddingHorizontal: 10, marginTop: 2 },
   tileCheck: { position: 'absolute', top: 8, left: 10, fontSize: 16 },
   tileMore: { position: 'absolute', top: 4, right: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },

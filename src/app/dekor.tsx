@@ -280,10 +280,10 @@ const st = StyleSheet.create({
   sw: { width: 62, alignItems: 'center', gap: 4 },
   swDot: { width: 50, height: 50, borderRadius: 25, borderWidth: 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   swAlt: { position: 'absolute', right: 0, bottom: 0, width: 25, height: 25 },
-  swT: { fontFamily: fonts.bodyBold, fontSize: 11 },
-  crown: { position: 'absolute', top: 1, right: 3, fontSize: 11 },
+  swT: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  crown: { position: 'absolute', top: 1, right: 3, fontSize: 12 },
   item: { width: 74, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 4 },
-  itemT: { fontFamily: fonts.bodyBold, fontSize: 10.5 },
+  itemT: { fontFamily: fonts.bodyBold, fontSize: 12 },
   grid: { borderRadius: radius.card, padding: 12, alignItems: 'center' },
   cell: { position: 'absolute', borderRadius: 8, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

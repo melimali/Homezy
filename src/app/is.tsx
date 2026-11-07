@@ -82,7 +82,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="h2" numberOfLines={2}>{t.name}</T>
-                <T v="small" style={{ fontSize: 14.5 }}>{art.line}</T>
+                <T v="small" style={{ fontSize: 15 }}>{art.line}</T>
               </View>
             </View>
             <View style={st.pointsRow}>
@@ -114,7 +114,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
                   style={[st.step, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}
                 >
                   <View style={[st.check, { borderColor: on ? c.ok : c.line, backgroundColor: on ? c.ok : 'transparent' }]}>
-                    {on && <Text style={{ color: c.surface, fontFamily: fonts.bodyBlack, fontSize: 13 }}>✓</Text>}
+                    {on && <Text style={{ color: c.surface, fontFamily: fonts.bodyBlack, fontSize: 13.5 }}>✓</Text>}
                   </View>
                   <T style={[{ flex: 1, fontSize: 15.5 }, on && { color: c.muted, textDecorationLine: 'line-through' }]}>{s}</T>
                 </Pressable>

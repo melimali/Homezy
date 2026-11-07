@@ -186,7 +186,7 @@ export default function Tanitim() {
         <View style={[st.langPill, { backgroundColor: c.surface }]} accessibilityRole="radiogroup">
           {(['tr', 'en'] as const).map(l => (
             <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
-              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
+              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
             </Pressable>
           ))}
         </View>
@@ -287,7 +287,7 @@ const st = StyleSheet.create({
   tape: { position: 'absolute', top: -9, alignSelf: 'center', width: 70, height: 20, borderRadius: 7, zIndex: 2, opacity: 0.95, transform: [{ rotate: '-3deg' }] },
   badge: { position: 'absolute', top: 14, right: 14, zIndex: 3, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' },
-  eyebrow: { fontFamily: fonts.bodyBlack, fontSize: 11.5, letterSpacing: 1.1, marginBottom: 6, textAlign: 'center' },
+  eyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.1, marginBottom: 6, textAlign: 'center' },
   title: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 33, letterSpacing: -0.2, textAlign: 'center' },
   text: { fontFamily: fonts.body, fontSize: 16, lineHeight: 23, marginTop: 8, textAlign: 'center' },
 });

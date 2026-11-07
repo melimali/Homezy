@@ -294,7 +294,7 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 126 },
   chartCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 3 },
   chartBar: { width: '100%', borderRadius: 6 },
-  chartN: { fontFamily: fonts.bodyBold, fontSize: 10 },
+  chartN: { fontFamily: fonts.bodyBold, fontSize: 12 },
   chartL: { fontFamily: fonts.bodyBold, fontSize: 9.5 },
   hbar: { flex: 1, height: 10, borderRadius: radius.pill, overflow: 'hidden' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

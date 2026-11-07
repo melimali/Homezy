@@ -233,10 +233,10 @@ export default function Bahce() {
               <T v="small">{detailFlower.story ?? `${detailFlower.name} bahçene neşe ve renk katan harika bir çiçek!`}</T>
             </Card>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 }}>
-              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13.5 }}>
                 Albümdedeki Sayı: {G.album[detailFlower.id] ?? 0} adet
               </Text>
-              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13.5 }}>
                 Tohum Fiyatı: ⭐ {detailFlower.price}
               </Text>
             </View>
@@ -571,18 +571,18 @@ const styles = StyleSheet.create({
   plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
   plotCell: { width: '31.5%' },
   plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
-  plotName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, textAlign: 'center' },
-  plotStage: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },
+  plotStage: { fontFamily: fonts.bodyBold, fontSize: 12 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
   decor: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', minHeight: 4 },
   decorE: { fontSize: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 14 },
   rowT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  rowS: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
+  rowS: { fontFamily: fonts.bodyBold, fontSize: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   item: { width: '47.5%', alignItems: 'center', padding: 14, gap: 8 },
-  tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  tag: { fontFamily: fonts.bodyBlack, fontSize: 13.5, textAlign: 'center' },
   albumGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   albumCell: { width: '23%', alignItems: 'center', borderRadius: radius.tile, paddingVertical: 8, gap: 2 },
 });

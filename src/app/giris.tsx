@@ -381,7 +381,7 @@ function Label({
       <Text
         style={{
           fontFamily: fonts.bodyBlack,
-          fontSize: 13,
+          fontSize: 13.5,
           color: c.muted,
           marginLeft: 6,
         }}
@@ -466,7 +466,7 @@ const st = StyleSheet.create({
   field: { flex: 0, alignSelf: "stretch", paddingVertical: 11 },
   legal: {
     fontFamily: fonts.body,
-    fontSize: 12.5,
+    fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
     paddingHorizontal: 8,

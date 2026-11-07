@@ -221,10 +221,10 @@ export default function Hesap() {
 
       <View style={{ gap: 8 }}>
         <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
         </Pressable>
         <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
         </Pressable>
       </View>
     </View>
@@ -476,7 +476,7 @@ const st = StyleSheet.create({
   avatarImg: { width: 80, height: 80, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   level: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
-  levelT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, textTransform: 'uppercase' },
+  levelT: { fontFamily: fonts.bodyBlack, fontSize: 12, textTransform: 'uppercase' },
   group: { borderRadius: radius.card, paddingHorizontal: 6, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 10 },
   rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },

@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontFamily: fonts.bodyBold,
-    fontSize: 10.5,
+    fontSize: 12,
   },
   legendDot: {
     width: 10,
@@ -225,10 +225,10 @@ const styles = StyleSheet.create({
   },
   badgeTitle: {
     fontFamily: fonts.bodyBlack,
-    fontSize: 12.5,
+    fontSize: 12,
   },
   badgeDesc: {
     fontFamily: fonts.bodyBold,
-    fontSize: 10.5,
+    fontSize: 12,
   },
 });

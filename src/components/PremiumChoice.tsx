@@ -69,7 +69,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       </View>
 
       <View style={[styles.limits, { backgroundColor: c.surface, borderColor: c.line }]}>
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14.5, color: c.ink, textAlign: 'center' }}>
+        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink, textAlign: 'center' }}>
           💬 Günde {LIMITS.premium.chats} Moka mesajı · 📸 {LIMITS.premium.scans} fotoğraf taraması
         </Text>
         <T v="tiny" style={{ textAlign: 'center' }}>Ücretsizde fotoğraf taraması haftada {LIMITS.free.scans}; sohbet Premium'a özel.</T>
@@ -83,10 +83,10 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>⭐ PREMIUM</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: brand.navy }}>⭐ PREMIUM</Text>
           </View>
           <Text style={[styles.price, { color: brand.mint }]}>{intro ?? prices[plan]}</Text>
-          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>
+          <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
             {intro ? 'ilk ay' : plan === 'annual' ? 'yıllık' : 'aylık'}
           </Text>
         </View>
@@ -122,7 +122,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         {ROWS.map(r => (
           <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
             <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
-            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13 }}>{r.label}</T>
+            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13.5 }}>{r.label}</T>
             <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
             <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
           </View>
@@ -178,7 +178,7 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
       </View>
       {badge && (
         <View style={[styles.tag, { backgroundColor: brand.clay }]}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>{badge}</Text>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: brand.navy }}>{badge}</Text>
         </View>
       )}
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{price}</Text>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
   plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 0, gap: 2 },
-  planName: { fontFamily: fonts.bodyBlack, fontSize: 13, paddingVertical: 3 },
+  planName: { fontFamily: fonts.bodyBlack, fontSize: 13.5, paddingVertical: 3 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   price: { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40 },
   table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 0 },

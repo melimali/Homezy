@@ -42,5 +42,5 @@ export function AdBanner() {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 4, marginTop: 16, marginBottom: 8, borderRadius: 22, paddingVertical: 8, overflow: 'hidden' },
-  label: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  label: { fontFamily: fonts.bodyBold, fontSize: 12 },
 });

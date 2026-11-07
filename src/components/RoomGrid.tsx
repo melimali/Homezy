@@ -88,5 +88,5 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 6, gap: 8 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: { position: 'absolute', top: 10, right: 10, minWidth: 26, height: 26, paddingHorizontal: 6, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13 },
+  badgeT: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
 });

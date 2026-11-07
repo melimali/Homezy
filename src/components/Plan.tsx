@@ -265,5 +265,5 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   rname: { fontFamily: fonts.display, fontSize: 12, lineHeight: 14, textAlign: 'center' },
   badge: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, alignItems: 'center' },
-  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 11 },
+  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 12 },
 });

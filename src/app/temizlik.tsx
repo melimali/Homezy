@@ -250,5 +250,5 @@ const st = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 18, paddingTop: 10, gap: 10, alignItems: 'center' },
   cta: { alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 17, alignSelf: 'stretch', maxWidth: 484, width: '100%' },
-  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 17 },
+  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
 });

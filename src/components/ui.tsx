@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { useEffect, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   Animated,
   Image,
@@ -186,7 +186,7 @@ export function IconBtn({
 export function Bar({ value, color, track, height = 8, style }: { value: number; color?: string; track?: string; height?: number; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
   const v = Math.max(0, Math.min(1, value || 0));
-  const w = useRef(new Animated.Value(v)).current;
+  const [w] = useState(() => new Animated.Value(v));
   // Değer değişince çubuk yumuşakça dolar.
   useEffect(() => {
     Animated.timing(w, { toValue: v, duration: 450, useNativeDriver: false }).start();

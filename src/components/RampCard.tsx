@@ -1,6 +1,7 @@
 import { Image, StyleSheet, View } from 'react-native';
 
 import { MOKA_ASSETS } from '@/constants/moka';
+import { WHY_LINE } from '@/domain/kisilik';
 import { dayKey } from '@/domain/play';
 import { nextStageOf, pendingStage, stageFor, weekGoal } from '@/domain/ramp';
 import { useNow } from '@/hooks/useNow';
@@ -62,6 +63,7 @@ export function RampCard() {
         <T style={{ fontSize: 34 }}>{light ? '🫖' : st.emoji}</T>
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
           <T v="bold">{light ? 'Hafif gün: bugün sadece 1-2 iş' : `${tx(st.name)} · ${tx(st.line)}`}</T>
+          {!!S.settings.why && WHY_LINE[S.settings.why] && days < 7 && <T v="tiny">{`${tx('Hatırla')}: ${tx(WHY_LINE[S.settings.why])}`}</T>}
           <T v="tiny">
             {next
               ? `${left} ${tx('gün daha çalışınca')} ${next.emoji} ${tx(next.name)}: ${next.cap >= 99 ? tx('tüm işler açılır') : `${next.cap} ${tx('iş günde')}`}`

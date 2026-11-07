@@ -74,6 +74,10 @@ export type RoomExtras = {
 export type Settings = {
   /** Kademeli başlangıç kapalı: tüm işler baştan görünür ("Hepsini aç"). Yoksa/false: aşama aşama açılır (src/domain/ramp.ts). */
   rampOff?: boolean;
+  /** Disiplin sorularından: "neden" (kisilik.ts WHY_LINE), "mola anı" (CUE_LABEL) ve "engel" (quit) cevap anahtarları. */
+  why?: string;
+  cue?: string;
+  obstacle?: string;
   /** Moka'nın kutladığı en son aşama (1…5). Yeni aşamaya geçince kutlama kartı bir kere çıkar. */
   rampSeen?: number;
   /** "Hafif gün": bu gün anahtarı bugünse Bugün sadece 1-2 iş gösterir; gün yine de sayılır. */

@@ -45,4 +45,12 @@ export const EN_N: Record<string, string> = {
   'toplam gün': 'total days',
   'en iyi seri': 'best streak',
   'Bu hafta hedefin {} gün: {}/{} ✓ Toplam {} günün hiç silinmez.': 'This week\'s goal is {} days: {}/{} ✓ Your {} total days never get erased.',
+  'Hatırla': 'Remember',
+  'Yorgunsan Bugün\'den "Hafif gün" seçebilirsin.': 'If you are tired, you can pick "Light day" from Today.',
+  'sakin bir ev istiyordun 🌿': 'you wanted a calm home 🌿', 'daha az stres istiyordun 😮‍💨': 'you wanted less stress 😮‍💨',
+  'kendinle gurur duymak istiyordun 💪': 'you wanted to feel proud of yourself 💪', 'ailen için buradasın 👨‍👩‍👧': 'you are here for your family 👨‍👩‍👧', 'düzen istiyordun ✨': 'you wanted order ✨',
+  'Bunu neden istiyorsun?': 'Why do you want this?', 'Zor günde bunu sana hatırlatırım.': 'I will remind you of this on a hard day.',
+  'Sakin bir ev': 'A calm home', 'Daha az stres': 'Less stress', 'Kendimle gurur duymak': 'Feeling proud of myself', 'Ailem için': 'For my family', 'Sadece düzen': 'Just order',
+  'Günün hangi anında kısa bir mola verirsin?': 'When do you usually take a short break?', 'Hatırlatmayı o ana koyarım.': 'I will set the reminder for that moment.',
+  'Sabah kahvesi': 'Morning coffee', 'İşten sonra': 'After work', 'Akşam yemeğinden sonra': 'After dinner', 'Yatmadan önce': 'Before bed',
 };

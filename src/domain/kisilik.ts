@@ -9,6 +9,13 @@ export type DOpt = { v: string; emoji: string; label: string; pts?: Partial<Reco
 export type DQ = { k: string; q: string; hint: string; multi?: boolean; max?: number; opts: DOpt[] };
 
 export const DISC_QUESTIONS: DQ[] = [
+  { k: 'why', q: 'Bunu neden istiyorsun?', hint: 'Zor günde bunu sana hatırlatırım.', opts: [
+    { v: 'sakin', emoji: '🌿', label: 'Sakin bir ev' }, { v: 'stres', emoji: '😮‍💨', label: 'Daha az stres' }, { v: 'gurur', emoji: '💪', label: 'Kendimle gurur duymak' },
+    { v: 'aile', emoji: '👨‍👩‍👧', label: 'Ailem için' }, { v: 'duzen', emoji: '✨', label: 'Sadece düzen' },
+  ] },
+  { k: 'cue', q: 'Günün hangi anında kısa bir mola verirsin?', hint: 'Hatırlatmayı o ana koyarım.', opts: [
+    { v: 'kahve', emoji: '☕', label: 'Sabah kahvesi' }, { v: 'is', emoji: '🌆', label: 'İşten sonra' }, { v: 'yemek', emoji: '🍽️', label: 'Akşam yemeğinden sonra' }, { v: 'yatak', emoji: '🌙', label: 'Yatmadan önce' },
+  ] },
   { k: 'areas', q: 'Hangi alanlarda disiplin istiyorsun?', hint: 'En çok 3 tane seç.', multi: true, max: 3, opts: [
     { v: 'ev', emoji: '🏠', label: 'Ev düzeni' }, { v: 'is', emoji: '💼', label: 'İş / kariyer' }, { v: 'ders', emoji: '📚', label: 'Ders / sınav' },
     { v: 'spor', emoji: '🏋️', label: 'Spor' }, { v: 'saglik', emoji: '😴', label: 'Sağlık / uyku' }, { v: 'gelisim', emoji: '🌱', label: 'Kişisel gelişim' },
@@ -101,3 +108,12 @@ export const TYPES: Record<TypeId, { emoji: string; name: string; says: string; 
 };
 
 export const TYPE_ORDER: TypeId[] = ['planli', 'atik', 'sakin', 'odakli', 'dalgin', 'hirsli', 'tembel', 'dengeli'];
+
+/** "Mola anı" cevabına göre sabah özeti / hatırlatma saati. */
+export const CUE_TIME: Record<string, string> = { kahve: '08:30', is: '18:00', yemek: '20:30', yatak: '22:00' };
+export const CUE_LABEL: Record<string, string> = { kahve: 'sabah kahvesiyle', is: 'işten sonra', yemek: 'akşam yemeğinden sonra', yatak: 'yatmadan önce' };
+/** "Neden" cevabı, Moka'nın hatırlatırken kullandığı cümle. */
+export const WHY_LINE: Record<string, string> = {
+  sakin: 'sakin bir ev istiyordun 🌿', stres: 'daha az stres istiyordun 😮‍💨', gurur: 'kendinle gurur duymak istiyordun 💪',
+  aile: 'ailen için buradasın 👨‍👩‍👧', duzen: 'düzen istiyordun ✨',
+};

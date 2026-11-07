@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Btn, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
-import { AXIS_NAMES, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
+import { AXIS_NAMES, CUE_TIME, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
 import { askable, DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
 import { savePersona, skipPersona, usePersona, type Disc } from '@/profile/usePersona';
 import { saveNickname, useNickname } from '@/profile/useName';
@@ -48,7 +48,10 @@ export default function Taniyalim() {
     setTimeout(() => {
       const p = personaOf(final);
       update(D => {
-        if (!D.setup) D.settings.time = PLAN[p].morning;
+        if (!D.setup) D.settings.time = typeof d.cue === 'string' && CUE_TIME[d.cue] ? CUE_TIME[d.cue] : PLAN[p].morning;
+        if (typeof d.why === 'string') D.settings.why = d.why;
+        if (typeof d.cue === 'string') D.settings.cue = d.cue;
+        if (typeof d.quit === 'string') D.settings.obstacle = d.quit;
       });
       const axes = axesOf(d, final.style);
       const type = typeOf(axes, d);

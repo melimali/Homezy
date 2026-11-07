@@ -1,5 +1,13 @@
 /** Kişilik / disiplin testi (src/domain/kisilik.ts, src/app/taniyalim.tsx): Türkçe metin → İngilizce. */
 export const EN_M: Record<string, string> = {
+  // Gelişim: yetenekler (src/domain/mokaLevel.ts, src/app/(tabs)/gelisim.tsx)
+  'Bugün {}/{} exp': 'Today {}/{} XP',
+  'Pomodoro odak oturumlarında artar: her 25 dakikalık oturum yaklaşık 2 exp (en az 10 dk).': 'Grows with Pomodoro focus sessions: each 25-minute session gives about 2 XP (at least 10 min).',
+  'Kafanı toplayıp bir şeye zaman ayırmak, aklını da besler.': 'Clearing your head and giving something your time feeds your mind too.',
+  'Her gün puan veren bir işi (rutin, bitki, günlük) yapınca artar. Küçük işler bile sayılır; günde 1 puan alırsın.': 'Grows when you do a task that earns points each day (a routine, a plant, a journal entry). Even small tasks count; you get 1 point a day.',
+  'Odanı toplamak kendine verdiğin küçük bir söz. Her gün tutunca disiplin olur.': 'Tidying your room is a small promise to yourself. Keep it every day and it becomes discipline.',
+  'Spor kaydı girince artar: her antrenman 3 exp. Günde en fazla 6.': 'Grows when you log a workout: each workout gives 3 XP, up to 6 a day.',
+  'Bedenine ayırdığın zaman, günün geri kalanına enerji olarak döner.': 'The time you give your body comes back as energy for the rest of the day.',
   // Ekran
   'Adım {} / {}': 'Step {} of {}',
   'Biraz da {} gibisin {}': 'You are a bit of {} too {}',

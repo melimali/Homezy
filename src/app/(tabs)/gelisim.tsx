@@ -1,5 +1,6 @@
 import { useRouter } from '@/lib/nav';
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
 import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
@@ -51,6 +52,8 @@ export default function Gelisim() {
   const freezeLeft = Math.max(0, lim.freezes - freezesUsed(S.play, now));
   const ml = mokaLevel(S.play.moka);
   const pose = week >= 10 ? 'party' : week ? 'thumbs_up' : 'sipping';
+  // Yetenek satırına dokununca kısa açıklama açılır (nasıl artar + Moka'nın notu).
+  const [openStat, setOpenStat] = useState<string | null>(null);
 
   const tour = useTabTour('gelisim', [...TOUR]);
   return (
@@ -85,14 +88,31 @@ export default function Gelisim() {
         <T v="tiny">Sonraki seviyeye {ml.need - ml.into} exp</T>
         {MOKA_STATS.map(m => {
           const sl = statLevel(S.play.moka.xp[m.id]);
+          const open = openStat === m.id;
+          const todayXp = S.play.moka.today.day === dayKey(now) ? S.play.moka.today.xp[m.id] : 0;
           return (
-            <View key={m.id} style={{ gap: 4 }}>
-              <T v="bold">{m.emoji} {m.name} · sv. {sl.level}</T>
+            <Squish
+              key={m.id}
+              onPress={() => setOpenStat(open ? null : m.id)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: open }}
+              accessibilityLabel={`${m.name}: ${m.hint}`}
+              style={[st.stat, { backgroundColor: c.surface2 }]}
+            >
+              <View style={st.statHead}>
+                <T v="bold" style={{ flex: 1 }}>{`${m.emoji} ${m.name} · sv. ${sl.level}`}</T>
+                <Text style={{ color: c.muted, fontSize: 16 }}>{open ? '▴' : '▾'}</Text>
+              </View>
               <Bar value={sl.pct / 100} />
-              <T v="tiny">{m.hint}. Bugün {S.play.moka.today.day === dayKey(now) ? S.play.moka.today.xp[m.id] : 0}/{DAILY_XP_CAP[m.id]} exp.</T>
-              <T v="tiny">{m.why}</T>
-              <T v="tiny" style={{ fontStyle: 'italic' }}>💛 {m.care}</T>
-            </View>
+              <T v="tiny">{m.hint}</T>
+              <T v="tiny">{`Bugün ${todayXp}/${DAILY_XP_CAP[m.id]} exp`}</T>
+              {open && (
+                <View style={{ gap: 6, paddingTop: 4 }}>
+                  <T v="small">{m.why}</T>
+                  <T v="tiny" style={{ fontStyle: 'italic' }}>{`💛 ${m.care}`}</T>
+                </View>
+              )}
+            </Squish>
           );
         })}
         {extrasUnlocked(S.play.days.length, now) && <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />}
@@ -165,6 +185,8 @@ function LinkTile({ emoji, label, sub, tint, onPress }: { emoji: string; label: 
 }
 
 const st = StyleSheet.create({
+  stat: { gap: 6, borderRadius: radius.tile, padding: 12 },
+  statHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, padding: 14,
     shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 18, elevation: 3,

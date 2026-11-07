@@ -27,7 +27,7 @@ import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { tx } from '@/i18n/runtime';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, warmShadow } from '@/theme';
 
 const TOUR = [
   { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası Bugün: sadece bugünün işleri.' },
@@ -408,14 +408,14 @@ function DailyGoals({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   heroMoka: { width: 84, height: 84 },
-  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
   day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
   dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
   dayN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6 },
+  progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   progHead: { flexDirection: 'row', alignItems: 'flex-end' },
   pct: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 24 },
   pills: { gap: 8, paddingHorizontal: 24 },

@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { prefs } from '@/lib/supabase';
+import { usePersona } from '@/profile/usePersona';
 
 /** Takma ad: "Seni tanıyalım"da sorulur, yalnız telefonda tutulur (şema değişmez). Misafir de adıyla çağrılır. */
 const KEY = 'nick';
@@ -30,4 +31,32 @@ export function useName(): string | null {
   const nick = useNickname();
   if (nick) return nick;
   return status === 'account' ? displayName(user) : null;
+}
+
+const BACK = 'aıou';
+const ROUND = 'ou';
+const VOWELS = 'aeıioöuü';
+
+/** Türkçe tamlama eki: Ayşe'nin, Ali'nin, Pınar'ın, Okan'ın, Ayşegül'ün. Ad yoksa null. */
+export function possessive(name: string | null): string | null {
+  const n = name?.trim();
+  if (!n) return null;
+  const low = n.toLocaleLowerCase('tr');
+  const last = [...low].reverse().find(ch => VOWELS.includes(ch)) ?? 'e';
+  const endsVowel = VOWELS.includes(low[low.length - 1]);
+  const v = BACK.includes(last) ? (ROUND.includes(last) ? 'u' : 'ı') : 'öü'.includes(last) ? 'ü' : 'i';
+  return `${n}'${endsVowel ? 'n' : ''}${v}n`;
+}
+
+/** "Ayşe'nin Evi" / yurt-öğrenci için "Ayşe'nin Odası". Ad yoksa genel başlık. */
+export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string): string {
+  const p = possessive(name);
+  if (!p) return generic;
+  return `${p} ${what === 'Ev' ? 'Evi' : what === 'Oda' ? 'Odası' : 'Planı'}`;
+}
+
+/** Ev mi oda mı: öğrenci (yurt) kendi odasının sahibidir. */
+export function useHomeWord(): 'Ev' | 'Oda' {
+  const { answers, done } = usePersona();
+  return done && answers.who === 'ogrenci' ? 'Oda' : 'Ev';
 }

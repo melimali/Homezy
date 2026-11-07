@@ -37,7 +37,7 @@ import { sessionHeroScene } from '@/domain/heroScenes';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useMokaState } from '@/hooks/useMokaState';
 import { useNow } from '@/hooks/useNow';
-import { useName } from '@/profile/useName';
+import { ownTitle, useHomeWord, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, space, useColors } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
@@ -51,6 +51,7 @@ export default function Home() {
   const now = useNow();
   const insets = useSafeAreaInsets();
   const name = useName();
+  const homeWord = useHomeWord();
   const all = allTasks(S, now);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
@@ -166,7 +167,7 @@ export default function Home() {
       </Card>
 
       <Card index={3} style={styles.sec}>
-        <SecHead title="🏡 Evim" h="h3" right={
+        <SecHead title={`🏡 ${ownTitle(name, homeWord, 'Evim')}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
               <T v="small">🎨 Düzenle</T>

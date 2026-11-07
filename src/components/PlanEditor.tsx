@@ -14,6 +14,7 @@ import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { PLAN } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
+import { ownTitle, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -39,6 +40,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const insets = useSafeAreaInsets();
   const { state: S, update } = useStore();
   const { persona } = usePersona();
+  const planName = useName();
   const recId = persona ? PLAN[persona].template : null;
   const toast = useToast();
   const { t: tr } = useTranslation();
@@ -279,7 +281,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       {!ask && (
         <View>
           <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
-          <T v="h1">{editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
+          <T v="h1">{ownTitle(planName, 'Plan', '') ? `${ownTitle(planName, 'Plan', '')}${editing ? ' · düzenle' : ' · kontrol et'}` : editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
         </View>
       )}
 

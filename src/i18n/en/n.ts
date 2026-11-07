@@ -1,5 +1,16 @@
 /** Disiplin planı (ev geri gitmez, yumuşak dil, kademeli başlangıç): Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_N: Record<string, string> = {
+  'Seri, disiplin rampası, hafif gün': 'Streak, discipline ramp, light day',
+  'Günlük, spor kaydı, haftalık özet': 'Journal, workout log, weekly summary',
+  'Seri dondurma': 'Streak freeze',
+  'Fotoğraf tarama (buzdolabı + kıyafet)': 'Photo scanning (fridge + outfits)',
+  'Gelişim önerisi': 'Growth suggestion',
+  'Ayrıntılı rapor, ruh hali grafiği, "geçen yıl bugün"': 'Detailed report, mood chart, "this day last year"',
+  'Ev sayısı': 'Number of homes',
+  'Ev temaları ve Premium eşyalar': 'Home themes and Premium items',
+  'Temel': 'Basic',
+  'Akıllı bildirim saatleri': 'Smart notification times',
+  'Reklam': 'Ads',
   'Evin seni bekliyor 🏡': 'Your home is waiting 🏡',
   'Ev biraz tozlandı 🌫️ Küçük bir işle tozu alırız, seviyen yerinde duruyor.': 'The house got a bit dusty 🌫️ One small task clears it, and your level stays put.',
   'Bugün için küçük bir işin seni bekliyor 🤍': 'One small task is ready for you today 🤍',

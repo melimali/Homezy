@@ -8,21 +8,27 @@ Uygulamadaki karşılaştırma tablosu ve kilitler tek yerden gelir: `src/domain
 
 | Özellik | Ücretsiz | Premium | Nerede, nasıl korunuyor |
 |---|---|---|---|
-| Ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar | ✓ | ✓ | |
-| Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 5 | Sunucu (`scan_usage`, aşağıda) |
-| Seri dondurma: gün kaçırınca seri bozulmaz | Ayda 2 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
-| Görev puanı | 1 kat | 1,5 kat (seri bonusu dahil) | Sunucu `play_award` |
-| Premium eşyalar (akvaryum, şömine, piyano) | — | ✓ | Sunucu `play_buy` |
-| Birden fazla ev (yazlık, iş yeri) | 1 ev | 5 ev | Telefonda (ev verisi telefonda). Premium bitince diğer evler silinmez, sadece geçiş kilitlenir |
-| Ev temaları: gece, kış, sonbahar | Gündüz | ✓ | Telefonda (`themeFor`) |
-| Günlük: fotoğraf, ruh hali grafiği, "geçen yıl bugün" | Yazı | ✓ | Fotoğraf yedeği sunucuda (Storage kuralı) |
-| Spor: haftalık/aylık grafikler, kişisel antrenman planı | Kayıt | ✓ | Telefonda (`src/domain/workout.ts`) |
-| Buzdolabındakilerle tarif önerisi | — | ✓ | Telefonda, internetsiz (`src/domain/recipes.ts`) |
+| Ev planı, odalar, rutinler, hatırlatmalar | ✓ | ✓ | |
+| Seri, disiplin rampası, hafif gün | ✓ | ✓ | Kilitsiz (`src/domain/ramp.ts`) |
+| Gardırop, buzdolabı, stok, bitkiler | ✓ | ✓ | |
+| Günlük (yazı), spor kaydı, haftalık özet | ✓ | ✓ | |
+| Seri dondurma | Ayda 2 | Ayda 3 | Uygulama açılınca kendiliğinden (`autoFreeze`); sunucu `play_freeze` (`20261107000000_dondurma_2.sql`) |
+| Görev puanı | 1 kat | 1,5 kat | Sunucu `play_award` |
+| Fotoğraf tarama (buzdolabı + kıyafet, ortak hak) | Haftada 2 | Günde 10 | Sunucu `scan_reserve` (`20261107120000_ai_limits_25_10.sql`) |
+| Moka ile sohbet | — | Günde 25 mesaj (ayda 750) | Sunucu `chat_reserve` (aynı migration) |
+| Gelişim önerisi ("başka öner") | Günde 1 | Günde 6 + aylık grafik | Telefonda (`src/domain/growth.ts`) |
+| Buzdolabından tarif önerisi | — | ✓ | Telefonda (`src/domain/recipes.ts`) |
 | Haftalık kombin planı | — | ✓ | Telefonda (`src/domain/outfits.ts`) |
-| Akıllı bildirimler | Sabit saat | Alışkanlığa göre saat; acil iş yoksa sabah özeti gelmez | Telefonda (`smartTimes`) |
-| Aile paylaşımı: evi paylaş, işleri bölüş ("👤 kim yapacak") | — | ✓ (katılanların Premium olması gerekmez) | Sunucu: ev sahibinin Premium'u bitince `family_*` fonksiyonları paylaşımı durdurur |
-| Bulut yedeği | Ev verisi | + günlük fotoğrafları | Sunucu: `yedek` kovasına sadece Premium yazar |
-| Reklam | Az (2 afiş) | Reklamsız | Telefonda |
+| Ayrıntılı rapor, ruh hali grafiği, "geçen yıl bugün" | Özet | ✓ | Telefonda |
+| Spor grafikleri ve antrenman planı | Kayıt | ✓ | Telefonda (`src/domain/workout.ts`) |
+| Ev sayısı | 1 | 5 | Telefonda. Premium bitince evler silinmez, geçiş kilitlenir |
+| Ev temaları ve Premium eşyalar (akvaryum, şömine, piyano) | Temel | ✓ | Temalar `themeFor`; eşyalar sunucu `play_buy` |
+| Aile paylaşımı (katılanların Premium olması gerekmez) | — | ✓ | Sunucu `family_*` |
+| Akıllı bildirim saatleri | Sabit saat | ✓ | Telefonda (`smartTimes`) |
+| Bulut yedeği | Ev verisi | + fotoğraflar | Sunucu: `yedek` kovası sadece Premium |
+| Reklam | Az (Ev ve Bugün altında afiş) | Yok | Telefonda |
+
+Ödeme ekranındaki tablo (`FEATURES`) bununla aynı sırada. İlke: seri, rampa, hafif gün ve temel görevler hep ücretsiz; Premium sadece yapay zekâ, konfor ve süs. Aşağıdaki "Premium'da günde 5 tarama" gibi eski sayılar tarihçedir; güncel sınır yukarıdaki tablo ve `LIMITS`.
 
 Neden bazıları sadece telefonda korunuyor: o özellikler sunucuya bir şey yazmıyor ya da bize maliyeti yok (tema, grafik, tarif listesi). Para ya da puan değeri olanlar (tarama, puan, eşya, dondurma, paylaşım, fotoğraf deposu) sunucuda korunuyor.
 

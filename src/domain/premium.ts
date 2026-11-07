@@ -27,25 +27,29 @@ export const THEMES: { id: HouseTheme; name: string; emoji: string; premium: boo
 export const themeFor = (theme: HouseTheme | undefined, premium: boolean): HouseTheme =>
   theme && (premium || !THEMES.find(t => t.id === theme)?.premium) ? theme : 'gunduz';
 
-/** Ödeme ekranındaki karşılaştırma. `free` / `premium`: '✓', '—' ya da kısa bir açıklama. */
+/**
+ * Ödeme ekranındaki karşılaştırma. `free` / `premium`: '✓', '—' ya da kısa bir açıklama.
+ * Sıra: önce herkese ücretsiz olan disiplin çekirdeği, sonra Premium'un konfor / yapay zekâ / süs katmanı.
+ * Sayılar `LIMITS` ve sunucudaki sınırlarla (…_ai_limits_25_10.sql, …_dondurma_2.sql) aynı olmalı.
+ */
 export const FEATURES: { emoji: string; label: string; free: string; premium: string }[] = [
   { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
+  { emoji: '🔥', label: 'Seri, disiplin rampası, hafif gün', free: '✓', premium: '✓' },
   { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
-  { emoji: '📸', label: 'Yapay zekâ ile fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
-  { emoji: '💬', label: 'Moka ile sohbet (her gün)', free: '—', premium: `Günde ${LIMITS.premium.chats} mesaj` },
-  { emoji: '📚', label: 'Kişisel gelişim: günlük öneri, kitaplık, hedef', free: 'Günde 1 öneri', premium: `Günde ${LIMITS.premium.picks} öneri + aylık grafik` },
-  { emoji: '❄️', label: 'Seri dondurma (gün kaçırınca seri korunur)', free: 'Ayda 2', premium: 'Ayda 3' },
-  { emoji: '⭐', label: 'Görevlerden kazanılan puan', free: '1 kat', premium: '1,5 kat' },
-  { emoji: '🎹', label: 'Premium eşyalar (akvaryum, şömine, piyano)', free: '—', premium: '✓' },
-  { emoji: '🏡', label: 'Birden fazla ev (yazlık, iş yeri)', free: '1 ev', premium: '5 ev' },
-  { emoji: '🌙', label: 'Ev temaları: gece, kış, sonbahar', free: 'Gündüz', premium: '✓' },
-  { emoji: '📔', label: 'Günlükte fotoğraf, ruh hali grafiği, "geçen yıl bugün"', free: 'Yazı', premium: '✓' },
-  { emoji: '📊', label: 'Ayrıntılı haftalık rapor (gün gün, ruh hali)', free: 'Özet', premium: '✓' },
-  { emoji: '🏃', label: 'Spor grafikleri ve kişisel antrenman planı', free: 'Kayıt', premium: '✓' },
+  { emoji: '📔', label: 'Günlük, spor kaydı, haftalık özet', free: '✓', premium: '✓' },
+  { emoji: '❄️', label: 'Seri dondurma', free: `Ayda ${LIMITS.free.freezes}`, premium: `Ayda ${LIMITS.premium.freezes}` },
+  { emoji: '⭐', label: 'Görev puanı', free: '1 kat', premium: `${LIMITS.premium.mult.toString().replace('.', ',')} kat` },
+  { emoji: '📸', label: 'Fotoğraf tarama (buzdolabı + kıyafet)', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
+  { emoji: '💬', label: 'Moka ile sohbet', free: '—', premium: `Günde ${LIMITS.premium.chats} mesaj` },
+  { emoji: '📚', label: 'Gelişim önerisi', free: 'Günde 1 öneri', premium: `Günde ${LIMITS.premium.picks} öneri + aylık grafik` },
   { emoji: '🍳', label: 'Buzdolabından tarif önerisi', free: '—', premium: '✓' },
   { emoji: '🧥', label: 'Haftalık kombin planı', free: '—', premium: '✓' },
-  { emoji: '🔔', label: 'Akıllı bildirimler (alışkanlığına göre saat)', free: 'Sabit saat', premium: '✓' },
-  { emoji: '👨‍👩‍👧', label: 'Aile paylaşımı: evi paylaş, işleri bölüş', free: '—', premium: '✓' },
+  { emoji: '📊', label: 'Ayrıntılı rapor, ruh hali grafiği, "geçen yıl bugün"', free: 'Özet', premium: '✓' },
+  { emoji: '🏃', label: 'Spor grafikleri ve antrenman planı', free: 'Kayıt', premium: '✓' },
+  { emoji: '🏡', label: 'Ev sayısı', free: `${LIMITS.free.homes} ev`, premium: `${LIMITS.premium.homes} ev` },
+  { emoji: '🌙', label: 'Ev temaları ve Premium eşyalar', free: 'Temel', premium: '✓' },
+  { emoji: '👨‍👩‍👧', label: 'Aile paylaşımı', free: '—', premium: '✓' },
+  { emoji: '🔔', label: 'Akıllı bildirim saatleri', free: 'Sabit saat', premium: '✓' },
   { emoji: '☁️', label: 'Bulut yedeği', free: 'Ev verisi', premium: '+ fotoğraflar' },
-  { emoji: '🚫', label: 'Reklamsız', free: 'Az reklam', premium: '✓' },
+  { emoji: '🚫', label: 'Reklam', free: 'Az reklam', premium: 'Yok' },
 ];

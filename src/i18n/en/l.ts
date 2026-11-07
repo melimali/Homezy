@@ -1,5 +1,16 @@
 /** Son boşluk taraması: İngilizcede Türkçe kalan ya da yarım çevrilen metinler. Bu dosya en son gelir, öncekileri ezer. */
 export const EN_L: Record<string, string> = {
+  'Nerede yaşıyorsun?': 'Where do you live?',
+  'Aile evi': 'Family home',
+  'Kişisel ev': 'Personal home',
+  'Sadece odam': 'Just my room',
+  'Yurt': 'Dorm',
+  'Bütün evin işleri, birlikte': 'Whole-home chores, together',
+  'Kendi evin, kendi düzenin': 'Your own home, your own routine',
+  'Yalnızca kendi odan': 'Only your own room',
+  'Yurt ya da kiralık oda': 'Dorm or rented room',
+  'Bugün tek bir işle başla, gün gün alışkanlık kazan.': 'Start with just one task today and build the habit day by day.',
+  'Oda ve Yurt seçersen sadece kendi odanın işleri görünür. Sonra değiştirebilirsin.': 'If you pick Room or Dorm, you only see tasks for your own room. You can change this later.',
   'Keyif köşesi': 'Cozy corner',
   'Misafirin göreceği odalar': 'Rooms guests will see',
   'Daha az göster': 'Show less',

@@ -245,7 +245,7 @@ export default function Bahce() {
         </Sheet>
       )}
     </Screen>
-    <GardenGate title="Moka'nın bahçesi" greeting="Hoş geldin! Gel, çiçeklere bakalım 🌷" />
+    <GardenGate />
     </View>
   );
 }

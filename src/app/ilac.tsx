@@ -57,7 +57,7 @@ export default function Ilac() {
         <Card style={{ backgroundColor: missed.length ? c.todaySoft : c.accentSoft }}>
           <View style={st.moka}>
             <Image source={MOKA_ASSETS[missed.length ? 'wink' : 'happy']} style={st.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
-            <T v="bold" style={{ flex: 1, fontSize: 14.5, lineHeight: 21 }}>{mokaMedLine(missed, dueNow, allDone)}</T>
+            <T v="bold" style={{ flex: 1, fontSize: 15, lineHeight: 21 }}>{mokaMedLine(missed, dueNow, allDone)}</T>
           </View>
         </Card>
       )}
@@ -114,7 +114,7 @@ export default function Ilac() {
                     <Text style={[st.dayLabel, { color: h.day === today ? c.ink : c.muted }]}>
                       {new Date(dayTs(h.day)).toLocaleDateString(dateLocale(), { weekday: 'narrow' })}
                     </Text>
-                    <Text style={[st.dayLabel, { color: c.muted, fontSize: 10.5 }]}>{h.total ? `${h.taken}/${h.total}` : '–'}</Text>
+                    <Text style={[st.dayLabel, { color: c.muted, fontSize: 12 }]}>{h.total ? `${h.taken}/${h.total}` : '–'}</Text>
                   </View>
                 );
               })}

@@ -146,7 +146,7 @@ export default function Taniyalim() {
                   <Text style={{ fontSize: 28 }}>{o.emoji}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{o.label}</Text>
-                    {!!o.sub && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.muted }}>{o.sub}</Text>}
+                    {!!o.sub && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.muted }}>{o.sub}</Text>}
                   </View>
                 </Squish>
               );

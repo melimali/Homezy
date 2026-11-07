@@ -221,10 +221,10 @@ export default function Hesap() {
 
       <View style={{ gap: 8 }}>
         <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
         </Pressable>
         <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
         </Pressable>
       </View>
     </View>
@@ -467,19 +467,19 @@ const st = StyleSheet.create({
   tileWrap: { width: '48.5%' },
   pins: { flexDirection: 'row', gap: 8 },
   pin: { flex: 1, alignItems: 'center', gap: 6 },
-  pinIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  pinIcon: { width: 56, height: 56, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: { borderRadius: radius.card, padding: 14, gap: 4 },
-  tileIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  tileIcon: { width: 52, height: 52, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: 80, height: 80, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   level: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
-  levelT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, textTransform: 'uppercase' },
+  levelT: { fontFamily: fonts.bodyBlack, fontSize: 12, textTransform: 'uppercase' },
   group: { borderRadius: radius.card, paddingHorizontal: 6, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 10 },
-  rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 42, height: 42, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },

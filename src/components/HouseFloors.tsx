@@ -103,5 +103,5 @@ const st = StyleSheet.create({
   },
   btn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   arrow: { fontFamily: fonts.bodyBlack, fontSize: 14, lineHeight: 18 },
-  label: { fontFamily: fonts.bodyBlack, fontSize: 11 },
+  label: { fontFamily: fonts.bodyBlack, fontSize: 12 },
 });

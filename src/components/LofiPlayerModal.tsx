@@ -170,7 +170,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
                   <Text style={[styles.trackName, { color: c.ink }]}>{t.name}</Text>
                   <Text style={[styles.trackDesc, { color: c.muted }]}>{t.desc}</Text>
                 </View>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: isPlaying ? c.ok : c.muted }}>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: isPlaying ? c.ok : c.muted }}>
                   {isPlaying ? '⏸ Durdur' : '▶ Çal'}
                 </Text>
               </Pressable>
@@ -244,10 +244,10 @@ const styles = StyleSheet.create({
   },
   trackName: {
     fontFamily: fonts.bodyBlack,
-    fontSize: 14.5,
+    fontSize: 15,
   },
   trackDesc: {
     fontFamily: fonts.bodyBold,
-    fontSize: 11.5,
+    fontSize: 12,
   },
 });

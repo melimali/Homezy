@@ -305,10 +305,10 @@ function Check({ on, onPress, title, sub, pill, pillK }: { on: boolean; onPress:
   return (
     <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked: on }} style={styles.check}>
       <View style={[styles.box2, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : 'transparent' }]}>
-        {on && <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 13, lineHeight: 16 }}>✓</Text>}
+        {on && <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 13.5, lineHeight: 16 }}>✓</Text>}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <T v="bold" style={{ fontSize: 14.5 }}>{title}</T>
+        <T v="bold" style={{ fontSize: 15 }}>{title}</T>
         <T v="small">{sub}</T>
       </View>
       {pill && pc && (

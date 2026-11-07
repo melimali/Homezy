@@ -366,7 +366,7 @@ function Stat({ emoji, value, label, tint, onPress }: { emoji: string; value: st
     <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${value} ${label}`} style={[styles.stat, { backgroundColor: tint }]}>
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
       <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{value}</Text>
-      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{label}</Text>
+      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{label}</Text>
     </Squish>
   );
 }
@@ -377,7 +377,7 @@ function Quick({ emoji, label, sub, tint, onPress }: { emoji: string; label: str
     <Squish onPress={onPress} accessibilityLabel={label} style={[styles.q, { backgroundColor: tint }]}>
       <Text style={{ fontSize: 30 }}>{emoji}</Text>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
-      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{sub}</Text>
+      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{sub}</Text>
     </Squish>
   );
 }
@@ -394,13 +394,13 @@ const styles = StyleSheet.create({
   },
   mokaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   mokaTap: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mokaIcon: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  mokaIcon: { width: 54, height: 54, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   mokaImg: { width: 58, height: 58, marginTop: 8 },
   mokaFoot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22, lineHeight: 24 },
-  statL: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
+  statL: { fontFamily: fonts.bodyBold, fontSize: 12 },
   nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16 },
-  nextIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  nextIcon: { width: 46, height: 46, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   stats: { flexDirection: 'row', gap: 10 },
   stat: { flex: 1, alignItems: 'center', gap: 0, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 4 },
   sec: { gap: 12, padding: 16 },
@@ -415,6 +415,6 @@ const styles = StyleSheet.create({
   viewer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   viewerScene: { width: '100%', paddingHorizontal: 8 },
   viewerModel: { width: '100%' },
-  viewerClose: { position: 'absolute', right: 18, width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  viewerClose: { position: 'absolute', right: 18, width: 46, height: 46, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   viewerCloseText: { fontSize: 32, lineHeight: 36, fontFamily: fonts.bodyBold },
 });

@@ -155,5 +155,5 @@ const st = StyleSheet.create({
   name: { flexDirection: 'row', marginTop: 32, paddingLeft: 14 },
   letter: { color: M.fg, fontFamily: fonts.body, fontSize: 28, marginRight: 14 },
   line: { marginTop: 20, width: 160, height: 1 },
-  sub: { marginTop: 16, paddingLeft: 7, color: M.muted, fontFamily: mono, fontSize: 11, letterSpacing: 6.7 },
+  sub: { marginTop: 16, paddingLeft: 7, color: M.muted, fontFamily: mono, fontSize: 12, letterSpacing: 6.7 },
 });

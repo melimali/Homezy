@@ -78,7 +78,7 @@ export default function Yemek() {
               <Squish onPress={() => setOpen(on ? null : p.meal.id)} accessibilityRole="button" accessibilityLabel={p.meal.name} style={st.head}>
                 <Text style={{ fontSize: 34 }}>{p.meal.emoji}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <T v="bold" style={{ fontSize: 17 }}>{p.meal.name}</T>
+                  <T v="bold" style={{ fontSize: 16 }}>{p.meal.name}</T>
                   <T v="small">{p.why} · ⏱ {p.meal.min} dk</T>
                 </View>
                 <Text style={{ color: c.muted, fontSize: 18 }}>{on ? '⌃' : '⌄'}</Text>
@@ -96,7 +96,7 @@ export default function Yemek() {
                       return (
                         <View key={x.n} style={st.ing}>
                           <Text style={{ width: 22 }}>{has ? '✅' : '🛒'}</Text>
-                          <T style={{ flex: 1, fontSize: 14.5 }}>{titleCase(x.n)} · {qtyText(x, p.servings)}</T>
+                          <T style={{ flex: 1, fontSize: 15 }}>{titleCase(x.n)} · {qtyText(x, p.servings)}</T>
                           <T v="tiny" style={{ color: has ? c.ok : c.warm }}>{has ? 'Dolapta var' : 'Alınacak'}</T>
                         </View>
                       );
@@ -126,7 +126,7 @@ export default function Yemek() {
 function Badge({ text, bg, fg }: { text: string; bg: string; fg: string }) {
   return (
     <View style={[st.badge, { backgroundColor: bg }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: fg }}>{text}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: fg }}>{text}</Text>
     </View>
   );
 }

@@ -45,7 +45,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
   return (
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[st.bar, { backgroundColor: dark ? '#37364A' : '#FFFBF5', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
+      <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
         <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
@@ -180,12 +180,12 @@ const st = StyleSheet.create({
   opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
   tabOuter: { flex: 1 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 7, borderRadius: radius.pill },
-  label: { fontSize: 11 },
+  label: { fontSize: 12 },
   plus: {
     width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -22, borderWidth: 4,
     shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
   },
-  plusClip: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden', alignItems: 'center' },
+  plusClip: { width: 54, height: 54, borderRadius: radius.card, overflow: 'hidden', alignItems: 'center' },
   plusMoka: { width: 60, height: 60, marginTop: 4 },
   plusBadge: { position: 'absolute', right: -4, bottom: -2, width: 22, height: 22, borderRadius: 11, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
 });

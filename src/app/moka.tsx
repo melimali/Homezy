@@ -166,7 +166,7 @@ export default function MokaChat() {
             <T v="tiny">{mokaTitle(lv.level)} · seviye {lv.level}</T>
           </View>
           <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" style={[st.pill, { backgroundColor: notes ? c.accent : c.surface2 }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: notes ? c.onAccent : c.ink }}>📝 Notlar</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: notes ? c.onAccent : c.ink }}>📝 Notlar</Text>
           </Squish>
           <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.pill, { backgroundColor: c.surface2 }]}>
             <Text style={{ fontSize: 14 }}>🚩</Text>
@@ -298,7 +298,7 @@ function Bubble({ item, typed }: { item: Item; typed: boolean }) {
       )}
       {item.done?.map((d, i) => (
         <View key={i} style={[st.done, { backgroundColor: c.sageSoft }]}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: c.ink }}>{d}</Text>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>{d}</Text>
         </View>
       ))}
     </View>

@@ -44,7 +44,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
       <FlexWidget style={{ width: 'match_parent', flexDirection: 'row', alignItems: 'center' }}>
         <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
           <TextWidget text={title} style={{ fontFamily: fonts.displayBold, fontSize: 20, color: c.ink }} maxLines={1} truncate="END" />
-          <TextWidget text={sub} style={{ fontFamily: fonts.body, fontSize: 11, color: note ? c.ok : c.muted }} maxLines={1} truncate="END" />
+          <TextWidget text={sub} style={{ fontFamily: fonts.body, fontSize: 12, color: note ? c.ok : c.muted }} maxLines={1} truncate="END" />
         </FlexWidget>
         {data.streak ? <TextWidget text={`🔥 ${data.streak}`} style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.today }} /> : null}
       </FlexWidget>
@@ -70,7 +70,7 @@ function Row({ t, c }: { t: WidgetTask; c: WColors }) {
       <TextWidget text={t.emoji} style={{ fontSize: 18, marginRight: 10 }} />
       <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
         <TextWidget text={tx(t.name)} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }} maxLines={1} truncate="END" />
-        <TextWidget text={tx(`${t.room} · ${t.label}`)} style={{ fontFamily: fonts.body, fontSize: 10, color: t.late ? c.late : c.muted }} maxLines={1} truncate="END" />
+        <TextWidget text={tx(`${t.room} · ${t.label}`)} style={{ fontFamily: fonts.body, fontSize: 12, color: t.late ? c.late : c.muted }} maxLines={1} truncate="END" />
       </FlexWidget>
       <FlexWidget
         clickAction={DONE_ACTION}

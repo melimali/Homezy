@@ -87,7 +87,7 @@ export default function Bildirimler() {
             <View style={[styles.dot, { backgroundColor: color[n.k] }]} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <T v="bold" style={{ fontSize: 14 }}>{n.title}</T>
-              <T v="small" style={{ fontSize: 13 }}>{n.text}</T>
+              <T v="small" style={{ fontSize: 13.5 }}>{n.text}</T>
             </View>
           </Pressable>
         ))}
@@ -182,7 +182,7 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }

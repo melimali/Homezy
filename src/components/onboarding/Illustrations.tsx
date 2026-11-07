@@ -152,7 +152,7 @@ export function RoomsArt({ t }: Props) {
             ]}
           >
             <RoomIcon name={tile.key} color={c.wall} />
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: c.ink, marginTop: 4 }}>{tile.label}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink, marginTop: 4 }}>{tile.label}</Text>
           </Animated.View>
         );
       })}
@@ -173,7 +173,7 @@ export function WardrobeArt({ t }: Props) {
       <Animated.View style={{ width: 222, borderRadius: 30, padding: 16, gap: 13, backgroundColor: c.fashionSurface, borderWidth: 1, borderColor: c.fashionLine, shadowColor: c.fashionInk, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.13, shadowRadius: 20, elevation: 5, transform: [{ translateY: lift }] }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ color: c.fashionAccent, fontFamily: fonts.bodyBlack, fontSize: 10, letterSpacing: 1.3 }}>MOKA&apos;NIN SEÇİMİ</Text>
+            <Text style={{ color: c.fashionAccent, fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.3 }}>MOKA&apos;NIN SEÇİMİ</Text>
             <Text style={{ color: c.fashionInk, fontFamily: fonts.displayBold, fontSize: 18 }}>Bugünkü kombin</Text>
           </View>
           <Animated.View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.fashion, transform: [{ scale: pulse }] }}>
@@ -192,16 +192,16 @@ export function WardrobeArt({ t }: Props) {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flexDirection: 'row', gap: 5 }}>
             {['#6F8190', '#B78F7B', '#D4BE9A'].map(x => <View key={x} style={{ width: 17, height: 17, borderRadius: 9, backgroundColor: x, borderWidth: 2, borderColor: c.fashionSurface }} />)}
-            <Text style={{ color: c.fashionInk, fontFamily: fonts.bodyBold, fontSize: 11, marginLeft: 2 }}>Uyumlu renkler</Text>
+            <Text style={{ color: c.fashionInk, fontFamily: fonts.bodyBold, fontSize: 12, marginLeft: 2 }}>Uyumlu renkler</Text>
           </View>
-          <Text style={{ color: c.ok, fontFamily: fonts.bodyBlack, fontSize: 11 }}>✓ Temiz</Text>
+          <Text style={{ color: c.ok, fontFamily: fonts.bodyBlack, fontSize: 12 }}>✓ Temiz</Text>
         </View>
       </Animated.View>
       <Animated.View style={{ position: 'absolute', top: 28, right: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, transform: [{ rotate: '5deg' }, { translateY: lift }] }}>
-        <Text style={{ color: c.ink, fontFamily: fonts.bodyBlack, fontSize: 11 }}>📷  Fotoğraftan tara</Text>
+        <Text style={{ color: c.ink, fontFamily: fonts.bodyBlack, fontSize: 12 }}>📷  Fotoğraftan tara</Text>
       </Animated.View>
       <View style={{ position: 'absolute', bottom: 20, left: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, transform: [{ rotate: '-4deg' }] }}>
-        <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 11 }}>🧺  Kirli · 2 parça</Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 12 }}>🧺  Kirli · 2 parça</Text>
       </View>
       <Image pointerEvents="none" source={MOKA_ASSETS.scarf} style={{ position: 'absolute', width: 76, height: 76, right: 4, bottom: -2 }} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Sparkle t={t} x={108} y={-82} at={0.18} />
@@ -234,11 +234,11 @@ export function FridgeArt({ t }: Props) {
       </Animated.View>
       <Animated.View style={[{ position: 'absolute', left: -2, top: 40, width: 132, borderRadius: 22, padding: 12, gap: 9, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }, arrive(0.08)]}>
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBlack, fontSize: 12 }}>🛒  Alışveriş listesi</Text>
-        <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 11 }}>🥛  Süt · Az</Text>
-        <Text style={{ color: c.late, fontFamily: fonts.bodyBlack, fontSize: 11 }}>🧀  Peynir · Bitti</Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>🥛  Süt · Az</Text>
+        <Text style={{ color: c.late, fontFamily: fonts.bodyBlack, fontSize: 12 }}>🧀  Peynir · Bitti</Text>
       </Animated.View>
       <Animated.View style={[{ position: 'absolute', right: -6, bottom: 24, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 18, backgroundColor: c.accent, transform: [{ rotate: '4deg' }] }, arrive(0.25)]}>
-        <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 11 }}>✓  Sen onayla</Text>
+        <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 12 }}>✓  Sen onayla</Text>
       </Animated.View>
       <Image pointerEvents="none" source={MOKA_ASSETS.chef} style={{ position: 'absolute', width: 88, height: 88, left: 4, bottom: -2 }} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Sparkle t={t} x={88} y={-94} at={0.42} />
@@ -335,7 +335,7 @@ const s = StyleSheet.create({
   finger: { position: 'absolute', width: 30, height: 30, borderRadius: 15, borderWidth: 4, opacity: 0.85 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 16 },
   pill: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
-  pillText: { fontFamily: fonts.bodyBlack, fontSize: 11.5 },
+  pillText: { fontFamily: fonts.bodyBlack, fontSize: 12 },
   check: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   tile: { position: 'absolute', width: 112, height: 112, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
   bell: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' },

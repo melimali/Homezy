@@ -28,5 +28,5 @@ const styles = StyleSheet.create({
   box: { borderRadius: radius.card, borderWidth: 0, padding: 16, gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  tagText: { fontFamily: fonts.bodyBlack, fontSize: 10.5, color: brand.navy },
+  tagText: { fontFamily: fonts.bodyBlack, fontSize: 12, color: brand.navy },
 });

@@ -24,7 +24,7 @@ import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
-import { fonts, warmShadow, radius, space, type, useColors, type Colors } from '@/theme';
+import { brand, fonts, warmShadow, radius, space, type, useColors, type Colors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
 import { ScreenBackground, type Tone } from './ScreenBackground';
@@ -273,7 +273,7 @@ export function Btn({
         style,
       ]}
     >
-      <Text maxFontSizeMultiplier={type.maxScale} style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13.5 : 16, letterSpacing: 0.1, textAlign: 'center' }}>{label}</Text>
+      <Text maxFontSizeMultiplier={type.maxScale} style={{ color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 13.5 : 16, letterSpacing: 0.2, textAlign: 'center' }}>{label}</Text>
     </Squish>
   );
 }
@@ -422,16 +422,16 @@ export const styles = StyleSheet.create({
   back: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   card: {
     borderRadius: radius.card, padding: space.card, gap: 16, borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: warmShadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 20, elevation: 3,
+    shadowColor: brand.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2,
   },
   cardBare: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, shadowOpacity: 0, elevation: 0 },
   secHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 },
   btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill,
-    paddingVertical: 16, paddingHorizontal: 24,
-    shadowColor: warmShadow, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 2,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: radius.btn,
+    paddingVertical: 15, paddingHorizontal: 24, minHeight: 50,
+    shadowColor: brand.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.14, shadowRadius: 4, elevation: 2,
   },
-  btnSmall: { paddingVertical: 9, paddingHorizontal: 16, shadowOpacity: 0, elevation: 0 },
+  btnSmall: { paddingVertical: 9, paddingHorizontal: 16, minHeight: 40, shadowOpacity: 0, elevation: 0 },
   chip: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16, borderWidth: StyleSheet.hairlineWidth },
   tabs: { gap: 10, paddingVertical: 6, paddingHorizontal: 2 },
   tab: { alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 84, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.tile },

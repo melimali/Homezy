@@ -54,4 +54,12 @@ export const EN_N: Record<string, string> = {
   'Günün hangi anında kısa bir mola verirsin?': 'When do you usually take a short break?', 'Hatırlatmayı o ana koyarım.': 'I will set the reminder for that moment.',
   'Sabah kahvesi': 'Morning coffee', 'İşten sonra': 'After work', 'Akşam yemeğinden sonra': 'After dinner', 'Yatmadan önce': 'Before bed',
   '🫖 Hafif gün': '🫖 Light day', '🫖 Hafif günü kapat': '🫖 End light day',
+  'Hedefi tuttun! 🎉': 'You hit your goal! 🎉', 'Bu hafta nasıl geçti?': 'How did this week go?',
+  'Bu hafta {} gün geldin. Yeni haftaya taze bir başlangıç ☕': 'You showed up {} days this week. A fresh start for the new week ☕',
+  '{}/{} gün. Sorun değil, ne zorladı?': '{}/{} days. No worries, what got in the way?',
+  'Unuttum': 'I forgot', 'Yorgundum': 'I was tired', 'Çok işti': 'Too many tasks', 'Sıkıldım': 'I got bored',
+  'Sabah özetin seni hatırlatır. Saati Bildirimler\'den değiştirebilirsin.': 'Your morning summary will remind you. You can change the time in Notifications.',
+  'Yorgun günlerde Bugün\'deki "Hafif gün" düğmesi 1-2 işe indirir. Gün yine sayılır.': 'On tired days the "Light day" button in Today cuts it to 1-2 tasks. The day still counts.',
+  'Anladım. İşleri yeniden adım adım açıyorum, günde daha az görürsün.': 'Got it. I will open tasks step by step again, so you see fewer per day.',
+  'Bonus bölümünden ve Moka\'dan yeni küçük şeyler deneyelim.': 'Let us try something new from the Bonus section and from Moka.',
 };

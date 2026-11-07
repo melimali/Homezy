@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Moka sohbeti. Mesajlar `moka-chat` sunucu fonksiyonuna gider (supabase/functions/moka-chat); API anahtarı
- * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 10, ayda 300 mesaj, dakikada 6).
+ * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 25, ayda 750 mesaj, dakikada 6).
  */
 type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
 type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean };
@@ -41,7 +41,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
       ok: false,
       limit: true,
       message: body.premium
-        ? tx('Bugünkü mesaj hakkımızı doldurduk, biraz dinlenelim ☕ Yarın yine buradayım 💛')
+        ? tx('Moka yoruldu 😴 Yarın tekrar gel, seni bekliyor olacağım ☕💛')
         : tx('Bugünkü mesaj hakkın doldu. Yarın yine buradayım ☕'),
     };
   }

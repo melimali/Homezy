@@ -12,7 +12,7 @@ import type { StockLevel, WashType } from '@/domain/types';
 /**
  * Yapay zekâ ile fotoğraf taraması. Fotoğraf `scan` sunucu fonksiyonuna gider (supabase/functions/scan);
  * fonksiyon hakkı kontrol eder, Claude'a sorar ve listeyi döner. Fotoğraf sunucuda saklanmaz.
- * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 5 (bkz. docs/premium.md).
+ * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 10 (bkz. docs/premium.md).
  */
 export type ScanKind = 'fridge' | 'look';
 

@@ -8,7 +8,7 @@ import type { HouseTheme } from './types';
 export const LIMITS = {
   /** `scans`: yapay zekâ taraması; ücretsizde haftada, Premium'da günde. Sınırı sunucu tutar (…_ai_limits.sql). `picks`: Moka'nın gelişim önerisinde günde kaç kez "başka öner" denir (src/domain/growth.ts); `chats`: Moka sohbet mesajı, her gün; sınırı `…_ai_limits.sql` tutar. */
   free: { freezes: 2, homes: 1, mult: 1, scans: 2, chats: 0, chatsMonth: 0, picks: 1 },
-  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 5, chats: 10, chatsMonth: 300, picks: 6 },
+  premium: { freezes: 3, homes: 5, mult: 1.5, scans: 10, chats: 25, chatsMonth: 750, picks: 6 },
 } as const;
 
 export const limits = (premium: boolean) => (premium ? LIMITS.premium : LIMITS.free);

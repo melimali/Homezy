@@ -143,8 +143,8 @@ export type Mood = 'isil' | 'keyifli' | 'sakin' | 'uykulu' | 'sessiz' | 'uyaniyo
 
 export function houseMood(p: HouseProgress, P: Play, mode: Mode | null, now = Date.now()): Mood {
   if (mode?.k === 'tatil') return 'tatil';
-  if (p.idle >= 2) return 'sessiz';
-  if (p.idle === 1) return 'uykulu';
+  if (p.resting >= 2) return 'sessiz';
+  if (p.resting === 1) return 'uykulu';
   const today = dayKey(now);
   // Ara verdikten sonra bugünün ilk işi: ışıklar tek tek yanar.
   if (p.today && p.streak === 1 && P.days.some(d => d < today)) return 'uyaniyor';

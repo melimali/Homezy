@@ -29,9 +29,9 @@ export function WelcomeBack() {
     const away = awayAhead(S.play, 0, now);
     const open = !hp.today && away != null && away >= AWAY_DAYS && S.play.welcomed !== today;
     const pick = quickPick(S, 15, now)[0] ?? [...allTasks(S, now)].sort((a, b) => taskMin(a.t) - taskMin(b.t))[0] ?? null;
-    return { open, away, hurt: hp.idle >= 3, pick };
+    return { open, away, pick };
   });
-  const { open, away, hurt, pick } = first;
+  const { open, away, pick } = first;
   const wants = open && S.play.welcomed !== today;
   const shown = useStep('welcomeBack', wants);
   useEffect(() => {
@@ -47,13 +47,11 @@ export function WelcomeBack() {
       {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <MokaMascot pose={hp.today ? 'maintenance' : 'happy'} size="lg" showBubble={false} style={styles.moka} />
-          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
+          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Hoş geldin, Moka uyandı!' : 'Tekrar hoş geldin!'}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
-              ? 'Harika bir dönüş 💛 Evin her gün bir parça daha yenilenecek. Yarın da minik bir işle devam edelim.'
-              : hurt
-                ? `${away} gündür yoktun, evin biraz yıprandı. Dert etme, ceza yok: kaldığın yerden devam ediyoruz.`
-                : `${away} gündür yoktun, evin seni bekliyordu. Kaldığın yerden devam edelim.`}
+              ? 'Dönmek en güzel adım 💛 Evin her gün bir parça daha büyüyecek. Yarın da minik bir işle devam edelim.'
+              : `${away} gündür yoktun, ev seni bekledi, hiçbir şey kaybolmadı 💛 Kaldığın yerden devam ediyoruz.`}
           </T>
           {!hp.today && pick && (
             <View style={{ alignSelf: 'stretch', gap: 6 }}>

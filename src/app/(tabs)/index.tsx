@@ -86,7 +86,8 @@ export default function Home() {
   // Moka'nın hali: iş bitince kutlama, gece ya da hiç iş yokken uykulu, aksi hâlde mutlu.
   const hr = new Date(now).getHours();
   const spriteAnim: SpriteAnim = !due.length && doneN > 0 ? 'party' : hr >= 23 || hr < 6 || (!due.length && !doneN) ? 'sleepy' : 'happy';
-  const warn = hp.idle > 0 || (!hp.today && hp.level > 0);
+  // Kırmızı/uyarı yok: ev geri gitmez, sadece dinlenir.
+  const warn = !hp.today && hp.level > 0;
 
   const tour = useTabTour('ev', [...TOUR]);
   const mark = tour.mark;
@@ -210,13 +211,13 @@ export default function Home() {
           )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         </View>
-        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: warn ? c.lateSoft : c.surface }]}>
+        <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: c.surface }]}>
           <View style={[styles.nextIcon, { backgroundColor: c.surface2 }]}>
-            <Text style={{ fontSize: 24 }}>{warn ? '🏚️' : next?.emoji ?? '🏡'}</Text>
+            <Text style={{ fontSize: 24 }}>{warn ? '😴' : next?.emoji ?? '🏡'}</Text>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             {warn || !next ? (
-              <T v="small" style={{ color: warn ? c.late : c.ink }}>{houseLine(hp)}</T>
+              <T v="small">{houseLine(hp)}</T>
             ) : (
               <>
                 <T v="tiny">Sıradaki · 🔥 {hp.streak} gün seri</T>

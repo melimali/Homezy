@@ -121,8 +121,10 @@ export type HouseProgress = {
   streak: number;
   /** Bugün bir şey yapıldı mı. */
   today: boolean;
-  /** Dünden geriye kaç gün kaçırıldı: 1 toz, 2 çatlak, 3+ çöküyor. */
+  /** Eski "toz / çatlak / yıkım" sayacı. Ev artık geriye gitmez; her zaman 0. Alan, eski kodlar derlensin diye duruyor. */
   idle: number;
+  /** Dünden geriye kaç gün iş yapılmadı (ceza yok; sadece "Moka uyuyor" gibi yumuşak bir cümle için). */
+  resting: number;
 };
 
 /**
@@ -146,14 +148,14 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
       } else if (ice.has(d)) {
         miss = 0;
       } else if (d !== today) {
+        // Ev geri gitmez: kaçırılan gün sadece "dinleniyor" sayılır (araştırma: suçluluk bırakmayı artırır).
         miss++;
-        if (miss >= 3) level = Math.max(0, level - 1);
       }
     }
   }
   let streak = 0;
   for (let d = active ? today : addDays(today, -1); set.has(d) || ice.has(d); d = addDays(d, -1)) if (set.has(d)) streak++;
-  return { level, streak, today: active, idle: active || !sorted.length ? 0 : miss };
+  return { level, streak, today: active, idle: 0, resting: active || !sorted.length ? 0 : miss };
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
@@ -199,8 +201,7 @@ export function autoFreeze(P: Play, limit: number, now = Date.now()): DayKey[] {
 
 /**
  * `d` gün sonraki akşam, o zamana kadar hiçbir şey yapılmazsa evin kaç gündür bekleyeceği
- * (`HouseProgress.idle` ile aynı anlam: 1 toz, 2 çatlak, 3+ çöküyor). Kalan dondurma hakları,
- * uygulama açılınca kaçırılan günleri koruyacağı için düşülür.
+ * (`HouseProgress.resting` ile aynı anlam). Ev artık geriye gitmediği için sadece metin seçiminde kullanılır.
  */
 export function idleAhead(p: HouseProgress, d: number, freezeLeft = 0) {
   if (!p.level) return 0;
@@ -239,11 +240,9 @@ export const nextStage = (level: number) => STAGES.find(s => s.level > level) ??
 
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
-  if (p.idle >= 3) return 'Evin biraz yıprandı 😢 Dert etme: bir iş yap, tamir hemen başlasın 🔨';
-  if (p.idle === 2) return 'Duvarlar biraz yorgun 🧱 Küçük bir iş yeter, birlikte toparlarız.';
-  if (p.idle === 1) return 'Ev biraz tozlandı 🌫️ Bir iş yap, tozu alalım!';
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
-  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍 Serin yanında.';
+  if (!p.today && p.resting >= 1) return 'Ev dinleniyor 😴 Küçük bir işle Moka uyanır, kaldığın yerden devam.';
+  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍';
   const next = nextStage(p.level);
   return next ? `Sıradaki: ${next.emoji} ${next.name}` : 'Rüya evin tamam! Seriyi sürdür ⭐';
 }

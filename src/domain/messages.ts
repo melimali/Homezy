@@ -138,15 +138,15 @@ export function streakLine(streak: number, built: boolean, key: string, now: num
   if (streak > 0)
     return pick(
       [
-        `🔥 ${streak} günlük serin seni bekliyor. İstersen minik bir iş yeter 🤍`,
-        `Evin seni bekliyor 🏡 ${streak} günlük seriyi sürdürelim mi?`,
+        `🔥 ${streak} günlük serin var. İstersen minik bir iş yeter 🤍`,
+        `Bugün tek bir küçük iş yeter 🏡 ${streak} günlük seriyi sürdürelim mi?`,
         `Bugün sakin geçti 🌿 Tek bir küçük iş yeter, istersen.`,
       ],
       key,
       now,
     );
   if (built)
-    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, tozlanmasın 🧹', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
+    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, Moka çok sevinir ☕', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
   return pick(
     ['Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️', 'Minik bir adım, büyük bir ev 🪵✨ Bugün bir iş yapalım mı?'],
     key,
@@ -187,16 +187,14 @@ export function eveningNudge(o: { streak: number; idle: number; away: number | n
       title: pick(['🤗 Evin seni özledi', '🏡 Kaldığın yerden devam', '💛 Seni bekliyoruz'], key, now),
       body: pick(
         [
-          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, evini birlikte toparlayalım 🏡',
-          'Bir iş yap, tamir hemen başlasın 🔨 Yavaş yavaş, birlikte.',
+          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, kaldığın yerden birlikte devam edelim 🏡',
+          'Bir iş yap, Moka hemen uyansın ☕ Yavaş yavaş, birlikte.',
           '5 dakikalık tek bir iş yeter. Gerisini adım adım hallederiz 🐢✨',
         ],
         key,
         now,
       ),
     };
-  if (idle >= 2) return { title: '🛟 Son şans: yarın evin çökmeye başlıyor', body: 'Bu akşam tek bir iş yap, evin kurtulsun. Minik bir iş bile yeter 💪' };
-  if (idle === 1) return { title: '🌫️ Evin tozlandı', body: 'Bu akşam bir iş yapmazsan yarın duvarlarda çatlaklar çıkar 😟 Bir dakikalık iş yeter.' };
   return { title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
 }
 

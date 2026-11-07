@@ -7,7 +7,7 @@ import { Appear, Float, Squish } from '@/components/motion';
 import { Btn, T } from '@/components/ui';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { AXIS_NAMES, CUE_TIME, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
-import { askable, DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
+import { DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
 import { savePersona, skipPersona, usePersona, type Disc } from '@/profile/usePersona';
 import { saveNickname, useNickname } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
@@ -23,7 +23,7 @@ export default function Taniyalim() {
   const { state, update } = useStore();
   const setupDone = state.setup;
   const { answers: saved } = usePersona();
-  const [ans, setAns] = useState<Answers>({ ...DEFAULT_ANSWERS, ...saved, tastes: [] });
+  const [ans, setAns] = useState<Answers>({ ...DEFAULT_ANSWERS, ...saved });
   const [step, setStep] = useState(0);
   const [chosen, setChosen] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -33,15 +33,16 @@ export default function Taniyalim() {
   const [disc, setDisc] = useState<DiscAnswers>({});
   const [result, setResult] = useState<Disc | null>(null);
 
-  const home = QUESTIONS.filter(x => askable(x.k, ans));
-  // Tek liste: önce ev soruları (Q1-Q7), sonra disiplin soruları (Q8-Q17).
+  // Kısa test: 1 ev sorusu ("kimlerle yaşıyorsun"), sonra 5 disiplin sorusu (her eksen için bir tane).
+  // Atlanan sorular varsayılana düşer (DEFAULT_ANSWERS); eski kayıtlı cevaplar korunur.
+  const home = QUESTIONS.filter(x => x.k === 'who');
   const steps: { k: string }[] = [...home, ...DISC_QUESTIONS];
   const inDisc = step >= home.length;
   const q = inDisc ? undefined : home[Math.min(step, home.length - 1)];
   const dq = inDisc ? DISC_QUESTIONS[Math.min(step - home.length, DISC_QUESTIONS.length - 1)] : undefined;
 
   const finish = (a: Answers, d: DiscAnswers = disc) => {
-    const final: Answers = a.cook === 'sevmem' ? { ...a, effort: 15 } : a;
+    const final: Answers = a;
     setAns(final);
     setSaving(true);
     // Moka notlarını alırken: kayıt + varsayılanlar (sabah özeti saati).
@@ -61,7 +62,7 @@ export default function Taniyalim() {
   };
 
   const next = (a: Answers, d: DiscAnswers = disc) => {
-    const total = QUESTIONS.filter(x => askable(x.k, a)).length + DISC_QUESTIONS.length;
+    const total = home.length + DISC_QUESTIONS.length;
     if (step + 1 >= total) finish(a, d);
     else setStep(step + 1);
   };
@@ -80,20 +81,12 @@ export default function Taniyalim() {
   };
 
   const pick = (v: unknown) => {
-    if (!q || q.multi) return;
+    if (!q) return;
     const a = { ...ans, [q.k]: v } as Answers;
     setAns(a);
     setChosen(x => ({ ...x, [q.k]: v }));
     next(a);
   };
-
-  const toggle = (v: Answers['tastes'][number]) =>
-    setAns(a => {
-      let t = a.tastes.includes(v) ? a.tastes.filter(x => x !== v) : [...a.tastes, v];
-      if (v === 'etsiz' && t.includes('etsiz')) t = t.filter(x => x !== 'et');
-      if (v === 'et' && t.includes('et')) t = t.filter(x => x !== 'etsiz');
-      return { ...a, tastes: t };
-    });
 
   if (result) return <TypeScreen r={result} onDone={() => {
     // Kayıt "Devam"da yapılır: yeni kullanıcıda kayıt, ekranı korumadan düşürür ve akış devam eder.
@@ -128,8 +121,8 @@ export default function Taniyalim() {
   }
 
   const mokaFor = dq
-    ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'areas' ? 'checklist' : 'analyzing')
-    : q!.k === 'budget' ? 'checklist' : q!.k === 'cook' || q!.k === 'effort' || q!.k === 'tastes' ? 'chef' : 'happy';
+    ? (dq.k === 'quit' ? 'blanket' : dq.k === 'drive' ? 'party' : dq.k === 'plan' ? 'checklist' : 'analyzing')
+    : 'happy';
   const cur = (q ?? dq)!;
   const pct = ((step + 1) / steps.length) * 100;
   const discSel = dq ? ((disc[dq.k] as string[] | string | undefined) ?? (dq.multi ? [] : undefined)) : undefined;
@@ -164,18 +157,13 @@ export default function Taniyalim() {
                     onPress={() => pickDisc(o.v)}
                   />
                 ))
-              : q!.multi
-                ? q!.opts.map(o => (
-                    <Option key={o.v} emoji={o.emoji} label={o.label} multi on={ans.tastes.includes(o.v)} onPress={() => toggle(o.v)} />
-                  ))
-                : (q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => (
+              : (q!.opts as { v: unknown; emoji: string; label: string; sub?: string }[]).map(o => (
                     <Option key={String(o.v)} emoji={o.emoji} label={o.label} sub={o.sub} on={chosen[q!.k] === o.v} onPress={() => pick(o.v)} />
                   ))}
           </View>
         </ScrollView>
       </Appear>
 
-      {q?.multi && <Btn kind="primary" label={ans.tastes.length ? 'Devam' : 'Hepsini severim, devam'} onPress={() => next(ans)} block />}
       {dq?.multi && <Btn kind="primary" label={(discSel as string[]).length ? 'Devam' : 'Şimdilik geç'} onPress={() => next(ans)} block />}
     </View>
   );

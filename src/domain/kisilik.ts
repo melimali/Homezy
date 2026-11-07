@@ -8,28 +8,17 @@ export type TypeId = 'planli' | 'atik' | 'sakin' | 'odakli' | 'dalgin' | 'hirsli
 export type DOpt = { v: string; emoji: string; label: string; pts?: Partial<Record<Axis, number>> };
 export type DQ = { k: string; q: string; hint: string; multi?: boolean; max?: number; opts: DOpt[] };
 
+// Kısa test: 5 eksenin her biri için en bilgilendirici tek soru (D: plan, B: start, O: focus, Y: quit, G: drive).
 export const DISC_QUESTIONS: DQ[] = [
-  { k: 'why', q: 'Bunu neden istiyorsun?', hint: 'Zor günde bunu sana hatırlatırım.', opts: [
-    { v: 'sakin', emoji: '🌿', label: 'Sakin bir ev' }, { v: 'stres', emoji: '😮‍💨', label: 'Daha az stres' }, { v: 'gurur', emoji: '💪', label: 'Kendimle gurur duymak' },
-    { v: 'aile', emoji: '👨‍👩‍👧', label: 'Ailem için' }, { v: 'duzen', emoji: '✨', label: 'Sadece düzen' },
-  ] },
-  { k: 'cue', q: 'Günün hangi anında kısa bir mola verirsin?', hint: 'Hatırlatmayı o ana koyarım.', opts: [
-    { v: 'kahve', emoji: '☕', label: 'Sabah kahvesi' }, { v: 'is', emoji: '🌆', label: 'İşten sonra' }, { v: 'yemek', emoji: '🍽️', label: 'Akşam yemeğinden sonra' }, { v: 'yatak', emoji: '🌙', label: 'Yatmadan önce' },
-  ] },
-  { k: 'areas', q: 'Hangi alanlarda disiplin istiyorsun?', hint: 'En çok 3 tane seç.', multi: true, max: 3, opts: [
-    { v: 'ev', emoji: '🏠', label: 'Ev düzeni' }, { v: 'is', emoji: '💼', label: 'İş / kariyer' }, { v: 'ders', emoji: '📚', label: 'Ders / sınav' },
-    { v: 'spor', emoji: '🏋️', label: 'Spor' }, { v: 'saglik', emoji: '😴', label: 'Sağlık / uyku' }, { v: 'gelisim', emoji: '🌱', label: 'Kişisel gelişim' },
-    { v: 'para', emoji: '💰', label: 'Para' }, { v: 'ruh', emoji: '🧘', label: 'Ruh hali' },
-  ] },
-  { k: 'level', q: 'Şu an düzenin nasıl?', hint: 'Planın zorluğunu buna göre ayarlarım.', opts: [
-    { v: 'sifir', emoji: '🌱', label: 'Sıfırdan başlıyorum' }, { v: 'bozuldu', emoji: '🔧', label: 'Vardı ama bozuldu' }, { v: 'iyi', emoji: '🚀', label: 'İyiyim, daha iyi olmak istiyorum', pts: { B: 1 } },
-  ] },
-  { k: 'chrono', q: 'Günün hangi saatinde en verimlisin?', hint: 'Görevleri o saate koyarım.', opts: [
-    { v: 'sabah', emoji: '🌅', label: 'Sabah' }, { v: 'ogle', emoji: '☀️', label: 'Öğlen' }, { v: 'aksam', emoji: '🌆', label: 'Akşam' }, { v: 'gece', emoji: '🌙', label: 'Gece' },
+  { k: 'plan', q: 'Planın nasıl olsun?', hint: 'Biçimini buna göre kurarım.', opts: [
+    { v: 'detay', emoji: '📋', label: 'Saatlik detaylı program', pts: { D: 3 } }, { v: 'kisa', emoji: '✅', label: 'Kısa günlük liste', pts: { D: 1 } }, { v: 'esnek', emoji: '🌊', label: 'Esnek, ruhuma göre', pts: { D: -2 } },
   ] },
   { k: 'start', q: 'Bir işe nasıl başlarsın?', hint: 'Dürüst ol, yargılamam.', opts: [
     { v: 'hemen', emoji: '⚡', label: 'Hemen başlarım', pts: { B: 3 } }, { v: 'isinma', emoji: '☕', label: 'Isınmam gerekir' },
     { v: 'birazdan', emoji: '🐌', label: 'Hep "birazdan" derim', pts: { B: -3 } }, { v: 'birakamam', emoji: '🔥', label: 'Başlayınca bırakamam', pts: { B: 2 } },
+  ] },
+  { k: 'focus', q: 'Kesintisiz ne kadar odaklanırsın?', hint: 'Odak bloklarını buna göre kurarım.', opts: [
+    { v: '10', emoji: '⏱️', label: '10 dk', pts: { O: -2 } }, { v: '25', emoji: '⏱️', label: '25 dk' }, { v: '45', emoji: '⏱️', label: '45 dk', pts: { O: 2 } }, { v: '90', emoji: '⏱️', label: '90 dk', pts: { O: 3 } },
   ] },
   { k: 'quit', q: 'Bir alışkanlığı en çok neden bırakırsın?', hint: 'Sana uygun desteği seçeyim.', opts: [
     { v: 'unutur', emoji: '🤷', label: 'Unutuyorum', pts: { Y: -1 } }, { v: 'yorulur', emoji: '😴', label: 'Yoruluyorum', pts: { Y: -1 } },
@@ -39,19 +28,6 @@ export const DISC_QUESTIONS: DQ[] = [
   { k: 'drive', q: 'Seni ne harekete geçirir?', hint: 'Moka seni buna göre motive eder.', opts: [
     { v: 'puan', emoji: '⭐', label: 'Puan ve seri', pts: { G: 1 } }, { v: 'soz', emoji: '🤝', label: 'Birine söz vermek', pts: { G: -1 } },
     { v: 'odul', emoji: '🎁', label: 'Ödül', pts: { G: -1 } }, { v: 'baski', emoji: '⏰', label: 'Son tarih / baskı' }, { v: 'hedef', emoji: '🎯', label: 'Kendi hedefim', pts: { G: 3 } },
-  ] },
-  { k: 'plan', q: 'Planın nasıl olsun?', hint: 'Biçimini buna göre kurarım.', opts: [
-    { v: 'detay', emoji: '📋', label: 'Saatlik detaylı program', pts: { D: 3 } }, { v: 'kisa', emoji: '✅', label: 'Kısa günlük liste', pts: { D: 1 } }, { v: 'esnek', emoji: '🌊', label: 'Esnek, ruhuma göre', pts: { D: -2 } },
-  ] },
-  { k: 'focus', q: 'Kesintisiz ne kadar odaklanırsın?', hint: 'Odak bloklarını buna göre kurarım.', opts: [
-    { v: '10', emoji: '⏱️', label: '10 dk', pts: { O: -2 } }, { v: '25', emoji: '⏱️', label: '25 dk' }, { v: '45', emoji: '⏱️', label: '45 dk', pts: { O: 2 } }, { v: '90', emoji: '⏱️', label: '90 dk', pts: { O: 3 } },
-  ] },
-  { k: 'budget', q: 'Günde hedeflerine ne kadar vakit ayırabilirsin?', hint: 'Günlük planı bu süreyi aşmayacak şekilde kurarım.', opts: [
-    { v: '15', emoji: '🕐', label: '15 dk' }, { v: '30', emoji: '🕑', label: '30 dk' }, { v: '60', emoji: '🕒', label: '60 dk' }, { v: '120', emoji: '🕓', label: '120+ dk' },
-  ] },
-  { k: 'streak', q: 'Son 30 günde bir alışkanlığı en fazla kaç gün sürdürdün?', hint: 'Başlangıç hedefini buna göre koyarım.', opts: [
-    { v: 'hic', emoji: '🌫️', label: 'Hiç', pts: { Y: -2, D: -1 } }, { v: '3', emoji: '🌱', label: '1-3 gün', pts: { Y: -1 } },
-    { v: '7', emoji: '🌿', label: '1 hafta', pts: { Y: 1, D: 1 } }, { v: '14', emoji: '🌳', label: '2 hafta ve üstü', pts: { Y: 3, D: 2 } },
   ] },
 ];
 

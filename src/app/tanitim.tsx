@@ -18,9 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dateLocale, tx } from '@/i18n/runtime';
 import { useAuth } from '@/auth/AuthProvider';
 import { useStore } from '@/store/AppStore';
-import { Burst, Float, Squish, useReduceMotion } from '@/components/motion';
+import { Burst, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
-import { LIMITS } from '@/domain/premium';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
@@ -38,83 +37,62 @@ type Page = {
   caption: string;
   scene: ImageSourcePropType;
   tint: (c: Colors) => string;
-  /** Sahnenin altındaki küçük çıkartmalar: neyi anlattığını bir bakışta gösterir. */
-  chips: string[];
   /** Sayfada Premium'a özel bir parça var: köşede rozet çıkar. */
   premium?: boolean;
 };
 
-// Her sayfa: kısa başlık + 1-2 cümle + özellik çipleri. Amaç: günlük disiplin (docs/skeleton-v3.md).
-const ALL_PAGES: Page[] = [
+// 6 sayfa, her biri: başlık + tek kısa cümle. Amaç: günlük disiplin, küçük adımlarla (docs/skeleton-v3.md).
+const PAGES: Page[] = [
   {
     eyebrow: 'Tanışalım',
     title: 'Küçük adımlar, uzun soluklu disiplin',
-    text: 'Bir oda toplayarak başla; spora, sonra kendini geliştirmeye uzan. Homezy her gün yanında, ben Moka da.',
+    text: 'Homezy, her gün biraz yapmanı sağlar.',
     caption: 'Merhaba, ben Moka ☕',
     scene: POSE_SCENES.happy!,
     tint: c => c.peachSoft,
-    chips: ['🧹 Oda toplama', '🏃 Spor', '🌱 Kişisel gelişim'],
   },
   {
     eyebrow: 'Evini çiz',
-    title: 'Evin planı cebinde',
-    text: 'Odaları parmağınla boya ya da hazır plan seç. Her odaya kendi işleri otomatik gelir.',
+    title: 'Evini çiz',
+    text: 'Odalarını boya, işleri kendiliğinden gelsin.',
     caption: 'Önce evini çizelim',
     scene: POSE_SCENES.handyman!,
     tint: c => c.sageSoft,
-    chips: ['🛏️ Odalar', '🍳 Mutfak', '🛁 Banyo', '🪴 Bitkiler'],
   },
   {
     eyebrow: 'Küçük işler',
-    title: 'İş yap, puan kazan, seri tut',
-    text: 'Her gün birkaç küçük iş bitir; puan kazan, serin uzasın. Aksattığın gün ertele ya da atla, sorun yok.',
+    title: 'Her gün birkaç iş',
+    text: 'Bitir, puan kazan, serini koru.',
     caption: 'Her gün biraz',
     scene: POSE_SCENES.sweeping!,
     tint: c => c.roseSoft,
-    chips: ['✅ Görevler', '⭐ Puan', '🔥 Seri', '😴 Ertele'],
   },
   {
     eyebrow: '3D evin',
     title: 'Düzenin evini büyütür',
-    text: 'Seri tuttukça 3D evin gelişir; bıraktıkça toz tutar. Gökyüzü hava durumuna göre değişir.',
+    text: 'Seri tuttukça evin gelişir.',
     caption: 'Evin seninle büyür',
     scene: POSE_SCENES.amazed!,
     tint: c => c.peachSoft,
-    chips: ['🏡 3D ev', '🌦️ Gökyüzü', '🛋️ Eşyalar', '🔼 2. kat'],
     premium: true,
   },
   {
     eyebrow: 'Moka ve bahçe',
-    title: 'Moka eşlik eder, bahçe çiçek açar',
-    text: 'Moka’ya sor, odak oturumunda lofi ile tek işe sarıl. Puanlarınla bahçeni sula, mağazadan eşya al.',
+    title: 'Moka hep yanında',
+    text: 'Sor, odaklan, bahçeni çiçeklendir.',
     caption: 'Moka’yla çalış',
     scene: POSE_SCENES.watering!,
     tint: c => c.sageSoft,
-    chips: ['💬 Sohbet', '🎧 Odak', '🌱 Bahçe', '🛍️ Mağaza'],
   },
   {
     eyebrow: 'Kendin için',
-    title: 'Spora ve kendine uzan',
-    text: 'Oda düzeninle kurduğun alışkanlığı spora ve kişisel gelişime taşı: antrenman, günlük, kitap ve film önerileri. Grafiklerle yolunu gör.',
+    title: 'Odadan kendine',
+    text: 'Önce oda, sonra spor ve gelişim.',
     caption: 'Kendine de zaman ayır',
     scene: POSE_SCENES.reading!,
     tint: c => c.lavenderSoft,
-    chips: ['🏃 Spor', '📔 Günlük', '📚 Kendini geliştir', '📊 Gelişim'],
-  },
-  {
-    eyebrow: 'Premium',
-    title: 'Evinin tadını çıkar',
-    text: 'Daha çok yapay zekâ taraması, 2. kat, özel eşyalar, 5 ev ve aile paylaşımı. Reklamsız; istediğin zaman iptal.',
-    caption: 'İlk ay indirimli ✨',
-    scene: POSE_SCENES.party!,
-    tint: c => c.peachSoft,
-    chips: [`📸 Günde ${LIMITS.premium.scans} tarama`, `💬 ${LIMITS.premium.chats} mesaj`, '🔼 2. kat', '⭐ 1,5 kat puan'],
-    premium: true,
   },
 ];
-
-const SHORT = ['Tanışalım', 'Evini çiz', 'Küçük işler', '3D evin', 'Moka ve bahçe', 'Kendin için', 'Premium'];
-const PAGES = ALL_PAGES.filter(p => SHORT.includes(p.eyebrow));
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. */
 export default function Tanitim() {
@@ -275,15 +253,6 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
           <Image source={p.scene} style={{ width: card - 28, height: ((card - 28) * 3) / 4, borderRadius: 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
           <View style={st.strip}>
             <Text style={[st.caption, { color: brand.navy }]} numberOfLines={1}>{p.caption}</Text>
-            <View style={st.chips}>
-              {p.chips.map((ch, k) => (
-                <Float key={ch} amp={2} dur={1900 + k * 300} delay={k * 200}>
-                  <View style={[st.chip, { backgroundColor: p.tint(c) }]}>
-                    <Text style={[st.chipT, { color: c.ink }]}>{ch}</Text>
-                  </View>
-                </Float>
-              ))}
-            </View>
           </View>
         </Squish>
       </Animated.View>
@@ -318,9 +287,6 @@ const st = StyleSheet.create({
   tape: { position: 'absolute', top: -9, alignSelf: 'center', width: 70, height: 20, borderRadius: 7, zIndex: 2, opacity: 0.95, transform: [{ rotate: '-3deg' }] },
   badge: { position: 'absolute', top: 14, right: 14, zIndex: 3, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   badgeT: { fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
-  chip: { borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 6 },
-  chipT: { fontFamily: fonts.bodyBlack, fontSize: 12.5 },
   eyebrow: { fontFamily: fonts.bodyBlack, fontSize: 11.5, letterSpacing: 1.1, marginBottom: 6, textAlign: 'center' },
   title: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 33, letterSpacing: -0.2, textAlign: 'center' },
   text: { fontFamily: fonts.body, fontSize: 16, lineHeight: 23, marginTop: 8, textAlign: 'center' },

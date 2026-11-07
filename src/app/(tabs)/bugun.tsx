@@ -6,6 +6,7 @@ import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
+import { BonusCard } from '@/components/BonusCard';
 import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
@@ -107,6 +108,7 @@ export default function Bugun() {
         </EmptyMsg>
       )}
       </View>
+      {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
       <MedsToday />
       <DailyGoals now={now} />
       <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>

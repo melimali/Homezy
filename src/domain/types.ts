@@ -255,6 +255,8 @@ export type Growth = {
   badges: Record<string, DayKey>;
   /** Kutlaması gösterilen son rozet sayısı olmasın diye: yeni rozetler bir kere söylenir. */
   seenBadges: string[];
+  /** İsteğe bağlı bonus öneriler: gün → kategori → yapıldı / atlandı. Puan ve seriyi etkilemez. */
+  bonus: Record<DayKey, Record<string, 'done' | 'skip'>>;
 };
 
 export type MokaNote = { id: string; day: DayKey; text: string; at: number };

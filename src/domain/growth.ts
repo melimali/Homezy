@@ -22,7 +22,7 @@ const shift = (k: DayKey, n: number): DayKey => {
 
 export const GOALS = [10, 15, 30, 45];
 export const emptyGrowth = (): Growth => ({
-  goalMin: 15, reads: [], books: [], watch: [], goalDays: [], pick: null, learn: {}, badges: {}, seenBadges: [],
+  goalMin: 15, reads: [], books: [], watch: [], goalDays: [], pick: null, learn: {}, badges: {}, seenBadges: [], bonus: {},
 });
 
 export const WATCH_KINDS: { id: WatchKind; emoji: string; name: string }[] = [

@@ -76,19 +76,13 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
               <Circle cx={230} cy={230} r={230} fill="url(#g)" />
             </Svg>
           </Animated.View>
-          {/* Logo: açık hap içinde, yaylanarak belirir, üstünden bir kez ışık geçer */}
+          {/* Logo: açık hap içinde, yaylanarak belirir */}
           <Animated.View
             style={[
               st.pill,
               { backgroundColor: c.cream, opacity: v.logo.interpolate({ inputRange: [0, 0.3], outputRange: [0, 1], extrapolate: 'clamp' }), transform: [{ scale: lerp(v.logo, 0.85, 1) }, { translateY: lerp(v.logo, 14, 0) }] },
             ]}>
             <Image source={require('../../assets/logo-yatay.png')} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
-            <Animated.View
-              style={[
-                st.shine,
-                { opacity: v.shine.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: lerp(v.shine, -LOGO_W, LOGO_W) }, { rotate: '18deg' }] },
-              ]}
-            />
           </Animated.View>
         </View>
         <Text style={[st.skip, { color: c.onNight }]}>Geç</Text>

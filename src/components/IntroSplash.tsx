@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
-import { MOKA_ASSETS } from '@/constants/moka';
 import { brand, fonts } from '@/theme';
 
 /**
@@ -13,8 +12,6 @@ import { brand, fonts } from '@/theme';
  */
 
 const MOKA = 150;
-const LOGO_W = 260;
-const LOGO_H = LOGO_W / 3;
 
 export function IntroSplash({ onDone }: { onDone: () => void }) {
   const [v] = useState(() => ({
@@ -73,7 +70,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     val.interpolate({ inputRange: [0, 1], outputRange: [from, to] });
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: brand.mint, opacity: v.all }]}>
+    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: '#F7F2EA', opacity: v.all }]}>
       <StatusBar style="dark" />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
         <View style={st.center} pointerEvents="none">
@@ -90,15 +87,15 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
             </Svg>
           </Animated.View>
           <Animated.Image
-            source={MOKA_ASSETS.happy}
+            source={require('../../assets/splash-moka.png')}
             resizeMode="contain"
             style={{ width: MOKA, height: MOKA, opacity: v.moka, transform: [{ translateY: lerp(v.moka, 18, 0) }] }}
           />
-          <Animated.Image
-            source={require('../../assets/logo-yatay.png')}
-            resizeMode="contain"
-            style={{ width: LOGO_W, height: LOGO_H, marginTop: 4, opacity: v.logo, transform: [{ translateY: lerp(v.logo, 14, 0) }] }}
-          />
+          <Animated.Text
+            style={[st.word, { opacity: v.logo, transform: [{ translateY: lerp(v.logo, 14, 0) }] }]}
+          >
+            Homezy
+          </Animated.Text>
           <View style={st.dots}>
             {v.dots.map((d, i) => (
               <Animated.View key={i} style={[st.dot, { opacity: d, transform: [{ scale: lerp(d, 0.7, 1.15) }] }]} />
@@ -115,6 +112,7 @@ const st = StyleSheet.create({
   root: { zIndex: 100, elevation: 100 },
   fill: { flex: 1 },
   center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
+  word: { fontFamily: fonts.display, fontSize: 40, color: brand.navy, marginTop: 6 },
   dots: { flexDirection: 'row', gap: 10, marginTop: 36, height: 10 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: brand.blue },
   skip: { position: 'absolute', right: 24, bottom: 40, fontFamily: fonts.bodyBold, fontSize: 14, opacity: 0.7 },

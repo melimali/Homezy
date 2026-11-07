@@ -61,14 +61,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo-kare.png",
-          "imageWidth": 180,
+          "image": "./assets/splash-moka.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#EBF5EE",
-          "dark": {
-            "image": "./assets/logo-kare.png",
-            "backgroundColor": "#283044"
-          }
+          "backgroundColor": "#F7F2EA"
         }
       ],
       [

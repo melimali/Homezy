@@ -28,7 +28,6 @@ const step = (t: Animated.Value, a: number, b: number) =>
 /** a'da belirir, b'de kaybolur. */
 const pulse = (t: Animated.Value, a: number, m: number, b: number) =>
   t.interpolate({ inputRange: [0, a, m, b, 1], outputRange: [0, 0, 1, 0, 0], extrapolate: 'clamp' });
-  t.interpolate({ inputRange: [0, phase * 0.25 + 0.25, 0.5 + phase * 0.25, 0.75 + phase * 0.25, 1].map(v => Math.min(1, v)).sort((x, y) => x - y), outputRange: [0, -amp, 0, -amp, 0].slice(0, 5) });
 
 function Bob({ t, emoji, size = 44, delay = 0, amp = 14 }: { t: Animated.Value; emoji: string; size?: number; delay?: number; amp?: number }) {
   // Her emoji kendi fazında iki kez zıplar (döngü sürekli).

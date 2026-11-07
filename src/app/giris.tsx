@@ -1,6 +1,5 @@
 import { useRouter } from "@/lib/nav";
 import { useState } from "react";
-import { MokaReact } from "@/components/MokaReact";
 import {
   Image,
   KeyboardAvoidingView,
@@ -14,22 +13,20 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { dateLocale, tx } from "@/i18n/runtime";
+import { tx } from "@/i18n/runtime";
 import { useAuth } from "@/auth/AuthProvider";
 import { validEmail } from "@/auth/errors";
 import { Btn, Card, Field, T, XBtn } from "@/components/ui";
 import { cloudEnabled } from "@/lib/supabase";
 import { legalUrl } from "@/lib/links";
 import { useStore } from "@/store/AppStore";
-import { brand, fonts, radius, useColors } from "@/theme";
+import { ForceScheme, fonts, radius, useColors } from "@/theme";
 import { Appear, Squish } from "@/components/motion";
 
 type Mode = "kayit" | "giris" | "sifre";
 
 /** Hesap oluştur / giriş yap / şifremi unuttum. Tanıtımdan sonra ve Hesap ekranından açılır. */
 export default function Giris() {
-  const c = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { status, signUp, signIn, resetPassword, continueAsGuest } = useAuth();
   const { state } = useStore();
@@ -113,27 +110,42 @@ export default function Giris() {
         : "E-posta adresini yaz, yenileme bağlantısını gönderelim.";
 
   return (
+    <ForceScheme scheme="light">
+      <GirisBody
+        {...{ mode, name, setName, email, setEmail, password, setPassword, show, setShow, busy, error, info, title, lead, fromApp, switchTo, submit, guest }}
+      />
+    </ForceScheme>
+  );
+}
+
+function GirisBody(p: {
+  mode: Mode; name: string; setName: (v: string) => void; email: string; setEmail: (v: string) => void;
+  password: string; setPassword: (v: string) => void; show: boolean; setShow: (f: (v: boolean) => boolean) => void;
+  busy: boolean; error: string | null; info: string | null; title: string; lead: string; fromApp: boolean;
+  switchTo: (m: Mode) => void; submit: () => void; guest: () => void;
+}) {
+  const { mode, name, setName, email, setEmail, password, setPassword, show, setShow, busy, error, info, title, lead, fromApp, switchTo, submit, guest } = p;
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { state } = useStore();
+  const en = state.settings.language === "en";
+
+  return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: c.bg }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           st.wrap,
-          { paddingTop: insets.top + 10, paddingBottom: 20 },
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 28 },
         ]}
       >
         <View style={st.head}>
-          <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
-            <Image
-              source={require("../../assets/logo-yatay.png")}
-              style={st.wordmark}
-              resizeMode="contain"
-              accessibilityLabel="Homezy"
-            />
-          </View>
-          {fromApp && (
+          {fromApp ? (
             <XBtn
               label="Kapat"
               onPress={() =>
@@ -142,18 +154,18 @@ export default function Giris() {
                   : router.replace(state.setup ? "/" : "/kurulum")
               }
             />
+          ) : (
+            <View style={{ height: 32 }} />
           )}
         </View>
 
         <View style={st.hero}>
-          <View style={[st.mokaWrap, { backgroundColor: c.surface2 }]}>
-            <MokaReact anim="happy" size={84} />
-          </View>
-          <Text style={[st.heroEyebrow, { color: c.muted }]}>
-            {tx(
-              mode === "sifre" ? "Şifremi unuttum" : "Hesap",
-            ).toLocaleUpperCase(dateLocale())}
-          </Text>
+          <Image
+            source={require("../../assets/moka/moka_happy_clean.webp")}
+            style={st.moka}
+            resizeMode="contain"
+            accessibilityLabel="Moka"
+          />
           <Text style={[st.heroTitle, { color: c.ink }]}>{title}</Text>
           <Text style={[st.heroLead, { color: c.muted }]}>{lead}</Text>
         </View>
@@ -174,13 +186,14 @@ export default function Giris() {
                   style={[st.segBtn, on && { backgroundColor: c.accent }]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={{
                       fontFamily: fonts.bodyBlack,
                       fontSize: 14,
                       color: on ? c.onAccent : c.muted,
                     }}
                   >
-                    {m === "kayit" ? "Hesap oluştur" : "Giriş yap"}
+                    {tx(m === "kayit" ? "Hesap oluştur" : "Giriş yap")}
                   </Text>
                 </Pressable>
               );
@@ -188,8 +201,7 @@ export default function Giris() {
           </View>
         )}
 
-        <Appear index={1}>
-        <Card style={{ gap: 10 }}>
+        <Card style={{ gap: 14, padding: 18 }}>
           {mode === "kayit" && (
             <Label text="Adın">
               <Field
@@ -207,11 +219,7 @@ export default function Giris() {
             <Field
               value={email}
               onChangeText={setEmail}
-              placeholder={
-                state.settings.language === "en"
-                  ? "name@example.com"
-                  : "ornek@eposta.com"
-              }
+              placeholder={en ? "name@example.com" : "ornek@eposta.com"}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -222,30 +230,30 @@ export default function Giris() {
           </Label>
           {mode !== "sifre" && (
             <Label text="Şifre">
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
+              <View style={st.pwRow}>
                 <Field
                   value={password}
                   onChangeText={setPassword}
                   placeholder="En az 8 karakter"
                   secureTextEntry={!show}
                   autoCapitalize="none"
-                  autoComplete={
-                    mode === "kayit" ? "new-password" : "current-password"
-                  }
-                  textContentType={
-                    mode === "kayit" ? "newPassword" : "password"
-                  }
+                  autoComplete={mode === "kayit" ? "new-password" : "current-password"}
+                  textContentType={mode === "kayit" ? "newPassword" : "password"}
                   onSubmitEditing={submit}
                   returnKeyType="go"
+                  style={[st.field, { flex: 1, paddingRight: 64 }]}
                 />
-                <Btn
-                  small
-                  label={show ? "Gizle" : "Göster"}
+                <Pressable
                   onPress={() => setShow((v) => !v)}
+                  hitSlop={8}
+                  accessibilityRole="button"
                   accessibilityLabel={show ? "Şifreyi gizle" : "Şifreyi göster"}
-                />
+                  style={st.pwToggle}
+                >
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: c.hi }}>
+                    {tx(show ? "Gizle" : "Göster")}
+                  </Text>
+                </Pressable>
               </View>
             </Label>
           )}
@@ -266,70 +274,52 @@ export default function Giris() {
             }
             onPress={submit}
             disabled={busy}
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 2 }}
           />
 
-          {mode === "giris" && (
+          {(mode === "giris" || mode === "sifre") && (
             <Squish
-              onPress={() => switchTo("sifre")}
+              onPress={() => switchTo(mode === "giris" ? "sifre" : "giris")}
               accessibilityRole="button"
               style={{ alignSelf: "center", padding: 4 }}
             >
-              <Text
-                style={{
-                  fontFamily: fonts.bodyBold,
-                  fontSize: 13.5,
-                  color: c.hi,
-                }}
-              >
-                Şifremi unuttum
-              </Text>
-            </Squish>
-          )}
-          {mode === "sifre" && (
-            <Squish
-              onPress={() => switchTo("giris")}
-              accessibilityRole="button"
-              style={{ alignSelf: "center", padding: 4 }}
-            >
-              <Text
-                style={{
-                  fontFamily: fonts.bodyBold,
-                  fontSize: 13.5,
-                  color: c.hi,
-                }}
-              >
-                Girişe dön
+              <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.hi }}>
+                {tx(mode === "giris" ? "Şifremi unuttum" : "Girişe dön")}
               </Text>
             </Squish>
           )}
         </Card>
-        </Appear>
 
         {mode === "kayit" && (
           <Text style={[st.legal, { color: c.muted }]}>
             Hesap oluşturarak{" "}
             <Text
               style={{ color: c.ink, fontFamily: fonts.bodyBold }}
-              onPress={() =>
-                Linking.openURL(legalUrl("terms", state.settings.language))
-              }
+              onPress={() => Linking.openURL(legalUrl("terms", state.settings.language))}
             >
               Kullanım koşulları
             </Text>
-            {state.settings.language === "en" ? " and the " : "'nı ve "}
+            {en ? " and the " : "'nı ve "}
             <Text
               style={{ color: c.ink, fontFamily: fonts.bodyBold }}
-              onPress={() =>
-                Linking.openURL(legalUrl("privacy", state.settings.language))
-              }
+              onPress={() => Linking.openURL(legalUrl("privacy", state.settings.language))}
             >
               Gizlilik politikası
             </Text>
-            {state.settings.language === "en"
+            {en
               ? ", and confirm you are over 13 years old."
               : "'nı kabul etmiş, 13 yaşından büyük olduğunu onaylamış olursun."}
           </Text>
+        )}
+
+        {!fromApp && mode !== "sifre" && (
+          <View style={{ gap: 8 }}>
+            <Btn kind="soft" label="Hesapsız devam et" onPress={guest} disabled={busy} />
+            <T v="small" style={{ textAlign: "center" }}>
+              Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım
+              sekmesinden hesap açabilirsin.
+            </T>
+          </View>
         )}
 
         {!cloudEnabled && (
@@ -339,31 +329,6 @@ export default function Giris() {
           </T>
         )}
       </ScrollView>
-      {!fromApp && mode !== "sifre" && (
-        <View
-          style={{
-            gap: 6,
-            paddingHorizontal: 18,
-            paddingTop: 10,
-            paddingBottom: insets.bottom + 10,
-            backgroundColor: c.bg,
-            borderTopWidth: 1,
-            borderTopColor: c.line,
-          }}
-        >
-          <Btn
-            kind="soft"
-            label="Hesapsız devam et"
-            onPress={guest}
-            disabled={busy}
-          />
-          {error && <Note color={c.late} bg={c.lateSoft} text={error} />}
-          <T v="small" style={{ textAlign: "center" }}>
-            Verilerin sadece bu telefonda kalır. İstediğin zaman Hesabım
-            sekmesinden hesap açabilirsin.
-          </T>
-        </View>
-      )}
     </KeyboardAvoidingView>
   );
 }
@@ -428,51 +393,21 @@ function Note({
 
 const st = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 18,
-    gap: 16,
+    paddingHorizontal: 20,
+    gap: 18,
     width: "100%",
     maxWidth: 480,
     alignSelf: "center",
   },
+  head: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 32 },
   hero: { alignItems: "center", gap: 6 },
-  mokaWrap: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  heroEyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.4, textAlign: "center" },
+  moka: { width: 150, height: 150, marginBottom: 2 },
   heroTitle: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, textAlign: "center" },
-  heroLead: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20, textAlign: "center", paddingHorizontal: 6 },
-  head: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  logoPill: {
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  wordmark: { width: 96, height: 32 },
+  heroLead: { fontFamily: fonts.body, fontSize: 14.5, lineHeight: 21, textAlign: "center", paddingHorizontal: 4 },
   seg: { flexDirection: "row", borderRadius: radius.pill, padding: 4 },
-  segBtn: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-  },
-  field: { flex: 0, alignSelf: "stretch", paddingVertical: 11 },
-  legal: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: "center",
-    paddingHorizontal: 8,
-  },
-  or: { flexDirection: "row", alignItems: "center", gap: 10 },
-  orLine: { flex: 1, height: 1.5 },
+  segBtn: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 11, paddingHorizontal: 8, borderRadius: radius.pill },
+  field: { flex: 0, alignSelf: "stretch", paddingVertical: 13 },
+  pwRow: { justifyContent: "center" },
+  pwToggle: { position: "absolute", right: 16, paddingVertical: 8 },
+  legal: { fontFamily: fonts.body, fontSize: 12, lineHeight: 18, textAlign: "center", paddingHorizontal: 8 },
 });

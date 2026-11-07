@@ -1,3 +1,4 @@
+import { createContext, createElement, useContext, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
 import type { RoomType } from '@/domain/types';
@@ -54,11 +55,21 @@ const dark: Colors = {
 /** İki tema birden; React dışında (ör. ana ekran widget'ı) tema seçmek için. */
 export const palettes = { light, dark };
 
-export function useColors(): Colors {
-  return useColorScheme() === 'dark' ? dark : light;
+/** Bir ekranı sistem temasından bağımsız açık (krem) temada tutar. */
+const LockedScheme = createContext<'light' | 'dark' | null>(null);
+export function ForceScheme({ scheme, children }: { scheme: 'light' | 'dark'; children: ReactNode }) {
+  return createElement(LockedScheme.Provider, { value: scheme }, children);
+}
+function useScheme() {
+  const sys = useColorScheme();
+  return useContext(LockedScheme) ?? (sys === 'dark' ? 'dark' : 'light');
 }
 
-export const useIsDark = () => useColorScheme() === 'dark';
+export function useColors(): Colors {
+  return useScheme() === 'dark' ? dark : light;
+}
+
+export const useIsDark = () => useScheme() === 'dark';
 
 export const fonts = {
   display: 'Baloo2_600SemiBold',

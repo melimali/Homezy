@@ -18,7 +18,11 @@ const expo = Easing.bezier(0.16, 1, 0.3, 1);
 const exitEase = Easing.bezier(0.7, 0, 0.3, 1);
 const LETTERS = 'Homezy'.split('');
 
-export function IntroSplash({ onDone }: { onDone: () => void }) {
+/**
+ * `play` false iken sadece opak krem perde olarak durur (Meikai introsunun altında); böylece
+ * uygulama ekranları (tanıtım, sorular) intro bitmeden asla görünmez. `play` true olunca oynar.
+ */
+export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?: boolean }) {
   const { width, height } = useWindowDimensions();
   const [v] = useState(() => ({
     glow: new Animated.Value(0),
@@ -31,12 +35,13 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const [ending, setEnding] = useState(false);
 
   const skip = () => {
-    if (ending) return;
+    if (ending || !play) return;
     setEnding(true);
     Animated.timing(v.out, { toValue: 1, duration: 200, useNativeDriver: true }).start(() => onDone());
   };
 
   useEffect(() => {
+    if (!play) return;
     let alive = true;
     const at = (delay: number, val: Animated.Value, duration: number, easing: (x: number) => number) =>
       Animated.sequence([Animated.delay(delay), Animated.timing(val, { toValue: 1, duration, easing, useNativeDriver: true })]);
@@ -59,9 +64,9 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       alive = false;
       anim.stop();
     };
-    // Sadece ilk açılışta bir kez.
+    // Sadece ilk açılışta, oynatma başlayınca bir kez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [play]);
 
   const lerp = (val: Animated.Value, a: number, b: number) => val.interpolate({ inputRange: [0, 1], outputRange: [a, b] });
   const moka = Math.round(Math.min(168, width * 0.4, height * 0.21));

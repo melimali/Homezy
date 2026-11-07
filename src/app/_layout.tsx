@@ -74,8 +74,9 @@ export default function RootLayout() {
                 <CaptchaHost />
                 <AppAlertHost />
               </FamilyProvider>
-              {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
-              {!introDone && meikai !== 'play' && <IntroSplash onDone={() => setIntroDone(true)} />}
+              {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. İlk karede
+                  takılır ve Meikai bitene kadar opak krem perde olarak bekler: tanıtım/sorular introdan önce görünmez. */}
+              {!introDone && <IntroSplash play={meikai !== 'play'} onDone={() => setIntroDone(true)} />}
               {/* Önce Meikai Digital açılışı; solarken altta Homezy açılışı başlar. */}
               {meikai !== 'done' && <MeikaiIntro onFade={() => setMeikai(m => (m === 'play' ? 'fade' : m))} onDone={() => setMeikai('done')} />}
             </ToastProvider>

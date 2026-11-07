@@ -7,7 +7,7 @@ import { prefs } from '@/lib/supabase';
  * kutlamalar, Ben turu) buradan sırayla geçer. Aynı anda sadece biri görünür; biri kapanınca
  * `GAP` ms sonra sıradaki gelir (kapanış animasyonu bitsin, ekran nefes alsın).
  */
-export const ORDER = ['welcome', 'welcomeBack', 'mood', 'choice', 'notif', 'celebrate', 'streak', 'levelUp', 'tour', 'tabIntro'] as const;
+export const ORDER = ['welcome', 'welcomeBack', 'mood', 'choice', 'notif', 'celebrate', 'streak', 'levelUp', 'tabIntro', 'tour'] as const;
 export type Step = (typeof ORDER)[number];
 export const GAP = 380;
 

@@ -9,10 +9,11 @@ import type { MokaPose } from '@/constants/moka';
 import { flag, useStep } from '@/lib/firstRun';
 import { radius, useColors } from '@/theme';
 
-/** Sekmeye ilk girişte çıkan kısa tanıtım. Ben sekmesinin kendi turu var (BenTour). Metinler Türkçe; EN sözlükte. */
+/** Sekmeye ilk girişte çıkan kısa tanıtım. Metinler Türkçe; EN sözlükte. */
 const INTRO: Record<string, { title: string; text: string; pose: MokaPose }> = {
   index: { title: 'Ev', text: 'Burası evin. Odalarına dokun, bekleyen işleri gör.', pose: 'happy' },
   bugun: { title: 'Bugün', text: 'Bugünün işleri burada. Dokun, yap, işaretle.', pose: 'cozy_plant' },
+  hesap: { title: 'Ben', text: 'Profilin, ayarların, Premium ve hesabın burada. Moka gezdirecek.', pose: 'cozy_plant' },
   gelisim: { title: 'Gelişim', text: 'Serini, puanını ve haftalık ilerlemeni buradan takip et.', pose: 'party' },
 };
 

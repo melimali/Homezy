@@ -1,5 +1,6 @@
 /** Son boşluk taraması: İngilizcede Türkçe kalan ya da yarım çevrilen metinler. Bu dosya en son gelir, öncekileri ezer. */
 export const EN_L: Record<string, string> = {
+  'Profilin, ayarların, Premium ve hesabın burada. Moka gezdirecek.': 'Your profile, settings, Premium and account live here. Moka will show you around.',
   '{} küçük iş var. Birini seç, başlayalım.': '{} small tasks left. Pick one and let\'s start.',
   '1 küçük iş var. Birini seç, başlayalım.': '1 small task left. Pick one and let\'s start.',
   '{} iş bitti, {} kaldı. Devam!': '{} done, {} to go. Keep going!',

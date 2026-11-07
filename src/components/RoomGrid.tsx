@@ -1,7 +1,9 @@
 import { useRouter } from '@/lib/nav';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
+import { RenameRoom } from '@/components/RenameRoom';
 import { SceneImage } from '@/components/SceneImage';
 import { Bar, T } from '@/components/ui';
 import { ROOM_ART } from '@/constants/room-art';
@@ -17,6 +19,7 @@ import { fonts, useColors } from '@/theme';
 export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; now: number; start?: number; row?: boolean }) {
   const c = useColors();
   const router = useRouter();
+  const [renaming, setRenaming] = useState<string | null>(null);
   const refs = allTasks(S, now);
   const rooms = S.order
     .map(id => ({ id, r: S.rooms[id], rc: roomCounts(S, id, now), clean: roomClean(S, id, now), mine: refs.filter(x => x.rid === id) }))
@@ -34,6 +37,7 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
           <Appear key={id} index={start + i} style={row ? styles.rowCell : styles.cell}>
             <Squish
               onPress={() => open(id)}
+              onLongPress={() => setRenaming(id)}
               accessibilityLabel={`${r.name}. ${rc.late ? `${rc.late} gecikmiş, ` : ''}${rc.today ? `${rc.today} bugün, ` : ''}%${clean} temiz`}
               style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadow, transform: [{ rotate: i % 2 ? '1.2deg' : '-1.2deg' }] }]}
             >
@@ -65,14 +69,18 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
       })}
     </>
   );
+  const modal = <RenameRoom id={renaming} onClose={() => setRenaming(null)} />;
   if (row) {
     return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.row}>
-        {cards}
-      </ScrollView>
+      <>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.row}>
+          {cards}
+        </ScrollView>
+        {modal}
+      </>
     );
   }
-  return <View style={styles.grid}>{cards}</View>;
+  return <View style={styles.grid}>{cards}{modal}</View>;
 }
 
 const styles = StyleSheet.create({

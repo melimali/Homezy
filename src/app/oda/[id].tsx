@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useRouter } from '@/lib/nav';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { MiniShape } from '@/components/Plan';
+import { RenameRoom } from '@/components/RenameRoom';
 import { RoomBody } from '@/components/RoomBody';
 import { SceneImage } from '@/components/SceneImage';
 import { BackLink, Screen, T } from '@/components/ui';
@@ -21,6 +23,7 @@ export default function RoomScreen() {
   const now = useNow();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state: S } = useStore();
+  const [renaming, setRenaming] = useState(false);
   const r = id ? S.rooms[id] : undefined;
   if (!r) return <Redirect href="/" />;
 
@@ -71,7 +74,9 @@ export default function RoomScreen() {
         </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
           <T v="eyebrow" style={{ marginBottom: 0 }}>{TYPES[r.type].label}</T>
-          <T v="h1" numberOfLines={1} style={{ fontSize: 26, lineHeight: 30 }}>{r.name}</T>
+          <Pressable onPress={() => setRenaming(true)} accessibilityRole="button" accessibilityLabel={`${r.name} ✏️`}>
+            <T v="h1" numberOfLines={1} style={{ fontSize: 26, lineHeight: 30 }}>{r.name} ✏️</T>
+          </Pressable>
           <View style={[styles.bar, { backgroundColor: c.surface }]}>
             <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
           </View>

@@ -1,13 +1,13 @@
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
 import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Appear, Squish } from '@/components/motion';
 import { useTabTour } from '@/components/useTabTour';
-import { Bar, Btn, Card, SecHead, Screen, T, TitleBar } from '@/components/ui';
+import { Bar, Btn, Card, SecHead, Screen, T, TitleBar, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { allTasks, doneToday, homeScore } from '@/domain/logic';
 import { DAILY_XP_CAP, MOKA_STATS, mokaLevel, mokaTitle, statLevel } from '@/domain/mokaLevel';
@@ -20,7 +20,7 @@ import { useNow } from '@/hooks/useNow';
 import { bestStreak, weekGoal } from '@/domain/ramp';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import { radius, useColors, warmShadow } from '@/theme';
+import { radius, useColors, elevation } from '@/theme';
 
 /**
  * Gelişim sekmesi (docs/skeleton-v3.md): yüzeyde dört sayı, altında tatlı grafikler.
@@ -104,7 +104,7 @@ export default function Gelisim() {
             >
               <View style={st.statHead}>
                 <T v="bold" style={{ flex: 1 }}>{`${m.emoji} ${m.name} · sv. ${sl.level}`}</T>
-                <Text style={{ color: c.muted, fontSize: 16 }}>{open ? '▴' : '▾'}</Text>
+                <View style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}><Chevron color={c.muted} size={16} dir="down" /></View>
               </View>
               <Bar value={sl.pct / 100} />
               <T v="tiny">{m.hint}</T>
@@ -189,15 +189,15 @@ function LinkTile({ emoji, label, sub, tint, onPress }: { emoji: string; label: 
 }
 
 const st = StyleSheet.create({
-  stat: { gap: 6, borderRadius: radius.tile, padding: 12, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  stat: { gap: 6, borderRadius: radius.tile, padding: 12, ...elevation.md },
   statHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, padding: 14,
     shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 18, elevation: 3,
   },
   rings: { flexDirection: 'row', gap: 12 },
-  ringCard: { flex: 1, alignItems: 'center', gap: 6, borderRadius: radius.card, paddingVertical: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  ringCard: { flex: 1, alignItems: 'center', gap: 6, borderRadius: radius.card, paddingVertical: 16, ...elevation.md },
   pills: { flexDirection: 'row', gap: 10 },
   links: { flexDirection: 'row', gap: 12 },
-  link: { flex: 1, borderRadius: radius.card, padding: 16, gap: 2, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  link: { flex: 1, borderRadius: radius.card, padding: 16, gap: 2, ...elevation.md },
 });

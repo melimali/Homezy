@@ -1,6 +1,6 @@
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ring } from '@/components/charts';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
@@ -19,7 +19,7 @@ import { useToast } from '@/components/Toast';
 import { MealCard } from '@/components/MealCard';
 import { MedsToday } from '@/components/MedsToday';
 import { useTabTour } from '@/components/useTabTour';
-import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar } from '@/components/ui';
+import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar, Chevron } from '@/components/ui';
 import { taskMin, bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { dailyCap } from '@/domain/ramp';
@@ -30,7 +30,7 @@ import { awardedToday, dayKey, POINTS, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { tx } from '@/i18n/runtime';
-import { fonts, radius, useColors, warmShadow } from '@/theme';
+import { fonts, radius, useColors, elevation } from '@/theme';
 
 const TOUR = [
   { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası Bugün: sadece bugünün işleri.' },
@@ -172,6 +172,7 @@ export default function Bugun() {
 /** Üstte büyük panel: Moka, ilerleme halkası ve duruma göre tek cümle. */
 function Hero({ total, done, left, tatil }: { total: number; done: number; left: number; tatil: boolean }) {
   const c = useColors();
+  const { width } = useWindowDimensions();
   const pct = total ? Math.round((done / total) * 100) : 100;
   const all = total > 0 && left === 0;
   const pose: MokaPose = tatil ? 'blanket' : all || !total ? 'party' : done === 0 ? 'wink' : 'happy';
@@ -184,17 +185,20 @@ function Hero({ total, done, left, tatil }: { total: number; done: number; left:
         : done === 0
           ? `${left} küçük iş var. Birini seç, başlayalım.`
           : `${done} iş bitti, ${left} kaldı. Devam!`;
+  // Dar ekranda (ör. 360 dp) Moka ve halka küçülür, yazı üç satıra bölünmez.
+  const small = width < 380;
+  const m = small ? 64 : 84;
   return (
     <Appear index={1} style={[styles.hero, { backgroundColor: c.accentSoft }]}>
       <Float amp={3} dur={2800}>
-        <Image source={MOKA_ASSETS[pose]} style={styles.heroMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+        <Image source={MOKA_ASSETS[pose]} style={{ width: m, height: m }} resizeMode="contain" accessibilityIgnoresInvertColors />
       </Float>
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-        <T v="h2" style={{ fontSize: 20, lineHeight: 26 }}>{line}</T>
+        <T v={small ? 'h3' : 'h2'}>{line}</T>
         <T v="small">{total ? `${done}/${total} tamamlandı` : 'Dinlenme günü'}</T>
       </View>
       <Pulse on={done}>
-        <Ring pct={pct} size={84} stroke={11} color={c.accent} label={total ? undefined : '✓'} />
+        <Ring pct={pct} size={small ? 68 : 84} stroke={small ? 9 : 11} color={c.accent} label={total ? undefined : '✓'} />
       </Pulse>
     </Appear>
   );
@@ -419,7 +423,7 @@ function DailyGoals({ now }: { now: number }) {
             <Text style={{ fontSize: 20 }}>{g.done ? '✅' : g.emoji}</Text>
             <Text style={[goalStyle.label, { color: g.done ? c.ok : c.ink }]}>{g.label}</Text>
             <Text style={[goalStyle.pts, { color: g.done ? c.ok : c.warm }]}>{g.done ? 'tamam' : `${g.pts} ⭐`}</Text>
-            {g.go && !g.done && <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>}
+            {g.go && !g.done && <Chevron color={c.muted} size={16} dir="right" />}
           </Squish>
         ))}
       </View>
@@ -429,14 +433,13 @@ function DailyGoals({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
-  heroMoka: { width: 84, height: 84 },
-  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, padding: 16, ...elevation.md },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, ...elevation.md },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
   day: { alignItems: 'center', gap: 2, width: 44, paddingVertical: 10, borderRadius: 18 },
   dayName: { fontFamily: fonts.bodyBold, fontSize: 12 },
   dayN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  progress: { borderRadius: radius.tile, padding: 18, gap: 14, marginTop: -6, ...elevation.md },
   progHead: { flexDirection: 'row', alignItems: 'flex-end' },
   pct: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 24 },
   pills: { gap: 8, paddingHorizontal: 24 },

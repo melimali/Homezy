@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { PremiumLock } from '@/components/PremiumLock';
-import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T, XBtn } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T, XBtn, Chevron } from '@/components/ui';
 import { uid } from '@/domain/logic';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
 import type { AppState, Settings, SportEntry, WorkoutGoal, WorkoutLevel } from '@/domain/types';
@@ -244,7 +244,7 @@ function WorkoutPlan({ now, onPick }: { now: number; onPick: (type: string, min:
             </T>
             <T v="small">{p.what} · {p.min} dk</T>
           </View>
-          <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
+          <Chevron color={c.muted} size={16} dir="right" />
         </Pressable>
       ))}
       <T v="tiny">Spor günlerini aşağıdaki hatırlatma bölümünden değiştirebilirsin. Ağrın varsa zorlama, doktoruna danış.</T>

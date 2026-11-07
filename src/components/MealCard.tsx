@@ -9,7 +9,7 @@ import { useStore } from '@/store/AppStore';
 import { useColors } from '@/theme';
 
 import { Squish } from './motion';
-import { Card, T } from './ui';
+import { Card, T, Chevron } from './ui';
 
 /** Bugün sekmesi: akşam (ya da sabah) için tek yemek önerisi; dokununca /yemek açılır. */
 export function MealCard() {
@@ -32,7 +32,7 @@ export function MealCard() {
             <T v="bold">{top.meal.name}</T>
             <T v="small">⏱ {top.meal.min} dk · ~{tlText(top.price)} · {top.missing.length ? `🛒 ${top.missing.length} eksik` : '✓ hepsi dolapta'}</T>
           </View>
-          <Text style={{ color: c.muted, fontSize: 22 }}>›</Text>
+          <Chevron color={c.muted} dir="right" />
         </View>
       </Card>
     </Squish>

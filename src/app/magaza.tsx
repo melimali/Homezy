@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, Screen, SecHead, T, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEMS, type Item, type ItemCategory } from '@/domain/items';
 import { POINTS } from '@/domain/play';
@@ -77,7 +77,7 @@ export default function Magaza() {
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
           <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
         </View>
-        <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
+        <Chevron color={c.muted} size={16} dir="right" />
       </Squish>
       </Appear>
 

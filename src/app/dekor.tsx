@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'reac
 import { HouseFloors } from '@/components/HouseFloors';
 import { Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, Screen, Tabs, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, Screen, Tabs, T, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEM } from '@/domain/items';
 import {
@@ -71,7 +71,7 @@ export default function Dekor() {
         <Squish onPress={() => router.push('/plan')} accessibilityRole="button" style={[st.tip, { backgroundColor: c.surface2 }]}>
           <Text style={{ fontSize: 22 }}>🏘️</Text>
           <T v="small" style={{ flex: 1 }}>Evin dubleks mi? Ev planında 2. kat çizebilirsin{premium.active ? '' : ' (Premium 👑)'}.</T>
-          <Text style={[st.chev, { color: c.muted }]}>›</Text>
+          <Chevron color={c.muted} size={16} dir="right" />
         </Squish>
       )}
 

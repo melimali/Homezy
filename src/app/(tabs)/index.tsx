@@ -24,7 +24,7 @@ import { useStep } from '@/lib/firstRun';
 import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Squish } from '@/components/motion';
-import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
+import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T, Chevron } from '@/components/ui';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { dailyCap } from '@/domain/ramp';
 import { taskMin } from '@/domain/home';
@@ -43,7 +43,7 @@ import { useNow } from '@/hooks/useNow';
 import { useTranslation } from '@/i18n/i18n';
 import { ownTitle, useHomeWord, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
-import { fonts, warmShadow, radius, space, useColors } from '@/theme';
+import { fonts, warmShadow, radius, space, useColors, elevation } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
 
 const TOUR = [
@@ -124,7 +124,7 @@ export default function Home() {
                 <T v="small" numberOfLines={3} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
               </View>
             </Squish>
-            <IconBtn icon={<Text style={[styles.chev, { color: c.ink }]}>›</Text>} label="Bugünün işleri" size={34} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
+            <IconBtn icon={<Chevron color={c.ink} size={16} dir="right" />} label="Bugünün işleri" size={36} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
           </View>
           <View style={styles.mokaFoot}>
             <Bar value={doneN / Math.max(1, doneN + due.length)} color={c.accent} height={7} style={{ flex: 1 }} />
@@ -154,7 +154,7 @@ export default function Home() {
             <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
             <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
           </View>
-          <Text style={[styles.weekT, { color: c.muted }]}>›</Text>
+          <Chevron color={c.muted} size={14} dir="right" />
         </Squish>
       )}
 
@@ -209,7 +209,7 @@ export default function Home() {
                 <T v="bold">Arsa hazır</T>
                 <T v="small">İlk işini yap, evin temeli atılsın.</T>
               </View>
-              <Text style={[styles.chev, { color: c.muted }]}>›</Text>
+              <Chevron color={c.muted} size={16} dir="right" />
             </Squish>
           )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
@@ -228,7 +228,7 @@ export default function Home() {
               </>
             )}
           </View>
-          <Text style={[styles.chev, { color: c.muted }]}>›</Text>
+          <Chevron color={c.muted} size={16} dir="right" />
         </Squish>
       </Card></View>
 
@@ -416,16 +416,16 @@ const styles = StyleSheet.create({
   mokaFoot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22, lineHeight: 24 },
   statL: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  nextCard: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 16, ...elevation.md },
   nextIcon: { width: 46, height: 46, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   stats: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, alignItems: 'center', gap: 0, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  stat: { flex: 1, alignItems: 'center', gap: 0, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4, ...elevation.md },
   sec: { gap: 12, padding: 16 },
   quick: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   week: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20 },
   weekT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   plot: { position: 'absolute', zIndex: 2, left: 12, right: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 14 },
-  q: { flex: 1, alignItems: 'center', gap: 3, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 4, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  q: { flex: 1, alignItems: 'center', gap: 3, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 4, ...elevation.md },
   modalBg: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalMoka: { marginTop: -100 },
   modal: { borderRadius: 40, padding: 28, paddingTop: 0, marginTop: 90, gap: 16, alignItems: 'center', maxWidth: 400, width: '100%' },

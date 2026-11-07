@@ -5,7 +5,7 @@ import { Animated, Easing, Image, PanResponder, Platform, Pressable, StyleSheet,
 import { useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, EmptyMsg, Field, Screen, SecHead, T } from '@/components/ui';
+import { BackLink, Btn, Card, EmptyMsg, Field, Screen, SecHead, T, Chevron } from '@/components/ui';
 import { checkinOf, journalMood } from '@/domain/mood';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
 import type { JournalEntry } from '@/domain/types';
@@ -215,7 +215,7 @@ export default function Gunluk() {
               accessibilityLabel="Sonraki sayfa"
               style={[styles.arrow, { backgroundColor: c.surface2, opacity: isToday ? 0.35 : 1 }]}
             >
-              <Text style={[styles.arrowTx, { color: c.ink }]}>›</Text>
+              <Chevron color={c.ink} dir="right" />
             </Squish>
           </View>
 

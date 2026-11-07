@@ -20,6 +20,7 @@ import { getLang, tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
+import Svg, { Path } from 'react-native-svg';
 import { fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
@@ -176,31 +177,30 @@ export default function MokaChat() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View style={[st.top, { paddingTop: insets.top + 10 }]}>
-        <BackLink />
+      <View style={[st.top, { paddingTop: insets.top + 8, borderBottomColor: c.line }]}>
         <View style={st.head}>
+          <BackLink label="" />
           <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
             <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
           </View>
-          <View style={{ flex: 1 }}>
-            <T v="h3">Moka</T>
-            <T v="tiny">{mokaTitle(lv.level)} · seviye {lv.level}</T>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T v="h3" numberOfLines={1}>Moka</T>
+            <T v="tiny" numberOfLines={1}>{busy ? 'yazıyor…' : `${mokaTitle(lv.level)} · seviye ${lv.level}`}</T>
           </View>
-          <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" style={[st.pill, { backgroundColor: notes ? c.accent : c.surface2 }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: notes ? c.onAccent : c.ink }}>📝 Notlar</Text>
+          <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
+            <Text style={{ fontSize: 17 }}>📝</Text>
           </Squish>
-          <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.pill, { backgroundColor: c.surface2 }]}>
-            <Text style={{ fontSize: 14 }}>🚩</Text>
+          <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.icon, { backgroundColor: c.surface }]}>
+            <Text style={{ fontSize: 16 }}>🚩</Text>
           </Squish>
-          <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.pill, { backgroundColor: c.surface2 }]}>
-            <Text style={{ fontSize: 14 }}>🧹</Text>
+          <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.icon, { backgroundColor: c.surface }]}>
+            <Text style={{ fontSize: 16 }}>🧹</Text>
           </Squish>
         </View>
+        <T v="tiny" style={{ textAlign: 'center', opacity: 0.8 }}>
+          Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+        </T>
       </View>
-
-      <T v="tiny" style={{ textAlign: 'center', paddingHorizontal: 20, opacity: 0.75 }}>
-        Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
-      </T>
 
       {notes ? (
         <ScrollView contentContainerStyle={st.list}>
@@ -223,9 +223,9 @@ export default function MokaChat() {
           {items.length <= 1 && !busy && (
             <View style={st.ideas}>
               {IDEAS.map(x => (
-                <Pressable key={x} onPress={() => send(x)} style={[st.idea, { backgroundColor: c.surface, borderColor: c.line }]}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.ink }}>{x}</Text>
-                </Pressable>
+                <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: c.surface, borderColor: c.line }]}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }}>{x}</Text>
+                </Squish>
               ))}
             </View>
           )}
@@ -249,7 +249,9 @@ export default function MokaChat() {
           style={{ flex: 1 }}
         />
         <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
-          <Text style={{ color: c.onAccent, fontSize: 18, fontFamily: fonts.bodyBlack }}>➤</Text>
+          <Svg width={20} height={20} viewBox="0 0 24 24">
+            <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
+          </Svg>
         </Squish>
       </View>
     </KeyboardAvoidingView>
@@ -349,19 +351,19 @@ function NotesList() {
 }
 
 const st = StyleSheet.create({
-  top: { paddingHorizontal: 16, gap: 8 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'flex-end' },
-  avatarImg: { width: 80, height: 80 },
-  pill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 8 },
+  top: { paddingHorizontal: 16, paddingBottom: 10, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
+  avatarImg: { width: 54, height: 54 },
+  icon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   list: { padding: 16, gap: 10, flexGrow: 1 },
   bubble: { maxWidth: '86%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
   moka: { borderBottomLeftRadius: 6, alignSelf: 'flex-start' },
   me: { borderBottomRightRadius: 6 },
   done: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   ideas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-  idea: { borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 9 },
+  idea: { minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 8 },
-  send: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  send: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
   note: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, padding: 14 },
 });

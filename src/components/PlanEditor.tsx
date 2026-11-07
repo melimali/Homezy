@@ -20,6 +20,7 @@ import { fonts, radius, useColors } from '@/theme';
 import { MokaMascot } from './MokaMascot';
 import { Appear, Squish } from './motion';
 import { Plan } from './Plan';
+import { PlanGuide } from './PlanGuide';
 import { StartChoice } from './StartChoice';
 import { useToast } from './Toast';
 import { AppHeader, BackLink, Btn, Sheet, styles as ui, T } from './ui';
@@ -279,6 +280,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         <View>
           <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
           <T v="h1">{editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
+        </View>
+      )}
+
+      {!ask && (
+        <View style={{ flexDirection: 'row' }}>
+          <PlanGuide ready={!ask} />
         </View>
       )}
 

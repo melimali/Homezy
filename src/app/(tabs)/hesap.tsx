@@ -25,7 +25,7 @@ import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { prefs } from '@/lib/supabase';
 import { pinMiniWidget, pinTodayWidget, widgetAvailable } from '@/widget/widget';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, warmShadow } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
@@ -459,8 +459,8 @@ const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 
 
 const st = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 8 },
-  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2 },
-  hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
+  hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   pinsCard: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 8, flexDirection: 'row', gap: 4 },
   sec: { paddingHorizontal: 4 },
   pinIn: { alignItems: 'center', gap: 6 },
@@ -469,9 +469,9 @@ const st = StyleSheet.create({
   pin: { flex: 1, alignItems: 'center', gap: 6 },
   pinIcon: { width: 56, height: 56, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { borderRadius: radius.card, padding: 14, gap: 4 },
+  tile: { borderRadius: radius.card, padding: 14, gap: 4, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   tileIcon: { width: 52, height: 52, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   avatar: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: 80, height: 80, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -482,10 +482,10 @@ const st = StyleSheet.create({
   rowIcon: { width: 42, height: 42, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   badgeIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
   badgeImg: { width: 46, height: 46 },
-  card: { borderRadius: radius.card, padding: 16, gap: 12 },
+  card: { borderRadius: radius.card, padding: 16, gap: 12, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   legal: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
   danger: { gap: 8, marginBottom: 20 },
   dangerBtn: { borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center' },

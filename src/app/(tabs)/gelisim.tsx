@@ -19,7 +19,7 @@ import { extrasUnlocked } from '@/lib/events';
 import { useNow } from '@/hooks/useNow';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import { radius, useColors } from '@/theme';
+import { radius, useColors, warmShadow } from '@/theme';
 
 /**
  * Gelişim sekmesi (docs/skeleton-v3.md): yüzeyde dört sayı, altında tatlı grafikler.
@@ -185,15 +185,15 @@ function LinkTile({ emoji, label, sub, tint, onPress }: { emoji: string; label: 
 }
 
 const st = StyleSheet.create({
-  stat: { gap: 6, borderRadius: radius.tile, padding: 12 },
+  stat: { gap: 6, borderRadius: radius.tile, padding: 12, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   statHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, padding: 14,
     shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 18, elevation: 3,
   },
   rings: { flexDirection: 'row', gap: 12 },
-  ringCard: { flex: 1, alignItems: 'center', gap: 6, borderRadius: radius.card, paddingVertical: 16 },
+  ringCard: { flex: 1, alignItems: 'center', gap: 6, borderRadius: radius.card, paddingVertical: 16, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   pills: { flexDirection: 'row', gap: 10 },
   links: { flexDirection: 'row', gap: 12 },
-  link: { flex: 1, borderRadius: radius.card, padding: 16, gap: 2 },
+  link: { flex: 1, borderRadius: radius.card, padding: 16, gap: 2, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
 });

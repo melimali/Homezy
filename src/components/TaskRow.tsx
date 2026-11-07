@@ -15,7 +15,7 @@ import { persistPhoto } from '@/lib/photos';
 import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, warmShadow } from '@/theme';
 
 import { Appear, Burst, Float, Squish } from './motion';
 import { useToast } from './Toast';
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   sticker: { width: 66, height: 66, marginVertical: -8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   tileWrap: { width: '48%' },
-  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0 },
+  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0, shadowColor: warmShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 10, elevation: 2 },
   tileEmoji: { fontSize: 40, lineHeight: 48 },
   tileName: { fontFamily: fonts.bodyBlack, fontSize: 15, lineHeight: 19, textAlign: 'center' },
   tileTag: { borderRadius: radius.pill, paddingVertical: 3, paddingHorizontal: 10, marginTop: 2 },

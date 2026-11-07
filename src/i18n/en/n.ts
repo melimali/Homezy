@@ -1,6 +1,6 @@
 /** Disiplin planı (ev geri gitmez, yumuşak dil, kademeli başlangıç): Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_N: Record<string, string> = {
-  'Ev dinleniyor 😴 Küçük bir işle Moka uyanır, kaldığın yerden devam.': 'The house is resting 😴 One small task wakes Moka up. Pick up right where you left off.',
+  'Ev biraz tozlandı 🌫️ Küçük bir işle tozu alırız, seviyen yerinde duruyor.': 'The house got a bit dusty 🌫️ One small task clears it, and your level stays put.',
   'Bugün için küçük bir işin seni bekliyor 🤍': 'One small task is ready for you today 🤍',
   'Bir iş yap, Moka hemen uyansın ☕ Yavaş yavaş, birlikte.': 'Do one task and Moka wakes right up ☕ Slowly, together.',
   'Evin seni özledi 🏡 Minik bir iş yeter, Moka çok sevinir ☕': 'Your home misses you 🏡 One tiny task is enough, Moka will be so happy ☕',

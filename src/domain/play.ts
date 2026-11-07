@@ -126,7 +126,7 @@ export type HouseProgress = {
   streak: number;
   /** Bugün bir şey yapıldı mı. */
   today: boolean;
-  /** Eski "toz / çatlak / yıkım" sayacı. Ev artık geriye gitmez; her zaman 0. Alan, eski kodlar derlensin diye duruyor. */
+  /** Sadece hafif toz: 0 ya da 1 (kaçırılan günden sonra 1, bir iş yapılınca hemen 0). Çatlak ve yıkım yok; seviye düşmez. */
   idle: number;
   /** Dünden geriye kaç gün iş yapılmadı (ceza yok; sadece "Moka uyuyor" gibi yumuşak bir cümle için). */
   resting: number;
@@ -160,7 +160,8 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
   }
   let streak = 0;
   for (let d = active ? today : addDays(today, -1); set.has(d) || ice.has(d); d = addDays(d, -1)) if (set.has(d)) streak++;
-  return { level, streak, today: active, idle: 0, resting: active || !sorted.length ? 0 : miss };
+  const resting = active || !sorted.length ? 0 : miss;
+  return { level, streak, today: active, idle: Math.min(1, resting), resting };
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
@@ -246,7 +247,7 @@ export const nextStage = (level: number) => STAGES.find(s => s.level > level) ??
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
-  if (!p.today && p.resting >= 1) return 'Ev dinleniyor 😴 Küçük bir işle Moka uyanır, kaldığın yerden devam.';
+  if (!p.today && p.resting >= 1) return 'Ev biraz tozlandı 🌫️ Küçük bir işle tozu alırız, seviyen yerinde duruyor.';
   if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍';
   const next = nextStage(p.level);
   return next ? `Sıradaki: ${next.emoji} ${next.name}` : 'Rüya evin tamam! Seriyi sürdür ⭐';

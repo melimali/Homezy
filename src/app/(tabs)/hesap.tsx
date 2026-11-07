@@ -126,12 +126,20 @@ export default function Hesap() {
       t('close'),
       async () => {
         setBusy('out');
-        if (account) {
-          await flush(user?.id, state);
-          await signOut();
-        } else {
-          // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
-          await deleteAccount();
+        try {
+          if (account) {
+            await Promise.race([flush(user?.id, state), new Promise(r => setTimeout(r, 4000))]);
+            await signOut();
+          } else {
+            // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
+            // Silinemezse (internet yok) yine de yerelden çık.
+            const r = await deleteAccount().catch(() => ({ ok: false as const }));
+            if (!r.ok) await signOut();
+          }
+        } catch {
+          await signOut().catch(() => {});
+        } finally {
+          setBusy(null);
         }
         replace(emptyState());
       },

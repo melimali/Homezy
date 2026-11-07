@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setGuestFlag(false);
     prefs.set('intro', null);
     setIntroSeen(false);
-    if (supabase) await withTimeout(supabase.auth.signOut(), 4000, null);
+    if (supabase) await withTimeout(supabase.auth.signOut({ scope: 'local' }).catch(() => null), 4000, null);
     setSession(null);
   }, []);
 

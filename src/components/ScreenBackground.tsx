@@ -10,11 +10,11 @@ import { useReduceMotion } from './motion';
 export type Tone = 'peach' | 'sage' | 'lavender' | 'rose' | 'sky';
 
 const TONES: Record<Tone, { light: [string, string, string]; dark: [string, string, string]; dot: string }> = {
-  peach: { light: ['#FDEBDD', '#FBF4EA', '#F8E3E0'], dark: ['#3A2F3B', '#2B2A35', '#2F2A3A'], dot: '#F7C9B0' },
-  sage: { light: ['#E6F0E8', '#FBF4EA', '#F4ECDD'], dark: ['#2C3A36', '#2B2A35', '#2E3034'], dot: '#BFD8C4' },
-  lavender: { light: ['#EEE8F6', '#FBF4EA', '#F8E4E8'], dark: ['#363250', '#2B2A35', '#332C3C'], dot: '#D9CDEB' },
-  rose: { light: ['#FAE4E8', '#FBF4EA', '#FCE8DC'], dark: ['#3D2E3A', '#2B2A35', '#35292F'], dot: '#F2C6CF' },
-  sky: { light: ['#E4EEF5', '#FBF4EA', '#EEE8F6'], dark: ['#2B3445', '#2B2A35', '#322F45'], dot: '#B9D2E3' },
+  peach: { light: ['#F8EFE4', '#F7F2EA', '#F4ECE1'], dark: ['#222A3B', '#1C2230', '#1A202D'], dot: '#F7C9B0' },
+  sage: { light: ['#EEF1E6', '#F7F2EA', '#F4ECE1'], dark: ['#202B33', '#1C2230', '#1A202D'], dot: '#BFD8C4' },
+  lavender: { light: ['#F1ECE9', '#F7F2EA', '#F4ECE1'], dark: ['#242A3E', '#1C2230', '#1A202D'], dot: '#D9CDEB' },
+  rose: { light: ['#F8ECE6', '#F7F2EA', '#F4ECE1'], dark: ['#262A3A', '#1C2230', '#1A202D'], dot: '#F2C6CF' },
+  sky: { light: ['#ECEFEC', '#F7F2EA', '#F4ECE1'], dark: ['#202B3C', '#1C2230', '#1A202D'], dot: '#B9D2E3' },
 };
 
 // Sabit parçacık düzeni: [x%, boyut, süre ms, gecikme ms, yol]
@@ -72,7 +72,7 @@ export const ScreenBackground = memo(function ScreenBackground({ tone = 'peach' 
         </Defs>
         <Rect width="100%" height="100%" fill="url(#g)" />
       </Svg>
-      {!reduce && DOTS.map(([x, s, d, dl, tr], i) => (
+      {false && !reduce && DOTS.map(([x, s, d, dl, tr], i) => (
         <Dot key={i} x={x} size={s} dur={d} delay={dl} travel={tr} color={dark ? 'rgba(255,255,255,0.35)' : t.dot} />
       ))}
     </View>

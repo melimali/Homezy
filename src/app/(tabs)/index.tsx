@@ -390,7 +390,9 @@ function Quick({ emoji, label, sub, tint, onPress }: { emoji: string; label: str
   const c = useColors();
   return (
     <Squish onPress={onPress} accessibilityLabel={label} style={[styles.q, { backgroundColor: tint }]}>
-      <Text style={{ fontSize: 30 }}>{emoji}</Text>
+      <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 22 }}>{emoji}</Text>
+      </View>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
       <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{sub}</Text>
     </Squish>

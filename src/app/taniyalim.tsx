@@ -134,11 +134,11 @@ export default function Taniyalim() {
   return (
     <View style={[st.wrap, { backgroundColor: c.bg, paddingTop: insets.top + 10, paddingBottom: insets.bottom + 16 }]}>
       <View style={st.topRow}>
-        <View style={{ width: 84 }}>
+        <View style={{ width: 124 }}>
           {step > 0 && <Btn kind="ghost" label="‹ Geri" onPress={() => setStep(step - 1)} />}
         </View>
         <T v="small" style={{ flex: 1, textAlign: 'center' }}>{`Adım ${step + 1} / ${steps.length}`}</T>
-        <View style={{ width: 84, alignItems: 'flex-end' }}>
+        <View style={{ width: 124, alignItems: 'flex-end' }}>
           {step === 0 && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); }} />}
         </View>
       </View>

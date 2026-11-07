@@ -1,24 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
-import { MOKA_ASSETS } from '@/constants/moka';
 import { fonts, useColors } from '@/theme';
 
 /**
- * Açılış (~1,8 sn): sade ve sakin. Düz zemin, Moka yumuşakça belirir,
- * altında "Homezy" ve slogan. Dokununca ya da "Geç" ile atlanır; her soğuk açılışta bir kez.
+ * Açılış (~1,9 sn): yazısız, sadece Homezy logosu. Koyu zemin, yumuşak ışık,
+ * logo yaylanarak belirir, bir kez ışık geçer. Dokununca ya da "Geç" ile atlanır; her soğuk açılışta bir kez.
  * Sadece opacity ve transform (useNativeDriver). Döngü yok.
  */
 
-const MOKA = 150;
+const LOGO_W = 280;
+const LOGO_H = LOGO_W / 3;
 
 export function IntroSplash({ onDone }: { onDone: () => void }) {
   const c = useColors();
   const [v] = useState(() => ({
-    moka: new Animated.Value(0),
-    word: new Animated.Value(0),
-    tag: new Animated.Value(0),
+    glow: new Animated.Value(0),
+    logo: new Animated.Value(0),
+    shine: new Animated.Value(0),
     all: new Animated.Value(1),
   }));
   const [ending, setEnding] = useState(false);
@@ -31,16 +32,16 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     let alive = true;
-    const at = (delay: number, val: Animated.Value, duration: number, toValue = 1) =>
+    const t = (delay: number, val: Animated.Value, duration: number, toValue = 1) =>
       Animated.sequence([
         Animated.delay(delay),
         Animated.timing(val, { toValue, duration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]);
     const anim = Animated.parallel([
-      at(0, v.moka, 500),
-      at(300, v.word, 450),
-      at(700, v.tag, 450),
-      at(1500, v.all, 300, 0),
+      t(0, v.glow, 900),
+      Animated.sequence([Animated.delay(150), Animated.spring(v.logo, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true })]),
+      t(650, v.shine, 650),
+      t(1600, v.all, 300, 0),
     ]);
     AccessibilityInfo.isReduceMotionEnabled()
       .catch(() => false)
@@ -61,23 +62,38 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     val.interpolate({ inputRange: [0, 1], outputRange: [from, to] });
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.bg, opacity: v.all }]}>
-      <StatusBar style="auto" />
+    <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: c.night, opacity: v.all }]}>
+      <StatusBar style="light" />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel="Açılışı geç">
         <View style={st.center} pointerEvents="none">
-          <Animated.Image
-            source={MOKA_ASSETS.happy}
-            resizeMode="contain"
-            style={{ width: MOKA, height: MOKA, opacity: v.moka, transform: [{ translateY: lerp(v.moka, 12, 0) }, { scale: lerp(v.moka, 0.94, 1) }] }}
-          />
-          <Animated.Text style={[st.word, { color: c.ink, opacity: v.word, transform: [{ translateY: lerp(v.word, 8, 0) }] }]}>
-            Homezy
-          </Animated.Text>
-          <Animated.Text style={[st.tag, { color: c.muted, opacity: v.tag }]}>
-            Küçük adımlar, uzun soluklu disiplin
-          </Animated.Text>
+          {/* Arkada yumuşak ışık */}
+          <Animated.View style={{ position: 'absolute', opacity: v.glow, transform: [{ scale: lerp(v.glow, 0.7, 1) }] }}>
+            <Svg width={460} height={460}>
+              <Defs>
+                <RadialGradient id="g" cx="50%" cy="50%" r="50%">
+                  <Stop offset="0" stopColor={c.cream} stopOpacity={0.22} />
+                  <Stop offset="1" stopColor={c.cream} stopOpacity={0} />
+                </RadialGradient>
+              </Defs>
+              <Circle cx={230} cy={230} r={230} fill="url(#g)" />
+            </Svg>
+          </Animated.View>
+          {/* Logo: açık hap içinde, yaylanarak belirir, üstünden bir kez ışık geçer */}
+          <Animated.View
+            style={[
+              st.pill,
+              { backgroundColor: c.cream, opacity: v.logo.interpolate({ inputRange: [0, 0.3], outputRange: [0, 1], extrapolate: 'clamp' }), transform: [{ scale: lerp(v.logo, 0.85, 1) }, { translateY: lerp(v.logo, 14, 0) }] },
+            ]}>
+            <Image source={require('../../assets/logo-yatay.png')} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
+            <Animated.View
+              style={[
+                st.shine,
+                { opacity: v.shine.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 1, 1, 0] }), transform: [{ translateX: lerp(v.shine, -LOGO_W, LOGO_W) }, { rotate: '18deg' }] },
+              ]}
+            />
+          </Animated.View>
         </View>
-        <Text style={[st.skip, { color: c.muted }]}>Geç</Text>
+        <Text style={[st.skip, { color: c.onNight }]}>Geç</Text>
       </Pressable>
     </Animated.View>
   );
@@ -86,8 +102,18 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
 const st = StyleSheet.create({
   root: { zIndex: 100, elevation: 100 },
   fill: { flex: 1 },
-  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  word: { fontFamily: fonts.displayBold, fontSize: 44, lineHeight: 54, marginTop: 8, letterSpacing: -0.5 },
-  tag: { fontFamily: fonts.body, fontSize: 15, marginTop: 4, textAlign: 'center' },
-  skip: { position: 'absolute', right: 24, bottom: 40, fontFamily: fonts.bodyBold, fontSize: 14 },
+  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
+  pill: {
+    paddingHorizontal: 28,
+    paddingVertical: 20,
+    borderRadius: 44,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  shine: { position: 'absolute', top: -20, bottom: -20, width: 60, backgroundColor: 'rgba(255,255,255,0.55)' },
+  skip: { position: 'absolute', right: 24, bottom: 40, fontFamily: fonts.bodyBold, fontSize: 14, opacity: 0.7 },
 });

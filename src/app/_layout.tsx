@@ -24,7 +24,7 @@ import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
-import { needsCheckin } from '@/domain/mood';
+import { markFirstDay, needsCheckin } from '@/domain/mood';
 import { sessionNo, useStep } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
@@ -94,6 +94,12 @@ function RootStack() {
   usePlaySync();
   usePersonaSync();
   const { seen: quizSeen } = usePersona();
+  const { update } = useStore();
+  // Ilk indirme günü işaretlenir: o gün "nasılsın" / "evde misin" sorulmaz (src/domain/mood.ts).
+  const needFirst = !state.setup && !state.play.ask?.first;
+  useEffect(() => {
+    if (needFirst) update(D => markFirstDay(D.play));
+  }, [needFirst, update]);
   const sound = state.settings.sound;
   useEffect(() => setSfxEnabled(sound), [sound]);
 

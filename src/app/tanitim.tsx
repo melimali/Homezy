@@ -24,7 +24,7 @@ import { IntroDeco, type DecoKind } from '@/components/IntroDeco';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
 import { sfx } from '@/lib/sfx';
-import { brand, fonts, radius, useColors, type Colors } from '@/theme';
+import { brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
 
 // Web önizlemesinde yerel sürücü yok; orada kaydırma JS ile izlenir.
 const PAPER = '#FFFDF8';
@@ -116,6 +116,7 @@ export default function Tanitim() {
     langTimers.current.push(setTimeout(() => update(d => void (d.settings.language = l)), 80));
     langTimers.current.push(setTimeout(() => setSwitching(false), 900));
   };
+  const dark = useIsDark();
   const reduce = useReduceMotion();
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
   const [page, setPage] = useState(0);
@@ -185,15 +186,17 @@ export default function Tanitim() {
 
       {/* Üst: logo ve "Atla" */}
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
-        <View style={[st.logoPill, { backgroundColor: brand.mint }]}>
-          <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
-        </View>
         <View style={[st.langPill, { backgroundColor: c.surface }]} accessibilityRole="radiogroup">
           {(['tr', 'en'] as const).map(l => (
             <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
             </Pressable>
           ))}
+        </View>
+        <View pointerEvents="none" style={st.logoCenter}>
+          <View style={[st.logoPill, dark && { backgroundColor: brand.mint }]}>
+            <Image source={require('../../assets/logo-yatay.png')} style={st.wordmark} resizeMode="contain" accessibilityLabel="Homezy" />
+          </View>
         </View>
         {!last && (
           <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={10} style={({ pressed }) => [st.skip, { backgroundColor: c.surface }, pressed && { opacity: 0.6 }]}>
@@ -271,8 +274,9 @@ function PageView({ p, i, w, h, x, top, c, onPoke }: { p: Page; i: number; w: nu
 
 const st = StyleSheet.create({
   top: { position: 'absolute', left: 20, right: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
-  wordmark: { width: 96, height: 32 },
+  logoCenter: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  logoPill: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
+  wordmark: { width: 128, height: 42 },
   langLoad: { alignItems: 'center', justifyContent: 'center', zIndex: 50 },
   langPill: { flexDirection: 'row', borderRadius: radius.pill, padding: 3 },
   langOpt: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill },

@@ -10,7 +10,7 @@ Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an
 
 ## 2. Ücretsiz / Premium bölünmesi
 
-**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 1 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
+**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 2 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
 
 **Premium (seçenek + içgörü + içerik):**
 

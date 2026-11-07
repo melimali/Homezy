@@ -10,7 +10,7 @@ Uygulamadaki karşılaştırma tablosu ve kilitler tek yerden gelir: `src/domain
 |---|---|---|---|
 | Ev planı, rutinler, gardırop, stok, bitkiler, hatırlatmalar | ✓ | ✓ | |
 | Yapay zekâ ile fotoğraf tarama (buzdolabı, kıyafet) | Haftada 2 | Günde 5 | Sunucu (`scan_usage`, aşağıda) |
-| Seri dondurma: gün kaçırınca seri bozulmaz, ev tozlanmaz | Ayda 1 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
+| Seri dondurma: gün kaçırınca seri bozulmaz | Ayda 2 | Ayda 3 | Uygulama açılınca kendiliğinden kullanılır (`autoFreeze`). Sunucu `play_freeze` ayda kaç hak kaldığını sayar |
 | Görev puanı | 1 kat | 1,5 kat (seri bonusu dahil) | Sunucu `play_award` |
 | Premium eşyalar (akvaryum, şömine, piyano) | — | ✓ | Sunucu `play_buy` |
 | Birden fazla ev (yazlık, iş yeri) | 1 ev | 5 ev | Telefonda (ev verisi telefonda). Premium bitince diğer evler silinmez, sadece geçiş kilitlenir |

@@ -14,4 +14,6 @@ export const EN_N: Record<string, string> = {
   'Bir gün ara verdim…\nev beni bekledi 😴': 'I took a day off…\nthe house waited for me 😴',
   'Dönmek en güzel adım!\nEvim büyüyor 🏡💪': 'Coming back is the best step!\nMy home is growing 🏡💪',
   'Her gün minik bir iş. Bir gün kaçırsan da ev seni bekler.': 'One tiny task a day. Even if you miss a day, the house waits for you.',
+  'Seri dondurma (gün kaçırınca seri korunur)': 'Streak freeze (your streak is kept if you miss a day)',
+  'Ayda 2': '2 a month',
 };

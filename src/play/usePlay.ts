@@ -79,7 +79,7 @@ async function send(get: () => AppState, update: Update) {
 }
 
 /**
- * Kaçırılan günleri ayın seri dondurma hakkıyla korur (ücretsiz ayda 1, Premium ayda 3).
+ * Kaçırılan günleri ayın seri dondurma hakkıyla korur (ücretsiz ayda 2, Premium ayda 3).
  * Sunucu da hakkı sayar; reddederse dondurma geri alınır.
  */
 function freezeMissed(get: () => AppState, update: Update, premium: boolean): string[] {

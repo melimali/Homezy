@@ -39,12 +39,17 @@ export const emptyPlay = (): Play => ({
   frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [], growth: emptyGrowth(), habits: emptyHabits(),
 });
 
+/**
+ * Yeni kullanıcıda sadece iki bildirim açık: sabah özeti (`routine`) ve akşam dönüş hatırlatması (`streak`).
+ * Gerisi (su, uyku, spor, okuma, stok…) kişi isteyince açılır: bildirim yorgunluğu bırakmanın ilk sebebi.
+ * Kayıtlı ayarı olanlar etkilenmez (normalize kayıtlı değerleri korur).
+ */
 export const defaultSettings = (): Settings => ({
-  time: '09:00', routine: true, stock: true, laundry: true,
-  streak: true, sport: true, read: true, water: true, sleepRemind: true, sportTime: '18:00', sportDays: [1, 3, 5],
+  time: '09:00', routine: true, stock: false, laundry: false,
+  streak: true, sport: false, read: false, water: false, sleepRemind: false, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
-  bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
-  actions: true, meds: true,
+  bills: false, expiry: false, weekly: false, flex: true, celebrate: true, sound: true,
+  actions: false, meds: true,
   language: deviceLang(),
 });
 

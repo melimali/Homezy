@@ -420,7 +420,7 @@ begin
   if exists (select 1 from public.play_events where user_id = uid and day = p_day) then
     return public.play_summary();
   end if;
-  lim := case when public.is_premium(uid) then 3 else 1 end;
+  lim := case when public.is_premium(uid) then 3 else 2 end;
   select count(*) into used from public.play_events
     where user_id = uid and kind = 'dondur' and date_trunc('month', day) = date_trunc('month', p_day);
   if used >= lim then

@@ -91,7 +91,7 @@ export default function MokaChat() {
     if (!msg || busy) return;
     setText('');
     const mine: Item = { id: nextId++, role: 'user', content: msg };
-    const history = [...items.filter(i => !i.error), mine].slice(-12).map(({ role, content, done }) => ({
+    const history = [...items.filter(i => !i.error), mine].slice(-6).map(({ role, content, done }) => ({
       role,
       content: done?.length ? `${content}\n[Uygulama bu işlemleri zaten yaptı: ${done.join(' | ')}]` : content,
     }));
@@ -108,6 +108,15 @@ export default function MokaChat() {
       return;
     }
     const ctx = chatCtx(get());
+    // Aynı mesaj art arda: model çağrılmaz.
+    const prevUser = [...items].reverse().find(i => i.role === 'user');
+    if (prevUser && prevUser.content.trim().toLowerCase() === msg.toLowerCase()) {
+      sfx('tap');
+      const rid2 = nextId++;
+      fresh.add(rid2);
+      setTimeout(() => push(p => [...p, { id: rid2, role: 'assistant', content: tx('Bunu az önce konuştuk ☕ Başka bir şey eklemek ister misin?') }]), 450);
+      return;
+    }
     // Selam / teşekkür / hoşça kal: hazır cevap, sunucu çağrılmaz, hak düşmez.
     const canned = cannedReply(msg, getLang(), ctx, cannedN++);
     if (canned) {

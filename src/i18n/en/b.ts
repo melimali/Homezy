@@ -206,4 +206,5 @@ export const EN_B: Record<string, string> = {
   '{}, ayrıntı': '{}, details',
  "💬 Günde {} Moka mesajı · 📸 {} fotoğraf taraması": "💬 {} Moka messages a day · 📸 {} photo scans a day",
  "Ücretsizde fotoğraf taraması haftada {}; sohbet Premium'a özel.": "Free plan: {} photo scans a week; chat is Premium only.",
+ 'Bunu az önce konuştuk ☕ Başka bir şey eklemek ister misin?': 'We just talked about that ☕ Anything to add?',
 };

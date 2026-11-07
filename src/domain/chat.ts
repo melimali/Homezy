@@ -34,8 +34,9 @@ export type ChatCtx = {
 /** Sunucuya giden, kısa özet. Fotoğraf, ad, e-posta gibi kişisel veri yok; sadece oda ve iş adları. */
 export function chatCtx(S: AppState, now = Date.now()): ChatCtx {
   const refs = allTasks(S, now);
-  // Önce acil işler; sunucu en fazla 80 iş alıyor.
-  const sorted = [...refs].sort((a, b) => a.s.diff - b.s.diff).slice(0, 40);
+  // Sadece bekleyen işler (gecikmiş / bugün / yakında), acil olandan başlayarak; sunucu en fazla 20 iş alıyor.
+  const open = refs.filter(x => x.s.k !== 'ok');
+  const sorted = (open.length ? open : refs).sort((a, b) => a.s.diff - b.s.diff).slice(0, 20);
   return {
     today: dayKey(now),
     rooms: S.order.filter(id => S.rooms[id]).map(id => ({ id, name: S.rooms[id].name })),

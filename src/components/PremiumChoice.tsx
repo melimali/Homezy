@@ -139,8 +139,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
-        {intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Premium her {unit} kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin.
-        Ödemeyi mağaza alır, kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı kabul edersin.
+        {`${intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Premium her ${unit} kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin. Ödemeyi mağaza alır, kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı kabul edersin.`}
       </T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
         <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>

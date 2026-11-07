@@ -1,5 +1,15 @@
 /** Kişilik / disiplin testi (src/domain/kisilik.ts, src/app/taniyalim.tsx): Türkçe metin → İngilizce. */
 export const EN_M: Record<string, string> = {
+  // Plan seçimi (PremiumChoice) ve ana ekran
+  'Düzenle': 'Edit',
+  'Buzdolabından tarif önerisi': 'Recipe suggestions from your fridge',
+  'Premium her {} kendiliğinden yenilenir': 'Premium renews automatically every {}',
+  'İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin': 'You can cancel any time in your App Store or Google Play subscription settings',
+  'Ödemeyi mağaza alır': 'The store takes the payment',
+  'kart bilgilerin bize gelmez': 'we never see your card details',
+  'Satın alarak Kullanım Koşulları’nı kabul edersin': 'By purchasing you accept the Terms of Use',
+  'İlk ay {}': 'First month {}',
+  'sonra her ay {}': 'then {} a month',
   // Quiz: ad sorusu
   'Sana nasıl seslenelim?': 'What should we call you?',
   'Moka seni adınla karşılasın.': 'Moka will greet you by name.',

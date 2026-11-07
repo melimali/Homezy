@@ -6,8 +6,8 @@ import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { fonts, useColors } from '@/theme';
 
 /**
- * Açılış (~1,9 sn): yazısız, sadece Homezy logosu. Koyu zemin, yumuşak ışık,
- * logo yaylanarak belirir, bir kez ışık geçer. Dokununca ya da "Geç" ile atlanır; her soğuk açılışta bir kez.
+ * Açılış (~1,7 sn): yazısız, sadece Homezy logosu. Koyu zemin, yumuşak ışık,
+ * logo yaylanarak belirir. Dokununca ya da "Geç" ile atlanır; her soğuk açılışta bir kez.
  * Sadece opacity ve transform (useNativeDriver). Döngü yok.
  */
 
@@ -19,7 +19,6 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const [v] = useState(() => ({
     glow: new Animated.Value(0),
     logo: new Animated.Value(0),
-    shine: new Animated.Value(0),
     all: new Animated.Value(1),
   }));
   const [ending, setEnding] = useState(false);
@@ -39,9 +38,8 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
       ]);
     const anim = Animated.parallel([
       t(0, v.glow, 900),
-      Animated.sequence([Animated.delay(150), Animated.spring(v.logo, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true })]),
-      t(650, v.shine, 650),
-      t(1600, v.all, 300, 0),
+      Animated.sequence([Animated.delay(150), Animated.spring(v.logo, { toValue: 1, friction: 9, tension: 60, useNativeDriver: true })]),
+      t(1400, v.all, 300, 0),
     ]);
     AccessibilityInfo.isReduceMotionEnabled()
       .catch(() => false)
@@ -114,6 +112,5 @@ const st = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 10,
   },
-  shine: { position: 'absolute', top: -20, bottom: -20, width: 60, backgroundColor: 'rgba(255,255,255,0.55)' },
   skip: { position: 'absolute', right: 24, bottom: 40, fontFamily: fonts.bodyBold, fontSize: 14, opacity: 0.7 },
 });

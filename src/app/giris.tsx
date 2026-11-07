@@ -1,4 +1,5 @@
 import { useRouter } from "@/lib/nav";
+import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   Image,
@@ -111,6 +112,8 @@ export default function Giris() {
 
   return (
     <ForceScheme scheme="light">
+      {/* Zemin krem: durum çubuğu simgeleri koyu olmalı (sistem koyu temadayken beyaz kalıp görünmüyordu). */}
+      <StatusBar style="dark" />
       <GirisBody
         {...{ mode, name, setName, email, setEmail, password, setPassword, show, setShow, busy, error, info, title, lead, fromApp, switchTo, submit, guest }}
       />

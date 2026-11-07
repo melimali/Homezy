@@ -14,8 +14,9 @@ import { applyChatAction, chatCtx, noteDayLabel, type ChatAction, type ChatMsg }
 import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL } from '@/lib/links';
+import { cannedReply } from '@/domain/chatCanned';
 import { askMoka } from '@/lib/mokaChat';
-import { tx } from '@/i18n/runtime';
+import { getLang, tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -41,6 +42,7 @@ let memory: Item[] = [HELLO];
 let nextId = 1;
 /** Premium olmayan kullanıcı bu oturumda kaç mesaj yazdı (ilk mesaja uzun tanıtım, sonrakilere kısa yönlendirme). */
 let freeAsked = 0;
+let cannedN = 0;
 
 /** Moka ile sohbet: tatlı bir muhabbet ve uygulamayı kontrol eden bir yapay zekâ (Haiku). Sunucuda çalışır, alan dışına çıkmaz. */
 export default function MokaChat() {
@@ -105,9 +107,19 @@ export default function MokaChat() {
       setTimeout(() => push(p => [...p, { id: gid, role: 'assistant', ...gate }]), 500);
       return;
     }
+    const ctx = chatCtx(get());
+    // Selam / teşekkür / hoşça kal: hazır cevap, sunucu çağrılmaz, hak düşmez.
+    const canned = cannedReply(msg, getLang(), ctx, cannedN++);
+    if (canned) {
+      sfx('tap');
+      const cid = nextId++;
+      fresh.add(cid);
+      setTimeout(() => push(p => [...p, { id: cid, role: 'assistant', content: canned }]), 450);
+      return;
+    }
     setBusy(true);
     sfx('tap');
-    const r = await askMoka(history, chatCtx(get()));
+    const r = await askMoka(history, ctx);
     setBusy(false);
     if (!r.ok) {
       push(p => [...p, { id: nextId++, role: 'assistant', content: r.message, error: true, cta: r.account ? 'login' : r.premium ? 'premium' : undefined }]);

@@ -109,6 +109,8 @@ export function CaptchaHost() {
       key={attempt}
       source={{ html: html(SITE_KEY), baseUrl: ORIGIN }}
       originWhitelist={['*']}
+      // Sadece Cloudflare Turnstile ve kendi sayfamız; başka bir adrese gidilemez (WebView açık yönlendirme / kimlik avı yüzeyi olmasın).
+      onShouldStartLoadWithRequest={req => /^(about|data|blob):/i.test(req.url) || req.url.startsWith(ORIGIN) || /^https:\/\/([a-z0-9-]+\.)*cloudflare\.com(\/|$)/i.test(req.url)}
       javaScriptEnabled
       domStorageEnabled
       setSupportMultipleWindows={false}

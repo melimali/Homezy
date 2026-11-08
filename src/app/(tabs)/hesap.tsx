@@ -254,6 +254,7 @@ export default function Hesap() {
       { emoji: '📚', label: 'Kendini geliştir', sub: 'Kitap, film, öğrenme önerileri', tint: c.lavenderSoft, href: '/buyume' as Href },
       { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
       { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${badges.length} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
+      { emoji: '🎮', label: 'Biraz eğlenelim', sub: 'Moka Uçuş', tint: c.lavenderSoft, href: '/eglence' as Href },
       ...(extras ? [
         { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },
         { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },

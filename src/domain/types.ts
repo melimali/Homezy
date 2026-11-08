@@ -275,6 +275,8 @@ export type Growth = {
   seenBadges: string[];
   /** İsteğe bağlı bonus öneriler: gün → kategori → yapıldı / atlandı. Puan ve seriyi etkilemez. */
   bonus: Record<DayKey, Record<string, 'done' | 'skip' | 'add'>>;
+  /** Moka Uçuş oyunu: en iyi skor ve günlük oyun sayısı. Puan / XP vermez. */
+  fun?: { best: number; day: DayKey; plays: number };
 };
 
 export type MokaNote = { id: string; day: DayKey; text: string; at: number };

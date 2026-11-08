@@ -9,6 +9,7 @@ import { DayPlanCard } from '@/components/MoodCheckin';
 import { BonusCard, BonusLocked } from '@/components/BonusCard';
 import { OdakCard } from '@/components/OdakCard';
 import { MikroCard } from '@/components/MikroCard';
+import { FunCard } from '@/components/FunCard';
 import { SecimCard } from '@/components/SecimCard';
 import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
@@ -136,6 +137,7 @@ export default function Bugun() {
       {/* Bonus katmanı tamamen isteğe bağlı: günün ana işleri bitince açılır (puan / seri etkilemez). */}
       {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
       {total === doneN && S.mode?.k !== 'tatil' && <MikroCard />}
+      {total === doneN && <FunCard />}
       {total > doneN && S.mode?.k !== 'tatil' && <BonusLocked left={total - doneN} />}
       <MedsToday />
       <PetsToday />

@@ -143,6 +143,7 @@ function RootStack() {
         <Stack.Screen name="oda/[id]" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="eglence" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="yasal" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />

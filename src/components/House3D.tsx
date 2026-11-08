@@ -8,6 +8,7 @@ import { facadeOf, floorOf, spotOf, wallOf, winOf } from '@/domain/look';
 import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
+import { RECIPES } from '@/domain/itemRecipes';
 import { MokaPet } from '@/components/MokaPet';
 import { useNow } from '@/hooks/useNow';
 import { sfx, haptic } from '@/lib/sfx';
@@ -269,6 +270,11 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
     case 'vazo':
       faces = b('v', 0.35, 0.35, 0.3, 0.3, 0, 10, POT);
       break;
+    default:
+      for (const part of RECIPES[id] ?? []) {
+        if (part[0] === 'b') faces.push(...b(String(extra.length + faces.length), part[1], part[2], part[3], part[4], part[5], part[6], part[7]));
+        else extra.push(ball('o' + extra.length + faces.length, part[1], part[2], part[3], part[4], part[5], part[6] ?? 1));
+      }
   }
   return [...faces.map(renderFace), ...extra];
 }

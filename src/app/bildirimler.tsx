@@ -115,13 +115,23 @@ export default function Bildirimler() {
         {s.routine && (
           <Toggle
             label="Bildirimden cevapla ✅"
-            sub="Günün en acil 3 işi ayrı bildirimle gelir; uygulamayı açmadan “Yaptım” de, puanın ve serin işlensin. “Yapmadım” işi yarına erteler."
+            sub="Günün en acil 3 işi ayrı bildirimle gelir; uygulamayı açmadan “Yaptım” de, puanın ve serin işlensin. “1 saat sonra” ya da “Yarın” ile ertele."
             value={s.actions}
             onChange={v => set('actions', v)}
           />
         )}
         <Toggle label="Haftalık özet 📅" sub="Pazar akşamı 19:00'da haftanın özeti" value={s.weekly} onChange={v => set('weekly', v)} />
       </Card>
+
+      {Platform.OS === 'android' && (
+        <Card>
+          <SecHead title="Bildirimler gelmiyor mu? 🔋" />
+          <T v="small">
+            Xiaomi, Redmi, POCO, Oppo, Huawei ve Samsung telefonlar kapalı uygulamaların bildirimini pil tasarrufu için engelleyebilir. Uygulama bilgisinde “Pil” → “Kısıtlama yok” seç, Xiaomi’de ayrıca “Otomatik başlat”ı aç ve uygulamayı son kullanılanlarda kilitle (karta uzun bas → kilit).
+          </T>
+          <Btn label="Uygulama ayarlarını aç" small onPress={() => Linking.openSettings().catch(() => {})} />
+        </Card>
+      )}
 
       <Card>
         <SecHead title="Ev hatırlatmaları" />

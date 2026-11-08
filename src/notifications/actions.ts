@@ -10,6 +10,7 @@ import { markDose } from '@/domain/meds';
 import { markPetDone } from '@/domain/pets';
 import { addXp } from '@/domain/mokaLevel';
 import { awardedToday, awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
+import { isQuiet, QUIET_TO } from '@/domain/formulas';
 import { limits } from '@/domain/premium';
 import type { AppState, TaskList } from '@/domain/types';
 
@@ -46,7 +47,7 @@ export type TaskAction = typeof DONE | typeof SKIP;
 type NotificationsModule = typeof NotificationsTypes;
 
 /** Bildirime konan veri. `premium`: zamanlandığı andaki üyelik; arka planda abonelik bilinmiyor. */
-export type TaskData = { url: string; tid: string; list: TaskList; premium: boolean };
+export type TaskData = { url: string; tid: string; list: TaskList; premium: boolean; snooze?: boolean };
 
 export async function ensureCategories(N: NotificationsModule) {
   // Web'de ve bazı Expo Go sürümlerinde kategori desteği yok; o zaman bildirimler düğmesiz gelir.
@@ -54,11 +55,13 @@ export async function ensureCategories(N: NotificationsModule) {
   const opts = { opensAppToForeground: false };
   await N.setNotificationCategoryAsync(TASK_CATEGORY, [
     { identifier: DONE, buttonTitle: tx('✅ Yaptım'), options: opts },
-    { identifier: SKIP, buttonTitle: tx('⏰ Yapmadım, yarın'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 1 saat sonra'), options: opts },
+    { identifier: SKIP, buttonTitle: tx('🌙 Yarın'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(PLANT_CATEGORY, [
     { identifier: DONE, buttonTitle: tx('💧 Suladım'), options: opts },
-    { identifier: SKIP, buttonTitle: tx('⏰ Sulamadım, yarın'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 1 saat sonra'), options: opts },
+    { identifier: SKIP, buttonTitle: tx('🌙 Yarın'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(MED_CATEGORY, [
     { identifier: TAKEN, buttonTitle: tx('💊 Aldım'), options: opts },
@@ -165,7 +168,7 @@ export function taskDataOf(content: { data?: unknown; dataString?: unknown } | u
     }
   }
   if (!data || typeof data.tid !== 'string' || typeof data.list !== 'string') return null;
-  return { url: data.url ?? '/bugun', tid: data.tid, list: data.list, premium: !!data.premium };
+  return { url: data.url ?? '/bugun', tid: data.tid, list: data.list, premium: !!data.premium, snooze: !!data.snooze };
 }
 
 /** Uygulama açıkken store'a giden yol. Kök layout'taki `useNotificationSync` kaydeder. */
@@ -259,7 +262,7 @@ export async function handleTaskAction(
   const { id, action } = r;
   const rem = reminderDataOf(r.content);
   if (rem) return handleReminder(N, r as ReminderResponse, rem, reschedule);
-  if (action !== DONE && action !== SKIP) return false;
+  if (action !== DONE && action !== SKIP && action !== LATER) return false;
   const data = taskDataOf(r.content);
   if (!data) return false;
   const key = `${id}:${action}`;
@@ -271,6 +274,31 @@ export async function handleTaskAction(
   if (dayKey(toMs(r.date) || now) !== dayKey(now)) {
     await N.dismissNotificationAsync(id).catch(() => {});
     return true;
+  }
+  if (action === LATER) {
+    // 1 saat sonrasına aynı bildirimi yeniden kurar; sessiz saate denk gelirse sabaha kaydırır.
+    let at = new Date(now + 60 * 60000);
+    if (isQuiet(at.getHours() * 60 + at.getMinutes())) {
+      at = new Date(at.getHours() * 60 + at.getMinutes() >= QUIET_TO ? at.getTime() + DAY : at.getTime());
+      at.setHours(Math.floor(QUIET_TO / 60), QUIET_TO % 60, 0, 0);
+    }
+    await N.scheduleNotificationAsync({
+      identifier: `z-gorev-${data.tid}-${now}`,
+      content: {
+        title: r.content?.title ?? '',
+        body: r.content?.body ?? '',
+        data: { ...data, snooze: true },
+        categoryIdentifier: data.list === 'plants' ? PLANT_CATEGORY : TASK_CATEGORY,
+      },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: 'isler' },
+    }).catch(e => console.warn('Homezy: erteleme kurulamadı', e));
+    await N.dismissNotificationAsync(id).catch(() => {});
+    return true;
+  }
+  // Yapıldı / yarına ertelendi: bekleyen "1 saat sonra" kopyaları susar.
+  for (const n of await N.getAllScheduledNotificationsAsync().catch(() => [])) {
+    const nd = taskDataOf(n.content as ResponseContent);
+    if (nd?.snooze && nd.tid === data.tid) await N.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
   }
   const mult = limits(data.premium).mult;
   let outcome: ActionOutcome | null = null;

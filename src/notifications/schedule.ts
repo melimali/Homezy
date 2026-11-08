@@ -10,7 +10,7 @@ import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
 import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
-import { learnedTime, thinNotifications } from '@/domain/formulas';
+import { learnedTime, NOTIF_DAY_MAX, notifEveryDays, thinNotifications } from '@/domain/formulas';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
 import { petNotifs, stillDue } from '@/domain/pets';
@@ -183,21 +183,31 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
     const rem = reminderDataOf(n.content);
     const doneAlready = rem?.kind === 'med' ? !!(rem.key && S.medLog[dayKey(now0)]?.[rem.key]) : rem?.kind === 'pet' ? !(rem.key && stillDue(S, rem.key, now0)) : false;
     if (rem?.snooze && !doneAlready) continue;
+    const td = taskDataOf(n.content);
+    if (td?.snooze) {
+      const t = allTasks(S, now0).find(x => x.t.id === td.tid)?.t;
+      if (t && !doneToday(t, now0) && !(t.snooze != null && t.snooze > now0)) continue;
+    }
     await N.cancelScheduledNotificationAsync(n.identifier);
   }
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
   const now = Date.now();
+  // Yok sayılan günlerde seyrelt: 2-3 gün uzaksa gün aşırı, 4+ ise 3 günde bir (uygulamayı açınca sayaç sıfırlanır).
+  const every = notifEveryDays(awayAhead(S.play, 0, now) ?? 0);
+  const ownPerDay = new Map<string, number>();
   for (let d = 0; d < DAYS_AHEAD; d++) {
     const at = new Date(now + d * DAY);
     at.setHours(hh || 0, mm || 0, 0, 0);
     if (at.getTime() <= now) continue;
+    if (d % every) continue;
     const ns = notifs(S, at.getTime());
     // Akıllı bildirim: acil bir şey yoksa sabah özetiyle rahatsız etme.
     if (smart && !ns.some(n => n.k !== 'ok')) continue;
     // En acil işler kendi bildirimiyle, düğmeleriyle gelir; özet geri kalanları toplar.
     const own = ownNotices(S, ns);
+    ownPerDay.set(dayKey(at.getTime()), own.length);
     for (const n of own) {
       const data: TaskData = { url: n.url ?? `/oda/${n.rid}`, tid: n.tid!, list: n.list!, premium };
       await N.scheduleNotificationAsync({
@@ -219,7 +229,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
-  for (const n of thinNudges(nudges(S, now, smart, premium), (hh || 0) * 60 + (mm || 0)))
+  for (const n of thinNudges(nudges(S, now, smart, premium, every), (hh || 0) * 60 + (mm || 0), ownPerDay))
     await N.scheduleNotificationAsync({
       content: {
         title: tx(n.title),
@@ -259,7 +269,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
  * Spam önleme: her gün için sabah özeti saati ayrılır, sonra hatırlatmalar sessiz saatlere (22:00–07:30) düşmez,
  * art arda ikisi 90 dk'dan yakın olmaz, günlük toplam (özet dahil) 4'ü geçmez. Öncelik: seri/karşılama, spor ve diğerleri, su.
  */
-export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[], summaryMinute: number): T[] {
+export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[], summaryMinute: number, ownPerDay: Map<string, number> = new Map()): T[] {
   const byDay = new Map<string, { minute: number; rank: number; n: T | null }[]>();
   for (const n of list) {
     const k = dayKey(n.at.getTime());
@@ -268,7 +278,8 @@ export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[
     byDay.set(k, arr);
   }
   const keep = new Set<T>();
-  for (const arr of byDay.values()) for (const x of thinNotifications(arr)) if (x.n) keep.add(x.n);
+  // Ayrı gelen acil iş bildirimleri de günlük sınıra sayılır.
+  for (const [k, arr] of byDay) for (const x of thinNotifications(arr, Math.max(1, NOTIF_DAY_MAX - (ownPerDay.get(k) ?? 0)))) if (x.n) keep.add(x.n);
   return list.filter(n => keep.has(n));
 }
 
@@ -278,7 +289,7 @@ export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[
  * Akşam hatırlatması evin durumuna göre değişir: toz, çatlak, "son şans". Birkaç gün gelmeyene
  * her akşam değil, 3., 5. ve 7. gün nazik bir "kaldığın yerden devam" gider.
  */
-export function nudges(S: AppState, now = Date.now(), smart = false, premium = false) {
+export function nudges(S: AppState, now = Date.now(), smart = false, premium = false, every = 1) {
   const out: { at: Date; title: string; body: string; url: string; kind?: ReminderKind }[] = [];
   const set = S.settings;
   const today = dayKey(now);
@@ -290,26 +301,27 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
   for (let d = 0; d < DAYS_AHEAD; d++) {
     const base = new Date(now + d * DAY);
     const key = dayKey(base.getTime());
+    const light = d % every !== 0; // seyreltilen günlerde isteğe bağlı hatırlatmalar susar
     if (set.sport && set.sportDays.includes(base.getDay()) && !(key === today && awardedToday(S.play, 'spor', 'spor', now))) {
       const at = new Date(base);
       at.setHours(sh || 0, sm || 0, 0, 0);
       if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor', kind: 'sport' });
     }
     // Okuma hedefi: kitap ya da okuma kaydı olanlara akşam 21:00, o gün hedef tutulmadıysa.
-    if (set.read && (S.play.growth.books.length || S.play.growth.reads.length) && !(key === today && goalMet(S.play.growth, today))) {
+    if (!light && set.read && (S.play.growth.books.length || S.play.growth.reads.length) && !(key === today && goalMet(S.play.growth, today))) {
       const at = new Date(base);
       at.setHours(21, 0, 0, 0);
       if (at.getTime() > now) out.push({ at, title: '📖 Okuma vakti', body: `Bugün ${S.play.growth.goalMin} dakika okumaya ne dersin? Moka yanında ☕`, url: '/buyume' });
     }
     // Su: gün içinde iki kez, o günün hedefi tutulmadıysa. Uyku: yatıştan 30 dk önce.
-    if (set.water && !(key === today && waterMet(S.play.habits, hKey(now)))) {
+    if (!light && set.water && !(key === today && waterMet(S.play.habits, hKey(now)))) {
       for (const hr of [12, 17]) {
         const at = new Date(base);
         at.setHours(hr, 0, 0, 0);
         if (at.getTime() > now) out.push({ at, ...waterNudge(`su${hr}`, at.getTime()), url: '/aliskanlik', kind: 'water' });
       }
     }
-    if (set.sleepRemind && S.play.habits.sleep && Object.keys(S.play.habits.sleep).length) {
+    if (!light && set.sleepRemind && S.play.habits.sleep && Object.keys(S.play.habits.sleep).length) {
       const [bh, bm] = S.play.habits.bedtime.split(':').map(n => parseInt(n, 10));
       const at = new Date(base);
       at.setHours(bh || 0, (bm || 0) - 30, 0, 0);

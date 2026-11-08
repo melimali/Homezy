@@ -1,13 +1,15 @@
 import { useRef, useState } from 'react';
-import { Share, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { PaperNote, NoteLine, type NoteHandle } from '@/components/PaperNote';
 import { Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, EmptyMsg, Field, Screen, T, XBtn } from '@/components/ui';
+import { BackLink, Bar, Btn, Card, Chip, EmptyMsg, Field, Screen, T, XBtn } from '@/components/ui';
+import { cartTotal, listTotal, lastMonths, money, parsePrice, setLimit, setPrice, spentIn } from '@/domain/budget';
 import { dayKey } from '@/domain/play';
 import { addShop, catOf, clearChecked, forgetUsual, forgotHints, removeShop, SHOP_CATS, shopLeft, shopText, suggestions, toggleShop } from '@/domain/shopping';
 import type { ShopCat } from '@/domain/types';
+import { dateLocale, tx } from '@/i18n/runtime';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, useColors } from '@/theme';
@@ -21,6 +23,25 @@ export default function Alisveris() {
   const [name, setName] = useState('');
   const note = useRef<NoteHandle>(null);
   const [cat, setCat] = useState<ShopCat>('market');
+  const [editing, setEditing] = useState<string | null>(null);
+  const [priceTxt, setPriceTxt] = useState('');
+  const [limitTxt, setLimitTxt] = useState('');
+  const [showBudget, setShowBudget] = useState(false);
+  const month = spentIn(S, now);
+  const limit = S.budget?.limit ?? 0;
+  const edit = S.shop.find(i => i.id === editing);
+  const savePrice = () => {
+    const v = priceTxt.trim() ? parsePrice(priceTxt) : null;
+    if (priceTxt.trim() && v == null) return toast('Geçerli bir fiyat yaz.');
+    if (editing) update(D => void setPrice(D, editing, v));
+    setEditing(null);
+  };
+  const saveLimit = () => {
+    const v = limitTxt.trim() ? parsePrice(limitTxt) : 0;
+    if (v == null) return toast('Geçerli bir tutar yaz.');
+    update(D => void setLimit(D, v));
+    toast(v ? 'Aylık bütçe kaydedildi.' : 'Bütçe sınırı kaldırıldı.');
+  };
   const hints = S.shopHide === dayKey(now) ? [] : forgotHints(S, now);
   const sug = suggestions(S).slice(0, 10);
   const checked = S.shop.filter(i => i.done).length;
@@ -82,6 +103,49 @@ export default function Alisveris() {
         </Card>
       )}
 
+      <Card>
+        <Pressable onPress={() => setShowBudget(v => !v)} accessibilityRole="button" accessibilityState={{ expanded: showBudget }} accessibilityLabel="Bütçe">
+          <View style={st.hintHead}>
+            <T v="h3" style={{ flex: 1 }}>💰 Bütçe</T>
+            <T v="bold">{money(month.total)}{limit ? ` / ${money(limit)}` : ''}</T>
+          </View>
+        </Pressable>
+        {limit > 0 && <Bar value={Math.min(1, month.total / limit)} color={month.total > limit ? c.late : c.accent} track={c.surface2} height={10} />}
+        {limit > 0 && month.total > limit && <T v="small" style={{ color: c.late }}>Bu ay bütçeyi aştın.</T>}
+        {listTotal(S) > 0 && <T v="small">Listedeki tahmini toplam: {money(listTotal(S))}{cartTotal(S) > 0 ? ` · Sepet: ${money(cartTotal(S))}` : ''}</T>}
+        {showBudget && (
+          <>
+            <T v="small">Ürünün yanındaki fiyata dokunup tutarı yaz. Alınanları temizleyince tutar bu ayın harcamasına yazılır.</T>
+            <Field value={limitTxt} onChangeText={setLimitTxt} placeholder={limit ? `Aylık bütçe (şimdi ${money(limit)})` : 'Aylık bütçe (ör. 5000)'} keyboardType="decimal-pad" accessibilityLabel="Aylık bütçe" maxLength={9} />
+            <Btn small kind="soft" label="Bütçeyi kaydet" onPress={saveLimit} />
+            {lastMonths(S, 6, now).some(m => m.total > 0) && (
+              <View style={st.months}>
+                {lastMonths(S, 6, now).map(m => {
+                  const peak = Math.max(...lastMonths(S, 6, now).map(x => x.total), 1);
+                  return (
+                    <View key={`${m.label}-${m.month}`} style={st.mcol} accessible accessibilityLabel={`${new Date(m.label, m.month, 1).toLocaleDateString(dateLocale(), { month: 'long' })}, ${money(m.total)}`}>
+                      <View style={[st.mbar, { height: 6 + 54 * (m.total / peak), backgroundColor: m.total > 0 ? c.accent : c.surface2 }]} />
+                      <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: c.muted }}>{new Date(m.label, m.month, 1).toLocaleDateString(dateLocale(), { month: 'short' })}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </>
+        )}
+      </Card>
+
+      {edit && (
+        <Card>
+          <T v="bold">{edit.name} için fiyat</T>
+          <Field value={priceTxt} onChangeText={setPriceTxt} placeholder="Fiyat (ör. 39,90)" keyboardType="decimal-pad" autoFocus accessibilityLabel="Fiyat" maxLength={9} onSubmitEditing={savePrice} />
+          <View style={st.wrap}>
+            <Btn small kind="primary" label="Kaydet" onPress={savePrice} />
+            <Btn small kind="ghost" label="Vazgeç" onPress={() => setEditing(null)} />
+          </View>
+        </Card>
+      )}
+
       {!S.shop.length && <EmptyMsg>Liste boş. Bir ürün ekle ya da önerilerden seç.</EmptyMsg>}
 
       {S.shop.length > 0 && (
@@ -96,7 +160,16 @@ export default function Alisveris() {
                 {xs.map(i => (
                   <NoteLine key={i.id} done={i.done} label={i.name}
                     onToggle={() => { update(D => void toggleShop(D, i.id)); note.current?.sway(); }}
-                    right={<XBtn label={`${i.name} ürününü sil`} onPress={() => update(D => void removeShop(D, i.id))} />} />
+                    right={(
+                      <View style={st.right}>
+                        <Pressable onPress={() => { setEditing(i.id); setPriceTxt(i.price ? String(i.price).replace('.', ',') : ''); }} hitSlop={8}
+                          accessibilityRole="button" accessibilityLabel={tx(i.price ? `${i.name} fiyatı` : `${i.name} için fiyat ekle`)}
+                          style={[st.price, { backgroundColor: 'rgba(40,48,68,0.1)' }]}>
+                          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>{i.price ? money(i.price) : '₺ +'}</Text>
+                        </Pressable>
+                        <XBtn label={`${i.name} ürününü sil`} onPress={() => update(D => void removeShop(D, i.id))} />
+                      </View>
+                    )} />
                 ))}
               </View>
             );
@@ -135,5 +208,10 @@ const st = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   noteTitle: { fontFamily: fonts.hand, fontSize: 34, lineHeight: 40, textAlign: 'center', marginBottom: 4 },
   cat: { fontFamily: fonts.hand, fontSize: 24, lineHeight: 30, marginTop: 8 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  price: { minHeight: 32, minWidth: 44, borderRadius: 999, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
+  months: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, paddingTop: 6 },
+  mcol: { flex: 1, alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
+  mbar: { width: '70%', borderRadius: 6 },
   usual: { borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
 });

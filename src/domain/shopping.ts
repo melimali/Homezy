@@ -1,3 +1,4 @@
+import { logPurchases } from '@/domain/budget';
 import { uid } from '@/domain/logic';
 import type { AppState, ShopCat, ShopItem } from '@/domain/types';
 
@@ -37,6 +38,7 @@ export const removeShop = (S: AppState, id: string) => {
 /** Alınanları listeden kaldırır; kaldırılanlar "sık alınanlar"a girer (bitince tek dokunuşla geri eklenir). Kaldırılan sayısı döner. */
 export function clearChecked(S: AppState): number {
   const gone = S.shop.filter(i => i.done);
+  logPurchases(S);
   for (const g of gone) {
     S.shopUsual = [{ name: g.name, cat: g.cat }, ...S.shopUsual.filter(u => !(u.cat === g.cat && same(u.name, g.name)))].slice(0, USUAL_CAP);
   }

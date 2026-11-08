@@ -6,7 +6,7 @@ import { Share, StyleSheet, Text, View } from 'react-native';
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { PremiumLock } from '@/components/PremiumLock';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Field, Screen, SecHead, T, XBtn, EmptyMsg } from '@/components/ui';
+import { BackLink, Bar, Btn, Card, Field, Screen, SecHead, T, XBtn, EmptyMsg } from '@/components/ui';
 import { FAMILY_MAX, GOAL_IDEAS, goalPct } from '@/domain/family';
 import { switchHome } from '@/domain/homes';
 import { useFamily } from '@/family/FamilyProvider';
@@ -26,7 +26,7 @@ export default function Aile() {
   const { session, user } = useAuth();
   const { premium } = usePurchases();
   const { state: S, update } = useStore();
-  const { info, loading, sharedId, sharing, create, join, leave, kick, goals, addGoal, logGoal, removeGoal } = useFamily();
+  const { info, loading, sharedId, sharing, create, join, leave, kick, goals, addGoal, logGoal, removeGoal, week } = useFamily();
   const [adding, setAdding] = useState(false);
   const [code, setCode] = useState('');
   const [name, setName] = useState(displayName(user));
@@ -109,6 +109,29 @@ export default function Aile() {
             ))}
             <T v="small">İşleri bölüşmek için oda ekranında bir işin yanındaki 👤 düğmesine dokun.</T>
           </Card>
+          {info.active && week.length > 0 && (() => {
+            const total = week.reduce((a, r) => a + r.done, 0);
+            const top = Math.max(...week.map(r => r.done), 1);
+            return (
+              <Card>
+                <SecHead title="Bu hafta birlikte 🏠" right={`${total}`} />
+                {week.map(r => {
+                  const m = info.members.find(x => x.id === r.userId);
+                  if (!m) return null;
+                  return (
+                    <View key={r.userId} style={{ gap: 4 }} accessible accessibilityLabel={`${m.name}, ${r.done} iş, bugün ${r.today}`}>
+                      <View style={styles.row}>
+                        <T v="bold" style={{ flex: 1 }}>{m.name.split(' ')[0]}{r.userId === session.user.id ? ' (sen)' : ''}</T>
+                        <T v="small">{r.done} iş{r.today ? ` · bugün ${r.today}` : ''}</T>
+                      </View>
+                      <Bar value={r.done / top} color={c.accent} track={c.surface2} height={8} />
+                    </View>
+                  );
+                })}
+                <T v="small">Herkesin son 7 günde tamamladığı iş sayısı. Hangi iş olduğu ve puanın paylaşılmaz.</T>
+              </Card>
+            );
+          })()}
           {info.active && (
             <Card>
               <SecHead title="Ortak hedefler 🎯" right={goals.length ? String(goals.length) : undefined} />

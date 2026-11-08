@@ -427,6 +427,7 @@ export function emptyState(): AppState {
     shop: [],
     shopUsual: [],
     shopHide: '',
+    budget: { limit: 0, log: [] },
   };
 }
 

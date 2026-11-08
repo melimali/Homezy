@@ -93,7 +93,13 @@ export default function Bugun() {
   const tour = useTabTour('bugun', [...TOUR]);
   return (
     <Screen header={false} tab tone="rose" {...tour.screen}>
-      <TitleBar title="Bugün" right={<IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />} />
+      <TitleBar title="Bugün" right={(
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <IconBtn icon="🔎" label="Ara" onPress={() => router.push('/ara' as never)} />
+          <IconBtn icon="📅" label="Takvim" onPress={() => router.push('/takvim' as never)} />
+          <IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />
+        </View>
+      )} />
       <WeekStrip now={now} />
       <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
       <RampCard />

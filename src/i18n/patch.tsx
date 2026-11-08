@@ -2,7 +2,7 @@
  * react-native'in Text, TextInput ve Alert bileşenlerini sarar: İngilizce iken içindeki metinler
  * `tx()` ile çevrilir. Böylece her ekranın metni tek tek değiştirilmeden çevrilir. _layout.tsx en üstte yükler.
  */
-import { createElement, type ComponentType, type ReactNode } from 'react';
+import { createElement, forwardRef, type ComponentType, type ReactNode } from 'react';
 import type * as RNTypes from 'react-native';
 
 import { tx } from './runtime';
@@ -45,7 +45,24 @@ export function installTranslationPatch() {
     createElement(OrigInput, {
       ...props,
       ...(typeof props.placeholder === 'string' ? { placeholder: tx(props.placeholder) } : null),
+      ...(typeof props.accessibilityLabel === 'string' ? { accessibilityLabel: tx(props.accessibilityLabel) } : null),
     });
+  // Ekran okuyucu etiketleri: Pressable ve Switch'in accessibilityLabel / accessibilityHint metinleri de çevrilir.
+  const labelled = (Orig: ComponentType<Record<string, unknown>>, name: string) => {
+    const W = forwardRef<unknown, Record<string, unknown>>((props, ref) =>
+      createElement(Orig, {
+        ...props,
+        ref,
+        ...(typeof props.accessibilityLabel === 'string' ? { accessibilityLabel: tx(props.accessibilityLabel) } : null),
+        ...(typeof props.accessibilityHint === 'string' ? { accessibilityHint: tx(props.accessibilityHint) } : null),
+      }),
+    );
+    W.displayName = name;
+    return W;
+  };
+  const OrigPressable = RN.Pressable as unknown as ComponentType<Record<string, unknown>>;
+  const OrigSwitch = RN.Switch as unknown as ComponentType<Record<string, unknown>>;
+
   // ref ve statik üyeler (ör. TextInput.State) için özellikleri taşı.
   Object.assign(PText, OrigText);
   Object.assign(PInput, OrigInput);
@@ -73,4 +90,6 @@ export function installTranslationPatch() {
   define('Text', PText);
   define('TextInput', PInput);
   define('Alert', PAlert);
+  define('Pressable', labelled(OrigPressable, 'Pressable'));
+  define('Switch', labelled(OrigSwitch, 'Switch'));
 }

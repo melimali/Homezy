@@ -85,6 +85,7 @@ export function normalize(S: AppState): AppState {
   S.shop ??= [];
   S.shopUsual ??= [];
   S.shopHide ??= '';
+  S.budget ??= { limit: 0, log: [] };
   // 2. kat: boyutu planla uyuşmuyorsa (eski kayıt) yok sayılır.
   if (S.cells2 && S.cells2.length !== S.cols * S.rows) S.cells2 = null;
   S.cells2 ??= null;

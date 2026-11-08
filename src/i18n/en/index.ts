@@ -23,6 +23,7 @@ import { EN_FUN } from './fun';
 import { EN_R } from './r';
 import { EN_S } from './s';
 import { EN_VIS } from './vis';
+import { EN_T } from './t';
 
 /** Türkçe metin → İngilizce. `{}` değişken yeridir (sırayla). a.ts önce gelir, b.ts yalnızca eksikleri tamamlar. */
-export const EN: Record<string, string> = { ...EN_SHOP, ...EN_PET, ...EN_M, ...EN_K, ...EN_J, ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_I, ...EN_A, ...EN_L, ...EN_N, ...EN_O, ...EN_P, ...EN_Q, ...EN_NOTIF, ...EN_TIPS, ...EN_FUN, ...EN_R, ...EN_S, ...EN_VIS };
+export const EN: Record<string, string> = { ...EN_SHOP, ...EN_PET, ...EN_M, ...EN_K, ...EN_J, ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_I, ...EN_A, ...EN_L, ...EN_N, ...EN_O, ...EN_P, ...EN_Q, ...EN_NOTIF, ...EN_TIPS, ...EN_FUN, ...EN_R, ...EN_S, ...EN_VIS, ...EN_T };

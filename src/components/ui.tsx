@@ -21,6 +21,7 @@ import { useRouter } from '@/lib/nav';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fmtShort, notifs } from '@/domain/logic';
+import { tx } from '@/i18n/runtime';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
@@ -462,7 +463,7 @@ function Dots({ color }: { color: string }) {
 export function XBtn({ onPress, label }: { onPress: () => void; label: string }) {
   const c = useColors();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={10}
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={tx(label)} hitSlop={14}
       style={({ pressed }) => [styles.x, { backgroundColor: pressed ? c.line : c.surface2 }]}>
       <Svg width={14} height={14} viewBox="0 0 24 24"><Path d="M6 6l12 12M18 6L6 18" stroke={c.muted} strokeWidth={3} strokeLinecap="round" /></Svg>
     </Pressable>
@@ -561,7 +562,7 @@ export function Sheet({ open, onClose, children, pose = 'happy', scroll = false 
   const { height } = useWindowDimensions();
   return (
     <Modal visible={open} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityLabel="Kapat" />
+      <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
       <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }, scroll && { maxHeight: height - insets.top - 90 }]}>
         <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
         <View style={[styles.grab, { backgroundColor: c.line }]} />

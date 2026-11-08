@@ -335,7 +335,10 @@ export type Pet = { id: string; name: string; kind: PetKind; emoji?: string; ite
 
 /** Alışveriş listesi. `usual`: daha önce alınıp listeden temizlenenler (bitince tek dokunuşla tekrar eklenir). */
 export type ShopCat = 'market' | 'temizlik' | 'ev' | 'evcil';
-export type ShopItem = { id: string; name: string; cat: ShopCat; done: boolean; at: number };
+export type ShopItem = { id: string; name: string; cat: ShopCat; done: boolean; at: number; /** Tahmini ya da gerçek fiyat (TL/₺ ya da yerel para birimi). Yoksa bütçeye sayılmaz. */ price?: number };
+/** Bütçe kaydı: alışveriş listesinden temizlenen fiyatlı ürünler. */
+export type SpendEntry = { at: number; name: string; cat: ShopCat; amt: number };
+export type Budget = { /** Aylık alışveriş bütçesi; 0: sınır yok. */ limit: number; log: SpendEntry[] };
 export type ShopUsual = { name: string; cat: ShopCat };
 
 export type AppState = {
@@ -372,6 +375,8 @@ export type AppState = {
   shopUsual: ShopUsual[];
   /** İpucu kartını gizlediği gün (`dayKey`); ertesi gün yeniden görünür. */
   shopHide: string;
+  /** Alışveriş bütçesi (src/domain/budget.ts). Yoksa boş. */
+  budget?: Budget;
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

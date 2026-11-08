@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text as RNText, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -984,6 +984,8 @@ type Props = {
   /** İki parmakla büyütme sadece tam ekran ev görünümünde (Evim); ana ekrandaki önizlemede kapalı. */
   pinchZoom?: boolean;
   mood?: Mood;
+  /** Dokununca odaya yaklaş (kamera odaya kayar, yakınlaşır); "Odaya gir" onOpenRoom'u çağırır. Yakınlaştırma ile çatı kalkar, uzaklaştırınca çatılı ev görünür. */
+  roomZoom?: boolean;
   /**
    * Gösterilen kat (dubleks). 0: zemin kat (üst kat gizli, içi görünsün). 1: üst kat; zemin kat
    * altında kapalı bir kütle olarak durur, pencereleri ve kapısıyla.
@@ -991,7 +993,7 @@ type Props = {
   floor?: Floor;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0 }: Props) {
+export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1014,7 +1016,10 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const [boxW, setBoxW] = useState(0);
   const [burst, setBurst] = useState(0);
   const [pinch] = useState(() => new Animated.Value(1));
-  const pinchRef = useRef({ d: 0, base: 1, cur: 1 });
+  const [pan] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
+  const pinchRef = useRef({ d: 0, base: 1, cur: 1, px: 0, py: 0, lx: 0, ly: 0, moved: false });
+  const [focus, setFocus] = useState<string | null>(null);
+  const focusFn = useRef<(id: string | null) => void>(() => {});
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
@@ -1177,7 +1182,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const handleOpenRoom = (id: string) => {
     haptic('light');
     sfx('tap');
-    onOpenRoom?.(id);
+    if (roomZoom) focusFn.current(id);
+    else onOpenRoom?.(id);
   };
   const handlePressHouse = () => {
     haptic('light');
@@ -1446,6 +1452,67 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
   }
 
+  // Çatı ve dış görünüm: uzaklaştırınca (pinch < 1) belirir, yaklaşınca kalkar. Her blok kısa bir kırma çatı.
+  const roofEls: ReactElement[] = [];
+  if (L >= 3) {
+    const roofBase = dark ? '#8A5C52' : '#C8826B';
+    const snowy = theme === 'kis';
+    const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
+    const o = 0.1, apexZ = WALL_H + 17;
+    for (const i of order) {
+      const r = Math.floor(i / cols), col = i % cols, tint = mix(rc, '#FFFFFF', ((r * 5 + col * 3) % 4) * 0.025);
+      const apex = P(r + 0.5, col + 0.5, apexZ);
+      const sw = P(r + 1 + o, col - o, WALL_H), se = P(r + 1 + o, col + 1 + o, WALL_H), ne = P(r - o, col + 1 + o, WALL_H);
+      roofEls.push(
+        <Polygon key={'rs' + i} points={pts([sw, se, apex])} fill={tint} stroke={shade(tint, -0.25)} strokeWidth={0.7} strokeLinejoin="round" />,
+        <Polygon key={'re' + i} points={pts([se, ne, apex])} fill={shade(tint, -0.16)} stroke={shade(tint, -0.3)} strokeWidth={0.7} strokeLinejoin="round" />,
+        <Polyline key={'rh' + i} points={pts([sw, apex, se])} fill="none" stroke="#FFFFFF" strokeOpacity={0.35} strokeWidth={0.9} strokeLinecap="round" strokeLinejoin="round" />,
+      );
+      for (const pt of [apex, sw, se, ne]) grow(pt);
+    }
+    if (L >= 7 && order.length) {
+      const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;
+      box('rchim', cr + 0.55, cc + 0.55, 0.16, 0.16, WALL_H + 8, 14, BRICK, 0.4).forEach(f => roofEls.push(renderFace(f)));
+    }
+  }
+  // Dış görünüm, bahçe henüz küçükken: çit, ağaçlar ve yol (sonra gelen bahçe süsleri bunların yerini alır).
+  const extEls: ReactElement[] = [];
+  if (L >= 3 && floor === 0 && order.length && L < 22) {
+    const rr = rMax + 0.55, c0 = cMin - 0.5, c1 = cMax + 0.5, r0 = rMin - 0.5;
+    const fenceC = '#EADFCF';
+    const post = (key: string, a: number, b: number) => {
+      const [x, y] = P(a, b, 0), [x2, y2] = P(a, b, 9);
+      extEls.push(<Polyline key={key} points={pts([[x, y], [x2, y2]])} stroke={fenceC} strokeWidth={2.2} strokeLinecap="round" fill="none" />);
+    };
+    for (let v = c0; v <= c1 + 0.01; v += 0.5) post('fp' + v, rr, v);
+    for (let u = r0; u <= rr + 0.01; u += 0.5) post('fq' + u, u, c1);
+    extEls.push(
+      <Polyline key="frs" points={pts([P(rr, c0, 6), P(rr, c1, 6), P(r0, c1, 6)])} stroke={fenceC} strokeWidth={1.6} fill="none" strokeLinejoin="round" />,
+      <Polyline key="frt" points={pts([P(rr, c0, 3), P(rr, c1, 3), P(r0, c1, 3)])} stroke={fenceC} strokeWidth={1.2} fill="none" strokeLinejoin="round" />,
+    );
+    // Taş yol: evin ön kenarından çite doğru.
+    const mid = (cMin + cMax) / 2;
+    extEls.push(<Polygon key="path" points={pts([P(rMax, mid - 0.25), P(rMax, mid + 0.25), P(rr, mid + 0.25), P(rr, mid - 0.25)])} fill="#D8C7AE" />);
+    const tree = (key: string, a: number, b: number, s: number) => {
+      const [x, y] = P(a, b, 0);
+      extEls.push(
+        <G key={key}>
+          <Ellipse cx={x} cy={y + 1} rx={9 * s} ry={3.5 * s} fill="rgba(40,48,68,0.14)" />
+          <Polyline points={pts([[x, y], [x, y - 14 * s]])} stroke="#8C5E45" strokeWidth={3 * s} strokeLinecap="round" fill="none" />
+          <Circle cx={x} cy={y - 21 * s} r={11 * s} fill={LEAF} />
+          <Circle cx={x - 4 * s} cy={y - 24 * s} r={5 * s} fill={shade(LEAF, 0.2)} fillOpacity={0.7} />
+        </G>,
+      );
+    };
+    tree('t1', rr - 0.15, c0 + 0.25, 1);
+    tree('t2', rr - 0.2, c1 - 0.3, 0.85);
+    tree('t3', r0 + 0.25, c0 + 0.1, 0.9);
+    ['#E58C7E', '#F2C46D', '#F4A6C0', '#FFFFFF'].forEach((col2, i) => {
+      const [fx, fy] = P(rr - 0.3, c0 + 0.7 + i * 0.35, 1);
+      extEls.push(<Circle key={'fl' + i} cx={fx} cy={fy} r={2.1} fill={col2} />);
+    });
+  }
+
   // Baca: en arkadaki bloğun duvarında; dumanı ambient katmanından çıkar.
   let chimney: Pt | undefined;
   if (L >= 7 && order.length) {
@@ -1544,6 +1611,34 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day && !dark));
   const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
   const sc = boxW > 0 ? boxW / vbW : 0;
+  const ZMAX = 3, ZMIN = 0.7;
+  focusFn.current = (id: string | null) => {
+    setFocus(id);
+    if (!id || !sc) {
+      Animated.parallel([
+        Animated.spring(pinch, { toValue: 1, friction: 8, tension: 60, useNativeDriver: true }),
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 8, tension: 60, useNativeDriver: true }),
+      ]).start();
+      pinchRef.current.cur = 1; pinchRef.current.px = 0; pinchRef.current.py = 0;
+      return;
+    }
+    const a = anchors[id];
+    const [fx, fy] = P(Math.floor(a / cols) + 0.5, (a % cols) + 0.5, 6);
+    const Z = 2.4;
+    const total = Z * zoom;
+    const ox = (fx - (minX + vbW / 2)) * sc, oy = (fy - (minY + vbH / 2)) * sc;
+    const tx = -ox * total, ty = -oy * total;
+    pinchRef.current.cur = Z; pinchRef.current.px = tx / 1; pinchRef.current.py = ty;
+    Animated.parallel([
+      Animated.spring(pinch, { toValue: Z, friction: 8, tension: 50, useNativeDriver: true }),
+      Animated.spring(pan, { toValue: { x: tx, y: ty }, friction: 8, tension: 50, useNativeDriver: true }),
+    ]).start();
+  };
+  // Zoom'a bağlı sürekli geçiş: yaklaştıkça çatı yükselip büyüyerek solar, çevre detayları da silikleşir.
+  const roofOp = pinch.interpolate({ inputRange: [ZMIN, 0.85, 1], outputRange: [1, 0.7, 0], extrapolate: 'clamp' });
+  const roofLift = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [0, -vbH * sc * 0.12], extrapolate: 'clamp' });
+  const roofGrow = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [1, 1.05], extrapolate: 'clamp' });
+  const extOp = pinch.interpolate({ inputRange: [ZMIN, 1, 1.8], outputRange: [1, 1, 0.2], extrapolate: 'clamp' });
 
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
@@ -1629,29 +1724,56 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const model = (
     <Animated.View
       onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
+      onTouchStart={e => {
+        const g = pinchRef.current;
+        const t = e.nativeEvent.touches[0];
+        if (t) { g.lx = t.pageX; g.ly = t.pageY; }
+        g.moved = false;
+      }}
       onTouchMove={e => {
         if (!pinchZoom) return;
         const t = e.nativeEvent.touches;
-        if (t.length < 2) return;
-        const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
         const g = pinchRef.current;
+        if (t.length < 2) {
+          // Yakınlaşmışken tek parmakla kaydır.
+          if (g.cur > 1.05 && t[0]) {
+            const dx = t[0].pageX - g.lx, dy = t[0].pageY - g.ly;
+            g.lx = t[0].pageX; g.ly = t[0].pageY;
+            if (Math.abs(dx) + Math.abs(dy) > 0.5) g.moved = true;
+            const lim = boxW * g.cur * 0.5;
+            g.px = Math.max(-lim, Math.min(lim, g.px + dx));
+            g.py = Math.max(-lim, Math.min(lim, g.py + dy));
+            pan.setValue({ x: g.px, y: g.py });
+          }
+          return;
+        }
+        const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
         if (!g.d) { g.d = d; g.base = g.cur; return; }
-        g.cur = Math.min(2.2, Math.max(0.8, g.base * (d / g.d)));
+        g.cur = Math.min(ZMAX, Math.max(ZMIN, g.base * (d / g.d)));
         pinch.setValue(g.cur);
+        if (focus) setFocus(null);
       }}
       onTouchEnd={e => {
         if (e.nativeEvent.touches.length >= 2) return;
         const g = pinchRef.current;
         if (!g.d) return;
         g.d = 0;
-        g.cur = 1;
-        Animated.spring(pinch, { toValue: 1, friction: 6, tension: 70, useNativeDriver: true }).start();
+        // Bırakınca kalır; 1'e yakınsa tam 1'e oturur.
+        if (Math.abs(g.cur - 1) < 0.08) {
+          g.cur = 1; g.px = 0; g.py = 0;
+          Animated.parallel([
+            Animated.spring(pinch, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true }),
+            Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 7, tension: 70, useNativeDriver: true }),
+          ]).start();
+        }
       }}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
         opacity: pop,
         transform: [
+          { translateX: pan.x },
+          { translateY: pan.y },
           { translateY: floatY },
           { translateX: swayX },
           { rotate: tilt },
@@ -1674,6 +1796,16 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       </Svg>
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
+      {extEls.length > 0 && pinchZoom && (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: extOp }]}>
+          <Svg width="100%" height="100%" viewBox={vb}>{extEls}</Svg>
+        </Animated.View>
+      )}
+      {roofEls.length > 0 && pinchZoom && (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp, transform: [{ translateY: roofLift }, { scale: roofGrow }] }]}>
+          <Svg width="100%" height="100%" viewBox={vb}>{roofEls}</Svg>
+        </Animated.View>
+      )}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
@@ -1701,6 +1833,20 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       )}
     </Animated.View>
   );
+  const focusRoom = focus ? S.rooms[focus] : null;
+  const focusBar = focusRoom ? (
+    <View style={[st3.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
+      <Pressable accessibilityRole="button" onPress={() => focusFn.current(null)} hitSlop={8} style={st3.btn}>
+        <SvgLessText color={c.ink}>← Uzaklaş</SvgLessText>
+      </Pressable>
+      <SvgLessText color={c.ink} bold>{ROOM_EMOJI[focusRoom.type]} {focusRoom.name}</SvgLessText>
+      {onOpenRoom && (
+        <Pressable accessibilityRole="button" onPress={() => { const id = focus!; focusFn.current(null); onOpenRoom(id); }} hitSlop={8} style={[st3.btn, { backgroundColor: c.ink }]}>
+          <SvgLessText color={c.bg}>Odaya gir →</SvgLessText>
+        </Pressable>
+      )}
+    </View>
+  ) : null;
   const colors = skyColors(theme, dark, wx);
   const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
   const content = onPressHouse ? (
@@ -1708,11 +1854,20 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       {model}
     </Pressable>
   ) : model;
-  if (!colors) return content;
+  if (!colors) return <View style={{ width: '100%' }}>{content}{focusBar}</View>;
   return (
     <View style={{ width: '100%' }}>
       {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear' && !dark} twA={twOpA} twB={twOpB} breath={breathOp} />}
       {content}
+      {focusBar}
     </View>
   );
 }
+
+function SvgLessText({ children, color, bold }: { children: React.ReactNode; color: string; bold?: boolean }) {
+  return <RNText style={{ color, fontFamily: bold ? fonts.bodyBlack : fonts.bodyBold, fontSize: 14 }}>{children}</RNText>;
+}
+const st3 = StyleSheet.create({
+  bar: { position: 'absolute', left: 12, right: 12, bottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 8, borderRadius: 999, borderWidth: 1 },
+  btn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+});

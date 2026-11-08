@@ -297,6 +297,7 @@ function HouseViewer({
   onClose: () => void;
 }) {
   const c = useColors();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [zoom] = useState(() => new Animated.Value(0.72));
   const [opacity] = useState(() => new Animated.Value(0));
@@ -323,7 +324,7 @@ function HouseViewer({
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
           <View style={styles.viewerModel}>
-            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed pinchZoom labels={false} />
+            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed pinchZoom roomZoom labels={false} onOpenRoom={id => { onClose(); router.push(`/oda/${id}` as Href); }} />
           </View>
         </Animated.View>
         <Pressable

@@ -1519,47 +1519,93 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
   }
 
-  // Roof: one flat deck that sits exactly on the wall tops, plus a fascia on every exposed front edge.
-  // Faces are built from grid corners only, so alignment holds in every rotation; no overhang means no overlap or z-fighting.
+  // Roof: a real gable per block (ridge runs along the column axis, so neighbours in a row merge into one ridge).
+  // Slopes, gable triangles and the wall skirt are built from grid corners only, so everything sits exactly on the
+  // wall tops in every rotation. No overhang means no overlap or z-fighting. Tile rows, ridge and eave lines and all
+  // windows are merged into a few Paths to keep the node count low.
   const roofEls: ReactElement[] = [];
   if (L >= 3) {
     const roofBase = dark ? '#8A5C52' : '#C8826B';
     const snowy = theme === 'kis';
     const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
-    const RT = 5; // deck thickness
-    const zTop = WALL_H + RT;
+    const RH = 14; // ridge height above the wall tops
+    const zR = WALL_H + RH;
     const edges: [number, number, number, number][] = [[0, 0, 0, 1], [0, 1, 1, 1], [1, 1, 1, 0], [1, 0, 0, 0]];
     const dirs: Pt[] = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+    const f1 = (p: Pt) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+    let lines = '', ridgeD = '', eaveD = '', glassD = '', frameD = '', shineD = '';
+    const glass = isNight ? '#FFE9A0' : dark ? '#7FA2C2' : '#BFE1F2';
     for (const i of order) {
       const r = Math.floor(i / cols), col = i % cols, id = cells[i]!;
       const nb = [at(r - 1, col), at(r, col + 1), at(r + 1, col), at(r, col - 1)];
-      const tint = mix(rc, '#FFFFFF', (r + col) % 2 ? 0.05 : 0);
+      const tint = mix(rc, '#FFFFFF', (r + col) % 2 ? 0.04 : 0);
       const [cx0, cy0] = P(r + 0.5, col + 0.5, 0);
+      const wallC = wallTint(id, true);
+      // 1. Wall skirt with windows on exposed, viewer-facing edges.
       edges.forEach(([dr1, dc1, dr2, dc2], e) => {
         if (nb[e]) return;
         const [nr, nc] = dirs[e];
         const mid = P(r + 0.5 + nr * 0.5, col + 0.5 + nc * 0.5, 0);
-        // Only edges that face the viewer (screen-down) are visible.
         if (mid[1] <= cy0 + 0.01) return;
         const left = mid[0] < cx0;
-        const sk = left ? wallTint(id, true) : shade(wallTint(id, true), -0.14);
-        // Wall skirt from the floor up to the deck, then the deck fascia.
-        roofEls.push(<Polygon key={`rk${i}_${e}`} points={pts([P(r + dr1, col + dc1, 0), P(r + dr2, col + dc2, 0), P(r + dr2, col + dc2, WALL_H), P(r + dr1, col + dc1, WALL_H)])} fill={sk} stroke={sk} strokeWidth={0.5} strokeLinejoin="round" />);
-        const fas = shade(tint, left ? -0.1 : -0.24);
-        roofEls.push(<Polygon key={`rn${i}_${e}`} points={pts([P(r + dr1, col + dc1, WALL_H), P(r + dr2, col + dc2, WALL_H), P(r + dr2, col + dc2, zTop), P(r + dr1, col + dc1, zTop)])} fill={fas} stroke={fas} strokeWidth={0.5} strokeLinejoin="round" />);
+        const sk = left ? wallC : shade(wallC, -0.14);
+        const a1 = r + dr1, b1 = col + dc1, a2 = r + dr2, b2 = col + dc2;
+        roofEls.push(<Polygon key={`rk${i}_${e}`} points={pts([P(a1, b1, 0), P(a2, b2, 0), P(a2, b2, WALL_H), P(a1, b1, WALL_H)])} fill={sk} stroke={sk} strokeWidth={0.5} strokeLinejoin="round" />);
+        // One window per edge, proportionally placed (t along the wall, z in the middle of the wall).
+        const at2 = (t: number, z: number) => P(a1 + (a2 - a1) * t, b1 + (b2 - b1) * t, z);
+        const q = [at2(0.3, 11), at2(0.7, 11), at2(0.7, 25), at2(0.3, 25)];
+        glassD += `M${q.map(f1).join('L')}Z`;
+        frameD += `M${q.map(f1).join('L')}Z M${f1(at2(0.5, 11))}L${f1(at2(0.5, 25))} M${f1(at2(0.3, 18))}L${f1(at2(0.7, 18))}`;
+        shineD += `M${f1(at2(0.34, 23))}L${f1(at2(0.46, 23))}L${f1(at2(0.34, 15))}Z`;
       });
-      const quad = [P(r, col, zTop), P(r, col + 1, zTop), P(r + 1, col + 1, zTop), P(r + 1, col, zTop)];
-      roofEls.push(<Polygon key={`rf${i}`} points={pts(quad)} fill={tint} stroke={tint} strokeWidth={0.6} strokeLinejoin="round" />);
-      edges.forEach(([dr1, dc1, dr2, dc2], e) => {
-        if (nb[e]) return;
-        const p1 = P(r + dr1, col + dc1, zTop), p2 = P(r + dr2, col + dc2, zTop);
-        roofEls.push(<Line key={`rl${i}_${e}`} x1={p1[0]} y1={p1[1]} x2={p2[0]} y2={p2[1]} stroke={shade(tint, -0.22)} strokeWidth={0.8} strokeLinecap="round" />);
-      });
-      for (const pt of quad) grow(pt);
+      // 2. Gable triangles on exposed, viewer-facing ends (west / east in grid terms).
+      for (const e of [1, 3]) {
+        if (nb[e]) continue;
+        const [nr, nc] = dirs[e];
+        const mid = P(r + 0.5 + nr * 0.5, col + 0.5 + nc * 0.5, 0);
+        if (mid[1] <= cy0 + 0.01) continue;
+        const cc2 = e === 1 ? col + 1 : col;
+        const tri = [P(r, cc2, WALL_H), P(r + 1, cc2, WALL_H), P(r + 0.5, cc2, zR)];
+        const gf = e === 1 ? shade(wallC, -0.14) : wallC;
+        roofEls.push(<Polygon key={`rg${i}_${e}`} points={pts(tri)} fill={gf} stroke={shade(tint, -0.2)} strokeWidth={1.1} strokeLinejoin="round" />);
+        // Small attic window in the triangle.
+        const at3 = (t: number, z: number) => P(r + t, cc2, z);
+        const aw = [at3(0.4, WALL_H + 3), at3(0.6, WALL_H + 3), at3(0.6, WALL_H + 8), at3(0.4, WALL_H + 8)];
+        glassD += `M${aw.map(f1).join('L')}Z`;
+        frameD += `M${aw.map(f1).join('L')}Z`;
+      }
+      // 3. Slopes: north (edge 0) and south (edge 2). Only the one that faces the viewer is drawn.
+      for (const e of [0, 2]) {
+        const rEave = e === 0 ? r : r + 1;
+        const eave = [P(rEave, col, WALL_H), P(rEave, col + 1, WALL_H)];
+        const ridge = [P(r + 0.5, col, zR), P(r + 0.5, col + 1, zR)];
+        if ((eave[0][1] + eave[1][1]) / 2 <= (ridge[0][1] + ridge[1][1]) / 2 + 0.01) continue;
+        const lit = (eave[0][0] + eave[1][0]) / 2 <= (ridge[0][0] + ridge[1][0]) / 2;
+        const fill = lit ? tint : shade(tint, -0.16);
+        roofEls.push(<Polygon key={`rs${i}_${e}`} points={pts([eave[0], eave[1], ridge[1], ridge[0]])} fill={fill} stroke={fill} strokeWidth={0.6} strokeLinejoin="round" />);
+        // Tile rows parallel to the ridge.
+        for (const u of [1 / 3, 2 / 3]) {
+          const ra = rEave + (r + 0.5 - rEave) * u, z = WALL_H + RH * u;
+          lines += `M${f1(P(ra, col, z))}L${f1(P(ra, col + 1, z))}`;
+        }
+        eaveD += `M${f1(eave[0])}L${f1(eave[1])}`;
+        ridgeD += `M${f1(ridge[0])}L${f1(ridge[1])}`;
+        for (const pt of ridge) grow(pt);
+      }
     }
+    // Merged line layers (drawn after all faces, so they never fight with them).
+    const lineC = shade(rc, -0.25);
+    roofEls.push(
+      <Path key="rtile" d={lines} stroke={lineC} strokeWidth={0.6} strokeOpacity={0.7} fill="none" />,
+      <Path key="reave" d={eaveD} stroke={shade(rc, -0.35)} strokeWidth={1.2} strokeLinecap="round" fill="none" />,
+      <Path key="rridge" d={ridgeD} stroke={shade(rc, -0.4)} strokeWidth={1.6} strokeLinecap="round" fill="none" />,
+      <Path key="rglass" d={glassD} fill={glass} />,
+      <Path key="rshine" d={shineD} fill="#FFFFFF" fillOpacity={0.5} />,
+      <Path key="rframe" d={frameD} stroke={dark ? '#E9E2D8' : '#FFFFFF'} strokeWidth={1} strokeLinejoin="round" fill="none" />,
+    );
     if (L >= 7 && order.length) {
       const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;
-      box('rchim', cr + 0.55, cc + 0.55, 0.16, 0.16, zTop - 1, 14, BRICK, 0.4).forEach(f => roofEls.push(renderFace(f)));
+      box('rchim', cr + 0.25, cc + 0.55, 0.16, 0.16, WALL_H + 3, 22, BRICK, 0.4).forEach(f => roofEls.push(renderFace(f)));
     }
   }
   // Dış görünüm, bahçe henüz küçükken: çit, ağaçlar ve yol (sonra gelen bahçe süsleri bunların yerini alır).

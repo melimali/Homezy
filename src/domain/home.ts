@@ -91,7 +91,7 @@ function listFor(S: AppState, t: ProfileTask): { rid: string; list: TaskList; ar
   return { rid: CARE, list: 'care', arr: S.care };
 }
 
-function eachList(S: AppState, fn: (arr: Task[]) => void) {
+export function eachList(S: AppState, fn: (arr: Task[]) => void) {
   fn(S.care);
   for (const rid of S.order) {
     fn(S.tasks[rid] || []);

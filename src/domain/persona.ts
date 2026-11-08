@@ -3,7 +3,13 @@
  * Persona kullanıcıya GÖSTERİLMEZ: sadece Moka'nın sözlerini, sabah özeti saatini, önerilen ev planını,
  * kurulum varsayılanlarını ve yemek önerilerini kişiye göre ayarlar. Her şey telefonda hesaplanır.
  */
-import type { HomeProfile } from './types';
+import type { HomeProfile, RoomType } from './types';
+
+/**
+ * Cevaba bağlı rutin (src/domain/kisisel.ts). `room`: tercih sırasıyla oda türleri; hiçbiri yoksa ilk odaya (`care` ise ev bakımına).
+ * `shared`: ortak alan işi; tek oda modunda ve aile evinde yaşayan gençte eklenmez. `plant`: bitki listesine.
+ */
+export type RoutineSpec = { name: string; every: number; min: number; room: RoomType[]; shared?: boolean; care?: boolean; plant?: boolean };
 
 export type Who = 'ogrenci' | 'tek' | 'cift' | 'anne' | 'aile';
 export type Rhythm = 'yogun' | 'evde' | 'karisik';
@@ -136,15 +142,56 @@ export type PersonaPlan = {
   home: Partial<HomeProfile>;
   /** Ev planı kurarken Moka'nın tavsiyesi. */
   planTip: string;
+  /** Bu kişilik tipine özel rutinler (en çok 2-3). */
+  tasks: RoutineSpec[];
 };
 
 export const PLAN: Record<Persona, PersonaPlan> = {
-  ogrenci: { morning: '09:30', template: 'tek', home: { bulasik: false, hali: false }, planTip: 'Yurt ya da kiralıkta sadece kendi odanla başla: "Sadece odam".' },
-  genc: { morning: '08:00', template: 'tek', home: { hali: true }, planTip: 'Sadece kendi odanı temizlemek istiyorsan "Sadece odam" yeter. Ortak alanlar için 2+1 de var.' },
-  tek: { morning: '08:00', template: '1+1', home: {}, planTip: '1+1 çoğu tek kişilik ev için tam.' },
-  cift: { morning: '07:45', template: '2+1', home: { bulasik: true }, planTip: 'İkiniz için 2+1: bir de çalışma köşesi çıkar.' },
-  anne: { morning: '06:45', template: '3+1', home: { hali: true, bulasik: true }, planTip: 'Çocuk odası için 3+1 plan rahat eder. Oyuncak toplama işleri de gelir.' },
-  sef: { morning: '08:00', template: '2+1', home: { bulasik: true }, planTip: 'Mutfağa geniş yer ayır, sen orada yaşıyorsun.' },
+  ogrenci: {
+    morning: '09:30', template: 'tek', home: { bulasik: false, hali: false }, planTip: 'Yurt ya da kiralıkta sadece kendi odanla başla: "Sadece odam".',
+    tasks: [
+      { name: 'Çalışma masanı topla', every: 1, min: 3, room: ['calisma', 'yatak'] },
+      { name: 'Yarın için çantanı hazırla', every: 1, min: 3, room: ['antre', 'yatak'] },
+      { name: 'Ders notlarını ve kağıtları ayıkla', every: 7, min: 10, room: ['calisma', 'yatak'] },
+    ],
+  },
+  genc: {
+    morning: '08:00', template: 'tek', home: { hali: true }, planTip: 'Sadece kendi odanı temizlemek istiyorsan "Sadece odam" yeter. Ortak alanlar için 2+1 de var.',
+    tasks: [
+      { name: 'Odandaki bardak ve tabakları mutfağa götür', every: 1, min: 3, room: ['yatak', 'cocuk'] },
+      { name: 'Okul çantanı hazırla', every: 1, min: 3, room: ['yatak', 'cocuk', 'antre'] },
+      { name: 'Çekmece ve dolabını düzenle', every: 14, min: 15, room: ['yatak', 'cocuk'] },
+    ],
+  },
+  tek: {
+    morning: '08:00', template: '1+1', home: {}, planTip: '1+1 çoğu tek kişilik ev için tam.',
+    tasks: [
+      { name: 'Haftalık alışveriş listesini yaz', every: 7, min: 10, room: ['mutfak'] },
+      { name: 'Posta ve kağıtlara bak', every: 7, min: 5, room: ['antre', 'salon'] },
+    ],
+  },
+  cift: {
+    morning: '07:45', template: '2+1', home: { bulasik: true }, planTip: 'İkiniz için 2+1: bir de çalışma köşesi çıkar.',
+    tasks: [
+      { name: 'Haftalık ev işlerini paylaş', every: 7, min: 10, room: ['salon'] },
+      { name: 'Çamaşırı birlikte kat', every: 7, min: 15, room: ['yatak', 'salon'] },
+    ],
+  },
+  anne: {
+    morning: '06:45', template: '3+1', home: { hali: true, bulasik: true }, planTip: 'Çocuk odası için 3+1 plan rahat eder. Oyuncak toplama işleri de gelir.',
+    tasks: [
+      { name: 'Oyuncak toplama turu', every: 1, min: 10, room: ['cocuk', 'salon'] },
+      { name: 'Çocuğun kap ve kaşıklarını yıka', every: 1, min: 10, room: ['mutfak'] },
+      { name: 'Oyuncakları sil', every: 14, min: 15, room: ['cocuk', 'salon'] },
+    ],
+  },
+  sef: {
+    morning: '08:00', template: '2+1', home: { bulasik: true }, planTip: 'Mutfağa geniş yer ayır, sen orada yaşıyorsun.',
+    tasks: [
+      { name: 'Haftalık menüyü planla', every: 7, min: 10, room: ['mutfak'] },
+      { name: 'Kiler ve baharat düzeni', every: 14, min: 15, room: ['mutfak'] },
+    ],
+  },
 };
 
 /* ---------- Moka'nın kişiye özel sözleri ---------- */

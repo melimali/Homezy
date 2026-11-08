@@ -9,7 +9,7 @@ import { router } from '@/lib/nav';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LogBox, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -32,6 +32,8 @@ import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
 import { useLeaderboardSync } from '@/leaderboard/leaderboard';
 import { usePersona, usePersonaSync } from '@/profile/usePersona';
+import { useActs } from '@/profile/useActs';
+import { applyQuiz, quizOf, sigOf } from '@/domain/kisisel';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
@@ -107,8 +109,15 @@ function RootStack() {
   usePlaySync();
   usePersonaSync();
   useLeaderboardSync();
-  const { seen: quizSeen } = usePersona();
+  const { seen: quizSeen, done: quizDone, answers: quizAns, disc: quizDisc } = usePersona();
+  const quizActs = useActs();
   const { update } = useStore();
+  // Cevaplara göre kişisel rutinler (src/domain/kisisel.ts): ev kurulunca ve cevap/oda değişince bir kez uygulanır.
+  const quiz = useMemo(() => quizOf(quizAns, quizDisc?.answers, quizActs), [quizAns, quizDisc, quizActs]);
+  const quizStale = state.setup && quizDone && state.settings.quizSig !== sigOf(state, quiz);
+  useEffect(() => {
+    if (quizStale) update(D => void applyQuiz(D, quiz));
+  }, [quizStale, quiz, update]);
   // Ilk indirme günü işaretlenir: o gün "nasılsın" / "evde misin" sorulmaz (src/domain/mood.ts).
   const needFirst = !state.setup && !state.play.ask?.first;
   useEffect(() => {

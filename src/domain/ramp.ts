@@ -56,6 +56,8 @@ export function dailyCap(S: AppState, now = Date.now()): number {
   // Geri dönüş: 2+ gün ara verildiyse bugün tek küçük işle başlanır; ilk iş bitince (gün sayılınca) normale döner.
   const p = S.play.days.length ? progressOf(S.play, now) : null;
   if (p && !p.today && p.resting >= 2) c = Math.min(c, 1);
+  // Cevaplardan gelen üst sınır ("ne kadar vaktin var", ritim, plan): Düzen aşamasında da aşılmaz.
+  if (S.settings.quizCap) c = Math.min(c, S.settings.quizCap);
   return c >= 99 ? Infinity : c;
 }
 

@@ -1,5 +1,5 @@
 /** Seçmeli görev kataloğu. Üretildi: scratchpad/gen.py (TR metin; İngilizcesi src/i18n/en/q.ts). */
-export type ActId = "pc" | "shoes" | "cook" | "pet" | "plants" | "study" | "sport" | "tv" | "coffee" | "phone" | "car";
+export type ActId = "pc" | "shoes" | "cook" | "pet" | "plants" | "study" | "sport" | "tv" | "coffee" | "phone" | "car" | "smoke" | "wfh" | "guest" | "hobby" | "allergy";
 export type CatId = "ev" | "bakim" | "saglik" | "ders" | "para" | "dijital" | "sosyal";
 export type KindId = 'ogrenci' | 'calisan' | 'ebeveyn' | 'tek' | 'ertelemeci' | 'duzenli';
 export type CTask = { id: string; cat: CatId; emoji: string; title: string; min: number; how: string[]; act?: ActId; after?: string; kinds?: KindId[] };
@@ -16,6 +16,11 @@ export const ACTS: { id: ActId; emoji: string; label: string }[] = [
   {"id": "coffee", "emoji": "☕", "label": "Kahve, çay içerim"},
   {"id": "phone", "emoji": "📱", "label": "Telefonda çok vakit geçiririm"},
   {"id": "car", "emoji": "🚗", "label": "Arabam var"},
+  {"id": "smoke", "emoji": "🚬", "label": "Sigara içerim"},
+  {"id": "wfh", "emoji": "💼", "label": "Evden çalışırım"},
+  {"id": "guest", "emoji": "👥", "label": "Sık misafir ağırlarım"},
+  {"id": "hobby", "emoji": "🎨", "label": "El işi, resim, müzik gibi hobilerim var"},
+  {"id": "allergy", "emoji": "🤧", "label": "Toz alerjim var"},
 ];
 export const CATS: { id: CatId; emoji: string; label: string }[] = [
   {"id": "ev", "emoji": "🏠", "label": "Ev"},

@@ -24,7 +24,9 @@ import { TYPES } from '@/domain/kisilik';
 import { usePersona } from '@/profile/usePersona';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import { radius, useColors, elevation } from '@/theme';
+import { radius, useColors, elevation, fonts } from '@/theme';
+
+const NAVY = '#283044';
 
 /**
  * Gelişim sekmesi (docs/skeleton-v3.md): yüzeyde dört sayı, altında tatlı grafikler.
@@ -85,10 +87,12 @@ export default function Gelisim() {
         <View style={[st.hero, { backgroundColor: tipe?.bg ?? c.surface, shadowColor: c.shadow }]}>
           {tipe && <Image source={tipe.img} style={{ width: 72, height: 72 }} resizeMode="contain" accessibilityIgnoresInvertColors />}
           <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-            <T v="tiny">Senin tipin</T>
-            <T v="bold">{tipe ? tipe.name : 'Henüz test çözülmedi'}</T>
-            {tipe ? <T v="small" numberOfLines={3}>{tipe.says}</T> : <T v="small">Moka seni tanısın, sana göre öneri yapsın.</T>}
-            <Btn label={tipe ? 'Testi tekrar çöz' : 'Testi çöz'} small kind="ghost" onPress={() => router.push('/taniyalim')} style={{ alignSelf: 'flex-start' }} />
+            <T v="tiny" style={{ color: NAVY, opacity: 0.7 }}>Senin tipin</T>
+            <T v="bold" style={{ color: NAVY }}>{tipe ? tipe.name : 'Henüz test çözülmedi'}</T>
+            {tipe ? <T v="small" numberOfLines={3} style={{ color: NAVY }}>{tipe.says}</T> : <T v="small">Moka seni tanısın, sana göre öneri yapsın.</T>}
+            <Squish onPress={() => router.push('/taniyalim')} accessibilityRole="button" style={{ alignSelf: 'flex-start', backgroundColor: NAVY, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, marginTop: 4 }}>
+              <T v="small" style={{ color: '#EBF5EE', fontFamily: fonts.bodyBlack }}>{tipe ? 'Testi tekrar çöz' : 'Testi çöz'}</T>
+            </Squish>
           </View>
         </View>
       </Appear>

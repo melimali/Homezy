@@ -1519,89 +1519,119 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
   }
 
-  // Roof: a real gable per block (ridge runs along the column axis, so neighbours in a row merge into one ridge).
-  // Slopes, gable triangles and the wall skirt are built from grid corners only, so everything sits exactly on the
-  // wall tops in every rotation. No overhang means no overlap or z-fighting. Tile rows, ridge and eave lines and all
-  // windows are merged into a few Paths to keep the node count low.
+  // Roof + exterior walls, built from one parametric recipe:
+  //  - pitch ROOF_PITCH_DEG, rise = half span * tan(pitch); ridge runs along the longer side of the footprint;
+  //  - eaves overhang EAVE_OV tile on exposed sides only (so neighbouring cells never overlap or z-fight);
+  //  - solid, opaque wall skirt + solid gable triangles; sparse windows (alternating tiles, 0.35 wall height) and one front door;
+  //  - everything is merged into a handful of Paths to keep the node count low.
   const roofEls: ReactElement[] = [];
   if (L >= 3) {
+    const ROOF_PITCH_DEG = 34, EAVE_OV = 0.22, TILE_Z = 26;
+    const RH = 0.5 * TILE_Z * Math.tan((ROOF_PITCH_DEG * Math.PI) / 180); // ridge height above the wall tops
+    const zR = WALL_H + RH;
+    const slopeZ = RH / 0.5; // z rise per tile of run
+    const WIN_Z0 = WALL_H * 0.36, WIN_Z1 = WIN_Z0 + WALL_H * 0.35; // window height = 0.35 wall height
+    const WIN_W = 0.3; // window width as a share of one tile
     const roofBase = dark ? '#8A5C52' : '#C8826B';
     const snowy = theme === 'kis';
     const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
-    const RH = 14; // ridge height above the wall tops
-    const zR = WALL_H + RH;
-    const edges: [number, number, number, number][] = [[0, 0, 0, 1], [0, 1, 1, 1], [1, 1, 1, 0], [1, 0, 0, 0]];
-    const dirs: Pt[] = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+    const alongC = cMax - cMin >= rMax - rMin; // ridge along columns when the house is wider than deep
+    const G = (u: number, v: number, z: number): Pt => (alongC ? P(u, v, z) : P(v, u, z));
     const f1 = (p: Pt) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
-    let lines = '', ridgeD = '', eaveD = '', glassD = '', frameD = '', shineD = '';
+    const quad = (a: Pt, b: Pt, c2: Pt, d: Pt) => `M${f1(a)}L${f1(b)}L${f1(c2)}L${f1(d)}Z`;
+    let lines = '', ridgeD = '', eaveD = '', glassD = '', frameD = '', shineD = '', sillD = '', doorD = '', knobD = '';
     const glass = isNight ? '#FFE9A0' : dark ? '#7FA2C2' : '#BFE1F2';
+    const nbOf = (i: number, du: number, dv: number) => {
+      const r = Math.floor(i / cols), col = i % cols;
+      return alongC ? at(r + du, col + dv) : at(r + dv, col + du);
+    };
+    const uOf = (i: number) => (alongC ? Math.floor(i / cols) : i % cols);
+    const vOf = (i: number) => (alongC ? i % cols : Math.floor(i / cols));
+    // Door: on the antre cell when it has a viewer-facing exposed south wall, else the most central such cell.
+    let doorCell = -1, doorScore = Infinity;
+    for (const i of order) {
+      if (nbOf(i, 1, 0)) continue;
+      const uc = uOf(i), vc = vOf(i);
+      if (G(uc + 1, vc + 0.5, 0)[1] <= G(uc + 0.5, vc + 0.5, 0)[1] + 0.01) continue;
+      const score = (cells[i] === 'antre' ? -100 : 0) + Math.abs(vc + 0.5 - (alongC ? centerC : centerR));
+      if (score < doorScore) { doorScore = score; doorCell = i; }
+    }
     for (const i of order) {
       const r = Math.floor(i / cols), col = i % cols, id = cells[i]!;
-      const nb = [at(r - 1, col), at(r, col + 1), at(r + 1, col), at(r, col - 1)];
+      const uc = uOf(i), vc = vOf(i);
       const tint = mix(rc, '#FFFFFF', (r + col) % 2 ? 0.04 : 0);
-      const [cx0, cy0] = P(r + 0.5, col + 0.5, 0);
+      const [cx0, cy0] = G(uc + 0.5, vc + 0.5, 0);
       const wallC = wallTint(id, true);
-      // 1. Wall skirt with windows on exposed, viewer-facing edges.
-      edges.forEach(([dr1, dc1, dr2, dc2], e) => {
-        if (nb[e]) return;
-        const [nr, nc] = dirs[e];
-        const mid = P(r + 0.5 + nr * 0.5, col + 0.5 + nc * 0.5, 0);
-        if (mid[1] <= cy0 + 0.01) return;
-        const left = mid[0] < cx0;
-        const sk = left ? wallC : shade(wallC, -0.14);
-        const a1 = r + dr1, b1 = col + dc1, a2 = r + dr2, b2 = col + dc2;
-        roofEls.push(<Polygon key={`rk${i}_${e}`} points={pts([P(a1, b1, 0), P(a2, b2, 0), P(a2, b2, WALL_H), P(a1, b1, WALL_H)])} fill={sk} stroke={sk} strokeWidth={0.5} strokeLinejoin="round" />);
-        // One window per edge, proportionally placed (t along the wall, z in the middle of the wall).
-        const at2 = (t: number, z: number) => P(a1 + (a2 - a1) * t, b1 + (b2 - b1) * t, z);
-        const q = [at2(0.3, 11), at2(0.7, 11), at2(0.7, 25), at2(0.3, 25)];
-        glassD += `M${q.map(f1).join('L')}Z`;
-        frameD += `M${q.map(f1).join('L')}Z M${f1(at2(0.5, 11))}L${f1(at2(0.5, 25))} M${f1(at2(0.3, 18))}L${f1(at2(0.7, 18))}`;
-        shineD += `M${f1(at2(0.34, 23))}L${f1(at2(0.46, 23))}L${f1(at2(0.34, 15))}Z`;
-      });
-      // 2. Gable triangles on exposed, viewer-facing ends (west / east in grid terms).
-      for (const e of [1, 3]) {
-        if (nb[e]) continue;
-        const [nr, nc] = dirs[e];
-        const mid = P(r + 0.5 + nr * 0.5, col + 0.5 + nc * 0.5, 0);
+      const walls: { key: string; du: number; dv: number; a: Pt; b: Pt }[] = [
+        { key: 'n', du: -1, dv: 0, a: [uc, vc], b: [uc, vc + 1] },
+        { key: 's', du: 1, dv: 0, a: [uc + 1, vc], b: [uc + 1, vc + 1] },
+        { key: 'w', du: 0, dv: -1, a: [uc, vc], b: [uc + 1, vc] },
+        { key: 'e', du: 0, dv: 1, a: [uc, vc + 1], b: [uc + 1, vc + 1] },
+      ];
+      for (const w of walls) {
+        if (nbOf(i, w.du, w.dv)) continue;
+        const mid = G(uc + 0.5 + w.du * 0.5, vc + 0.5 + w.dv * 0.5, 0);
         if (mid[1] <= cy0 + 0.01) continue;
-        const cc2 = e === 1 ? col + 1 : col;
-        const tri = [P(r, cc2, WALL_H), P(r + 1, cc2, WALL_H), P(r + 0.5, cc2, zR)];
-        const gf = e === 1 ? shade(wallC, -0.14) : wallC;
-        roofEls.push(<Polygon key={`rg${i}_${e}`} points={pts(tri)} fill={gf} stroke={shade(tint, -0.2)} strokeWidth={1.1} strokeLinejoin="round" />);
-        // Small attic window in the triangle.
-        const at3 = (t: number, z: number) => P(r + t, cc2, z);
-        const aw = [at3(0.4, WALL_H + 3), at3(0.6, WALL_H + 3), at3(0.6, WALL_H + 8), at3(0.4, WALL_H + 8)];
-        glassD += `M${aw.map(f1).join('L')}Z`;
-        frameD += `M${aw.map(f1).join('L')}Z`;
+        const sk = mid[0] < cx0 ? wallC : shade(wallC, -0.14);
+        const A1 = G(w.a[0], w.a[1], 0), A2 = G(w.b[0], w.b[1], 0);
+        const t = (s: number, z: number) => G(w.a[0] + (w.b[0] - w.a[0]) * s, w.a[1] + (w.b[1] - w.a[1]) * s, z);
+        roofEls.push(<Polygon key={`rk${i}${w.key}`} points={pts([A1, A2, G(w.b[0], w.b[1], WALL_H), G(w.a[0], w.a[1], WALL_H)])} fill={sk} stroke={sk} strokeWidth={0.5} strokeLinejoin="round" />);
+        roofEls.push(<Polygon key={`rb${i}${w.key}`} points={pts([A1, A2, t(1, 3), t(0, 3)])} fill={shade(sk, -0.1)} />);
+        if (i === doorCell && w.key === 's') {
+          doorD += quad(t(0.36, 0), t(0.64, 0), t(0.64, 21), t(0.36, 21));
+          knobD += `M${f1(t(0.58, 10))}l0.01 0`;
+          sillD += quad(t(0.3, 0), t(0.7, 0), t(0.7, 2), t(0.3, 2));
+        } else if ((r * 3 + col * 5 + (w.du !== 0 ? 1 : 0)) % 2 === 0) {
+          const s0 = 0.5 - WIN_W / 2, s1 = 0.5 + WIN_W / 2;
+          const q = [t(s0, WIN_Z0), t(s1, WIN_Z0), t(s1, WIN_Z1), t(s0, WIN_Z1)];
+          glassD += `M${q.map(f1).join('L')}Z`;
+          frameD += `M${q.map(f1).join('L')}Z M${f1(t(0.5, WIN_Z0))}L${f1(t(0.5, WIN_Z1))}`;
+          sillD += quad(t(s0 - 0.04, WIN_Z0 - 2.2), t(s1 + 0.04, WIN_Z0 - 2.2), t(s1 + 0.04, WIN_Z0), t(s0 - 0.04, WIN_Z0));
+          shineD += `M${f1(t(s0 + 0.03, WIN_Z1 - 1.5))}L${f1(t(0.45, WIN_Z1 - 1.5))}L${f1(t(s0 + 0.03, WIN_Z0 + 2))}Z`;
+        }
       }
-      // 3. Slopes: north (edge 0) and south (edge 2). Only the one that faces the viewer is drawn.
-      for (const e of [0, 2]) {
-        const rEave = e === 0 ? r : r + 1;
-        const eave = [P(rEave, col, WALL_H), P(rEave, col + 1, WALL_H)];
-        const ridge = [P(r + 0.5, col, zR), P(r + 0.5, col + 1, zR)];
+      // Gable triangles (solid) on exposed, viewer-facing ends.
+      for (const [dv, vEdge] of [[-1, vc], [1, vc + 1]] as [number, number][]) {
+        if (nbOf(i, 0, dv)) continue;
+        const mid = G(uc + 0.5, vc + 0.5 + dv * 0.5, 0);
+        if (mid[1] <= cy0 + 0.01) continue;
+        const gf = mid[0] < cx0 ? wallC : shade(wallC, -0.14);
+        roofEls.push(<Polygon key={`rg${i}_${dv}`} points={pts([G(uc, vEdge, WALL_H), G(uc + 1, vEdge, WALL_H), G(uc + 0.5, vEdge, zR)])} fill={gf} stroke={gf} strokeWidth={0.6} strokeLinejoin="round" />);
+      }
+      // Slopes (du = -1 low side, +1 high side); only the one facing the viewer is drawn.
+      const v0 = vc - (nbOf(i, 0, -1) ? 0 : EAVE_OV), v1 = vc + 1 + (nbOf(i, 0, 1) ? 0 : EAVE_OV);
+      for (const du of [-1, 1]) {
+        const ovE = nbOf(i, du, 0) ? 0 : EAVE_OV;
+        const uE = du < 0 ? uc : uc + 1;
+        const zE = WALL_H - ovE * slopeZ;
+        const eave = [G(uE + du * ovE, v0, zE), G(uE + du * ovE, v1, zE)];
+        const ridge = [G(uc + 0.5, v0, zR), G(uc + 0.5, v1, zR)];
         if ((eave[0][1] + eave[1][1]) / 2 <= (ridge[0][1] + ridge[1][1]) / 2 + 0.01) continue;
         const lit = (eave[0][0] + eave[1][0]) / 2 <= (ridge[0][0] + ridge[1][0]) / 2;
         const fill = lit ? tint : shade(tint, -0.16);
-        roofEls.push(<Polygon key={`rs${i}_${e}`} points={pts([eave[0], eave[1], ridge[1], ridge[0]])} fill={fill} stroke={fill} strokeWidth={0.6} strokeLinejoin="round" />);
-        // Tile rows parallel to the ridge.
-        for (const u of [1 / 3, 2 / 3]) {
-          const ra = rEave + (r + 0.5 - rEave) * u, z = WALL_H + RH * u;
-          lines += `M${f1(P(ra, col, z))}L${f1(P(ra, col + 1, z))}`;
+        roofEls.push(<Polygon key={`rs${i}_${du}`} points={pts([eave[0], eave[1], ridge[1], ridge[0]])} fill={fill} stroke={fill} strokeWidth={0.6} strokeLinejoin="round" />);
+        for (const u of [0.28, 0.52, 0.76]) {
+          const ua = uE + (uc + 0.5 - uE) * u, z = WALL_H + RH * u;
+          lines += `M${f1(G(ua, v0, z))}L${f1(G(ua, v1, z))}`;
         }
-        eaveD += `M${f1(eave[0])}L${f1(eave[1])}`;
+        if (ovE) eaveD += `M${f1(eave[0])}L${f1(eave[1])}`;
         ridgeD += `M${f1(ridge[0])}L${f1(ridge[1])}`;
         for (const pt of ridge) grow(pt);
+        for (const pt of eave) grow(pt);
       }
     }
     // Merged line layers (drawn after all faces, so they never fight with them).
     const lineC = shade(rc, -0.25);
     roofEls.push(
-      <Path key="rtile" d={lines} stroke={lineC} strokeWidth={0.6} strokeOpacity={0.7} fill="none" />,
-      <Path key="reave" d={eaveD} stroke={shade(rc, -0.35)} strokeWidth={1.2} strokeLinecap="round" fill="none" />,
-      <Path key="rridge" d={ridgeD} stroke={shade(rc, -0.4)} strokeWidth={1.6} strokeLinecap="round" fill="none" />,
+      <Path key="rtile" d={lines} stroke={lineC} strokeWidth={0.5} strokeOpacity={0.4} fill="none" />,
+      <Path key="reave" d={eaveD} stroke={shade(rc, -0.35)} strokeWidth={1.4} strokeLinecap="round" fill="none" />,
+      <Path key="rridge" d={ridgeD} stroke={shade(rc, -0.4)} strokeWidth={1.8} strokeLinecap="round" fill="none" />,
+      <Path key="rsill" d={sillD} fill={dark ? '#E9E2D8' : '#FFFFFF'} fillOpacity={0.95} />,
       <Path key="rglass" d={glassD} fill={glass} />,
       <Path key="rshine" d={shineD} fill="#FFFFFF" fillOpacity={0.5} />,
       <Path key="rframe" d={frameD} stroke={dark ? '#E9E2D8' : '#FFFFFF'} strokeWidth={1} strokeLinejoin="round" fill="none" />,
+      <Path key="rdoor" d={doorD} fill={dark ? '#C8A07A' : '#8B5E3C'} stroke={dark ? '#E9E2D8' : '#FFFFFF'} strokeWidth={0.8} strokeLinejoin="round" />,
+      <Path key="rknob" d={knobD} stroke="#F2C46D" strokeWidth={1.6} strokeLinecap="round" fill="none" />,
     );
     if (L >= 7 && order.length) {
       const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;

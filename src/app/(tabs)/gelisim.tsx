@@ -1,5 +1,5 @@
 import { useRouter } from '@/lib/nav';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -178,7 +178,7 @@ export default function Gelisim() {
       <Appear index={8} style={st.links}>
         <LinkTile emoji="🗓️" label="Haftam" sub="Paylaşılabilir kart" tint={c.roseSoft} onPress={() => router.push('/hafta')} />
         <LinkTile emoji="🌤️" label="Günüm" sub="Moka ile paylaş" tint={c.roseSoft} onPress={() => router.push('/gunum')} />
-        <LinkTile emoji="🏆" label="Sıralama" sub="Ev puanı" tint={c.peachSoft} onPress={() => router.push('/siralama')} />
+        <LinkTile emoji="🏆" label="Sıralama" sub="Ev puanı" tint={c.peachSoft} onPress={() => router.push('/siralama' as Href)} />
         {extrasUnlocked(S.play.days.length, now) && <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />}
       </Appear>
       {tour.node}

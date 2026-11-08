@@ -18,6 +18,7 @@
 | Sıralama (isteğe bağlı): takma ad, ev puanı, seviye, seri, temizlik %, Moka exp | Kullanıcı (katılırsa) | Supabase `lb_profiles`, `lb_daily` (herkese açık yalnız takma ad + puanlar) | Supabase (AB) | Sıralamada kaldığı sürece | Sıralamadan çık (`lb_leave`) ya da hesap silme (cascade) |
 | İlaç adı, doz, saat, "içtim" kayıtları (sağlık verisi) | Kullanıcı | Sadece telefon (expo-sqlite); bulut yedeğine, sohbete ve yapay zekâya gönderilmez (`src/sync/cloud.ts forCloud`) | – | Uygulamayı silene kadar | Uygulamayı silme / veri sıfırlama |
 | Yaklaşık konum (2 ondalık) | Cihaz | Saklanmaz | Open-Meteo | – | – |
+| Yapay zekâ kötüye kullanım sayacı (IP'nin tek yönlü SHA-256 özeti + gün sayacı; ham IP saklanmaz) | Sunucu | Supabase `ai_counter` / `ai_rate`, 7 gün | Supabase | Supabase politikası | Hesap silme gerekmez (kimlikle bağlı değil) |
 | Robot doğrulaması (IP, tarayıcı/cihaz sinyalleri; sadece giriş, kayıt ve misafir oturumu açılırken, captcha açıksa) | Cloudflare Turnstile | Saklanmaz (Cloudflare işler) | Cloudflare | Cloudflare politikası | – |
 | Bildirim zamanlamaları | Uygulama | Telefon | – | – | İzin kapatma / uygulamayı silme |
 | Reklam kimliği, IP, cihaz bilgisi (ücretsiz plan) | AdMob SDK | AdMob | Google | Google politikası | Premium'a geçiş / reklam kimliğini sıfırlama |

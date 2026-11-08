@@ -59,6 +59,8 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
   const status = error.context.status as number;
   const body = await error.context.json().catch(() => ({}));
   if (status === 403 && body.error === 'account_required') return { ok: false, account: true, message: tx(SCAN_ACCOUNT_NEEDED) };
+  if (status === 429 && body.error === 'rate') return { ok: false, retry: true, message: tx('Çok hızlı denedin. Bir dakika bekleyip tekrar dene; hakkından düşmedi.') };
+  if (status === 429 && body.error === 'capacity') return { ok: false, message: tx('Yapay zekâ bugün çok yoğun. Yarın tekrar dene; hakkından düşmedi.') };
   if (status === 429) {
     return {
       ok: false,

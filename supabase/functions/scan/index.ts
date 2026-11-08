@@ -9,10 +9,12 @@
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
+import { guard } from '../_shared/guard.ts';
 import { admin } from '../_shared/subscription.ts';
 import { KINDS, COLORS, FABRICS, SCHEMA, clean, parseJson, str } from './clean.ts';
 
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+// Zaman aşımı 60 sn, otomatik yeniden deneme yok (her deneme ayrıca ücretlendirilir).
+const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY'), timeout: 60_000, maxRetries: 0 });
 const MODEL = Deno.env.get('SCAN_MODEL') ?? 'claude-haiku-5-5';
 // Güvenlik sınıflandırıcısı reddederse istek aynı çağrıda başka bir modelle tekrarlanır. Haiku bunu desteklemiyor.
 const FALLBACK = MODEL.startsWith('claude-haiku')
@@ -127,16 +129,19 @@ Deno.serve(async req => {
   if (!mediaType) return json({ error: 'bad_image' }, 415);
   const known = (Array.isArray(body.known) ? body.known : []).map(x => str(x, 60)).filter(Boolean).slice(0, 80);
 
+  // Maliyet koruması: dakika sınırı, IP ve genel günlük tavan (kullanıcı hakkından önce, ucuz kontrol).
+  const g = await guard(req, userId, 'scan');
+  if (!g.ok) return json({ error: g.error }, g.status);
   const { data: slot, error: slotErr } = await admin.rpc('scan_reserve', { p_user: userId, p_kind: kind });
-  if (slotErr) return json({ error: 'server' }, 500);
-  if (!slot.ok) return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429);
-  const release = () => admin.rpc('scan_release', { p_user: userId, p_period: slot.period, p_kind: kind });
+  if (slotErr) { await g.release(); return json({ error: 'server' }, 500); }
+  if (!slot.ok) { await g.release(); return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429); }
+  const release = async () => { await g.release(); await admin.rpc('scan_release', { p_user: userId, p_period: slot.period, p_kind: kind }); };
 
   try {
     const res = await anthropic.beta.messages.create({
       model: MODEL,
-      // Düşünme payı dahil; JSON yarıda kesilmesin.
-      max_tokens: 16000,
+      // Düşünme payı dahil; JSON yarıda kesilmesin ama maliyet de sınırlı kalsın.
+      max_tokens: 6000,
       // 'low' ürünleri ve kumaşları sık atlıyordu; tarama başına birkaç saniye daha uzun ama daha isabetli.
       output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA[kind] } },
       ...FALLBACK,

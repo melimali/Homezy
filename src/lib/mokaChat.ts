@@ -33,6 +33,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   if (status === 403 && body.error === 'premium_required') return { ok: false, premium: true, message: tx("Sohbet Premium'a özel ☕") };
   if (status === 413) return { ok: false, message: tx('Mesajın çok uzun. Biraz kısaltıp tekrar dene.') };
   if (status === 429 && body.error === 'rate') return { ok: false, message: tx('Çok hızlı yazıyorsun, bir dakika nefes alalım ☕ Birazdan tekrar dene.') };
+  if (status === 429 && body.error === 'capacity') return { ok: false, message: tx('Yapay zekâ bugün çok yoğun. Yarın tekrar dene; hakkından düşmedi.') };
   if (status === 429 && body.error === 'limit_month') {
     return { ok: false, limit: true, message: tx('Bu ayki sohbet hakkımızı doldurduk, çok keyifliydi ☕ Yeni ayda yine buradayım. İşlerin için uygulama hep açık 💛') };
   }

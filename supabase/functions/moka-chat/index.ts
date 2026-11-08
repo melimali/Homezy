@@ -13,10 +13,12 @@
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
+import { guard } from '../_shared/guard.ts';
 import { admin } from '../_shared/subscription.ts';
 import { ACTION_RE, toolSchemas, validate, type Action, type Ctx } from '../_shared/chatTools.ts';
 
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+// Zaman aşımı 30 sn, otomatik yeniden deneme yok.
+const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY'), timeout: 30_000, maxRetries: 0 });
 const MODEL = Deno.env.get('CHAT_MODEL') ?? 'claude-haiku-5-5';
 
 const MAX_MSG = 400; // karakter
@@ -158,7 +160,11 @@ Deno.serve(async req => {
   if (!slot.ok && slot.reason === 'rate') return json({ error: 'rate' }, 429);
   if (!slot.ok && slot.reason === 'monthly') return json({ error: 'limit_month', premium: slot.premium, limit: slot.mlimit, used: slot.mused }, 429);
   if (!slot.ok) return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429);
-  const release = () => admin.rpc('chat_release', { p_user: userId, p_day: slot.day });
+  const releaseSlot = () => admin.rpc('chat_release', { p_user: userId, p_day: slot.day });
+  // Maliyet koruması: dakika sınırı, IP ve genel günlük tavan.
+  const g = await guard(req, userId, 'chat');
+  if (!g.ok) { await releaseSlot(); return json({ error: g.error }, g.status); }
+  const release = async () => { await g.release(); await releaseSlot(); };
 
   const useTools = wantsTools(messages[messages.length - 1].content);
   try {

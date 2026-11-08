@@ -8,6 +8,8 @@ export const EN_B: Record<string, string> = {
   'Giriş yap / üye ol': 'Sign in / sign up',
   "Sohbet Premium'a özel ☕": 'Chatting is Premium-only ☕',
   'Mesajın çok uzun. Biraz kısaltıp tekrar dene.': 'Your message is too long. Shorten it a bit and try again.',
+  'Çok hızlı denedin. Bir dakika bekleyip tekrar dene; hakkından düşmedi.': "You tried too fast. Wait a minute and try again; it didn't count against your limit.",
+  'Yapay zekâ bugün çok yoğun. Yarın tekrar dene; hakkından düşmedi.': "The AI is very busy today. Try again tomorrow; it didn't count against your limit.",
   'Çok hızlı yazıyorsun, bir dakika nefes alalım ☕ Birazdan tekrar dene.': "You're typing fast, let's take a breath for a minute ☕ Try again shortly.",
   'Bu ayki sohbet hakkımızı doldurduk, çok keyifliydi ☕ Yeni ayda yine buradayım. İşlerin için uygulama hep açık 💛': "We've used this month's chat allowance, it was lovely ☕ I'll be back next month. The app is always open for your chores 💛",
   'Bugünkü mesaj hakkımızı doldurduk, biraz dinlenelim ☕ Yarın yine buradayım 💛': "We've used today's messages, let's rest a bit ☕ I'll be here again tomorrow 💛",

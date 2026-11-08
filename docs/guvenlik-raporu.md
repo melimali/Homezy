@@ -58,3 +58,18 @@ Durum: **Düzeltildi** (kodda/SQL'de, deploy/çalıştırma gerekir) · **Elle**
 - Puan: sunucu "gerçekten temizledi mi" bilemez; günlük üst sınır ve gün başına tek ödül ile sınırlı. Üstüne gidilirse seri/puan sıralaması (rekabet) eklenmedikçe sorun değil.
 - Aile kodu paylaşılırsa (sahibi yanlış kişiye verirse) 5 kişi Premium avantajı alır; tasarım gereği. Sahibi `family_kick` ile çıkarabilir, kodu yenilemek için paylaşımı kapatıp açması gerekir.
 - Captcha henüz uygulamada yok (dashboard rate limit önce).
+
+## Yapay zekâ maliyet denetimi (2026-11-08)
+
+Sadece iki yerde yapay zekâ var: `scan` ve `moka-chat` Edge Function'ları. Uygulamada başka sağlayıcı çağrısı ve API anahtarı yok (`EXPO_PUBLIC_*` içinde gizli anahtar yok; ANTHROPIC_API_KEY sadece Supabase gizli değişkeni).
+
+Zaten vardı: JWT + sunucuda `getUser`, anonim hesap reddi, Moka Premium'a özel, kullanıcı başına günlük/aylık hak, model/sistem istemi sunucuda, gövde ve görsel boyutu, görsel türü doğrulama, metin uzunluk sınırları, AI_DISABLED anahtarı, CORS izin listesi.
+
+Eklendi (`20261110000000_ai_koruma.sql`, `_shared/guard.ts`):
+- Kullanıcı başına dakika sınırı (tarama 4, sohbet 8), IP başına dakikada 30 ve günde 200 (IP ham saklanmaz, SHA-256 özeti, 7 gün sonra silinir).
+- Tüm uygulama için günlük tavan (harcama kesici): tarama 1500, sohbet 4000. Aşılırsa `capacity` (429), model çağrılmaz.
+- Anthropic istemcisi: zaman aşımı (tarama 60 sn, sohbet 30 sn), otomatik yeniden deneme kapalı; tarama `max_tokens` 16000 → 6000.
+- Kullanım günlüğü: Supabase > Functions > Logs (`{"ai":"scan","ip":"…","user":"…"}`).
+
+Ayar (Supabase gizli değişkenleri, isteğe bağlı): `AI_DAILY_CAP_SCAN`, `AI_DAILY_CAP_CHAT`, `AI_IP_DAILY`, `AI_IP_PER_MIN`, `AI_DISABLED=1` (acil durdurma).
+Bu fonksiyonlar `--no-verify-jwt` ile DEPLOY EDİLMEMELİ (sadece `revenuecat-webhook` öyle).

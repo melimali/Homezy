@@ -28,6 +28,7 @@ import { markFirstDay, needsCheckin } from '@/domain/mood';
 import { sessionNo, useStep } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
+import { useLeaderboardSync } from '@/leaderboard/leaderboard';
 import { usePersona, usePersonaSync } from '@/profile/usePersona';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
@@ -94,6 +95,7 @@ function RootStack() {
   useCloudSync();
   usePlaySync();
   usePersonaSync();
+  useLeaderboardSync();
   const { seen: quizSeen } = usePersona();
   const { update } = useStore();
   // Ilk indirme günü işaretlenir: o gün "nasılsın" / "evde misin" sorulmaz (src/domain/mood.ts).
@@ -151,6 +153,7 @@ function RootStack() {
         <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="rozetler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="siralama" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="buyume" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="aliskanlik" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />

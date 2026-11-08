@@ -1,4 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -66,7 +67,7 @@ export default function Evim() {
                     onPress={() => setAns(a => ({ ...a, [p.k]: v }))}
                     style={[styles.segBtn, on && { backgroundColor: v ? c.accent : c.muted }]}
                   >
-                    <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: on ? c.onAccent : c.muted }}>{l}</Text>
+                    <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.muted }}>{l}</Text>
                   </Pressable>
                 );
               })}

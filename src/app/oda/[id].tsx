@@ -1,8 +1,11 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Redirect, useLocalSearchParams } from 'expo-router';
+import { useRouter } from '@/lib/nav';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { MiniShape } from '@/components/Plan';
+import { RenameRoom } from '@/components/RenameRoom';
 import { RoomBody } from '@/components/RoomBody';
 import { SceneImage } from '@/components/SceneImage';
 import { BackLink, Screen, T } from '@/components/ui';
@@ -20,6 +23,7 @@ export default function RoomScreen() {
   const now = useNow();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state: S } = useStore();
+  const [renaming, setRenaming] = useState(false);
   const r = id ? S.rooms[id] : undefined;
   if (!r) return <Redirect href="/" />;
 
@@ -38,7 +42,7 @@ export default function RoomScreen() {
               if (!x) return null;
               const on = rid === r.id;
               const rc = roomCounts(S, rid, now);
-              const dot = rc.late ? c.late : rc.today ? c.today : null;
+              const dot = rc.late || rc.today ? c.today : null;
               return (
                 <Squish
                   key={rid}
@@ -65,17 +69,19 @@ export default function RoomScreen() {
       <Appear key={`hero-${r.id}`} style={[styles.hero, { backgroundColor: c.room[r.type] }]}>
         <Float amp={4}>
           <View style={[styles.emoji, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 38 }}>{ROOM_EMOJI[r.type]}</Text>
+            <Text style={{ fontSize: 34 }}>{ROOM_EMOJI[r.type]}</Text>
           </View>
         </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
           <T v="eyebrow" style={{ marginBottom: 0 }}>{TYPES[r.type].label}</T>
-          <T v="h1" numberOfLines={1} style={{ fontSize: 26, lineHeight: 30 }}>{r.name}</T>
+          <Pressable onPress={() => setRenaming(true)} accessibilityRole="button" accessibilityLabel={`${r.name} ✏️`}>
+            <T v="h1" numberOfLines={1} style={{ fontSize: 26, lineHeight: 30 }}>{r.name} ✏️</T>
+          </Pressable>
           <View style={[styles.bar, { backgroundColor: c.surface }]}>
             <View style={[styles.fill, { width: `${clean}%`, backgroundColor: clean >= 80 ? c.ok : clean >= 50 ? c.today : c.late }]} />
           </View>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: c.ink, opacity: 0.85 }}>
-            {cleanWord(clean)} · %{clean} · ~{n * 2} m²
+          <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: c.ink, opacity: 0.85 }}>
+            {cleanWord(clean)} · %{clean} · ~{n * 2} m²
           </Text>
         </View>
         <MiniShape state={S} id={r.id} />
@@ -91,8 +97,8 @@ const styles = StyleSheet.create({
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
   hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', top: -2, right: -2, width: 13, height: 13, borderRadius: 7, borderWidth: 2 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 22, paddingHorizontal: 20, borderRadius: radius.card },
-  emoji: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 20, paddingHorizontal: 18, borderRadius: radius.card },
+  emoji: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
   bar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', marginTop: 8 },
   fill: { height: '100%', borderRadius: radius.pill },
 });

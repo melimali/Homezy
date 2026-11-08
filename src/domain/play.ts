@@ -17,8 +17,16 @@ import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
  */
 
 export const POINTS: Record<PlayKind, number> = { gorev: 10, spor: 15, gunluk: 10 };
-/** Günün ilk işinde seri bonusu: önceki seri gün sayısı × 2, en fazla 20. */
-export const streakBonus = (prevStreak: number) => Math.min(20, prevStreak * 2);
+/**
+ * Günün ilk işinde seri bonusu: yumuşak eğri 30·(1−e^(−n/15)); sert tavan yok, 30'a yaklaşır
+ * (1. gün 2, 7. gün 11, 15. gün 19, 30. gün 26). Sunucu aynısını hesaplar (supabase/migrations/20261109000000_formuller.sql).
+ */
+export const streakBonus = (prevStreak: number) => Math.round(30 * (1 - Math.exp(-Math.max(0, prevStreak) / 15)));
+/**
+ * Azalan getiri: günün `before` işten sonraki işi kaç puan verir. İlk 5 iş 10, sonraki 5 iş 5, kalan 10 iş 2 (en çok 95/gün).
+ * Yeni iş ekleyip puan toplamayı caydırır; asıl ödül her gün gelmek (seri) olur. Sunucu aynı tabloyu kullanır.
+ */
+export const taskPoints = (before: number) => (before >= DAILY_TASK_CAP ? 0 : before < 5 ? POINTS.gorev : before < 10 ? 5 : 2);
 /** Bir günde puan veren en fazla iş sayısı (yeni iş ekleyip puan toplamayı sınırlar). */
 export const DAILY_TASK_CAP = 20;
 
@@ -39,12 +47,17 @@ export const emptyPlay = (): Play => ({
   frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [], growth: emptyGrowth(), habits: emptyHabits(),
 });
 
+/**
+ * Yeni kullanıcıda sadece iki bildirim açık: sabah özeti (`routine`) ve akşam dönüş hatırlatması (`streak`).
+ * Gerisi (su, uyku, spor, okuma, stok…) kişi isteyince açılır: bildirim yorgunluğu bırakmanın ilk sebebi.
+ * Kayıtlı ayarı olanlar etkilenmez (normalize kayıtlı değerleri korur).
+ */
 export const defaultSettings = (): Settings => ({
-  time: '09:00', routine: true, stock: true, laundry: true,
-  streak: true, sport: true, read: true, water: true, sleepRemind: true, sportTime: '18:00', sportDays: [1, 3, 5],
+  time: '09:00', routine: true, stock: false, laundry: false,
+  streak: true, sport: false, read: false, water: false, sleepRemind: false, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
-  bills: true, expiry: true, weekly: true, flex: true, celebrate: true, sound: true,
-  actions: true, meds: true,
+  bills: false, expiry: false, weekly: false, flex: true, celebrate: true, sound: true,
+  actions: false, meds: true, pets: true, shop: true,
   language: deviceLang(),
 });
 
@@ -68,6 +81,11 @@ export function normalize(S: AppState): AppState {
   S.seasonal ??= {};
   S.meds ??= [];
   S.medLog ??= {};
+  S.pets ??= [];
+  S.shop ??= [];
+  S.shopUsual ??= [];
+  S.shopHide ??= '';
+  S.budget ??= { limit: 0, log: [] };
   // 2. kat: boyutu planla uyuşmuyorsa (eski kayıt) yok sayılır.
   if (S.cells2 && S.cells2.length !== S.cols * S.rows) S.cells2 = null;
   S.cells2 ??= null;
@@ -114,6 +132,35 @@ const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {}
 export const BUILT = 7;
 export const MAX_LEVEL = 100;
 
+/** Affedilen boşluktan sonra bir sonraki affa kadar geçmesi gereken gün. */
+export const FORGIVE_COOLDOWN = 14;
+/** Affedilmek için boşluktan önce üst üste kaç gün yapılmış olmalı (7 günlük seri). */
+export const FORGIVE_MIN_RUN = 6;
+
+/**
+ * Seri affı: en az 7 günlük bir serinin ortasındaki TEK günlük boşluk (sonraki gün yine iş yapıldıysa)
+ * otomatik affedilir, dondurma hakkı harcanmaz. İki affın arası en az 14 gün. Dondurulan günler zinciri bozmaz.
+ * Ceza yerine "hata payı": uzun seriyi tek bir unutkanlık bozmasın.
+ */
+export function forgivenGaps(days: DayKey[], frozen: DayKey[], today: DayKey): Set<DayKey> {
+  const out = new Set<DayKey>();
+  const done = new Set(days);
+  const ice = new Set(frozen);
+  const sorted = [...done].filter(d => d <= today).sort();
+  if (!sorted.length) return out;
+  let run = 0;
+  let last: DayKey | null = null;
+  for (let d = sorted[0]; d <= today; d = addDays(d, 1)) {
+    if (done.has(d)) run++;
+    else if (ice.has(d)) continue;
+    else if (d < today && done.has(addDays(d, 1)) && run >= FORGIVE_MIN_RUN && (!last || (dayTs(d) - dayTs(last)) / DAY >= FORGIVE_COOLDOWN)) {
+      out.add(d);
+      last = d;
+    } else run = 0;
+  }
+  return out;
+}
+
 export type HouseProgress = {
   /** Evin şu anki seviyesi (0: boş arsa). */
   level: number;
@@ -121,8 +168,10 @@ export type HouseProgress = {
   streak: number;
   /** Bugün bir şey yapıldı mı. */
   today: boolean;
-  /** Dünden geriye kaç gün kaçırıldı: 1 toz, 2 çatlak, 3+ çöküyor. */
+  /** Sadece hafif toz: 0 ya da 1 (kaçırılan günden sonra 1, bir iş yapılınca hemen 0). Çatlak ve yıkım yok; seviye düşmez. */
   idle: number;
+  /** Dünden geriye kaç gün iş yapılmadı (ceza yok; sadece "Moka uyuyor" gibi yumuşak bir cümle için). */
+  resting: number;
 };
 
 /**
@@ -132,8 +181,9 @@ export type HouseProgress = {
 export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[] = []): HouseProgress {
   const today = dayKey(now);
   const set = new Set(days);
-  // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır.
+  // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır. Affedilen tek boşluk da öyle.
   const ice = new Set(frozen);
+  for (const g of forgivenGaps(days, frozen, today)) ice.add(g);
   const sorted = [...set].filter(d => d <= today).sort();
   const active = set.has(today);
   let level = 0;
@@ -146,14 +196,15 @@ export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[]
       } else if (ice.has(d)) {
         miss = 0;
       } else if (d !== today) {
+        // Ev geri gitmez: kaçırılan gün sadece "dinleniyor" sayılır (araştırma: suçluluk bırakmayı artırır).
         miss++;
-        if (miss >= 3) level = Math.max(0, level - 1);
       }
     }
   }
   let streak = 0;
   for (let d = active ? today : addDays(today, -1); set.has(d) || ice.has(d); d = addDays(d, -1)) if (set.has(d)) streak++;
-  return { level, streak, today: active, idle: active || !sorted.length ? 0 : miss };
+  const resting = active || !sorted.length ? 0 : miss;
+  return { level, streak, today: active, idle: Math.min(1, resting), resting };
 }
 
 /** Oyun durumundan evin ilerlemesi (dondurulan günler dahil). */
@@ -199,8 +250,7 @@ export function autoFreeze(P: Play, limit: number, now = Date.now()): DayKey[] {
 
 /**
  * `d` gün sonraki akşam, o zamana kadar hiçbir şey yapılmazsa evin kaç gündür bekleyeceği
- * (`HouseProgress.idle` ile aynı anlam: 1 toz, 2 çatlak, 3+ çöküyor). Kalan dondurma hakları,
- * uygulama açılınca kaçırılan günleri koruyacağı için düşülür.
+ * (`HouseProgress.resting` ile aynı anlam). Ev artık geriye gitmediği için sadece metin seçiminde kullanılır.
  */
 export function idleAhead(p: HouseProgress, d: number, freezeLeft = 0) {
   if (!p.level) return 0;
@@ -225,7 +275,7 @@ export type DayMark = { key: DayKey; mark: 'done' | 'ice' | 'miss' | 'today'; n:
 export function lastWeek(P: Play, now = Date.now()): DayMark[] {
   const today = dayKey(now);
   const done = new Set(P.days);
-  const ice = new Set(P.frozen);
+  const ice = new Set([...P.frozen, ...forgivenGaps(P.days, P.frozen, today)]);
   return Array.from({ length: 7 }, (_, i) => {
     const key = addDays(today, i - 6);
     const n = P.log[key]?.length ?? 0;
@@ -239,11 +289,9 @@ export const nextStage = (level: number) => STAGES.find(s => s.level > level) ??
 
 /** Evin durumu için tek satırlık, tatlı bir açıklama. */
 export function houseLine(p: HouseProgress) {
-  if (p.idle >= 3) return 'Evin biraz yıprandı 😢 Dert etme: bir iş yap, tamir hemen başlasın 🔨';
-  if (p.idle === 2) return 'Duvarlar biraz yorgun 🧱 Küçük bir iş yeter, birlikte toparlarız.';
-  if (p.idle === 1) return 'Ev biraz tozlandı 🌫️ Bir iş yap, tozu alalım!';
   if (!p.level) return 'Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️';
-  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍 Serin yanında.';
+  if (!p.today && p.resting >= 1) return 'Ev biraz tozlandı 🌫️ Küçük bir işle tozu alırız, seviyen yerinde duruyor.';
+  if (!p.today) return 'Bugün için küçük bir işin seni bekliyor 🤍';
   const next = nextStage(p.level);
   return next ? `Sıradaki: ${next.emoji} ${next.name}` : 'Rüya evin tamam! Seriyi sürdür ⭐';
 }
@@ -270,7 +318,7 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
   for (const k of Object.keys(P.awarded)) if (P.awarded[k] !== day) delete P.awarded[k];
   P.awarded[key] = day;
   const tasksToday = Object.keys(P.awarded).filter(k => k.startsWith('gorev:')).length;
-  let pts = kind === 'gorev' && tasksToday > DAILY_TASK_CAP ? 0 : POINTS[kind];
+  let pts = kind === 'gorev' ? taskPoints(tasksToday - 1) : POINTS[kind];
   if (!before.today) {
     pts += streakBonus(before.streak);
     P.days = [...P.days, day].sort();

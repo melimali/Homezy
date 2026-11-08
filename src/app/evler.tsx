@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -157,7 +157,7 @@ export default function Evler() {
               >
                 <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
                 <Text style={[styles.themeName, { color: c.ink }]}>{t.name}</Text>
-                {locked && <Text style={{ fontSize: 11 }}>👑</Text>}
+                {locked && <Text style={{ fontSize: 12 }}>👑</Text>}
               </Pressable>
             );
           })}
@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
   sheet: { borderRadius: 40, padding: 28, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
   home: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  on: { fontFamily: fonts.bodyBlack, fontSize: 13 },
+  on: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
   themes: { flexDirection: 'row', gap: 8 },
   theme: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.card - 6, borderWidth: 2, gap: 2 },
-  themeName: { fontFamily: fonts.bodyBlack, fontSize: 12.5 },
+  themeName: { fontFamily: fonts.bodyBlack, fontSize: 12 },
 });

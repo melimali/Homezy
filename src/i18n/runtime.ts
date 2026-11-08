@@ -30,6 +30,8 @@ export function setLang(code: string | undefined) {
 }
 export const getLang = () => LANG;
 export const isEn = () => LANG === 'en';
+/** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
+export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
 export const dateLocale = () => (LANG === 'en' ? 'en-US' : 'tr-TR');
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);
@@ -51,22 +53,32 @@ const split = (s: string) => {
 };
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
-const patterns: { re: RegExp; out: string }[] = [];
-for (const [k, v] of Object.entries(EN)) {
+const patterns: { re: RegExp; out: string; lit: number }[] = [];
+for (const [k0, v0] of Object.entries(EN)) {
+  // Baştaki/sondaki boşluk eşleşmeyi bozmasın: çeviri çekirdek metin üzerinden aranır.
+  const k = k0.trim() || k0;
+  const v = k === k0 ? v0 : v0.trim();
   if (k.includes('{}')) {
     // Sondaki {} boş kalabilir ("... blok" + boş ek).
     const body = esc(norm(k));
     const tail = body.endsWith('{}');
     const head = tail ? body.slice(0, -2) : body;
-    patterns.push({ re: new RegExp('^' + head.replace(/\{\}/g, '([^·\\n]+?)') + (tail ? '([^·\\n]*?)' : '') + '$', 'i'), out: v });
+    // Harfe bitişik {} ("iş{}") bir ek yuvasıdır; harfle başlayan metin ("işaretlersin") eşleşmesin.
+    const LETTER = 'A-Za-zÇĞİÖŞÜçğıöşü';
+    const isSlot = (before: string) => new RegExp('[' + LETTER + ']$').test(before);
+    const slot = (before: string) => (isSlot(before) ? '(?![' + LETTER + '])' : '');
+    // Ek yuvası boş olabilir ("{} iş bitti{}." + "3 iş bitti."), diğer {} en az bir karakter ister.
+    const headRe = head.split('{}').map((part, i, arr) => (i < arr.length - 1 ? part + slot(part) + (isSlot(part) ? '([^\\n]*?)' : '([^·\\n]+?)') : part)).join('');
+    const tailRe = tail ? slot(head) + '([^·\\n]*?)' : '';
+    patterns.push({ re: new RegExp('^' + headRe + tailRe + '$', 'i'), out: v, lit: k.split('{}').join('').length });
   } else {
     exact.set(norm(k), v);
     const c = split(k).core;
     if (c) canon.set(lower(c), split(v).core || v);
   }
 }
-// Daha uzun (daha belirgin) kalıplar önce denensin.
-patterns.sort((a, b) => b.re.source.length - a.re.source.length);
+// Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
+patterns.sort((a, b) => b.lit - a.lit);
 
 const cache = new Map<string, string>();
 
@@ -132,7 +144,8 @@ export function tx<T>(s: T): T {
   if (LANG !== 'en' || typeof s !== 'string') return s;
   const hit = cache.get(s);
   if (hit !== undefined) return hit as T;
-  const r = translate(s);
+  // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%.
+  const r = translate(s).replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2%');
   if (cache.size > 4000) cache.clear();
   cache.set(s, r);
   return r as T;

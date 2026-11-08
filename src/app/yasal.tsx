@@ -1,10 +1,11 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { Directory, File, Paths } from 'expo-file-system';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useState } from 'react';
 import { Linking, Platform, Share, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
+import { BackLink, Btn, Card, Divider, ListRow, Screen, T } from '@/components/ui';
 import { aiConsent, locationOk } from '@/lib/consent';
 import { LEGAL, legalUrl } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
@@ -18,6 +19,7 @@ const CREDITS: { name: string; what: string; license: string }[] = [
   { name: 'react-native-google-mobile-ads', what: 'Reklam (ücretsiz plan)', license: 'Apache-2.0' },
   { name: 'react-native-svg, react-native-view-shot, react-native-safe-area-context, react-native-screens, react-native-android-widget', what: 'Arayüz', license: 'MIT' },
   { name: 'Baloo 2 (Ek Type)', what: 'Başlık yazı tipi', license: 'SIL OFL 1.1' },
+  { name: 'Caveat (Impallari Type)', what: 'El yazısı (alışveriş notu)', license: 'SIL OFL 1.1' },
   { name: 'Nunito (Vernon Adams, Jacques Le Bailly)', what: 'Metin yazı tipi', license: 'SIL OFL 1.1' },
   { name: 'Pixabay', what: 'Müzik ve ortam sesleri', license: 'Pixabay İçerik Lisansı' },
   { name: 'Open-Meteo.com', what: 'Hava durumu verisi', license: 'CC BY 4.0' },
@@ -33,6 +35,7 @@ export default function Yasal() {
   const [ai, setAi] = useState(aiConsent.get());
   const [loc, setLoc] = useState(locationOk.get());
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
 
   const exportData = async () => {
     setBusy(true);
@@ -56,8 +59,8 @@ export default function Yasal() {
     setBusy(false);
   };
 
-  const link = (label: string, url: string) => (
-    <Btn kind="soft" label={label} onPress={() => Linking.openURL(url)} block />
+  const link = (label: string, url: string, icon: string) => (
+    <ListRow icon={icon} title={label} onPress={() => Linking.openURL(url)} accessibilityLabel={label} />
   );
 
   return (
@@ -67,9 +70,13 @@ export default function Yasal() {
 
       <Card>
         <T v="h3">Belgeler</T>
-        {link('Gizlilik Politikası', legalUrl('privacy', lang))}
-        {link('Kullanım Koşulları', legalUrl('terms', lang))}
-        {link('Hesap ve veri silme sayfası', LEGAL.deletion)}
+        <View>
+          {link('Gizlilik Politikası', legalUrl('privacy', lang), '🔒')}
+          <Divider inset={54} />
+          {link('Kullanım Koşulları', legalUrl('terms', lang), '📄')}
+          <Divider inset={54} />
+          {link('Hesap ve veri silme sayfası', LEGAL.deletion, '🗑️')}
+        </View>
       </Card>
 
       <Card>

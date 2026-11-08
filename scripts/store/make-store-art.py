@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "docs/magaza/ham"
 FD = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "node_modules/@expo-google-fonts"
 OUT = ROOT / "docs/magaza"
-MOKA = ROOT / "assets/moka"
+MOKA = ROOT / "assets-src/moka"
 
 NAVY, MUTED = (40, 48, 68), (92, 85, 104)
 

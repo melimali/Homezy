@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
@@ -37,7 +38,9 @@ export default function Ilac() {
   const allDone = doses.length > 0 && doses.every(d => d.mark);
   const hist = history(S, 7, now);
   const pct = adherence(hist);
-  const [open, setOpen] = useState(false);
+  // Bugün sekmesindeki "+ İlaç ekle" doğrudan ekleme penceresini açar (/ilac?add=1).
+  const { add } = useLocalSearchParams<{ add?: string }>();
+  const [open, setOpen] = useState(add === '1');
 
   const mark = (d: Dose, s: 'taken' | 'skipped' | null) => update(D => void markDose(D, today, d.key, s));
 
@@ -46,7 +49,7 @@ export default function Ilac() {
       <BackLink />
       <View>
         <T v="eyebrow">İlaçlarım</T>
-        <T v="h1">İlaç vaktin 💊</T>
+        <T v="h1">İlaç ve takviye 💊</T>
         <T v="lead">Vaktinde hatırlatırım, aldıklarını sen işaretlersin.</T>
       </View>
 
@@ -54,7 +57,7 @@ export default function Ilac() {
         <Card style={{ backgroundColor: missed.length ? c.todaySoft : c.accentSoft }}>
           <View style={st.moka}>
             <Image source={MOKA_ASSETS[missed.length ? 'wink' : 'happy']} style={st.mokaImg} resizeMode="contain" accessibilityIgnoresInvertColors />
-            <T v="bold" style={{ flex: 1, fontSize: 14.5, lineHeight: 21 }}>{mokaMedLine(missed, dueNow, allDone)}</T>
+            <T v="bold" style={{ flex: 1, fontSize: 15, lineHeight: 21 }}>{mokaMedLine(missed, dueNow, allDone)}</T>
           </View>
         </Card>
       )}
@@ -62,7 +65,7 @@ export default function Ilac() {
       <Card>
         <SecHead title="Bugün" right={doses.length ? `${doses.filter(d => d.mark?.s === 'taken').length}/${doses.length}` : undefined} />
         {!S.meds.length ? (
-          <EmptyMsg>Henüz ilaç eklemedin. İlk ilacını ekleyince vaktinde hatırlatırım.</EmptyMsg>
+          <EmptyMsg>Henüz ilaç eklemedin. İlk ilacını ya da takviyeni (vitamin, mineral…) ekleyince vaktinde hatırlatırım.</EmptyMsg>
         ) : !doses.length ? (
           <T v="small">Bugün için alınacak ilaç yok 🌿</T>
         ) : (
@@ -72,7 +75,7 @@ export default function Ilac() {
               const bg = state === 'taken' ? c.okSoft : state === 'missed' ? c.todaySoft : c.surface2;
               return (
                 <View key={d.key} style={[st.dose, { backgroundColor: bg }]}>
-                  <Text style={{ fontSize: 24 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '💊'}</Text>
+                  <Text style={{ fontSize: 24 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : d.med.kind === 'takviye' ? '🌿' : '💊'}</Text>
                   <View style={{ flex: 1 }}>
                     <T v="bold" style={{ fontSize: 15 }}>{d.med.name}</T>
                     <T v="small">
@@ -93,7 +96,7 @@ export default function Ilac() {
             })}
           </View>
         )}
-        <Btn kind={S.meds.length ? 'soft' : 'primary'} label="+ İlaç ekle" onPress={() => setOpen(true)} />
+        <Btn kind={S.meds.length ? 'soft' : 'primary'} label="+ İlaç / takviye ekle" onPress={() => setOpen(true)} />
       </Card>
 
       {S.meds.length > 0 && (
@@ -111,7 +114,7 @@ export default function Ilac() {
                     <Text style={[st.dayLabel, { color: h.day === today ? c.ink : c.muted }]}>
                       {new Date(dayTs(h.day)).toLocaleDateString(dateLocale(), { weekday: 'narrow' })}
                     </Text>
-                    <Text style={[st.dayLabel, { color: c.muted, fontSize: 10.5 }]}>{h.total ? `${h.taken}/${h.total}` : '–'}</Text>
+                    <Text style={[st.dayLabel, { color: c.muted, fontSize: 12 }]}>{h.total ? `${h.taken}/${h.total}` : '–'}</Text>
                   </View>
                 );
               })}
@@ -119,7 +122,7 @@ export default function Ilac() {
           </Card>
 
           <Card>
-            <SecHead title="İlaçlarım" />
+            <SecHead title="İlaç ve takviyelerim" />
             {S.meds.map(m => (
               <View key={m.id} style={st.medRow}>
                 <View style={{ flex: 1 }}>
@@ -135,27 +138,37 @@ export default function Ilac() {
 
       <T v="tiny" style={{ textAlign: 'center' }}>{MED_DISCLAIMER} İlaç bilgilerin sadece bu telefonda durur, buluta yedeklenmez.</T>
 
-      <AddSheet open={open} onClose={() => setOpen(false)} onSave={(n, d, t, days) => {
-        update(D => void D.meds.push(newMed(n, d, t, days)));
+      <AddSheet open={open} onClose={() => setOpen(false)} onSave={(n, d, t, days, k) => {
+        update(D => void D.meds.push(newMed(n, d, t, days, Date.now(), k)));
         setOpen(false);
       }} />
     </Screen>
   );
 }
 
-function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (name: string, dose: string, times: string[], days: number[]) => void }) {
+function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (name: string, dose: string, times: string[], days: number[], kind: 'ilac' | 'takviye') => void }) {
   const c = useColors();
   const [name, setName] = useState('');
   const [dose, setDose] = useState('');
   const [times, setTimes] = useState<string[]>(['08:00']);
   const [days, setDays] = useState<number[]>([]);
+  const [kind, setKind] = useState<'ilac' | 'takviye'>('ilac');
   const togglePreset = (t: string) => setTimes(x => (x.includes(t) ? x.filter(y => y !== t) : [...x, t].sort()));
   const ok = name.trim().length > 0 && times.length > 0;
 
   return (
     <Sheet open={open} onClose={onClose} scroll pose="happy">
-      <T v="h2">Yeni ilaç</T>
-      <Field value={name} onChangeText={setName} placeholder="İlaç adı" maxLength={40} accessibilityLabel="İlaç adı" />
+      <T v="h2">{kind === 'takviye' ? 'Yeni takviye' : 'Yeni ilaç'}</T>
+      <View style={st.wrap}>
+        <Chip label="💊 İlaç" on={kind === 'ilac'} onPress={() => setKind('ilac')} />
+        <Chip label="🌿 Takviye" on={kind === 'takviye'} onPress={() => setKind('takviye')} />
+      </View>
+      {kind === 'takviye' && (
+        <View style={st.wrap}>
+          {['D vitamini', 'C vitamini', 'Omega-3', 'Magnezyum', 'Demir', 'Probiyotik'].map(n => <Chip key={n} label={n} on={name === n} onPress={() => setName(n)} />)}
+        </View>
+      )}
+      <Field value={name} onChangeText={setName} placeholder={kind === 'takviye' ? 'Takviye adı (ör. D vitamini)' : 'İlaç adı'} maxLength={40} accessibilityLabel="Ad" />
       <Field value={dose} onChangeText={setDose} placeholder="Doz (ör. 1 tablet, 5 ml)" maxLength={30} accessibilityLabel="Doz" />
       <T v="h3">Hangi vakitler?</T>
       <View style={st.wrap}>
@@ -180,7 +193,7 @@ function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => voi
         ))}
       </View>
       <T v="tiny">{MED_DISCLAIMER}</T>
-      <Btn kind="primary" label="Ekle" disabled={!ok} onPress={() => { onSave(name, dose, times, days); setName(''); setDose(''); setTimes(['08:00']); setDays([]); }} />
+      <Btn kind="primary" label="Ekle" disabled={!ok} onPress={() => { onSave(name, dose, times, days, kind); setKind('ilac'); setName(''); setDose(''); setTimes(['08:00']); setDays([]); }} />
     </Sheet>
   );
 }

@@ -1,5 +1,7 @@
-import { allTasks, doneToday, placeOf } from '@/domain/logic';
-import { progressOf } from '@/domain/play';
+import { hKey, waterMet, waterOf, waterPct } from '@/domain/habits';
+import { dosesOn, doseState } from '@/domain/meds';
+import { allTasks, doneToday, placeOf, shopItems } from '@/domain/logic';
+import { dayKey, progressOf } from '@/domain/play';
 import { tipOfDay } from '@/domain/tips';
 import type { AppState } from '@/domain/types';
 
@@ -61,5 +63,37 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
     mood,
     // Günün cümlesini Moka (kakapo) söylüyor.
     tip: { emoji: '🦜', text: tipOfDay(now).text },
+  };
+}
+
+/** Küçük çoklu widget'ın verisi: su, ilaç, market, aktif görev. */
+export type MiniData = {
+  streak: number;
+  mood: { emoji: string; line: string };
+  water: { n: number; goal: number; pct: number; met: boolean };
+  /** Sıradaki ilaç dozu; `left` bugün işaretlenmemiş doz sayısı, `total` bugünkü doz. */
+  med: { key: string; name: string; time: string; late: boolean; left: number; total: number } | null;
+  shop: { id: string; name: string; more: number; total: number } | null;
+  task: (WidgetTask & { more: number }) | null;
+};
+
+export function miniData(S: AppState, now = Date.now()): MiniData {
+  const w = widgetData(S, now);
+  const H = S.play.habits;
+  const day = hKey(now);
+  const doses = dosesOn(S, dayKey(now));
+  const open = doses.filter(d => !d.mark);
+  const next = open.find(d => doseState(d, now) !== 'later') ?? open[0];
+  const shop = shopItems(S);
+  const t = w.tasks[0];
+  return {
+    streak: w.streak,
+    mood: w.mood,
+    water: { n: waterOf(H, day), goal: H.waterGoal, pct: waterPct(H, day), met: waterMet(H, day) },
+    med: next
+      ? { key: next.key, name: next.med.name, time: next.time, late: doseState(next, now) === 'missed', left: open.length, total: doses.length }
+      : doses.length ? { key: '', name: '', time: '', late: false, left: 0, total: doses.length } : null,
+    shop: shop.length ? { id: shop[0].x.id, name: shop[0].x.name, more: shop.length - 1, total: shop.length } : null,
+    task: t ? { ...t, more: w.tasks.length - 1 } : null,
   };
 }

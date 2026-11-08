@@ -1,4 +1,6 @@
-import { useRouter, type Href } from 'expo-router';
+import { tlText } from '@/i18n/runtime';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { Text, View } from 'react-native';
 
 import { planMeals, type Slot } from '@/domain/meals';
@@ -7,7 +9,7 @@ import { useStore } from '@/store/AppStore';
 import { useColors } from '@/theme';
 
 import { Squish } from './motion';
-import { Card, T } from './ui';
+import { Card, T, Chevron } from './ui';
 
 /** Bugün sekmesi: akşam (ya da sabah) için tek yemek önerisi; dokununca /yemek açılır. */
 export function MealCard() {
@@ -28,9 +30,9 @@ export function MealCard() {
           <View style={{ flex: 1 }}>
             <T v="eyebrow" style={{ marginBottom: 0 }}>{slot === 'aksam' ? 'Bu gece' : 'Yarın sabah'}</T>
             <T v="bold">{top.meal.name}</T>
-            <T v="small">⏱ {top.meal.min} dk · ~{top.price} TL · {top.missing.length ? `🛒 ${top.missing.length} eksik` : '✓ hepsi dolapta'}</T>
+            <T v="small">⏱ {top.meal.min} dk · ~{tlText(top.price)} · {top.missing.length ? `🛒 ${top.missing.length} eksik` : '✓ hepsi dolapta'}</T>
           </View>
-          <Text style={{ color: c.muted, fontSize: 22 }}>›</Text>
+          <Chevron color={c.muted} dir="right" />
         </View>
       </Card>
     </Squish>

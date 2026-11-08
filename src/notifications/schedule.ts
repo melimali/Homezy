@@ -8,14 +8,17 @@ import { allTasks, doneToday, greet, notifs } from '@/domain/logic';
 import { firstOpenDay } from '@/lib/events';
 import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
-import { eveningNudge, sportLine, summaryTail } from '@/domain/messages';
+import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
+import { learnedTime, thinNotifications } from '@/domain/formulas';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
+import { petNotifs, stillDue } from '@/domain/pets';
+import { SHOP_DAY, shopLeft } from '@/domain/shopping';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
-import { ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, TASK_CATEGORY, taskDataOf, type TaskData } from './actions';
+import { categoryOf, ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, reminderDataOf, TASK_CATEGORY, taskDataOf, type ReminderData, type ReminderKind, type TaskData } from './actions';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
 const DAYS_AHEAD = 7;
@@ -142,6 +145,15 @@ async function dismissStale(N: NotificationsModule, S: AppState) {
   const now = Date.now();
   const tasks = new Map(allTasks(S, now).map(x => [x.t.id, x.t]));
   for (const n of await N.getPresentedNotificationsAsync()) {
+    const rem = reminderDataOf(n.request.content);
+    if (rem?.kind === 'med' && rem.key && S.medLog[dayKey(now)]?.[rem.key]) {
+      await N.dismissNotificationAsync(n.request.identifier);
+      continue;
+    }
+    if (rem?.kind === 'pet' && rem.key && !stillDue(S, rem.key, now)) {
+      await N.dismissNotificationAsync(n.request.identifier);
+      continue;
+    }
     const data = taskDataOf(n.request.content);
     if (!data) continue;
     const t = tasks.get(data.tid);
@@ -156,6 +168,7 @@ async function dismissStale(N: NotificationsModule, S: AppState) {
  */
 export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   const smart = premium && S.settings.smart;
+  const now0 = Date.now();
   const N = getNotifications();
   if (!N) return;
   if ((await getPermission()) !== 'granted') return;
@@ -164,8 +177,14 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   await ensureChannel(N);
   await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
   // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
-  for (const n of await N.getAllScheduledNotificationsAsync())
-    if ((n.content.data as { focus?: boolean } | undefined)?.focus !== true) await N.cancelScheduledNotificationAsync(n.identifier);
+  // Ertelenmiş hatırlatmalar da kalır; ama dozu zaten işaretlenmişse gitsin.
+  for (const n of await N.getAllScheduledNotificationsAsync()) {
+    if ((n.content.data as { focus?: boolean } | undefined)?.focus === true) continue;
+    const rem = reminderDataOf(n.content);
+    const doneAlready = rem?.kind === 'med' ? !!(rem.key && S.medLog[dayKey(now0)]?.[rem.key]) : rem?.kind === 'pet' ? !(rem.key && stillDue(S, rem.key, now0)) : false;
+    if (rem?.snooze && !doneAlready) continue;
+    await N.cancelScheduledNotificationAsync(n.identifier);
+  }
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
@@ -200,18 +219,57 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
-  for (const n of nudges(S, now, smart, premium))
+  for (const n of thinNudges(nudges(S, now, smart, premium), (hh || 0) * 60 + (mm || 0)))
     await N.scheduleNotificationAsync({
-      content: { title: tx(n.title), body: tx(n.body), data: { url: n.url } },
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: n.kind ? ({ url: n.url, kind: n.kind, premium } satisfies ReminderData) : { url: n.url },
+        ...(n.kind ? { categoryIdentifier: categoryOf(n.kind) } : {}),
+      },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
   // İlaç hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen doz atlanır.
   for (const n of medNotifs(S, now))
     await N.scheduleNotificationAsync({
       identifier: n.id,
-      content: { title: tx(n.title), body: tx(n.body), data: { url: '/ilac' } },
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: { url: '/ilac', kind: 'med', key: n.key, premium } satisfies ReminderData,
+        categoryIdentifier: categoryOf('med'),
+      },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: MEDS },
     });
+  // Evcil hayvan bakımı (mama, yıkama, aşı…): kullanıcının eklediği işlerin vaktinde.
+  for (const n of petNotifs(S, now))
+    await N.scheduleNotificationAsync({
+      identifier: n.id,
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: { url: '/evcil', kind: 'pet', key: n.key, premium } satisfies ReminderData,
+        categoryIdentifier: categoryOf('pet'),
+      },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
+    });
+}
+
+/**
+ * Spam önleme: her gün için sabah özeti saati ayrılır, sonra hatırlatmalar sessiz saatlere (22:00–07:30) düşmez,
+ * art arda ikisi 90 dk'dan yakın olmaz, günlük toplam (özet dahil) 4'ü geçmez. Öncelik: seri/karşılama, spor ve diğerleri, su.
+ */
+export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[], summaryMinute: number): T[] {
+  const byDay = new Map<string, { minute: number; rank: number; n: T | null }[]>();
+  for (const n of list) {
+    const k = dayKey(n.at.getTime());
+    const arr = byDay.get(k) ?? [{ minute: summaryMinute, rank: -1, n: null }];
+    arr.push({ minute: n.at.getHours() * 60 + n.at.getMinutes(), rank: n.kind === 'water' ? 4 : n.kind ? 2 : 1, n });
+    byDay.set(k, arr);
+  }
+  const keep = new Set<T>();
+  for (const arr of byDay.values()) for (const x of thinNotifications(arr)) if (x.n) keep.add(x.n);
+  return list.filter(n => keep.has(n));
 }
 
 /**
@@ -221,7 +279,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
  * her akşam değil, 3., 5. ve 7. gün nazik bir "kaldığın yerden devam" gider.
  */
 export function nudges(S: AppState, now = Date.now(), smart = false, premium = false) {
-  const out: { at: Date; title: string; body: string; url: string }[] = [];
+  const out: { at: Date; title: string; body: string; url: string; kind?: ReminderKind }[] = [];
   const set = S.settings;
   const today = dayKey(now);
   const hp = progressOf(S.play, now);
@@ -235,7 +293,7 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
     if (set.sport && set.sportDays.includes(base.getDay()) && !(key === today && awardedToday(S.play, 'spor', 'spor', now))) {
       const at = new Date(base);
       at.setHours(sh || 0, sm || 0, 0, 0);
-      if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor' });
+      if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor', kind: 'sport' });
     }
     // Okuma hedefi: kitap ya da okuma kaydı olanlara akşam 21:00, o gün hedef tutulmadıysa.
     if (set.read && (S.play.growth.books.length || S.play.growth.reads.length) && !(key === today && goalMet(S.play.growth, today))) {
@@ -248,7 +306,7 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       for (const hr of [12, 17]) {
         const at = new Date(base);
         at.setHours(hr, 0, 0, 0);
-        if (at.getTime() > now) out.push({ at, title: '💧 Su molası', body: 'Bir bardak su iyi gelir. Moka da içiyor ☕', url: '/aliskanlik' });
+        if (at.getTime() > now) out.push({ at, ...waterNudge(`su${hr}`, at.getTime()), url: '/aliskanlik', kind: 'water' });
       }
     }
     if (set.sleepRemind && S.play.habits.sleep && Object.keys(S.play.habits.sleep).length) {
@@ -262,6 +320,12 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       at.setHours(WEEKLY_TIME[0], WEEKLY_TIME[1], 0, 0);
       // Özet, zamanlandığı andaki veriyle yazılır; veri değiştikçe yeniden zamanlanır.
       if (at.getTime() > now) out.push({ at, title: '🦜 Moka’nın haftalık raporu', body: mokaWeekBody(mokaWeek(S, now)), url: '/hafta' });
+    }
+    if (set.shop && base.getDay() === SHOP_DAY) {
+      const left = shopLeft(S);
+      const at = new Date(base);
+      at.setHours(10, 0, 0, 0);
+      if (left > 0 && at.getTime() > now) out.push({ at, title: '🛒 Alışveriş günü', body: `Listende ${left} ürün var. Çıkmadan bir göz at?`, url: '/alisveris' });
     }
     const away = awayAhead(S.play, d, now);
     const quiet = away != null && away >= AWAY_DAYS && away % 2 === 0;
@@ -323,7 +387,7 @@ export function smartTimes(S: AppState): { streak: number | null; sport: number 
     return d.getHours() * 60 + d.getMinutes();
   });
   return {
-    streak: t.length >= 5 ? clamp(q15(median(t) - 60), 17 * 60, 21 * 60 + 30) : null,
+    streak: learnedTime(t, 60, 17 * 60, 21 * 60 + 30),
     sport: sp.length >= 3 ? clamp(q15(median(sp) - 30), 6 * 60, 22 * 60) : null,
   };
 }

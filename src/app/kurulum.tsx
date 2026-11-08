@@ -1,11 +1,11 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 
 import { PlanEditor } from '@/components/PlanEditor';
 import { useToast } from '@/components/Toast';
 import { Btn } from '@/components/ui';
 import { cancelNewHome } from '@/domain/homes';
 import { track } from '@/lib/events';
-import { requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
+import { getPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
 
 /** İlk açılış: evini bloklarla kur, sonra evle ilgili soruları cevapla (`/evim`). */
@@ -22,9 +22,9 @@ export default function Kurulum() {
         if (!extra) track('onboarding_done');
         if (!extra) toast('Evin hazır 🏡 Bugün sekmesinden ilk işini yap, Moka sevinsin!');
         if (extra) toast(`${next.homeName} hazır 🏡 Evler arasında Hesabım > Evlerim'den geçebilirsin.`);
-        // Sabah özeti için izni ev kurulduktan hemen sonra istiyoruz.
-        requestPermission()
-          .then(ok => (ok ? rescheduleMorningSummaries(next) : undefined))
+        // Bildirim izni artık burada sorulmaz: ilk iş yapılınca sırayla sorulur (NotifAsk). İzin zaten varsa sadece zamanlanır.
+        getPermission()
+          .then(p => (p === 'granted' ? rescheduleMorningSummaries(next) : undefined))
           .catch(() => {});
       }}
       footer={

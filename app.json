@@ -3,13 +3,16 @@
     "name": "Homezy",
     "slug": "homezy",
     "scheme": "homezy",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.meikai.homezy"
+      "bundleIdentifier": "com.meikai.homezy",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.meikai.homezy",
@@ -38,29 +41,30 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
-      ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz."
+        }
+      ],
       "expo-font",
       [
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**"
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**\n-keep class com.facebook.react.** { *; }\n-keep class com.facebook.hermes.** { *; }\n-keep class com.swmansion.reanimated.** { *; }\n-keep class expo.modules.** { *; }\n-keep class com.revenuecat.purchases.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.ump.** { *; }\n-keep class com.reactnativeandroidwidget.** { *; }\n-keep class com.meikai.homezy.** { *; }\n-dontwarn com.revenuecat.**\n-dontwarn com.google.android.gms.**"
           }
         }
       ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo-kare.png",
-          "imageWidth": 180,
+          "image": "./assets/splash-moka.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#EBF5EE",
-          "dark": {
-            "image": "./assets/logo-kare.png",
-            "backgroundColor": "#283044"
-          }
+          "backgroundColor": "#F7F2EA"
         }
       ],
       [
@@ -95,6 +99,7 @@
         }
       ],
       "expo-sharing",
+      "@sentry/react-native",
       [
         "react-native-android-widget",
         {
@@ -117,6 +122,20 @@
               "maxResizeHeight": "340dp",
               "resizeMode": "horizontal|vertical",
               "previewImage": "./assets/widget-preview.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "Mini",
+              "label": "Homezy · Mini",
+              "description": "Su, ilaç, market ve aktif görev tek küçük widget'ta. Dokunarak bardak ekle, ilacı ve işi tamamla.",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "520dp",
+              "maxResizeHeight": "340dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview-mini.png",
               "updatePeriodMillis": 1800000
             }
           ]

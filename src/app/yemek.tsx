@@ -1,3 +1,4 @@
+import { isEn, tlText } from '@/i18n/runtime';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -77,14 +78,14 @@ export default function Yemek() {
               <Squish onPress={() => setOpen(on ? null : p.meal.id)} accessibilityRole="button" accessibilityLabel={p.meal.name} style={st.head}>
                 <Text style={{ fontSize: 34 }}>{p.meal.emoji}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <T v="bold" style={{ fontSize: 17 }}>{p.meal.name}</T>
+                  <T v="bold" style={{ fontSize: 16 }}>{p.meal.name}</T>
                   <T v="small">{p.why} · ⏱ {p.meal.min} dk</T>
                 </View>
                 <Text style={{ color: c.muted, fontSize: 18 }}>{on ? '⌃' : '⌄'}</Text>
               </Squish>
               <View style={st.badges}>
                 <Badge text={`🌿 ${p.meal.health}/5 ${healthLabel(p.meal.health)}`} bg={p.meal.health >= 4 ? c.accentSoft : c.surface2} fg={c.ink} />
-                <Badge text={`${TIER[p.tier]} · ~${p.price} TL`} bg={c.surface2} fg={c.ink} />
+                <Badge text={`${TIER[p.tier]} · ~${tlText(p.price)}`} bg={c.surface2} fg={c.ink} />
                 <Badge text={p.missing.length ? `🛒 ${p.missing.length} eksik` : '✓ Hepsi dolapta'} bg={p.missing.length ? c.peachSoft : c.accentSoft} fg={c.ink} />
               </View>
               {on && (
@@ -95,7 +96,7 @@ export default function Yemek() {
                       return (
                         <View key={x.n} style={st.ing}>
                           <Text style={{ width: 22 }}>{has ? '✅' : '🛒'}</Text>
-                          <T style={{ flex: 1, fontSize: 14.5 }}>{titleCase(x.n)} · {qtyText(x, p.servings)}</T>
+                          <T style={{ flex: 1, fontSize: 15 }}>{titleCase(x.n)} · {qtyText(x, p.servings)}</T>
                           <T v="tiny" style={{ color: has ? c.ok : c.warm }}>{has ? 'Dolapta var' : 'Alınacak'}</T>
                         </View>
                       );
@@ -104,7 +105,7 @@ export default function Yemek() {
                   <T style={{ fontSize: 14 }}>{p.meal.steps}</T>
                   {p.missing.length > 0 && (
                     <>
-                      <T v="small">Eksikler yaklaşık {p.missingPrice} TL tutar. Fiyatlar tahminidir.</T>
+                      <T v="small">{isEn() ? `The missing items cost about ${tlText(p.missingPrice)}. Prices are estimates.` : `Eksikler yaklaşık ${p.missingPrice} TL tutar. Fiyatlar tahminidir.`}</T>
                       <Btn small kind="primary" label="Eksikleri listeye ekle 🛒" onPress={() => addMissing(p)} style={{ alignSelf: 'flex-start' }} />
                     </>
                   )}
@@ -125,7 +126,7 @@ export default function Yemek() {
 function Badge({ text, bg, fg }: { text: string; bg: string; fg: string }) {
   return (
     <View style={[st.badge, { backgroundColor: bg }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: fg }}>{text}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: fg }}>{text}</Text>
     </View>
   );
 }

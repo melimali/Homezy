@@ -99,5 +99,5 @@ const styles = StyleSheet.create({
   item: { paddingVertical: 10, gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   day: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
-  dayName: { width: 48, fontFamily: fonts.bodyBlack, fontSize: 13 },
+  dayName: { width: 48, fontFamily: fonts.bodyBlack, fontSize: 13.5 },
 });

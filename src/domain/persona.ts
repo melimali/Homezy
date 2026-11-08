@@ -139,8 +139,8 @@ export type PersonaPlan = {
 };
 
 export const PLAN: Record<Persona, PersonaPlan> = {
-  ogrenci: { morning: '09:30', template: 'studyo', home: { bulasik: false, hali: false }, planTip: 'Küçük bir evde her şey elinin altında. Stüdyo ya da 1+1 yeter.' },
-  genc: { morning: '08:00', template: '2+1', home: { hali: true }, planTip: 'Aile evinde kendi odan ve ortak alanlar için 2+1 iyi bir başlangıç.' },
+  ogrenci: { morning: '09:30', template: 'tek', home: { bulasik: false, hali: false }, planTip: 'Yurt ya da kiralıkta sadece kendi odanla başla: "Sadece odam".' },
+  genc: { morning: '08:00', template: 'tek', home: { hali: true }, planTip: 'Sadece kendi odanı temizlemek istiyorsan "Sadece odam" yeter. Ortak alanlar için 2+1 de var.' },
   tek: { morning: '08:00', template: '1+1', home: {}, planTip: '1+1 çoğu tek kişilik ev için tam.' },
   cift: { morning: '07:45', template: '2+1', home: { bulasik: true }, planTip: 'İkiniz için 2+1: bir de çalışma köşesi çıkar.' },
   anne: { morning: '06:45', template: '3+1', home: { hali: true, bulasik: true }, planTip: 'Çocuk odası için 3+1 plan rahat eder. Oyuncak toplama işleri de gelir.' },

@@ -25,7 +25,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 function checkProductionAds() {
   const env = process.env;
   if (env.EAS_BUILD !== 'true' || env.EAS_BUILD_PROFILE !== 'production') return;
-  const platform = env.EAS_BUILD_PLATFORM === 'ios' ? 'IOS' : 'ANDROID';
+  // iOS'ta AdMob henüz kurulu değil: kimlik yoksa derleme durmaz, uygulama reklamsız çıkar
+  // (src/ads/ads.ts release'te banner kimliği yoksa hiç reklam göstermez). Kimlikleri eklemek için docs/reklam.md.
+  if (env.EAS_BUILD_PLATFORM === 'ios') return;
+  const platform = 'ANDROID';
   const missing = [`EXPO_PUBLIC_ADMOB_APP_ID_${platform}`, `EXPO_PUBLIC_ADMOB_BANNER_${platform}`].filter(k => !env[k]);
   if (missing.length) {
     throw new Error(`Homezy: production derlemesi için EAS ortam değişkeni eksik: ${missing.join(', ')}. Bkz. docs/reklam.md`);

@@ -13,6 +13,7 @@ const LETTER: Record<string, RoomType> = {
 export type PlanTemplate = { id: string; label: string; emoji: string; sub: string; rows: string[] };
 
 export const TEMPLATES: PlanTemplate[] = [
+  { id: 'tek', label: 'Sadece odam', emoji: '🛏️', sub: 'tek oda', rows: ['YYYY', 'YYYY', 'YYYY', 'YYYY'] },
   { id: 'studyo', label: 'Stüdyo', emoji: '🛋️', sub: '1 oda', rows: ['SSSMM', 'SSSMM', 'SSSSS', 'SSSAB', 'SSSAB', 'LLL..'] },
   { id: '1+1', label: '1+1', emoji: '🏠', sub: '2 oda', rows: ['YYYMMM', 'YYYMMM', 'YYYABB', 'SSSABB', 'SSSSSL', 'SSSSSL'] },
   { id: '2+1', label: '2+1', emoji: '🏡', sub: '3 oda', rows: ['YYYMMM', 'YYYMMM', 'YYYABB', 'ZZAABB', 'ZZSSSL', 'ZZSSSL', 'SSSSSL', '......'] },

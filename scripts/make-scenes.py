@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = json.load(open(os.path.join(ROOT, 'scripts/scenes.json'), encoding='utf-8'))
 BG_DIR = os.path.join(ROOT, 'assets/arkaplan')
 OUT_DIR = os.path.join(ROOT, 'assets/scenes')
-MOKA_DIR = os.path.join(ROOT, 'assets/moka')
+MOKA_DIR = os.path.join(ROOT, 'assets-src/moka')
 TS = os.path.join(ROOT, 'src/constants/scenes.ts')
 W, H = 1280, 960  # 4:3 (Ev ekranında büyük gösterildiği için yüksek)
 UPSCALE_MIN = 600  # bundan küçük arka planlar upscale ile büyütülür

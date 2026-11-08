@@ -117,9 +117,9 @@ const styles = StyleSheet.create({
   tailTop: { top: -6, left: '50%', marginLeft: -8 },
   title: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, letterSpacing: -0.2 },
   titleSm: { fontSize: 16, lineHeight: 20 },
-  msg: { fontFamily: fonts.bodyBold, fontSize: 14.5, lineHeight: 21 },
-  msgSm: { fontSize: 13, lineHeight: 18 },
+  msg: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21 },
+  msgSm: { fontSize: 13.5, lineHeight: 18 },
   tip: { gap: 3 },
-  tipHead: { fontFamily: fonts.bodyBlack, fontSize: 11.5, letterSpacing: 1.4, textTransform: 'uppercase' },
-  tipText: { fontFamily: fonts.bodyBlack, fontSize: 14.5, lineHeight: 21 },
+  tipHead: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase' },
+  tipText: { fontFamily: fonts.bodyBlack, fontSize: 15, lineHeight: 21 },
 });

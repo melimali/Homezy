@@ -1,4 +1,5 @@
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, Text, View, type ColorValue } from 'react-native';
@@ -8,7 +9,9 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { MOKA_ASSETS } from '@/constants/moka';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors, useIsDark } from '@/theme';
+import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
+
+import { haptic } from '@/lib/sfx';
 
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
@@ -35,6 +38,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     const o = descriptors[r.key].options;
     const focused = state.index === i;
     const press = () => {
+      if (!focused) haptic('light');
       const e = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
       if (!focused && !e.defaultPrevented) navigateToTab(r.key);
     };
@@ -44,9 +48,9 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
   return (
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[st.bar, { backgroundColor: dark ? 'rgba(55,54,74,0.99)' : 'rgba(255,251,245,0.99)', borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.9)', shadowColor: c.shadow }]}>
+      <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.06)' : c.line, shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
-        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
+        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle: Moka sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
             <Image source={MOKA_ASSETS.happy} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
@@ -112,9 +116,9 @@ function Tab({ name, label, focused, onPress }: { name: IconName; label: string;
   const color = focused ? c.ink : c.muted;
   return (
     <Squish onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} quiet style={st.tabOuter}>
-      <Animated.View style={[st.tab, focused && { backgroundColor: c[BUBBLE[name]] }, { transform: [{ scale: v }] }]}>
+      <Animated.View style={[st.tab, focused && { backgroundColor: c.accentSoft }, { transform: [{ scale: v }] }]}>
         <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
-        <Text numberOfLines={1} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
+        <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
       </Animated.View>
     </Squish>
   );
@@ -124,7 +128,7 @@ function Glyph({ name, color, filled, cut }: { name: IconName; color: ColorValue
   const p = { stroke: color, strokeWidth: 2.2, fill: filled ? color : 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   const line = { ...p, fill: 'none' };
   return (
-    <Svg width={22} height={22} viewBox="0 0 24 24">
+    <Svg width={21} height={21} viewBox="0 0 24 24">
       {name === 'home' && <Path {...p} d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />}
       {name === 'growth' && (
         <>
@@ -173,18 +177,18 @@ function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 const st = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 6, maxWidth: 520, alignSelf: 'center', width: '100%' },
   bar: {
-    flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 8, gap: 2,
-    borderWidth: 1.5, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 1, shadowRadius: 22, elevation: 8,
+    flexDirection: 'row', alignItems: 'center', borderRadius: 28, paddingVertical: 6, paddingHorizontal: 6, gap: 2,
+    borderWidth: StyleSheet.hairlineWidth, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.6, shadowRadius: 14, elevation: 6,
   },
-  opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 16, paddingHorizontal: 18, minHeight: 72 },
   tabOuter: { flex: 1 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 7, borderRadius: radius.pill },
-  label: { fontSize: 11 },
+  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 50, paddingVertical: 6, paddingHorizontal: 4, borderRadius: 22 },
+  label: { fontSize: 12 },
   plus: {
-    width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -22, borderWidth: 4,
-    shadowColor: '#B9805F', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
+    width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -16, borderWidth: 3,
+    shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
   },
-  plusClip: { width: 54, height: 54, borderRadius: 27, overflow: 'hidden', alignItems: 'center' },
-  plusMoka: { width: 60, height: 60, marginTop: 4 },
-  plusBadge: { position: 'absolute', right: -4, bottom: -2, width: 22, height: 22, borderRadius: 11, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
+  plusClip: { width: 46, height: 46, borderRadius: radius.card, overflow: 'hidden', alignItems: 'center' },
+  plusMoka: { width: 52, height: 52, marginTop: 4 },
+  plusBadge: { position: 'absolute', right: -3, bottom: -2, width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });

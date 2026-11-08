@@ -1,10 +1,12 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { dateLocale } from '@/i18n/runtime';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, Screen, SecHead, T, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEMS, type Item, type ItemCategory } from '@/domain/items';
 import { POINTS } from '@/domain/play';
@@ -19,8 +21,13 @@ import { sfx } from '@/lib/sfx';
 const CATEGORIES: [ItemCategory, string][] = [
   ['tum', '✨ Tümü'],
   ['mobilya', '🪑 Mobilya'],
-  ['dekor', '💡 Dekor'],
+  ['aydinlatma', '🕯️ Işık'],
+  ['duvar', '🖼️ Duvar'],
+  ['dekor', '🏺 Dekor'],
   ['bitki', '🪴 Bitki'],
+  ['hobi', '🎨 Hobi'],
+  ['mevsim', '🎄 Mevsim'],
+  ['dis', '🏡 Dış mekan'],
   ['elektronik', '🎸 Elektronik'],
   ['evcil', '🐱 Evcil'],
   ['ozel', '👑 Özel'],
@@ -52,7 +59,7 @@ export default function Magaza() {
       <View>
         <T v="eyebrow">Mağaza</T>
         <T v="h1">Evine eşya al 🛍️</T>
-        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
+        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: günün ilk 5 işi +{POINTS.gorev} (sonrakiler daha az), spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
         <T v="small" style={{ marginTop: 4 }}>
           {premium.active
             ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString(dateLocale())} kat geliyor, 👑 eşyalar senin için açık.`
@@ -76,7 +83,7 @@ export default function Magaza() {
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
           <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
         </View>
-        <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
+        <Chevron color={c.muted} size={16} dir="right" />
       </Squish>
       </Appear>
 
@@ -113,6 +120,7 @@ function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected:
   const { buy } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const owned = S.play.owned.includes(item.id);
   const room = S.play.placed[item.id];
   const locked = item.premium && !premium.active;
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
   crown: { position: 'absolute', top: -4, right: -4, fontSize: 16 },
   meter: { width: 64, height: 6, borderRadius: 3, overflow: 'hidden' },
   meterFill: { height: 6, borderRadius: 3 },
-  tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  tag: { fontFamily: fonts.bodyBlack, fontSize: 13.5, textAlign: 'center' },
   garden: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18 },
   gardenT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   rooms: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

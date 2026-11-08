@@ -1,0 +1,17 @@
+export const EN_FUN: Record<string, string> = {
+  'Biraz eğlenelim 🎮': "Let's have some fun 🎮",
+  'Moka Uçuş': 'Moka Flap',
+  'Moka Uçuş: dokun, Moka kanat çırpsın; kahve fincanı sütunlarının arasından geç. Puan vermez, sadece keyif.': 'Moka Flap: tap to flap and fly between the coffee-cup columns. No points, just fun.',
+  'Moka Uçuş: fincan sütunlarının arasından geç. En iyi: {}': 'Moka Flap: fly between the cup columns. Best: {}',
+  'Oyna': 'Play',
+  'Yarın tekrar': 'Back tomorrow',
+  'Skor: {}': 'Score: {}',
+  'En iyi: {}': 'Best: {}',
+  'Dokun, Moka uçsun! 🦜': 'Tap to make Moka fly! 🦜',
+  '{} engel geçtin! {}': 'You passed {} obstacles! {}',
+  '🏆 Yeni rekor': '🏆 New record',
+  'Tekrar dene': 'Try again',
+  '3 oyun yeter, yarın görüşürüz 🌙': '3 games is enough, see you tomorrow 🌙',
+  'Bugün {}/{} oyun': 'Games today: {}/{}',
+  'Kanat çırp': 'Flap',
+};

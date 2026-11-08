@@ -1,4 +1,5 @@
 import { uid } from '@/domain/logic';
+import { medAgain, medNudge } from '@/domain/messages';
 import { addDays, dayKey, dayTs } from '@/domain/play';
 import type { AppState, Med, MedMark } from '@/domain/types';
 
@@ -12,8 +13,8 @@ export const MED_DISCLAIMER = 'Homezy tıbbi tavsiye vermez. İlaç ve dozları 
 
 export const doseKey = (id: string, time: string) => `${id}@${time}`;
 
-export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now()): Med => ({
-  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now,
+export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now(), kind: 'ilac' | 'takviye' = 'ilac'): Med => ({
+  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now, kind,
 });
 
 export type Dose = { med: Med; time: string; key: string; mark?: MedMark };
@@ -104,8 +105,8 @@ export function mokaMedLine(missed: Dose[], dueNow: Dose[], allDone: boolean): s
       ? `☕ Moka usulca soruyor: ${n} vakti geçmiş gibi. Aldıysan işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`
       : `☕ Moka usulca soruyor: ${missed.length} ilacın vakti geçmiş gibi. Aldıklarını işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`;
   }
-  if (dueNow.length) return `💊 ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
-  if (allDone) return '🌟 Bugünkü ilaçların tamam. Moka seninle gurur duyuyor!';
+  if (dueNow.length) return `${dueNow[0].med.kind === 'takviye' ? '🌿' : '💊'} ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
+  if (allDone) return '🌟 Bugünkü ilaç ve takviyelerin tamam. Moka seninle gurur duyuyor!';
   return '☕ Moka bugünkü ilaçlarını hatırlayacak.';
 }
 
@@ -115,7 +116,7 @@ export function mokaMedLine(missed: Dose[], dueNow: Dose[], allDone: boolean): s
  */
 export function medNotifs(S: AppState, now = Date.now()) {
   if (!S.settings.meds || !S.meds.length) return [];
-  const out: { id: string; at: Date; title: string; body: string }[] = [];
+  const out: { id: string; at: Date; title: string; body: string; key: string }[] = [];
   const today = dayKey(now);
   for (let d = 0; d < NOTIF_DAYS; d++) {
     const day = addDays(today, d);
@@ -125,10 +126,10 @@ export function medNotifs(S: AppState, now = Date.now()) {
       const label = dose.med.dose ? `${dose.med.name} · ${dose.med.dose}` : dose.med.name;
       const first = new Date(dayTs(day));
       first.setHours(Math.floor(t / 60), t % 60, 0, 0);
-      if (first.getTime() > now) out.push({ id: `ilac-${dose.key}-${day}`, at: first, title: '💊 İlaç vakti', body: label });
+      if (first.getTime() > now) out.push({ id: `ilac-${dose.key}-${day}`, at: first, key: dose.key, ...medNudge(label, dose.key, first.getTime()) });
       const again = new Date(first.getTime() + MISSED_AFTER_MIN * 60000);
       if (again.getTime() > now)
-        out.push({ id: `ilac2-${dose.key}-${day}`, at: again, title: '☕ Moka usulca soruyor', body: `${dose.med.name} aldın mı? Aldıysan uygulamada işaretle.` });
+        out.push({ id: `ilac2-${dose.key}-${day}`, at: again, key: dose.key, title: '☕ Moka usulca soruyor', body: medAgain(dose.med.name, dose.key, again.getTime()) });
     }
   }
   return out.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, MED_NOTIF_CAP);

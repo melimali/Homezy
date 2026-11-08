@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import { useBusy } from '@/components/BusyOverlay';
+import { useRouter } from '@/lib/nav';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,7 +9,8 @@ import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
-import { Breathe, Flutter, Shower, Sway, Twinkle } from '@/components/gardenFx';
+import { GardenScene } from '@/components/GardenScene';
+import { Breathe, Flutter, GrowIn, Shower, Sway, Twinkle, Wander } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
@@ -20,6 +22,7 @@ import { dayKey } from '@/domain/play';
 import type { MokaPose } from '@/constants/moka';
 import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
+import { useSky } from '@/lib/weather';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -50,6 +53,8 @@ export default function Bahce() {
   const fire = Math.max(0, blooms - blooms0);
   const maxPlots = premium.active ? PLOTS.premium : PLOTS.free;
   const month = monthFlower(now);
+  const sky = useSky();
+  const hour = new Date(now).getHours();
 
   const grown = G.plots.map(p => ({ p, f: FLOWER[p.flower], g: growth(P, p, now) }));
 
@@ -84,16 +89,18 @@ export default function Bahce() {
     <Screen header={false} image={require('../../assets/bahce/bahce-arka.jpg')}>
       <BackLink />
       <Appear>
-        <T v="eyebrow">Puanla bahçe</T>
-        <T v="h1">Moka&apos;nın bahçesi 🌷</T>
-        <T v="lead">Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
+        <Glass scrim style={{ gap: 6 }}>
+          <T v="eyebrow" style={{ color: '#E6C9BD', letterSpacing: 1.2 }}>PUANLA BAHÇE</T>
+          <T v="h1" style={{ color: '#EBF5EE' }}>Moka&apos;nın bahçesi 🌷</T>
+          <T v="lead" style={{ color: '#D5E3DA' }}>Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
+        </Glass>
       </Appear>
 
       <Appear index={1}>
-        <Glass style={styles.wallet}>
+        <Glass scrim style={styles.wallet}>
           <Float amp={3} dur={1800}><Text style={{ fontSize: 26 }}>⭐</Text></Float>
-          <Pulse on={P.points}><Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text></Pulse>
-          <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
+          <Pulse on={P.points}><Text style={[styles.walletN, { color: '#FFFFFF' }]}>{P.points}</Text></Pulse>
+          <Text style={[styles.walletL, { color: '#E6C9BD' }]}>puanın var</Text>
         </Glass>
       </Appear>
 
@@ -103,46 +110,36 @@ export default function Bahce() {
       </Appear>
 
       <Appear index={3}>
-      <Glass style={styles.statsCard}>
+      <Glass scrim style={styles.statsCard}>
         <View style={styles.statsRow}>
           <View style={{ flex: 1 }}>
-            <T v="tiny" style={{ color: c.muted }}>BAHÇE SEVİYESİ</T>
-            <T v="bold" style={{ color: c.ink, fontSize: 16 }}>{rank.title}</T>
+            <T v="tiny" style={{ color: '#B9C7BF' }}>BAHÇE SEVİYESİ</T>
+            <T v="bold" style={{ color: '#FFFFFF', fontSize: 16 }}>{rank.title}</T>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <T v="tiny" style={{ color: c.muted }}>KOLEKSİYON</T>
-            <T v="bold" style={{ color: c.today, fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
+            <T v="tiny" style={{ color: '#B9C7BF' }}>KOLEKSİYON</T>
+            <T v="bold" style={{ color: '#E6C9BD', fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
           </View>
         </View>
-        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2, marginTop: 4 }]}>
+        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: 'rgba(235,245,238,0.18)', marginTop: 4 }]}>
           <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
         </View>
       </Glass>
       </Appear>
 
       <Appear index={4}>
-      <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
-        <Float amp={6} dur={5200} style={[styles.blob, { top: -30, right: -20 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.blue }]} />
-        </Float>
-        <Float amp={5} dur={4400} delay={600} style={[styles.blob, { bottom: 40, left: -40 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.clay }]} />
-        </Float>
-        <View pointerEvents="none" style={[styles.sky, { backgroundColor: c.surface }]} />
-        <Float amp={3} dur={3800} style={styles.sun}><Text style={{ fontSize: 34 }}>☀️</Text></Float>
-        <Float amp={8} dur={9000} style={[styles.cloud, { top: 22, left: '38%' }]}><Text style={{ fontSize: 26, opacity: 0.85 }}>☁️</Text></Float>
-        <Float amp={6} dur={7000} delay={900} style={[styles.cloud, { top: 60, right: '12%' }]}><Text style={{ fontSize: 20, opacity: 0.7 }}>☁️</Text></Float>
-        <View pointerEvents="none" style={styles.grass}>
-          <Text style={styles.grassT}>🌿🌱🌾🌿🌱🌾🌿🌱🌾🌿🌱🌾</Text>
-        </View>
-        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
+      <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
+        <GardenScene hour={hour} sky={sky} blooms={blooms} />
+        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
         <Flutter emoji="🦋" top="14%" dur={8500} />
         <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
         {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
         <View style={styles.bedTop}>
-          <Float amp={5} dur={2600}>
-            <MokaMascot pose={pose} size="md" showBubble={false} />
-          </Float>
+          <Wander range={14} dur={6500}>
+            <Float amp={5} dur={2600}>
+              <MokaMascot pose={pose} size="md" showBubble={false} />
+            </Float>
+          </Wander>
           <Glass style={styles.bubble} intensity={30}>
             <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
           </Glass>
@@ -219,7 +216,7 @@ export default function Bahce() {
 
       {detailFlower && (
         <Sheet open={!!detailFlower} onClose={() => setDetailFlower(null)} pose="plants">
-          <View style={{ alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+          <View style={{ alignItems: 'center', gap: 12, paddingTop: 18, paddingBottom: 6 }}>
             <PlantArt flower={detailFlower} stage={5} size={110} />
             <T v="h2">{detailFlower.emoji} {detailFlower.name}</T>
             <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -231,19 +228,19 @@ export default function Bahce() {
               <T v="small">{detailFlower.story ?? `${detailFlower.name} bahçene neşe ve renk katan harika bir çiçek!`}</T>
             </Card>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 }}>
-              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13.5 }}>
                 Albümdedeki Sayı: {G.album[detailFlower.id] ?? 0} adet
               </Text>
-              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13 }}>
+              <Text style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 13.5 }}>
                 Tohum Fiyatı: ⭐ {detailFlower.price}
               </Text>
             </View>
-            <Btn label="Kapat" onPress={() => setDetailFlower(null)} block style={{ marginTop: 10 }} />
+            <Btn kind="primary" label="Kapat" onPress={() => setDetailFlower(null)} block style={{ marginTop: 10 }} />
           </View>
         </Sheet>
       )}
     </Screen>
-    <GardenGate title="Moka'nın bahçesi" greeting="Hoş geldin! Gel, çiçeklere bakalım 🌷" />
+    <GardenGate />
     </View>
   );
 }
@@ -261,15 +258,17 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
     >
       <Twinkle on={g} />
       <Sway deg={stage >= 3 ? 4 : 2} dur={2200 + (flower.price % 7) * 260} delay={(flower.grow % 5) * 200}>
-        {plot.bloomed ? (
-          <Breathe amp={0.08} dur={1200}>
-            <Float amp={3} dur={1900}>
-              <PlantArt flower={flower} stage={stage} size={54} />
-            </Float>
-          </Breathe>
-        ) : (
-          <PlantArt flower={flower} stage={stage} size={54} />
-        )}
+        <GrowIn h={54} delay={150 + (flower.grow % 7) * 90} pop={stage}>
+          {plot.bloomed ? (
+            <Breathe amp={0.08} dur={1200}>
+              <Float amp={3} dur={1900}>
+                <PlantArt flower={flower} stage={stage} size={54} />
+              </Float>
+            </Breathe>
+          ) : (
+            <PlantArt flower={flower} stage={stage} size={54} />
+          )}
+        </GrowIn>
       </Sway>
       <Text style={[styles.plotName, { color: c.ink }]} numberOfLines={1}>{flower.name}</Text>
       <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
@@ -363,6 +362,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
   const { spend } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const [popped, setPopped] = useState(0);
   const locked = f.premium && !premium.active;
   const short = f.price - S.play.points;
@@ -409,6 +409,7 @@ function FertRow({ plot }: { plot: Plot }) {
   const { state: S } = useStore();
   const { spend } = usePlay();
   const [busy, setBusy] = useState<string | null>(null);
+  useBusy(!!busy);
   const [rain, setRain] = useState<{ n: number; e: string }>({ n: 0, e: '💧' });
   const f = FLOWER[plot.flower]!;
   const room = Math.max(0, FERT_CAP(f) - plot.fert);
@@ -473,6 +474,7 @@ function ExtraCard({ x, onOwned }: { x: Extra; onOwned?: { on: boolean; pick: ()
   const { buy } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const owned = x.price === 0 || S.play.owned.includes(x.id);
   const locked = x.premium && !premium.active;
   const short = x.price - S.play.points;
@@ -554,33 +556,26 @@ const styles = StyleSheet.create({
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   statsCard: { padding: 20, gap: 8 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 110, opacity: 0.35 },
-  sun: { position: 'absolute', top: 8, left: 12 },
-  cloud: { position: 'absolute' },
-  grass: { position: 'absolute', bottom: -4, left: 0, right: 0, alignItems: 'center', opacity: 0.7 },
-  grassT: { fontSize: 22, letterSpacing: 2 },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
-  blob: { position: 'absolute', width: 150, height: 150, opacity: 0.35 },
-  blobIn: { flex: 1, borderRadius: 75 },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
   plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
   plotCell: { width: '31.5%' },
-  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
-  plotName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, textAlign: 'center' },
-  plotStage: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3, backgroundColor: 'rgba(255,255,255,0.28)' },
+  plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },
+  plotStage: { fontFamily: fonts.bodyBold, fontSize: 12 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
   decor: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', minHeight: 4 },
   decorE: { fontSize: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 14 },
   rowT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  rowS: { fontFamily: fonts.bodyBold, fontSize: 12.5 },
+  rowS: { fontFamily: fonts.bodyBold, fontSize: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   item: { width: '47.5%', alignItems: 'center', padding: 14, gap: 8 },
-  tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  tag: { fontFamily: fonts.bodyBlack, fontSize: 13.5, textAlign: 'center' },
   albumGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   albumCell: { width: '23%', alignItems: 'center', borderRadius: radius.tile, paddingVertical: 8, gap: 2 },
 });

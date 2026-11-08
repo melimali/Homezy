@@ -1,5 +1,6 @@
+import { useActive } from '@/hooks/useActive';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text as RNText, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -8,6 +9,7 @@ import { facadeOf, floorOf, spotOf, wallOf, winOf } from '@/domain/look';
 import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
+import { RECIPES } from '@/domain/itemRecipes';
 import { MokaPet } from '@/components/MokaPet';
 import { useNow } from '@/hooks/useNow';
 import { sfx, haptic } from '@/lib/sfx';
@@ -28,6 +30,8 @@ const B = 14;
 const SLAB = 10;
 const WALL_H = 34;
 const INNER_H = 20;
+/** Balkonun dışa bakan kenarı: korkuluk yüksekliği (evin duvarı değil). */
+const RAIL_H = 9;
 const FRONT_H = 8;
 const T = 0.12;
 
@@ -267,6 +271,11 @@ function itemShape(id: string, r: number, c: number, k: string): ReactElement[] 
     case 'vazo':
       faces = b('v', 0.35, 0.35, 0.3, 0.3, 0, 10, POT);
       break;
+    default:
+      for (const part of RECIPES[id] ?? []) {
+        if (part[0] === 'b') faces.push(...b(String(extra.length + faces.length), part[1], part[2], part[3], part[4], part[5], part[6], part[7]));
+        else extra.push(ball('o' + extra.length + faces.length, part[1], part[2], part[3], part[4], part[5], part[6] ?? 1));
+      }
   }
   return [...faces.map(renderFace), ...extra];
 }
@@ -973,7 +982,11 @@ type Props = {
   zoom?: number;
   /** Gökyüzü zemini ev kutusunun dışına da taşar (tam ekran görünüm). */
   bleed?: boolean;
+  /** İki parmakla büyütme sadece tam ekran ev görünümünde (Evim); ana ekrandaki önizlemede kapalı. */
+  pinchZoom?: boolean;
   mood?: Mood;
+  /** Dokununca odaya yaklaş (kamera odaya kayar, yakınlaşır); "Odaya gir" onOpenRoom'u çağırır. Yakınlaştırma ile çatı kalkar, uzaklaştırınca çatılı ev görünür. */
+  roomZoom?: boolean;
   /**
    * Gösterilen kat (dubleks). 0: zemin kat (üst kat gizli, içi görünsün). 1: üst kat; zemin kat
    * altında kapalı bir kütle olarak durur, pencereleri ve kapısıyla.
@@ -981,7 +994,7 @@ type Props = {
   floor?: Floor;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0 }: Props) {
+export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1000,11 +1013,16 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const [breathAnim] = useState(() => new Animated.Value(0));
   const [twinkle] = useState(() => new Animated.Value(0));
   const previousLevel = useRef(L);
-  const [reduce, setReduce] = useState(false);
+  const [reduceSys, setReduce] = useState(false);
+  const active = useActive();
+  const reduce = reduceSys || !active;
   const [boxW, setBoxW] = useState(0);
   const [burst, setBurst] = useState(0);
   const [pinch] = useState(() => new Animated.Value(1));
-  const pinchRef = useRef({ d: 0, base: 1, cur: 1 });
+  const [pan] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
+  const pinchRef = useRef({ d: 0, base: 1, cur: 1, px: 0, py: 0, lx: 0, ly: 0, moved: false });
+  const [focus, setFocus] = useState<string | null>(null);
+  const focusFn = useRef<(id: string | null) => void>(() => {});
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
@@ -1167,7 +1185,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const handleOpenRoom = (id: string) => {
     haptic('light');
     sfx('tap');
-    onOpenRoom?.(id);
+    if (roomZoom) focusFn.current(id);
+    else onOpenRoom?.(id);
   };
   const handlePressHouse = () => {
     haptic('light');
@@ -1193,10 +1212,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   // Kapılar: iki oda arasındaki her duvarda bir kapı (en arkadaki ortak blokta), giriş kapısı antrede.
   const doors = new Set<string>();
   const seenPair = new Set<string>();
+  // Antre (koridor) varsa odalar sadece antreye açılır; odalar arası kapı yok.
+  const hallway = cells.some(cid => cid && S.rooms[cid]?.type === 'antre');
   for (const i of order) {
     const id = cells[i]!, r = Math.floor(i / cols), col = i % cols;
     for (const [dir, nb] of [['n', at(r - 1, col)], ['w', at(r, col - 1)]] as const) {
       if (!nb || nb === id) continue;
+      if (hallway && S.rooms[id]?.type !== 'antre' && S.rooms[nb]?.type !== 'antre') continue;
       const pair = [id, nb].sort().join('|');
       if (seenPair.has(pair)) continue;
       seenPair.add(pair);
@@ -1337,13 +1359,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     const winOn = (parity: number) => wm === 2 || (wm === 1 && (r + col) % 2 === parity);
     const winFill = isNight && p >= 70 ? '#FFF2B2' : c.hi;
     if (n !== id && L >= 2) {
-      const h = wallH(n ? INNER_H : WALL_H);
+      const balc = S.rooms[id]?.type === 'balkon';
+      const h = wallH(n ? INNER_H : balc ? RAIL_H : WALL_H);
       if (L === 2) frame(k + 'n', r, col, T * 0.7, 1, h);
       else {
         wall(k + 'n', r, col, T, 1, h, wallTint(id, !n));
         if (L >= 5 && doors.has(i + 'n')) door(k + 'n', r, col, 'n', false);
         if (L >= 5 && entrance === i + 'n') door(k + 'n', r, col, 'n', true);
-        else if (!n && L >= 5 && winOn(0)) {
+        else if (!n && !balc && L >= 5 && winOn(0)) {
           add({ key: k + 'nw', fill: winFill, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + T + 0.1, col + 0.5, 19);
@@ -1356,7 +1379,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         }
         if (idle >= 2 && (r + col) % 2 === 1)
           crack(k + 'nc', [P(r + T, col + 0.5, h - 2), P(r + T, col + 0.6, h - 7), P(r + T, col + 0.47, h - 11), P(r + T, col + 0.58, h - 16)]);
-        if (!n && L >= 26)
+        if (!n && !balc && L >= 26)
           for (const v of [0.2, 0.5, 0.8]) {
             const [x, y] = P(r, col + v, WALL_H + 3);
             els.push(<Circle key={k + 'li' + v} cx={x} cy={y} r={1.8} fill={GOLD} />);
@@ -1364,14 +1387,15 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       }
     }
     if (w !== id && L >= 2) {
-      const h = wallH(w ? INNER_H : WALL_H);
+      const balc = S.rooms[id]?.type === 'balkon';
+      const h = wallH(w ? INNER_H : balc ? RAIL_H : WALL_H);
       const r0 = n !== id ? r + T : r;
       if (L === 2) frame(k + 'w', r, col, 1, T * 0.7, h);
       else {
         wall(k + 'w', r0, col, r + 1 - r0, T, h, wallTint(id, !w));
         if (L >= 5 && doors.has(i + 'w')) door(k + 'w', r, col, 'w', false);
         if (L >= 5 && entrance === i + 'w') door(k + 'w', r, col, 'w', true);
-        else if (!w && L >= 5 && winOn(1)) {
+        else if (!w && !balc && L >= 5 && winOn(1)) {
           add({ key: k + 'ww', fill: winFill, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + 0.5, col + T + 0.1, 19);
@@ -1429,6 +1453,84 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       if (!at(r + 1, col)) frame(k + 's', r + 1 - T * 0.7, col, T * 0.7, 1, WALL_H);
       if (!at(r, col + 1)) frame(k + 'x', r, col + 1 - T * 0.7, 1, T * 0.7, WALL_H);
     }
+  }
+
+  // Çatı ve dış görünüm: uzaklaştırınca (pinch < 1) belirir, yaklaşınca kalkar. Her blok kısa bir kırma çatı.
+  const roofEls: ReactElement[] = [];
+  if (L >= 3) {
+    const roofBase = dark ? '#8A5C52' : '#C8826B';
+    const snowy = theme === 'kis';
+    const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
+    const o = 0.1, apexZ = WALL_H + 17;
+    // Her hücre: dört kenar köşesi (dönmeye göre doğru), arkadan öne sıralı dört üçgen + ön duvar eteği.
+    for (const i of order) {
+      const r = Math.floor(i / cols), col = i % cols, tint = mix(rc, '#FFFFFF', ((r * 5 + col * 3) % 4) * 0.025);
+      const apex = P(r + 0.5, col + 0.5, apexZ);
+      const corners: Pt[] = [[r - o, col - o], [r - o, col + 1 + o], [r + 1 + o, col + 1 + o], [r + 1 + o, col - o]];
+      const base = corners.map(([a1, b1]) => P(a1, b1, WALL_H));
+      const cy = P(r + 0.5, col + 0.5, 0)[1];
+      const id = cells[i]!;
+      // Etek: ön tarafa bakan, komşusuz kenarlarda alçak ön duvarı çatıya kadar kapatır (boşluk kalmasın).
+      const edges: [number, number, number, number][] = [[r, col, r, col + 1], [r, col + 1, r + 1, col + 1], [r + 1, col + 1, r + 1, col], [r + 1, col, r, col]];
+      const nb = [at(r - 1, col), at(r, col + 1), at(r + 1, col), at(r, col - 1)];
+      edges.forEach(([r1, c1, r2, c2], e) => {
+        if (nb[e]) return;
+        const m1 = P(r1, c1, 0), m2 = P(r2, c2, 0);
+        if ((m1[1] + m2[1]) / 2 <= cy + 0.5) return;
+        const sk = wallTint(id, true);
+        const left = (m1[0] + m2[0]) / 2 < P(r + 0.5, col + 0.5, 0)[0];
+        roofEls.push(<Polygon key={`rk${i}_${e}`} points={pts([m1, m2, P(r2, c2, WALL_H), P(r1, c1, WALL_H)])} fill={left ? sk : shade(sk, -0.14)} stroke={shade(sk, -0.3)} strokeWidth={0.6} strokeLinejoin="round" />);
+      });
+      const faces = [0, 1, 2, 3].map(e => ({ e, a: base[e], b: base[(e + 1) % 4] })).sort((p1, p2) => (p1.a[1] + p1.b[1]) - (p2.a[1] + p2.b[1]));
+      for (const f of faces) {
+        const mx = (f.a[0] + f.b[0]) / 2, my = (f.a[1] + f.b[1]) / 2;
+        if (my < apex[1] - 0.5) continue; // arka yüzler zaten kapalı
+        const fill = mx < apex[0] - 0.5 ? tint : mx > apex[0] + 0.5 ? shade(tint, -0.16) : shade(tint, -0.06);
+        roofEls.push(<Polygon key={`rf${i}_${f.e}`} points={pts([f.a, f.b, apex])} fill={fill} stroke={shade(tint, -0.28)} strokeWidth={0.7} strokeLinejoin="round" />);
+      }
+      for (const pt of [apex, ...base]) grow(pt);
+    }
+    if (L >= 7 && order.length) {
+      const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;
+      box('rchim', cr + 0.55, cc + 0.55, 0.16, 0.16, WALL_H + 8, 14, BRICK, 0.4).forEach(f => roofEls.push(renderFace(f)));
+    }
+  }
+  // Dış görünüm, bahçe henüz küçükken: çit, ağaçlar ve yol (sonra gelen bahçe süsleri bunların yerini alır).
+  const extEls: ReactElement[] = [];
+  if (L >= 3 && floor === 0 && order.length && L < 22) {
+    const rr = rMax + 0.55, c0 = cMin - 0.5, c1 = cMax + 0.5, r0 = rMin - 0.5;
+    const fenceC = '#EADFCF';
+    const post = (key: string, a: number, b: number) => {
+      const [x, y] = P(a, b, 0), [x2, y2] = P(a, b, 9);
+      extEls.push(<Polyline key={key} points={pts([[x, y], [x2, y2]])} stroke={fenceC} strokeWidth={2.2} strokeLinecap="round" fill="none" />);
+    };
+    for (let v = c0; v <= c1 + 0.01; v += 0.5) post('fp' + v, rr, v);
+    for (let u = r0; u <= rr + 0.01; u += 0.5) post('fq' + u, u, c1);
+    extEls.push(
+      <Polyline key="frs" points={pts([P(rr, c0, 6), P(rr, c1, 6), P(r0, c1, 6)])} stroke={fenceC} strokeWidth={1.6} fill="none" strokeLinejoin="round" />,
+      <Polyline key="frt" points={pts([P(rr, c0, 3), P(rr, c1, 3), P(r0, c1, 3)])} stroke={fenceC} strokeWidth={1.2} fill="none" strokeLinejoin="round" />,
+    );
+    // Taş yol: evin ön kenarından çite doğru.
+    const mid = (cMin + cMax) / 2;
+    extEls.push(<Polygon key="path" points={pts([P(rMax, mid - 0.25), P(rMax, mid + 0.25), P(rr, mid + 0.25), P(rr, mid - 0.25)])} fill="#D8C7AE" />);
+    const tree = (key: string, a: number, b: number, s: number) => {
+      const [x, y] = P(a, b, 0);
+      extEls.push(
+        <G key={key}>
+          <Ellipse cx={x} cy={y + 1} rx={9 * s} ry={3.5 * s} fill="rgba(40,48,68,0.14)" />
+          <Polyline points={pts([[x, y], [x, y - 14 * s]])} stroke="#8C5E45" strokeWidth={3 * s} strokeLinecap="round" fill="none" />
+          <Circle cx={x} cy={y - 21 * s} r={11 * s} fill={LEAF} />
+          <Circle cx={x - 4 * s} cy={y - 24 * s} r={5 * s} fill={shade(LEAF, 0.2)} fillOpacity={0.7} />
+        </G>,
+      );
+    };
+    tree('t1', rr - 0.15, c0 + 0.25, 1);
+    tree('t2', rr - 0.2, c1 - 0.3, 0.85);
+    tree('t3', r0 + 0.25, c0 + 0.1, 0.9);
+    ['#E58C7E', '#F2C46D', '#F4A6C0', '#FFFFFF'].forEach((col2, i) => {
+      const [fx, fy] = P(rr - 0.3, c0 + 0.7 + i * 0.35, 1);
+      extEls.push(<Circle key={'fl' + i} cx={fx} cy={fy} r={2.1} fill={col2} />);
+    });
   }
 
   // Baca: en arkadaki bloğun duvarında; dumanı ambient katmanından çıkar.
@@ -1529,7 +1631,71 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day && !dark));
   const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
   const sc = boxW > 0 ? boxW / vbW : 0;
+  const ZMAX = 3, ZMIN = 0.7;
+  focusFn.current = (id: string | null) => {
+    setFocus(id);
+    if (!id || !sc) {
+      Animated.parallel([
+        Animated.spring(pinch, { toValue: 1, friction: 8, tension: 60, useNativeDriver: true }),
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 8, tension: 60, useNativeDriver: true }),
+      ]).start();
+      pinchRef.current.cur = 1; pinchRef.current.px = 0; pinchRef.current.py = 0;
+      return;
+    }
+    const a = anchors[id];
+    const [fx, fy] = P(Math.floor(a / cols) + 0.5, (a % cols) + 0.5, 6);
+    const Z = 2.4;
+    const total = Z * zoom;
+    const ox = (fx - (minX + vbW / 2)) * sc, oy = (fy - (minY + vbH / 2)) * sc;
+    const tx = -ox * total, ty = -oy * total;
+    pinchRef.current.cur = Z; pinchRef.current.px = tx / 1; pinchRef.current.py = ty;
+    Animated.parallel([
+      Animated.spring(pinch, { toValue: Z, friction: 8, tension: 50, useNativeDriver: true }),
+      Animated.spring(pan, { toValue: { x: tx, y: ty }, friction: 8, tension: 50, useNativeDriver: true }),
+    ]).start();
+  };
+  // Zoom'a bağlı sürekli geçiş: yaklaştıkça çatı yükselip büyüyerek solar, çevre detayları da silikleşir.
+  const roofOp = pinch.interpolate({ inputRange: [ZMIN, 0.9, 1], outputRange: [1, 0.55, 0], extrapolate: 'clamp' });
+  // Çimenli zemin: uzaklaştıkça büyür ve belirir, yaklaşınca küçülüp söner.
+  const grassOp = pinch.interpolate({ inputRange: [ZMIN, 0.95, 1], outputRange: [1, 0.6, 0], extrapolate: 'clamp' });
+  const grassScale = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [1.15, 0.45], extrapolate: 'clamp' });
+  const grassSway = swayAnim.interpolate({ inputRange: [0, 1], outputRange: [-1.6, 1.6] });
+  const extOp = pinch.interpolate({ inputRange: [ZMIN, 1, 1.8], outputRange: [1, 1, 0.2], extrapolate: 'clamp' });
 
+  // Çimenli, çiçekli zemin (sabit tohumlu, her render aynı).
+  const grassBase: ReactElement[] = [];
+  const grassTufts: ReactElement[] = [];
+  if (pinchZoom) {
+    const snowyG = theme === 'kis', autumnG = theme === 'sonbahar';
+    const g1 = snowyG ? (dark ? '#6E7B8C' : '#E6EDF4') : autumnG ? (dark ? '#4F5A33' : '#A9B26A') : dark ? '#2F5238' : '#8FCB86';
+    const g2 = shade(g1, dark ? 0.1 : -0.1);
+    const bladeC = shade(g1, dark ? 0.22 : -0.22);
+    const gx = (minX + maxX) / 2, gy = (houseMinY + houseMaxY) / 2 + vbH * 0.06;
+    const grx = vbW * 1.0, gry = vbH * 0.78;
+    grassBase.push(
+      <Ellipse key="gl2" cx={gx} cy={gy + gry * 0.04} rx={grx} ry={gry} fill={g2} />,
+      <Ellipse key="gl1" cx={gx} cy={gy} rx={grx * 0.94} ry={gry * 0.93} fill={g1} />,
+    );
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const FL = snowyG ? [] : ['#FFFFFF', '#F7D154', '#F29BB5', '#B79CF2', '#F28C6B'];
+    for (let k = 0; k < 64; k++) {
+      const ang = rnd() * Math.PI * 2, rad = Math.sqrt(0.18 + rnd() * 0.82) * 0.9;
+      const x = gx + Math.cos(ang) * grx * rad, y = gy + Math.sin(ang) * gry * rad;
+      // Evin altındaki bölgeyi boş bırak.
+      if (Math.abs(x - gx) < (maxX - minX) * 0.3 && y > houseMinY + vbH * 0.05 && y < houseMaxY - 2) continue;
+      if (k % 3 && FL.length) {
+        const fc = FL[k % FL.length], s0 = 3 + rnd() * 2;
+        grassBase.push(
+          <Circle key={`fp${k}`} cx={x} cy={y} r={s0} fill={fc} />,
+          <Circle key={`fc${k}`} cx={x} cy={y} r={s0 * 0.4} fill={fc === '#F7D154' ? '#F28C6B' : '#F7D154'} />,
+        );
+      } else {
+        const h = 6 + rnd() * 6, lean = (rnd() - 0.5) * 5;
+        grassTufts.push(<Polyline key={`bl${k}`} points={pts([[x - 2, y], [x + lean, y - h], [x + 2, y]])} fill="none" stroke={bladeC} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />);
+      }
+    }
+  }
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
@@ -1578,7 +1744,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         </SvgText>
         {nTask > 0 && (
           <G>
-            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={rc.late ? c.late : c.warm} />
+            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={c.warm} />
             <SvgText x={cardX + w - 11} y={cardY + TAG_H / 2 + 3.5} fontSize={9.5} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
               {nTask}
             </SvgText>
@@ -1614,28 +1780,56 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const model = (
     <Animated.View
       onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
-      onTouchMove={e => {
-        const t = e.nativeEvent.touches;
-        if (t.length < 2) return;
-        const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
+      onTouchStart={e => {
         const g = pinchRef.current;
+        const t = e.nativeEvent.touches[0];
+        if (t) { g.lx = t.pageX; g.ly = t.pageY; }
+        g.moved = false;
+      }}
+      onTouchMove={e => {
+        if (!pinchZoom) return;
+        const t = e.nativeEvent.touches;
+        const g = pinchRef.current;
+        if (t.length < 2) {
+          // Yakınlaşmışken tek parmakla kaydır.
+          if (g.cur > 1.05 && t[0]) {
+            const dx = t[0].pageX - g.lx, dy = t[0].pageY - g.ly;
+            g.lx = t[0].pageX; g.ly = t[0].pageY;
+            if (Math.abs(dx) + Math.abs(dy) > 0.5) g.moved = true;
+            const lim = boxW * g.cur * 0.5;
+            g.px = Math.max(-lim, Math.min(lim, g.px + dx));
+            g.py = Math.max(-lim, Math.min(lim, g.py + dy));
+            pan.setValue({ x: g.px, y: g.py });
+          }
+          return;
+        }
+        const d = Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
         if (!g.d) { g.d = d; g.base = g.cur; return; }
-        g.cur = Math.min(2.2, Math.max(0.8, g.base * (d / g.d)));
+        g.cur = Math.min(ZMAX, Math.max(ZMIN, g.base * (d / g.d)));
         pinch.setValue(g.cur);
+        if (focus) setFocus(null);
       }}
       onTouchEnd={e => {
         if (e.nativeEvent.touches.length >= 2) return;
         const g = pinchRef.current;
         if (!g.d) return;
         g.d = 0;
-        g.cur = 1;
-        Animated.spring(pinch, { toValue: 1, friction: 6, tension: 70, useNativeDriver: true }).start();
+        // Bırakınca kalır; 1'e yakınsa tam 1'e oturur.
+        if (Math.abs(g.cur - 1) < 0.08) {
+          g.cur = 1; g.px = 0; g.py = 0;
+          Animated.parallel([
+            Animated.spring(pinch, { toValue: 1, friction: 7, tension: 70, useNativeDriver: true }),
+            Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 7, tension: 70, useNativeDriver: true }),
+          ]).start();
+        }
       }}
       style={{
         width: '100%',
         aspectRatio: vbW / vbH,
         opacity: pop,
         transform: [
+          { translateX: pan.x },
+          { translateY: pan.y },
           { translateY: floatY },
           { translateX: swayX },
           { rotate: tilt },
@@ -1645,6 +1839,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         ],
       }}
     >
+      {pinchZoom && sc > 0 && (
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: '-60%', top: '-60%', width: '220%', height: '220%', opacity: grassOp, transform: [{ scale: grassScale }] }}>
+          <Svg width="100%" height="100%" viewBox={`${minX - vbW * 0.6} ${minY - vbH * 0.6} ${vbW * 2.2} ${vbH * 2.2}`}>{grassBase}</Svg>
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ translateX: grassSway }] }]}>
+            <Svg width="100%" height="100%" viewBox={`${minX - vbW * 0.6} ${minY - vbH * 0.6} ${vbW * 2.2} ${vbH * 2.2}`}>{grassTufts}</Svg>
+          </Animated.View>
+        </Animated.View>
+      )}
       <Svg width="100%" height="100%" viewBox={vb} onPress={handlePressHouse}>
         {lightDefs}
         {onPressHouse && <Rect x={minX} y={minY} width={vbW} height={vbH} fill="transparent" onPress={handlePressHouse} />}
@@ -1658,6 +1860,16 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       </Svg>
       {layer('breath', breathOp, life.breath, breathScale)}
       {layer('twa', twOpA, [...life.twA, ...wings(true)])}
+      {extEls.length > 0 && pinchZoom && (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: extOp }]}>
+          <Svg width="100%" height="100%" viewBox={vb}>{extEls}</Svg>
+        </Animated.View>
+      )}
+      {roofEls.length > 0 && pinchZoom && (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp }]}>
+          <Svg width="100%" height="100%" viewBox={vb}>{roofEls}</Svg>
+        </Animated.View>
+      )}
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
@@ -1685,6 +1897,20 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       )}
     </Animated.View>
   );
+  const focusRoom = focus ? S.rooms[focus] : null;
+  const focusBar = focusRoom ? (
+    <View style={[st3.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
+      <Pressable accessibilityRole="button" onPress={() => focusFn.current(null)} hitSlop={8} style={st3.btn}>
+        <SvgLessText color={c.ink}>← Uzaklaş</SvgLessText>
+      </Pressable>
+      <SvgLessText color={c.ink} bold>{ROOM_EMOJI[focusRoom.type]} {focusRoom.name}</SvgLessText>
+      {onOpenRoom && (
+        <Pressable accessibilityRole="button" onPress={() => { const id = focus!; focusFn.current(null); onOpenRoom(id); }} hitSlop={8} style={[st3.btn, { backgroundColor: c.ink }]}>
+          <SvgLessText color={c.bg}>Odaya gir →</SvgLessText>
+        </Pressable>
+      )}
+    </View>
+  ) : null;
   const colors = skyColors(theme, dark, wx);
   const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
   const content = onPressHouse ? (
@@ -1692,11 +1918,20 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       {model}
     </Pressable>
   ) : model;
-  if (!colors) return content;
+  if (!colors) return <View style={{ width: '100%' }}>{content}{focusBar}</View>;
   return (
     <View style={{ width: '100%' }}>
       {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear' && !dark} twA={twOpA} twB={twOpB} breath={breathOp} />}
       {content}
+      {focusBar}
     </View>
   );
 }
+
+function SvgLessText({ children, color, bold }: { children: React.ReactNode; color: string; bold?: boolean }) {
+  return <RNText style={{ color, fontFamily: bold ? fonts.bodyBlack : fonts.bodyBold, fontSize: 14 }}>{children}</RNText>;
+}
+const st3 = StyleSheet.create({
+  bar: { position: 'absolute', left: 12, right: 12, bottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 8, borderRadius: 999, borderWidth: 1 },
+  btn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+});

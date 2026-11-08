@@ -13,10 +13,12 @@ Kullanıcı başına aylık en kötü durum (Haiku):
 | Kalem | Sınır | Maliyet |
 |---|---|---|
 | Sohbet (eski: 150/gün = 4.500/ay) | 4.500 × 0,001 | **4,50 $ (zarar)** |
-| Sohbet (yeni: 40/gün, 600/ay) | 600 × 0,001 | **0,60 $** |
-| Tarama (günde 50 = 1.500/ay) | 1.500 × 0,0006 | 0,90 $ |
-| **Toplam en kötü durum** | | **1,50 $** |
+| Sohbet (eski: 40/gün, 600/ay) | 600 × 0,001 | 0,60 $ |
+| Sohbet (güncel: 10/gün, 300/ay) | 300 × 0,001 | **0,30 $** |
+| Tarama (eski: günde 50 = 1.500/ay) | 1.500 × 0,0006 | 0,90 $ |
+| Tarama (güncel: günde 5 = 150/ay) | 150 × 0,0006 | **0,09 $** |
+| **Toplam en kötü durum (güncel)** | | **0,39 $** (eski 1,50 $) |
 
-1,50 $ = net 4,95 $'ın ≈ %30'u → brüt kâr ≈ %70. Gerçekçi kullanımda (ayda ~150 mesaj, 25 tarama) AI gideri ≈ 0,17 $ (%96+ marj).
+Güncel limitlerle tam kullanımda 0,39 $ = net 4,95 $'ın ≈ %8'i (eski 1,50 $ ≈ %30). Gerçekçi kullanımda (ayda ~150 mesaj, 25 tarama) AI gideri ≈ 0,17 $ (%96+ marj).
 
-Kararlar: günlük 40, aylık 600, dakikada 6, mesaj 400 karakter, geçmiş 8, cevap ≤ 500 token. Sınırları değiştirirsen `premium.ts`, SQL ve bu tablo birlikte güncellenmeli. Sonnet'e geçilirse (≈ 20× pahalı) sohbet aylık ≈ 100 mesaja, taramalar düşürülmeli. Yıllık TR planında en kötü durum payı biraz aşar (1,50 > 0,79 $) ama hem sohbet hem tarama sınırını aynı ay dolduran kullanıcı çok nadirdir; Anthropic Console aylık harcama tavanı son güvence.
+Kararlar: günlük 10, aylık 300, dakikada 6, mesaj 400 karakter, geçmiş 8, cevap ≤ 500 token. Sınırları değiştirirsen `premium.ts`, SQL ve bu tablo birlikte güncellenmeli. Sonnet'e geçilirse (≈ 20× pahalı) sohbet aylık ≈ 100 mesaja, taramalar düşürülmeli. Yıllık TR planında en kötü durum payı biraz aşar (1,50 > 0,79 $) ama hem sohbet hem tarama sınırını aynı ay dolduran kullanıcı çok nadirdir; Anthropic Console aylık harcama tavanı son güvence.

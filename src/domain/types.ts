@@ -1,6 +1,6 @@
 import type { Garden } from './garden';
 import type { PersonaId } from './items';
-import type { CheckIn } from './mood';
+import type { CheckIn, DailyAsk } from './mood';
 import type { HouseLook } from './look';
 export type RoomType =
   | 'yatak'
@@ -72,6 +72,22 @@ export type RoomExtras = {
 };
 
 export type Settings = {
+  /** Kademeli başlangıç kapalı: tüm işler baştan görünür ("Hepsini aç"). Yoksa/false: aşama aşama açılır (src/domain/ramp.ts). */
+  rampOff?: boolean;
+  /** Disiplin sorularından: "neden" (kisilik.ts WHY_LINE), "mola anı" (CUE_LABEL) ve "engel" (quit) cevap anahtarları. */
+  why?: string;
+  cue?: string;
+  obstacle?: string;
+  /** Moka'nın kutladığı en son aşama (1…5). Yeni aşamaya geçince kutlama kartı bir kere çıkar. */
+  rampSeen?: number;
+  /** "Hafif gün": bu gün anahtarı bugünse Bugün sadece 1-2 iş gösterir; gün yine de sayılır. */
+  lightDay?: string | null;
+  /** If-then niyet: "ne zaman / nerede / ne" (src/domain/niyet.ts). Bir güne bağlı; başka günde yok sayılır. */
+  intent?: { day: string; when: string; task: string; place: string } | null;
+  /** Tek oda modu: doluysa işler, bildirimler ve puan sadece bu odaya göre (oda kimliği). Yoksa tüm ev. */
+  solo?: string | null;
+  /** Görünüm: telefonu izle / açık / koyu. Yoksa telefonu izler. */
+  appearance?: 'system' | 'light' | 'dark';
   /** "HH:MM" */
   time: string;
   routine: boolean;
@@ -103,6 +119,10 @@ export type Settings = {
   expiry: boolean;
   /** İlaç hatırlatmaları (vakit ve nazik ikinci hatırlatma). */
   meds: boolean;
+  /** Evcil hayvan bakım hatırlatmaları (mama, yıkama, aşı…). */
+  pets: boolean;
+  /** Cumartesi sabahı alışveriş listesi hatırlatması. */
+  shop: boolean;
   /** Pazar akşamı haftalık özet. */
   weekly: boolean;
   /** Esnek zamanlama: zamanı geçen iş, sıklığının yarısı kadar gün daha gecikmiş sayılmaz. */
@@ -201,6 +221,8 @@ export type Play = {
   persona: PersonaId;
   /** Günün ilk açılışındaki "Bugün nasıl hissediyorsun?" cevapları, gün → cevap (src/domain/mood.ts). */
   checkins: Record<DayKey, CheckIn>;
+  /** Günlük iki soru: 1. açılış "nasılsın", 2. açılış "evde misin" (src/domain/mood.ts `stageOf`). */
+  ask?: DailyAsk;
   /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
   moka: MokaGrowth;
   /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */
@@ -253,6 +275,10 @@ export type Growth = {
   badges: Record<string, DayKey>;
   /** Kutlaması gösterilen son rozet sayısı olmasın diye: yeni rozetler bir kere söylenir. */
   seenBadges: string[];
+  /** İsteğe bağlı bonus öneriler: gün → kategori → yapıldı / atlandı. Puan ve seriyi etkilemez. */
+  bonus: Record<DayKey, Record<string, 'done' | 'skip' | 'add'>>;
+  /** Moka Uçuş oyunu: en iyi skor ve günlük oyun sayısı. Puan / XP vermez. */
+  fun?: { best: number; day: DayKey; plays: number };
 };
 
 export type MokaNote = { id: string; day: DayKey; text: string; at: number };
@@ -294,10 +320,26 @@ export type HomeData = {
 export type SavedHome = HomeData & { id: string; name: string; setup: boolean };
 
 /** İlaç takibi: sadece telefonda tutulur, buluta yedeklenmez (sağlık verisi). `days`: boşsa her gün, değilse 0 pazar … 6 cumartesi. */
-export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number };
+export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number;
+  /** 'takviye': vitamin, mineral vb. Yoksa ilaç. */
+  kind?: 'ilac' | 'takviye' };
 export type MedMark = { s: 'taken' | 'skipped'; at: number };
 /** Gün anahtarı → `ilacId@HH:MM` → işaret. */
 export type MedLog = Record<string, Record<string, MedMark>>;
+
+/** Evcil hayvan: kullanıcının eklediği bakım işleri (mama, yıkama, aşı…) ve son yapılma zamanları. */
+export type PetKind = 'kedi' | 'kopek' | 'kus' | 'balik' | 'diger';
+/** `everyH`: kaç saatte bir. `last`: son yapılma (yoksa null, o zaman `start`'tan sayılır). `remind`: bildirim gelsin mi. */
+export type PetItem = { id: string; name: string; emoji: string; everyH: number; last: number | null; start: number; remind: boolean };
+export type Pet = { id: string; name: string; kind: PetKind; emoji?: string; items: PetItem[] };
+
+/** Alışveriş listesi. `usual`: daha önce alınıp listeden temizlenenler (bitince tek dokunuşla tekrar eklenir). */
+export type ShopCat = 'market' | 'temizlik' | 'ev' | 'evcil';
+export type ShopItem = { id: string; name: string; cat: ShopCat; done: boolean; at: number; /** Tahmini ya da gerçek fiyat (TL/₺ ya da yerel para birimi). Yoksa bütçeye sayılmaz. */ price?: number };
+/** Bütçe kaydı: alışveriş listesinden temizlenen fiyatlı ürünler. */
+export type SpendEntry = { at: number; name: string; cat: ShopCat; amt: number };
+export type Budget = { /** Aylık alışveriş bütçesi; 0: sınır yok. */ limit: number; log: SpendEntry[] };
+export type ShopUsual = { name: string; cat: ShopCat };
 
 export type AppState = {
   v: 1;
@@ -328,6 +370,13 @@ export type AppState = {
   seasonal: Record<string, number>;
   meds: Med[];
   medLog: MedLog;
+  pets: Pet[];
+  shop: ShopItem[];
+  shopUsual: ShopUsual[];
+  /** İpucu kartını gizlediği gün (`dayKey`); ertesi gün yeniden görünür. */
+  shopHide: string;
+  /** Alışveriş bütçesi (src/domain/budget.ts). Yoksa boş. */
+  budget?: Budget;
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

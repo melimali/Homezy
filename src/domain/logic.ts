@@ -1,5 +1,5 @@
 import { dateLocale, tx } from '@/i18n/runtime';
-import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, ROOM_EMOJI, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
+import { CARE, DAY, DONATE_AFTER, EXPIRY_WARN, LAUNDRY_THRESHOLD, PHOTO_MAX_AGE, roomEmoji, STOCK_DEF, TYPES, WASH, WASH_TYPES } from './constants';
 import { baseCare, billStatus, dayDiff, emptyProfile, GUEST_ROOMS, seasonalNow, taskMin, warrantyStatus } from './home';
 import { defaultSettings, emptyPlay } from './play';
 import { laundryLine, photoLine, statusTail, stockLine, stockTitle, taskLine } from './messages';
@@ -35,7 +35,7 @@ export function status(t: Task, now = Date.now(), flex = false): TaskStatus {
   const snoozed = t.snooze != null && diff > 0;
   if (diff < 0) {
     if (flex && -diff <= tolerance(t.every)) return { k: 'today', diff, label: `${-diff} gün geçti` };
-    return { k: 'late', diff, label: `${-diff} gündür bekliyor` };
+    return { k: 'late', diff, label: `${-diff} gündür hazır` };
   }
   if (diff === 0) return { k: 'today', diff, label: 'Bugün' };
   if (diff === 1) return { k: 'ok', diff, label: snoozed ? 'Yarına ertelendi' : 'Yarın' };
@@ -70,18 +70,20 @@ export const everyText = (every: number) => (every === 1 ? 'her gün' : `${every
 
 export function allTasks(S: AppState, now = Date.now()): TaskRef[] {
   const out: TaskRef[] = [];
+  const solo = S.settings.solo && S.rooms[S.settings.solo] ? S.settings.solo : null;
   for (const rid of S.order) {
+    if (solo && rid !== solo) continue;
     (S.tasks[rid] || []).forEach(t => out.push({ t, rid, list: 'tasks', s: statusIn(S, t, now) }));
     (S.mod[rid]?.plants || []).forEach(t => out.push({ t, rid, list: 'plants', s: statusIn(S, t, now) }));
   }
-  (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
+  if (!solo) (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
   return out;
 }
 
 /** Görünen ad ve emoji: oda ya da "Ev bakımı". */
 export function placeOf(S: AppState, rid: string) {
   const r = S.rooms[rid];
-  return r ? { name: r.name, emoji: ROOM_EMOJI[r.type], type: r.type as RoomType | null } : { name: 'Ev bakımı', emoji: '🔧', type: null };
+  return r ? { name: r.name, emoji: roomEmoji(r.type, S.order.slice(0, S.order.indexOf(rid)).filter(x => S.rooms[x]?.type === r.type).length), type: r.type as RoomType | null } : { name: 'Ev bakımı', emoji: '🔧', type: null };
 }
 
 /* ---------- canlı ev haritası: temizlik yüzdesi ---------- */
@@ -99,7 +101,8 @@ export function freshness(t: Task, now = Date.now()) {
 /** Odanın temizlik yüzdesi (0-100). Tatilde, tatile çıkılan andaki hali. Rutini yoksa 100. */
 export function roomClean(S: AppState, rid: string, now = Date.now()) {
   const at = S.mode?.k === 'tatil' ? S.mode.since : now;
-  const ts = S.tasks[rid] || [];
+  // Hiç yapılmamış işler puana girmez (yeni evde 0 iş = %50 gibi tutarsız sonuç çıkmasın).
+  const ts = (S.tasks[rid] || []).filter(t => t.last != null);
   if (!ts.length) return 100;
   return Math.round((100 * ts.reduce((a, t) => a + freshness(t, at), 0)) / ts.length);
 }
@@ -253,7 +256,8 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
         });
       });
   }
-  if (set.bills) {
+  const solo = set.solo && S.rooms[set.solo] ? set.solo : null;
+  if (set.bills && !solo) {
     for (const b of S.bills || []) {
       const st = billStatus(b, now);
       if (st.paid || st.k === 'ok') continue;
@@ -275,6 +279,7 @@ export function notifs(S: AppState, now = Date.now()): Notice[] {
     if (left) ns.push({ k: 'today', rid: CARE, url: '/bugun', title: '✨ Bayram temizliği', text: `${left} iş kaldı. Bugün birkaçını bitirelim mi? 💪` });
   }
   for (const rid of S.order) {
+    if (solo && rid !== solo) continue;
     const m = S.mod[rid] || {};
     const room = S.rooms[rid].name;
     const fridge = TYPES[S.rooms[rid].type].mod === 'buzdolabi';
@@ -371,11 +376,15 @@ export function makeRoom(S: AppState, type: RoomType) {
  * İlk kayıtta hiç yapılmamış işler hepsi birden "bugün" olmasın (30 iş ürkütücü): en sık işlerden `keep`
  * tanesi bugün kalır, gerisi önümüzdeki günlere dağıtılır (son yapılma tarihi geriye kurulur).
  */
-export function staggerFirstDay(S: AppState, now = Date.now(), keep = 7) {
+export function staggerFirstDay(S: AppState, now = Date.now(), keep = 6) {
   const fresh = S.order.flatMap(rid => (S.tasks[rid] || []).filter(t => t.last == null && t.snooze == null));
   fresh.sort((a, b) => a.every - b.every);
   fresh.slice(keep).forEach((t, i) => {
-    if (t.every < 2) return;
+    if (t.every < 2) {
+      // Günlük iş bugün kalmasın: yarına ertele (sonra her gün gelir).
+      t.snooze = sod(now) + DAY * (1 + (i % 2));
+      return;
+    }
     const d = 1 + (i % Math.min(t.every - 1, 7));
     t.last = ago(t.every - d, now);
   });
@@ -414,6 +423,11 @@ export function emptyState(): AppState {
     seasonal: {},
     meds: [],
     medLog: {},
+    pets: [],
+    shop: [],
+    shopUsual: [],
+    shopHide: '',
+    budget: { limit: 0, log: [] },
   };
 }
 
@@ -435,7 +449,7 @@ export function seed(now = Date.now()): AppState {
     Y: [5, 9, 7, 0, 12], M: [1, 0, 3, 26, 40, 4], B: [2, 5, 9, 4, 3], A: [3, 8], S: [3, 7, 6, 31], L: [10, 12],
   };
   for (const k of Object.keys(map) as (keyof typeof map)[])
-    S.tasks[map[k]].forEach((t, i) => (t.last = ago(agos[k][i], now)));
+    S.tasks[map[k]].forEach((t, i) => (t.last = agos[k][i] == null ? null : ago(agos[k][i], now)));
   S.care.forEach((t, i) => (t.last = ago([12, 20, 25][i] ?? 10, now)));
   const w = (name: string, cat: string, state: 'temiz' | 'kirli' | 'utu', wash: WashType) =>
     ({ id: uid(), name, cat, state, wash, added: now, worn: state === 'kirli' ? now : null });

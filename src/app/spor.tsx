@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { PremiumLock } from '@/components/PremiumLock';
-import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T, XBtn } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T, XBtn, Chevron } from '@/components/ui';
 import { uid } from '@/domain/logic';
 import { addDays, awardedToday, dayKey, dayTs, POINTS } from '@/domain/play';
 import type { AppState, Settings, SportEntry, WorkoutGoal, WorkoutLevel } from '@/domain/types';
@@ -244,7 +244,7 @@ function WorkoutPlan({ now, onPick }: { now: number; onPick: (type: string, min:
             </T>
             <T v="small">{p.what} · {p.min} dk</T>
           </View>
-          <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
+          <Chevron color={c.muted} size={16} dir="right" />
         </Pressable>
       ))}
       <T v="tiny">Spor günlerini aşağıdaki hatırlatma bölümünden değiştirebilirsin. Ağrın varsa zorlama, doktoruna danış.</T>
@@ -294,7 +294,7 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 126 },
   chartCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 3 },
   chartBar: { width: '100%', borderRadius: 6 },
-  chartN: { fontFamily: fonts.bodyBold, fontSize: 10 },
+  chartN: { fontFamily: fonts.bodyBold, fontSize: 12 },
   chartL: { fontFamily: fonts.bodyBold, fontSize: 9.5 },
   hbar: { flex: 1, height: 10, borderRadius: radius.pill, overflow: 'hidden' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

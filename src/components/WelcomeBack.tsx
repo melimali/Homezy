@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { StepModal } from '@/components/StepModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { TaskRow } from '@/components/TaskRow';
 import { Btn, T } from '@/components/ui';
 import { allTasks, quickPick } from '@/domain/logic';
 import { taskMin } from '@/domain/home';
 import { AWAY_DAYS, awayAhead, dayKey, progressOf } from '@/domain/play';
+import { useStep } from '@/lib/firstRun';
 import { useNow } from '@/hooks/useNow';
+import { WHY_LINE } from '@/domain/kisilik';
+import { tx } from '@/i18n/runtime';
 import { reactMoka } from '@/lib/mokaReact';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
@@ -27,10 +31,11 @@ export function WelcomeBack() {
     const away = awayAhead(S.play, 0, now);
     const open = !hp.today && away != null && away >= AWAY_DAYS && S.play.welcomed !== today;
     const pick = quickPick(S, 15, now)[0] ?? [...allTasks(S, now)].sort((a, b) => taskMin(a.t) - taskMin(b.t))[0] ?? null;
-    return { open, away, hurt: hp.idle >= 3, pick };
+    return { open, away, pick };
   });
-  const { open, away, hurt, pick } = first;
-  const shown = open && S.play.welcomed !== today;
+  const { open, away, pick } = first;
+  const wants = open && S.play.welcomed !== today;
+  const shown = useStep('welcomeBack', wants);
   useEffect(() => {
     if (!shown) return;
     const t = setTimeout(() => reactMoka('hug'), 500);
@@ -40,28 +45,30 @@ export function WelcomeBack() {
 
   const close = () => void update(D => void (D.play.welcomed = today));
   return (
-    <Modal transparent animationType="fade" onRequestClose={close}>
-      <View style={[styles.bg, { backgroundColor: c.shadow }]}>
+    <StepModal onClose={close}>
+      {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <MokaMascot pose={hp.today ? 'maintenance' : 'happy'} size="lg" showBubble={false} style={styles.moka} />
-          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Tamir başladı!' : 'Tekrar hoş geldin!'}</T>
+          <T v="h1" style={{ textAlign: 'center' }}>{hp.today ? 'Hoş geldin, Moka uyandı!' : 'Tekrar hoş geldin!'}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
-              ? 'Harika bir dönüş 💛 Evin her gün bir parça daha yenilenecek. Yarın da minik bir işle devam edelim.'
-              : hurt
-                ? `${away} gündür yoktun, evin biraz yıprandı. Dert etme, ceza yok: kaldığın yerden devam ediyoruz.`
-                : `${away} gündür yoktun, evin seni bekliyordu. Kaldığın yerden devam edelim.`}
+              ? 'Dönmek en güzel adım 💛 Evin her gün bir parça daha büyüyecek. Yarın da minik bir işle devam edelim.'
+              : `${away} gündür yoktun, ev seni bekledi 💛 Yeni seri bugün başlıyor, ${S.play.days.length} günün hâlâ duruyor. Kaldığın yerden devam ediyoruz.`}
           </T>
+          {!hp.today && S.settings.why && WHY_LINE[S.settings.why] && (
+            <T v="small" style={{ textAlign: 'center' }}>{`${tx('Hatırla')}: ${tx(WHY_LINE[S.settings.why])}`}</T>
+          )}
+          {!hp.today && S.settings.obstacle === 'yorulur' && <T v="tiny" style={{ textAlign: 'center' }}>Yorgunsan Bugün'den "Hafif gün" seçebilirsin.</T>}
           {!hp.today && pick && (
             <View style={{ alignSelf: 'stretch', gap: 6 }}>
               <T v="eyebrow" style={{ textAlign: 'center', marginBottom: 0 }}>Bugün sadece bunu yap</T>
               <TaskRow t={pick.t} rid={pick.rid} list={pick.list} showRoom first />
             </View>
           )}
-          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Yaşasın!' : 'Sonra'} onPress={close} block />
+          <Btn kind={hp.today ? 'primary' : 'ghost'} label={hp.today ? 'Yaşasın!' : 'Sonra'} onPress={dismiss} block />
         </View>
-      </View>
-    </Modal>
+      )}
+    </StepModal>
   );
 }
 

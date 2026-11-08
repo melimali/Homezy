@@ -6,8 +6,10 @@ import { prefs } from '@/lib/supabase';
  * Anahtar: `ad` ya da `ad:ayrıntı` (ör. `paywall_view:streak`).
  */
 export type EventName = 
-  | 'paywall_view' | 'paywall_buy' | 'paywall_close' | 'streak_mark' | 'levelup_peek' | 'season_peek'
-  | 'app_open' | 'day_return' | 'first_task_done' | 'onboarding_done';
+  | 'paywall_view' | 'paywall_buy' | 'paywall_close' | 'locked_tap' | 'scan_limit' | 'streak_mark' | 'levelup_peek' | 'season_peek'
+  | 'app_open' | 'day_return' | 'first_task_done' | 'onboarding_done'
+  /** Disiplin ölçümü: iş yapılan gün, günün ilk işinin saati (`task_hour:HH`), 3+ gün ara verip dönüş, aşama atlama. */
+  | 'active_day' | 'task_hour' | 'comeback' | 'stage_up' | 'light_day' | 'ramp_skip';
 
 const KEY = 'events';
 
@@ -68,4 +70,23 @@ export function extrasUnlocked(activeDays: number, now = Date.now()): boolean {
   if (!first) return true;
   const age = Math.round((new Date(`${dayStr(now)}T12:00:00`).getTime() - new Date(`${first}T12:00:00`).getTime()) / 86400000);
   return age >= 2;
+}
+
+/**
+ * Bugünün ilk işi yapılınca çağrılır (disiplin ölçümü). `rest`: önceki gün sayısı kadar ara.
+ * Gün başına bir kez: aktif gün sayısı, günün saati ve 3+ gün sonra dönüş.
+ */
+export function trackActiveDay(rest: number, now = Date.now()) {
+  track('active_day');
+  track('task_hour', String(new Date(now).getHours()).padStart(2, '0'));
+  if (rest >= 3) track('comeback');
+}
+
+/** Ölçümlerden okunan özet: açılış gününden beri aktif gün oranı. */
+export function disciplineSummary(now = Date.now()) {
+  const c = eventCounts();
+  const first = firstOpenDay();
+  const age = first ? Math.max(1, Math.round((new Date(`${dayStr(now)}T12:00:00`).getTime() - new Date(`${first}T12:00:00`).getTime()) / 86400000) + 1) : 1;
+  const active = c.active_day ?? 0;
+  return { active, days: age, share: Math.min(1, active / age), comebacks: c.comeback ?? 0, d1: c['day_return:d1'] ?? 0, d7: c['day_return:d7'] ?? 0 };
 }

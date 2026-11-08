@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Alert, AppState as RNAppState } from 'react-native';
+import { AppState as RNAppState } from 'react-native';
 
 import { useAuth } from '@/auth/AuthProvider';
 import type { AppState } from '@/domain/types';
 import { prefs, supabase } from '@/lib/supabase';
 import { useStore } from '@/store/AppStore';
+import { appAlert } from '@/components/AppAlert';
 
 /**
  * Ev verisinin bulut yedeği: Supabase'deki `homes` tablosunda kullanıcı başına tek satır (JSON).
@@ -21,11 +22,38 @@ export async function fetchHome(userId: string): Promise<RemoteHome | null> {
   return data ? { state: data.state as AppState, updatedAt: data.updated_at as string } : null;
 }
 
+/** Bu telefonun bulutta en son gördüğü ya da yazdığı sürümün zamanı (başka telefon yazdıysa farklı çıkar). */
+const STAMP = 'cloudStamp';
+
 export async function pushHome(userId: string, S: AppState) {
   if (!supabase) return;
-  const { error } = await supabase.from('homes').upsert({ user_id: userId, state: forCloud(S) });
+  const { data, error } = await supabase.from('homes').upsert({ user_id: userId, state: forCloud(S) }).select('updated_at').maybeSingle();
   if (error) throw error;
+  if (data?.updated_at) prefs.set(STAMP, data.updated_at as string);
 }
+
+/** Buluttaki sürümün zamanı (satır yoksa null). Veriyi indirmeden bakılır. */
+async function remoteStamp(userId: string): Promise<string | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('homes').select('updated_at').eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  return (data?.updated_at as string | undefined) ?? null;
+}
+
+/**
+ * Başka bir telefon bizden sonra yazdıysa ezmemek için önce sürüme bakar.
+ * 'conflict': bulutta bu telefonun görmediği bir sürüm var, yazılmadı.
+ */
+async function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflict'> {
+  const known = prefs.get(STAMP);
+  const rs = await remoteStamp(userId);
+  if (known && rs && rs !== known) return 'conflict';
+  await pushHome(userId, S);
+  return 'ok';
+}
+
+/** Yeniden deneme beklemesi: 30 sn'den başlayıp ikiye katlanır, en çok 10 dk. */
+export const backoff = (fails: number) => Math.min(600_000, 30_000 * 2 ** Math.max(0, fails - 1));
 
 /**
  * Evi siler: buluttaki satır boş bir evle (setup: false) değiştirilir. Kullanıcı başına tek satır
@@ -122,10 +150,11 @@ export function useCloudSync() {
         if (local.setup) await pushHome(userId, local).catch(() => {});
         link(userId);
       } else if (!local.setup) {
+        prefs.set(STAMP, remote.updatedAt);
         replace(mergeFromCloud(remote.state, local));
         link(userId);
       } else {
-        Alert.alert(
+        appAlert(
           'Bu hesapta kayıtlı bir ev var',
           'Buluttaki evini mi kullanalım, yoksa bu telefondaki evi mi? Seçmediğin silinir.',
           [
@@ -140,6 +169,7 @@ export function useCloudSync() {
               text: 'Buluttakini',
               style: 'default',
               onPress: () => {
+                prefs.set(STAMP, remote.updatedAt);
                 replace(mergeFromCloud(remote.state, latest.current));
                 link(userId);
               },
@@ -155,22 +185,73 @@ export function useCloudSync() {
   }, [userId, linked, link, replace, tick]);
 
   const active = userId && linked === userId ? userId : undefined;
+  const fails = useRef(0);
+  const asking = useRef(false);
+  const skip = useRef(false);
+
+  // Başka telefonda değişiklik varsa kullanıcıya sorulur; sorulmadan hiçbir taraf ezilmez.
+  const resolveConflict = useCallback((uid: string) => {
+    if (asking.current) return;
+    asking.current = true;
+    const done = () => void (asking.current = false);
+    appAlert(
+      'Başka bir telefonda değişiklik var',
+      'Bu hesapla başka bir cihazda evi değiştirmişsin. Hangisini tutalım? Seçmediğin değişiklikler kaybolur.',
+      [
+        {
+          text: 'Bu telefondakini',
+          onPress: () => {
+            pushHome(uid, latest.current).then(() => void (dirty.current = false)).catch(() => {}).finally(done);
+          },
+        },
+        {
+          text: 'Diğer cihazdakini',
+          onPress: () => {
+            fetchHome(uid)
+              .then(r => {
+                if (!r) return;
+                prefs.set(STAMP, r.updatedAt);
+                skip.current = true;
+                dirty.current = false;
+                replace(mergeFromCloud(r.state, latest.current));
+              })
+              .catch(() => {})
+              .finally(done);
+          },
+        },
+      ],
+      { cancelable: false },
+    );
+  }, [replace]);
+
+  const writeNow = useCallback(async (uid: string) => {
+    try {
+      const r = await pushChecked(uid, latest.current);
+      if (r === 'conflict') return resolveConflict(uid);
+      dirty.current = false;
+      fails.current = 0;
+    } catch (e) {
+      fails.current++;
+      console.warn('Homezy: bulut yedeği yazılamadı', e);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setTick(t => t + 1), backoff(fails.current));
+    }
+  }, [resolveConflict]);
 
   // Değişiklikleri birkaç saniye bekleyip yaz.
   useEffect(() => {
     if (!active || !state.setup) return;
+    if (skip.current) {
+      skip.current = false;
+      return;
+    }
     dirty.current = true;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       timer.current = null;
-      pushHome(active, latest.current)
-        .then(() => void (dirty.current = false))
-        .catch(e => {
-          console.warn('Homezy: bulut yedeği yazılamadı', e);
-          timer.current = setTimeout(() => setTick(t => t + 1), 30_000);
-        });
+      void writeNow(active);
     }, DELAY);
-  }, [active, state, tick]);
+  }, [active, state, tick, writeNow]);
 
   // Eşleşme internetsizlikten yapılamadıysa 30 sn'de bir tekrar dene.
   useEffect(() => {
@@ -179,19 +260,37 @@ export function useCloudSync() {
     return () => clearInterval(t);
   }, [userId, linked]);
 
-  // Uygulama arka plana geçerken bekleyen yedeği hemen yaz.
+  // Uygulama öne gelince: bekleyen yedek varsa yaz; yoksa başka telefonda yeni sürüm olup olmadığına bak ve sessizce al.
+  // Arka plana geçerken bekleyen yedek hemen yazılır.
   useEffect(() => {
     if (!active) return;
+    const pull = async () => {
+      try {
+        const known = prefs.get(STAMP);
+        const rs = await remoteStamp(active);
+        if (!rs || rs === known || dirty.current) return;
+        const r = await fetchHome(active);
+        if (!r?.state.setup || dirty.current) return;
+        prefs.set(STAMP, r.updatedAt);
+        skip.current = true;
+        replace(mergeFromCloud(r.state, latest.current));
+      } catch {
+        /* internet yok: sonra tekrar bakılır */
+      }
+    };
     const sub = RNAppState.addEventListener('change', s => {
-      if (s === 'active' && dirty.current) setTick(t => t + 1);
+      if (s === 'active') {
+        if (dirty.current) setTick(t => t + 1);
+        else void pull();
+      }
       if (s !== 'active' && dirty.current && latest.current.setup) {
         if (timer.current) clearTimeout(timer.current);
         timer.current = null;
-        pushHome(active, latest.current).then(() => void (dirty.current = false)).catch(() => {});
+        void writeNow(active);
       }
     });
     return () => sub.remove();
-  }, [active]);
+  }, [active, replace, writeNow]);
 
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
 }

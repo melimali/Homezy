@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 import type { DayBar, DotMark, MoodPoint } from '@/domain/stats';
 import type { RoomType } from '@/domain/types';
@@ -23,6 +23,46 @@ function useGrow(delay = 0) {
   return v;
 }
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+
+/** 0 → hedef sayan, yavaşlayarak oturan sayı (hareketi azalt açıksa hemen hedef). Hedef değişince kaldığı yerden devam eder. */
+export function useCountUp(target: number, delay = 0, duration = 900) {
+  const reduce = useReduceMotion();
+  const [v] = useState(() => new Animated.Value(reduce ? target : 0));
+  const [n, setN] = useState(reduce ? target : 0);
+  useEffect(() => {
+    const id = v.addListener(({ value }) => setN(Math.round(value)));
+    return () => v.removeListener(id);
+  }, [v]);
+  useEffect(() => {
+    if (reduce) { v.setValue(target); return; }
+    const a = Animated.timing(v, { toValue: target, duration, delay, easing: Easing.out(Easing.cubic), useNativeDriver: false });
+    a.start();
+    return () => a.stop();
+  }, [v, target, delay, duration, reduce]);
+  return n;
+}
+
+/** Sayı sıfırdan yukarı sayar. */
+export function CountText({ value, style, suffix = '', prefix = '', delay = 0 }: { value: number; style?: object; suffix?: string; prefix?: string; delay?: number }) {
+  const n = useCountUp(value, delay);
+  return <Text style={style}>{prefix}{n}{suffix}</Text>;
+}
+
+/** 0 → 1 doğrusal ilerleme (çizgi açılışı); JS sürücüsü, çünkü SVG özelliği sürüyor. */
+function useGrowLinear(duration: number) {
+  const reduce = useReduceMotion();
+  const [v] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  useEffect(() => {
+    if (reduce) return v.setValue(1);
+    const a = Animated.timing(v, { toValue: 1, duration, delay: 150, easing: Easing.inOut(Easing.cubic), useNativeDriver: false });
+    a.start();
+    return () => a.stop();
+  }, [v, duration, reduce]);
+  return v;
+}
+
 /** Son 7 günün çubukları. Bugünkü çubuk vurgulu, üstünde sayı. */
 export function WeekBars({ bars, height = 120 }: { bars: DayBar[]; height?: number }) {
   const c = useColors();
@@ -42,23 +82,31 @@ function Bar1({ b, i, h, color, ink, muted }: { b: DayBar; i: number; h: number;
   const v = useGrow(i * 60);
   return (
     <View style={st.barCol}>
-      <Text style={[st.barN, { color: b.n ? ink : 'transparent' }]}>{b.n}</Text>
+      <CountText value={b.n} delay={i * 60} style={[st.barN, { color: b.n ? ink : 'transparent' }]} />
       <Animated.View style={[st.bar, { height: h, backgroundColor: color, transformOrigin: 'bottom', transform: [{ scaleY: v }] }]} />
       <Text style={[st.barL, { color: b.today ? ink : muted, fontFamily: b.today ? fonts.bodyBlack : fonts.bodyBold }]}>{b.label}</Text>
     </View>
   );
 }
 
-/** Yüzde halkası; ortada büyük sayı ve küçük ad. */
+/** Yüzde halkası; yay ve ortadaki sayı sıfırdan yükselir. */
 export function Ring({ pct, size = 112, stroke = 13, color, label, emoji }: { pct: number; size?: number; stroke?: number; color?: string; label?: string; emoji?: string }) {
   const c = useColors();
-  const v = useGrow();
+  const reduce = useReduceMotion();
   const r = (size - stroke) / 2;
   const len = 2 * Math.PI * r;
   const p = Math.max(0, Math.min(100, pct));
+  const [prog] = useState(() => new Animated.Value(reduce ? p : 0));
+  useEffect(() => {
+    if (reduce) { prog.setValue(p); return; }
+    const a = Animated.timing(prog, { toValue: p, duration: 1100, easing: Easing.out(Easing.cubic), useNativeDriver: false });
+    a.start();
+    return () => a.stop();
+  }, [prog, p, reduce]);
+  const shown = useCountUp(p, 0, 1100);
   const id = `rg${Math.round(size)}${label ?? ''}`.replace(/\W/g, '');
   return (
-    <Animated.View style={{ width: size, height: size, transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }} accessibilityLabel={`${label ?? ''} yüzde ${p}`}>
+    <View style={{ width: size, height: size }} accessibilityLabel={`${label ?? ''} yüzde ${p}`}>
       <Svg width={size} height={size}>
         <Defs>
           <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
@@ -67,18 +115,27 @@ export function Ring({ pct, size = 112, stroke = 13, color, label, emoji }: { pc
           </LinearGradient>
         </Defs>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
-        {p > 0 && <Circle
+        <AnimatedCircle
           cx={size / 2} cy={size / 2} r={r} stroke={`url(#${id})`} strokeWidth={stroke} fill="none" strokeLinecap="round"
-          strokeDasharray={`${(len * p) / 100} ${len}`} transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />}
+          strokeDasharray={`${len} ${len}`}
+          strokeDashoffset={prog.interpolate({ inputRange: [0, 100], outputRange: [len, 0] })}
+          opacity={prog.interpolate({ inputRange: [0, 0.5], outputRange: [0, 1], extrapolate: 'clamp' })}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
       </Svg>
       <View style={[StyleSheet.absoluteFill, st.center]}>
         {emoji ? <Text style={{ fontSize: size * 0.16 }}>{emoji}</Text> : null}
-        <Text style={[st.ringN, { color: c.ink, fontSize: size * 0.24 }]}>%{p}</Text>
+        <Text style={[st.ringN, { color: c.ink, fontSize: size * 0.24 }]}>%{shown}</Text>
         {label ? <Text style={[st.ringL, { color: c.muted }]}>{label}</Text> : null}
       </View>
-    </Animated.View>
+    </View>
   );
+}
+
+/** Sırayla fışkırarak beliren küçük kutu (takvim noktaları, ısı haritası). */
+export function Pop({ i, style, children, step = 22 }: { i: number; style?: object; children?: ReactNode; step?: number }) {
+  const v = useGrow(i * step);
+  return <Animated.View style={[style, { opacity: v.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }]}>{children}</Animated.View>;
 }
 
 /** Son 4 haftanın seri takvimi: pazartesiden başlayan 7 sütun. */
@@ -92,10 +149,10 @@ export function StreakDots({ dots }: { dots: { key: string; mark: DotMark }[] })
       </View>
       {[0, 1, 2, 3].map(w => (
         <View key={w} style={st.dotRow}>
-          {dots.slice(w * 7, w * 7 + 7).map(d => (
-            <View key={d.key} style={[st.dot, { backgroundColor: fill[d.mark], borderColor: d.mark === 'today' ? c.peach : 'transparent' }]}>
+          {dots.slice(w * 7, w * 7 + 7).map((d, k) => (
+            <Pop key={d.key} i={w * 7 + k} style={[st.dot, { backgroundColor: fill[d.mark], borderColor: d.mark === 'today' ? c.peach : 'transparent' }]}>
               {d.mark === 'done' ? <Text style={st.dotE}>🔥</Text> : d.mark === 'ice' ? <Text style={st.dotE}>❄️</Text> : null}
-            </View>
+            </Pop>
           ))}
         </View>
       ))}
@@ -122,6 +179,7 @@ export function MoodLine({ points, height = 110 }: { points: MoodPoint[]; height
       d += ` C${mx} ${y(q.score)} ${mx} ${Y} ${X} ${Y}`;
     }
   });
+  const reveal = useGrowLinear(900);
   const area = known.length > 1 ? `${d} L${x(known[known.length - 1].i)} ${height} L${x(known[0].i)} ${height} Z` : '';
   return (
     <View onLayout={e => setW(e.nativeEvent.layout.width)} style={{ height: height + 18 }}>
@@ -134,12 +192,17 @@ export function MoodLine({ points, height = 110 }: { points: MoodPoint[]; height
             </LinearGradient>
           </Defs>
           {[1, 3, 5].map(s => <Path key={s} d={`M${pad} ${y(s)} H${w - pad}`} stroke={c.line} strokeWidth={1} strokeDasharray="3 6" />)}
-          {area ? <Path d={area} fill="url(#moodFill)" /> : null}
-          {d ? <Path d={d} stroke={c.rose} strokeWidth={3.5} fill="none" strokeLinecap="round" /> : null}
+          <Defs>
+            <ClipPath id="moodClip"><AnimatedRect x={0} y={0} height={height} width={reveal.interpolate({ inputRange: [0, 1], outputRange: [0, w] })} /></ClipPath>
+          </Defs>
+          <G clipPath="url(#moodClip)">
+            {area ? <Path d={area} fill="url(#moodFill)" /> : null}
+            {d ? <Path d={d} stroke={c.rose} strokeWidth={3.5} fill="none" strokeLinecap="round" /> : null}
+          </G>
         </Svg>
       )}
       {w > 0 && known.map(p => (
-        <Text key={p.key} style={[st.moodE, { left: x(p.i) - 11, top: y(p.score) - 12 }]}>{p.emoji}</Text>
+        <Animated.Text key={p.key} style={[st.moodE, { left: x(p.i) - 11, top: y(p.score) - 12, opacity: reveal.interpolate({ inputRange: [Math.max(0, p.i / points.length - 0.05), Math.min(1, p.i / points.length + 0.1)], outputRange: [0, 1], extrapolate: 'clamp' }) }]}>{p.emoji}</Animated.Text>
       ))}
       {w > 0 && (
         <View style={st.moodAxis}>
@@ -169,7 +232,7 @@ function RoomBar({ r, i, emoji, color }: { r: { name: string; pct: number }; i: 
       <View style={{ flex: 1, gap: 5 }}>
         <View style={st.roomHead}>
           <Text numberOfLines={1} style={[st.roomName, { color: c.ink }]}>{r.name}</Text>
-          <Text style={[st.roomPct, { color: r.pct < 40 ? c.late : c.muted }]}>%{r.pct}</Text>
+          <CountText value={r.pct} prefix="%" delay={i * 70} style={[st.roomPct, { color: r.pct < 40 ? c.late : c.muted }]} />
         </View>
         <View style={[st.track, { backgroundColor: c.surface2 }]}>
           <Animated.View style={[st.fill, { width: `${Math.max(4, r.pct)}%`, backgroundColor: color, transformOrigin: 'left', transform: [{ scaleX: v }] }]} />
@@ -185,7 +248,7 @@ export function StatPill({ emoji, n, label, tint }: { emoji: string; n: string |
   return (
     <View style={[st.pill, { backgroundColor: tint }]}>
       <Text style={{ fontSize: 20 }}>{emoji}</Text>
-      <Text style={[st.pillN, { color: c.ink }]}>{n}</Text>
+      {typeof n === 'number' ? <CountText value={n} style={[st.pillN, { color: c.ink }]} /> : <Text style={[st.pillN, { color: c.ink }]}>{n}</Text>}
       <Text style={[st.pillL, { color: c.muted }]} numberOfLines={1}>{label}</Text>
     </View>
   );

@@ -64,7 +64,7 @@ Take a photo of your fridge; AI finds what is running low. Empty items drop onto
 One gentle notification a day, at the time you choose.
 
 ⭐ PREMIUM
-50 AI scans a day, 3 streak freezes a month, 1.5× points, up to 5 homes, themes, family sharing and no ads. The basics of your home are always free.
+5 AI scans a day and 10 Moka messages a day, 3 streak freezes a month, 1.5× points, up to 5 homes, themes, family sharing and no ads. The basics of your home are always free.
 
 Your data stays on your phone first. Create an account only if you want a backup.
 

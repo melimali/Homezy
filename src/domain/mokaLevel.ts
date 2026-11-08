@@ -9,10 +9,10 @@ import type { DayKey, FocusSession, MokaGrowth, MokaStat, Play, PlayKind } from 
  * Moka sohbet botu için okuma yardımcıları: `mokaSummary()`, `mokaLevel()`.
  */
 
-export const MOKA_STATS: { id: MokaStat; name: string; emoji: string; hint: string }[] = [
-  { id: 'zeka', name: 'Zeka', emoji: '🧠', hint: 'Odaklan ve çalış' },
-  { id: 'disiplin', name: 'Disiplin', emoji: '🧹', hint: 'Ev işlerini yap' },
-  { id: 'saglik', name: 'Sağlık', emoji: '💪', hint: 'Spor yap' },
+export const MOKA_STATS: { id: MokaStat; name: string; emoji: string; hint: string; why: string; care: string }[] = [
+  { id: 'zeka', name: 'Zeka', emoji: '🧠', hint: 'Odaklan ve çalış', why: 'Pomodoro odak oturumlarında artar: her 25 dakikalık oturum yaklaşık 2 exp (en az 10 dk).', care: 'Kafanı toplayıp bir şeye zaman ayırmak, aklını da besler.' },
+  { id: 'disiplin', name: 'Disiplin', emoji: '🧹', hint: 'Ev işlerini yap', why: 'Her gün puan veren bir işi (rutin, bitki, günlük) yapınca artar. Küçük işler bile sayılır; günde 1 puan alırsın.', care: 'Odanı toplamak kendine verdiğin küçük bir söz. Her gün tutunca disiplin olur.' },
+  { id: 'saglik', name: 'Sağlık', emoji: '💪', hint: 'Spor yap', why: 'Spor kaydı girince artar: her antrenman 3 exp. Günde en fazla 6.', care: 'Bedenine ayırdığın zaman, günün geri kalanına enerji olarak döner.' },
 ];
 
 /** Bir günde stat başına kazanılabilecek en çok exp. */

@@ -54,7 +54,7 @@ Never forget boiler service, smoke detector tests, seasonal chores, bill due dat
 Every morning at the time you choose, your day's tasks in a single notification. You pick which reminders you want.
 
 ⭐ PREMIUM
-Daily chat with Moka, 50 AI scans a day, a second floor, 3 streak freezes a month, 1.5x points, up to 5 homes, home themes, family sharing and an ad-free experience. Your home's core chores are always free.
+10 chat messages with Moka a day, 5 AI scans a day, a second floor, 3 streak freezes a month, 1.5x points, up to 5 homes, home themes, family sharing and an ad-free experience. Your home's core chores are always free.
 
 Your data lives on your phone first; you can create an account to back it up. Your card details never reach us. For AI scans, your photo is processed only for recognition and is not stored.
 

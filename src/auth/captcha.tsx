@@ -152,7 +152,7 @@ export function CaptchaHost() {
     <View style={[StyleSheet.absoluteFill, st.dim]}>
       <View style={[st.card, { backgroundColor: c.surface }]}>
         <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink, textAlign: 'center' }}>{title}</Text>
-        <Text style={{ fontFamily: fonts.body, fontSize: 14.5, lineHeight: 20, color: c.muted, textAlign: 'center' }}>{hint}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: c.muted, textAlign: 'center' }}>{hint}</Text>
         {phase === 'err' ? (
           <Pressable
             accessibilityRole="button"

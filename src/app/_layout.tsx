@@ -1,8 +1,11 @@
+import { initCrashReporting } from '@/lib/crash';
 import { installTranslationPatch } from '@/i18n/patch';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { Stack, router, usePathname } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
+import { router } from '@/lib/nav';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -12,32 +15,45 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { CaptchaHost } from '@/auth/captcha';
+import { AppAlertHost } from '@/components/AppAlert';
+import { BusyProvider } from '@/components/BusyOverlay';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { IntroSplash } from '@/components/IntroSplash';
+import { MeikaiIntro } from '@/components/MeikaiIntro';
 import { PremiumChoice } from '@/components/PremiumChoice';
 import { ToastProvider } from '@/components/Toast';
 import { FamilyProvider } from '@/family/FamilyProvider';
 import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
+import { markFirstDay, needsCheckin } from '@/domain/mood';
+import { sessionNo, useStep } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
+import { useLeaderboardSync } from '@/leaderboard/leaderboard';
 import { usePersona, usePersonaSync } from '@/profile/usePersona';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
-import { useColors } from '@/theme';
+import { setAppearance, useColors, useIsDark } from '@/theme';
 
+initCrashReporting();
 installTranslationPatch();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 // Emülatörde Google Play hesabı olmadığı için RevenueCat her açılışta hata yazar; geliştirirken ekranı kaplamasın.
 if (__DEV__) LogBox.ignoreLogs(['[RevenueCat]']);
 configureNotifications();
 
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return <ErrorScreen error={error} retry={retry} />;
+}
+
 export default function RootLayout() {
   const c = useColors();
   const [introDone, setIntroDone] = useState(false);
+  const [meikai, setMeikai] = useState<'play' | 'fade' | 'done'>('play');
   const [fontsLoaded, fontError] = useFonts({
-    Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
+    Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Caveat_700Bold,
   });
 
   useEffect(() => trackOpen(), []);
@@ -54,20 +70,33 @@ export default function RootLayout() {
         <PurchasesProvider>
           <AppStoreProvider>
             <ToastProvider>
+              <BusyProvider>
               <FamilyProvider>
-                <StatusBar style="auto" />
+                <AppStatusBar />
                 <RootStack />
                 <LaunchChoice />
                 <CaptchaHost />
+                <AppAlertHost />
               </FamilyProvider>
-              {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. */}
-              {!introDone && <IntroSplash onDone={() => setIntroDone(true)} />}
+              </BusyProvider>
+              {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. İlk karede
+                  takılır ve Meikai bitene kadar opak krem perde olarak bekler: tanıtım/sorular introdan önce görünmez. */}
+              {!introDone && <IntroSplash play={meikai !== 'play'} onDone={() => setIntroDone(true)} />}
+              {/* Önce Meikai Digital açılışı; solarken altta Homezy açılışı başlar. */}
+              {meikai !== 'done' && <MeikaiIntro onFade={() => setMeikai(m => (m === 'play' ? 'fade' : m))} onDone={() => setMeikai('done')} />}
             </ToastProvider>
           </AppStoreProvider>
         </PurchasesProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
+}
+
+function AppStatusBar() {
+  const { state } = useStore();
+  const dark = useIsDark();
+  useEffect(() => setAppearance(state.settings.appearance), [state.settings.appearance]);
+  return <StatusBar style={dark ? 'light' : 'dark'} />;
 }
 
 function RootStack() {
@@ -77,7 +106,14 @@ function RootStack() {
   useCloudSync();
   usePlaySync();
   usePersonaSync();
+  useLeaderboardSync();
   const { seen: quizSeen } = usePersona();
+  const { update } = useStore();
+  // Ilk indirme günü işaretlenir: o gün "nasılsın" / "evde misin" sorulmaz (src/domain/mood.ts).
+  const needFirst = !state.setup && !state.play.ask?.first;
+  useEffect(() => {
+    if (needFirst) update(D => markFirstDay(D.play));
+  }, [needFirst, update]);
   const sound = state.settings.sound;
   useEffect(() => setSfxEnabled(sound), [sound]);
 
@@ -118,6 +154,7 @@ function RootStack() {
         <Stack.Screen name="oda/[id]" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="is" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="temizlik" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="eglence" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="yasal" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bildirimler" options={{ animation: 'slide_from_right' }} />
@@ -128,10 +165,13 @@ function RootStack() {
         <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="rozetler" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="siralama" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="buyume" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="aliskanlik" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ilac" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="alisveris" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="evcil" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bakim" options={{ animation: 'slide_from_right' }} />
@@ -158,6 +198,8 @@ function RootStack() {
 
 // Evi kurarken ve tanıtımda satın alma ekranı çıkmasın diye bu sayfalarda gizlenir.
 const CHOICE_WAIT = ['/tanitim', '/taniyalim', '/giris', '/kurulum', '/evim'];
+// Seçim ekranı rota değil, üstüne binen bir katman: sadece sekme sayfalarında çıkar (yoksa derin bağlantıyla açılan sayfa altında kalır).
+const CHOICE_TABS = ['/', '/bugun', '/gelisim', '/odalar', '/hesap'];
 
 /**
  * Tanıtım ve ev kurulumundan sonra Ücretsiz / Premium seçimi. Bir kere seçilince bir daha çıkmaz;
@@ -169,8 +211,10 @@ function LaunchChoice() {
   const { status, introSeen } = useAuth();
   const path = usePathname();
   const [done, setDone] = useState(() => prefs.get('planChoice') != null);
-  const ready = introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path);
-  if (done || premium.active || !ready) return null;
+  // İlk açılışta (ve ilk oturumda) satın alma ekranı çıkmaz; kullanıcı önce evini görsün. İkinci açılıştan itibaren sırayla gelir.
+  const ready = sessionNo >= 2 && introSeen && (status === 'guest' || status === 'account') && state.setup && !CHOICE_WAIT.includes(path) && CHOICE_TABS.includes(path) && !needsCheckin(state.play);
+  const turn = useStep('choice', !done && !premium.active && ready);
+  if (!turn) return null;
   return (
     <View style={StyleSheet.absoluteFill}>
       <PremiumChoice

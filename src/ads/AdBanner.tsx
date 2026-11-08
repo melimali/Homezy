@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { usePurchases } from '@/purchases/PurchasesProvider';
-import { fonts, useColors } from '@/theme';
+import { fonts, useColors, radius } from '@/theme';
 
 import { bannerUnit, getAds, startAds } from './ads';
 
@@ -41,6 +41,6 @@ export function AdBanner() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 4, marginTop: 4, borderRadius: 22, paddingVertical: 8, overflow: 'hidden' },
-  label: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  wrap: { alignItems: 'center', gap: 4, marginTop: 16, marginBottom: 8, borderRadius: radius.tile, paddingVertical: 8, overflow: 'hidden' },
+  label: { fontFamily: fonts.bodyBold, fontSize: 12 },
 });

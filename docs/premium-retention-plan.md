@@ -10,7 +10,7 @@ Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an
 
 ## 2. Ücretsiz / Premium bölünmesi
 
-**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 1 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
+**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 2 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
 
 **Premium (seçenek + içgörü + içerik):**
 
@@ -24,7 +24,7 @@ Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an
 | Ek alanlar | 1 ev | 5 ev, ek oda, alternatif tasarım | Kısmen var |
 | Hedef planı | 1 plan | Birden fazla plan, esnek rutin, hedef önerisi | Yeni |
 | Bildirim | Sabit saat | Akıllı saat, gelişmiş hatırlatıcı | Var |
-| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 50 / 1,5× | Var |
+| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 5 / 1,5× | Var |
 
 Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme" sayılır mı?** Öneri: kalsın (ilerlemeyi kilitlemiyor, sadece hızlandırıyor/koruyor), ama seri **asla** paywall arkasında silinmesin: dondurma yoksa seri kırılır, bu doğal kuraldır; Premium bittiğinde eldeki seri ve ev korunur.
 

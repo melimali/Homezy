@@ -6,7 +6,7 @@ import type { RoomType, StatusKind, StockItem } from './types';
  */
 
 /** Metinden ve günden sabit bir sayı üretir; havuzdan mesaj seçmek için. */
-function pick<T>(pool: readonly T[], key: string, now: number): T {
+export function pick<T>(pool: readonly T[], key: string, now: number): T {
   const day = Math.floor(now / 864e5);
   let h = day;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
@@ -77,7 +77,7 @@ export function taskLine(o: { name: string; type: RoomType | null; plant: boolea
 
 /** Durumu kısa ve yumuşak anlatan ek. */
 export function statusTail(k: StatusKind, diff: number, never: boolean) {
-  if (k === 'late') return diff <= -7 ? `${-diff} gündür bekliyor 🥺` : `${-diff} gündür seni bekliyor 🤍`;
+  if (k === 'late') return `${-diff} gündür hazır, vaktin olunca 🤍`;
   if (never) return 'Hadi ilk kez yapalım 🌟';
   return 'Bugün yapılacak 📅';
 }
@@ -138,15 +138,15 @@ export function streakLine(streak: number, built: boolean, key: string, now: num
   if (streak > 0)
     return pick(
       [
-        `🔥 ${streak} günlük serin seni bekliyor. İstersen minik bir iş yeter 🤍`,
-        `Evin seni bekliyor 🏡 ${streak} günlük seriyi sürdürelim mi?`,
+        `🔥 ${streak} günlük serin var. İstersen minik bir iş yeter 🤍`,
+        `Bugün tek bir küçük iş yeter 🏡 ${streak} günlük seriyi sürdürelim mi?`,
         `Bugün sakin geçti 🌿 Tek bir küçük iş yeter, istersen.`,
       ],
       key,
       now,
     );
   if (built)
-    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, tozlanmasın 🧹', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
+    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, Moka çok sevinir ☕', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
   return pick(
     ['Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️', 'Minik bir adım, büyük bir ev 🪵✨ Bugün bir iş yapalım mı?'],
     key,
@@ -162,7 +162,42 @@ export function sportLine(key: string, now: number) {
       'Biraz hareket iyi gelir 🧘 Hazır mısın?',
       '15 dakikalık bir yürüyüş bile seriyi sürdürür 🚶✨',
       'Kaslar uyanmak istiyor 💪😄',
+      'Moka ısınma hareketlerine başladı bile 🦜💨 Sen de gel!',
+      'Bugün küçük bir antrenman, yarın büyük bir fark 🌱💪',
+      'Minderi ser, müziği aç, 10 dakika yeter 🎶🧘',
     ],
+    key,
+    now,
+  );
+}
+
+/** Su molası: başlık ve metin, gün ve saate göre değişir. */
+export function waterNudge(key: string, now: number) {
+  return {
+    title: pick(['💧 Su molası', '🥤 Bir yudum su?', '🌿 Moka su içiyor'], key, now),
+    body: pick(
+      [
+        'Bir bardak su iyi gelir. Moka da içiyor ☕',
+        'Su içtin mi? Bardak elinde olsun 💧😊',
+        'Küçük bir mola, büyük bir tazelik 🌊',
+        'Bedenin “su lütfen” diyor 🫗✨',
+      ],
+      key,
+      now,
+    ),
+  };
+}
+
+/** İlaç vakti: ilk hatırlatma ve nazik ikinci hatırlatma. */
+export function medNudge(label: string, key: string, now: number) {
+  return {
+    title: pick(['💊 İlaç vakti', '☕ Moka hatırlatıyor', '🌿 Küçük bir hatırlatma'], key, now),
+    body: pick([`${label} · vakti geldi`, `${label} için bir an ayıralım mı?`, `${label} seni bekliyor, acele yok 🤍`], key, now),
+  };
+}
+export function medAgain(name: string, key: string, now: number) {
+  return pick(
+    [`${name} aldın mı? Aldıysan “Aldım”a dokun.`, `${name} hâlâ bekliyor. Aldıysan işaretleyelim mi?`, `Moka usulca soruyor: ${name} tamam mı? ☕`],
     key,
     now,
   );
@@ -187,16 +222,14 @@ export function eveningNudge(o: { streak: number; idle: number; away: number | n
       title: pick(['🤗 Evin seni özledi', '🏡 Kaldığın yerden devam', '💛 Seni bekliyoruz'], key, now),
       body: pick(
         [
-          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, evini birlikte toparlayalım 🏡',
-          'Bir iş yap, tamir hemen başlasın 🔨 Yavaş yavaş, birlikte.',
+          'Ceza yok, kaldığın yerden devam. Tek bir minik iş seç, kaldığın yerden birlikte devam edelim 🏡',
+          'Bir iş yap, Moka hemen uyansın ☕ Yavaş yavaş, birlikte.',
           '5 dakikalık tek bir iş yeter. Gerisini adım adım hallederiz 🐢✨',
         ],
         key,
         now,
       ),
     };
-  if (idle >= 2) return { title: '🛟 Son şans: yarın evin çökmeye başlıyor', body: 'Bu akşam tek bir iş yap, evin kurtulsun. Minik bir iş bile yeter 💪' };
-  if (idle === 1) return { title: '🌫️ Evin tozlandı', body: 'Bu akşam bir iş yapmazsan yarın duvarlarda çatlaklar çıkar 😟 Bir dakikalık iş yeter.' };
   return { title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
 }
 

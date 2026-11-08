@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import { useBusy } from '@/components/BusyOverlay';
+import { useRouter } from '@/lib/nav';
 import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
 import { useTask } from '@/components/TaskRow';
-import { Bar, IconBtn, Pill, T } from '@/components/ui';
+import { Bar, IconBtn, Pill, T, Chevron } from '@/components/ui';
 import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { roomMokaScene, HOME_MOKA_SCENE } from '@/constants/curated-scenes';
 import { ROOM_SCENES } from '@/constants/scenes';
@@ -64,7 +65,7 @@ export default function Clean() {
       {shown === 'room' && (
         <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32, paddingHorizontal: space.screen, gap: 14 }}>
           <View style={st.top}>
-            <IconBtn icon={<Text style={[st.x, { color: c.ink }]}>‹</Text>} label="Geri" onPress={back} />
+            <IconBtn icon={<Chevron color={c.ink} />} label="Geri" onPress={back} />
           </View>
           <Appear style={{ alignItems: 'center', gap: 6 }}>
             <Float amp={4}>
@@ -175,6 +176,7 @@ function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish
   const art = taskArt(k.pose);
   const scene = roomMokaScene(roomType, ROOM_SCENES[roomType]) ?? HOME_MOKA_SCENE;
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const pts = useRef(0);
   const finish = () => {
     if (busy || k.doneToday) return;
@@ -250,5 +252,5 @@ const st = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 18, paddingTop: 10, gap: 10, alignItems: 'center' },
   cta: { alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 17, alignSelf: 'stretch', maxWidth: 484, width: '100%' },
-  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 17 },
+  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
 });

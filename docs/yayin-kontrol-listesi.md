@@ -9,7 +9,7 @@ Bağlam: Melih'in şirketi yok, D-U-N-S yok. Google Play ve Apple **kişisel** h
 | Madde | Durum | Not |
 |---|---|---|
 | Android paket adı `com.meikai.homezy`, iOS `bundleIdentifier` aynı | ✅ | Mağazaya ilk yüklemeden sonra değişmez. (CLAUDE.md'deki `com.meikaidigital.layfapp` eski, bu dosya doğru.) |
-| Sürüm `1.0.0`, `versionCode 1`; `eas.json` production `autoIncrement` + `appVersionSource: remote` | ✅ | Her production build kodu kendisi artırır |
+| Sürüm `1.0.2`, `versionCode` EAS uzaktan; `eas.json` production `autoIncrement` + `appVersionSource: remote` | ✅ | Her production build kodu kendisi artırır |
 | Production profili = `app-bundle` (.aab), `environment: production` | ✅ | |
 | Submit: `track: internal` | ✅ | İlk .aab elle yüklenir, sonra `eas submit` çalışır. Submit için Play servis hesabı JSON'u gerekir (🖐) |
 | İkon 1024×1024, adaptive icon, splash (açık/koyu) | ✅ | Apple için alfa kanalı olmamalı: `assets/icon.png` yayından önce kontrol et ❓ |

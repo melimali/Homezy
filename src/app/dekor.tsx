@@ -1,11 +1,12 @@
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { HouseFloors } from '@/components/HouseFloors';
 import { Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, Screen, Tabs, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, Screen, Tabs, T, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEM } from '@/domain/items';
 import {
@@ -70,7 +71,7 @@ export default function Dekor() {
         <Squish onPress={() => router.push('/plan')} accessibilityRole="button" style={[st.tip, { backgroundColor: c.surface2 }]}>
           <Text style={{ fontSize: 22 }}>🏘️</Text>
           <T v="small" style={{ flex: 1 }}>Evin dubleks mi? Ev planında 2. kat çizebilirsin{premium.active ? '' : ' (Premium 👑)'}.</T>
-          <Text style={[st.chev, { color: c.muted }]}>›</Text>
+          <Chevron color={c.muted} size={16} dir="right" />
         </Squish>
       )}
 
@@ -279,10 +280,10 @@ const st = StyleSheet.create({
   sw: { width: 62, alignItems: 'center', gap: 4 },
   swDot: { width: 50, height: 50, borderRadius: 25, borderWidth: 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   swAlt: { position: 'absolute', right: 0, bottom: 0, width: 25, height: 25 },
-  swT: { fontFamily: fonts.bodyBold, fontSize: 11 },
-  crown: { position: 'absolute', top: 1, right: 3, fontSize: 11 },
+  swT: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  crown: { position: 'absolute', top: 1, right: 3, fontSize: 12 },
   item: { width: 74, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 4 },
-  itemT: { fontFamily: fonts.bodyBold, fontSize: 10.5 },
+  itemT: { fontFamily: fonts.bodyBold, fontSize: 12 },
   grid: { borderRadius: radius.card, padding: 12, alignItems: 'center' },
   cell: { position: 'absolute', borderRadius: 8, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

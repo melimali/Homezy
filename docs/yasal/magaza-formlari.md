@@ -1,6 +1,6 @@
 # Mağaza gizlilik formları (hazır cevaplar)
 
-> Avukat görüşü değildir. Formlar ürün her değiştiğinde (yeni SDK, yeni veri) güncellenmeli; yanlış beyan mağaza reddi sebebidir. Cevaplar şu koda göre: Supabase, RevenueCat, AdMob (kişiselleştirilmemiş), Anthropic (tarama + sohbet), Open-Meteo, analytics yok.
+> Avukat görüşü değildir. Formlar ürün her değiştiğinde (yeni SDK, yeni veri) güncellenmeli; yanlış beyan mağaza reddi sebebidir. Cevaplar şu koda göre: Supabase, RevenueCat, AdMob (kişiselleştirilmemiş), Anthropic (tarama + sohbet), Open-Meteo, Sentry (sadece çökme raporu: Data Safety > App info and performance > Crash logs + Diagnostics, toplanıyor, kimliğe bağlı değil, amaç: uygulama işlevselliği), analytics yok.
 
 ## 1. Google Play › Veri güvenliği (Data safety)
 

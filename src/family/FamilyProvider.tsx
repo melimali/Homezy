@@ -2,9 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import type { FamilyGoal, FamilyInfo, SharedHome } from '@/domain/family';
+import type { FamilyGoal, FamilyInfo, FamilyWeekRow, SharedHome } from '@/domain/family';
 import { dropShared, forShare, homeData, mergeHome, openShared, sharedHomeId } from '@/domain/homes';
 import type { AppState, HomeData } from '@/domain/types';
+import { dayKey } from '@/domain/play';
 import { offlineMsg, online } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -39,6 +40,8 @@ type FamilyCtx = {
   addGoal: (g: { title: string; emoji: string; target: number; unit: string }) => Promise<Result>;
   logGoal: (id: string, n: number) => Promise<Result>;
   removeGoal: (id: string) => Promise<Result>;
+  /** Son 7 günde herkesin tamamladığı iş sayısı (…_aile_haftasi.sql çalışmadıysa boş). */
+  week: FamilyWeekRow[];
 };
 
 const FamilyContext = createContext<FamilyCtx | null>(null);
@@ -59,12 +62,14 @@ const errText = (m: string) =>
   : 'Bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';
 
 const NO_GOALS: FamilyGoal[] = [];
+const NO_WEEK: FamilyWeekRow[] = [];
 
 export function FamilyProvider({ children }: { children: ReactNode }) {
   const { session, user } = useAuth();
   const { state, update, get } = useStore();
   const { setFamilyPremium } = usePurchases();
   const [goals, setGoals] = useState<FamilyGoal[]>([]);
+  const [week, setWeek] = useState<FamilyWeekRow[]>([]);
   const [raw, setInfo] = useState<FamilyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const uid = session?.user.id;
@@ -119,6 +124,39 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       sub.remove();
     };
   }, [goalsOn, loadGoals]);
+
+  const loadWeek = useCallback(async () => {
+    if (!supabase || !uid) return;
+    const { data, error } = await supabase.rpc('family_week');
+    if (!error && Array.isArray(data)) setWeek(data as FamilyWeekRow[]);
+  }, [uid]);
+  useEffect(() => {
+    if (!goalsOn) return;
+    const first = setTimeout(loadWeek, 0);
+    const t = setInterval(loadWeek, POLL * 2);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
+  }, [goalsOn, loadWeek]);
+
+  // Bugün tamamlanan iş sayısı artınca ortak haftaya yazılır (birkaç saniye bekleyip, internet yoksa sessizce atlanır).
+  const logs = state.play.log;
+  const reported = useRef(0);
+  useEffect(() => {
+    const day = dayKey(Date.now());
+    const doneToday = logs[day]?.length ?? 0;
+    if (!goalsOn || !supabase || doneToday <= reported.current) return;
+    const t = setTimeout(async () => {
+      if (!supabase) return;
+      const { data, error } = await supabase.rpc('family_report', { p_day: day, p_done: doneToday });
+      if (!error) {
+        reported.current = doneToday;
+        if (Array.isArray(data)) setWeek(data as FamilyWeekRow[]);
+      }
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [goalsOn, logs]);
 
   const goalCall = useCallback(
     async (fn: string, args: Record<string, unknown>): Promise<Result> => {
@@ -279,8 +317,8 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   // Aile evi kapalıyken hedefler boş görünür; state'i effect içinde sıfırlamaya gerek yok.
   const shownGoals = goalsOn ? goals : NO_GOALS;
   const value = useMemo(
-    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals: shownGoals, addGoal, logGoal, removeGoal }),
-    [info, loading, sharedId, sharing, refresh, create, join, leave, kick, shownGoals, addGoal, logGoal, removeGoal],
+    () => ({ info, loading, sharedId, sharing, refresh, create, join, leave, kick, goals: shownGoals, addGoal, logGoal, removeGoal, week: goalsOn ? week : NO_WEEK }),
+    [info, loading, sharedId, sharing, refresh, create, join, leave, kick, shownGoals, addGoal, logGoal, removeGoal, goalsOn, week],
   );
   return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;
 }

@@ -58,9 +58,9 @@ export function MokaSprite({ anim = 'happy', size = 120, flip = false, bounce = 
 
   const src = anim === 'walk' ? WALK[frame] : MOODS[anim];
   return (
-    <View style={{ width: size, height: size }} accessibilityIgnoresInvertColors>
+    <View style={{ width: size, height: size, overflow: 'hidden' }} accessibilityIgnoresInvertColors>
       <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateY: bob }, { scale: pop }, { scaleX: flip ? -1 : 1 }] }]}>
-        <Image source={src} style={StyleSheet.absoluteFill} resizeMode="contain" />
+        <Image source={src} style={{ width: size, height: size }} resizeMode="contain" />
       </Animated.View>
     </View>
   );

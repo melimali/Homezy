@@ -5,7 +5,7 @@ import { Animated, Platform, Pressable, StyleSheet, useWindowDimensions, View } 
 
 import { MokaSprite, type SpriteMood } from '@/components/MokaSprite';
 import { Btn, T } from '@/components/ui';
-import { flap, GAP, GROUND, H, MX, newFlap, night, PIPE_W, step, W, type Flap } from '@/domain/flap';
+import { flap, GAP, GROUND, H, MX, newFlap, night, PIPE_W, pipeDy, step, W, type Flap } from '@/domain/flap';
 import { useActive } from '@/hooks/useActive';
 import { radius } from '@/theme';
 
@@ -20,14 +20,14 @@ function buzz() {
 // Oyun sahnesi renkleri; tema renkleri değil, sahne resmi.
 const CUP = '#F4E7D8', CUP_SHADE = '#E2CFBC', RIM = '#BFA89E', RIM_DARK = '#8B786D';
 const FAR = '#A9D3C0', NEAR = '#86BD9B', GRASS = '#7FB98F', GROUND_C = '#C9A27E', STRIPE = '#B88F6C';
-const STARS = [[24, 30], [90, 70], [150, 24], [210, 90], [262, 40], [60, 130], [240, 150], [120, 110]] as const;
-const CLOUDS = [[10, 40, 1], [130, 95, 0.7], [250, 25, 0.85], [350, 120, 0.6]] as const;
+const STARS = [[24, 30], [90, 70], [150, 24], [210, 90], [60, 130]] as const;
+const CLOUDS = [[10, 40, 1], [150, 95, 0.7], [290, 25, 0.85]] as const;
 const CLOUD_SPAN = W + 120;
 const SPRITE = 30; // Moka çizim boyutu (çarpışma yarıçapı MR ile orantılı)
 const CAP_H = 16;
-const PARTS = ['✨', '⭐', '🪶', '💨', '☕', '✨', '⭐', '🪶', '💨', '☕', '✨', '⭐'];
+const PARTS = ['✨', '⭐', '🪶', '💨', '✨', '⭐', '🪶', '💨'];
 
-type PipeView = { id: number; gap: number };
+type PipeView = { id: number; gap: number; moving: boolean };
 type Slot = { x: Animated.Value; y: Animated.Value; o: Animated.Value; px: number; py: number; vx: number; vy: number; life: number; max: number };
 
 const mod = (a: number, n: number) => ((a % n) + n) % n;
@@ -43,24 +43,23 @@ const Hills = memo(function Hills({ tx, color, h, r, w, hi }: { tx: Animated.Val
   );
 });
 
-const PipeShape = memo(function PipeShape({ gap, tx }: { gap: number; tx: Animated.Value }) {
+const EXT = 60; // hareketli boru kayınca boşluk görünmesin diye gövde uzatılır
+const PipeShape = memo(function PipeShape({ gap, tx, ty }: { gap: number; tx: Animated.Value; ty: Animated.Value }) {
   const botTop = gap + GAP;
-  const botH = H - GROUND - botTop + 6;
+  const botH = H - GROUND - botTop + 6 + EXT;
   const body = { position: 'absolute' as const, left: 0, width: PIPE_W, backgroundColor: CUP, borderLeftWidth: 3, borderRightWidth: 3, borderColor: RIM };
   const cap = { position: 'absolute' as const, left: -5, width: PIPE_W + 10, height: CAP_H, borderRadius: 8, backgroundColor: RIM, borderWidth: 3, borderColor: RIM_DARK };
   return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: PIPE_W, height: H, transform: [{ translateX: tx }] }}>
-      <View style={[body, { top: 0, height: gap - CAP_H + 2 }]}>
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: PIPE_W, height: H, transform: [{ translateX: tx }, { translateY: ty }] }}>
+      <View style={[body, { top: -EXT, height: gap - CAP_H + 2 + EXT }]}>
         <View style={styles.shine} />
         <View style={styles.shade} />
-        <View style={[styles.band, { bottom: 18 }]} />
       </View>
       <View style={[cap, { top: gap - CAP_H }]} />
       <View style={[cap, { top: botTop }]} />
       <View style={[body, { top: botTop + CAP_H - 2, height: botH }]}>
         <View style={styles.shine} />
         <View style={styles.shade} />
-        <View style={[styles.band, { top: 18 }]} />
       </View>
     </Animated.View>
   );
@@ -104,13 +103,14 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
   const clock = useRef(0);
   const shake = useRef(0);
   const lastNt = useRef(-1);
+  const lastTilt = useRef(0);
   const pipeKey = useRef('');
 
   const v = useMemo(() => ({
     y: new Animated.Value(H / 2 - SPRITE / 2), tilt: new Animated.Value(0), sy: new Animated.Value(1),
     clouds: new Animated.Value(0), far: new Animated.Value(0), near: new Animated.Value(0), ground: new Animated.Value(0),
     nt: new Animated.Value(0), shake: new Animated.Value(0), flash: new Animated.Value(0), bump: new Animated.Value(1),
-    pipeX: new Map<number, Animated.Value>(),
+    pipeX: new Map<number, Animated.Value>(), pipeY: new Map<number, Animated.Value>(), zero: new Animated.Value(0),
   }), []);
   const slots = useMemo<Slot[]>(() => PARTS.map(() => ({ x: new Animated.Value(-50), y: new Animated.Value(-50), o: new Animated.Value(0), px: 0, py: 0, vx: 0, vy: 0, life: 0, max: 1 })), []);
   const slotAt = useRef(0);
@@ -136,9 +136,9 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
     if (key === pipeKey.current) return;
     pipeKey.current = key;
     const ids = new Set(list.map(p => p.id));
-    v.pipeX.forEach((_, id) => { if (!ids.has(id)) v.pipeX.delete(id); });
-    list.forEach(p => pipeVal(p.id, p.x));
-    setPipes(list.map(p => ({ id: p.id, gap: p.gap })));
+    v.pipeX.forEach((_, id) => { if (!ids.has(id)) { v.pipeX.delete(id); v.pipeY.delete(id); } });
+    list.forEach(p => { pipeVal(p.id, p.x); if (p.amp && !v.pipeY.has(p.id)) v.pipeY.set(p.id, new Animated.Value(pipeDy(p))); });
+    setPipes(list.map(p => ({ id: p.id, gap: p.gap, moving: p.amp > 0 })));
   }, [v, pipeVal]);
 
   const endGame = (sc: number, y: number) => {
@@ -166,13 +166,14 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
         Animated.spring(v.bump, { toValue: 1, friction: 4, tension: 160, ...nd }).start();
       }
       syncPipes(n.pipes);
-      for (const p of n.pipes) v.pipeX.get(p.id)?.setValue(p.x);
+      for (const p of n.pipes) { v.pipeX.get(p.id)?.setValue(p.x); if (p.amp) v.pipeY.get(p.id)?.setValue(pipeDy(p)); }
       if (n.over) endGame(n.score, n.y);
     }
     const s = g.current;
     const idle = !s.started ? Math.sin(clock.current * 4) * 6 : 0;
     v.y.setValue(s.y + idle - SPRITE / 2);
-    v.tilt.setValue(Math.max(-25, Math.min(70, s.vy / 8)));
+    const tl = Math.round(Math.max(-25, Math.min(70, s.vy / 8)));
+    if (tl !== lastTilt.current) { lastTilt.current = tl; v.tilt.setValue(tl); }
     v.clouds.setValue(-mod(s.dist * 0.12, CLOUD_SPAN));
     v.far.setValue(-mod(s.dist * 0.15, 260));
     v.near.setValue(-mod(s.dist * 0.35, 180));
@@ -239,7 +240,7 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
             <Hills tx={v.far} color={FAR} h={110} r={90} w={260} hi="#BDE0CF" />
             <Hills tx={v.near} color={NEAR} h={70} r={60} w={180} hi="#A2D0B2" />
             <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#14203A', opacity: veil }]} />
-            {pipes.map(p => <PipeShape key={p.id} gap={p.gap} tx={pipeVal(p.id, W + 40)} />)}
+            {pipes.map(p => <PipeShape key={p.id} gap={p.gap} tx={pipeVal(p.id, W + 40)} ty={(p.moving && v.pipeY.get(p.id)) || v.zero} />)}
             <View pointerEvents="none" style={styles.ground}>
               <View style={styles.grass} />
               <Animated.View style={{ position: 'absolute', left: 0, top: 14, width: 44 * 10, height: 8, transform: [{ translateX: v.ground }] }}>

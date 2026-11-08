@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -361,6 +362,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
   const { spend } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const [popped, setPopped] = useState(0);
   const locked = f.premium && !premium.active;
   const short = f.price - S.play.points;
@@ -407,6 +409,7 @@ function FertRow({ plot }: { plot: Plot }) {
   const { state: S } = useStore();
   const { spend } = usePlay();
   const [busy, setBusy] = useState<string | null>(null);
+  useBusy(!!busy);
   const [rain, setRain] = useState<{ n: number; e: string }>({ n: 0, e: '💧' });
   const f = FLOWER[plot.flower]!;
   const room = Math.max(0, FERT_CAP(f) - plot.fert);
@@ -471,6 +474,7 @@ function ExtraCard({ x, onOwned }: { x: Extra; onOwned?: { on: boolean; pick: ()
   const { buy } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const owned = x.price === 0 || S.play.owned.includes(x.id);
   const locked = x.premium && !premium.active;
   const short = x.price - S.play.points;

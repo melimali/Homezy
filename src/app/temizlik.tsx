@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -175,6 +176,7 @@ function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish
   const art = taskArt(k.pose);
   const scene = roomMokaScene(roomType, ROOM_SCENES[roomType]) ?? HOME_MOKA_SCENE;
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const pts = useRef(0);
   const finish = () => {
     if (busy || k.doneToday) return;

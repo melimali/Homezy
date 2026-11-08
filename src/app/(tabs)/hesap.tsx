@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { type BadgeArt } from '@/constants/badges';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
@@ -63,6 +64,7 @@ export default function Hesap() {
   const { premium, restore, manage } = usePurchases();
   const { state, replace, update } = useStore();
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
+  useBusy(!!busy);
   const [langOpen, setLangOpen] = useState(false);
   const [cat, setCat] = useState<string | null>(null);
   const [tour, setTour] = useState(false);

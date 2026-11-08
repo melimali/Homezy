@@ -16,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { CaptchaHost } from '@/auth/captcha';
 import { AppAlertHost } from '@/components/AppAlert';
+import { BusyProvider } from '@/components/BusyOverlay';
 import { ErrorScreen } from '@/components/ErrorScreen';
 import { IntroSplash } from '@/components/IntroSplash';
 import { MeikaiIntro } from '@/components/MeikaiIntro';
@@ -69,6 +70,7 @@ export default function RootLayout() {
         <PurchasesProvider>
           <AppStoreProvider>
             <ToastProvider>
+              <BusyProvider>
               <FamilyProvider>
                 <AppStatusBar />
                 <RootStack />
@@ -76,6 +78,7 @@ export default function RootLayout() {
                 <CaptchaHost />
                 <AppAlertHost />
               </FamilyProvider>
+              </BusyProvider>
               {/* Açılış animasyonu uygulamanın üstünde oynar; altta veriler bu sırada yüklenir. İlk karede
                   takılır ve Meikai bitene kadar opak krem perde olarak bekler: tanıtım/sorular introdan önce görünmez. */}
               {!introDone && <IntroSplash play={meikai !== 'play'} onDone={() => setIntroDone(true)} />}

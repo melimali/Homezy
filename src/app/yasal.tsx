@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { Directory, File, Paths } from 'expo-file-system';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useState } from 'react';
@@ -34,6 +35,7 @@ export default function Yasal() {
   const [ai, setAi] = useState(aiConsent.get());
   const [loc, setLoc] = useState(locationOk.get());
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
 
   const exportData = async () => {
     setBusy(true);

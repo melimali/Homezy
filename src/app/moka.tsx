@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -69,6 +70,7 @@ export default function MokaChat() {
   const [items, setItems] = useState<Item[]>(memory);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);

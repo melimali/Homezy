@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
@@ -21,8 +22,10 @@ export default function Siralama() {
   const [period, setPeriod] = useState<LbPeriod>('hafta');
   const [data, setData] = useState<LbData | null>(null);
   const [loading, setLoading] = useState(true);
+  useBusy(loading);
   const [nick, setNick] = useState(nick0 ?? '');
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const account = status === 'account';
 
   const [tick, setTick] = useState(0);

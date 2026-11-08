@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { dateLocale } from '@/i18n/runtime';
 import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
@@ -119,6 +120,7 @@ function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected:
   const { buy } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const owned = S.play.owned.includes(item.id);
   const room = S.play.placed[item.id];
   const locked = item.premium && !premium.active;

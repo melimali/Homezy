@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
@@ -31,6 +32,7 @@ export default function Aile() {
   const [code, setCode] = useState('');
   const [name, setName] = useState(displayName(user));
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const [armed, setArmed] = useState(false);
 
   const run = async (fn: () => Promise<{ ok: true } | { ok: false; error: string }>, done?: string) => {

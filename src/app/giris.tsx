@@ -1,3 +1,4 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from "@/lib/nav";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -42,6 +43,7 @@ export default function Giris() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 

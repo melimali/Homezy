@@ -1,3 +1,4 @@
+import { useBusy } from './BusyOverlay';
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +28,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const toast = useToast();
   const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+  useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const intro = plan === 'monthly' ? introPrice : null;

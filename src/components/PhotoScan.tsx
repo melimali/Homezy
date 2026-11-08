@@ -1,6 +1,6 @@
 import { useRouter } from '@/lib/nav';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { LV, WASH } from '@/domain/constants';
 import { uid } from '@/domain/logic';
@@ -8,7 +8,7 @@ import { LIMITS } from '@/domain/premium';
 import { attLine, COLORS, guessColor, guessFabric, guessKind, KINDS, toColor, toFabric, toHex, toKind } from '@/domain/style';
 import type { StockLevel, WashType } from '@/domain/types';
 import { pickPhoto } from '@/lib/photos';
-import { scanPhoto, trLow } from '@/lib/scan';
+import { scanPhoto, trLow, type Conf } from '@/lib/scan';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
@@ -26,7 +26,7 @@ import { Btn, SecHead, T } from './ui';
 type Busy = { st: 'busy' };
 type Err = { st: 'err'; msg: string; retry: boolean; limit: boolean; account?: boolean };
 
-type FridgeItem = { name: string; qty: string; lvl: StockLevel; matchId: string | null; on: boolean; low: boolean; exp: number | null };
+type FridgeItem = { name: string; qty: string; lvl: StockLevel; matchId: string | null; on: boolean; conf: Conf; exp: number | null };
 type FridgeState = null | Busy | Err | {
   st: 'review'; items: FridgeItem[]; missing: { id: string; name: string; on: boolean }[]; note: string; left: number;
 };
@@ -59,8 +59,8 @@ export function useFridgeScan(rid: string) {
       const matchId = hit && !used.has(hit.id) ? hit.id : null;
       if (matchId) used.add(matchId);
       else if (items.some(x => trLow(x.name) === trLow(it.name))) continue;
-      const low = it.conf === 'dusuk';
-      items.push({ name: hit && matchId ? hit.name : it.name, qty: it.qty, lvl: it.lvl, matchId, on: !low, low, exp: parseExp(it.exp) });
+      const conf = toConf(it.conf);
+      items.push({ name: hit && matchId ? hit.name : it.name, qty: it.qty, lvl: it.lvl, matchId, on: conf === 'kesin', conf, exp: parseExp(it.exp) });
     }
     const missing = r.result.missing
       .map(n => byName.get(trLow(n)))
@@ -116,11 +116,14 @@ export function FridgeScanPanel({ s, retry }: { s: ReturnType<typeof useFridgeSc
   const lvName = (k: StockLevel) => LV.find(x => x[0] === k)![1];
   const toggle = (kind: 'items' | 'missing', i: number) =>
     setScan(p => (p?.st === 'review' ? { ...p, [kind]: p[kind].map((x, j) => (j === i ? { ...x, on: !x.on } : x)) } : p));
+  const rename = (i: number, name: string) =>
+    setScan(p => (p?.st === 'review' ? { ...p, items: p.items.map((x, j) => (j === i ? { ...x, name } : x)) } : p));
   return (
     <Review title="Fotoğrafta gördüklerim" count={`${scan.items.length} ürün`} note={scan.note} left={scan.left}>
       {scan.items.map((x, i) => (
-        <Check key={'i' + i} on={x.on} onPress={() => toggle('items', i)} title={x.name}
-          sub={[x.low ? '❓ emin değilim, kontrol et' : '', x.qty, x.exp ? `SKT ${new Date(x.exp).toLocaleDateString('tr-TR')}` : '', x.matchId ? 'listede var' : 'listeye eklenecek'].filter(Boolean).join(' · ')} pill={lvName(x.lvl)} pillK={x.lvl} />
+        <Check key={'i' + i} on={x.on} onPress={() => toggle('items', i)} title={x.name} conf={x.conf}
+          onName={x.conf === 'kesin' ? undefined : v => rename(i, v)}
+          sub={[x.qty, x.exp ? `SKT ${new Date(x.exp).toLocaleDateString('tr-TR')}` : '', x.matchId ? 'listede var' : 'listeye eklenecek'].filter(Boolean).join(' · ')} pill={lvName(x.lvl)} pillK={x.lvl} />
       ))}
       {!scan.items.length && <T v="small">Fotoğrafta tanıyabildiğim bir ürün olmadı. Bu tarama hakkından düşmedi.</T>}
       {scan.missing.length > 0 && <T v="bold" style={{ fontSize: 14, marginTop: 4 }}>Göremediklerim</T>}
@@ -128,7 +131,7 @@ export function FridgeScanPanel({ s, retry }: { s: ReturnType<typeof useFridgeSc
         <Check key={'m' + i} on={x.on} onPress={() => toggle('missing', i)} title={x.name} sub="Fotoğrafta görünmedi. İşaretlersen Bitti olur." pill="Bitti?" pillK="yok" />
       ))}
       <T v="tiny">Miktarlar tahmini. İşaretli olanlar listeye işlenir.</T>
-      {scan.items.some(x => x.low) && <T v="tiny">Emin olmadığım ürünler işaretsiz geldi; doğruysa işaretle.</T>}
+      {scan.items.some(x => x.conf !== 'kesin') && <T v="tiny">⚠ tahmin ve ❓ emin değilim işaretli ürünler işaretsiz geldi. Adı doğruysa işaretle, değilse adı düzelt.</T>}
       <View style={styles.row}>
         {scan.items.length + scan.missing.length > 0 && <Btn small kind="primary" label="Listeye işle" onPress={apply} />}
         <Btn small kind="ghost" label="Vazgeç" onPress={stop} />
@@ -140,7 +143,7 @@ export function FridgeScanPanel({ s, retry }: { s: ReturnType<typeof useFridgeSc
 /* ---------- gardırop ---------- */
 
 type LookItem = {
-  name: string; cat: string; wash: WashType | null; matchId: string | null; on: boolean; low: boolean;
+  name: string; cat: string; wash: WashType | null; matchId: string | null; on: boolean; conf: Conf;
   kind: string | null; color: string | null; hex: string | null; fabric: string | null; pattern: 'düz' | 'desenli';
 };
 type LookState = null | Busy | Err | { st: 'review'; items: LookItem[]; worn: boolean; note: string; left: number };
@@ -177,7 +180,7 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
       const kind = toKind(p.kind) || guessKind(p.name);
       const color = toColor(p.color) || guessColor(p.name);
       return {
-        name: hit && matchId ? hit.name : p.name, cat: kind ? KINDS[kind].cat : p.cat, wash: p.wash, matchId, on: p.conf !== 'dusuk', low: p.conf === 'dusuk',
+        name: hit && matchId ? hit.name : p.name, cat: kind ? KINDS[kind].cat : p.cat, wash: p.wash, matchId, on: toConf(p.conf) === 'kesin', conf: toConf(p.conf),
         kind, color, hex: toHex(p.hex) || (color ? COLORS[color] : null), fabric: toFabric(p.fabric) || guessFabric(p.name, kind),
         pattern: p.pattern === 'desenli' ? 'desenli' : 'düz',
       };
@@ -246,8 +249,8 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
       {scan?.st === 'review' && (
         <Review title="Fotoğrafta gördüklerim" count={`${scan.items.length} parça`} note={scan.note} left={scan.left}>
           {scan.items.map((x, i) => (
-            <Check key={i} on={x.on} onPress={() => toggle(i)} title={x.name}
-              sub={`${x.low ? '❓ emin değilim, kontrol et · ' : ''}${attLine(x)}${x.pattern === 'desenli' ? ' · desenli' : ''}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'dolabında var' : 'dolaba eklenecek'}`} />
+            <Check key={i} on={x.on} onPress={() => toggle(i)} title={x.name} conf={x.conf}
+              sub={`${attLine(x)}${x.pattern === 'desenli' ? ' · desenli' : ''}${x.wash ? ` · ${WASH[x.wash].emoji} ${WASH[x.wash].label}` : ''} · ${x.matchId ? 'dolabında var' : 'dolaba eklenecek'}`} />
           ))}
           {!scan.items.length && <T v="small">Fotoğrafta tanıyabildiğim bir kıyafet olmadı. Bu tarama hakkından düşmedi.</T>}
           <T v="tiny">Tür, renk ve kumaş tahmini. İşaretli parçalar gardıroba eklenir (dolabında olanlar tekrar eklenmez) ve kombin onlarla değerlendirilir.</T>
@@ -308,7 +311,11 @@ function Review({ title, count, note, left, children }: { title: string; count: 
   );
 }
 
-function Check({ on, onPress, title, sub, pill, pillK }: { on: boolean; onPress: () => void; title: string; sub: string; pill?: string; pillK?: StockLevel }) {
+const toConf = (v: string | undefined): Conf => (v === 'tahmin' ? 'tahmin' : v === 'belirsiz' || v === 'dusuk' ? 'belirsiz' : 'kesin');
+
+function Check({ on, onPress, title, sub, pill, pillK, conf = 'kesin', onName }: {
+  on: boolean; onPress: () => void; title: string; sub: string; pill?: string; pillK?: StockLevel; conf?: Conf; onName?: (v: string) => void;
+}) {
   const c = useColors();
   const pc = pillK ? { var: [c.okSoft, c.ok], az: [c.todaySoft, c.today], yok: [c.lateSoft, c.late] }[pillK] : null;
   return (
@@ -317,7 +324,18 @@ function Check({ on, onPress, title, sub, pill, pillK }: { on: boolean; onPress:
         {on && <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 13.5, lineHeight: 16 }}>✓</Text>}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <T v="bold" style={{ fontSize: 15 }}>{title}</T>
+        {conf !== 'kesin' && (
+          <View style={[styles.pill, { backgroundColor: c.todaySoft, alignSelf: 'flex-start' }]}>
+            <Text style={{ color: c.today, fontFamily: fonts.bodyBlack, fontSize: 12 }}>{conf === 'tahmin' ? '⚠ Tahmin' : '❓ Emin değilim'}</Text>
+          </View>
+        )}
+        {onName ? (
+          <>
+            <TextInput value={title} onChangeText={onName} accessibilityLabel="Ürün adı"
+              style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.ink, borderBottomWidth: 1, borderColor: c.line, paddingVertical: 2 }} />
+            <T v="tiny">Bu ne? Doğru mu? Değilse adı düzelt.</T>
+          </>
+        ) : <T v="bold" style={{ fontSize: 15 }}>{title}</T>}
         <T v="small">{sub}</T>
       </View>
       {pill && pc && (

@@ -34,7 +34,7 @@ export const SCHEMA = {
             qty: { type: 'string' },
             lvl: { type: 'string', enum: ['var', 'az', 'yok'] },
             match: nullable({ type: 'string' }),
-            conf: { type: 'string', enum: ['yuksek', 'dusuk'] },
+            conf: { type: 'string', enum: ['kesin', 'tahmin', 'belirsiz'] },
             exp: nullable({ type: 'string' }),
           },
           required: ['name', 'qty', 'lvl', 'match', 'conf', 'exp'],
@@ -63,7 +63,7 @@ export const SCHEMA = {
             pattern: { type: 'string', enum: ['düz', 'desenli'] },
             wash: { type: 'string', enum: WASH },
             match: nullable({ type: 'string' }),
-            conf: { type: 'string', enum: ['yuksek', 'dusuk'] },
+            conf: { type: 'string', enum: ['kesin', 'tahmin', 'belirsiz'] },
           },
           required: ['name', 'kind', 'color', 'hex', 'fabric', 'pattern', 'wash', 'match', 'conf'],
           additionalProperties: false,
@@ -94,6 +94,11 @@ export const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, 
 const nameOrNull = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 60) : null);
 
 /** Modelin cevabını uygulamanın beklediği biçime indirir; tanınmayan alanları atar. */
+/** kesin: net görüldü; tahmin: içi/adı tahmin (kullanıcıya sorulur); belirsiz: model emin değil. Eski değerler (yuksek/dusuk) da okunur. */
+export function cleanConf(v: unknown): 'kesin' | 'tahmin' | 'belirsiz' {
+  return v === 'tahmin' ? 'tahmin' : v === 'belirsiz' || v === 'dusuk' ? 'belirsiz' : 'kesin';
+}
+
 /** Ambalajda açıkça yazan son kullanma tarihi (YYYY-AA-GG); makul aralık dışındaysa null. */
 export function cleanExp(v: unknown, now = Date.now()): string | null {
   const m = typeof v === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(v.trim()) : null;
@@ -113,7 +118,7 @@ export function clean(kind: Kind, r: Record<string, any>, now = Date.now()) {
       const name = str(x?.name, 40);
       if (!name) return [];
       const lvl = ['var', 'az', 'yok'].includes(x?.lvl) ? x.lvl : 'var';
-      return [{ name, qty: str(x?.qty, 30), lvl, match: nameOrNull(x?.match), conf: x?.conf === 'dusuk' ? 'dusuk' : 'yuksek', exp: cleanExp(x?.exp, now) }];
+      return [{ name, qty: str(x?.qty, 30), lvl, match: nameOrNull(x?.match), conf: cleanConf(x?.conf), exp: cleanExp(x?.exp, now) }];
     });
     const missing = (Array.isArray(r.missing) ? r.missing : []).map((x: unknown) => str(x, 60)).filter(Boolean).slice(0, 40);
     return { items, missing, note };
@@ -133,7 +138,7 @@ export function clean(kind: Kind, r: Record<string, any>, now = Date.now()) {
       pattern: x?.pattern === 'desenli' ? 'desenli' : 'düz',
       wash: WASH.includes(x?.wash) ? x.wash : null,
       match: nameOrNull(x?.match),
-      conf: x?.conf === 'dusuk' ? 'dusuk' : 'yuksek',
+      conf: cleanConf(x?.conf),
     }];
   });
   return { pieces, worn: r.worn === true, note };

@@ -14,11 +14,13 @@ import type { StockLevel, WashType } from '@/domain/types';
  * fonksiyon hakkı kontrol eder, Claude'a sorar ve listeyi döner. Fotoğraf sunucuda saklanmaz.
  * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 10 (bkz. docs/premium.md).
  */
+export type Conf = 'kesin' | 'tahmin' | 'belirsiz';
+
 export type ScanKind = 'fridge' | 'look';
 
 export type FridgeScan = {
-  /** `conf`: 'dusuk' ise model emin değil (onay ekranında işaretsiz gelir). `exp`: ambalajda okunan tarih (YYYY-AA-GG). */
-  items: { name: string; qty: string; lvl: StockLevel; match: string | null; conf?: 'yuksek' | 'dusuk'; exp?: string | null }[];
+  /** `conf`: kesin / tahmin (ünlem, kullanıcıya sorulur) / belirsiz; tahmin ve belirsiz onay ekranında işaretsiz gelir. `exp`: ambalajda okunan tarih (YYYY-AA-GG). */
+  items: { name: string; qty: string; lvl: StockLevel; match: string | null; conf?: Conf; exp?: string | null }[];
   missing: string[];
   note: string;
 };
@@ -26,7 +28,7 @@ export type FridgeScan = {
 export type LookScan = {
   /** Tür, renk, kumaş ve desen sunucunun yeni sürümünde var; eski sürümde yoksa addan tahmin edilir. */
   pieces: {
-    name: string; cat: string; wash: WashType | null; match: string | null; conf?: 'yuksek' | 'dusuk';
+    name: string; cat: string; wash: WashType | null; match: string | null; conf?: Conf;
     kind?: string | null; color?: string | null; hex?: string | null; fabric?: string | null; pattern?: 'düz' | 'desenli';
   }[];
   worn: boolean;

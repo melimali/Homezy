@@ -39,13 +39,13 @@ Nasıl bak:
 - Önce rafları yukarıdan aşağıya, sonra kapak raflarını ve sebzelik çekmecelerini tek tek tara. Arkada kalan ve üst üste duran ürünlere de bak.
 - Birbirine benzeyen ürünleri ayır: süt / ayran / kefir, yoğurt / labne / krema, sirke / zeytinyağı, reçel / bal / tahin, beyaz peynir / kaşar. Ambalaj etiketi okunuyorsa etikete güven, rengi ve şekli tek başına yeterli sayma.
 - Sadece fotoğrafta gerçekten görünenleri yaz. Uydurma, "muhtemelen vardır" diye ekleme.
-- İçi anlaşılmayan kapaklı kap, kavanoz, folyo ve opak poşetleri tahmin etme: ya atla ya da kesin olmayan bir ad verip conf="dusuk" yaz (ör. "Kapaklı kap").
+- İçi anlaşılmayan kapaklı kap, kavanoz, folyo ve opak poşetleri atlama: şekline, rengine, boyutuna ve yanındakilere bakarak EN OLASI içeriği tahmin et, ama conf="tahmin" yaz (ör. "Yoğurt" ya da hiçbir ipucu yoksa "Kapaklı kap"). Kullanıcıya "Bu ne? Doğru mu?" diye sorulacak, bu yüzden tahmin etmekten çekinme.
 
 Alanlar:
 - name: kısa, genel Türkçe ad, marka yazma (ör. "Süt", "Beyaz peynir", "Domates"). Aynı üründen birden fazla varsa tek satırda topla.
-- qty: kısa Türkçe miktar. Sayabiliyorsan say ("6 adet", "2 şişe"); içi görünen ambalajda doluluğa bak ("yarım şişe", "dibinde biraz", "dolu paket"). Bilmiyorsan "" yaz.
+- qty: HER üründe doldur. Sayabiliyorsan say ("6 adet", "2 şişe"); içi görünen ambalajda doluluğa bak ("yarım şişe", "dibinde biraz", "dolu paket"). Miktardan emin değilsen tahmin et ve başına "~" koy ("~2 adet", "~yarım paket"). Boş bırakma.
 - lvl: "var" yeterince var, "az" bitmek üzere ya da üçte birden az kalmış (taze ürünlerde 1-2 adet kalmışsa da az), "yok" ambalaj boş görünüyor.
-- conf: "yuksek" ürünü ve miktarı net gördüysen; "dusuk" ürün kısmen kapalıysa, bulanıksa, etiketi okunmuyorsa ya da adı bir tahminse. Kullanıcı düşük güvenli satırları onay ekranında ayrıca kontrol eder; emin olmadığın şeyi "yuksek" yazma.
+- conf: "kesin" ürünü net gördüysen; "tahmin" ürünün adını şekil/renk/bağlamdan çıkardıysan (içi görünmeyen kap, etiketi okunmayan ambalaj); "belirsiz" tahmin bile edemiyorsan ya da çok az görünüyorsa. Kullanıcı "tahmin" ve "belirsiz" satırlara ayrıca onay verir; emin olmadığın şeyi "kesin" yazma.
 - exp: ambalajda açıkça okunan son kullanma tarihi, "YYYY-AA-GG" biçiminde; okunmuyorsa null. Tarihi tahmin etme.
 - match: ürün takip listesindeki bir ürünle aynıysa (farklı yazılmış olsa da, ör. "Kaşar" ile "Kaşar peyniri") listedeki adı aynen yaz, değilse null. Emin değilsen null.
 - missing: takip listesinde olup fotoğrafta hiç göremediğin ürünlerin adları, listedeki yazımla. Fotoğraf buzdolabının sadece bir kısmını gösteriyorsa missing boş olsun.
@@ -53,7 +53,7 @@ Alanlar:
 - Fotoğraf buzdolabı ya da yiyecek dolabı değilse items ve missing boş olsun, note bunu söylesin.
 
 Sadece şu biçimde JSON döndür, başka metin yazma:
-{"items":[{"name":"Süt","qty":"yarım şişe","lvl":"az","match":"Süt","conf":"yuksek","exp":null}],"missing":["Tereyağı"],"note":"Süt azalmış, domates hiç yok."}`;
+{"items":[{"name":"Süt","qty":"yarım şişe","lvl":"az","match":"Süt","conf":"kesin","exp":null}],"missing":["Tereyağı"],"note":"Süt azalmış, domates hiç yok."}`;
 }
 
 function lookPrompt(known: string[]) {
@@ -65,7 +65,7 @@ ${list(known)}
 Nasıl bak:
 - Parçaları tek tek ele al. Üst üste duran ya da kısmen görünen parçaları da say; ama görünmeyen bir şeyi (kapalı ceketin altındaki gömlek gibi) uydurma.
 - Aynı parça iki kez yazılmasın. Birbirine benzeyen ama farklı iki parça varsa (iki farklı mavi gömlek) ikisini ayrı yaz.
-- Rengi ışığa ve gölgeye göre değil kumaşın asıl rengine göre seç. Kumaşı doku, parlaklık, dikiş ve kalıba bakarak çıkar; emin değilsen conf="dusuk" yaz.
+- Rengi ışığa ve gölgeye göre değil kumaşın asıl rengine göre seç. Kumaşı doku, parlaklık, dikiş ve kalıba bakarak çıkar; emin değilsen conf="tahmin" yaz.
 
 Alanlar:
 - kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}. Listede tam karşılığı yoksa en yakınını seç (hırka ve süveter: Kazak, yelek: Ceket, çanta, şapka, kemer, atkı: Aksesuar).
@@ -75,14 +75,14 @@ Alanlar:
 - pattern: "düz" ya da "desenli" (çizgili, kareli, çiçekli, baskılı vb.).
 - name: kısa Türkçe ad, renk + tür, ör. "Lacivert keten gömlek". Marka yazma.
 - wash: yıkama grubu, şu listeden biri: beyaz (beyaz ve krem), renkli, koyu (siyah, lacivert, koyu kot), hassas (yün, ipek, saten, kaşmir).
-- conf: "yuksek" tür, renk ve kumaşı net gördüysen; "dusuk" parça kısmen görünüyorsa, bulanıksa ya da kumaş/tür tahminse. Kullanıcı düşük güvenli parçaları onay ekranında ayrıca kontrol eder.
+- conf: "kesin" tür, renk ve kumaşı net gördüysen; "tahmin" parça kısmen görünüyor ya da tür/kumaşı doku ve kalıptan çıkardıysan; "belirsiz" bulanık ya da çok az görünüyorsa. Kullanıcı "tahmin" ve "belirsiz" parçalara ayrıca onay verir.
 - match: parça dolaptaki bir parçayla büyük olasılıkla aynıysa dolaptaki adı aynen yaz, değilse null. Emin değilsen null.
 - worn: kıyafetler bir kişinin üzerinde giyiliyse true, serilmiş ya da askıdaysa false.
 - note: Türkçe, en fazla iki kısa cümle. Parçaların renk, kumaş ve stil uyumu hakkında yorum yap; bir şey uymuyorsa nedenini söyle.
 - Kişinin yüzü, bedeni ya da ortam hakkında yorum yapma. Fotoğrafta kıyafet yoksa pieces boş olsun, note bunu söylesin.
 
 Sadece şu biçimde JSON döndür, başka metin yazma:
-{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","wash":"beyaz","match":"Beyaz gömlek","conf":"yuksek"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
+{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","wash":"beyaz","match":"Beyaz gömlek","conf":"kesin"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
 }
 
 /** Base64 başlığından gerçek görsel türünü bulur (istemcinin söylediği tür güvenilmez). */

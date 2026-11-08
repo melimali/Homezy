@@ -1,8 +1,9 @@
 /** Disiplin planı (ev geri gitmez, yumuşak dil, kademeli başlangıç): Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_N: Record<string, string> = {
-  '❓ emin değilim, kontrol et': '❓ not sure, please check',
-  '❓ emin değilim, kontrol et · ': '❓ not sure, please check · ',
-  'Emin olmadığım ürünler işaretsiz geldi; doğruysa işaretle.': "Items I'm not sure about are unchecked; check them if they're right.",
+  '⚠ Tahmin': '⚠ Guess',
+  '❓ Emin değilim': "❓ Not sure",
+  'Bu ne? Doğru mu? Değilse adı düzelt.': 'What is this? Is it right? If not, fix the name.',
+  '⚠ tahmin ve ❓ emin değilim işaretli ürünler işaretsiz geldi. Adı doğruysa işaretle, değilse adı düzelt.': 'Items marked ⚠ guess or ❓ not sure came unchecked. Check them if the name is right, or fix the name.',
   'Seri, disiplin rampası, hafif gün': 'Streak, discipline ramp, light day',
   'Günlük, spor kaydı, haftalık özet': 'Journal, workout log, weekly summary',
   'Seri dondurma': 'Streak freeze',

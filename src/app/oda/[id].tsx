@@ -24,7 +24,7 @@ export default function RoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state: S } = useStore();
   const [renaming, setRenaming] = useState(false);
-  const r = id ? S.rooms[id] : undefined;
+  const r = id && Object.hasOwn(S.rooms, id) ? S.rooms[id] : undefined;
   if (!r) return <Redirect href="/" />;
 
   const n = cellCount(S, r.id);

@@ -1480,6 +1480,7 @@ export const EN_A: Record<string, string> = {
  "İnternet ve giriş gerekiyor.": "Internet and sign-in required.",
  "Aile paylaşımı için internet ve giriş gerekiyor.": "Family sharing needs internet and a signed-in account.",
  "Aileye katılmak için internet ve giriş gerekiyor.": "Joining a family needs internet and a signed-in account.",
+ "Paylaşılan ev okunamadı. Ev sahibinden evi yeniden paylaşmasını iste.": "Could not read the shared home. Ask the owner to share it again.",
  "Yapay zekâ ile işlenecek": "Will be processed with AI",
  "Kabul ediyorum": "I accept",
  "Sohbet bu sürümde kullanılamıyor.": "Chat isn't available in this version.",

@@ -24,7 +24,7 @@ const LISTS: TaskList[] = ['tasks', 'plants', 'care'];
 
 function findTask(S: AppState, rid: string, list: TaskList, id: string): Task | undefined {
   const arr = list === 'care' ? S.care : list === 'plants' ? S.mod[rid]?.plants : S.tasks[rid];
-  return arr?.find(t => t.id === id);
+  return Array.isArray(arr) ? arr.find(t => t.id === id) : undefined;
 }
 
 /** İş ekranı: üstte işin sahnesi, adımlar ve "Başla". Bitince koyu kutlama ekranı açılır. */

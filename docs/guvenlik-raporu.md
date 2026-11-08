@@ -73,3 +73,15 @@ Eklendi (`20261110000000_ai_koruma.sql`, `_shared/guard.ts`):
 
 Ayar (Supabase gizli değişkenleri, isteğe bağlı): `AI_DAILY_CAP_SCAN`, `AI_DAILY_CAP_CHAT`, `AI_IP_DAILY`, `AI_IP_PER_MIN`, `AI_DISABLED=1` (acil durdurma).
 Bu fonksiyonlar `--no-verify-jwt` ile DEPLOY EDİLMEMELİ (sadece `revenuecat-webhook` öyle).
+
+## İnceleme 2 (2026-11-10)
+
+Düzeltilenler: sıralama takma adı filtresi + tekrar engeli + `lb_hide` moderasyonu, sahte temizlik yüzdesi sınırı (`lb_publish`),
+sonradan eklenen tablolarda yetki kilidi, `family_report`/`goal_add` null parametre, hesap silmede `family_daily`,
+Moka sohbetinde sunucu tarafı kriz algılama (`_shared/safety.ts`, 112 cevabı), `allowBackup=false`, Sentry izleme kırıntısı temizliği,
+captcha WebView gezinti kilidi, ortak ev verisi biçim doğrulaması (`validSharedHome`), derin bağlantı parametre korumaları.
+Migration: `supabase/migrations/20261110100000_guvenlik_2.sql` (tum-sql.sql sonunda da var).
+
+Bilinen, kabul edilen riskler: sıralamadaki `p_cells` ve `p_xp` istemciden gelir (sadece kozmetik sıralama etkisi);
+`play_award` işin gerçekten yapıldığını doğrulayamaz (günlük tavan 95 + seri); Supabase oturumu telefonda expo-sqlite içinde (uygulama alanı korumalı, yedek kapalı);
+`npm audit`: 11 orta seviye, hepsi derleme araçlarında (glob/minimatch), uygulamaya girmez.

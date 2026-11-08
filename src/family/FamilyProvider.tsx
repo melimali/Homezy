@@ -3,7 +3,7 @@ import { AppState as RNAppState } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import type { FamilyGoal, FamilyInfo, FamilyWeekRow, SharedHome } from '@/domain/family';
-import { dropShared, forShare, homeData, mergeHome, openShared, sharedHomeId } from '@/domain/homes';
+import { dropShared, forShare, homeData, mergeHome, openShared, sharedHomeId, validSharedHome } from '@/domain/homes';
 import type { AppState, HomeData } from '@/domain/types';
 import { dayKey } from '@/domain/play';
 import { offlineMsg, online } from '@/lib/net';
@@ -194,6 +194,8 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   /** Sunucudaki evi telefondakiyle birleştirip açar. */
   const applyRemote = useCallback(
     (remote: SharedHome) => {
+      // Bozuk ya da kötü niyetli ortak ev uygulanmaz (uygulamayı çökertmesin).
+      if (!validSharedHome(remote.state)) return;
       base.current = remote.updatedAt;
       update(D => {
         if (D.homeId !== live.current.sharedId) return;
@@ -285,6 +287,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       const loaded = await supabase.rpc('family_load');
       if (loaded.error || !loaded.data) return { ok: false, error: errText(loaded.error?.message ?? '') };
       const remote = loaded.data as SharedHome;
+      if (!validSharedHome(remote.state)) return { ok: false, error: 'Paylaşılan ev okunamadı. Ev sahibinden evi yeniden paylaşmasını iste.' };
       const id = sharedHomeId(fi.ownerId);
       update((D: AppState) => openShared(D, id, `${fi.ownerName} ile evimiz`, remote.state));
       setInfo(fi);

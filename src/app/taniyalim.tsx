@@ -13,6 +13,7 @@ import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { AXIS_NAMES, CUE_TIME, axesOf, DISC_QUESTIONS, sideOf, TYPES, typeOf, type Axes, type DiscAnswers } from '@/domain/kisilik';
 import { DEFAULT_ANSWERS, PLAN, personaOf, QUESTIONS, type Answers } from '@/domain/persona';
 import { savePersona, skipPersona, usePersona, type Disc } from '@/profile/usePersona';
+import { saveActs } from '@/profile/useActs';
 import { saveNickname, useNickname } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { ForceScheme, fonts, useColors, type Colors } from '@/theme';
@@ -104,7 +105,7 @@ function TaniyalimInner() {
     });
   };
 
-  // Kısa test: 1 ev sorusu ("kimlerle yaşıyorsun"), sonra 5 disiplin sorusu. Atlananlar varsayılana düşer.
+  // Kısa test: 1 ev sorusu ("kimlerle yaşıyorsun"), "evde neler yaparsın" (çoklu), sonra 5 disiplin sorusu. Atlananlar varsayılana düşer.
   const home = QUESTIONS.filter(x => x.k === 'who');
   const stepsN = home.length + DISC_QUESTIONS.length;
   const inDisc = step >= home.length;
@@ -115,6 +116,7 @@ function TaniyalimInner() {
     setSaving(true);
     setTimeout(() => {
       const p = personaOf(a);
+      if (Array.isArray(d.acts)) saveActs(d.acts);
       update(D => {
         if (!D.setup) D.settings.time = typeof d.cue === 'string' && CUE_TIME[d.cue] ? CUE_TIME[d.cue] : PLAN[p].morning;
         if (typeof d.why === 'string') D.settings.why = d.why;

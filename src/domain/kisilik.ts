@@ -1,4 +1,5 @@
 import type { ImageSourcePropType } from 'react-native';
+import { ACTS } from './secimData';
 /**
  * Moka Disiplin Testi (docs/moka-disiplin-testi.md): "Seni tanıyalım" ile tek akış.
  * Q8-Q17 disiplin soruları, 5 eksen, 8 tip. Telefonda hesaplanır, yapay zekâ yok.
@@ -10,6 +11,8 @@ export type DQ = { k: string; q: string; hint: string; multi?: boolean; max?: nu
 
 // Kısa test: 5 eksenin her biri için en bilgilendirici tek soru (D: plan, B: start, O: focus, Y: quit, G: drive).
 export const DISC_QUESTIONS: DQ[] = [
+  // Çoklu seçim: cevaplar özel işleri açar (src/domain/secim.ts). Puan vermez, kişilik tipini etkilemez.
+  { k: 'acts', q: 'Evde neler yaparsın?', hint: 'İstediklerini seç, sana özel işler çıkarayım.', multi: true, opts: ACTS.map(a => ({ v: a.id, emoji: a.emoji, label: a.label })) },
   { k: 'plan', q: 'Planın nasıl olsun?', hint: 'Biçimini buna göre kurarım.', opts: [
     { v: 'detay', emoji: '📋', label: 'Saatlik detaylı program', pts: { D: 3 } }, { v: 'kisa', emoji: '✅', label: 'Kısa günlük liste', pts: { D: 1 } }, { v: 'esnek', emoji: '🌊', label: 'Esnek, ruhuma göre', pts: { D: -2 } },
   ] },

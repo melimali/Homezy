@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { HowTo } from '@/components/HowTo';
+import { roomHow } from '@/domain/secim';
 import { Squish } from '@/components/motion';
 import { Card, SecHead, T } from '@/components/ui';
 import { BONUS_CATS, bonusState, bonusToday, setBonus } from '@/domain/bonus';
@@ -25,6 +28,7 @@ export function BonusCard() {
   const { answers, done: asked, disc } = usePersona();
   const day = gKey(now);
   const G = S.play.growth;
+  const [howId, setHowId] = useState<string | null>(null);
 
   const solo = S.settings.solo && S.rooms[S.settings.solo] ? S.settings.solo : null;
   const rooms = (solo ? [solo] : S.order).filter(id => S.rooms[id]).map(id => ({ id, type: S.rooms[id].type }));
@@ -65,17 +69,22 @@ export function BonusCard() {
             {spark.tasks.map(p => {
               const s = markState(G, day, 'o:' + p.id);
               return (
-                <Squish
-                  key={p.id}
-                  onPress={() => update(d => mark(d.play.growth, day, 'o:' + p.id, 'done'))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Yaptım: ${p.title}`}
-                  style={[st.lvl, { backgroundColor: s === 'done' ? c.accentSoft : c.surface }]}
-                >
-                  <T style={{ fontSize: 22 }}>{s === 'done' ? '✅' : p.emoji}</T>
-                  <T v="bold" numberOfLines={2} style={[{ flex: 1 }, s === 'done' ? { textDecorationLine: 'line-through' } : null]}>{p.title}</T>
-                  <T v="tiny" style={{ color: c.accent }}>{`${LVL[p.lvl].emoji} ${LVL[p.lvl].label}`}</T>
-                </Squish>
+                <View key={p.id} style={[st.lvl, { backgroundColor: s === 'done' ? c.accentSoft : c.surface, flexDirection: 'column', alignItems: 'stretch' }]}>
+                  <Squish
+                    onPress={() => update(d => mark(d.play.growth, day, 'o:' + p.id, 'done'))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Yaptım: ${p.title}`}
+                    style={st.lvlLine}
+                  >
+                    <T style={{ fontSize: 22 }}>{s === 'done' ? '✅' : p.emoji}</T>
+                    <T v="bold" numberOfLines={2} style={[{ flex: 1 }, s === 'done' ? { textDecorationLine: 'line-through' } : null]}>{p.title}</T>
+                    <T v="tiny" style={{ color: c.accent }}>{`${LVL[p.lvl].emoji} ${LVL[p.lvl].label}`}</T>
+                  </Squish>
+                  <Squish onPress={() => setHowId(h => (h === p.id ? null : p.id))} accessibilityRole="button" accessibilityLabel={`Nasıl yapılır: ${p.title}`} style={{ alignSelf: 'flex-start', paddingTop: 4 }}>
+                    <T v="tiny" style={{ color: c.accent }}>{howId === p.id ? 'Gizle' : 'Nasıl?'}</T>
+                  </Squish>
+                  {howId === p.id && <HowTo steps={roomHow(p.id)} />}
+                </View>
               );
             })}
           </View>
@@ -118,7 +127,8 @@ export function BonusLocked({ left }: { left: number }) {
 
 const st = StyleSheet.create({
   room: { borderRadius: radius.tile, padding: 12, gap: 10 },
-  lvl: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, paddingVertical: 10, paddingHorizontal: 12 },
+  lvl: { borderRadius: radius.tile, paddingVertical: 10, paddingHorizontal: 12 },
+  lvlLine: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: radius.tile, padding: 12 },
   btn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   lock: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.card, padding: 12 },

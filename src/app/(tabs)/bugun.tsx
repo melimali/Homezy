@@ -9,6 +9,7 @@ import { DayPlanCard } from '@/components/MoodCheckin';
 import { BonusCard, BonusLocked } from '@/components/BonusCard';
 import { OdakCard } from '@/components/OdakCard';
 import { MikroCard } from '@/components/MikroCard';
+import { SecimCard } from '@/components/SecimCard';
 import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
 import { ShopList } from '@/components/ShopList';
@@ -130,6 +131,7 @@ export default function Bugun() {
       {hiddenN > 0 && S.mode?.k !== 'tatil' && (
         <Btn kind="soft" block label={total === doneN ? `Bugünlük tamam 🎉 İstersen biraz daha (${hiddenN} iş)` : `${hiddenN} iş daha var · İstersen göster`} onPress={() => setShowAll(true)} />
       )}
+      <SecimCard />
       {/* Bonus katmanı tamamen isteğe bağlı: günün ana işleri bitince açılır (puan / seri etkilemez). */}
       {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
       {total === doneN && S.mode?.k !== 'tatil' && <MikroCard />}

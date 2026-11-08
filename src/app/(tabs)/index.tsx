@@ -3,6 +3,7 @@ import { useRouter } from '@/lib/nav';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
+import { LayoutAnimation, Platform, UIManager } from 'react-native';
 
 
 import { House3D } from '@/components/House3D';
@@ -49,6 +50,8 @@ import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, space, useColors, elevation } from '@/theme';
 import type { AppState, HouseTheme } from '@/domain/types';
 
+if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
+
 const TOUR = [
   { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası evin: her gün buradan başlarız.' },
   { key: 'stats', pose: 'cheers', text: 'Serin, puanın ve ev seviyen. Her gün bir iş yaparsan evin büyür.' },
@@ -61,6 +64,7 @@ export default function Home() {
   const router = useRouter();
   const { state: S } = useStore();
   const [houseOpen, setHouseOpen] = useState(false);
+  const [openAll, setOpenAll] = useState(false);
   const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
   const insets = useSafeAreaInsets();
@@ -166,8 +170,9 @@ export default function Home() {
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
         ) : undefined} />
         <View>
-          {(['sabah', 'oda', 'ev'] as Cat[]).map(cat => {
-            const rows = shown.filter(x => catOf(x) === cat);
+          {(() => { let left = openAll ? Infinity : 3; return (['sabah', 'oda', 'ev'] as Cat[]).map(cat => {
+            const rows = shown.filter(x => catOf(x) === cat).slice(0, left);
+            left -= rows.length;
             if (!rows.length) return null;
             return (
               <View key={cat}>
@@ -175,8 +180,14 @@ export default function Home() {
                 {rows.map((x, i) => <TaskRow key={x.t.id} t={x.t} rid={x.rid} list={x.list} showRoom first={i === 0} />)}
               </View>
             );
-          })}
+          }); })()}
         </View>
+        {shown.length > 3 && (
+          <Squish onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpenAll(o => !o); }} accessibilityRole="button" accessibilityLabel={openAll ? 'Daha az göster' : `+${shown.length - 3} iş daha`} accessibilityState={{ expanded: openAll }} style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, marginTop: 6, borderRadius: 999, backgroundColor: c.surface2 }}>
+            <T v="small">{openAll ? 'Daha az göster' : `+${shown.length - 3} iş daha`}</T>
+            <View style={{ transform: [{ rotate: openAll ? '180deg' : '0deg' }] }}><Chevron color={c.muted} size={14} dir="down" /></View>
+          </Squish>
+        )}
         {!due.length && (doneN > 0 ? (
           <View style={{ alignItems: 'center', gap: 6 }}>
             <MokaSprite anim="party" size={120} />

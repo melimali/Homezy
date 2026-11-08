@@ -119,9 +119,17 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
   }, [def.motion, reduce, m, dancing]);
 
   const mStyle = useMemo(() => (dancing ? danceStyle(m) : motionStyle(m, def.motion)), [m, def.motion, dancing]);
-  const bottom = Math.round(h * scene.bottom);
-  const size = Math.max(0, Math.min(Math.round(w * scene.size), h - bottom - reserveTop));
-  const box = { position: 'absolute' as const, left: Math.round(w * scene.x - size / 2), bottom, width: size, height: size };
+  // Konumlar arka plan resmine göre: resim "cover" ile ölçeklenip kırpıldığı gibi Moka da aynı dönüşümle yerleşir.
+  const src = Image.resolveAssetSource(scene.background);
+  const iw = src?.width || 1, ih = src?.height || 1;
+  const k = Math.max(w / iw, h / ih);
+  const offX = (w - iw * k) / 2, offY = (h - ih * k) / 2;
+  const size = Math.max(0, Math.round(scene.size * iw * k));
+  const feetY = offY + scene.bottom * ih * k;
+  const maxSize = Math.max(0, Math.round(feetY - reserveTop));
+  const sz = Math.min(size, maxSize);
+  const bottom = Math.round(h - feetY);
+  const box = { position: 'absolute' as const, left: Math.round(offX + scene.x * iw * k - sz / 2), bottom, width: sz, height: sz };
 
   return (
     <View onLayout={e => { const nw = Math.round(e.nativeEvent.layout.width); if (nw !== w) setW(nw); }} style={{ alignSelf: 'stretch', height: h || undefined, aspectRatio: h ? undefined : ratio, overflow: 'hidden', marginTop }}>
@@ -130,11 +138,11 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
           <Image source={scene.background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" fadeDuration={0} accessibilityIgnoresInvertColors />
           {below}
           <Animated.View pointerEvents="none" style={[box, { opacity: pop }]}>
-            <Animated.View style={[{ width: size, height: size }, mStyle]}>
-              <Image source={scene.sticker} style={{ width: size, height: size }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
+            <Animated.View style={[{ width: sz, height: sz }, mStyle]}>
+              <Image source={scene.sticker} style={{ width: sz, height: sz }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
             </Animated.View>
           </Animated.View>
-          <Particles fx={dancing ? 'notes' : def.fx} reduce={reduce} left={box.left + size * 0.62} top={h - bottom - size * 0.55} />
+          <Particles fx={dancing ? 'notes' : def.fx} reduce={reduce} left={box.left + sz * 0.62} top={h - bottom - sz * 0.55} />
         </>
       )}
       {children}

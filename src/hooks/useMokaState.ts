@@ -19,6 +19,7 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
   const { persona } = usePersona();
   const now = useNow();
   const [shift, setShift] = useState(0);
+  const lang = getLang();
   const status = useMemo(() => mokaStatus(S, now, roomId), [S, now, roomId]);
   const m = useMemo(() => {
     let q = pickMoka(status, shift);
@@ -31,12 +32,12 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     const day = Number(status.day.replace(/\D/g, '')) + shift;
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
-    const en = getLang() === 'en';
+    const en = lang === 'en';
     const msg = en ? tx(q.message) : q.message;
     const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);
     const first = keepCase ? msg.charAt(0) : msg.charAt(0).toLocaleLowerCase(en ? 'en' : 'tr');
     return { ...q, message: `${name}, ${first}${msg.slice(1)}` };
-  }, [status, shift, name, persona, roomId, getLang()]);
+  }, [status, shift, name, persona, roomId, lang]);
   const next = useCallback(() => setShift(x => x + 1), []);
   return { ...m, image: MOKA_ASSETS[m.pose], status, next };
 }

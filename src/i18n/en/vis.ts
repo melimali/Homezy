@@ -14,6 +14,7 @@ export const EN_VIS: Record<string, string> = {
   'Evimi paylaş': 'Share my home',
   'Evimi paylaş 📤': 'Share my home 📤',
   'Arkadaşlarına evinin kartını gönder.': 'Send your home card to your friends.',
+  'Sonraki aşama': 'Next stage',
   'Bu hafta': 'This week',
   'Ev kartını arkadaşlarına gönder': 'Send your home card to your friends',
   'Küçük işler, büyük huzur 🏡 homezy': 'Small chores, big calm 🏡 homezy',

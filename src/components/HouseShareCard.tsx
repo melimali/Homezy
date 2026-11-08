@@ -26,7 +26,7 @@ export function HouseShareCard({ state: S, now, ref }: { state: AppState; now: n
       <Image source={MOKA_ASSETS.party} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Text style={[st.big, { color: c.ink }]}>Evim seviye {hp.level}</Text>
       {stage && <Text style={[st.sub, { color: c.muted }]}>{stage.name}</Text>}
-      <View style={[st.bar, { backgroundColor: c.surface }]} accessibilityLabel={`Sonraki aşamaya %${Math.round(next * 100)}`}>
+      <View style={[st.bar, { backgroundColor: c.surface }]} accessibilityLabel="Sonraki aşama" accessibilityValue={{ text: `${Math.round(next * 100)}%` }}>
         <View style={[st.fill, { width: `${Math.max(6, next * 100)}%`, backgroundColor: c.hi }]} />
       </View>
       <View style={st.row} accessibilityLabel="Bu hafta">

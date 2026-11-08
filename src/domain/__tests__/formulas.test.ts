@@ -102,3 +102,26 @@ describe('premium önerisi', () => {
     expect(shouldUpsell(s({ scanLimitHit: true, dismissed: 2, daysSinceShown: 4 }), false)).toBe(true);
   });
 });
+
+import { shouldShowPaywall, upsellInput } from '../paywall';
+import { orderByFit } from '../formulas';
+import { thinNudges } from '../../notifications/schedule';
+
+describe('bağlantılar', () => {
+  it('bugün sırası: gecikenler önde, saat dışında kısa iş önde', () => {
+    const o = orderByFit([{ n: 1, min: 20, diff: 0 }, { n: 2, min: 5, diff: 0 }, { n: 3, min: 30, diff: -1 }], [], 480);
+    expect(o.map(x => x.n)).toEqual([3, 2, 1]);
+  });
+  it('paywall: sinyalsiz seri anı hâlâ çıkar, sakin kullanıcıda sinyalle çıkmaz', () => {
+    const mem = { first: '2026-10-01', last: null };
+    const now = new Date(2026, 10, 8, 12).getTime();
+    expect(shouldShowPaywall('streak', mem, false, now)).toBe(true);
+    expect(shouldShowPaywall('streak', mem, false, now, upsellInput(4, 3, {}))).toBe(false);
+    expect(shouldShowPaywall('streak', mem, false, now, upsellInput(14, 7, { locked_tap: 1 }))).toBe(true);
+  });
+  it('bildirim ayıklama: özet saatine yakın hatırlatma düşer', () => {
+    const at = (h: number, m = 0) => new Date(2026, 10, 9, h, m);
+    const out = thinNudges([{ at: at(9, 30) }, { at: at(19) }, { at: at(23) }], 9 * 60);
+    expect(out.map(x => x.at.getHours())).toEqual([19]);
+  });
+});

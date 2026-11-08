@@ -6,7 +6,7 @@ import { prefs } from '@/lib/supabase';
  * Anahtar: `ad` ya da `ad:ayrıntı` (ör. `paywall_view:streak`).
  */
 export type EventName = 
-  | 'paywall_view' | 'paywall_buy' | 'paywall_close' | 'streak_mark' | 'levelup_peek' | 'season_peek'
+  | 'paywall_view' | 'paywall_buy' | 'paywall_close' | 'locked_tap' | 'scan_limit' | 'streak_mark' | 'levelup_peek' | 'season_peek'
   | 'app_open' | 'day_return' | 'first_task_done' | 'onboarding_done'
   /** Disiplin ölçümü: iş yapılan gün, günün ilk işinin saati (`task_hour:HH`), 3+ gün ara verip dönüş, aşama atlama. */
   | 'active_day' | 'task_hour' | 'comeback' | 'stage_up' | 'light_day' | 'ramp_skip';

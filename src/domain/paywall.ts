@@ -11,7 +11,7 @@ export const QUIET_DAYS = 3;
 /** Seri kilometre taşları: bu günlerde kutlamadan sonra paywall düşünülür. */
 export const STREAK_MARKS = [3, 7, 14, 30] as const;
 
-export type PaywallMemory = { first: string | null; last: string | null };
+export type PaywallMemory = { first: string | null; last: string | null; /** Kaç kez gösterildi (Premium olmayana her gösterim kapatma sayılır). */ shown?: number };
 
 export const emptyPaywallMemory = (): PaywallMemory => ({ first: null, last: null });
 
@@ -28,7 +28,7 @@ export const MOMENT_COPY: Record<PaywallMoment, { title: string; text: string }>
 const USER_INITIATED: PaywallMoment[] = ['theme', 'report'];
 
 export function shouldShowPaywall(
-  moment: PaywallMoment, mem: PaywallMemory, premium: boolean, now = Date.now(),
+  moment: PaywallMoment, mem: PaywallMemory, premium: boolean, now = Date.now(), sig?: Omit<UpsellSignals, 'shown' | 'dismissed' | 'daysSinceShown'>,
 ): boolean {
   if (premium) return false;
   if (USER_INITIATED.includes(moment)) return true;
@@ -37,13 +37,18 @@ export function shouldShowPaywall(
   if (!mem.first) return false;
   const age = Math.round((dayTs(today) - dayTs(mem.first)) / 86400000);
   if (age < QUIET_DAYS) return false;
-  return mem.last !== today;
+  if (mem.last === today) return false;
+  if (!sig) return true;
+  // Sinyaller varsa: kapatma sayısına göre bekleme + değer/niyet puanı. Seri ve seviye atlama anı kendi başına 30 puan sayılır.
+  const shown = mem.shown ?? 0;
+  const since = mem.last ? Math.round((dayTs(today) - dayTs(mem.last)) / 86400000) : null;
+  return shouldUpsell({ ...sig, lockedTaps: sig.lockedTaps + 2, shown, dismissed: shown, daysSinceShown: since }, false);
 }
 
 /** Paywall gösterildi: ilk gün ve son gün kaydedilir. */
 export function markPaywallShown(mem: PaywallMemory, now = Date.now()): PaywallMemory {
   const today = dayKey(now);
-  return { first: mem.first ?? today, last: today };
+  return { first: mem.first ?? today, last: today, shown: (mem.shown ?? 0) + 1 };
 }
 
 /** Uygulamanın ilk açıldığı günü kaydeder (sessiz dönem buradan sayılır). */
@@ -92,3 +97,8 @@ export function shouldUpsell(s: UpsellSignals, premium: boolean): boolean {
   if (s.daysSinceShown != null && s.daysSinceShown < upsellCooldown(s.dismissed)) return false;
   return upsellScore(s) >= UPSELL_THRESHOLD;
 }
+
+/** Telefondaki sayaçlardan (`events.ts`) ve oyun durumundan satış sinyalleri. `locked_tap` ve `scan_limit` olayları toplam sayıdır. */
+export const upsellInput = (activeDays: number, streak: number, counts: Record<string, number>) => ({
+  activeDays, streak, lockedTaps: counts.locked_tap ?? 0, scanLimitHit: (counts.scan_limit ?? 0) > 0,
+});

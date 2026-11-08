@@ -10,7 +10,7 @@ import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
 import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
-import { learnedTime } from '@/domain/formulas';
+import { learnedTime, thinNotifications } from '@/domain/formulas';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
 import { petNotifs, stillDue } from '@/domain/pets';
@@ -219,7 +219,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
-  for (const n of nudges(S, now, smart, premium))
+  for (const n of thinNudges(nudges(S, now, smart, premium), (hh || 0) * 60 + (mm || 0)))
     await N.scheduleNotificationAsync({
       content: {
         title: tx(n.title),
@@ -253,6 +253,23 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
       },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
+}
+
+/**
+ * Spam önleme: her gün için sabah özeti saati ayrılır, sonra hatırlatmalar sessiz saatlere (22:00–07:30) düşmez,
+ * art arda ikisi 90 dk'dan yakın olmaz, günlük toplam (özet dahil) 4'ü geçmez. Öncelik: seri/karşılama, spor ve diğerleri, su.
+ */
+export function thinNudges<T extends { at: Date; kind?: ReminderKind }>(list: T[], summaryMinute: number): T[] {
+  const byDay = new Map<string, { minute: number; rank: number; n: T | null }[]>();
+  for (const n of list) {
+    const k = dayKey(n.at.getTime());
+    const arr = byDay.get(k) ?? [{ minute: summaryMinute, rank: -1, n: null }];
+    arr.push({ minute: n.at.getHours() * 60 + n.at.getMinutes(), rank: n.kind === 'water' ? 4 : n.kind ? 2 : 1, n });
+    byDay.set(k, arr);
+  }
+  const keep = new Set<T>();
+  for (const arr of byDay.values()) for (const x of thinNotifications(arr)) if (x.n) keep.add(x.n);
+  return list.filter(n => keep.has(n));
 }
 
 /**

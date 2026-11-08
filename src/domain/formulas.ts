@@ -62,6 +62,15 @@ export function sortByTime<T extends { slot?: Slot }>(tasks: T[], times: number[
     .map(x => x.t);
 }
 
+/**
+ * Bugün listesi sırası: gecikenler her zaman önde. Sonra kişinin yoğun saatindeyse (uygunluk ≥ 0.6) uzun işler,
+ * değilse kısa işler öne gelir (enerji yüksekken zor iş, düşükken kolay iş). Alışkanlık verisi yoksa kısa iş önde.
+ */
+export function orderByFit<T extends { min: number; diff: number }>(tasks: T[], times: number[], nowMin: number): T[] {
+  const long = taskFit(times, nowMin) >= 0.6 && peakMinute(times) != null;
+  return [...tasks].sort((a, b) => Number(b.diff < 0) - Number(a.diff < 0) || (long ? b.min - a.min : a.min - b.min) || a.diff - b.diff);
+}
+
 /* ---------- bildirim saati ve sıklığı ---------- */
 
 /** Rahatsız etmeme saatleri: 22:00 - 07:30. */

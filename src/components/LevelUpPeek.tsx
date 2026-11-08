@@ -6,10 +6,10 @@ import { StepModal } from '@/components/StepModal';
 import { premiumHref } from '@/components/PaywallMoments';
 import { Btn, T } from '@/components/ui';
 import { ITEMS } from '@/domain/items';
-import { emptyPaywallMemory, markPaywallShown, shouldShowPaywall, type PaywallMemory } from '@/domain/paywall';
+import { emptyPaywallMemory, markPaywallShown, shouldShowPaywall, upsellInput, type PaywallMemory } from '@/domain/paywall';
 import { progressOf } from '@/domain/play';
 import { useStep } from '@/lib/firstRun';
-import { track } from '@/lib/events';
+import { eventCounts, track } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -41,7 +41,7 @@ export function LevelUpPeek() {
     if (!wants) return false;
     try {
       const m = { ...emptyPaywallMemory(), ...(JSON.parse(prefs.get(MEM_KEY) ?? 'null') as PaywallMemory | null) };
-      return shouldShowPaywall('levelup', m, false);
+      return shouldShowPaywall('levelup', m, false, undefined, upsellInput(S.play.days.length, progressOf(S.play).streak, eventCounts()));
     } catch {
       return false;
     }

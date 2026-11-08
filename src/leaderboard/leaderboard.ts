@@ -9,7 +9,7 @@ import { useStore } from '@/store/AppStore';
 
 /**
  * Global ev sıralaması (isteğe bağlı, yalnız hesaplı kullanıcı). Tek "ev puanı":
- * eşyalar (harcanan puan / 10) + Moka bahçesi (harcanan puan / 10, en çok 300) + ev temizliği (0-100).
+ * (eşyalar + Moka bahçesi) hesap yaşına göre sınırlı ve ev büyüklüğüne göre normalize (src/domain/formulas.ts `fairScore`) + ev temizliği (0-100).
  * Hesap sunucuda (supabase/migrations/20261108000000_siralama.sql); uygulama sadece temizlik yüzdesini gönderir.
  */
 export type LbRow = { rank: number; nick: string; score: number; items?: number; garden?: number; clean?: number; xp?: number; level: number; streak: number; me?: boolean };
@@ -52,9 +52,14 @@ export function useLeaderboardSync() {
   const now = useNow();
   const score = homeScore(state, now);
   const xp = totalXp(state.play.moka);
+  const cells = Math.max(1, state.cells.filter(Boolean).length);
   useEffect(() => {
     if (!supabase || status !== 'account' || !lbOn()) return;
-    const t = setTimeout(() => void supabase!.rpc('lb_publish', { p_clean: score, p_xp: xp }).then(() => {}, () => {}), 5000);
+    const t = setTimeout(() => {
+      const sb = supabase!;
+      // Yeni sunucu (adil sıralama) ev büyüklüğünü de ister; eski sunucu tanımazsa eski çağrıya düşer.
+      void sb.rpc('lb_publish', { p_clean: score, p_xp: xp, p_cells: cells }).then(r => (r.error ? sb.rpc('lb_publish', { p_clean: score, p_xp: xp }) : r)).then(() => {}, () => {});
+    }, 5000);
     return () => clearTimeout(t);
-  }, [status, score, xp]);
+  }, [status, score, xp, cells]);
 }

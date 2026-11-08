@@ -1,6 +1,8 @@
 import { useRouter } from '@/lib/nav';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
+import { track } from '@/lib/events';
 
 import { LV, WASH } from '@/domain/constants';
 import { uid } from '@/domain/logic';
@@ -280,6 +282,9 @@ function Working({ text, onStop }: { text: string; onStop: () => void }) {
 function Failed({ e, onRetry, onClose }: { e: Err; onRetry: () => void; onClose: () => void }) {
   const router = useRouter();
   const { premium } = usePurchases();
+  useEffect(() => {
+    if (e.limit && !premium.active) track('scan_limit');
+  }, [e.limit, premium.active]);
   return (
     <View style={{ gap: 8 }} accessibilityLiveRegion="assertive">
       <T style={{ fontSize: 14 }}>{e.msg}</T>

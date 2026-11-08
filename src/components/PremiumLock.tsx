@@ -1,6 +1,7 @@
 import { useRouter } from '@/lib/nav';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { track } from '@/lib/events';
 import { brand, fonts, radius, useColors } from '@/theme';
 
 import { Btn, T } from './ui';
@@ -19,7 +20,7 @@ export function PremiumLock({ title, text, emoji = '👑' }: { title: string; te
         </View>
       </View>
       <T v="small" style={{ fontSize: 13.5 }}>{text}</T>
-      <Btn small label="Premium'a bak ⭐" onPress={() => router.push('/premium')} style={{ alignSelf: 'flex-start' }} />
+      <Btn small label="Premium'a bak ⭐" onPress={() => { track('locked_tap'); router.push('/premium'); }} style={{ alignSelf: 'flex-start' }} />
     </View>
   );
 }

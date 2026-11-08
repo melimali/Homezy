@@ -26,6 +26,7 @@ import { useTabTour } from '@/components/useTabTour';
 import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar, Chevron } from '@/components/ui';
 import { taskMin, bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
+import { orderByFit } from '@/domain/formulas';
 import { dailyCap } from '@/domain/ramp';
 import { RampCard } from '@/components/RampCard';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
@@ -71,7 +72,8 @@ export default function Bugun() {
   const cap = dailyCap(S, now);
   const flat = visibleAll.flatMap(g => g[2]);
   const undone = flat.filter(x => !isDoneToday(x.t, now));
-  const rank = [...undone].sort((a, b) => taskMin(a.t) - taskMin(b.t) || a.s.diff - b.s.diff);
+  const nowD = new Date(now);
+  const rank = orderByFit(undone.map(x => ({ x, min: taskMin(x.t), diff: x.s.diff })), S.play.times ?? [], nowD.getHours() * 60 + nowD.getMinutes()).map(o => o.x);
   const room = showAll ? Infinity : Math.max(0, cap - (flat.length - undone.length));
   const allowed = new Set(rank.slice(0, room).map(x => x.t.id));
   const hiddenN = undone.length - allowed.size;

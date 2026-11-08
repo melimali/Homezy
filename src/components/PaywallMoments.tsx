@@ -7,13 +7,13 @@ import { StepModal } from '@/components/StepModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Btn, T } from '@/components/ui';
 import {
-  emptyPaywallMemory, isStreakMark, markFirstSeen, markPaywallShown, shouldShowPaywall,
+  emptyPaywallMemory, isStreakMark, markFirstSeen, markPaywallShown, shouldShowPaywall, upsellInput,
   type PaywallMemory, type PaywallMoment,
 } from '@/domain/paywall';
 import { progressOf } from '@/domain/play';
 import { THEMES } from '@/domain/premium';
 import { useStep } from '@/lib/firstRun';
-import { track } from '@/lib/events';
+import { eventCounts, track } from '@/lib/events';
 import { maybeAskReview } from '@/lib/review';
 import { haptic, sfx } from '@/lib/sfx';
 import { prefs } from '@/lib/supabase';
@@ -55,8 +55,8 @@ export function StreakMoment() {
   const show = useStep('streak', wants);
   const go = useRef(false);
   const offer = useMemo(
-    () => wants && shouldShowPaywall('streak', readMem(), premium.active),
-    [wants, premium.active],
+    () => wants && shouldShowPaywall('streak', readMem(), premium.active, undefined, upsellInput(S.play.days.length, hp.streak, eventCounts())),
+    [wants, premium.active, S.play.days.length, hp.streak],
   );
 
   useEffect(() => {

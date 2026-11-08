@@ -426,6 +426,7 @@ export function emptyState(): AppState {
     pets: [],
     shop: [],
     shopUsual: [],
+    shopHide: '',
   };
 }
 

@@ -86,3 +86,55 @@ export function shopText(S: AppState): string {
 }
 
 export type { ShopItem };
+
+/** İpucu havuzu: insanların marketten sık unuttuğu temel şeyler. */
+export const FORGOT: { name: string; cat: ShopCat; emoji: string }[] = [
+  { name: 'Tuvalet kâğıdı', cat: 'temizlik', emoji: '🧻' },
+  { name: 'Çöp poşeti', cat: 'temizlik', emoji: '🗑️' },
+  { name: 'Bulaşık süngeri', cat: 'temizlik', emoji: '🧽' },
+  { name: 'Bulaşık deterjanı', cat: 'temizlik', emoji: '🫧' },
+  { name: 'Çamaşır suyu', cat: 'temizlik', emoji: '🧴' },
+  { name: 'Yüzey temizleyici', cat: 'temizlik', emoji: '🧼' },
+  { name: 'Sıvı sabun', cat: 'temizlik', emoji: '🧼' },
+  { name: 'Diş macunu', cat: 'temizlik', emoji: '🪥' },
+  { name: 'Şampuan', cat: 'temizlik', emoji: '🚿' },
+  { name: 'Peçete / kâğıt havlu', cat: 'temizlik', emoji: '🧻' },
+  { name: 'Çamaşır deterjanı', cat: 'temizlik', emoji: '🧺' },
+  { name: 'Tuz', cat: 'market', emoji: '🧂' },
+  { name: 'Sıvı yağ', cat: 'market', emoji: '🫒' },
+  { name: 'Kahve filtresi', cat: 'market', emoji: '☕' },
+  { name: 'Çay', cat: 'market', emoji: '🍵' },
+  { name: 'Şeker', cat: 'market', emoji: '🍬' },
+  { name: 'Un', cat: 'market', emoji: '🌾' },
+  { name: 'Yumurta', cat: 'market', emoji: '🥚' },
+  { name: 'Ekmek', cat: 'market', emoji: '🍞' },
+  { name: 'Zeytinyağı', cat: 'market', emoji: '🫒' },
+  { name: 'Salça', cat: 'market', emoji: '🍅' },
+  { name: 'Baharatlar (karabiber, pul biber)', cat: 'market', emoji: '🌶️' },
+  { name: 'Sirke', cat: 'market', emoji: '🍶' },
+  { name: 'Su', cat: 'market', emoji: '💧' },
+  { name: 'Pil', cat: 'ev', emoji: '🔋' },
+  { name: 'Ampul', cat: 'ev', emoji: '💡' },
+  { name: 'İlk yardım malzemesi (yara bandı)', cat: 'ev', emoji: '🩹' },
+  { name: 'Ağrı kesici', cat: 'ev', emoji: '💊' },
+  { name: 'Priz uzatma / çoklu priz', cat: 'ev', emoji: '🔌' },
+  { name: 'Koli bandı', cat: 'ev', emoji: '📦' },
+  { name: 'Buzdolabı poşeti / saklama kabı', cat: 'ev', emoji: '🥡' },
+  { name: 'Fırın kâğıdı / alüminyum folyo', cat: 'ev', emoji: '🧾' },
+  { name: 'Mum / çakmak', cat: 'ev', emoji: '🕯️' },
+  { name: 'Güneş kremi', cat: 'ev', emoji: '🧴' },
+  { name: 'Mama (yedek)', cat: 'evcil', emoji: '🍽️' },
+  { name: 'Kedi kumu', cat: 'evcil', emoji: '🐱' },
+  { name: 'Köpek tasması torbası', cat: 'evcil', emoji: '🐶' },
+];
+
+/** Bugünün ipuçları: havuzdan gün gün dönen, listede olmayan en çok `n` ürün. */
+export function forgotHints(S: AppState, now = Date.now(), n = 3) {
+  const start = (Math.floor(now / 864e5) * n) % FORGOT.length;
+  const out: typeof FORGOT = [];
+  for (let i = 0; i < FORGOT.length && out.length < n; i++) {
+    const f = FORGOT[(start + i) % FORGOT.length];
+    if (!S.shop.some(x => !x.done && same(x.name, f.name))) out.push(f);
+  }
+  return out;
+}

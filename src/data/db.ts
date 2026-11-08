@@ -110,6 +110,7 @@ export async function loadState(): Promise<AppState | null> {
     pets: json<Pet[]>(m.pets, []),
     shop: json<ShopItem[]>(m.shop, []),
     shopUsual: json<ShopUsual[]>(m.shopUsual, []),
+    shopHide: json<string>(m.shopHide, ''),
     // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
     cells2: json<(string | null)[] | null>(m.cells2, null),
   };
@@ -179,6 +180,7 @@ export async function saveState(S: AppState): Promise<void> {
       ['pets', JSON.stringify(S.pets ?? [])],
       ['shop', JSON.stringify(S.shop ?? [])],
       ['shopUsual', JSON.stringify(S.shopUsual ?? [])],
+      ['shopHide', JSON.stringify(S.shopHide ?? '')],
       ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],

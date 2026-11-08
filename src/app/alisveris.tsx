@@ -4,8 +4,10 @@ import { Share, StyleSheet, Text, View } from 'react-native';
 import { Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Chip, EmptyMsg, Field, Screen, T, XBtn } from '@/components/ui';
-import { addShop, catOf, clearChecked, forgetUsual, removeShop, SHOP_CATS, shopLeft, shopText, suggestions, toggleShop } from '@/domain/shopping';
+import { dayKey } from '@/domain/play';
+import { addShop, catOf, clearChecked, forgetUsual, forgotHints, removeShop, SHOP_CATS, shopLeft, shopText, suggestions, toggleShop } from '@/domain/shopping';
 import type { ShopCat } from '@/domain/types';
+import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, useColors } from '@/theme';
 
@@ -13,9 +15,11 @@ import { fonts, useColors } from '@/theme';
 export default function Alisveris() {
   const c = useColors();
   const toast = useToast();
+  const now = useNow();
   const { state: S, update } = useStore();
   const [name, setName] = useState('');
   const [cat, setCat] = useState<ShopCat>('market');
+  const hints = S.shopHide === dayKey(now) ? [] : forgotHints(S, now);
   const sug = suggestions(S).slice(0, 10);
   const checked = S.shop.filter(i => i.done).length;
   const usual = S.shopUsual.filter(u => !S.shop.some(x => !x.done && x.cat === u.cat && x.name === u.name));
@@ -52,6 +56,19 @@ export default function Alisveris() {
         <Field value={name} onChangeText={setName} placeholder="Ürün (ör. deterjan, süt)" maxLength={40} returnKeyType="done" onSubmitEditing={add} accessibilityLabel="Ürün adı" />
         <Btn kind="primary" label="Ekle" disabled={!name.trim()} onPress={add} />
       </Card>
+
+      {hints.length > 0 && (
+        <Card>
+          <View style={st.hintHead}>
+            <T v="h3" style={{ flex: 1 }}>💡 İpucu: unutma!</T>
+            <Btn small kind="ghost" label="Gizle" onPress={() => update(D => void (D.shopHide = dayKey(Date.now())))} />
+          </View>
+          <T v="small">Marketten çoğu kişi bunları unutur. Dokun, listeye eklensin.</T>
+          <View style={st.wrap}>
+            {hints.map(h => <Chip key={h.name} label={`${h.emoji} ${h.name}`} on={false} onPress={() => update(D => void addShop(D, h.name, h.cat))} />)}
+          </View>
+        </Card>
+      )}
 
       {sug.length > 0 && (
         <Card>
@@ -113,6 +130,7 @@ export default function Alisveris() {
 }
 
 const st = StyleSheet.create({
+  hintHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 18, paddingRight: 8 },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },

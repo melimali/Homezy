@@ -366,6 +366,8 @@ export type AppState = {
   pets: Pet[];
   shop: ShopItem[];
   shopUsual: ShopUsual[];
+  /** İpucu kartını gizlediği gün (`dayKey`); ertesi gün yeniden görünür. */
+  shopHide: string;
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

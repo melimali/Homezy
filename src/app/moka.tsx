@@ -10,7 +10,8 @@ import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
 import { mimikOf } from '@/constants/mimik';
 import { CHAT_ACCOUNT_NEEDED, CHAT_PREMIUM_INTRO, CHAT_PREMIUM_NUDGE } from '@/domain/chatGate';
-import { applyChatAction, chatCtx, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
+import { applyChatAction, chatCtx, describeAction, needsConfirm, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
+import type { AppState } from '@/domain/types';
 import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL } from '@/lib/links';
@@ -24,7 +25,18 @@ import Svg, { Path } from 'react-native-svg';
 import { fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
-type Item = ChatMsg & { id: number; done?: string[]; error?: boolean; cta?: 'premium' | 'login' };
+type Item = ChatMsg & {
+  id: number;
+  done?: string[];
+  error?: boolean;
+  cta?: 'premium' | 'login';
+  /** Yapılanları geri alan işlevler (taslak state üzerinde) ve geri alındı mı. */
+  undo?: ((D: AppState) => void)[];
+  undone?: boolean;
+  /** Onay bekleyen silme eylemleri ve sonucu. */
+  confirm?: ChatAction[];
+  confirmed?: 'yes' | 'no';
+};
 
 /** Cevap yazılma süresi (ms): kısa cevap hızlı, uzun cevap en çok 3,5 sn. Moka'nın ağzı bu sürece göre oynar. */
 const typeMs = (len: number) => Math.min(3500, 500 + len * 22);
@@ -34,9 +46,9 @@ const fresh = new Set<number>();
 const HELLO: Item = {
   id: 0,
   role: 'assistant',
-  content: 'Merhaba, ben Moka ☕ Bana iş ekletebilir, yaptıklarını işaretletebilir, takvime not yazdırabilir ya da sadece sohbet edebilirsin!',
+  content: 'Merhaba, ben Moka ☕ Bana iş ekletebilir, alışveriş listene ürün yazdırabilir, yaptıklarını (su, spor, ilaç, hayvan bakımı) işaretletebilir, günlük ve takvim notu yazdırabilir ya da sadece sohbet edebilirsin!',
 };
-const IDEAS = ['Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım', 'Bugün günlük yazmak istiyorum', 'Biraz hareket edelim mi?', 'Dışarı çıkmaya ne dersin?', 'Evi toparlamak için küçük bir adım öner'];
+const IDEAS = ['Alışveriş listesine süt ve ekmek ekle', 'Bugün 2 bardak su içtim', 'Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım', 'Bugün günlük yazmak istiyorum', 'Biraz hareket edelim mi?', 'Dışarı çıkmaya ne dersin?', 'Evi toparlamak için küçük bir adım öner'];
 
 /** Oturum boyunca konuşma kalır; kapatınca silinir (mesajlar telefonda saklanmaz). */
 let memory: Item[] = [HELLO];
@@ -136,27 +148,61 @@ export default function MokaChat() {
       return;
     }
     if (r.limit != null && r.mlimit != null) setLeft({ day: Math.max(0, r.limit - r.used), month: Math.max(0, r.mlimit - (r.mused ?? 0)) });
-    // Sunucu doğruladı; telefon yine kendi verisine göre doğrulayıp uygular.
+    // Sunucu doğruladı; telefon yine kendi verisine göre doğrulayıp uygular. Silme eylemleri onay bekler.
     const done: string[] = [];
-    const got: { focus?: { minutes: number; topic: string } } = {};
+    const undo: ((D: AppState) => void)[] = [];
+    const confirm: ChatAction[] = [];
+    const got: { focus?: { minutes: number; topic: string }; go?: string } = {};
     const mult = limits(premium.active).mult;
     update(D => {
-      for (const a of r.actions.slice(0, 3) as ChatAction[]) {
+      for (const a of r.actions.slice(0, 4) as ChatAction[]) {
+        if (needsConfirm(a)) {
+          confirm.push(a);
+          continue;
+        }
         const out = applyChatAction(D, a, Date.now(), mult);
         if (out.ok) {
-          done.push(out.line);
+          if (out.line) done.push(out.line);
+          if (out.undo) undo.push(out.undo);
           if (out.focus) got.focus = out.focus;
+          if (out.go) got.go = out.go;
         }
       }
     });
     if (done.length) sfx('done');
     const rid = nextId++;
     fresh.add(rid);
-    push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done }]);
+    push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done, ...(undo.length ? { undo } : {}), ...(confirm.length ? { confirm } : {}) }]);
+    const go = got.go;
+    if (go) setTimeout(() => router.push(go as never), 700);
     const f = got.focus;
     if (f) {
       setTimeout(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
     }
+  };
+
+  const undoItem = (id: number) => {
+    const it = items.find(i => i.id === id);
+    if (!it?.undo || it.undone) return;
+    update(D => void it.undo!.forEach(fn => fn(D)));
+    push(p => p.map(i => (i.id === id ? { ...i, undone: true } : i)));
+    toast('Geri aldım ↩️');
+  };
+
+  const confirmItem = (id: number, yes: boolean) => {
+    const it = items.find(i => i.id === id);
+    if (!it?.confirm || it.confirmed) return;
+    const lines: string[] = [];
+    if (yes) {
+      update(D => {
+        for (const a of it.confirm!) {
+          const out = applyChatAction(D, a, Date.now(), 1);
+          if (out.ok && out.line) lines.push(out.line);
+        }
+      });
+      if (lines.length) sfx('done');
+    }
+    push(p => p.map(i => (i.id === id ? { ...i, confirmed: yes ? 'yes' : 'no', done: [...(i.done ?? []), ...lines] } : i)));
   };
 
   /** Google Play yapay zekâ içeriği kuralı: uygunsuz cevap uygulama içinden bildirilebilir. */
@@ -210,7 +256,7 @@ export default function MokaChat() {
         <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}>
           {items.map(i => (
             <Appear key={i.id}>
-              <Bubble item={i} typed={!reduce && fresh.has(i.id)} />
+              <Bubble item={i} typed={!reduce && fresh.has(i.id)} onUndo={undoItem} onConfirm={confirmItem} />
             </Appear>
           ))}
           {busy && (
@@ -306,8 +352,9 @@ function useTyped(text: string, on: boolean, done: () => void) {
   return text.slice(0, n);
 }
 
-function Bubble({ item, typed }: { item: Item; typed: boolean }) {
+function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean; onUndo: (id: number) => void; onConfirm: (id: number, yes: boolean) => void }) {
   const c = useColors();
+  const { state: S } = useStore();
   const router = useRouter();
   const me = item.role === 'user';
   const shown = useTyped(item.content, typed, () => fresh.delete(item.id));
@@ -324,6 +371,22 @@ function Bubble({ item, typed }: { item: Item; typed: boolean }) {
           <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>{d}</Text>
         </View>
       ))}
+      {item.undo?.length && !item.undone ? (
+        <Squish onPress={() => onUndo(item.id)} accessibilityLabel="Geri al" style={[st.done, { backgroundColor: c.surface, borderColor: c.line, borderWidth: 1 }]}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>↩️ Geri al</Text>
+        </Squish>
+      ) : null}
+      {item.confirm?.length && !item.confirmed ? (
+        <View style={{ gap: 6, alignItems: 'flex-start' }}>
+          {item.confirm.map((a, i) => (
+            <Text key={i} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.ink }}>{describeAction(S, a)}</Text>
+          ))}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Btn small kind="primary" label="Evet, sil" onPress={() => onConfirm(item.id, true)} />
+            <Btn small kind="ghost" label="Vazgeç" onPress={() => onConfirm(item.id, false)} />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

@@ -202,7 +202,7 @@ async function handleReminder(
   const known = r.action === LATER || r.action === TAKEN || r.action === DRANK || r.action === DONE;
   if (!known) return false;
   // Eski bir günün cevabı sayılmaz.
-  if (d.kind !== 'pet' && dayKey(r.date || now) !== dayKey(now)) {
+  if (d.kind !== 'pet' && dayKey(toMs(r.date) || now) !== dayKey(now)) {
     await N.dismissNotificationAsync(r.id).catch(() => {});
     return true;
   }
@@ -241,6 +241,9 @@ async function handleReminder(
   return true;
 }
 
+/** Bildirim zamanı bazı platformlarda saniye olarak gelir; milisaniyeye çevirir. */
+const toMs = (t: number) => (t > 0 && t < 1e11 ? t * 1000 : t);
+
 /** Aynı cevabı iki kez işleme (arka plan görevi ve dinleyici aynı anda gelebilir). */
 const handled = new Set<string>();
 
@@ -265,7 +268,7 @@ export async function handleTaskAction(
 
   const now = Date.now();
   // Eski bir günün cevabı (ör. arka planda işlenmiş, uygulama ertesi gün açılınca yine gelmiş) bir daha sayılmaz.
-  if (dayKey(r.date || now) !== dayKey(now)) {
+  if (dayKey(toMs(r.date) || now) !== dayKey(now)) {
     await N.dismissNotificationAsync(id).catch(() => {});
     return true;
   }

@@ -1,8 +1,9 @@
 import { useActive } from '@/hooks/useActive';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
 import type { HeroFx, HeroMotion, HeroScene } from '@/domain/heroScenes';
+import { getActive, subscribe } from '@/lib/ambient';
 import { useReduceMotion } from './motion';
 
 const FX: Record<Exclude<HeroFx, 'none'>, string[]> = {
@@ -70,6 +71,11 @@ function motionStyle(v: Animated.Value, m: HeroMotion) {
     case 'beat': return { transform: [{ translateY: I([0, -4]) }] };
   }
 }
+/** Müzik çalarken Moka dans eder: zıplar ve iki yana yatar (yalnızca transform, yerel sürücü). */
+function danceStyle(v: Animated.Value) {
+  const I = (o: number[]) => v.interpolate({ inputRange: [0, 1], outputRange: o });
+  return { transform: [{ translateY: I([0, -9]) }, { rotate: I(['-4deg', '4deg']) }] };
+}
 const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, zoom: 6500, beat: 700 };
 
 /**
@@ -89,6 +95,8 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
   const active = useActive();
   const reduce = reduceSys || !active;
   const def = scene;
+  const music = useSyncExternalStore(subscribe, getActive).length > 0;
+  const dancing = music && !reduce;
   const [w, setW] = useState(0);
   const h = w ? Math.round(w / ratio) : 0;
   const m = useRef(new Animated.Value(0)).current;
@@ -103,16 +111,16 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
   useEffect(() => {
     if (reduce) { m.setValue(0); return; }
     m.setValue(0);
-    const d = DUR[def.motion];
+    const d = dancing ? 420 : DUR[def.motion];
     const loop = Animated.loop(Animated.sequence([
       Animated.timing(m, { toValue: 1, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
       Animated.timing(m, { toValue: 0, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
     ]));
     loop.start();
     return () => loop.stop();
-  }, [def.motion, reduce, m]);
+  }, [def.motion, reduce, m, dancing]);
 
-  const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
+  const mStyle = useMemo(() => (dancing ? danceStyle(m) : motionStyle(m, def.motion)), [m, def.motion, dancing]);
   const bottom = Math.round(h * scene.bottom);
   const size = Math.max(0, Math.min(Math.round(w * scene.size), h - bottom - reserveTop));
   const box = { position: 'absolute' as const, left: Math.round(w * scene.x - size / 2), bottom, width: size, height: size };
@@ -128,7 +136,7 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
               <Image source={scene.sticker} style={{ width: size, height: size }} resizeMode="contain" fadeDuration={0} accessibilityIgnoresInvertColors />
             </Animated.View>
           </Animated.View>
-          <Particles fx={def.fx} reduce={reduce} left={box.left + size * 0.62} top={h - bottom - size * 0.55} />
+          <Particles fx={dancing ? 'notes' : def.fx} reduce={reduce} left={box.left + size * 0.62} top={h - bottom - size * 0.55} />
         </>
       )}
       {children}

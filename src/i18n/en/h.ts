@@ -57,4 +57,6 @@ export const EN_H: Record<string, string> = {
   "Kapalı": "Off",
   "Benim Kombom": "My Mix",
   "Kendi karışımın": "Your own blend",
+  "✨ Moka'nın seçimi": "✨ Moka's pick",
+  "🎧 Pikap çalsın": "🎧 Play the turntable",
 };

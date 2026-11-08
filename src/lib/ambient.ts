@@ -245,3 +245,22 @@ export function saveCustom() {
   emit([...active]);
   return true;
 }
+
+/** Moka'nın seçimi: ruh haline (verilmişse) ve günün saatine göre kombo. */
+export function suggestCombo(feel?: string | null, hour = new Date().getHours()): Combo {
+  const by = (id: string) => COMBOS.find(k => k.id === id) ?? COMBOS[0];
+  if (feel === 'yorgun' || feel === 'keyifsiz') return by(hour >= 18 || hour < 6 ? 'deep-sleep' : 'rainy-coffee');
+  if (feel === 'bunalmis') return by('forest-morning');
+  if (hour >= 23 || hour < 5) return by('deep-sleep');
+  if (hour >= 19) return by('fire-evening');
+  if (hour >= 17) return by('night-focus');
+  if (hour < 11) return by('forest-morning');
+  return by('rainy-coffee');
+}
+
+/** Odak oturumu için müzik: kendi kombon varsa o, yoksa Moka'nın seçimi. Zaten bir şey çalıyorsa dokunmaz; başlattıysa true. */
+export function startFocusMusic(feel?: string | null) {
+  if (!ambientAvailable() || active.length) return false;
+  playCombo(getCustom() ?? suggestCombo(feel));
+  return active.length > 0;
+}

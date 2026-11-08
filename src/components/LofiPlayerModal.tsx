@@ -2,9 +2,11 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useActive } from '@/hooks/useActive';
-import { ambientAvailable, COMBOS, comboActive, getActive, getCustom, getLevel, getSleepAt, playCombo, saveCustom, setLevel, setPlaying, setSleep, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
+import { ambientAvailable, COMBOS, comboActive, getActive, getCustom, getLevel, getSleepAt, playCombo, saveCustom, suggestCombo, setLevel, setPlaying, setSleep, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
 import { haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
+import { useStore } from '@/store/AppStore';
+import { answered, checkinOf } from '@/domain/mood';
 import { Btn, Chip, Sheet, T } from './ui';
 
 type Track = {
@@ -40,6 +42,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   const active = useSyncExternalStore(subscribe, getActive);
   const activeTrack = TRACKS.find(t => active.includes(t.id)) ?? null;
   const playing = active.length > 0;
+  const { state: S } = useStore();
   const sleepAt = getSleepAt();
   const custom = getCustom();
   const live = useActive(); // Ekran odakta değilken animasyon dönmesin
@@ -196,6 +199,17 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             ))}
           </View>
         </View>
+
+        <Btn
+          kind="soft"
+          label="✨ Moka'nın seçimi"
+          onPress={() => {
+            const ci = checkinOf(S.play);
+            const pick = suggestCombo(answered(ci) ? ci.feel : null);
+            haptic('medium');
+            if (!comboActive(pick)) playCombo(pick);
+          }}
+        />
 
         {/* Hazır kombolar */}
         <View style={{ width: '100%', gap: 8 }}>

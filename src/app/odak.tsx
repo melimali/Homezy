@@ -8,7 +8,9 @@ import { BackLink, Btn, Card, Chip, Screen, SecHead, Sheet, T } from '@/componen
 import { useToast } from '@/components/Toast';
 import { addFocus, focusToday, focusXp, mokaLevel } from '@/domain/mokaLevel';
 import { scheduleFocusEnd, cancelFocusEnd } from '@/notifications/focus';
+import { startFocusMusic, stopAll } from '@/lib/ambient';
 import { sfx } from '@/lib/sfx';
+import { answered, checkinOf } from '@/domain/mood';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
@@ -28,6 +30,8 @@ export default function Odak() {
   const [min, setMin] = useState(() => MINUTES.reduce((a, m) => (Math.abs(m - Number(params.min)) < Math.abs(a - Number(params.min)) ? m : a), 25));
   const [topic, setTopic] = useState(() => (TOPICS.includes(String(params.topic)) ? String(params.topic) : TOPICS[0]));
   const [run, setRun] = useState<Run | null>(null);
+  const [withMusic, setWithMusic] = useState(false);
+  const musicByFocus = useRef(false);
   const [now, setNow] = useState(() => Date.now());
   const [logFor, setLogFor] = useState<{ mode: 'oku' | 'izle'; min: number } | null>(null);
 
@@ -35,6 +39,10 @@ export default function Odak() {
     (r: Run, minutes: number) => {
       setRun(null);
       cancelFocusEnd();
+      if (musicByFocus.current) {
+        musicByFocus.current = false;
+        stopAll();
+      }
       let gained = 0;
       let up = 0;
       update(D => {
@@ -68,6 +76,10 @@ export default function Odak() {
     setRun(r);
     setNow(Date.now());
     scheduleFocusEnd(r.endsAt, topic);
+    if (withMusic) {
+      const ci = checkinOf(S.play);
+      musicByFocus.current = startFocusMusic(answered(ci) ? ci.feel : null);
+    }
     sfx('pop');
   };
   // Moka sohbeti `auto=1` ile açtıysa oturum kendiliğinden, istenen süreyle başlar.
@@ -110,6 +122,7 @@ export default function Odak() {
           <View style={st.row}>{MINUTES.map(m => <Chip key={m} label={`${m} dk`} on={min === m} onPress={() => setMin(m)} />)}</View>
           <SecHead title="Ne çalışıyorsun?" h="h3" />
           <View style={st.row}>{TOPICS.map(t => <Chip key={t} label={t} on={topic === t} onPress={() => setTopic(t)} />)}</View>
+          <Chip label="🎧 Pikap çalsın" on={withMusic} onPress={() => setWithMusic(v => !v)} />
           <Btn kind="primary" label="Başla" block onPress={() => start()} />
         </Card>
       ) : (

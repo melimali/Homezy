@@ -4,7 +4,7 @@ import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { MokaReact } from '@/components/MokaReact';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
@@ -15,6 +15,8 @@ import { useToast } from '@/components/Toast';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
 import { saveNickname, useName } from '@/profile/useName';
+import { usePersona } from '@/profile/usePersona';
+import { TYPES } from '@/domain/kisilik';
 import { homeScore, emptyState } from '@/domain/logic';
 import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
@@ -88,6 +90,8 @@ export default function Hesap() {
   const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); setTourWanted(false); };
   const account = status === 'account';
   const nick = useName();
+  const { disc } = usePersona();
+  const typeImg = disc && TYPES[disc.type] ? TYPES[disc.type].img : null;
   const name = nick ?? (account ? displayName(user) : t('guest'));
   const [editNick, setEditNick] = useState<string | null>(null);
   const now = useNow();
@@ -307,7 +311,11 @@ export default function Hesap() {
       <Appear index={1} style={[st.hero, { backgroundColor: c.accentSoft }]}>
         <Float amp={3} dur={2800}>
           <View style={[st.avatar, { backgroundColor: c.surface }]}>
-            <MokaReact anim={hp.streak > 0 ? 'happy' : 'yawn'} size={64} />
+            {typeImg ? (
+              <Image source={typeImg} style={{ width: 64, height: 64 }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            ) : (
+              <MokaReact anim={hp.streak > 0 ? 'happy' : 'yawn'} size={64} />
+            )}
           </View>
         </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 6 }}>

@@ -52,7 +52,7 @@ export function Cabinet({ kind, items, hint }: { kind: 'fridge' | 'wardrobe'; it
   const [door] = useState(() => new Animated.Value(reduce ? 1 : 0));
   const [shown, setShown] = useState(false);
   const fridge = kind === 'fridge';
-  const h = fridge ? 210 : 220;
+  const h = fridge ? 330 : 220;
 
   useEffect(() => {
     if (!w) return;
@@ -74,7 +74,7 @@ export function Cabinet({ kind, items, hint }: { kind: 'fridge' | 'wardrobe'; it
   const frame = fridge ? c.sage : c.clay;
 
   return (
-    <View onLayout={e => setW(Math.round(e.nativeEvent.layout.width))}>
+    <View onLayout={e => setW(Math.round(e.nativeEvent.layout.width))} style={fridge ? { width: '100%', maxWidth: 240, alignSelf: 'center' } : undefined}>
       <Pressable
         onPress={() => { if (open) setShown(false); setOpen(!open); }}
         accessibilityRole="button"

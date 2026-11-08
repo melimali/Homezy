@@ -126,9 +126,12 @@ function Tab({ name, label, focused, onPress }: { name: IconName; label: string;
   const color = focused ? tone.ink[mode] : c.muted;
   return (
     <Squish onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} quiet style={st.tabOuter}>
-      <Animated.View style={[st.tab, { backgroundColor: pillBg, transform: [{ scale: v }] }]}>
-        <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
-        <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
+      {/* Arka plan (JS sürücü) ve ölçek (yerel sürücü) aynı View'da karışırsa "moved to native" hatası verir; ayrı View'lar. */}
+      <Animated.View style={[st.tab, { backgroundColor: pillBg }]}>
+        <Animated.View style={[st.tabInner, { transform: [{ scale: v }] }]}>
+          <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
+          <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
+        </Animated.View>
       </Animated.View>
     </Squish>
   );
@@ -192,7 +195,8 @@ const st = StyleSheet.create({
   },
   opt: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, paddingVertical: 16, paddingHorizontal: 18, minHeight: 72 },
   tabOuter: { flex: 1 },
-  tab: { alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 50, paddingVertical: 6, paddingHorizontal: 4, borderRadius: 22 },
+  tab: { alignItems: 'center', justifyContent: 'center', minHeight: 50, paddingVertical: 6, paddingHorizontal: 4, borderRadius: 22 },
+  tabInner: { alignItems: 'center', justifyContent: 'center', gap: 2 },
   label: { fontSize: 12 },
   plus: {
     width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -16, borderWidth: 3,

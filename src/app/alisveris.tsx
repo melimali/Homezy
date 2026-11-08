@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Share, StyleSheet, Text, View } from 'react-native';
 
+import { PaperNote, NoteLine, type NoteHandle } from '@/components/PaperNote';
 import { Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Chip, EmptyMsg, Field, Screen, T, XBtn } from '@/components/ui';
@@ -9,7 +10,7 @@ import { addShop, catOf, clearChecked, forgetUsual, forgotHints, removeShop, SHO
 import type { ShopCat } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, useColors } from '@/theme';
+import { brand, fonts, useColors } from '@/theme';
 
 /** Alışveriş listesi: ekle, işaretle, sil, alınanları temizle, kategoriler, öneriler, sık alınanlar, metin olarak paylaş. */
 export default function Alisveris() {
@@ -18,6 +19,7 @@ export default function Alisveris() {
   const now = useNow();
   const { state: S, update } = useStore();
   const [name, setName] = useState('');
+  const note = useRef<NoteHandle>(null);
   const [cat, setCat] = useState<ShopCat>('market');
   const hints = S.shopHide === dayKey(now) ? [] : forgotHints(S, now);
   const sug = suggestions(S).slice(0, 10);
@@ -82,26 +84,25 @@ export default function Alisveris() {
 
       {!S.shop.length && <EmptyMsg>Liste boş. Bir ürün ekle ya da önerilerden seç.</EmptyMsg>}
 
-      {SHOP_CATS.map(k => {
-        const xs = S.shop.filter(i => i.cat === k.id);
-        if (!xs.length) return null;
-        return (
-          <Card key={k.id}>
-            <T v="h3">{k.emoji} {k.label}</T>
-            <View style={{ gap: 8 }}>
-              {xs.map(i => (
-                <View key={i.id} style={[st.row, { backgroundColor: i.done ? c.surface2 : c.accentSoft }]}>
-                  <Squish onPress={() => update(D => void toggleShop(D, i.id))} accessibilityRole="checkbox" accessibilityState={{ checked: i.done }} accessibilityLabel={i.name} style={st.rowMain}>
-                    <Text style={{ fontSize: 22 }}>{i.done ? '✅' : '⬜'}</Text>
-                    <T v="bold" style={{ flex: 1, fontSize: 16, opacity: i.done ? 0.5 : 1, textDecorationLine: i.done ? 'line-through' : 'none' }}>{i.name}</T>
-                  </Squish>
-                  <XBtn label={`${i.name} ürününü sil`} onPress={() => update(D => void removeShop(D, i.id))} />
-                </View>
-              ))}
-            </View>
-          </Card>
-        );
-      })}
+      {S.shop.length > 0 && (
+        <PaperNote ref={note}>
+          <Text style={[st.noteTitle, { color: brand.navy }]}>🛒 Alışveriş listem</Text>
+          {SHOP_CATS.map(k => {
+            const xs = S.shop.filter(i => i.cat === k.id);
+            if (!xs.length) return null;
+            return (
+              <View key={k.id}>
+                <Text style={[st.cat, { color: brand.cocoa }]}>{k.emoji} {k.label}</Text>
+                {xs.map(i => (
+                  <NoteLine key={i.id} done={i.done} label={i.name}
+                    onToggle={() => { update(D => void toggleShop(D, i.id)); note.current?.sway(); }}
+                    right={<XBtn label={`${i.name} ürününü sil`} onPress={() => update(D => void removeShop(D, i.id))} />} />
+                ))}
+              </View>
+            );
+          })}
+        </PaperNote>
+      )}
 
       {S.shop.length > 0 && (
         <View style={st.wrap}>
@@ -132,7 +133,7 @@ export default function Alisveris() {
 const st = StyleSheet.create({
   hintHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 18, paddingRight: 8 },
-  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
+  noteTitle: { fontFamily: fonts.hand, fontSize: 34, lineHeight: 40, textAlign: 'center', marginBottom: 4 },
+  cat: { fontFamily: fonts.hand, fontSize: 24, lineHeight: 30, marginTop: 8 },
   usual: { borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
 });

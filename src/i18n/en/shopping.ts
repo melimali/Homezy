@@ -70,4 +70,13 @@ export const EN_SHOP: Record<string, string> = {
   'İpucu: unutma!': 'Tip: do not forget!',
   'Marketten çoğu kişi bunları unutur. Dokun, listeye eklensin.': 'People often forget these at the store. Tap to add.',
   'Gizle': 'Hide',
+  'Kapatmak için dokun': 'Tap to close',
+  'Açmak için dokun': 'Tap to open',
+  'Buzdolabı kapağını kapat': 'Close the fridge door',
+  'Buzdolabı kapağını aç': 'Open the fridge door',
+  'Gardırop kapaklarını kapat': 'Close the wardrobe doors',
+  'Gardırop kapaklarını aç': 'Open the wardrobe doors',
+  'Gardırop boş. Aşağıdan kıyafet ekle.': 'Wardrobe is empty. Add clothes below.',
+  'Buzdolabı boş. Fotoğraf çek ya da ürün ekle.': 'Fridge is empty. Take a photo or add an item.',
+  'Alışveriş notu': 'Shopping note',
 };

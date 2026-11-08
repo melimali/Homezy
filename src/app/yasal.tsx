@@ -18,6 +18,7 @@ const CREDITS: { name: string; what: string; license: string }[] = [
   { name: 'react-native-google-mobile-ads', what: 'Reklam (ücretsiz plan)', license: 'Apache-2.0' },
   { name: 'react-native-svg, react-native-view-shot, react-native-safe-area-context, react-native-screens, react-native-android-widget', what: 'Arayüz', license: 'MIT' },
   { name: 'Baloo 2 (Ek Type)', what: 'Başlık yazı tipi', license: 'SIL OFL 1.1' },
+  { name: 'Caveat (Impallari Type)', what: 'El yazısı (alışveriş notu)', license: 'SIL OFL 1.1' },
   { name: 'Nunito (Vernon Adams, Jacques Le Bailly)', what: 'Metin yazı tipi', license: 'SIL OFL 1.1' },
   { name: 'Pixabay', what: 'Müzik ve ortam sesleri', license: 'Pixabay İçerik Lisansı' },
   { name: 'Open-Meteo.com', what: 'Hava durumu verisi', license: 'CC BY 4.0' },

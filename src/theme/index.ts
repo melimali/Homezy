@@ -77,6 +77,8 @@ export const fonts = {
   body: 'Nunito_600SemiBold',
   bodyBold: 'Nunito_700Bold',
   bodyBlack: 'Nunito_800ExtraBold',
+  /** El yazısı (alışveriş not kağıdı). Yüklenemezse sistem yazı tipine düşer. */
+  hand: 'Caveat_700Bold',
 };
 
 /**

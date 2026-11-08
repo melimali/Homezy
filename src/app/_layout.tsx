@@ -1,6 +1,7 @@
 import { initCrashReporting } from '@/lib/crash';
 import { installTranslationPatch } from '@/i18n/patch';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
 import { Stack, usePathname } from 'expo-router';
@@ -51,7 +52,7 @@ export default function RootLayout() {
   const [introDone, setIntroDone] = useState(false);
   const [meikai, setMeikai] = useState<'play' | 'fade' | 'done'>('play');
   const [fontsLoaded, fontError] = useFonts({
-    Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold,
+    Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Caveat_700Bold,
   });
 
   useEffect(() => trackOpen(), []);

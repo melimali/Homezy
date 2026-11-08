@@ -73,7 +73,7 @@ function motionStyle(v: Animated.Value, m: HeroMotion) {
 }
 /** Müzik çalarken Moka dans eder: zıplar ve iki yana yatar (yalnızca transform, yerel sürücü). */
 function danceStyle(v: Animated.Value) {
-  const I = (o: number[]) => v.interpolate({ inputRange: [0, 1], outputRange: o });
+  const I = <T extends number | string>(o: T[]) => v.interpolate({ inputRange: [0, 1], outputRange: o as unknown as number[] });
   return { transform: [{ translateY: I([0, -9]) }, { rotate: I(['-4deg', '4deg']) }] };
 }
 const DUR: Record<HeroMotion, number> = { breath: 3000, bob: 1500, sway: 2200, zoom: 6500, beat: 700 };

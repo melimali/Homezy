@@ -173,6 +173,69 @@ export function Twinkle({ on }: { on: unknown }) {
   );
 }
 
+/** Sıfırdan büyür: ilk çizimde tabandan yaylanarak belirir; `pop` değişince (yeni aşama) bir kere zıplar. */
+export function GrowIn({ children, h = 60, delay = 0, pop }: { children: ReactNode; h?: number; delay?: number; pop?: unknown }) {
+  const reduce = useReduceMotion();
+  const [g] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  const [b] = useState(() => new Animated.Value(0));
+  const prev = useRef(pop);
+  useEffect(() => {
+    if (reduce) return;
+    Animated.sequence([
+      Animated.delay(delay),
+      Animated.spring(g, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true }),
+    ]).start();
+  }, [g, delay, reduce]);
+  useEffect(() => {
+    if (prev.current === pop) return;
+    prev.current = pop;
+    if (reduce) return;
+    b.setValue(0);
+    Animated.sequence([
+      Animated.timing(b, { toValue: 1, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(b, { toValue: 0, friction: 3, tension: 120, useNativeDriver: true }),
+    ]).start();
+  }, [pop, b, reduce]);
+  const scale = Animated.add(g, b.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] }));
+  // Tabandan büyüsün: ölçek merkezden olduğu için yarı yüksekliği kadar aşağı kaydır.
+  const shift = scale.interpolate({ inputRange: [0, 1], outputRange: [h / 2, 0], extrapolate: 'extend' });
+  return <Animated.View style={{ transform: [{ translateY: shift }, { scale }] }}>{children}</Animated.View>;
+}
+
+/** Yatayda yavaşça gezinir (Moka bahçede dolaşır), adım atar gibi hafifçe zıplar. */
+export function Wander({ children, range = 40, dur = 7000, style }: { children: ReactNode; range?: number; dur?: number; style?: StyleProp<ViewStyle> }) {
+  const reduce = useReduceMotion();
+  const [x] = useState(() => new Animated.Value(0));
+  const [hop] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce) return;
+    const lx = loop(x, [[1, dur], [0, dur]]);
+    const lh = loop(hop, [[1, 380], [0, 380]]);
+    lx.start();
+    lh.start();
+    return () => {
+      lx.stop();
+      lh.stop();
+    };
+  }, [x, hop, dur, reduce]);
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          transform: [
+            { translateX: x.interpolate({ inputRange: [0, 1], outputRange: [-range, range] }) },
+            { translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) },
+            { rotate: hop.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) },
+          ],
+        },
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
   fly: { position: 'absolute', left: 8, zIndex: 3 },
   shower: { ...StyleSheet.absoluteFill as object, zIndex: 6 },

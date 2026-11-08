@@ -8,7 +8,8 @@ import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
-import { Breathe, Flutter, Shower, Sway, Twinkle } from '@/components/gardenFx';
+import { GardenScene } from '@/components/GardenScene';
+import { Breathe, Flutter, GrowIn, Shower, Sway, Twinkle, Wander } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
@@ -20,6 +21,7 @@ import { dayKey } from '@/domain/play';
 import type { MokaPose } from '@/constants/moka';
 import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
+import { useSky } from '@/lib/weather';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -50,6 +52,8 @@ export default function Bahce() {
   const fire = Math.max(0, blooms - blooms0);
   const maxPlots = premium.active ? PLOTS.premium : PLOTS.free;
   const month = monthFlower(now);
+  const sky = useSky();
+  const hour = new Date(now).getHours();
 
   const grown = G.plots.map(p => ({ p, f: FLOWER[p.flower], g: growth(P, p, now) }));
 
@@ -123,22 +127,18 @@ export default function Bahce() {
       </Appear>
 
       <Appear index={4}>
-      <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
-        <View pointerEvents="none" style={[styles.sky, { backgroundColor: c.surface }]} />
-        <Float amp={3} dur={3800} style={styles.sun}><Text style={{ fontSize: 34 }}>☀️</Text></Float>
-        <Float amp={8} dur={9000} style={[styles.cloud, { top: 22, left: '38%' }]}><Text style={{ fontSize: 26, opacity: 0.85 }}>☁️</Text></Float>
-        <Float amp={6} dur={7000} delay={900} style={[styles.cloud, { top: 60, right: '12%' }]}><Text style={{ fontSize: 20, opacity: 0.7 }}>☁️</Text></Float>
-        <View pointerEvents="none" style={styles.grass}>
-          <Text style={styles.grassT}>🌿🌱🌾🌿🌱🌾🌿🌱🌾🌿🌱🌾</Text>
-        </View>
-        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
+      <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
+        <GardenScene hour={hour} sky={sky} blooms={blooms} />
+        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
         <Flutter emoji="🦋" top="14%" dur={8500} />
         <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
         {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
         <View style={styles.bedTop}>
-          <Float amp={5} dur={2600}>
-            <MokaMascot pose={pose} size="md" showBubble={false} />
-          </Float>
+          <Wander range={14} dur={6500}>
+            <Float amp={5} dur={2600}>
+              <MokaMascot pose={pose} size="md" showBubble={false} />
+            </Float>
+          </Wander>
           <Glass style={styles.bubble} intensity={30}>
             <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
           </Glass>
@@ -257,15 +257,17 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
     >
       <Twinkle on={g} />
       <Sway deg={stage >= 3 ? 4 : 2} dur={2200 + (flower.price % 7) * 260} delay={(flower.grow % 5) * 200}>
-        {plot.bloomed ? (
-          <Breathe amp={0.08} dur={1200}>
-            <Float amp={3} dur={1900}>
-              <PlantArt flower={flower} stage={stage} size={54} />
-            </Float>
-          </Breathe>
-        ) : (
-          <PlantArt flower={flower} stage={stage} size={54} />
-        )}
+        <GrowIn h={54} delay={150 + (flower.grow % 7) * 90} pop={stage}>
+          {plot.bloomed ? (
+            <Breathe amp={0.08} dur={1200}>
+              <Float amp={3} dur={1900}>
+                <PlantArt flower={flower} stage={stage} size={54} />
+              </Float>
+            </Breathe>
+          ) : (
+            <PlantArt flower={flower} stage={stage} size={54} />
+          )}
+        </GrowIn>
       </Sway>
       <Text style={[styles.plotName, { color: c.ink }]} numberOfLines={1}>{flower.name}</Text>
       <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
@@ -550,11 +552,6 @@ const styles = StyleSheet.create({
   walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   statsCard: { padding: 20, gap: 8 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 110, opacity: 0.35 },
-  sun: { position: 'absolute', top: 8, left: 12 },
-  cloud: { position: 'absolute' },
-  grass: { position: 'absolute', bottom: -4, left: 0, right: 0, alignItems: 'center', opacity: 0.7 },
-  grassT: { fontSize: 22, letterSpacing: 2 },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -562,7 +559,7 @@ const styles = StyleSheet.create({
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
   plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
   plotCell: { width: '31.5%' },
-  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
+  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3, backgroundColor: 'rgba(255,255,255,0.28)' },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },
   plotStage: { fontFamily: fonts.bodyBold, fontSize: 12 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },

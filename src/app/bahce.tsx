@@ -106,7 +106,7 @@ export default function Bahce() {
 
       {/* Plak Çalar */}
       <Appear index={2} style={{ flexDirection: 'row', gap: 10 }}>
-        <Btn small kind="soft" label="🎵 Plak Çalar (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
+        <Btn small kind="soft" label="🎵 Pikap (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
       </Appear>
 
       <Appear index={3}>

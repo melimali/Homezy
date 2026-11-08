@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ambientAvailable, getActive, setPlaying, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
+import { useActive } from '@/hooks/useActive';
+import { ambientAvailable, COMBOS, comboActive, getActive, playCombo, setPlaying, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
 import { haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
 import { Btn, Sheet, T } from './ui';
@@ -21,6 +22,10 @@ const TRACKS: Track[] = [
   { id: 'nature', emoji: '🌿', name: 'Orman Kuşları', desc: 'Doğanın kalbinde dinlendirici kuş sesleri', soundType: 'nature' },
   { id: 'sea', emoji: '🌊', name: 'Deniz Dalgaları', desc: 'Kıyıya vuran yavaş dalgalar ve martılar', soundType: 'sea' },
   { id: 'night', emoji: '🌙', name: 'Gece Cırcır Böcekleri', desc: 'Yaz gecesi, açık pencere, uzaktan rüzgâr', soundType: 'night' },
+  { id: 'storm', emoji: '⛈️', name: 'Gök Gürültülü Fırtına', desc: 'Sert yağmur, pencerede fırtına', soundType: 'storm' },
+  { id: 'slowlofi', emoji: '🌌', name: 'Yavaş Lo-Fi', desc: 'Gece geç saat için ağır, uykulu ritimler', soundType: 'slowlofi' },
+  { id: 'deepsea', emoji: '🐋', name: 'Derin Okyanus', desc: 'Yavaş, derin ve sakin dalgalar', soundType: 'deepsea' },
+  { id: 'wind', emoji: '🍃', name: 'Hafif Rüzgâr', desc: 'Perdeyi sallayan serin esinti', soundType: 'wind' },
 ];
 
 type Props = {
@@ -28,13 +33,15 @@ type Props = {
   onClose: () => void;
 };
 
-/** Moka'nın Plak Çaları: Dinlendirici ASMR ve Lo-Fi sesler modalı. */
+/** Moka'nın Pikapı: Dinlendirici ASMR ve Lo-Fi sesler modalı. */
 export function LofiPlayerModal({ open, onClose }: Props) {
   const c = useColors();
   // Parçalar modal kapansa da çalmaya devam eder; birden fazlası karışabilir.
   const active = useSyncExternalStore(subscribe, getActive);
   const activeTrack = TRACKS.find(t => active.includes(t.id)) ?? null;
   const playing = active.length > 0;
+  const live = useActive(); // Ekran odakta değilken animasyon dönmesin
+  const spinning = playing && live;
   const [spinAnim] = useState(() => new Animated.Value(0));
   const [armAnim] = useState(() => new Animated.Value(0));
   const [pulseAnim] = useState(() => new Animated.Value(0));
@@ -47,7 +54,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-    if (!playing) {
+    if (!spinning) {
       pulseAnim.setValue(0);
       bars.forEach(b => b.setValue(0.3));
       return;
@@ -69,14 +76,14 @@ export function LofiPlayerModal({ open, onClose }: Props) {
       pulse.stop();
       waves.forEach(w => w.stop());
     };
-  }, [playing, armAnim, pulseAnim, bars]);
+  }, [playing, spinning, armAnim, pulseAnim, bars]);
 
-  const armRot = armAnim.interpolate({ inputRange: [0, 1], outputRange: ['-28deg', '4deg'] });
+  const armRot = armAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '24deg'] });
   const glowScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] });
   const glowOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
 
   useEffect(() => {
-    if (!playing) {
+    if (!spinning) {
       spinAnim.stopAnimation();
       return;
     }
@@ -90,7 +97,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
     );
     loop.start();
     return () => loop.stop();
-  }, [playing, spinAnim]);
+  }, [spinning, spinAnim]);
 
   const spin = spinAnim.interpolate({
     inputRange: [0, 1],
@@ -112,22 +119,27 @@ export function LofiPlayerModal({ open, onClose }: Props) {
     <Sheet open={open} onClose={onClose} pose="cozy_plant" scroll>
       <View style={{ alignItems: 'center', gap: 16, paddingVertical: 10 }}>
         <Text style={{ fontSize: 48 }}>🎵</Text>
-        <T v="h2">Moka&apos;nın Plak Çaları</T>
+        <T v="h2">Moka&apos;nın Pikapı</T>
         <T v="small" style={{ textAlign: 'center' }}>
-          Temizlik yaparken veya dinlenirken ruhunu dinlendirecek huzurlu ASMR ve Lo-Fi sesler.
+          Plağı seç, iğneyi bırak: temizlik ve dinlenme için huzurlu sesler.
         </T>
 
-        {/* Dönen Plak Animasyonu */}
+        {/* Pikap: gövde, dönen plak, ses kolu */}
         <View style={[styles.turntable, { backgroundColor: c.surface2 }]}>
           <Animated.View
             pointerEvents="none"
             style={[styles.glow, { borderColor: c.warm, opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
           />
           <Animated.View style={[styles.vinyl, { transform: [{ rotate: spin }], backgroundColor: playing ? c.ink : c.muted }]}>
-            <View style={[styles.groove, { width: 94, height: 94, borderRadius: 47 }]} />
-            <View style={[styles.groove, { width: 74, height: 74, borderRadius: 37 }]} />
-            <View style={[styles.vinylLabel, { backgroundColor: c.warm }]} />
+            <View style={[styles.groove, { width: 130, height: 130, borderRadius: 65 }]} />
+            <View style={[styles.groove, { width: 104, height: 104, borderRadius: 52 }]} />
+            <View style={[styles.groove, { width: 80, height: 80, borderRadius: 40 }]} />
+            <View style={[styles.shine, { backgroundColor: 'rgba(255,255,255,0.10)' }]} />
+            <View style={[styles.vinylLabel, { backgroundColor: c.warm }]}>
+              <Text style={{ fontSize: 16 }}>{activeTrack?.emoji ?? '☕'}</Text>
+            </View>
           </Animated.View>
+          <View style={[styles.pivot, { backgroundColor: c.line }]} />
           <Animated.View style={[styles.armWrap, { transform: [{ rotate: armRot }] }]}>
             <View style={[styles.arm, { backgroundColor: c.muted }]} />
             <View style={[styles.armHead, { backgroundColor: c.ink }]} />
@@ -146,12 +158,40 @@ export function LofiPlayerModal({ open, onClose }: Props) {
           <Btn label="⏭" onPress={() => step(1)} />
         </View>
 
-        <T v="bold" style={{ color: playing ? c.ok : c.muted }}>
-          {playing ? `Çalıyor: ${TRACKS.filter(t => active.includes(t.id)).map(t => `${t.emoji} ${t.name}`).join(' + ')}` : ambientAvailable() ? 'Plak çalar duruyor' : 'Bu derlemede ses çalma yok'}
+        <T v="bold" style={{ color: playing ? c.ok : c.muted, textAlign: 'center' }}>
+          {playing ? '🎶 ' + TRACKS.filter(t => active.includes(t.id)).map(t => t.emoji + ' ' + t.name).join(' + ') : ambientAvailable() ? 'Pikap duruyor' : 'Bu derlemede ses çalma yok'}
         </T>
 
+        {/* Hazır kombolar */}
+        <View style={{ width: '100%', gap: 8 }}>
+          <T v="bold">Hazır Kombolar</T>
+          {COMBOS.map(k => {
+            const on = comboActive(k);
+            return (
+              <Pressable
+                key={k.id}
+                onPress={() => {
+                  haptic('medium');
+                  playCombo(k);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={k.name}
+                style={[styles.trackRow, { backgroundColor: on ? c.accentSoft : c.surface, borderColor: on ? c.hi : c.line }]}
+              >
+                <Text style={{ fontSize: 24 }}>{k.emoji}</Text>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.trackName, { color: c.ink }]}>{k.name}</Text>
+                  <Text style={[styles.trackDesc, { color: c.muted }]}>{k.desc}</Text>
+                </View>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.ok : c.muted }}>{on ? '⏸ Durdur' : '▶ Çal'}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <T v="bold" style={{ width: '100%' }}>Tek Plaklar</T>
         {/* Parça Listesi */}
-        <View style={{ width: '100%', gap: 8, marginTop: 4 }}>
+        <View style={{ width: '100%', gap: 8 }}>
           {TRACKS.map(t => {
             const isPlaying = active.includes(t.id);
             return (
@@ -159,7 +199,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
                 key={t.id}
                 onPress={() => selectTrack(t)}
                 accessibilityRole="button"
-                accessibilityLabel={`${t.name} çal`}
+                accessibilityLabel={t.name}
                 style={[
                   styles.trackRow,
                   { backgroundColor: isPlaying ? c.accentSoft : c.surface, borderColor: isPlaying ? c.hi : c.line },
@@ -186,36 +226,42 @@ export function LofiPlayerModal({ open, onClose }: Props) {
 
 const styles = StyleSheet.create({
   turntable: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+    width: 250,
+    height: 190,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(0,0,0,0.10)',
     marginVertical: 6,
   },
   vinyl: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 30,
+  },
+  vinylLabel: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 2,
+    borderColor: '#FFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  vinylLabel: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#FFF',
-  },
+  shine: { position: 'absolute', width: 150, height: 40, top: 18, borderRadius: 20 },
   glow: {
     position: 'absolute',
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    left: 25,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: 3,
   },
+  pivot: { position: 'absolute', top: 12, right: 18, width: 22, height: 22, borderRadius: 11 },
   groove: {
     position: 'absolute',
     borderWidth: 1,
@@ -223,14 +269,14 @@ const styles = StyleSheet.create({
   },
   armWrap: {
     position: 'absolute',
-    top: 2,
-    right: 10,
+    top: 18,
+    right: 27,
     width: 8,
-    height: 70,
+    height: 100,
     alignItems: 'center',
     transformOrigin: 'top center',
   },
-  arm: { width: 4, height: 58, borderRadius: 2 },
+  arm: { width: 4, height: 84, borderRadius: 2 },
   armHead: { width: 10, height: 12, borderRadius: 3 },
   waves: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 28 },
   bar: { width: 5, height: 28, borderRadius: 3 },

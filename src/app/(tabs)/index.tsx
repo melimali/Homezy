@@ -262,7 +262,7 @@ export default function Home() {
         <SecHead title="Keyif köşesi" h="h3" />
         <Appear index={5} style={styles.quick}>
           <Quick i={0} emoji="🌷" label="Bahçe" sub={gardenSub(S, now)} tint={c.surface} onPress={() => router.push('/bahce' as Href)} />
-          <Quick i={1} emoji="🎵" label="Plak" sub="Lo-fi" tint={c.surface} onPress={() => setLofiOpen(true)} />
+          <Quick i={1} emoji="🎵" label="Pikap" sub="Lo-fi" tint={c.surface} onPress={() => setLofiOpen(true)} />
           <Quick i={2} emoji="📔" label="Günlük" sub="Bugün" tint={c.surface} onPress={() => router.push('/gunluk')} />
           {extrasUnlocked(S.play.days.length, now) && (
             <Quick i={3} emoji="🏃" label="Spor" sub="Hareket" tint={c.surface} onPress={() => router.push('/spor')} />

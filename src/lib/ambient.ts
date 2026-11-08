@@ -5,7 +5,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
  * Plak çaların sürekli (loop) çalan parçaları: lofi ve ambiyans sesleri. Birden fazlası aynı anda açılıp
  * karıştırılabilir (ör. lofi + yağmur). Dosyalar assets/sounds/ altında. Yerel ses modülü yoksa hiçbir şey çalmaz.
  */
-export type AmbientId = 'lofi' | 'rain' | 'fireplace' | 'nature' | 'sea' | 'night';
+export type AmbientId = 'lofi' | 'rain' | 'fireplace' | 'nature' | 'sea' | 'night' | 'storm' | 'slowlofi' | 'deepsea' | 'wind';
 
 const SOURCES: Record<AmbientId, number> = {
   lofi: require('../../assets/sounds/lofi.mp3'),
@@ -14,10 +14,18 @@ const SOURCES: Record<AmbientId, number> = {
   nature: require('../../assets/sounds/bird.mp3'),
   sea: require('../../assets/sounds/sea.mp3'),
   night: require('../../assets/sounds/cricet.mp3'),
+  // Aynı dosyalar farklı hız/seviyeyle: yeni ses dosyası eklemeden çeşit. Gerçek dosya gelince sadece buradaki require değişir.
+  storm: require('../../assets/sounds/rain.mp3'),
+  slowlofi: require('../../assets/sounds/lofi.mp3'),
+  deepsea: require('../../assets/sounds/sea.mp3'),
+  wind: require('../../assets/sounds/sea.mp3'),
 };
 
+/** Parçanın çalma hızı (1 = özgün). Perde düzeltmeli: yavaşlayınca tiz-bas bozulmaz. */
+const RATE: Partial<Record<AmbientId, number>> = { storm: 1.3, slowlofi: 0.85, deepsea: 0.8, wind: 1.5 };
+
 /** Lofi ana müzik, ambiyanslar altta durur ki karışınca birbirini bastırmasın. */
-const VOLUME: Record<AmbientId, number> = { lofi: 0.7, rain: 0.5, fireplace: 0.5, nature: 0.5, sea: 0.5, night: 0.5 };
+const VOLUME: Record<AmbientId, number> = { lofi: 0.7, rain: 0.5, fireplace: 0.5, nature: 0.5, sea: 0.5, night: 0.5, storm: 0.8, slowlofi: 0.7, deepsea: 0.55, wind: 0.3 };
 
 let Audio: typeof import('expo-audio') | null | undefined;
 function audio() {
@@ -55,6 +63,15 @@ function player(id: AmbientId) {
       p = A.createAudioPlayer(SOURCES[id]);
       p.loop = true;
       p.volume = VOLUME[id];
+      const r = RATE[id];
+      if (r) {
+        try {
+          p.shouldCorrectPitch = true;
+          p.setPlaybackRate(r);
+        } catch {
+          // Hız ayarlanamazsa özgün hızda çalar.
+        }
+      }
       players[id] = p;
     }
     return p;
@@ -75,11 +92,12 @@ export function subscribe(fn: () => void) {
   };
 }
 
-export function setPlaying(id: AmbientId, on: boolean) {
+export function setPlaying(id: AmbientId, on: boolean, volume?: number) {
   const p = player(id);
   if (on) {
     if (!p) return;
     try {
+      p.volume = volume ?? VOLUME[id];
       p.play();
     } catch {
       return;
@@ -114,3 +132,29 @@ export function solo(id: AmbientId) {
   for (const other of active) if (other !== id) setPlaying(other, false);
   setPlaying(id, true);
 }
+
+/** Hazır kombo: katman seviyeleri önceden ayarlı, tek dokunuşla (öncekileri durdurur). */
+export type Combo = { id: string; emoji: string; name: string; desc: string; layers: Partial<Record<AmbientId, number>> };
+export const COMBOS: Combo[] = [
+  { id: 'rainy-coffee', emoji: '☕', name: 'Yağmurlu Kahve', desc: 'Yumuşak lo-fi, pencerede yağmur', layers: { lofi: 0.6, rain: 0.45 } },
+  { id: 'night-focus', emoji: '🌙', name: 'Gece Odak', desc: 'Yavaş lo-fi ve uzaktan cırcır böcekleri', layers: { slowlofi: 0.65, night: 0.3 } },
+  { id: 'fire-evening', emoji: '🪵', name: 'Şömine Akşamı', desc: 'Çıtırdayan odun ve hafif rüzgâr', layers: { fireplace: 0.6, wind: 0.2 } },
+  { id: 'forest-morning', emoji: '🌿', name: 'Orman Sabahı', desc: 'Kuş sesleri, uzaktan lo-fi', layers: { nature: 0.6, lofi: 0.3 } },
+  { id: 'storm-cozy', emoji: '⛈️', name: 'Fırtınalı Kış', desc: 'Dışarıda fırtına, içeride şömine', layers: { storm: 0.7, fireplace: 0.45 } },
+  { id: 'deep-sleep', emoji: '😴', name: 'Derin Uyku', desc: 'Derin dalgalar ve hafif yağmur', layers: { deepsea: 0.55, rain: 0.25 } },
+];
+
+/** Bir kombonun katmanlarını çalar; kombo zaten çalıyorsa durdurur. */
+export function playCombo(combo: Combo) {
+  const ids = Object.keys(combo.layers) as AmbientId[];
+  if (comboActive(combo)) return stopAll();
+  for (const other of active) if (!ids.includes(other)) setPlaying(other, false);
+  for (const id of ids) {
+    setPlaying(id, true, combo.layers[id]);
+  }
+}
+
+export const comboActive = (combo: Combo) => {
+  const ids = Object.keys(combo.layers) as AmbientId[];
+  return ids.length === active.length && ids.every(i => active.includes(i));
+};

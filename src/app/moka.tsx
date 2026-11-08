@@ -95,6 +95,7 @@ export default function MokaChat() {
   }, []);
 
   useEffect(() => {
+    if (items.length <= 1 && !busy) return;
     const t = setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 60);
     return () => clearTimeout(t);
   }, [items, busy]);
@@ -225,23 +226,26 @@ export default function MokaChat() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={[st.top, { paddingTop: insets.top + 8, borderBottomColor: c.line }]}>
         <View style={st.head}>
-          <BackLink label="" />
-          <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
-            <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <T v="h3" numberOfLines={1}>Moka</T>
-            <T v="tiny" numberOfLines={1}>{busy ? 'yazıyor…' : `${mokaTitle(lv.level)} · seviye ${lv.level}`}</T>
-          </View>
-          <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
-            <Text style={{ fontSize: 17 }}>📝</Text>
-          </Squish>
-          <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.icon, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 16 }}>🚩</Text>
-          </Squish>
-          <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.icon, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 16 }}>🧹</Text>
-          </Squish>
+          <BackLink
+            label=""
+            title={busy ? 'Moka · yazıyor…' : `Moka · seviye ${lv.level}`}
+            right={
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
+                  <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
+                </View>
+                <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
+                  <Text style={{ fontSize: 17 }}>📝</Text>
+                </Squish>
+                <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.icon, { backgroundColor: c.surface }]}>
+                  <Text style={{ fontSize: 16 }}>🚩</Text>
+                </Squish>
+                <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.icon, { backgroundColor: c.surface }]}>
+                  <Text style={{ fontSize: 16 }}>🧹</Text>
+                </Squish>
+              </View>
+            }
+          />
         </View>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.8 }}>
           Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
@@ -253,7 +257,7 @@ export default function MokaChat() {
           <NotesList />
         </ScrollView>
       ) : (
-        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })}>
+        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
           {items.map(i => (
             <Appear key={i.id}>
               <Bubble item={i} typed={!reduce && fresh.has(i.id)} onUndo={undoItem} onConfirm={confirmItem} />

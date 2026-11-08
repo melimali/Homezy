@@ -1128,7 +1128,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const { cols, rows } = S;
   const upperCells = S.cells2 && S.cells2.length === S.cells.length ? S.cells2 : null;
   const floor: Floor = floorProp === 1 && upperCells?.some(Boolean) ? 1 : 0;
-  const cells = floor === 1 ? upperCells! : S.cells;
+  const cells = floor === 1 && upperCells ? upperCells : S.cells;
   const ground = S.cells;
   // Kadraj iki katın birleşimine göre: katlar arasında geçerken ev yerinden kaymasın.
   let rMin = rows, cMin = cols, rMax = 0, cMax = 0;
@@ -1335,7 +1335,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       const r = Math.floor(i / cols), col = i % cols, gid = ground[i]!;
       const tint = facade ?? wallOf(S, gid)?.color ?? WHITE;
       const tc = painted ? (dark ? shade(tint, -0.45) : tint) : BRICK;
-      box('g' + i, r, col, 1, 1, Z0, WALL_H, tc).forEach(f => add(f.key.endsWith('t') ? { ...f, fill: upperCells![i] ? shade(slab, -0.1) : (dark ? '#6B6F7A' : '#C9C3BA') } : f));
+      box('g' + i, r, col, 1, 1, Z0, WALL_H, tc).forEach(f => add(f.key.endsWith('t') ? { ...f, fill: upperCells?.[i] ? shade(slab, -0.1) : (dark ? '#6B6F7A' : '#C9C3BA') } : f));
       for (const pt of [P(r + 1, col + 1, Z0 - SLAB), P(r + 1, col, Z0 - SLAB)]) grow(pt);
       if (L < 5) continue;
       const wm = winOf(S, gid);

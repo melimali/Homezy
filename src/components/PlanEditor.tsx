@@ -1,25 +1,31 @@
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ROOM_EMOJI, ROOM_TYPES, TYPES } from '@/domain/constants';
-import { cellCount, emptyState, makeRoom, removeRoom } from '@/domain/logic';
+import { cellCount, emptyState, makeRoom, removeRoom, staggerFirstDay } from '@/domain/logic';
 import { addUpper, applyTemplate, floorCells, floorView, GRID, hasUpper, removeUpper, resizeGrid, restoreSnap, snapOf, TEMPLATES, type Floor, type PlanSnap } from '@/domain/plan-templates';
 import type { AppState } from '@/domain/types';
 import { useTranslation } from '@/i18n/i18n';
+import { tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { PLAN } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
+import { ownTitle, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
 import { MokaMascot } from './MokaMascot';
 import { Appear, Squish } from './motion';
 import { Plan } from './Plan';
+import { PlanGuide } from './PlanGuide';
+import { StartChoice } from './StartChoice';
 import { useToast } from './Toast';
 import { AppHeader, BackLink, Btn, Sheet, styles as ui, T } from './ui';
+import { appAlert } from '@/components/AppAlert';
 
 type Tool = string | 'erase' | null;
 
@@ -34,12 +40,18 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const insets = useSafeAreaInsets();
   const { state: S, update } = useStore();
   const { persona } = usePersona();
+  const planName = useName();
   const recId = persona ? PLAN[persona].template : null;
   const toast = useToast();
-  const { t: tr } = useTranslation();
+  const { t: tr, lang } = useTranslation();
   const [tool, setTool] = useState<Tool>(null);
   const [painting, setPainting] = useState(false);
+  const [nameFocus, setNameFocus] = useState(false);
   const [clearArm, setClearArm] = useState(false);
+  /** İlk kurulumda sade görünüm: hazır plan seç, bitti. Oda paleti, kat, silgi, boyut "Ayrıntılı düzenle" ile açılır. */
+  const [adv, setAdv] = useState(false);
+  /** İlk kurulumda en baştaki soru: sadece kendi odam mı, tüm ev mi. */
+  const [ask, setAsk] = useState(() => !S.setup && S.order.length === 0);
   const [tplArm, setTplArm] = useState<string | null>(null);
   const [history, setHistory] = useState<PlanSnap[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
@@ -107,7 +119,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     const s = stateRef.current;
     if (s.order.some(id => !cellCount(s, id))) {
       update(D => {
-        for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+        for (const id of [...D.order]) if (!cellCount(D, id) && !D.rooms[id]?.virtual) removeRoom(D, id);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,9 +179,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const doSave = () => {
     const first = !S.setup;
     const next = update(D => {
-      for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+      for (const id of [...D.order]) if (!cellCount(D, id) && !D.rooms[id]?.virtual) removeRoom(D, id);
       if (D.cells2 && !D.cells2.some(Boolean)) D.cells2 = null;
       if (D.order.length) D.setup = true;
+      if (first) staggerFirstDay(D);
     });
     if (!next.order.length) {
       toast('Kaydetmek için en az bir oda çiz.');
@@ -184,10 +197,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const save = () => {
     const has = (type: string) => S.order.some(id => S.rooms[id]?.type === type && cellCount(S, id) > 0);
     const missing: string[] = [];
-    if (!has('yatak')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
-    if (!has('mutfak')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
-    if (!missing.length || !S.order.length) return doSave();
-    Alert.alert(
+    const hasMod = (m: string) => S.order.some(id => S.rooms[id]?.virtual && TYPES[S.rooms[id].type].mod === m);
+    if (!has('yatak') && !hasMod('gardirop')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
+    if (!has('mutfak') && !hasMod('buzdolabi')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
+    // Tek oda modunda eksik oda uyarısı yok: kullanıcı bilerek tek oda seçti.
+    if (S.settings.solo || !missing.length || !S.order.length) return doSave();
+    appAlert(
       tr('Evin eksik kaldı 🏡'),
       tr('Şunları çizmeden bu özellikler odalarda görünmez:') + '\n\n• ' + missing.join('\n• ') + '\n\n' + tr('Ben sekmesindeki Gardırop ve Buzdolabı bölümlerinden yine de kullanabilirsin.'),
       [
@@ -231,7 +246,11 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     setFloor(0);
     remember();
     try {
-      update(D => applyTemplate(D, t));
+      update(D => {
+        applyTemplate(D, t);
+        // "Sadece odam": tek oda modu da açılır.
+        D.settings.solo = t.id === 'tek' ? D.order[0] ?? null : null;
+      });
     } catch {
       toast('Plan çizilemedi, tekrar dene.');
       return;
@@ -266,17 +285,40 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       contentContainerStyle={[ui.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }]}
     >
       {editing ? <BackLink /> : <AppHeader />}
-      <View>
-        <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
-        <T v="h1">{editing ? 'Evini düzenle' : 'Evini birlikte çizelim'}</T>
-      </View>
+      {!ask && (
+        <View>
+          <T v="eyebrow">{editing ? 'Ev planı' : 'Adım 1 / 2'}</T>
+          <T v="h1">{ownTitle(planName, 'Plan', '', lang) ? `${ownTitle(planName, 'Plan', '', lang)}${editing ? ' · düzenle' : ' · kontrol et'}` : editing ? 'Evini düzenle' : 'Planını kontrol et'}</T>
+        </View>
+      )}
 
-      <Appear index={1}>
-        <MokaMascot pose={help.pose} title={help.title} message={help.message} size="sm" />
-      </Appear>
+      {!ask && (
+        <View style={{ flexDirection: 'row' }}>
+          <PlanGuide ready={!ask} />
+        </View>
+      )}
+
+      {!ask && (
+        <Appear index={1}>
+          <MokaMascot pose={help.pose} title={help.title} message={help.message} size="sm" />
+        </Appear>
+      )}
+
+      {ask && (
+        <StartChoice
+          onPick={k => {
+            setAsk(false);
+            if (k === 'oda') pickTemplate('tek');
+            if (k === 'yurt') {
+              pickTemplate('tek');
+              update(D => { const id = D.order[0]; if (id && D.rooms[id]) D.rooms[id].name = 'Yurt odam'; });
+            }
+          }}
+        />
+      )}
 
       {/* 1. Hazır şablon */}
-      <View style={{ gap: 8 }}>
+      {!ask && <View style={{ gap: 8 }}>
         <T v="h3">Hazır plan</T>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.row} style={st.bleed}>
           {TEMPLATES.map(t => {
@@ -292,8 +334,12 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         </ScrollView>
         {persona && !rooms.length && <T v="tiny">{PLAN[persona].planTip}</T>}
         {tplArm && <T v="tiny">Şablon mevcut planın yerine geçer. Emin isen tekrar dokun.</T>}
-      </View>
+      </View>}
 
+      {!ask && !(adv || S.setup) && (
+        <Btn kind="ghost" label="✏️ Kendim çizeyim (ayrıntılı)" onPress={() => setAdv(true)} block />
+      )}
+      {(adv || S.setup) && (<>
       {/* 2. Oda paleti */}
       <View style={{ gap: 8 }}>
         <T v="h3">Oda ekle</T>
@@ -326,18 +372,19 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         <ToolPill on={false} disabled={!history.length} label="↩️ Geri al" onPress={undo} />
       </View>
 
+      </>)}
       {/* 3. Plan */}
-      <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
+      {!ask && <View style={[st.canvas, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
         <Plan state={view} edit activeId={tool} onPaint={paint} onPaintingChange={setPainting} />
-      </View>
+      </View>}
 
-      <View style={st.sizeRow}>
+      {(adv || S.setup) && <View style={st.sizeRow}>
         <Stepper label="Genişlik" n={S.cols} min={GRID.minCols} max={GRID.maxCols} onStep={d => resize(d, 0)} />
         <Stepper label="Uzunluk" n={S.rows} min={GRID.minRows} max={GRID.maxRows} onStep={d => resize(0, d)} />
-      </View>
-      <T v="small" style={{ textAlign: 'center' }}>
+      </View>}
+      {!ask && <T v="small" style={{ textAlign: 'center' }}>
         {rooms.length} oda · ~{blocks * 2} m² · {S.cols} × {S.rows} blok{upper ? ' · 2 kat' : ''}
-      </T>
+      </T>}
 
       {/* Odalar: dokun → çiz, kalem → adı / sil */}
       {rooms.length > 0 && (
@@ -361,7 +408,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
                     <Text style={[st.roomM, { color: c.muted }]}>{n * 2} m²</Text>
                   </Squish>
                   <Squish onPress={() => setEditId(id)} hitSlop={8} accessibilityLabel={`${r.name} düzenle`} style={[st.pen, { backgroundColor: c.surface2 }]}>
-                    <Text style={{ fontSize: 11 }}>✏️</Text>
+                    <Text style={{ fontSize: 12 }}>✏️</Text>
                   </Squish>
                 </View>
               );
@@ -370,10 +417,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
         </View>
       )}
 
-      <View style={st.actions}>
+      {!ask && <View style={st.actions}>
         <Btn label={clearArm ? 'Emin misin?' : 'Temizle'} kind={clearArm ? 'danger' : 'ghost'} onPress={clear} style={{ flex: 1 }} />
         <Btn label={editing ? 'Kaydet' : 'Evimi kaydet 🏡'} kind="primary" onPress={save} style={{ flex: 1.6 }} />
-      </View>
+      </View>}
       {footer}
 
       <Sheet open={!!er} onClose={() => setEditId(null)} pose="handyman">
@@ -381,7 +428,10 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
           <>
             <T v="h2">{ROOM_EMOJI[er.type]} Odayı düzenle</T>
             <TextInput
-              value={er.name}
+              // Varsayılan ad ("Salon 2") kayıtta Türkçe durur; yazılmıyorken ekranda dile göre çevrilir.
+              value={nameFocus ? er.name : tx(er.name)}
+              onFocus={() => setNameFocus(true)}
+              onBlur={() => setNameFocus(false)}
               accessibilityLabel="Oda adı"
               maxLength={40}
               onChangeText={v => update(D => void (D.rooms[editId] && (D.rooms[editId].name = v || TYPES[D.rooms[editId].type].label)))}
@@ -446,9 +496,9 @@ function Stepper({ label, n, min, max, onStep }: { label: string; n: number; min
 const st = StyleSheet.create({
   bleed: { marginHorizontal: -22 },
   row: { gap: 10, paddingHorizontal: 22, paddingVertical: 4 },
-  tpl: { width: 92, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 12 },
-  tplT: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  tplS: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
+  tpl: { width: 104, alignItems: 'center', justifyContent: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 6 },
+  tplT: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20, minHeight: 40, textAlign: 'center', textAlignVertical: 'center' },
+  tplS: { fontFamily: fonts.bodyBold, fontSize: 12, textAlign: 'center' },
   pal: { width: 72, alignItems: 'center', gap: 6 },
   palIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
   palPlus: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
@@ -463,13 +513,13 @@ const st = StyleSheet.create({
   stepB: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   stepBT: { fontFamily: fonts.bodyBlack, fontSize: 20, lineHeight: 24 },
   stepN: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 22 },
-  stepL: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  stepL: { fontFamily: fonts.bodyBold, fontSize: 12 },
   roomWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   roomChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 2, maxWidth: '100%' },
   roomMain: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   roomT: { fontFamily: fonts.bodyBlack, fontSize: 13.5, flexShrink: 1 },
-  roomM: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
+  roomM: { fontFamily: fonts.bodyBold, fontSize: 12 },
   pen: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   rename: { fontFamily: fonts.bodyBold, fontSize: 16, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 16 },
   actions: { flexDirection: 'row', gap: 10 },

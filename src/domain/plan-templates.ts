@@ -13,6 +13,7 @@ const LETTER: Record<string, RoomType> = {
 export type PlanTemplate = { id: string; label: string; emoji: string; sub: string; rows: string[] };
 
 export const TEMPLATES: PlanTemplate[] = [
+  { id: 'tek', label: 'Sadece odam', emoji: '🛏️', sub: 'tek oda', rows: ['YYYY', 'YYYY', 'YYYY', 'YYYY'] },
   { id: 'studyo', label: 'Stüdyo', emoji: '🛋️', sub: '1 oda', rows: ['SSSMM', 'SSSMM', 'SSSSS', 'SSSAB', 'SSSAB', 'LLL..'] },
   { id: '1+1', label: '1+1', emoji: '🏠', sub: '2 oda', rows: ['YYYMMM', 'YYYMMM', 'YYYABB', 'SSSABB', 'SSSSSL', 'SSSSSL'] },
   { id: '2+1', label: '2+1', emoji: '🏡', sub: '3 oda', rows: ['YYYMMM', 'YYYMMM', 'YYYABB', 'ZZAABB', 'ZZSSSL', 'ZZSSSL', 'SSSSSL', '......'] },
@@ -22,13 +23,12 @@ export const TEMPLATES: PlanTemplate[] = [
 /** Planı temizleyip şablonu çizer (yerinde değiştirir). */
 export function applyTemplate(S: AppState, t: PlanTemplate) {
   for (const id of [...S.order]) removeRoom(S, id);
-  for (const id of Object.keys(S.rooms)) removeRoom(S, id);
   S.rows = t.rows.length;
-  S.cols = Math.max(...t.rows.map(r => r.length));
+  S.cols = t.rows[0].length;
   const ids: Record<string, string> = {};
   // Odalar planda soldan sağa, yukarıdan aşağı göründükleri sırayla oluşur.
   for (const ch of t.rows.join('')) if (LETTER[ch] && !ids[ch]) ids[ch] = makeRoom(S, LETTER[ch]);
-  S.cells = t.rows.flatMap(r => [...r.padEnd(S.cols, '.')].map(ch => ids[ch] ?? null));
+  S.cells = [...t.rows.join('')].map(ch => ids[ch] ?? null);
   if (S.cells2) S.cells2 = Array(S.cols * S.rows).fill(null);
 }
 

@@ -7,6 +7,7 @@ import { DAY } from '@/domain/constants';
 import { addWater, hKey, waterMet, waterOf } from '@/domain/habits';
 import { allTasks, doneToday, placeOf, sod, uid } from '@/domain/logic';
 import { markDose } from '@/domain/meds';
+import { markPetDone } from '@/domain/pets';
 import { addXp } from '@/domain/mokaLevel';
 import { awardedToday, awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
 import { limits } from '@/domain/premium';
@@ -30,11 +31,12 @@ export const FEEDBACK_CHANNEL = 'geri-bildirim';
 export const MED_CATEGORY = 'ilac-cevap';
 export const WATER_CATEGORY = 'su-cevap';
 export const SPORT_CATEGORY = 'spor-cevap';
+export const PET_CATEGORY = 'evcil-cevap';
 export const TAKEN = 'aldim';
 export const DRANK = 'ictim';
 export const LATER = 'ertele';
 /** "Sonra hatırlat" kaç dakika sonra tekrar çalar. */
-export const SNOOZE_MIN = { med: 10, water: 30, sport: 60 } as const;
+export const SNOOZE_MIN = { med: 10, water: 30, sport: 60, pet: 60 } as const;
 
 export type ReminderKind = keyof typeof SNOOZE_MIN;
 /** Hatırlatma bildirimine konan veri. `key`: ilaçta doz anahtarı. `snooze`: ertelenmiş kopya (yeniden zamanlamada silinmez). */
@@ -70,9 +72,13 @@ export async function ensureCategories(N: NotificationsModule) {
     { identifier: DONE, buttonTitle: tx('✅ Yaptım'), options: opts },
     { identifier: LATER, buttonTitle: tx('⏰ 1 saat sonra'), options: opts },
   ]);
+  await N.setNotificationCategoryAsync(PET_CATEGORY, [
+    { identifier: DONE, buttonTitle: tx('✅ Yaptım'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 1 saat sonra'), options: opts },
+  ]);
 }
 
-export const categoryOf = (k: ReminderKind) => (k === 'med' ? MED_CATEGORY : k === 'water' ? WATER_CATEGORY : SPORT_CATEGORY);
+export const categoryOf = (k: ReminderKind) => (k === 'med' ? MED_CATEGORY : k === 'water' ? WATER_CATEGORY : k === 'pet' ? PET_CATEGORY : SPORT_CATEGORY);
 const channelOf = (k: ReminderKind) => (k === 'med' ? 'ilac' : 'hatirlatma');
 
 /** Bildirim cevabındaki hatırlatma verisi; görev bildirimlerinde null. */
@@ -85,7 +91,7 @@ export function reminderDataOf(content: { data?: unknown; dataString?: unknown }
       return null;
     }
   }
-  if (!data || (data.kind !== 'med' && data.kind !== 'water' && data.kind !== 'sport')) return null;
+  if (!data || (data.kind !== 'med' && data.kind !== 'water' && data.kind !== 'sport' && data.kind !== 'pet')) return null;
   return { url: data.url ?? '/bugun', kind: data.kind, key: data.key, premium: !!data.premium, snooze: !!data.snooze };
 }
 
@@ -98,6 +104,10 @@ export function applyReminderAction(D: AppState, d: ReminderData, now: number, m
     markDose(D, dayKey(now), d.key, 'taken', now);
     const med = D.meds.find(m => d.key!.startsWith(`${m.id}@`));
     return { title: `✅ ${med?.name ?? 'İlaç'}`, body: 'Aldın olarak işaretlendi. Moka gurur duyuyor ☕' };
+  }
+  if (d.kind === 'pet') {
+    const f = d.key ? markPetDone(D, ...(d.key.split('@') as [string, string]), now) : null;
+    return f ? { title: `✅ ${f.pet.name}: ${f.item.name}`, body: 'Kaydedildi. Bir sonraki vakitte hatırlatırım ☕' } : null;
   }
   if (d.kind === 'water') {
     const H = D.play.habits;
@@ -192,7 +202,7 @@ async function handleReminder(
   const known = r.action === LATER || r.action === TAKEN || r.action === DRANK || r.action === DONE;
   if (!known) return false;
   // Eski bir günün cevabı sayılmaz.
-  if (dayKey(r.date || now) !== dayKey(now)) {
+  if (d.kind !== 'pet' && dayKey(r.date || now) !== dayKey(now)) {
     await N.dismissNotificationAsync(r.id).catch(() => {});
     return true;
   }
@@ -212,14 +222,14 @@ async function handleReminder(
     await saveState(S);
     await reschedule(S, d.premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
   }
-  // Alınan dozun bekleyen ertelemeleri de susar.
-  if (d.kind === 'med' && d.key)
+  // Alınan dozun / yapılan bakımın bekleyen ertelemeleri de susar.
+  if ((d.kind === 'med' || d.kind === 'pet') && d.key)
     for (const n of await N.getAllScheduledNotificationsAsync().catch(() => [])) {
       const nd = reminderDataOf(n.content as ResponseContent);
       if (nd?.snooze && nd.key === d.key) await N.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
     }
   const fb = out as ReminderOutcome;
-  if (fb && d.kind !== 'med') {
+  if (fb && d.kind !== 'med' && d.kind !== 'pet') {
     await N.scheduleNotificationAsync({
       identifier: r.id,
       content: { title: tx(fb.title), body: tx(fb.body), data: { url: d.url }, autoDismiss: true },

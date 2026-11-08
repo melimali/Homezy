@@ -3,7 +3,7 @@ import * as SQLite from 'expo-sqlite';
 import { CARE, TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
 import type {
-  AppState, Bill, Med, MedLog, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
+  AppState, Bill, Med, MedLog, Pet, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
 } from '@/domain/types';
 
 /**
@@ -107,6 +107,7 @@ export async function loadState(): Promise<AppState | null> {
     seasonal: json<Record<string, number>>(m.seasonal, {}),
     meds: json<Med[]>(m.meds, []),
     medLog: json<MedLog>(m.medLog, {}),
+    pets: json<Pet[]>(m.pets, []),
     // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
     cells2: json<(string | null)[] | null>(m.cells2, null),
   };
@@ -173,6 +174,7 @@ export async function saveState(S: AppState): Promise<void> {
       ['seasonal', JSON.stringify(S.seasonal)],
       ['meds', JSON.stringify(S.meds ?? [])],
       ['medLog', JSON.stringify(S.medLog ?? {})],
+      ['pets', JSON.stringify(S.pets ?? [])],
       ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],

@@ -117,6 +117,8 @@ export type Settings = {
   expiry: boolean;
   /** İlaç hatırlatmaları (vakit ve nazik ikinci hatırlatma). */
   meds: boolean;
+  /** Evcil hayvan bakım hatırlatmaları (mama, yıkama, aşı…). */
+  pets: boolean;
   /** Pazar akşamı haftalık özet. */
   weekly: boolean;
   /** Esnek zamanlama: zamanı geçen iş, sıklığının yarısı kadar gün daha gecikmiş sayılmaz. */
@@ -319,6 +321,12 @@ export type MedMark = { s: 'taken' | 'skipped'; at: number };
 /** Gün anahtarı → `ilacId@HH:MM` → işaret. */
 export type MedLog = Record<string, Record<string, MedMark>>;
 
+/** Evcil hayvan: kullanıcının eklediği bakım işleri (mama, yıkama, aşı…) ve son yapılma zamanları. */
+export type PetKind = 'kedi' | 'kopek' | 'kus' | 'balik' | 'diger';
+/** `everyH`: kaç saatte bir. `last`: son yapılma (yoksa null, o zaman `start`'tan sayılır). `remind`: bildirim gelsin mi. */
+export type PetItem = { id: string; name: string; emoji: string; everyH: number; last: number | null; start: number; remind: boolean };
+export type Pet = { id: string; name: string; kind: PetKind; emoji?: string; items: PetItem[] };
+
 export type AppState = {
   v: 1;
   setup: boolean;
@@ -348,6 +356,7 @@ export type AppState = {
   seasonal: Record<string, number>;
   meds: Med[];
   medLog: MedLog;
+  pets: Pet[];
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

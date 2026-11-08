@@ -423,6 +423,7 @@ export function emptyState(): AppState {
     seasonal: {},
     meds: [],
     medLog: {},
+    pets: [],
   };
 }
 

@@ -138,6 +138,7 @@ export default function Bildirimler() {
           onChange={v => set('sport', v)}
         />
         <Toggle label="İlaç hatırlatmaları 💊" sub="İlaç vaktinde ve 45 dakika sonra bir nazik ikinci hatırlatma (işaretlediysen gelmez)" value={s.meds} onChange={v => set('meds', v)} />
+        <Toggle label="Evcil hayvan bakımı 🐾" sub="Eklediğin mama, yıkama, aşı gibi işlerin vaktinde (“Yaptım” düğmesiyle)" value={s.pets} onChange={v => set('pets', v)} />
         <Toggle label="Okuma hatırlatması 📖" sub="Akşam 21:00, günlük okuma hedefin tutulmadıysa" value={s.read} onChange={v => set('read', v)} />
         <Toggle label="Su hatırlatması 💧" sub="12:00 ve 17:00, günlük hedef tutulmadıysa" value={s.water} onChange={v => set('water', v)} />
         <Toggle label="Uyku hatırlatması 🌙" sub="Yatış saatinden 30 dakika önce" value={s.sleepRemind} onChange={v => set('sleepRemind', v)} />

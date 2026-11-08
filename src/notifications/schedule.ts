@@ -12,6 +12,7 @@ import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messa
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
+import { petNotifs, stillDue } from '@/domain/pets';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
@@ -147,6 +148,10 @@ async function dismissStale(N: NotificationsModule, S: AppState) {
       await N.dismissNotificationAsync(n.request.identifier);
       continue;
     }
+    if (rem?.kind === 'pet' && rem.key && !stillDue(S, rem.key, now)) {
+      await N.dismissNotificationAsync(n.request.identifier);
+      continue;
+    }
     const data = taskDataOf(n.request.content);
     if (!data) continue;
     const t = tasks.get(data.tid);
@@ -174,7 +179,8 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   for (const n of await N.getAllScheduledNotificationsAsync()) {
     if ((n.content.data as { focus?: boolean } | undefined)?.focus === true) continue;
     const rem = reminderDataOf(n.content);
-    if (rem?.snooze && !(rem.kind === 'med' && rem.key && S.medLog[dayKey(now0)]?.[rem.key])) continue;
+    const doneAlready = rem?.kind === 'med' ? !!(rem.key && S.medLog[dayKey(now0)]?.[rem.key]) : rem?.kind === 'pet' ? !(rem.key && stillDue(S, rem.key, now0)) : false;
+    if (rem?.snooze && !doneAlready) continue;
     await N.cancelScheduledNotificationAsync(n.identifier);
   }
   await dismissStale(N, S).catch(() => {});
@@ -232,6 +238,18 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
         categoryIdentifier: categoryOf('med'),
       },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: MEDS },
+    });
+  // Evcil hayvan bakımı (mama, yıkama, aşı…): kullanıcının eklediği işlerin vaktinde.
+  for (const n of petNotifs(S, now))
+    await N.scheduleNotificationAsync({
+      identifier: n.id,
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: { url: '/evcil', kind: 'pet', key: n.key, premium } satisfies ReminderData,
+        categoryIdentifier: categoryOf('pet'),
+      },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
 }
 

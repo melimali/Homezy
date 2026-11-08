@@ -20,6 +20,7 @@ import { TaskRow } from '@/components/TaskRow';
 import { useToast } from '@/components/Toast';
 import { MealCard } from '@/components/MealCard';
 import { MedsToday } from '@/components/MedsToday';
+import { PetsToday } from '@/components/PetsToday';
 import { useTabTour } from '@/components/useTabTour';
 import { Btn, Card, Chip, EmptyMsg, IconBtn, Pill, Screen, SecHead, T, TitleBar, Chevron } from '@/components/ui';
 import { taskMin, bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVacation, warrantyStatus } from '@/domain/home';
@@ -137,6 +138,7 @@ export default function Bugun() {
       {total === doneN && S.mode?.k !== 'tatil' && <MikroCard />}
       {total > doneN && S.mode?.k !== 'tatil' && <BonusLocked left={total - doneN} />}
       <MedsToday />
+      <PetsToday />
       <DailyGoals now={now} />
       <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
         <Text style={{ fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>

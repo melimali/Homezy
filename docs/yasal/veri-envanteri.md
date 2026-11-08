@@ -4,6 +4,7 @@
 |---|---|---|---|---|---|
 | Ev verisi (AppState: plan, rutin, gardırop, stok, bitki, fatura, garanti, not, günlük, spor, ayarlar, puan) | Kullanıcı | Telefon (SQLite). Hesap varsa `homes` (jsonb) | Supabase (AB) | Hesap açık olduğu sürece | Hesap silme (`delete_me` → cascade); telefonda uygulamayı silme |
 | İlaç takibi (ilaç adı, doz, saatler, alındı/atlandı kaydı) | Kullanıcı | Sadece telefon (SQLite `meta`). Buluta (`homes`) yedeklenmez, aile paylaşımına girmez | - | Uygulama silinene kadar | Uygulamayı silmek ya da ilacı uygulamada silmek |
+| Evcil hayvan bakımı (hayvan adı, türü, bakım işleri, son yapılma zamanı) | Kullanıcı | Telefon (SQLite `meta`); hesaplı kullanıcıda ev yedeğiyle birlikte Supabase `homes` | - | Hesap silinene ya da uygulama silinene kadar | Hayvanı ya da işi uygulamada silmek |
 | Hesap (ad, e-posta, parola hash) | Kullanıcı | `auth.users`, `profiles` | Supabase | Hesap süresi | Hesap silme |
 | Anonim misafir kimliği | Otomatik | `auth.users` | Supabase | Hesap süresi / çıkışta silinir | Misafir çıkışı + hesap silme |
 | Puan, alımlar, harcamalar | Uygulama | `play_events`, `play_owned`, `play_spend` | Supabase | Hesap süresi | Cascade |

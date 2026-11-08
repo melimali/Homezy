@@ -13,6 +13,7 @@ import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
+import { PetsCard } from '@/components/PetsCard';
 import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
 import { MokaReact } from '@/components/MokaReact';
 import { TaskRow } from '@/components/TaskRow';
@@ -242,6 +243,8 @@ export default function Home() {
         } />
         <RoomGrid state={S} now={now} start={3} row />
       </Card>
+
+      <PetsCard />
 
       {houseOpen && (
         <HouseViewer

@@ -15,14 +15,15 @@ export const MAX_DT = 0.05; // uzun kare (yavaş telefon) en fazla bu kadar iler
 export const SUBSTEP = 1 / 120; // sabit adım: kare hızından bağımsız fizik
 export const DAILY_PLAYS = 3;
 
-export type Pipe = { x: number; gap: number; passed: boolean };
+export type Pipe = { id: number; x: number; gap: number; passed: boolean };
+let pipeId = 0;
 export type Flap = { y: number; vy: number; pipes: Pipe[]; score: number; over: boolean; started: boolean; dist: number };
 
 export const newFlap = (): Flap => ({ y: H / 2, vy: 0, pipes: [], score: 0, over: false, started: false, dist: 0 });
 
 const PLAY_H = H - GROUND;
 /** rnd: 0..1 (test için verilebilir). */
-export const makePipe = (x: number, rnd = Math.random()): Pipe => ({ x, gap: 50 + rnd * (PLAY_H - 100 - GAP), passed: false });
+export const makePipe = (x: number, rnd = Math.random()): Pipe => ({ id: pipeId++, x, gap: 50 + rnd * (PLAY_H - 100 - GAP), passed: false });
 
 export function flap(g: Flap, rnd = Math.random()): Flap {
   if (g.over) return g;

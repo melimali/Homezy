@@ -44,7 +44,7 @@ describe('Moka Uçuş', () => {
     expect(circleHitsRect(7, 15, 5, 10, 0, 10, 10)).toBe(false); // köşe boşluğu
   });
   it('sütuna değince biter, boşlukta kalınca bitmez', () => {
-    const p = [{ x: 60, gap: 100, passed: false }];
+    const p = [{ id: 0, x: 60, gap: 100, passed: false }];
     expect(hits(50, p)).toBe(true);
     expect(hits(100 + GAP / 2, p)).toBe(false);
     expect(hits(100 + GAP + 20, p)).toBe(true);

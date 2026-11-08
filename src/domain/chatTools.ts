@@ -7,7 +7,8 @@ import { doseKey, dosesOn, markDose, newMed, removeMed } from './meds';
 import { saveCheckin, answered, checkinOf, type Feel } from './mood';
 import { markPetDone } from './pets';
 import { awardLocal, dayKey, pruneLog } from './play';
-import type { AppState, DayKey, MedMark, StockItem } from './types';
+import { addShop, removeShop, SHOP_CATS } from './shopping';
+import type { AppState, DayKey, MedMark, ShopCat } from './types';
 
 /**
  * Moka sohbet araçlarının uygulama tarafındaki TEK kaydı. Sunucudaki karşılığı:
@@ -59,38 +60,6 @@ export function noteDayLabel(day: DayKey, now = Date.now()) {
   if (day === today) return 'Bugün';
   if (day === dayKey(now + DAY)) return 'Yarın';
   return new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
-}
-
-/* ---------- alışveriş listesi ---------- */
-// Alışveriş listesi şimdilik stok kayıtlarından türer (`shopItems`: durumu "var" olmayanlar). Ayrı bir liste özelliği
-// gelirse sadece bu üç işlev değişir.
-const stocks = (D: AppState) => D.order.flatMap(rid => (D.mod[rid]?.stock ?? []).map(x => ({ x, rid })));
-function homeStock(D: AppState): StockItem[] | null {
-  const kitchen = D.order.find(r => D.rooms[r]?.type === 'mutfak' && D.mod[r]?.stock);
-  const any = kitchen ?? D.order.find(r => D.mod[r]?.stock);
-  return any ? D.mod[any].stock! : null;
-}
-/** Verilen ürünleri listeye alır. Geri döner: eklenenler ve geri almak için eski durumlar. */
-function shopAdd(D: AppState, names: string[]) {
-  const target = homeStock(D);
-  if (!target) return null;
-  const added: string[] = [];
-  const created: string[] = [];
-  const prev: { id: string; lvl: StockItem['lvl'] }[] = [];
-  for (const n of names) {
-    const hit = stocks(D).find(s => norm(s.x.name) === norm(n));
-    if (hit) {
-      if (hit.x.lvl === 'yok') continue;
-      prev.push({ id: hit.x.id, lvl: hit.x.lvl });
-      hit.x.lvl = 'yok';
-    } else {
-      const item: StockItem = { id: uid(), name: n, lvl: 'yok' };
-      target.push(item);
-      created.push(item.id);
-    }
-    added.push(n);
-  }
-  return { added, created, prev };
 }
 
 /* ---------- araçlar ---------- */
@@ -147,51 +116,29 @@ const EXEC: Record<string, Exec> = {
     if (!kind || !(minutes >= 10 && minutes <= 90)) return FAIL;
     return { ok: true, line: `🍅 ${kind.label} odağı: ${minutes} dk`, focus: { minutes, topic: kind.topic } };
   },
-  shop_add(D, a) {
+  shop_add(D, a, { now }) {
     const names = list(a.items, 10, 40);
+    const cat = SHOP_CATS.some(c => c.id === a.cat) ? (a.cat as ShopCat) : 'market';
     if (!names.length) return FAIL;
-    const r = shopAdd(D, names);
-    if (!r) return { ok: false, line: 'Alışveriş listesi için mutfak ya da stok odası yok' };
-    if (!r.added.length) return { ok: true, line: '🛒 Hepsi zaten listede' };
-    return {
-      ok: true,
-      line: `🛒 Ekledim: ${r.added.join(', ')}`,
-      undo: X => {
-        for (const { x } of stocks(X)) {
-          const p = r.prev.find(q => q.id === x.id);
-          if (p) x.lvl = p.lvl;
-        }
-        for (const rid of X.order) if (X.mod[rid]?.stock) X.mod[rid].stock = X.mod[rid].stock!.filter(s => !r.created.includes(s.id));
-      },
-    };
+    const added = names.filter(n => addShop(D, n, cat, now));
+    if (!added.length) return { ok: true, line: '🛒 Hepsi zaten listede' };
+    const ids = D.shop.filter(i => added.some(n => norm(n) === norm(i.name)) && i.at === now).map(i => i.id);
+    return { ok: true, line: `🛒 Ekledim: ${added.join(', ')}`, undo: X => void (X.shop = X.shop.filter(i => !ids.includes(i.id))) };
   },
   shop_check(D, a) {
     const names = list(a.items, 10, 40).map(norm);
-    const prev: { id: string; lvl: StockItem['lvl'] }[] = [];
-    const got: string[] = [];
-    for (const { x } of stocks(D)) {
-      if (x.lvl !== 'var' && names.includes(norm(x.name))) {
-        prev.push({ id: x.id, lvl: x.lvl });
-        x.lvl = 'var';
-        got.push(x.name);
-      }
-    }
-    if (!got.length) return { ok: false, line: 'Listede bulamadım' };
-    return { ok: true, line: `✅ Alındı: ${got.join(', ')}`, undo: X => void stocks(X).forEach(({ x }) => { const p = prev.find(q => q.id === x.id); if (p) x.lvl = p.lvl; }) };
+    const hit = D.shop.filter(i => !i.done && names.includes(norm(i.name)));
+    if (!hit.length) return { ok: false, line: 'Listede bulamadım' };
+    hit.forEach(i => void (i.done = true));
+    const ids = hit.map(i => i.id);
+    return { ok: true, line: `✅ Alındı: ${hit.map(i => i.name).join(', ')}`, undo: X => void X.shop.forEach(i => { if (ids.includes(i.id)) i.done = false; }) };
   },
   shop_remove(D, a) {
     const names = list(a.items, 10, 40).map(norm);
-    const gone: string[] = [];
-    for (const rid of D.order) {
-      const st = D.mod[rid]?.stock;
-      if (!st) continue;
-      D.mod[rid].stock = st.filter(x => {
-        const hit = x.lvl !== 'var' && names.includes(norm(x.name));
-        if (hit) gone.push(x.name);
-        return !hit;
-      });
-    }
-    return gone.length ? { ok: true, line: `🗑️ Listeden çıkardım: ${gone.join(', ')}` } : { ok: false, line: 'Listede bulamadım' };
+    const hit = D.shop.filter(i => names.includes(norm(i.name)));
+    if (!hit.length) return { ok: false, line: 'Listede bulamadım' };
+    hit.forEach(i => removeShop(D, i.id));
+    return { ok: true, line: `🗑️ Listeden çıkardım: ${hit.map(i => i.name).join(', ')}` };
   },
   journal_add(D, a, { now, mult }) {
     const text = txt(a.text, 400);

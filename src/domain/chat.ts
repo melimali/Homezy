@@ -1,5 +1,5 @@
 import { waterOf, hKey } from './habits';
-import { allTasks, placeOf, shopItems } from './logic';
+import { allTasks, placeOf } from './logic';
 import { mokaLevel } from './mokaLevel';
 import { dayKey, progressOf } from './play';
 import type { AppState, DayKey } from './types';
@@ -40,7 +40,7 @@ export function chatCtx(S: AppState, now = Date.now()): ChatCtx {
     streak: progressOf(S.play, now).streak,
     late: refs.filter(x => x.s.k === 'late').length,
     due: refs.filter(x => x.s.k !== 'ok').length,
-    shop: shopItems(S).slice(0, 15).map(x => x.x.name),
+    shop: S.shop.filter(i => !i.done).slice(0, 15).map(i => i.name),
     meds: S.meds.slice(0, 8).map(m => ({ id: m.id, name: m.name })),
     pets: S.pets.slice(0, 5).map(p => ({ id: p.id, name: p.name, items: p.items.slice(0, 8).map(i => ({ id: i.id, name: i.name })) })),
     water: { n: waterOf(S.play.habits, hKey(now)), goal: S.play.habits.waterGoal },

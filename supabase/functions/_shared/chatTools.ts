@@ -45,7 +45,7 @@ export const TOOLS: Tool[] = [
   { name: 'remove_task', d: 'Listedeki bir işi tamamen siler (kullanıcıya onay sorulur).', destructive: true, f: { task_id: { t: 'ref', of: 'task' } } },
   { name: 'add_note', d: 'Takvime not ya da hatırlatma yazar.', f: { day, text: { t: 's', max: 140 }, time: { t: 'time', opt: true, d: 'Saat varsa HH:MM' } } },
   { name: 'start_focus', d: 'Odak (Pomodoro) ekranını açar.', f: { minutes: { t: 'i', min: 10, max: 90 }, kind: { t: 'e', vals: FOCUS_KINDS } } },
-  { name: 'shop_add', d: 'Alışveriş listesine ürün ekler.', f: { items: { t: 'list', max: 10, len: 40, d: 'Ürün adları' } } },
+  { name: 'shop_add', d: 'Alışveriş listesine ürün ekler.', f: { items: { t: 'list', max: 10, len: 40, d: 'Ürün adları' }, cat: { t: 'e', vals: ['market', 'temizlik', 'ev', 'evcil'], opt: true, d: 'Varsayılan market' } } },
   { name: 'shop_check', d: 'Alışveriş listesindeki ürünleri "alındı" yapar (listeden düşer).', f: { items: { t: 'list', max: 10, len: 40 } } },
   { name: 'shop_remove', d: 'Ürünleri alışveriş listesinden tamamen siler (onay sorulur).', destructive: true, f: { items: { t: 'list', max: 10, len: 40 } } },
   { name: 'journal_add', d: 'Bugünün günlüğüne yazı ekler.', f: { text: { t: 's', max: 400 }, mood: { t: 'e', vals: MOODS, opt: true } } },

@@ -5,7 +5,7 @@ import { applyChatAction, needsConfirm, TOOL_NAMES } from '../chatTools';
 import { chatCtx } from '../chat';
 import { newMed } from '../meds';
 import { newPet, newPetItem } from '../pets';
-import { seed, shopItems } from '../logic';
+import { seed } from '../logic';
 import { dayKey } from '../play';
 
 const NOW = new Date(2026, 10, 9, 10, 0).getTime();
@@ -56,17 +56,22 @@ describe('sunucu doğrulaması', () => {
 });
 
 describe('uygulayıcı', () => {
-  it('alışveriş: ekle, alındı, geri al', () => {
+  it('alışveriş: ekle, alındı, sil, geri al', () => {
     const S = world();
-    const before = shopItems(S).length;
-    const r = applyChatAction(S, { type: 'shop_add', items: ['kuru fasulye', 'ekmek'] }, NOW);
+    const r = applyChatAction(S, { type: 'shop_add', items: ['süt', 'ekmek'], cat: 'market' }, NOW);
     expect(r.ok).toBe(true);
-    expect(shopItems(S).map(x => x.x.name)).toEqual(expect.arrayContaining(['kuru fasulye', 'Ekmek']));
+    expect(S.shop.map(i => i.name)).toEqual(expect.arrayContaining(['süt', 'ekmek']));
     r.undo!(S);
-    expect(shopItems(S).length).toBe(before);
-    applyChatAction(S, { type: 'shop_add', items: ['kuru fasulye'] }, NOW);
-    expect(applyChatAction(S, { type: 'shop_check', items: ['Kuru Fasulye'] }, NOW).ok).toBe(true);
-    expect(shopItems(S).some(x => x.x.name === 'kuru fasulye')).toBe(false);
+    expect(S.shop.length).toBe(0);
+    applyChatAction(S, { type: 'shop_add', items: ['süt'] }, NOW);
+    expect(applyChatAction(S, { type: 'shop_add', items: ['Süt'] }, NOW).line).toContain('zaten');
+    const c = applyChatAction(S, { type: 'shop_check', items: ['SÜT'] }, NOW);
+    expect(S.shop[0].done).toBe(true);
+    c.undo!(S);
+    expect(S.shop[0].done).toBe(false);
+    expect(applyChatAction(S, { type: 'shop_remove', items: ['süt'] }, NOW).ok).toBe(true);
+    expect(S.shop.length).toBe(0);
+    expect(applyChatAction(S, { type: 'shop_check', items: ['yok'] }, NOW).ok).toBe(false);
   });
   it('su ve geri alma', () => {
     const S = world();

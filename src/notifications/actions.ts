@@ -4,8 +4,11 @@ import { Platform } from 'react-native';
 
 import { loadState, saveState } from '@/data/db';
 import { DAY } from '@/domain/constants';
-import { allTasks, doneToday, placeOf, sod } from '@/domain/logic';
-import { awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
+import { addWater, hKey, waterMet, waterOf } from '@/domain/habits';
+import { allTasks, doneToday, placeOf, sod, uid } from '@/domain/logic';
+import { markDose } from '@/domain/meds';
+import { addXp } from '@/domain/mokaLevel';
+import { awardedToday, awardLocal, awardToast, dayKey, pruneLog, type AwardResult } from '@/domain/play';
 import { limits } from '@/domain/premium';
 import type { AppState, TaskList } from '@/domain/types';
 
@@ -22,6 +25,20 @@ export const PLANT_CATEGORY = 'bitki';
 export const DONE = 'yaptim';
 export const SKIP = 'yapmadim';
 export const FEEDBACK_CHANNEL = 'geri-bildirim';
+
+/** İlaç, su ve spor hatırlatmaları: uygulamayı açmadan cevaplanır. */
+export const MED_CATEGORY = 'ilac-cevap';
+export const WATER_CATEGORY = 'su-cevap';
+export const SPORT_CATEGORY = 'spor-cevap';
+export const TAKEN = 'aldim';
+export const DRANK = 'ictim';
+export const LATER = 'ertele';
+/** "Sonra hatırlat" kaç dakika sonra tekrar çalar. */
+export const SNOOZE_MIN = { med: 10, water: 30, sport: 60 } as const;
+
+export type ReminderKind = keyof typeof SNOOZE_MIN;
+/** Hatırlatma bildirimine konan veri. `key`: ilaçta doz anahtarı. `snooze`: ertelenmiş kopya (yeniden zamanlamada silinmez). */
+export type ReminderData = { url: string; kind: ReminderKind; key?: string; premium: boolean; snooze?: boolean };
 
 export type TaskAction = typeof DONE | typeof SKIP;
 type NotificationsModule = typeof NotificationsTypes;
@@ -41,6 +58,61 @@ export async function ensureCategories(N: NotificationsModule) {
     { identifier: DONE, buttonTitle: '💧 Suladım', options: opts },
     { identifier: SKIP, buttonTitle: '⏰ Sulamadım, yarın', options: opts },
   ]);
+  await N.setNotificationCategoryAsync(MED_CATEGORY, [
+    { identifier: TAKEN, buttonTitle: tx('💊 Aldım'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 10 dk sonra hatırlat'), options: opts },
+  ]);
+  await N.setNotificationCategoryAsync(WATER_CATEGORY, [
+    { identifier: DRANK, buttonTitle: tx('💧 İçtim'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 30 dk sonra'), options: opts },
+  ]);
+  await N.setNotificationCategoryAsync(SPORT_CATEGORY, [
+    { identifier: DONE, buttonTitle: tx('✅ Yaptım'), options: opts },
+    { identifier: LATER, buttonTitle: tx('⏰ 1 saat sonra'), options: opts },
+  ]);
+}
+
+export const categoryOf = (k: ReminderKind) => (k === 'med' ? MED_CATEGORY : k === 'water' ? WATER_CATEGORY : SPORT_CATEGORY);
+const channelOf = (k: ReminderKind) => (k === 'med' ? 'ilac' : 'hatirlatma');
+
+/** Bildirim cevabındaki hatırlatma verisi; görev bildirimlerinde null. */
+export function reminderDataOf(content: { data?: unknown; dataString?: unknown } | undefined): ReminderData | null {
+  let data = content?.data as Partial<ReminderData> | undefined;
+  if (!data && typeof content?.dataString === 'string') {
+    try {
+      data = JSON.parse(content.dataString) as Partial<ReminderData>;
+    } catch {
+      return null;
+    }
+  }
+  if (!data || (data.kind !== 'med' && data.kind !== 'water' && data.kind !== 'sport')) return null;
+  return { url: data.url ?? '/bugun', kind: data.kind, key: data.key, premium: !!data.premium, snooze: !!data.snooze };
+}
+
+export type ReminderOutcome = { title: string; body: string } | null;
+
+/** İlaç aldım / su içtim / spor yaptım. Aynı cevap iki kez gelse de sonuç değişmez. */
+export function applyReminderAction(D: AppState, d: ReminderData, now: number, mult = 1): ReminderOutcome {
+  if (d.kind === 'med') {
+    if (!d.key) return null;
+    markDose(D, dayKey(now), d.key, 'taken', now);
+    const med = D.meds.find(m => d.key!.startsWith(`${m.id}@`));
+    return { title: `✅ ${med?.name ?? 'İlaç'}`, body: 'Aldın olarak işaretlendi. Moka gurur duyuyor ☕' };
+  }
+  if (d.kind === 'water') {
+    const H = D.play.habits;
+    const day = hKey(now);
+    const willMeet = !waterMet(H, day) && waterOf(H, day) + 1 >= H.waterGoal;
+    addWater(H, day, 1);
+    if (willMeet && awardLocal(D, 'gorev', 'alisk:su', '💧 Su hedefi', now, mult).awarded) addXp(D.play, 'saglik', 3, now);
+    return { title: '💧 Su', body: `${waterOf(H, day)}/${H.waterGoal} bardak. Aferin sana!` };
+  }
+  if (awardedToday(D.play, 'spor', 'spor', now)) return { title: '🏃 Spor', body: 'Bugünkü sporun zaten kayıtlı ✓' };
+  D.play.sport.unshift({ id: uid(), day: dayKey(now), type: 'Spor', min: 20, at: now });
+  D.play.sport.splice(400);
+  const r = awardLocal(D, 'spor', 'spor', '🏃 Spor · 20 dk', now, mult);
+  pruneLog(D.play);
+  return { title: '🏃 Spor', body: awardToast(r, 'Spor') };
 }
 
 export type ActionOutcome = { name: string; result: AwardResult | null; already: boolean };
@@ -93,6 +165,72 @@ export const setLiveStore = (l: Live | null) => void (live = l);
 /** Uygulama açıksa store; ana ekran widget'ı da değişikliği bunun üzerinden yapar. */
 export const liveStore = () => live;
 
+type ResponseContent = { data?: unknown; dataString?: unknown; title?: string | null; body?: string | null };
+type ReminderResponse = { id: string; action: string; date: number; content: ResponseContent };
+
+/** Bu hatırlatmayı `min` dakika sonrası için yeniden kurar. Yeniden zamanlama bunları silmez (`snooze`). */
+async function snooze(N: NotificationsModule, r: ReminderResponse, d: ReminderData, now: number) {
+  const at = new Date(now + SNOOZE_MIN[d.kind] * 60000);
+  const data: ReminderData = { ...d, snooze: true };
+  await N.scheduleNotificationAsync({
+    identifier: `z-${d.kind}-${d.key ?? ''}-${now}`,
+    content: { title: r.content.title ?? '', body: r.content.body ?? '', data, categoryIdentifier: categoryOf(d.kind) },
+    trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: channelOf(d.kind) },
+  }).catch(e => console.warn('Homezy: erteleme kurulamadı', e));
+}
+
+async function handleReminder(
+  N: NotificationsModule,
+  r: ReminderResponse,
+  d: ReminderData,
+  reschedule: (S: AppState, premium: boolean) => Promise<void>,
+): Promise<boolean> {
+  const now = Date.now();
+  const key = `${r.id}:${r.action}`;
+  if (handled.has(key)) return true;
+  handled.add(key);
+  const known = r.action === LATER || r.action === TAKEN || r.action === DRANK || r.action === DONE;
+  if (!known) return false;
+  // Eski bir günün cevabı sayılmaz.
+  if (dayKey(r.date || now) !== dayKey(now)) {
+    await N.dismissNotificationAsync(r.id).catch(() => {});
+    return true;
+  }
+  if (r.action === LATER) {
+    await snooze(N, r, d, now);
+    await N.dismissNotificationAsync(r.id).catch(() => {});
+    return true;
+  }
+  const mult = limits(d.premium).mult;
+  let out: ReminderOutcome = null;
+  if (live) {
+    live.update(D => void (out = applyReminderAction(D, d, now, mult)));
+  } else {
+    const S = await loadState();
+    if (!S) return true;
+    out = applyReminderAction(S, d, now, mult);
+    await saveState(S);
+    await reschedule(S, d.premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
+  }
+  // Alınan dozun bekleyen ertelemeleri de susar.
+  if (d.kind === 'med' && d.key)
+    for (const n of await N.getAllScheduledNotificationsAsync().catch(() => [])) {
+      const nd = reminderDataOf(n.content as ResponseContent);
+      if (nd?.snooze && nd.key === d.key) await N.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
+    }
+  const fb = out as ReminderOutcome;
+  if (fb && d.kind !== 'med') {
+    await N.scheduleNotificationAsync({
+      identifier: r.id,
+      content: { title: tx(fb.title), body: tx(fb.body), data: { url: d.url }, autoDismiss: true },
+      trigger: Platform.OS === 'android' ? { channelId: FEEDBACK_CHANNEL } : null,
+    }).catch(() => N.dismissNotificationAsync(r.id));
+  } else {
+    await N.dismissNotificationAsync(r.id).catch(() => {});
+  }
+  return true;
+}
+
 /** Aynı cevabı iki kez işleme (arka plan görevi ve dinleyici aynı anda gelebilir). */
 const handled = new Set<string>();
 
@@ -102,10 +240,12 @@ const handled = new Set<string>();
  */
 export async function handleTaskAction(
   N: NotificationsModule,
-  r: { id: string; action: string; date: number; content: { data?: unknown; dataString?: unknown } | undefined },
+  r: { id: string; action: string; date: number; content: ResponseContent | undefined },
   reschedule: (S: AppState, premium: boolean) => Promise<void>,
 ): Promise<boolean> {
   const { id, action } = r;
+  const rem = reminderDataOf(r.content);
+  if (rem) return handleReminder(N, r as ReminderResponse, rem, reschedule);
   if (action !== DONE && action !== SKIP) return false;
   const data = taskDataOf(r.content);
   if (!data) return false;

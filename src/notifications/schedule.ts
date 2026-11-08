@@ -8,14 +8,14 @@ import { allTasks, doneToday, greet, notifs } from '@/domain/logic';
 import { firstOpenDay } from '@/lib/events';
 import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
-import { eveningNudge, sportLine, summaryTail } from '@/domain/messages';
+import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
-import { ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, TASK_CATEGORY, taskDataOf, type TaskData } from './actions';
+import { categoryOf, ensureCategories, FEEDBACK_CHANNEL, PLANT_CATEGORY, reminderDataOf, TASK_CATEGORY, taskDataOf, type ReminderData, type ReminderKind, type TaskData } from './actions';
 
 /** Kaç günlük sabah özeti önceden zamanlanır. Uygulama her açıldığında ve veri değiştikçe yenilenir. */
 const DAYS_AHEAD = 7;
@@ -142,6 +142,11 @@ async function dismissStale(N: NotificationsModule, S: AppState) {
   const now = Date.now();
   const tasks = new Map(allTasks(S, now).map(x => [x.t.id, x.t]));
   for (const n of await N.getPresentedNotificationsAsync()) {
+    const rem = reminderDataOf(n.request.content);
+    if (rem?.kind === 'med' && rem.key && S.medLog[dayKey(now)]?.[rem.key]) {
+      await N.dismissNotificationAsync(n.request.identifier);
+      continue;
+    }
     const data = taskDataOf(n.request.content);
     if (!data) continue;
     const t = tasks.get(data.tid);
@@ -156,6 +161,7 @@ async function dismissStale(N: NotificationsModule, S: AppState) {
  */
 export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   const smart = premium && S.settings.smart;
+  const now0 = Date.now();
   const N = getNotifications();
   if (!N) return;
   if ((await getPermission()) !== 'granted') return;
@@ -164,8 +170,13 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   await ensureChannel(N);
   await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
   // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
-  for (const n of await N.getAllScheduledNotificationsAsync())
-    if ((n.content.data as { focus?: boolean } | undefined)?.focus !== true) await N.cancelScheduledNotificationAsync(n.identifier);
+  // Ertelenmiş hatırlatmalar da kalır; ama dozu zaten işaretlenmişse gitsin.
+  for (const n of await N.getAllScheduledNotificationsAsync()) {
+    if ((n.content.data as { focus?: boolean } | undefined)?.focus === true) continue;
+    const rem = reminderDataOf(n.content);
+    if (rem?.snooze && !(rem.kind === 'med' && rem.key && S.medLog[dayKey(now0)]?.[rem.key])) continue;
+    await N.cancelScheduledNotificationAsync(n.identifier);
+  }
   await dismissStale(N, S).catch(() => {});
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
@@ -202,14 +213,24 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
   }
   for (const n of nudges(S, now, smart, premium))
     await N.scheduleNotificationAsync({
-      content: { title: tx(n.title), body: tx(n.body), data: { url: n.url } },
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: n.kind ? ({ url: n.url, kind: n.kind, premium } satisfies ReminderData) : { url: n.url },
+        ...(n.kind ? { categoryIdentifier: categoryOf(n.kind) } : {}),
+      },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
   // İlaç hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen doz atlanır.
   for (const n of medNotifs(S, now))
     await N.scheduleNotificationAsync({
       identifier: n.id,
-      content: { title: tx(n.title), body: tx(n.body), data: { url: '/ilac' } },
+      content: {
+        title: tx(n.title),
+        body: tx(n.body),
+        data: { url: '/ilac', kind: 'med', key: n.key, premium } satisfies ReminderData,
+        categoryIdentifier: categoryOf('med'),
+      },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: MEDS },
     });
 }
@@ -221,7 +242,7 @@ export async function rescheduleMorningSummaries(S: AppState, premium = false) {
  * her akşam değil, 3., 5. ve 7. gün nazik bir "kaldığın yerden devam" gider.
  */
 export function nudges(S: AppState, now = Date.now(), smart = false, premium = false) {
-  const out: { at: Date; title: string; body: string; url: string }[] = [];
+  const out: { at: Date; title: string; body: string; url: string; kind?: ReminderKind }[] = [];
   const set = S.settings;
   const today = dayKey(now);
   const hp = progressOf(S.play, now);
@@ -235,7 +256,7 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
     if (set.sport && set.sportDays.includes(base.getDay()) && !(key === today && awardedToday(S.play, 'spor', 'spor', now))) {
       const at = new Date(base);
       at.setHours(sh || 0, sm || 0, 0, 0);
-      if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor' });
+      if (at.getTime() > now) out.push({ at, title: '🏃 Spor vakti', body: sportLine('spor', at.getTime()), url: '/spor', kind: 'sport' });
     }
     // Okuma hedefi: kitap ya da okuma kaydı olanlara akşam 21:00, o gün hedef tutulmadıysa.
     if (set.read && (S.play.growth.books.length || S.play.growth.reads.length) && !(key === today && goalMet(S.play.growth, today))) {
@@ -248,7 +269,7 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       for (const hr of [12, 17]) {
         const at = new Date(base);
         at.setHours(hr, 0, 0, 0);
-        if (at.getTime() > now) out.push({ at, title: '💧 Su molası', body: 'Bir bardak su iyi gelir. Moka da içiyor ☕', url: '/aliskanlik' });
+        if (at.getTime() > now) out.push({ at, ...waterNudge(`su${hr}`, at.getTime()), url: '/aliskanlik', kind: 'water' });
       }
     }
     if (set.sleepRemind && S.play.habits.sleep && Object.keys(S.play.habits.sleep).length) {

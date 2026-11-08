@@ -6,7 +6,7 @@ import type { RoomType, StatusKind, StockItem } from './types';
  */
 
 /** Metinden ve günden sabit bir sayı üretir; havuzdan mesaj seçmek için. */
-function pick<T>(pool: readonly T[], key: string, now: number): T {
+export function pick<T>(pool: readonly T[], key: string, now: number): T {
   const day = Math.floor(now / 864e5);
   let h = day;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
@@ -162,7 +162,42 @@ export function sportLine(key: string, now: number) {
       'Biraz hareket iyi gelir 🧘 Hazır mısın?',
       '15 dakikalık bir yürüyüş bile seriyi sürdürür 🚶✨',
       'Kaslar uyanmak istiyor 💪😄',
+      'Moka ısınma hareketlerine başladı bile 🦜💨 Sen de gel!',
+      'Bugün küçük bir antrenman, yarın büyük bir fark 🌱💪',
+      'Minderi ser, müziği aç, 10 dakika yeter 🎶🧘',
     ],
+    key,
+    now,
+  );
+}
+
+/** Su molası: başlık ve metin, gün ve saate göre değişir. */
+export function waterNudge(key: string, now: number) {
+  return {
+    title: pick(['💧 Su molası', '🥤 Bir yudum su?', '🌿 Moka su içiyor'], key, now),
+    body: pick(
+      [
+        'Bir bardak su iyi gelir. Moka da içiyor ☕',
+        'Su içtin mi? Bardak elinde olsun 💧😊',
+        'Küçük bir mola, büyük bir tazelik 🌊',
+        'Bedenin “su lütfen” diyor 🫗✨',
+      ],
+      key,
+      now,
+    ),
+  };
+}
+
+/** İlaç vakti: ilk hatırlatma ve nazik ikinci hatırlatma. */
+export function medNudge(label: string, key: string, now: number) {
+  return {
+    title: pick(['💊 İlaç vakti', '☕ Moka hatırlatıyor', '🌿 Küçük bir hatırlatma'], key, now),
+    body: pick([`${label} · vakti geldi`, `${label} için bir an ayıralım mı?`, `${label} seni bekliyor, acele yok 🤍`], key, now),
+  };
+}
+export function medAgain(name: string, key: string, now: number) {
+  return pick(
+    [`${name} aldın mı? Aldıysan “Aldım”a dokun.`, `${name} hâlâ bekliyor. Aldıysan işaretleyelim mi?`, `Moka usulca soruyor: ${name} tamam mı? ☕`],
     key,
     now,
   );

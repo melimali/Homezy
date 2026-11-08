@@ -124,12 +124,6 @@ export default function Bahce() {
 
       <Appear index={4}>
       <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
-        <Float amp={6} dur={5200} style={[styles.blob, { top: -30, right: -20 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.blue }]} />
-        </Float>
-        <Float amp={5} dur={4400} delay={600} style={[styles.blob, { bottom: 40, left: -40 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.clay }]} />
-        </Float>
         <View pointerEvents="none" style={[styles.sky, { backgroundColor: c.surface }]} />
         <Float amp={3} dur={3800} style={styles.sun}><Text style={{ fontSize: 34 }}>☀️</Text></Float>
         <Float amp={8} dur={9000} style={[styles.cloud, { top: 22, left: '38%' }]}><Text style={{ fontSize: 26, opacity: 0.85 }}>☁️</Text></Float>
@@ -221,7 +215,7 @@ export default function Bahce() {
 
       {detailFlower && (
         <Sheet open={!!detailFlower} onClose={() => setDetailFlower(null)} pose="plants">
-          <View style={{ alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+          <View style={{ alignItems: 'center', gap: 12, paddingTop: 18, paddingBottom: 6 }}>
             <PlantArt flower={detailFlower} stage={5} size={110} />
             <T v="h2">{detailFlower.emoji} {detailFlower.name}</T>
             <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -240,7 +234,7 @@ export default function Bahce() {
                 Tohum Fiyatı: ⭐ {detailFlower.price}
               </Text>
             </View>
-            <Btn label="Kapat" onPress={() => setDetailFlower(null)} block style={{ marginTop: 10 }} />
+            <Btn kind="primary" label="Kapat" onPress={() => setDetailFlower(null)} block style={{ marginTop: 10 }} />
           </View>
         </Sheet>
       )}
@@ -562,8 +556,6 @@ const styles = StyleSheet.create({
   grass: { position: 'absolute', bottom: -4, left: 0, right: 0, alignItems: 'center', opacity: 0.7 },
   grassT: { fontSize: 22, letterSpacing: 2 },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
-  blob: { position: 'absolute', width: 150, height: 150, opacity: 0.35 },
-  blobIn: { flex: 1, borderRadius: 75 },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { flex: 1, padding: 14, borderRadius: radius.tile },

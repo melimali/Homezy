@@ -91,6 +91,7 @@ const leaf = (key: string, x: number, y: number, rx: number, ry: number, rot: nu
 export function PlantArt({ flower, stage, size = 72, pot = true }: { flower?: Flower; stage: number; size?: number; pot?: boolean }) {
   const parts: ReactElement[] = [];
   const soilY = 58;
+  const pad = flower && stage >= 5 ? 16 : 0; // açan çiçek üstten kırpılmasın
   if (flower && stage >= 0) {
     if (stage === 0) parts.push(<Ellipse key="seed" cx={30} cy={soilY - 1} rx={3} ry={2} fill="#C9A98F" />);
     if (stage >= 1) {
@@ -106,7 +107,12 @@ export function PlantArt({ flower, stage, size = 72, pot = true }: { flower?: Fl
     }
   }
   return (
-    <Svg width={size} height={(size * 80) / 60} viewBox="0 0 60 80">
+    <Svg
+      width={size}
+      height={(size * (80 + pad)) / 60}
+      viewBox={`0 ${-pad} 60 ${80 + pad}`}
+      style={pad ? { marginTop: -(size * pad) / 60 } : undefined}
+    >
       <Ellipse cx={30} cy={78} rx={20} ry={2.4} fill="#000" fillOpacity={0.12} />
       <G>{parts}</G>
       {pot && (

@@ -560,7 +560,7 @@ export function Sheet({ open, onClose, children, pose = 'happy', scroll = false 
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={open} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityLabel="Kapat" />
       <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }, scroll && { maxHeight: height - insets.top - 90 }]}>
         <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
@@ -616,7 +616,7 @@ export const styles = StyleSheet.create({
   heroMoka: { width: 82, height: 82 },
   empty: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   emptyMoka: { width: 104, height: 104 },
-  sheetMoka: { position: 'absolute', top: -70, right: 28, width: 92, height: 92 },
+  sheetMoka: { position: 'absolute', top: -62, right: 24, width: 84, height: 84, zIndex: 2 },
   bell: { width: hit, height: hit, borderRadius: hit / 2, alignItems: 'center', justifyContent: 'center', borderWidth: 0 },
   badge: { position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   navBar: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: hit },

@@ -67,12 +67,12 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Text style={{ fontSize: 48 }}>🏡</Text>
         <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar."}</T>
+        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium: Moka sohbeti, daha çok tarama, 2. kat ve temalar, 5 ev, aile paylaşımı ve reklamsız deneyim."}</T>
       </View>
 
       <View style={[styles.limits, { backgroundColor: c.surface, borderColor: c.line }]}>
         <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink, textAlign: 'center' }}>
-          💬 Günde {LIMITS.premium.chats} Moka mesajı · 📸 {LIMITS.premium.scans} fotoğraf taraması
+          💬 Günde {LIMITS.premium.chats} Moka mesajı · 📸 Günde {LIMITS.premium.scans} tarama
         </Text>
         <T v="tiny" style={{ textAlign: 'center' }}>Ücretsizde fotoğraf taraması haftada {LIMITS.free.scans}; sohbet Premium'a özel.</T>
       </View>

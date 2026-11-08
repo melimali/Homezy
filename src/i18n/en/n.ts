@@ -76,4 +76,10 @@ export const EN_N: Record<string, string> = {
   'Yorgun günlerde Bugün\'deki "Hafif gün" düğmesi 1-2 işe indirir. Gün yine sayılır.': 'On tired days the "Light day" button in Today cuts it to 1-2 tasks. The day still counts.',
   'Anladım. İşleri yeniden adım adım açıyorum, günde daha az görürsün.': 'Got it. I will open tasks step by step again, so you see fewer per day.',
   'Bonus bölümünden ve Moka\'dan yeni küçük şeyler deneyelim.': 'Let us try something new from the Bonus section and from Moka.',
+  'Seri ve günlük görevler': 'Streak and daily tasks',
+  'Ev temaları': 'Home themes',
+  '3D ev: 2. kat ve Premium eşyalar': '3D home: 2nd floor and Premium items',
+  'Günde 6 öneri': '6 suggestions a day',
+  'Evin işleri her iki planda da ücretsiz. Premium: Moka sohbeti, daha çok tarama, 2. kat ve temalar, 5 ev, aile paylaşımı ve reklamsız deneyim.': 'Home chores are free on both plans. Premium: Moka chat, more scans, 2nd floor and themes, 5 homes, family sharing and an ad-free experience.',
+  '💬 Günde 25 Moka mesajı · 📸 Günde 10 tarama': '💬 25 Moka messages a day · 📸 10 scans a day',
 };

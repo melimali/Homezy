@@ -160,7 +160,7 @@ export default function Hesap() {
       t('deleteAccount'),
       async () => {
         setBusy('delete');
-        const r = await deleteAccount();
+        const r = await deleteAccount().catch(() => ({ ok: false as const, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' }));
         setBusy(null);
         if (!r.ok) return toast(r.error);
         replace(emptyState());
@@ -241,10 +241,10 @@ export default function Hesap() {
       </View>
 
       <View style={{ gap: 8 }}>
-        <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+        <Pressable onPress={doSignOut} disabled={busy === 'out' || busy === 'delete'} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
           <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
         </Pressable>
-        <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+        <Pressable onPress={doDelete} disabled={busy === 'out' || busy === 'delete'} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
           <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
         </Pressable>
       </View>

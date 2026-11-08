@@ -145,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     // Tanıtım tekrar gösterilmez: çıkınca doğrudan giriş ekranı açılır (kurulum sorusu çıkmaz).
     setGuestFlag(false);
+    // Önce yerel oturum düşer (giriş ekranı hemen açılır); sunucu yanıtı beklenip takılmaz.
+    setSession(null);
     if (supabase) await withTimeout(supabase.auth.signOut({ scope: 'local' }).catch(() => null), 4000, null);
     setSession(null);
   }, []);
@@ -156,9 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (off) return off;
       // Kullanıcıyı, profilini, ev yedeğini ve abonelik kaydını siler (supabase/migrations: delete_me).
       // Mağaza aboneliğini kullanıcı App Store / Google Play'den kendisi iptal eder; ekranda bunu söylüyoruz.
-      await removeAllPhotos(session.user.id);
-      const { error } = await supabase.rpc('delete_me');
-      if (error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
+      await withTimeout(removeAllPhotos(session.user.id), 8000, undefined);
+      const res = await withTimeout(Promise.resolve(supabase.rpc('delete_me')), 20000, null);
+      if (!res || res.error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
     }
     await signOut();
     return { ok: true };

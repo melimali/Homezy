@@ -13,16 +13,17 @@ export const GAP = 380;
 
 export type Queue = ReturnType<typeof createQueue>;
 
-export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof clearTimeout = clearTimeout) {
+export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof clearTimeout = clearTimeout, closed: string[] = []) {
   const wants = new Set<Step>();
   const subs = new Set<() => void>();
   let current: Step | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   const emit = () => subs.forEach(f => f());
-  const best = () => ORDER.find(s => wants.has(s)) ?? null;
+  const shut = new Set<string>(closed);
+  const best = () => (shut.size ? null : ORDER.find(s => wants.has(s)) ?? null);
 
   const reconcile = () => {
-    if (current && !wants.has(current)) {
+    if (current && (!wants.has(current) || shut.size)) {
       current = null;
       emit();
     }
@@ -44,6 +45,13 @@ export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof
       else wants.delete(id);
       reconcile();
     },
+    /** Kapı: herhangi bir anahtar kapalıysa (ör. açılış animasyonu, tanıtım) hiçbir pencere gelmez. */
+    gate(key: string, open: boolean) {
+      if (open === !shut.has(key)) return;
+      if (open) shut.delete(key);
+      else shut.add(key);
+      reconcile();
+    },
     get current() {
       return current;
     },
@@ -55,6 +63,7 @@ export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof
     },
     reset() {
       wants.clear();
+      shut.clear();
       if (timer) clearT(timer);
       timer = null;
       current = null;
@@ -62,7 +71,14 @@ export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof
   };
 }
 
-const queue = createQueue();
+const queue = createQueue(setTimeout, clearTimeout, ['splash', 'intro']);
+
+/** Açılış animasyonu ve tanıtım bitmeden "nasılsın" gibi pencereler çıkmasın. */
+export function useStepGate(key: string, open: boolean) {
+  useEffect(() => {
+    queue.gate(key, open);
+  }, [key, open]);
+}
 
 /** Pencere gösterilmek istiyorsa `wants` true ver; sıra ona gelince true döner. */
 export function useStep(id: Step, wants: boolean): boolean {

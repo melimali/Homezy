@@ -11,6 +11,7 @@ import { shareCard } from '@/lib/share';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
+import { tx } from '@/i18n/runtime';
 import { brand, fonts, radius, useColors } from '@/theme';
 
 type Frame = { level: number; idle: number; cap: string; shake?: boolean; ms?: number };
@@ -103,7 +104,7 @@ export default function Hikaye() {
           <Text style={[styles.sub, { color: c.muted }]}>Her gün minik bir iş. Bir gün kaçırsan da ev seni bekler.</Text>
         </View>
       ) : (
-        <Animated.Text style={[styles.cap, { color: c.ink, opacity: fade }]}>{f.cap}</Animated.Text>
+        <Animated.Text style={[styles.cap, { color: c.ink, opacity: fade }]}>{tx(f.cap)}</Animated.Text>
       )}
       <Animated.View style={{ width: '100%', transform: [{ translateX: shake }] }}>
         <House3D state={S} now={now} build={end ? { level: frames[0].level, idle: 0 } : f} theme={themeFor(S.settings.theme, premium.active)} labels={false} />

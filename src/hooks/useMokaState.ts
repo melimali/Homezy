@@ -7,6 +7,7 @@ import { personaLine } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
+import { getLang, tx } from '@/i18n/runtime';
 
 /**
  * Moka'nın şu anki pozu ve sözü: gecikmiş işler, ev puanı, açık oda, mod ve saate göre.
@@ -29,8 +30,13 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     // Üç günden birinde Moka söze adla başlar (misafirde hitap yok).
     const day = Number(status.day.replace(/\D/g, '')) + shift;
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
-    return { ...q, message: `${name}, ${q.message.charAt(0).toLocaleLowerCase('tr')}${q.message.slice(1)}` };
-  }, [status, shift, name, persona, roomId]);
+    // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
+    const en = getLang() === 'en';
+    const msg = en ? tx(q.message) : q.message;
+    const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);
+    const first = keepCase ? msg.charAt(0) : msg.charAt(0).toLocaleLowerCase(en ? 'en' : 'tr');
+    return { ...q, message: `${name}, ${first}${msg.slice(1)}` };
+  }, [status, shift, name, persona, roomId, getLang()]);
   const next = useCallback(() => setShift(x => x + 1), []);
   return { ...m, image: MOKA_ASSETS[m.pose], status, next };
 }

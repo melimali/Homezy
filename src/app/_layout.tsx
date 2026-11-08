@@ -27,7 +27,7 @@ import { configureNotifications } from '@/notifications/schedule';
 import { trackOpen } from '@/lib/events';
 import { prefs } from '@/lib/supabase';
 import { markFirstDay, needsCheckin } from '@/domain/mood';
-import { sessionNo, useStep } from '@/lib/firstRun';
+import { sessionNo, useStep, useStepGate } from '@/lib/firstRun';
 import { setSfxEnabled } from '@/lib/sfx';
 import { usePlaySync } from '@/play/usePlay';
 import { useLeaderboardSync } from '@/leaderboard/leaderboard';
@@ -54,6 +54,7 @@ export default function RootLayout() {
   const c = useColors();
   const [introDone, setIntroDone] = useState(false);
   const [meikai, setMeikai] = useState<'play' | 'fade' | 'done'>('play');
+  useStepGate('splash', introDone && meikai === 'done');
   const [fontsLoaded, fontError] = useFonts({
     Baloo2_600SemiBold, Baloo2_700Bold, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Caveat_700Bold,
   });
@@ -126,6 +127,7 @@ function RootStack() {
   const sound = state.settings.sound;
   useEffect(() => setSfxEnabled(sound), [sound]);
 
+  useStepGate('intro', introSeen && status !== 'signedOut' && status !== 'loading');
   const loading = status === 'loading';
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync().catch(() => {});

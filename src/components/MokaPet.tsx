@@ -139,10 +139,12 @@ export function MokaPet({
       raf = requestAnimationFrame(tick);
       const s = sim.current;
       if (!s) return;
-      const dt = Math.min(0.1, last ? (ts - last) / 1000 : 0.016);
+      const dt = Math.min(0.25, last ? (ts - last) / 1000 : 0.016);
       last = ts;
       acc += dt;
-      if (acc < 1 / 30) return;
+      // Yürürken/oynarken ~24 kare, dururken ~8 kare: JS iş parçacığı + SVG yeniden çizimi ucuz kalsın.
+      const busy = s.mode === 'walk' || s.mode === 'hop' || s.mode === 'cheer' || s.mode === 'fluff';
+      if (acc < (busy ? 1 / 24 : 1 / 8)) return;
       const d = acc; acc = 0;
       s.t += d;
       // göz kırpma

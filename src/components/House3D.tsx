@@ -1,3 +1,4 @@
+import { useActive } from '@/hooks/useActive';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text as RNText, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
@@ -1012,7 +1013,9 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const [breathAnim] = useState(() => new Animated.Value(0));
   const [twinkle] = useState(() => new Animated.Value(0));
   const previousLevel = useRef(L);
-  const [reduce, setReduce] = useState(false);
+  const [reduceSys, setReduce] = useState(false);
+  const active = useActive();
+  const reduce = reduceSys || !active;
   const [boxW, setBoxW] = useState(0);
   const [burst, setBurst] = useState(0);
   const [pinch] = useState(() => new Animated.Value(1));

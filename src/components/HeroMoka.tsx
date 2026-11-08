@@ -1,3 +1,4 @@
+import { useActive } from '@/hooks/useActive';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
@@ -84,7 +85,9 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
   below?: ReactNode;
   children?: ReactNode;
 }) {
-  const reduce = useReduceMotion();
+  const reduceSys = useReduceMotion();
+  const active = useActive();
+  const reduce = reduceSys || !active;
   const def = scene;
   const [w, setW] = useState(0);
   const h = w ? Math.round(w / ratio) : 0;

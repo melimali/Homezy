@@ -1,3 +1,4 @@
+import { useActive } from '@/hooks/useActive';
 import { memo, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -37,7 +38,9 @@ const DOTS: [number, number, number, number, number][] = [
 
 function Dot({ x, size, dur, delay, travel, color }: { x: number; size: number; dur: number; delay: number; travel: number; color: string }) {
   const [v] = useState(() => new Animated.Value(0));
+  const active = useActive();
   useEffect(() => {
+    if (!active) return;
     const a = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
@@ -47,7 +50,7 @@ function Dot({ x, size, dur, delay, travel, color }: { x: number; size: number; 
     );
     a.start();
     return () => a.stop();
-  }, [v, dur, delay]);
+  }, [v, dur, delay, active]);
   return (
     <Animated.View
       pointerEvents="none"

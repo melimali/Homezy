@@ -86,26 +86,31 @@ function TaniyalimInner() {
   const [slide] = useState(() => new Animated.Value(0));
   const [fade] = useState(() => new Animated.Value(1));
   const busy = useRef(false);
+  const [locked, setLocked] = useState(false);
   const reduce = useRef(false);
   useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(v => { reduce.current = v; }).catch(() => {}); }, []);
   const transition = (dir: 1 | -1, swap: () => void, hold = 0) => {
     if (busy.current) return;
     if (reduce.current) { swap(); return; }
     busy.current = true;
+    setLocked(true);
     // Önce seçili hâl kısa süre görünür (hold), sonra eski soru süzülüp çıkar, yenisi gelir. Dokunmalar bu sürede kilitli.
     Animated.sequence([
       Animated.delay(hold),
       Animated.parallel([
-        Animated.timing(slide, { toValue: -dir * 36, duration: 240, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 0, duration: 240, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+        Animated.timing(slide, { toValue: -dir * 28, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0, duration: 200, easing: Easing.in(Easing.quad), useNativeDriver: true }),
       ]),
     ]).start(() => {
+      // Yeni içerik çizilene kadar görünmez kal (eski içeriğin geri parlamasını önler), sonra tek kez içeri gir.
       swap();
-      slide.setValue(dir * 36);
-      Animated.parallel([
-        Animated.timing(slide, { toValue: 0, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 1, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      ]).start(() => { busy.current = false; });
+      slide.setValue(dir * 28);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        Animated.parallel([
+          Animated.timing(slide, { toValue: 0, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(fade, { toValue: 1, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start(() => { busy.current = false; setLocked(false); });
+      }));
     });
   };
 
@@ -214,7 +219,7 @@ function TaniyalimInner() {
             ) : (
               <View style={{ gap: 10 }} key={`${key}`}>
                 {opts.map((o, i) => (
-                  <Appear key={o.v} index={i * 2}>
+                  <View key={o.v}>
                     <OptionCard
                       opt={o}
                       qk={key}
@@ -224,14 +229,14 @@ function TaniyalimInner() {
                       narrow={narrow}
                       onPress={() => pick(o.v)}
                     />
-                  </Appear>
+                  </View>
                 ))}
               </View>
             )}
           </ScrollView>
         </Animated.View>
 
-        <Cta label={ctaLabel} enabled={ctaOn} onPress={next} />
+        <Cta label={ctaLabel} enabled={ctaOn && !locked} onPress={next} />
       </View>
     </KeyboardAvoidingView>
   );

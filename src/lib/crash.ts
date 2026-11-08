@@ -55,3 +55,15 @@ export function reportError(e: unknown) {
     S?.captureException(e);
   } catch {}
 }
+
+/** Sentry testi: gizli tetik (Ben sekmesi, sürüm yazısına uzun bas). Gönderildiyse true. */
+export async function sendTestError(): Promise<boolean> {
+  try {
+    if (!S) return false;
+    S.captureException(new Error('Homezy Sentry test hatası (' + new Date().toISOString() + ')'));
+    await S.flush(4000);
+    return true;
+  } catch {
+    return false;
+  }
+}

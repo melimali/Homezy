@@ -23,6 +23,7 @@ import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
 import { legalUrl } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
+import { sendTestError } from '@/lib/crash';
 import { isOwner } from '@/auth/owner';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
@@ -230,7 +231,12 @@ export default function Hesap() {
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
           Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Hava durumu: Open-Meteo.com. Konum yalnızca gökyüzü için kullanılır, saklanmaz. Tüm lisanslar: Gizlilik ve yasal.
         </T>
-        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
+        <Pressable
+          delayLongPress={1500}
+          onLongPress={async () => appAlert('Sentry testi', (await sendTestError()) ? 'Test hatası gönderildi. Sentry panelinde birkaç dakikada görünür.' : 'Gönderilemedi: Sentry kapalı (geliştirme sürümü, DSN yok ya da yerel modül yok).')}
+        >
+          <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
+        </Pressable>
       </View>
 
       <View style={{ gap: 8 }}>

@@ -72,6 +72,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
       bars.forEach(b => b.setValue(0.3));
       return;
     }
+    pulseAnim.setValue(0);
     const pulse = Animated.loop(
       Animated.timing(pulseAnim, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: true }),
     );
@@ -96,10 +97,9 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   const glowOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
 
   useEffect(() => {
-    if (!spinning) {
-      spinAnim.stopAnimation();
-      return;
-    }
+    if (!spinning) return;
+    // Yerel sürücüyle durdurulmuş değerin üstüne yeni döngü kurulursa dönmez: her başlatmada sıfırla.
+    spinAnim.setValue(0);
     const loop = Animated.loop(
       Animated.timing(spinAnim, {
         toValue: 1,
@@ -147,7 +147,6 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             <View style={[styles.groove, { width: 130, height: 130, borderRadius: 65 }]} />
             <View style={[styles.groove, { width: 104, height: 104, borderRadius: 52 }]} />
             <View style={[styles.groove, { width: 80, height: 80, borderRadius: 40 }]} />
-            <View style={[styles.shine, { backgroundColor: 'rgba(255,255,255,0.10)' }]} />
             <View style={[styles.vinylLabel, { backgroundColor: c.warm }]}>
               <Text style={{ fontSize: 16 }}>{activeTrack?.emoji ?? '☕'}</Text>
             </View>
@@ -299,6 +298,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 30,
+    overflow: 'hidden',
   },
   vinylLabel: {
     width: 46,
@@ -309,7 +309,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shine: { position: 'absolute', width: 150, height: 40, top: 18, borderRadius: 20 },
   glow: {
     position: 'absolute',
     left: 25,

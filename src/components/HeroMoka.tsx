@@ -1,9 +1,8 @@
 import { useActive } from '@/hooks/useActive';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 
 import type { HeroFx, HeroMotion, HeroScene } from '@/domain/heroScenes';
-import { getActive, subscribe } from '@/lib/ambient';
 import { useReduceMotion } from './motion';
 
 const FX: Record<Exclude<HeroFx, 'none'>, string[]> = {
@@ -95,8 +94,7 @@ export function HeroMoka({ scene, ratio, marginTop, reserveTop, below, children 
   const active = useActive();
   const reduce = reduceSys || !active;
   const def = scene;
-  const music = useSyncExternalStore(subscribe, getActive).length > 0;
-  const dancing = music && !reduce;
+  const dancing = false; // Pikap çalarken Moka dans etmez.
   const [w, setW] = useState(0);
   const h = w ? Math.round(w / ratio) : 0;
   const m = useRef(new Animated.Value(0)).current;

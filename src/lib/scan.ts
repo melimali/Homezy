@@ -17,7 +17,8 @@ import type { StockLevel, WashType } from '@/domain/types';
 export type ScanKind = 'fridge' | 'look';
 
 export type FridgeScan = {
-  items: { name: string; qty: string; lvl: StockLevel; match: string | null }[];
+  /** `conf`: 'dusuk' ise model emin değil (onay ekranında işaretsiz gelir). `exp`: ambalajda okunan tarih (YYYY-AA-GG). */
+  items: { name: string; qty: string; lvl: StockLevel; match: string | null; conf?: 'yuksek' | 'dusuk'; exp?: string | null }[];
   missing: string[];
   note: string;
 };
@@ -25,7 +26,7 @@ export type FridgeScan = {
 export type LookScan = {
   /** Tür, renk, kumaş ve desen sunucunun yeni sürümünde var; eski sürümde yoksa addan tahmin edilir. */
   pieces: {
-    name: string; cat: string; wash: WashType | null; match: string | null;
+    name: string; cat: string; wash: WashType | null; match: string | null; conf?: 'yuksek' | 'dusuk';
     kind?: string | null; color?: string | null; hex?: string | null; fabric?: string | null; pattern?: 'düz' | 'desenli';
   }[];
   worn: boolean;

@@ -114,7 +114,7 @@ const LEAF = '#7FB28A';
 const POT = '#C8826B';
 
 /** Odanın türüne göre minik eşya. Koordinatlar blok içinde 0–1 arası. */
-function furniture(type: RoomType, r: number, c: number, k: string, col: Colors): ReactElement[] {
+function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0): ReactElement[] {
   const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
     box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
   const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string) => {
@@ -190,6 +190,16 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors)
     case 'antre':
       faces = [...b('h', 0.2, 0.22, 0.6, 0.56, 0, 1, '#BFA89E'), ...b('a', 0.14, 0.14, 0.18, 0.72, 0, 9, WOOD)];
       break;
+  }
+  if (v > 0) {
+    // 2., 3. ... aynı tür oda: standart eşyaya renk lekesi, halı, bitki ve lamba eklenir (sıraya göre sabit).
+    const pal = [['#E58C7E', '#78A1BB'], ['#78A1BB', '#F2C46D'], ['#9CB9D0', '#E58C7E'], ['#F2C46D', '#7FB28A']][(v - 1) % 4];
+    const corner = v % 2 === 1;
+    faces.push(...b('vr', 0.06, corner ? 0.62 : 0.06, 0.28, 0.32, 0, 0.7, pal[0]), ...b('vi', 0.1, corner ? 0.66 : 0.1, 0.2, 0.24, 0.7, 0.4, pal[1]));
+    const cu = corner ? 0.9 : 0.1;
+    faces.push(...b('vp', 0.8, cu - 0.05, 0.1, 0.1, 0, 5, POT));
+    extra.push(ball('vl', 0.85, cu, 11, 5, v % 3 === 0 ? pal[1] : LEAF), ball('vm', 0.83, cu + (corner ? -0.04 : 0.04), 15, 3, shade(LEAF, 0.15)));
+    if (v >= 2) faces.push(...b('vq', 0.9, corner ? 0.1 : 0.85, 0.05, 0.05, 0, 14, BEAM), ...b('vs', 0.87, corner ? 0.07 : 0.82, 0.11, 0.11, 14, 5, pal[1]));
   }
   return [...faces.map(renderFace), ...extra];
 }
@@ -1101,6 +1111,16 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   }, [S, now]);
 
   const anchors: Record<string, number> = {};
+  const variantOf: Record<string, number> = {};
+  {
+    const seen: Record<string, number> = {};
+    for (const rid of S.order) {
+      const t = S.rooms[rid]?.type;
+      if (!t) continue;
+      variantOf[rid] = seen[t] ?? 0;
+      seen[t] = variantOf[rid] + 1;
+    }
+  }
   const props: Record<string, number> = {};
   const depth = (i: number) => {
     const dr = Math.floor(i / cols) + 0.5 - projectionCenter[0];
@@ -1412,7 +1432,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     }
 
     if (i === stairAt && L >= 4) stairs(k, r, col);
-    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c)}</G>);
+    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0)}</G>);
     for (const item of itemAt[i] ?? []) {
       if (item === 'kedi' || item === 'kopek') {
         // Gezilebilir bloklar: odanın, mobilya / etiket / merdiven / başka eşya olmayan blokları.

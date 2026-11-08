@@ -33,10 +33,25 @@ export function isLightDay(S: AppState, now = Date.now()): boolean {
   return answered(c) && (c.feel === 'yorgun' || c.feel === 'bunalmis' || c.feel === 'keyifsiz' || c.busy === 'yogun');
 }
 
+/**
+ * Zorluk uyarlaması: son 7 günün (bugün hariç) çalışılan gün sayısına göre günlük yük ±1 kayar.
+ * 6-7 gün çalışıldıysa +1 ("biraz daha zorlayalım"), 0-2 gün çalışıldıysa -1 ("yükü hafiflettim").
+ * En az 7 toplam gün gerekir; aşama sınırı değişmez, sadece onun etrafında kayar.
+ */
+export function loadAdjust(S: AppState, now = Date.now()): -1 | 0 | 1 {
+  if (S.settings.rampOff || S.play.days.length < 7) return 0;
+  if (stageFor(S.play.days.length).cap >= 99) return 0;
+  const set = new Set(S.play.days);
+  const today = dayKey(now);
+  let a = 0;
+  for (let i = 1; i <= 7; i++) if (set.has(addDays(today, -i))) a++;
+  return a >= 6 ? 1 : a <= 2 ? -1 : 0;
+}
+
 /** Bugün gösterilecek en çok iş sayısı. Atlayanlar ve tatil dışında bütün işler için `Infinity`. */
 export function dailyCap(S: AppState, now = Date.now()): number {
   if (S.settings.rampOff) return Infinity;
-  const cap = stageFor(S.play.days.length).cap;
+  const cap = Math.max(1, stageFor(S.play.days.length).cap + loadAdjust(S, now));
   let c = isLightDay(S, now) ? Math.min(cap, 2) : cap;
   // Geri dönüş: 2+ gün ara verildiyse bugün tek küçük işle başlanır; ilk iş bitince (gün sayılınca) normale döner.
   const p = S.play.days.length ? progressOf(S.play, now) : null;

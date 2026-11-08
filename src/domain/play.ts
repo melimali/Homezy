@@ -17,8 +17,13 @@ import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
  */
 
 export const POINTS: Record<PlayKind, number> = { gorev: 10, spor: 15, gunluk: 10 };
-/** Günün ilk işinde seri bonusu: önceki seri gün sayısı × 2, en fazla 20. */
-export const streakBonus = (prevStreak: number) => Math.min(20, prevStreak * 2);
+/** Günün ilk işinde seri bonusu: önceki seri gün sayısı × 2, en fazla 30 (supabase/migrations/20261108140000_puan_dengesi.sql). */
+export const streakBonus = (prevStreak: number) => Math.min(30, prevStreak * 2);
+/**
+ * Azalan getiri: günün `before` işten sonraki işi kaç puan verir. İlk 5 iş 10, sonraki 5 iş 5, kalan 10 iş 2 (en çok 95/gün).
+ * Yeni iş ekleyip puan toplamayı caydırır; asıl ödül her gün gelmek (seri) olur. Sunucu aynı tabloyu kullanır.
+ */
+export const taskPoints = (before: number) => (before >= DAILY_TASK_CAP ? 0 : before < 5 ? POINTS.gorev : before < 10 ? 5 : 2);
 /** Bir günde puan veren en fazla iş sayısı (yeni iş ekleyip puan toplamayı sınırlar). */
 export const DAILY_TASK_CAP = 20;
 
@@ -279,7 +284,7 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
   for (const k of Object.keys(P.awarded)) if (P.awarded[k] !== day) delete P.awarded[k];
   P.awarded[key] = day;
   const tasksToday = Object.keys(P.awarded).filter(k => k.startsWith('gorev:')).length;
-  let pts = kind === 'gorev' && tasksToday > DAILY_TASK_CAP ? 0 : POINTS[kind];
+  let pts = kind === 'gorev' ? taskPoints(tasksToday - 1) : POINTS[kind];
   if (!before.today) {
     pts += streakBonus(before.streak);
     P.days = [...P.days, day].sort();

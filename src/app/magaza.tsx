@@ -58,7 +58,7 @@ export default function Magaza() {
       <View>
         <T v="eyebrow">Mağaza</T>
         <T v="h1">Evine eşya al 🛍️</T>
-        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
+        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: günün ilk 5 işi +{POINTS.gorev} (sonrakiler daha az), spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
         <T v="small" style={{ marginTop: 4 }}>
           {premium.active
             ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString(dateLocale())} kat geliyor, 👑 eşyalar senin için açık.`

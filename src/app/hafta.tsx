@@ -3,7 +3,6 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import type { View } from 'react-native';
 
 import { MokaWeekCard } from '@/components/MokaReport';
-import { HeatmapCard } from '@/components/HeatmapCard';
 import { BackLink, Btn, Screen, T } from '@/components/ui';
 import { WeekReflect } from '@/components/WeekReflect';
 import { WeekReportCard } from '@/components/WeekReportCard';
@@ -45,7 +44,6 @@ export default function Hafta() {
       <WeekReflect />
       <WeekCard ref={card} state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} />
       <Btn kind="primary" label="📤 Paylaş" onPress={share} block />
-      <HeatmapCard state={S} now={now} />
       <WeekReportCard now={now} />
       <Btn label="🎬 Evimin hikâyesi" onPress={() => router.push('/hikaye')} block />
       <T v="small" style={{ textAlign: 'center' }}>Kartı Instagram hikâyende ya da WhatsApp’ta paylaş, arkadaşların da evini toplasın 🏡</T>

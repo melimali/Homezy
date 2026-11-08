@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { emptyState } from '../logic';
-import { bestStreak, dailyCap, isLightDay, pendingStage, stageFor, weekGoal } from '../ramp';
+import { bestStreak, dailyCap, loadAdjust, isLightDay, pendingStage, stageFor, weekGoal } from '../ramp';
 
 const NOON = new Date(2026, 10, 11, 12).getTime(); // çarşamba
 
@@ -19,7 +19,8 @@ describe('ramp', () => {
     expect(dailyCap(S, NOON)).toBe(Infinity);
     S.settings.rampOff = false;
     S.play.days = [...Array.from({ length: 19 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`), '2026-11-10'];
-    expect(dailyCap(S, NOON)).toBe(5);
+    // Son 7 günde sadece 1 gün çalışılmış: yük 5'ten 4'e hafifler.
+    expect(dailyCap(S, NOON)).toBe(4);
     S.settings.lightDay = '2026-11-11';
     expect(dailyCap(S, NOON)).toBe(2);
   });
@@ -28,7 +29,7 @@ describe('ramp', () => {
     S.play.days = Array.from({ length: 20 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
     expect(dailyCap(S, NOON)).toBe(1);
     S.play.days.push('2026-11-11');
-    expect(dailyCap(S, NOON)).toBe(5);
+    expect(dailyCap(S, NOON)).toBe(4);
   });
   it('en iyi seri ve hafta hedefi', () => {
     const S = emptyState();
@@ -51,6 +52,15 @@ describe('ramp', () => {
     S.play.days = [...Array.from({ length: 19 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`), '2026-11-10'];
     S.play.checkins = { '2026-11-11': { feel: 'yorgun', busy: 'evde', at: NOON } };
     expect(isLightDay(S, NOON)).toBe(true);
+    expect(dailyCap(S, NOON)).toBe(2);
+  });
+  it('zorluk uyarlaması: düzenliyse +1, seyrekse -1', () => {
+    const S = emptyState();
+    S.play.days = ['2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07', '2026-11-08', '2026-11-09', '2026-11-10'];
+    expect(loadAdjust(S, NOON)).toBe(1);
+    expect(dailyCap(S, NOON)).toBe(4);
+    S.play.days = ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-11-09'];
+    expect(loadAdjust(S, NOON)).toBe(-1);
     expect(dailyCap(S, NOON)).toBe(2);
   });
 });

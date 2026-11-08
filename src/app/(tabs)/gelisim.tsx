@@ -1,7 +1,9 @@
 import { useRouter } from '@/lib/nav';
-import { useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { HeatmapCard } from '@/components/HeatmapCard';
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
 import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
 import { MokaMascot } from '@/components/MokaMascot';
@@ -57,6 +59,10 @@ export default function Gelisim() {
   const pose = week >= 10 ? 'party' : week ? 'thumbs_up' : 'sipping';
   // Yetenek satırına dokununca kısa açıklama açılır (nasıl artar + Moka'nın notu).
   const [openStat, setOpenStat] = useState<string | null>(null);
+
+  // Sekmeye her dönüşte grafikler sıfırdan yeniden yükselir.
+  const [rk, setRk] = useState(0);
+  useFocusEffect(useCallback(() => { setRk(k => k + 1); }, []));
 
   const tour = useTabTour('gelisim', [...TOUR]);
   return (
@@ -121,7 +127,7 @@ export default function Gelisim() {
         {extrasUnlocked(S.play.days.length, now) && <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />}
       </Card></View>
 
-      <Appear index={2} style={st.rings}>
+      <Appear key={`r${rk}`} index={2} style={st.rings}>
         <View style={[st.ringCard, { backgroundColor: c.surface }]}>
           <Ring pct={todayPct} color={c.peach} label="bugün" size={104} />
           <T v="tiny">{doneN}/{doneN + dueN} iş</T>
@@ -132,7 +138,7 @@ export default function Gelisim() {
         </View>
       </Appear>
 
-      <Appear index={3} style={st.pills}>
+      <Appear key={`p${rk}`} index={3} style={st.pills}>
         <StatPill emoji="🔥" n={hp.streak} label="gün seri" tint={c.peachSoft} />
         <StatPill emoji="📅" n={S.play.days.length} label="toplam gün" tint={c.lavenderSoft} />
         <StatPill emoji="🏅" n={Math.max(best, hp.streak)} label="en iyi seri" tint={c.sageSoft} />
@@ -140,31 +146,32 @@ export default function Gelisim() {
 
       <View {...tour.mark('hafta')}><Card index={4}>
         <SecHead title="Bu hafta" h="h3" right={`${week} iş`} />
-        <WeekBars bars={bars} />
+        <WeekBars key={`w${rk}`} bars={bars} />
       </Card>
 
       <Card index={5}>
         <SecHead title="Seri takvimi" h="h3" right={`❄️ ${freezeLeft}/${lim.freezes}`} />
         <T v="small">{`Bu hafta hedefin ${wk.goal} gün: ${Math.min(wk.done, wk.goal)}/${wk.goal} ✓ Toplam ${S.play.days.length} günün hiç silinmez.`}</T>
-        <StreakDots dots={monthDots(S.play, now)} />
+        <StreakDots key={`s${rk}`} dots={monthDots(S.play, now)} />
         <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
       </Card>
 
       </View>
+      <HeatmapCard key={`h${rk}`} state={S} now={now} />
       <MokaWeekCard index={5} />
 
       <MoodWeekCard index={6} />
 
       <View {...tour.mark('ruh')}><Card index={6}>
         <SecHead title="Ruh hali" h="h3" right="14 gün" />
-        <MoodLine points={mood} />
+        <MoodLine key={`m${rk}`} points={mood} />
         <T v="small">{moodLineOf(mood)}</T>
       </Card></View>
 
       {rooms.length > 0 && (
         <Card index={7}>
           <SecHead title="Odalar" h="h3" right={`%${score}`} />
-          <RoomBars rooms={rooms} emoji={ROOM_EMOJI} />
+          <RoomBars key={`b${rk}`} rooms={rooms} emoji={ROOM_EMOJI} />
         </Card>
       )}
 

@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Pop } from '@/components/charts';
+
 import { allTasks, doneToday } from '@/domain/logic';
 import { addDays, BUILT, dayKey, dayTs, progressOf } from '@/domain/play';
 import type { AppState } from '@/domain/types';
@@ -89,8 +91,10 @@ export function HeatmapCard({ state: S, now }: Props) {
 
       {/* 30 Günlük Heatmap Izgarası */}
       <View style={styles.grid}>
-        {days.map(d => (
-          <View
+        {days.map((d, i) => (
+          <Pop
+            i={i}
+            step={28}
             key={d.key}
             style={[
               styles.tile,
@@ -105,7 +109,7 @@ export function HeatmapCard({ state: S, now }: Props) {
                 {d.doneCount}
               </Text>
             )}
-          </View>
+          </Pop>
         ))}
       </View>
 
@@ -122,8 +126,10 @@ export function HeatmapCard({ state: S, now }: Props) {
       <View style={styles.badgeSection}>
         <Text style={[styles.badgeHead, { color: c.ink }]}>Rozetlerin 🏆</Text>
         <View style={styles.badgeGrid}>
-          {badges.map(b => (
-            <View
+          {badges.map((b, i) => (
+            <Pop
+              i={30 + i * 4}
+              step={28}
               key={b.id}
               style={[
                 styles.badgeCard,
@@ -138,7 +144,7 @@ export function HeatmapCard({ state: S, now }: Props) {
               <Text style={[styles.badgeDesc, { color: c.muted }]}>
                 {b.unlocked ? 'Kazanıldı ✓' : b.desc}
               </Text>
-            </View>
+            </Pop>
           ))}
         </View>
       </View>

@@ -119,6 +119,8 @@ export type Settings = {
   meds: boolean;
   /** Evcil hayvan bakım hatırlatmaları (mama, yıkama, aşı…). */
   pets: boolean;
+  /** Cumartesi sabahı alışveriş listesi hatırlatması. */
+  shop: boolean;
   /** Pazar akşamı haftalık özet. */
   weekly: boolean;
   /** Esnek zamanlama: zamanı geçen iş, sıklığının yarısı kadar gün daha gecikmiş sayılmaz. */
@@ -327,6 +329,11 @@ export type PetKind = 'kedi' | 'kopek' | 'kus' | 'balik' | 'diger';
 export type PetItem = { id: string; name: string; emoji: string; everyH: number; last: number | null; start: number; remind: boolean };
 export type Pet = { id: string; name: string; kind: PetKind; emoji?: string; items: PetItem[] };
 
+/** Alışveriş listesi. `usual`: daha önce alınıp listeden temizlenenler (bitince tek dokunuşla tekrar eklenir). */
+export type ShopCat = 'market' | 'temizlik' | 'ev' | 'evcil';
+export type ShopItem = { id: string; name: string; cat: ShopCat; done: boolean; at: number };
+export type ShopUsual = { name: string; cat: ShopCat };
+
 export type AppState = {
   v: 1;
   setup: boolean;
@@ -357,6 +364,8 @@ export type AppState = {
   meds: Med[];
   medLog: MedLog;
   pets: Pet[];
+  shop: ShopItem[];
+  shopUsual: ShopUsual[];
 };
 
 export type TaskList = 'tasks' | 'plants' | 'care';

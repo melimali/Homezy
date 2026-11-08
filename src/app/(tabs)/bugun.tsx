@@ -167,6 +167,7 @@ export default function Bugun() {
       {shop.length > 0 && (
         <Card>
           <ShopList items={shop} title="Alınacaklar" h="h2" />
+          <Btn small kind="soft" label="Alışveriş listem ›" onPress={() => router.push('/alisveris' as never)} />
         </Card>
       )}
       <ModeCard now={now} />

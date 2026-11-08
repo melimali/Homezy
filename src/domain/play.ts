@@ -49,7 +49,7 @@ export const defaultSettings = (): Settings => ({
   streak: true, sport: false, read: false, water: false, sleepRemind: false, sportTime: '18:00', sportDays: [1, 3, 5],
   smart: true, theme: 'gunduz', workout: null,
   bills: false, expiry: false, weekly: false, flex: true, celebrate: true, sound: true,
-  actions: false, meds: true, pets: true,
+  actions: false, meds: true, pets: true, shop: true,
   language: deviceLang(),
 });
 
@@ -74,6 +74,8 @@ export function normalize(S: AppState): AppState {
   S.meds ??= [];
   S.medLog ??= {};
   S.pets ??= [];
+  S.shop ??= [];
+  S.shopUsual ??= [];
   // 2. kat: boyutu planla uyuşmuyorsa (eski kayıt) yok sayılır.
   if (S.cells2 && S.cells2.length !== S.cols * S.rows) S.cells2 = null;
   S.cells2 ??= null;

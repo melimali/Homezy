@@ -14,6 +14,7 @@ import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
 import { RoomGrid } from '@/components/RoomGrid';
 import { PetsCard } from '@/components/PetsCard';
+import { ShopCard } from '@/components/ShopCard';
 import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
 import { MokaReact } from '@/components/MokaReact';
 import { TaskRow } from '@/components/TaskRow';
@@ -245,6 +246,7 @@ export default function Home() {
       </Card>
 
       <PetsCard />
+      <ShopCard />
 
       {houseOpen && (
         <HouseViewer

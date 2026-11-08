@@ -424,6 +424,8 @@ export function emptyState(): AppState {
     meds: [],
     medLog: {},
     pets: [],
+    shop: [],
+    shopUsual: [],
   };
 }
 

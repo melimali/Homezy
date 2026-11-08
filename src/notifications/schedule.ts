@@ -13,6 +13,7 @@ import { mokaWeek, mokaWeekBody } from '@/domain/report';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
 import { petNotifs, stillDue } from '@/domain/pets';
+import { SHOP_DAY, shopLeft } from '@/domain/shopping';
 import { limits } from '@/domain/premium';
 import type { AppState, Notice } from '@/domain/types';
 
@@ -301,6 +302,12 @@ export function nudges(S: AppState, now = Date.now(), smart = false, premium = f
       at.setHours(WEEKLY_TIME[0], WEEKLY_TIME[1], 0, 0);
       // Özet, zamanlandığı andaki veriyle yazılır; veri değiştikçe yeniden zamanlanır.
       if (at.getTime() > now) out.push({ at, title: '🦜 Moka’nın haftalık raporu', body: mokaWeekBody(mokaWeek(S, now)), url: '/hafta' });
+    }
+    if (set.shop && base.getDay() === SHOP_DAY) {
+      const left = shopLeft(S);
+      const at = new Date(base);
+      at.setHours(10, 0, 0, 0);
+      if (left > 0 && at.getTime() > now) out.push({ at, title: '🛒 Alışveriş günü', body: `Listende ${left} ürün var. Çıkmadan bir göz at?`, url: '/alisveris' });
     }
     const away = awayAhead(S.play, d, now);
     const quiet = away != null && away >= AWAY_DAYS && away % 2 === 0;

@@ -158,6 +158,7 @@ function RootStack() {
         <Stack.Screen name="aliskanlik" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="gunluk" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ilac" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="alisveris" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evcil" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="evler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="aile" options={{ animation: 'slide_from_right' }} />

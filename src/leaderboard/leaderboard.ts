@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { totalXp } from '@/domain/mokaLevel';
 import { homeScore } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { prefs, supabase } from '@/lib/supabase';
@@ -11,16 +12,19 @@ import { useStore } from '@/store/AppStore';
  * eşyalar (harcanan puan / 10) + Moka bahçesi (harcanan puan / 10, en çok 300) + ev temizliği (0-100).
  * Hesap sunucuda (supabase/migrations/20261108000000_siralama.sql); uygulama sadece temizlik yüzdesini gönderir.
  */
-export type LbRow = { rank: number; nick: string; score: number; items: number; garden: number; clean: number; level: number; streak: number; me?: boolean };
+export type LbRow = { rank: number; nick: string; score: number; items?: number; garden?: number; clean?: number; xp?: number; level: number; streak: number; me?: boolean };
 export type LbData = { top: LbRow[]; me: LbRow | null; joined: boolean; nick: string | null; total: number };
 export type LbPeriod = 'hafta' | 'hepsi';
 
 const ON = 'lb.on';
 export const lbOn = () => prefs.get(ON) === '1';
 
-export async function lbTop(period: LbPeriod): Promise<LbData | null> {
+export type LbBoard = 'ev' | 'moka';
+
+/** Ev puanı ('ev', haftalık/tüm zamanlar) ya da Moka Şampiyonları ('moka', tüm zamanlar). */
+export async function lbTop(period: LbPeriod, board: LbBoard = 'ev'): Promise<LbData | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.rpc('lb_top', { p_period: period });
+  const { data, error } = board === 'moka' ? await supabase.rpc('lb_moka_top') : await supabase.rpc('lb_top', { p_period: period });
   if (error || !data) return null;
   return data as LbData;
 }
@@ -47,9 +51,10 @@ export function useLeaderboardSync() {
   const { state } = useStore();
   const now = useNow();
   const score = homeScore(state, now);
+  const xp = totalXp(state.play.moka);
   useEffect(() => {
     if (!supabase || status !== 'account' || !lbOn()) return;
-    const t = setTimeout(() => void supabase!.rpc('lb_publish', { p_clean: score }).then(() => {}, () => {}), 5000);
+    const t = setTimeout(() => void supabase!.rpc('lb_publish', { p_clean: score, p_xp: xp }).then(() => {}, () => {}), 5000);
     return () => clearTimeout(t);
-  }, [status, score]);
+  }, [status, score, xp]);
 }

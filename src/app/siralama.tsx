@@ -6,7 +6,7 @@ import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
 import { useTranslation } from '@/i18n/i18n';
-import { lbJoin, lbLeave, lbTop, type LbData, type LbPeriod, type LbRow } from '@/leaderboard/leaderboard';
+import { lbJoin, lbLeave, lbTop, type LbBoard, type LbData, type LbPeriod, type LbRow } from '@/leaderboard/leaderboard';
 import { useNickname } from '@/profile/useName';
 import { radius, useColors } from '@/theme';
 
@@ -17,6 +17,7 @@ export default function Siralama() {
   const toast = useToast();
   const { status } = useAuth();
   const nick0 = useNickname();
+  const [board, setBoard] = useState<LbBoard>('ev');
   const [period, setPeriod] = useState<LbPeriod>('hafta');
   const [data, setData] = useState<LbData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,9 +30,9 @@ export default function Siralama() {
   useEffect(() => {
     if (!account) return;
     let off = false;
-    lbTop(period).then(d => { if (!off) { setData(d); setLoading(false); } });
+    lbTop(period, board).then(d => { if (!off) { setData(d); setLoading(false); } });
     return () => void (off = true);
-  }, [account, period, tick]);
+  }, [account, period, board, tick]);
 
   const join = async () => {
     setBusy(true);
@@ -54,7 +55,15 @@ export default function Siralama() {
     <Screen header={false}>
       <BackLink />
       <T v="h1">{t('Ev sıralaması 🏆')}</T>
-      <T v="tiny">{t('Ev puanı = eve aldığın eşyalar + Moka bahçesi + ev temizliği')}</T>
+      <View style={st.tabs}>
+        {(['ev', 'moka'] as const).map(b => (
+          <Squish key={b} onPress={() => { setBoard(b); setLoading(true); }} accessibilityRole="button" accessibilityState={{ selected: board === b }}
+            style={[st.tab, { backgroundColor: board === b ? c.accent : c.surface2 }]}>
+            <T v="bold" style={{ color: board === b ? c.onAccent : c.ink }}>{b === 'ev' ? t('Ev puanı') : t('Moka Şampiyonları')}</T>
+          </Squish>
+        ))}
+      </View>
+      <T v="tiny">{board === 'ev' ? t('Ev puanı = eve aldığın eşyalar + Moka bahçesi + ev temizliği') : t('Moka seviyene göre: en çok exp toplayan Moka şampiyon olur 👑')}</T>
 
       {!account && (
         <Card><T v="small">{t('Sıralamaya katılmak için hesap aç ya da giriş yap. Misafirler katılamaz.')}</T></Card>
@@ -75,7 +84,7 @@ export default function Siralama() {
       {account && data?.joined && (
         <>
           <View style={st.tabs}>
-            {(['hafta', 'hepsi'] as const).map(p => (
+            {board === 'ev' && (['hafta', 'hepsi'] as const).map(p => (
               <Squish key={p} onPress={() => setPeriod(p)} accessibilityRole="button" accessibilityState={{ selected: period === p }}
                 style={[st.tab, { backgroundColor: period === p ? c.accent : c.surface2 }]}>
                 <T v="bold" style={{ color: period === p ? c.onAccent : c.ink }}>{p === 'hafta' ? t('Bu hafta') : t('Tüm zamanlar')}</T>
@@ -83,7 +92,7 @@ export default function Siralama() {
             ))}
           </View>
           {data.me ? (
-            <Card><T v="bold">{`#${data.me.rank} · ${data.me.score} ${t('puan')}`}</T><T v="tiny">{brk(data.me, t)}</T></Card>
+            <Card><T v="bold">{`#${data.me.rank} · ${board === 'moka' ? `${t('Moka sv.')} ${data.me.score}` : `${data.me.score} ${t('puan')}`}`}</T><T v="tiny">{brk(data.me, board)}</T></Card>
           ) : (
             <Card><T v="small">{t('Listeye girmek için en az 3 gün iş yapman gerekir.')}</T></Card>
           )}
@@ -92,9 +101,9 @@ export default function Siralama() {
               <T v="bold" style={{ width: 36 }}>{r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : `#${r.rank}`}</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" numberOfLines={1}>{r.nick}</T>
-                <T v="tiny" numberOfLines={1}>{`${t('Sv.')} ${r.level} · 🔥 ${r.streak} · ${brk(r, t)}`}</T>
+                <T v="tiny" numberOfLines={1}>{`${t('Sv.')} ${r.level} · 🔥 ${r.streak} · ${brk(r, board)}`}</T>
               </View>
-              <T v="bold">{r.score}</T>
+              <T v="bold">{board === 'moka' ? `${t('Moka sv.')} ${r.score}` : r.score}</T>
             </Appear>
           ))}
           {loading && <T v="tiny">{t('Yükleniyor…')}</T>}
@@ -106,7 +115,7 @@ export default function Siralama() {
   );
 }
 
-const brk = (r: LbRow, _t: (s: string) => string) => `🪑 ${r.items} · 🌸 ${r.garden} · ✨ ${r.clean}`;
+const brk = (r: LbRow, b: LbBoard) => b === 'moka' ? `${r.xp ?? 0} exp` : `🪑 ${r.items} · 🌸 ${r.garden} · ✨ ${r.clean}`;
 
 const st = StyleSheet.create({
   input: { borderRadius: radius.tile, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16 },

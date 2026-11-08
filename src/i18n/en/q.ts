@@ -453,4 +453,7 @@ export const EN_Q: Record<string, string> = {
  "Sıralama yüklenemedi. İnterneti kontrol et.": "Could not load the leaderboard. Check your connection.",
  "Sıralama": "Leaderboard",
  "Ev puanı": "House score",
+ "Moka Şampiyonları": "Top Mokas",
+ "Moka seviyene göre: en çok exp toplayan Moka şampiyon olur 👑": "Ranked by Moka level: the Moka with the most exp is the champion 👑",
+ "Moka sv.": "Moka lv.",
 };

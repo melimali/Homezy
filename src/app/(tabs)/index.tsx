@@ -17,6 +17,7 @@ import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
 import { MokaReact } from '@/components/MokaReact';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
+import { FeatureTip } from '@/components/FeatureTip';
 import { FirstWelcome, NotifAsk } from '@/components/FirstRun';
 import { StepModal } from '@/components/StepModal';
 import { useTabTour } from '@/components/useTabTour';
@@ -276,6 +277,7 @@ export default function Home() {
       <MoodCheckin />
       <NotifAsk />
       <LevelUpPeek />
+      <FeatureTip />
       {tour.node}
     </Screen>
   );

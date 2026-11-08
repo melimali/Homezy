@@ -1,5 +1,5 @@
 import { answered } from './mood';
-import { addDays, dayKey, progressOf } from './play';
+import { addDays, dayKey, forgivenGaps, progressOf } from './play';
 import type { AppState, DayKey, Play } from './types';
 
 /**
@@ -62,8 +62,8 @@ export function dailyCap(S: AppState, now = Date.now()): number {
 /** En uzun seri (dondurulan günler zinciri bozmaz). Hiç sıfırlanmaz, sadece büyür. */
 export function bestStreak(P: Play): number {
   const done = new Set(P.days);
-  const ice = new Set(P.frozen);
   const all = [...done].sort();
+  const ice = new Set([...P.frozen, ...forgivenGaps(P.days, P.frozen, all[all.length - 1] ?? '')]);
   if (!all.length) return 0;
   let best = 0;
   let run = 0;

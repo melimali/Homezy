@@ -11,8 +11,11 @@ describe('puan dengesi', () => {
     expect(taskPoints(20)).toBe(0);
     expect(total).toBe(95);
   });
-  it('seri bonusu 30 ile sınırlı', () => {
-    expect(streakBonus(3)).toBe(6);
-    expect(streakBonus(40)).toBe(30);
+  it('seri bonusu yumuşak eğri, 30\'u geçmez', () => {
+    expect(streakBonus(0)).toBe(0);
+    expect(streakBonus(1)).toBe(2);
+    expect(streakBonus(7)).toBe(11);
+    expect(streakBonus(30)).toBe(26);
+    expect(streakBonus(400)).toBe(30);
   });
 });

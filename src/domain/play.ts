@@ -17,8 +17,11 @@ import type { AppState, DayKey, Play, PlayKind, Settings } from './types';
  */
 
 export const POINTS: Record<PlayKind, number> = { gorev: 10, spor: 15, gunluk: 10 };
-/** Günün ilk işinde seri bonusu: önceki seri gün sayısı × 2, en fazla 30 (supabase/migrations/20261108140000_puan_dengesi.sql). */
-export const streakBonus = (prevStreak: number) => Math.min(30, prevStreak * 2);
+/**
+ * Günün ilk işinde seri bonusu: yumuşak eğri 30·(1−e^(−n/15)); sert tavan yok, 30'a yaklaşır
+ * (1. gün 2, 7. gün 11, 15. gün 19, 30. gün 26). Sunucu aynısını hesaplar (supabase/migrations/20261109000000_formuller.sql).
+ */
+export const streakBonus = (prevStreak: number) => Math.round(30 * (1 - Math.exp(-Math.max(0, prevStreak) / 15)));
 /**
  * Azalan getiri: günün `before` işten sonraki işi kaç puan verir. İlk 5 iş 10, sonraki 5 iş 5, kalan 10 iş 2 (en çok 95/gün).
  * Yeni iş ekleyip puan toplamayı caydırır; asıl ödül her gün gelmek (seri) olur. Sunucu aynı tabloyu kullanır.
@@ -128,6 +131,35 @@ const emptyGarden = (): Garden => ({ plots: [], album: {}, fed: { day: '', n: {}
 export const BUILT = 7;
 export const MAX_LEVEL = 100;
 
+/** Affedilen boşluktan sonra bir sonraki affa kadar geçmesi gereken gün. */
+export const FORGIVE_COOLDOWN = 14;
+/** Affedilmek için boşluktan önce üst üste kaç gün yapılmış olmalı (7 günlük seri). */
+export const FORGIVE_MIN_RUN = 6;
+
+/**
+ * Seri affı: en az 7 günlük bir serinin ortasındaki TEK günlük boşluk (sonraki gün yine iş yapıldıysa)
+ * otomatik affedilir, dondurma hakkı harcanmaz. İki affın arası en az 14 gün. Dondurulan günler zinciri bozmaz.
+ * Ceza yerine "hata payı": uzun seriyi tek bir unutkanlık bozmasın.
+ */
+export function forgivenGaps(days: DayKey[], frozen: DayKey[], today: DayKey): Set<DayKey> {
+  const out = new Set<DayKey>();
+  const done = new Set(days);
+  const ice = new Set(frozen);
+  const sorted = [...done].filter(d => d <= today).sort();
+  if (!sorted.length) return out;
+  let run = 0;
+  let last: DayKey | null = null;
+  for (let d = sorted[0]; d <= today; d = addDays(d, 1)) {
+    if (done.has(d)) run++;
+    else if (ice.has(d)) continue;
+    else if (d < today && done.has(addDays(d, 1)) && run >= FORGIVE_MIN_RUN && (!last || (dayTs(d) - dayTs(last)) / DAY >= FORGIVE_COOLDOWN)) {
+      out.add(d);
+      last = d;
+    } else run = 0;
+  }
+  return out;
+}
+
 export type HouseProgress = {
   /** Evin şu anki seviyesi (0: boş arsa). */
   level: number;
@@ -148,8 +180,9 @@ export type HouseProgress = {
 export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[] = []): HouseProgress {
   const today = dayKey(now);
   const set = new Set(days);
-  // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır.
+  // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır. Affedilen tek boşluk da öyle.
   const ice = new Set(frozen);
+  for (const g of forgivenGaps(days, frozen, today)) ice.add(g);
   const sorted = [...set].filter(d => d <= today).sort();
   const active = set.has(today);
   let level = 0;
@@ -241,7 +274,7 @@ export type DayMark = { key: DayKey; mark: 'done' | 'ice' | 'miss' | 'today'; n:
 export function lastWeek(P: Play, now = Date.now()): DayMark[] {
   const today = dayKey(now);
   const done = new Set(P.days);
-  const ice = new Set(P.frozen);
+  const ice = new Set([...P.frozen, ...forgivenGaps(P.days, P.frozen, today)]);
   return Array.from({ length: 7 }, (_, i) => {
     const key = addDays(today, i - 6);
     const n = P.log[key]?.length ?? 0;

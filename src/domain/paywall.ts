@@ -52,3 +52,43 @@ export function markFirstSeen(mem: PaywallMemory, now = Date.now()): PaywallMemo
 }
 
 export const isStreakMark = (streak: number) => (STREAK_MARKS as readonly number[]).includes(streak);
+
+/* ---------- ne zaman satış önerisi? ---------- */
+
+export type UpsellSignals = {
+  /** Uygulamayı kullandığı toplam gün. */
+  activeDays: number;
+  /** Güncel seri. */
+  streak: number;
+  /** Bu hafta Premium'a kilitli bir şeye dokunma sayısı (tema, rapor, 2. kat...). */
+  lockedTaps: number;
+  /** Yapay zekâ tarama hakkı bitti mi. */
+  scanLimitHit: boolean;
+  /** Paywall kaç kez gösterildi ve kaç kez kapatıldı. */
+  shown: number;
+  dismissed: number;
+  /** Paywall en son kaç gün önce gösterildi (hiç yoksa null). */
+  daysSinceShown: number | null;
+};
+
+/**
+ * Premium önerisi puanı: değer görmüş (aktif gün, seri) ve kilide çarpmış (kilitli dokunuş, tarama sınırı) kişi hazırdır.
+ * Her kapatma bekleme süresini uzatır (2, 4, 8... gün, en çok 30); ilk 3 gün hiç. Eşik 50.
+ */
+export function upsellScore(s: UpsellSignals): number {
+  if (s.activeDays < QUIET_DAYS) return 0;
+  const value = Math.min(30, s.activeDays * 2) + Math.min(20, s.streak * 2);
+  const intent = Math.min(30, s.lockedTaps * 15) + (s.scanLimitHit ? 30 : 0);
+  return Math.min(100, value + intent);
+}
+
+export const UPSELL_THRESHOLD = 50;
+
+/** Bekleme süresi (gün): her kapatmada ikiye katlanır. */
+export const upsellCooldown = (dismissed: number) => Math.min(30, 2 ** Math.max(1, dismissed));
+
+export function shouldUpsell(s: UpsellSignals, premium: boolean): boolean {
+  if (premium) return false;
+  if (s.daysSinceShown != null && s.daysSinceShown < upsellCooldown(s.dismissed)) return false;
+  return upsellScore(s) >= UPSELL_THRESHOLD;
+}

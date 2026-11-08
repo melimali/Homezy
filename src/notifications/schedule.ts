@@ -10,6 +10,7 @@ import { goalMet } from '@/domain/growth';
 import { hKey, waterMet } from '@/domain/habits';
 import { eveningNudge, sportLine, summaryTail, waterNudge } from '@/domain/messages';
 import { mokaWeek, mokaWeekBody } from '@/domain/report';
+import { learnedTime } from '@/domain/formulas';
 import { AWAY_DAYS, awardedToday, awayAhead, dayKey, freezesUsed, idleAhead, progressOf } from '@/domain/play';
 import { medNotifs } from '@/domain/meds';
 import { petNotifs, stillDue } from '@/domain/pets';
@@ -369,7 +370,7 @@ export function smartTimes(S: AppState): { streak: number | null; sport: number 
     return d.getHours() * 60 + d.getMinutes();
   });
   return {
-    streak: t.length >= 5 ? clamp(q15(median(t) - 60), 17 * 60, 21 * 60 + 30) : null,
+    streak: learnedTime(t, 60, 17 * 60, 21 * 60 + 30),
     sport: sp.length >= 3 ? clamp(q15(median(sp) - 30), 6 * 60, 22 * 60) : null,
   };
 }

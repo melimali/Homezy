@@ -93,4 +93,17 @@ export const EN_R: Record<string, string> = {
   'Geç, başkasını öner': 'Skip, suggest another',
   '🗑️ Bu işi sil': '🗑️ Delete this task',
   'Yurt ya da kiralıkta sadece kendi odanla başla: "Sadece odam".': 'In a dorm or rental, start with just your own room: "Just my room".',
+  // Mağaza eşyaları (2)
+  'Orta sehpa': 'Coffee table',
+  'Konforlu yatak': 'Cozy bed',
+  'Mum': 'Candle',
+  'Fener': 'Lantern',
+  'Yukka': 'Yucca',
+  'Palmiye': 'Palm',
+  'Kardan adam': 'Snowman',
+  'Ramazan feneri': 'Ramadan lantern',
+  'Posta kutusu': 'Mailbox',
+  '🛏️ Odam': '🛏️ My room',
+  'Görev puanı': 'Task points',
+  'Pirinci haşla; yoğurt, yumurta ve unu çırpıp ılıştırarak ekle, nane ile bitir.': 'Boil the rice; whisk the yogurt, egg and flour, warm it gently and stir it in, then finish with mint.',
 };

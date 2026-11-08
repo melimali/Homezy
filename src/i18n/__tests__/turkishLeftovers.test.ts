@@ -65,3 +65,38 @@ it('koddaki Türkçe metinlerin İngilizce karşılığı var', () => {
   const lines = [...miss].map(([s, f]) => `${f}\t${s}`);
   expect(lines).toEqual([]);
 });
+
+// Veri havuzları (src/domain, src/constants): eşya, görev, ürün, adım, öneri metinleri koddan değil
+// dışa aktarılan nesnelerden okunur; böylece yeni eklenen her havuz maddesi de İngilizce istenir.
+const POOL_SKIP_FILES = /^(growth|havuz|plan-templates)\.ts$/; // dil öğrenme kartları, iç kimlikler, ızgara kodları
+const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…']);
+it('veri havuzlarındaki her metnin İngilizce karşılığı var', () => {
+  setLang('en');
+  const out = new Map<string, string>();
+  const seen = new WeakSet<object>();
+  const collect = (v: unknown, f: string, depth: number) => {
+    if (typeof v === 'string') { out.set(v, f); return; }
+    if (!v || typeof v !== 'object' || depth > 7 || seen.has(v as object)) return;
+    seen.add(v as object);
+    for (const x of Array.isArray(v) ? v : Object.values(v as object)) collect(x, f, depth + 1);
+  };
+  for (const d of ['domain', 'constants']) {
+    const dir = path.join(__dirname, '../..', d);
+    for (const file of fs.readdirSync(dir)) {
+      if (!/\.ts$/.test(file) || POOL_SKIP_FILES.test(file)) continue;
+      let mod: Record<string, unknown>;
+      try { mod = require(path.join(dir, file)); } catch { continue; }
+      for (const v of Object.values(mod)) if (typeof v !== 'function') collect(v, d + '/' + file, 0);
+    }
+  }
+  const miss: string[] = [];
+  for (const [s, f] of out) {
+    if (s.length < 3 || s.length > 400 || POOL_OK.has(s)) continue;
+    if (/^#[0-9a-fA-F]{3,8}$/.test(s)) continue; // renk kodu
+    if (/^[a-z0-9_\-:./#@{}]+$/.test(s) || /^https?:|^\//.test(s)) continue; // kimlik, yol
+    if (/^[\p{Extended_Pictographic}\u200d\ufe0f\s]+$/u.test(s) || /^[0-9\-+°%\s]+$/.test(s) || /^[A-Z.+0-9]+$/.test(s)) continue; // emoji, sayı, kod
+    const o = tx(s);
+    if (o === s || ((TR_CHARS.test(o) || TR_WORD.test(o)) && !EN_VALUE_OK.test(o))) miss.push(f + '\t' + s + '  =>  ' + o);
+  }
+  expect(miss).toEqual([]);
+});

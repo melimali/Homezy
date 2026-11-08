@@ -88,19 +88,23 @@ function TaniyalimInner() {
   const busy = useRef(false);
   const reduce = useRef(false);
   useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(v => { reduce.current = v; }).catch(() => {}); }, []);
-  const transition = (dir: 1 | -1, swap: () => void) => {
+  const transition = (dir: 1 | -1, swap: () => void, hold = 0) => {
     if (busy.current) return;
     if (reduce.current) { swap(); return; }
     busy.current = true;
-    Animated.parallel([
-      Animated.timing(slide, { toValue: -dir * 44, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      Animated.timing(fade, { toValue: 0, duration: 180, useNativeDriver: true }),
+    // Önce seçili hâl kısa süre görünür (hold), sonra eski soru süzülüp çıkar, yenisi gelir. Dokunmalar bu sürede kilitli.
+    Animated.sequence([
+      Animated.delay(hold),
+      Animated.parallel([
+        Animated.timing(slide, { toValue: -dir * 36, duration: 240, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0, duration: 240, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
     ]).start(() => {
       swap();
-      slide.setValue(dir * 44);
+      slide.setValue(dir * 36);
       Animated.parallel([
-        Animated.timing(slide, { toValue: 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 1, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       ]).start(() => { busy.current = false; });
     });
   };
@@ -158,9 +162,10 @@ function TaniyalimInner() {
   };
 
   const next = () => {
-    if (!nameDone) { saveNickname(nm); transition(1, () => { setNameDone(true); setStep(0); }); return; }
+    if (busy.current) return;
+    if (!nameDone) { saveNickname(nm); transition(1, () => { setNameDone(true); setStep(0); }, 300); return; }
     if (step + 1 >= stepsN) finish(ans, disc);
-    else transition(1, () => setStep(step + 1));
+    else transition(1, () => setStep(step + 1), has ? 350 : 150);
   };
   const back = () => (step > 0 ? transition(-1, () => setStep(step - 1)) : transition(-1, () => setNameDone(false)));
   const skip = () => { skipPersona(); if (setupDone && router.canGoBack()) router.back(); };
@@ -209,7 +214,7 @@ function TaniyalimInner() {
             ) : (
               <View style={{ gap: 10 }} key={`${key}`}>
                 {opts.map((o, i) => (
-                  <Appear key={o.v} index={i}>
+                  <Appear key={o.v} index={i * 2}>
                     <OptionCard
                       opt={o}
                       qk={key}
@@ -251,7 +256,7 @@ function TopBar({ page, total, onBack, onSkip }: { page: number; total: number; 
   const c = useColors();
   const [w] = useState(() => new Animated.Value((page + 1) / total));
   useEffect(() => {
-    Animated.timing(w, { toValue: (page + 1) / total, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    Animated.timing(w, { toValue: (page + 1) / total, duration: 650, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start();
   }, [page, total, w]);
   return (
     <View style={st.top}>

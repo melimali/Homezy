@@ -54,6 +54,8 @@ export const EN_N: Record<string, string> = {
   'Yeni aşama': 'New stage', 'gün daha çalışınca': 'more active days until', 'tüm işler açılır': 'all tasks unlock', 'iş günde': 'tasks a day',
   'Bütün işlerin açık. Düzen sende 🏡': 'All your tasks are open. The routine is yours 🏡',
   'Bu hafta {}/{} gün': 'This week {}/{} days',
+  '+{} iş daha': '+{} more tasks',
+  'Daha az göster': 'Show less',
   'Hepsini aç': 'Open all',
   'Bugünlük tamam 🎉 İstersen biraz daha ({} iş)': 'Done for today 🎉 A little more if you like ({} tasks)',
   '{} iş daha var · İstersen göster': '{} more tasks · Show if you like',

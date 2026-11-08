@@ -1,6 +1,6 @@
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, LayoutAnimation, Platform, Pressable, UIManager, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ring } from '@/components/charts';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
@@ -88,6 +88,7 @@ export default function Bugun() {
   const places = [...new Map(today.map(x => [x.rid, placeOf(S, x.rid)])).entries()];
   const [only, setOnly] = useState<string | null>(null);
   const [more, setMore] = useState(false);
+  const [openAll, setOpenAll] = useState(false);
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
   const tour = useTabTour('bugun', [...TOUR]);
@@ -117,8 +118,10 @@ export default function Bugun() {
 
       {!S.home.asked && <ProfilePrompt />}
       <View {...tour.mark('liste')}>
-      {visible.map(([label, hint, arr], gi) => {
-        const rows = filt ? arr.filter(x => x.rid === filt) : arr;
+      {(() => { let left = openAll ? Infinity : 3; return visible.map(([label, hint, arr], gi) => {
+        const all = filt ? arr.filter(x => x.rid === filt) : arr;
+        const rows = all.slice(0, left);
+        left -= rows.length;
         if (!rows.length) return null;
         return (
           <Card bare key={label} index={gi + 2}>
@@ -131,7 +134,12 @@ export default function Bugun() {
             </View>
           </Card>
         );
-      })}
+      }); })()}
+      {total > 3 && (
+        <Squish onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpenAll(o => !o); }} accessibilityRole="button" accessibilityState={{ expanded: openAll }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
+          <T v="small">{openAll ? 'Daha az göster' : `+${total - 3} iş daha`}</T>
+        </Squish>
+      )}
       {!visible.length && !total && (
         <EmptyMsg pose={S.mode?.k === 'tatil' ? 'blanket' : 'party'}>
           {S.mode?.k === 'tatil' ? 'Tatildesin, iyi dinlen. Ev seni bekler.' : 'Bugünlük her şey tamam.'}
@@ -189,6 +197,8 @@ export default function Bugun() {
 }
 
 /** Üstte büyük panel: Moka, ilerleme halkası ve duruma göre tek cümle. */
+if (Platform.OS === 'android') UIManager.setLayoutAnimationEnabledExperimental?.(true);
+
 function Hero({ total, done, left, tatil }: { total: number; done: number; left: number; tatil: boolean }) {
   const c = useColors();
   const { width } = useWindowDimensions();

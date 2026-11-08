@@ -119,7 +119,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
     const s = stateRef.current;
     if (s.order.some(id => !cellCount(s, id))) {
       update(D => {
-        for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+        for (const id of [...D.order]) if (!cellCount(D, id) && !D.rooms[id]?.virtual) removeRoom(D, id);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -179,7 +179,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const doSave = () => {
     const first = !S.setup;
     const next = update(D => {
-      for (const id of [...D.order]) if (!cellCount(D, id)) removeRoom(D, id);
+      for (const id of [...D.order]) if (!cellCount(D, id) && !D.rooms[id]?.virtual) removeRoom(D, id);
       if (D.cells2 && !D.cells2.some(Boolean)) D.cells2 = null;
       if (D.order.length) D.setup = true;
       if (first) staggerFirstDay(D);
@@ -197,8 +197,9 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
   const save = () => {
     const has = (type: string) => S.order.some(id => S.rooms[id]?.type === type && cellCount(S, id) > 0);
     const missing: string[] = [];
-    if (!has('yatak')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
-    if (!has('mutfak')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
+    const hasMod = (m: string) => S.order.some(id => S.rooms[id]?.virtual && TYPES[S.rooms[id].type].mod === m);
+    if (!has('yatak') && !hasMod('gardirop')) missing.push(tr('Yatak odası: gardırop ve kombin özelliği için'));
+    if (!has('mutfak') && !hasMod('buzdolabi')) missing.push(tr('Mutfak: buzdolabı ve alışveriş takibi için'));
     // Tek oda modunda eksik oda uyarısı yok: kullanıcı bilerek tek oda seçti.
     if (S.settings.solo || !missing.length || !S.order.length) return doSave();
     appAlert(

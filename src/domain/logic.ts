@@ -343,15 +343,17 @@ export function roomBounds(S: AppState, id: string) {
  * 1 bloklu oda açar (gerisi odayla aynı, sonra Plan'dan büyütülür). Boş yer yoksa null.
  */
 export const findRoom = (S: AppState, mod: 'gardirop' | 'buzdolabi') =>
-  S.order.find(id => S.rooms[id] && TYPES[S.rooms[id].type].mod === mod && cellCount(S, id) > 0) ?? null;
+  S.order.find(id => S.rooms[id] && TYPES[S.rooms[id].type].mod === mod && cellCount(S, id) > 0)
+  ?? S.order.find(id => S.rooms[id]?.virtual && TYPES[S.rooms[id].type].mod === mod) ?? null;
 
 export function roomFor(S: AppState, mod: 'gardirop' | 'buzdolabi'): string | null {
   const found = findRoom(S, mod);
   if (found) return found;
   const i = S.cells.findIndex(x => !x);
-  if (i < 0) return null;
   const id = makeRoom(S, mod === 'gardirop' ? 'yatak' : 'mutfak');
-  S.cells[i] = id;
+  // Boş blok yoksa (yurt, tek oda, dolu plan) planda yer tutmayan bölge olarak aç.
+  if (i < 0) S.rooms[id].virtual = true;
+  else S.cells[i] = id;
   S.setup = true;
   return id;
 }

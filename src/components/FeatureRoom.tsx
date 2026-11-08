@@ -13,12 +13,12 @@ export function FeatureRoom({ mod }: { mod: 'gardirop' | 'buzdolabi' }) {
   const open = () => {
     let ok = true;
     update(D => { ok = !!roomFor(D, mod); });
-    if (!ok) toast('Planda boş blok yok. Önce Ev planı\'ndan yer aç.');
+    if (!ok) toast('Açılamadı, tekrar dene.');
   };
   return (
     <Card>
       <T v="h3">{mod === 'gardirop' ? 'Gardırop için oda çizmedin' : 'Buzdolabı için mutfak çizmedin'}</T>
-      <T v="small">Sorun değil, tek bloklu bir oda açalım. Sonra Ev planı&apos;ndan büyütebilirsin.</T>
+      <T v="small">Sorun değil, senin için bir bölge açalım. Yurt ya da tek odalı evde de kullanabilirsin.</T>
       <Btn kind="primary" label={mod === 'gardirop' ? '👕 Gardırobu aç' : '🧊 Buzdolabını aç'} onPress={open} block />
     </Card>
   );

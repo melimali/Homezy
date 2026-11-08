@@ -2518,6 +2518,8 @@ export const EN_A: Record<string, string> = {
  "Planda boş blok yok. Önce Ev planı'ndan yer aç.": "No free block on the plan. Make space in Home plan first.",
  "🧊 Buzdolabını aç": "🧊 Open fridge",
  "👕 Gardırobu aç": "👕 Open wardrobe",
+ "Sorun değil, senin için bir bölge açalım. Yurt ya da tek odalı evde de kullanabilirsin.": "No problem, let's open a zone for you. Works in a dorm or a one-room home too.",
+ "Açılamadı, tekrar dene.": "Couldn't open it, try again.",
  "Sorun değil, tek bloklu bir oda açalım. Sonra Ev planı'ndan büyütebilirsin.": "No problem, let's open a one-block room. You can enlarge it later in Home plan.",
  "Buzdolabı için mutfak çizmedin": "You haven't drawn a kitchen for the fridge",
  "Gardırop için oda çizmedin": "You haven't drawn a room for the wardrobe",

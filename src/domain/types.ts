@@ -15,7 +15,8 @@ export type RoomType =
 
 export type RoomModule = 'gardirop' | 'buzdolabi' | 'stok' | 'bitki' | null;
 
-export type Room = { id: string; type: RoomType; name: string };
+/** virtual: planda blok tutmayan bölge (gardırop / buzdolabı). Tek odalı evde de çalışsın diye. */
+export type Room = { id: string; type: RoomType; name: string; virtual?: boolean };
 
 /** Rutin, bitki ya da ev bakımı işi: her `every` günde bir yapılır. */
 export type Task = {

@@ -1462,16 +1462,33 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     const snowy = theme === 'kis';
     const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
     const o = 0.1, apexZ = WALL_H + 17;
+    // Her hücre: dört kenar köşesi (dönmeye göre doğru), arkadan öne sıralı dört üçgen + ön duvar eteği.
     for (const i of order) {
       const r = Math.floor(i / cols), col = i % cols, tint = mix(rc, '#FFFFFF', ((r * 5 + col * 3) % 4) * 0.025);
       const apex = P(r + 0.5, col + 0.5, apexZ);
-      const sw = P(r + 1 + o, col - o, WALL_H), se = P(r + 1 + o, col + 1 + o, WALL_H), ne = P(r - o, col + 1 + o, WALL_H);
-      roofEls.push(
-        <Polygon key={'rs' + i} points={pts([sw, se, apex])} fill={tint} stroke={shade(tint, -0.25)} strokeWidth={0.7} strokeLinejoin="round" />,
-        <Polygon key={'re' + i} points={pts([se, ne, apex])} fill={shade(tint, -0.16)} stroke={shade(tint, -0.3)} strokeWidth={0.7} strokeLinejoin="round" />,
-        <Polyline key={'rh' + i} points={pts([sw, apex, se])} fill="none" stroke="#FFFFFF" strokeOpacity={0.35} strokeWidth={0.9} strokeLinecap="round" strokeLinejoin="round" />,
-      );
-      for (const pt of [apex, sw, se, ne]) grow(pt);
+      const corners: Pt[] = [[r - o, col - o], [r - o, col + 1 + o], [r + 1 + o, col + 1 + o], [r + 1 + o, col - o]];
+      const base = corners.map(([a1, b1]) => P(a1, b1, WALL_H));
+      const cy = P(r + 0.5, col + 0.5, 0)[1];
+      const id = cells[i]!;
+      // Etek: ön tarafa bakan, komşusuz kenarlarda alçak ön duvarı çatıya kadar kapatır (boşluk kalmasın).
+      const edges: [number, number, number, number][] = [[r, col, r, col + 1], [r, col + 1, r + 1, col + 1], [r + 1, col + 1, r + 1, col], [r + 1, col, r, col]];
+      const nb = [at(r - 1, col), at(r, col + 1), at(r + 1, col), at(r, col - 1)];
+      edges.forEach(([r1, c1, r2, c2], e) => {
+        if (nb[e]) return;
+        const m1 = P(r1, c1, 0), m2 = P(r2, c2, 0);
+        if ((m1[1] + m2[1]) / 2 <= cy + 0.5) return;
+        const sk = wallTint(id, true);
+        const left = (m1[0] + m2[0]) / 2 < P(r + 0.5, col + 0.5, 0)[0];
+        roofEls.push(<Polygon key={`rk${i}_${e}`} points={pts([m1, m2, P(r2, c2, WALL_H), P(r1, c1, WALL_H)])} fill={left ? sk : shade(sk, -0.14)} stroke={shade(sk, -0.3)} strokeWidth={0.6} strokeLinejoin="round" />);
+      });
+      const faces = [0, 1, 2, 3].map(e => ({ e, a: base[e], b: base[(e + 1) % 4] })).sort((p1, p2) => (p1.a[1] + p1.b[1]) - (p2.a[1] + p2.b[1]));
+      for (const f of faces) {
+        const mx = (f.a[0] + f.b[0]) / 2, my = (f.a[1] + f.b[1]) / 2;
+        if (my < apex[1] - 0.5) continue; // arka yüzler zaten kapalı
+        const fill = mx < apex[0] - 0.5 ? tint : mx > apex[0] + 0.5 ? shade(tint, -0.16) : shade(tint, -0.06);
+        roofEls.push(<Polygon key={`rf${i}_${f.e}`} points={pts([f.a, f.b, apex])} fill={fill} stroke={shade(tint, -0.28)} strokeWidth={0.7} strokeLinejoin="round" />);
+      }
+      for (const pt of [apex, ...base]) grow(pt);
     }
     if (L >= 7 && order.length) {
       const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;
@@ -1638,11 +1655,47 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     ]).start();
   };
   // Zoom'a bağlı sürekli geçiş: yaklaştıkça çatı yükselip büyüyerek solar, çevre detayları da silikleşir.
-  const roofOp = pinch.interpolate({ inputRange: [ZMIN, 0.85, 1], outputRange: [1, 0.7, 0], extrapolate: 'clamp' });
-  const roofLift = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [0, -vbH * sc * 0.12], extrapolate: 'clamp' });
-  const roofGrow = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [1, 1.05], extrapolate: 'clamp' });
+  const roofOp = pinch.interpolate({ inputRange: [ZMIN, 0.9, 1], outputRange: [1, 0.55, 0], extrapolate: 'clamp' });
+  // Çimenli zemin: uzaklaştıkça büyür ve belirir, yaklaşınca küçülüp söner.
+  const grassOp = pinch.interpolate({ inputRange: [ZMIN, 0.95, 1], outputRange: [1, 0.6, 0], extrapolate: 'clamp' });
+  const grassScale = pinch.interpolate({ inputRange: [ZMIN, 1], outputRange: [1.15, 0.45], extrapolate: 'clamp' });
+  const grassSway = swayAnim.interpolate({ inputRange: [0, 1], outputRange: [-1.6, 1.6] });
   const extOp = pinch.interpolate({ inputRange: [ZMIN, 1, 1.8], outputRange: [1, 1, 0.2], extrapolate: 'clamp' });
 
+  // Çimenli, çiçekli zemin (sabit tohumlu, her render aynı).
+  const grassBase: ReactElement[] = [];
+  const grassTufts: ReactElement[] = [];
+  if (pinchZoom) {
+    const snowyG = theme === 'kis', autumnG = theme === 'sonbahar';
+    const g1 = snowyG ? (dark ? '#6E7B8C' : '#E6EDF4') : autumnG ? (dark ? '#4F5A33' : '#A9B26A') : dark ? '#2F5238' : '#8FCB86';
+    const g2 = shade(g1, dark ? 0.1 : -0.1);
+    const bladeC = shade(g1, dark ? 0.22 : -0.22);
+    const gx = (minX + maxX) / 2, gy = (houseMinY + houseMaxY) / 2 + vbH * 0.06;
+    const grx = vbW * 1.0, gry = vbH * 0.78;
+    grassBase.push(
+      <Ellipse key="gl2" cx={gx} cy={gy + gry * 0.04} rx={grx} ry={gry} fill={g2} />,
+      <Ellipse key="gl1" cx={gx} cy={gy} rx={grx * 0.94} ry={gry * 0.93} fill={g1} />,
+    );
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const FL = snowyG ? [] : ['#FFFFFF', '#F7D154', '#F29BB5', '#B79CF2', '#F28C6B'];
+    for (let k = 0; k < 64; k++) {
+      const ang = rnd() * Math.PI * 2, rad = Math.sqrt(0.18 + rnd() * 0.82) * 0.9;
+      const x = gx + Math.cos(ang) * grx * rad, y = gy + Math.sin(ang) * gry * rad;
+      // Evin altındaki bölgeyi boş bırak.
+      if (Math.abs(x - gx) < (maxX - minX) * 0.3 && y > houseMinY + vbH * 0.05 && y < houseMaxY - 2) continue;
+      if (k % 3 && FL.length) {
+        const fc = FL[k % FL.length], s0 = 3 + rnd() * 2;
+        grassBase.push(
+          <Circle key={`fp${k}`} cx={x} cy={y} r={s0} fill={fc} />,
+          <Circle key={`fc${k}`} cx={x} cy={y} r={s0 * 0.4} fill={fc === '#F7D154' ? '#F28C6B' : '#F7D154'} />,
+        );
+      } else {
+        const h = 6 + rnd() * 6, lean = (rnd() - 0.5) * 5;
+        grassTufts.push(<Polyline key={`bl${k}`} points={pts([[x - 2, y], [x + lean, y - h], [x + 2, y]])} fill="none" stroke={bladeC} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />);
+      }
+    }
+  }
   // Evin altındaki yumuşak gölge.
   const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
@@ -1786,6 +1839,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         ],
       }}
     >
+      {pinchZoom && sc > 0 && (
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: '-60%', top: '-60%', width: '220%', height: '220%', opacity: grassOp, transform: [{ scale: grassScale }] }}>
+          <Svg width="100%" height="100%" viewBox={`${minX - vbW * 0.6} ${minY - vbH * 0.6} ${vbW * 2.2} ${vbH * 2.2}`}>{grassBase}</Svg>
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ translateX: grassSway }] }]}>
+            <Svg width="100%" height="100%" viewBox={`${minX - vbW * 0.6} ${minY - vbH * 0.6} ${vbW * 2.2} ${vbH * 2.2}`}>{grassTufts}</Svg>
+          </Animated.View>
+        </Animated.View>
+      )}
       <Svg width="100%" height="100%" viewBox={vb} onPress={handlePressHouse}>
         {lightDefs}
         {onPressHouse && <Rect x={minX} y={minY} width={vbW} height={vbH} fill="transparent" onPress={handlePressHouse} />}
@@ -1805,7 +1866,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         </Animated.View>
       )}
       {roofEls.length > 0 && pinchZoom && (
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp, transform: [{ translateY: roofLift }, { scale: roofGrow }] }]}>
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp }]}>
           <Svg width="100%" height="100%" viewBox={vb}>{roofEls}</Svg>
         </Animated.View>
       )}

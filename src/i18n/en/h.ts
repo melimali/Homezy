@@ -49,4 +49,12 @@ export const EN_H: Record<string, string> = {
   "Derin dalgalar ve hafif yağmur": "Deep waves and light rain",
   "🎵 Pikap (ASMR)": "🎵 Turntable (ASMR)",
   "Pikap": "Turntable",
+  "Katman Sesleri": "Layer Volumes",
+  "Kıs": "Quieter",
+  "Aç": "Louder",
+  "⭐ Kombom olarak kaydet": "⭐ Save as my mix",
+  "😴 Uyku Zamanlayıcısı": "😴 Sleep Timer",
+  "Kapalı": "Off",
+  "Benim Kombom": "My Mix",
+  "Kendi karışımın": "Your own blend",
 };

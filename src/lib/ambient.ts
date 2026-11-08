@@ -97,7 +97,8 @@ export function setPlaying(id: AmbientId, on: boolean, volume?: number) {
   if (on) {
     if (!p) return;
     try {
-      p.volume = volume ?? VOLUME[id];
+      p.volume = volume ?? levels[id] ?? VOLUME[id];
+      if (volume !== undefined) levels[id] = volume;
       p.play();
     } catch {
       return;
@@ -125,6 +126,7 @@ export function stopAll() {
     }
   }
   if (active.length) emit([]);
+  if (sleepTimer && !active.length) setSleep(null);
 }
 
 /** Sadece bu parçayı çal (öncekileri durdurur): önceki/sonraki düğmeleri için. */
@@ -158,3 +160,88 @@ export const comboActive = (combo: Combo) => {
   const ids = Object.keys(combo.layers) as AmbientId[];
   return ids.length === active.length && ids.every(i => active.includes(i));
 };
+
+/** Katman ses seviyesi (0–1): çalarken anında uygulanır, "kendi kombom" olarak kaydedilebilir. */
+const levels: Partial<Record<AmbientId, number>> = {};
+export const getLevel = (id: AmbientId) => levels[id] ?? VOLUME[id];
+export function setLevel(id: AmbientId, v: number) {
+  const x = Math.min(1, Math.max(0.05, v));
+  levels[id] = x;
+  try {
+    const p = players[id];
+    if (p) p.volume = x;
+  } catch {
+    // Ayarlanamazsa bir sonraki çalışta uygulanır.
+  }
+  emit([...active]); // arayüz yenilensin
+}
+
+/** Uyku zamanlayıcısı: süre bitince sesi yavaşça kısıp durdurur. */
+let sleepAt: number | null = null;
+let sleepTimer: ReturnType<typeof setInterval> | null = null;
+export const getSleepAt = () => sleepAt;
+export function setSleep(minutes: number | null) {
+  if (sleepTimer) clearInterval(sleepTimer);
+  sleepTimer = null;
+  sleepAt = minutes ? Date.now() + minutes * 60000 : null;
+  if (sleepAt) {
+    sleepTimer = setInterval(() => {
+      const left = (sleepAt ?? 0) - Date.now();
+      if (left <= 0) {
+        stopAll();
+        for (const id of Object.keys(players) as AmbientId[]) {
+          try {
+            players[id]!.volume = levels[id] ?? VOLUME[id];
+          } catch {
+            // Sorun değil.
+          }
+        }
+        setSleep(null);
+      } else if (left < 20000) {
+        for (const id of active) {
+          try {
+            players[id]!.volume = (levels[id] ?? VOLUME[id]) * (left / 20000);
+          } catch {
+            // Sorun değil.
+          }
+        }
+      }
+    }, 1000);
+  }
+  emit([...active]);
+}
+
+/** Kaydedilmiş "kendi kombom": çalan katmanlar ve seviyeleri. */
+const KEY = 'homezy.ambient.custom';
+function kv() {
+  try {
+    return (require('expo-sqlite/kv-store') as typeof import('expo-sqlite/kv-store')).default; // eslint-disable-line @typescript-eslint/no-require-imports
+  } catch {
+    return null;
+  }
+}
+let customMem: Combo | null = null;
+export function getCustom(): Combo | null {
+  if (customMem) return customMem;
+  try {
+    const raw = kv()?.getItemSync(KEY);
+    if (raw) customMem = JSON.parse(raw) as Combo;
+  } catch {
+    // Okunamazsa kayıt yok sayılır.
+  }
+  return customMem;
+}
+/** Şu an çalanları kombo olarak kaydeder. Çalan yoksa false. */
+export function saveCustom() {
+  if (!active.length) return false;
+  const layers: Partial<Record<AmbientId, number>> = {};
+  for (const id of active) layers[id] = getLevel(id);
+  customMem = { id: 'custom', emoji: '⭐', name: 'Benim Kombom', desc: 'Kendi karışımın', layers };
+  try {
+    kv()?.setItemSync(KEY, JSON.stringify(customMem));
+  } catch {
+    // Kalıcı yazılamazsa bu oturumda kalır.
+  }
+  emit([...active]);
+  return true;
+}

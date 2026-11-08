@@ -2,10 +2,10 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useActive } from '@/hooks/useActive';
-import { ambientAvailable, COMBOS, comboActive, getActive, playCombo, setPlaying, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
+import { ambientAvailable, COMBOS, comboActive, getActive, getCustom, getLevel, getSleepAt, playCombo, saveCustom, setLevel, setPlaying, setSleep, solo, stopAll, subscribe, toggle, type AmbientId } from '@/lib/ambient';
 import { haptic } from '@/lib/sfx';
 import { fonts, radius, useColors } from '@/theme';
-import { Btn, Sheet, T } from './ui';
+import { Btn, Chip, Sheet, T } from './ui';
 
 type Track = {
   id: AmbientId;
@@ -40,6 +40,8 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   const active = useSyncExternalStore(subscribe, getActive);
   const activeTrack = TRACKS.find(t => active.includes(t.id)) ?? null;
   const playing = active.length > 0;
+  const sleepAt = getSleepAt();
+  const custom = getCustom();
   const live = useActive(); // Ekran odakta değilken animasyon dönmesin
   const spinning = playing && live;
   const [spinAnim] = useState(() => new Animated.Value(0));
@@ -162,10 +164,43 @@ export function LofiPlayerModal({ open, onClose }: Props) {
           {playing ? '🎶 ' + TRACKS.filter(t => active.includes(t.id)).map(t => t.emoji + ' ' + t.name).join(' + ') : ambientAvailable() ? 'Pikap duruyor' : 'Bu derlemede ses çalma yok'}
         </T>
 
+        {/* Katman ses ayarı */}
+        {playing && (
+          <View style={{ width: '100%', gap: 6 }}>
+            <T v="bold">Katman Sesleri</T>
+            {TRACKS.filter(t => active.includes(t.id)).map(t => (
+              <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 20 }}>{t.emoji}</Text>
+                <Pressable onPress={() => setLevel(t.id, getLevel(t.id) - 0.1)} accessibilityRole="button" accessibilityLabel="Kıs" style={styles.lvlBtn}>
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>−</Text>
+                </Pressable>
+                <View style={[styles.lvlTrack, { backgroundColor: c.line }]}>
+                  <View style={{ width: `${Math.round(getLevel(t.id) * 100)}%`, height: 8, borderRadius: 4, backgroundColor: c.warm }} />
+                </View>
+                <Pressable onPress={() => setLevel(t.id, getLevel(t.id) + 0.1)} accessibilityRole="button" accessibilityLabel="Aç" style={styles.lvlBtn}>
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>+</Text>
+                </Pressable>
+              </View>
+            ))}
+            <Btn small kind="soft" label="⭐ Kombom olarak kaydet" onPress={() => saveCustom()} />
+          </View>
+        )}
+
+        {/* Uyku zamanlayıcısı */}
+        <View style={{ width: '100%', gap: 6 }}>
+          <T v="bold">😴 Uyku Zamanlayıcısı</T>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <Chip label="Kapalı" on={!sleepAt} onPress={() => setSleep(null)} />
+            {[15, 30, 60].map(m => (
+              <Chip key={m} label={`${m} dk`} on={!!sleepAt && Math.abs((sleepAt - Date.now()) / 60000 - m) < 1.5} onPress={() => setSleep(m)} />
+            ))}
+          </View>
+        </View>
+
         {/* Hazır kombolar */}
         <View style={{ width: '100%', gap: 8 }}>
           <T v="bold">Hazır Kombolar</T>
-          {COMBOS.map(k => {
+          {(custom ? [custom, ...COMBOS] : COMBOS).map(k => {
             const on = comboActive(k);
             return (
               <Pressable
@@ -288,6 +323,8 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1.5,
   },
+  lvlBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.06)' },
+  lvlTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   trackName: {
     fontFamily: fonts.bodyBlack,
     fontSize: 15,

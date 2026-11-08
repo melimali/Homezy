@@ -75,6 +75,7 @@ export default function MokaChat() {
   const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const [kb, setKb] = useState(false);
   useEffect(() => {
     const sh = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKb(true));

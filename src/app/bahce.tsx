@@ -10,7 +10,7 @@ import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { GardenScene } from '@/components/GardenScene';
-import { Breathe, Flutter, GrowIn, Shower, Sway, Twinkle, Wander } from '@/components/gardenFx';
+import { Breathe, Flutter, GrowIn, Shower, Sway, Twinkle } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
@@ -135,11 +135,9 @@ export default function Bahce() {
         <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
         {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
         <View style={styles.bedTop}>
-          <Wander range={14} dur={6500}>
-            <Float amp={5} dur={2600}>
-              <MokaMascot pose={pose} size="md" showBubble={false} />
-            </Float>
-          </Wander>
+          <Breathe amp={0.03} dur={2600}>
+            <MokaMascot pose={pose} size="md" showBubble={false} />
+          </Breathe>
           <Glass style={styles.bubble} intensity={30}>
             <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
           </Glass>

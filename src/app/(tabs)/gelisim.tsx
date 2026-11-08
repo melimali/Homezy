@@ -1,7 +1,7 @@
 import { useRouter } from '@/lib/nav';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { HeatmapCard } from '@/components/HeatmapCard';
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
@@ -20,6 +20,8 @@ import { dayBars, monthDots, moodLineOf, moodSeries, roomScores, weekLine } from
 import { extrasUnlocked } from '@/lib/events';
 import { useNow } from '@/hooks/useNow';
 import { bestStreak, weekGoal } from '@/domain/ramp';
+import { TYPES } from '@/domain/kisilik';
+import { usePersona } from '@/profile/usePersona';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors, elevation } from '@/theme';
@@ -41,6 +43,8 @@ export default function Gelisim() {
   const now = useNow();
   const { state: S } = useStore();
   const { premium } = usePurchases();
+  const { disc } = usePersona();
+  const tipe = disc ? TYPES[disc.type] : null;
   const hp = progressOf(S.play, now);
   const best = bestStreak(S.play);
   const wk = weekGoal(S, now);
@@ -76,6 +80,18 @@ export default function Gelisim() {
           <T v="small" numberOfLines={3}>{weekLine(bars)}</T>
         </View>
       </Appear></View>
+
+      <Appear index={2}>
+        <View style={[st.hero, { backgroundColor: tipe?.bg ?? c.surface, shadowColor: c.shadow }]}>
+          {tipe && <Image source={tipe.img} style={{ width: 72, height: 72 }} resizeMode="contain" accessibilityIgnoresInvertColors />}
+          <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+            <T v="tiny">Senin tipin</T>
+            <T v="bold">{tipe ? tipe.name : 'Henüz test çözülmedi'}</T>
+            {tipe ? <T v="small" numberOfLines={3}>{tipe.says}</T> : <T v="small">Moka seni tanısın, sana göre öneri yapsın.</T>}
+            <Btn label={tipe ? 'Testi tekrar çöz' : 'Testi çöz'} small kind="ghost" onPress={() => router.push('/taniyalim')} style={{ alignSelf: 'flex-start' }} />
+          </View>
+        </View>
+      </Appear>
 
       <Appear index={2}>
         <Squish onPress={() => router.push('/buyume')} accessibilityRole="link" accessibilityLabel="Kendini geliştir" style={[st.hero, { backgroundColor: c.sageSoft, shadowColor: c.shadow }]}>

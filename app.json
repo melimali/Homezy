@@ -100,7 +100,7 @@
         }
       ],
       "expo-sharing",
-      "@sentry/react-native",
+      ["@sentry/react-native/expo", { "organization": "meikai-digital", "project": "homezy" }],
       [
         "react-native-android-widget",
         {

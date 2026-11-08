@@ -1,0 +1,67 @@
+// @ts-nocheck
+// Regresyon bekçisi: (1) İngilizce sözlükte Türkçe harf/kelime kalmamalı,
+// (2) koddaki Türkçe görünen metinlerin hepsinin İngilizce çevirisi olmalı.
+// Kasıtlı Türkçe metinler (dil öğrenme kartları, geliştirici günlükleri, yorumlar) aşağıdaki listelerde.
+import { expect, it } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
+
+import { EN } from '../en';
+import { setLang, tx } from '../runtime';
+
+const TR_CHARS = /[çğıöşüÇĞİÖŞÜ]/;
+// Sözlük değerinde kasıtlı Türkçe kalabilir (yemek adları, dizi/kitap adları, özel adlar).
+const EN_VALUE_OK = /Ethos|Türkiye|Karnıyarık|İmam bayıldı|Türkçe|Turkish|Çağan|Oğuz|Ahmet/;
+// Türkçe sözcük eşleşmesi: İngilizce'de de geçen ortak yazımlar ("var", "ev"...) bilerek yok.
+const TR_WORD = /(?<![’'])\b(ve|için|değil|çok|daha|bugün|yarın|dün|kadar|gibi|şimdi|tamam|evet|hayır|temiz|kirli|sağlıklı|tümü|bekliyor|seni|senin|benim|hiç|nasıl|neden|hangi|ürün|alışveriş|yaptım|bitti|gecikti)\b/i;
+
+function walk(d: string, out: string[] = []) {
+  for (const f of fs.readdirSync(d)) {
+    const p = path.join(d, f);
+    if (f === 'i18n' || f === '__tests__') continue;
+    if (fs.statSync(p).isDirectory()) walk(p, out);
+    else if (/\.tsx?$/.test(f)) out.push(p);
+  }
+  return out;
+}
+
+// Bu dosyalarda Türkçe metin bilerek kalır (İngilizce modda Türkçe öğretmek, geliştirici günlüğü).
+const SKIP_FILES = [/domain[\\/]growth\.ts$/, /domain[\\/]havuz\.ts$/, /theme[\\/]index\.ts$/, /useName\.ts$/,
+  // Dile göre ayrı yazılmış (tr/en) metinler:
+  /domain[\\/]chatCanned\.ts$/, /app[\\/]tanitim\.tsx$/];
+// Geliştirici hata iletileri ve tarayıcının kaçırdığı kaçışlı tırnak parçaları.
+const LOG = /^Homezy: |içinde kullanılmalı|^(den|dan|deki|a|e|ya) |^"\}de |, cta: /;
+
+it('İngilizce sözlük değerlerinde Türkçe kalmamış', () => {
+  const bad = Object.entries(EN)
+    .filter(([, v]) => (TR_CHARS.test(v) || TR_WORD.test(v)) && !EN_VALUE_OK.test(v))
+    .map(([k, v]) => `${k} => ${v}`);
+  expect(bad).toEqual([]);
+});
+
+it('koddaki Türkçe metinlerin İngilizce karşılığı var', () => {
+  setLang('en');
+  const miss = new Map<string, string>();
+  const lit = /(['"`])((?:(?!\1)[^\\\n]|\\.){3,200})\1/g;
+  const jsx = />([^<>{}\n]{3,200})</g;
+  for (const f of walk(path.join(__dirname, '../..'))) {
+    if (SKIP_FILES.some(r => r.test(f))) continue;
+    const src = fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');
+    for (const rx of [lit, jsx]) {
+      for (const m of src.matchAll(rx)) {
+        let s = (rx === lit ? m[2] : m[1]).replace(/\$\{[^}]*\}/g, '{}').replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/\\(['"])/g, '$1').replace(/\\n/g, '\n').trim();
+        if (/^[./@#]|import |require|=>|[{}]{2}|\.tsx?|https?:/.test(s) || LOG.test(s)) continue;
+        if (/\{\}\s*$/.test(s) && !/ /.test(s.replace(/\{\}/g, ''))) continue;
+        const turkish = TR_CHARS.test(s) ? / /.test(s) || /^[A-ZÇĞİÖŞÜ]/.test(s) : /^[A-Z]/.test(s) && TR_WORD.test(s);
+        if (!turkish) continue;
+        // Kod parçaları (regex, JSX kalıntısı) ve satırı bölünmüş şablonlar atlanır.
+        if (/[<>=;]|\]\s*,|accessibilityRole|\$\{|^[,)\]}]/.test(s)) continue;
+        const out = tx(s);
+        // Çevrilmemiş ya da yarım çevrilmiş (çıktıda Türkçe harf/kelime kalmış) metin.
+        if (out === s || ((TR_CHARS.test(out) || TR_WORD.test(out)) && !EN_VALUE_OK.test(out))) miss.set(s, path.relative(process.cwd(), f) + '  =>  ' + out);
+      }
+    }
+  }
+  const lines = [...miss].map(([s, f]) => `${f}\t${s}`);
+  expect(lines).toEqual([]);
+});

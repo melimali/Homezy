@@ -97,6 +97,10 @@ const SCHEMA = {
   },
 } as const;
 
+/** İngilizce modda: kullanıcıya görünen metinler İngilizce olsun; `match`/`missing` listedeki yazımla kalır, enum alanlar (kind, color, fabric, pattern, wash, lvl) aynen kalır. */
+const EN_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in English. Write name, qty and note in natural English (e.g. "Milk", "half a bottle", "Navy linen shirt"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl) exactly as specified, in Turkish.`;
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : prompt);
+
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 
 function fridgePrompt(known: string[]) {
@@ -221,7 +225,7 @@ Deno.serve(async req => {
   // Gövde boyutu, kimlik doğrulamadan sonra ve JSON ayrıştırılmadan önce sınırlanır.
   const parsed0 = await readJson(req, MAX_IMAGE + 20_000);
   if ('error' in parsed0) return json({ error: parsed0.error }, parsed0.error === 'too_large' ? 413 : 400);
-  const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown };
+  const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown; lang?: unknown };
   const kind = body.kind === 'fridge' || body.kind === 'look' ? body.kind : null;
   const image = typeof body.image === 'string' ? body.image : '';
   if (!kind || !image) return json({ error: 'bad_request' }, 400);
@@ -249,7 +253,7 @@ Deno.serve(async req => {
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-          { type: 'text', text: kind === 'fridge' ? fridgePrompt(known) : lookPrompt(known) },
+          { type: 'text', text: withLang(kind === 'fridge' ? fridgePrompt(known) : lookPrompt(known), body.lang) },
         ],
       }],
     });

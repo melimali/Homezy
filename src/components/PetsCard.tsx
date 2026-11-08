@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 
 import { Btn, Card, SecHead, T } from '@/components/ui';
+import { tx } from '@/i18n/runtime';
 import { itemState, petEmoji, petsDue } from '@/domain/pets';
 import { useNow } from '@/hooks/useNow';
 import { useRouter } from '@/lib/nav';
@@ -23,7 +24,7 @@ export function PetsCard() {
   const late = due.filter(d => d.s.k === 'late').length;
   return (
     <Card>
-      <SecHead title="🐾 Evcil hayvanlarım" right={due.length ? `${due.length} bekliyor` : undefined} />
+      <SecHead title="🐾 Evcil hayvanlarım" right={due.length ? `${due.length} ${tx('bekliyor')}` : undefined} />
       {!S.pets.length ? (
         <T v="small">Hayvanını ekle; mama, yıkama, aşı gibi işleri sen seç, vaktinde hatırlatayım.</T>
       ) : (

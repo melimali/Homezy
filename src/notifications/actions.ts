@@ -53,12 +53,12 @@ export async function ensureCategories(N: NotificationsModule) {
   if (Platform.OS === 'web') return;
   const opts = { opensAppToForeground: false };
   await N.setNotificationCategoryAsync(TASK_CATEGORY, [
-    { identifier: DONE, buttonTitle: '✅ Yaptım', options: opts },
-    { identifier: SKIP, buttonTitle: '⏰ Yapmadım, yarın', options: opts },
+    { identifier: DONE, buttonTitle: tx('✅ Yaptım'), options: opts },
+    { identifier: SKIP, buttonTitle: tx('⏰ Yapmadım, yarın'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(PLANT_CATEGORY, [
-    { identifier: DONE, buttonTitle: '💧 Suladım', options: opts },
-    { identifier: SKIP, buttonTitle: '⏰ Sulamadım, yarın', options: opts },
+    { identifier: DONE, buttonTitle: tx('💧 Suladım'), options: opts },
+    { identifier: SKIP, buttonTitle: tx('⏰ Sulamadım, yarın'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(MED_CATEGORY, [
     { identifier: TAKEN, buttonTitle: tx('💊 Aldım'), options: opts },

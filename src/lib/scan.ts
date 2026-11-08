@@ -1,4 +1,4 @@
-import { tx } from '@/i18n/runtime';
+import { getLang, tx } from '@/i18n/runtime';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
@@ -47,7 +47,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
   const image = await prepare(uri);
   if (!image) return { ok: false, message: tx('Fotoğraf okunamadı. Başka bir fotoğraf dene.') };
   const { data, error } = await supabase.functions.invoke('scan', {
-    body: { kind, image, mediaType: 'image/jpeg', known },
+    body: { kind, image, mediaType: 'image/jpeg', known, lang: getLang() },
     timeout: TIMEOUT,
   });
   if (!error) return { ok: true, ...data };

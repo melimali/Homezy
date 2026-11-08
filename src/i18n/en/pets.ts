@@ -33,7 +33,6 @@ export const EN_PET: Record<string, string> = {
   'Hepsi tamam ✓': 'All done ✓',
   'İş ekle': 'Add a task',
   'Bakım işleri ›': 'Care tasks ›',
-  '{} bekliyor': '{} waiting',
   '{} iş': '{} tasks',
   ' · gecikti': ' · overdue',
   '{} gecikti': '{} overdue',

@@ -184,6 +184,10 @@ function RootStack() {
         <Stack.Screen name="gunum" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="hikaye" options={{ animation: 'fade' }} />
         <Stack.Screen name="premium" options={{ animation: 'slide_from_bottom' }} />
+        {/* Korumasız kalırsa ilk açılışta (tanıtım yokken) alfabetik ilk rota olarak açılıyordu. */}
+        <Stack.Screen name="ara" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="takvim" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="paylas" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
       <Stack.Protected guard={inside && !state.setup}>
         <Stack.Screen name="kurulum" options={{ animation: 'fade' }} />

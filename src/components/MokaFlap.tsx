@@ -180,8 +180,8 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
           {fx.parts.map((p, i) => (
             <T key={i} pointerEvents="none" style={{ position: 'absolute', left: p.x - p.s / 2, top: p.y - p.s / 2, fontSize: p.s, opacity: Math.min(1, p.life * 2.5) }}>{p.e}</T>
           ))}
-          <View pointerEvents="none" style={{ position: 'absolute', left: MX - 28, top: my - 28 - MR / 2, transform: [{ rotate: `${tilt}deg` }, { scaleX: squash }, { scaleY: flapping ? 0.9 : 1 }] }}>
-            <MokaSprite anim={g.over ? 'sleepy' : flapping ? 'party' : 'happy'} size={56} bounce={false} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: MX - 20, top: my - 20 - MR / 2, transform: [{ rotate: `${tilt}deg` }, { scaleX: squash }, { scaleY: flapping ? 0.9 : 1 }] }}>
+            <MokaSprite anim={g.over ? 'sleepy' : flapping ? 'party' : 'happy'} size={40} bounce={false} />
           </View>
           {fx.pops.map((p, i) => (
             <T key={i} pointerEvents="none" v="bold" style={{ position: 'absolute', left: p.x - 10, top: p.y, fontSize: 20 + (0.8 - p.life) * 10, opacity: Math.min(1, p.life * 2), color: '#FFF8E8' }}>+1</T>

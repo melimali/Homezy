@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
+import { useActive } from '@/hooks/useActive';
 import { MIMIK, type Mimik } from '@/constants/mimik';
 
 export type FaceMood = Exclude<Mimik, 'wink' | 'talk'>;
@@ -17,7 +18,10 @@ const MOODS: FaceMood[] = ['neutral', 'happy', 'cheer', 'wow', 'sad', 'sleepy'];
  * "Hareketi azalt" açıksa döngüler durur, sadece mimik geçişi kalır.
  */
 export function MokaFace({ size, mood = 'happy', talking = false, thinking = false, pop = 0 }: { size: number; mood?: FaceMood; talking?: boolean; thinking?: boolean; pop?: number }) {
-  const reduce = useReduceMotion();
+  const reduceM = useReduceMotion();
+  const active = useActive();
+  // Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur.
+  const reduce = reduceM || !active;
   const [breath] = useState(() => new Animated.Value(0));
   const [fur] = useState(() => new Animated.Value(0));
   const [wink] = useState(() => new Animated.Value(0));

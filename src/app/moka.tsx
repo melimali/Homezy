@@ -1,11 +1,12 @@
 import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
-import { MokaFace } from '@/components/MokaFace';
+import { MokaFace, type FaceMood } from '@/components/MokaFace';
+import { useActive } from '@/hooks/useActive';
 import { Appear, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
@@ -73,6 +74,12 @@ export default function MokaChat() {
   useBusy(!!busy);
   const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
+  const { width: winW } = useWindowDimensions();
+  const heroSize = Math.round(Math.min(200, Math.max(120, winW * 0.5)));
+  const [scrollY] = useState(() => new Animated.Value(0));
+  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true });
+  // Büyük Moka kayıp gidince üst çubukta küçük Moka belirir.
+  const miniOp = scrollY.interpolate({ inputRange: [heroSize * 0.5, heroSize * 0.85], outputRange: [0, 1], extrapolate: 'clamp' });
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const lv = mokaLevel(S.play.moka);
   // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
@@ -226,32 +233,32 @@ export default function MokaChat() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View style={[st.top, { paddingTop: insets.top + 8, borderBottomColor: c.line }]}>
+      <View style={[st.top, { paddingTop: insets.top + 8, borderBottomColor: c.line, backgroundColor: c.bg }]}>
         <View style={st.head}>
           <BackLink
             label=""
-            title={busy ? 'Moka · yazıyor…' : `Moka · seviye ${lv.level}`}
             right={
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
-                  <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
-                </View>
-                <Squish onPress={() => setNotes(n => !n)} accessibilityLabel="Notlarım" accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
-                  <Text style={{ fontSize: 17 }}>📝</Text>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Animated.View style={[st.mini, { opacity: miniOp, transform: [{ scale: miniOp }] }]} pointerEvents="none">
+                  <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
+                    <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
+                  </View>
+                  <T v="h3" numberOfLines={1} style={{ flexShrink: 1 }}>Moka</T>
+                </Animated.View>
+                <View style={{ flex: 1 }} />
+                <Squish onPress={() => setNotes(n => !n)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
+                  <Text style={{ fontSize: 16 }}>📝</Text>
                 </Squish>
-                <Squish onPress={report} accessibilityLabel="Moka'nın son cevabını bildir" style={[st.icon, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 16 }}>🚩</Text>
+                <Squish onPress={report} accessibilityLabel={tx('Moka\'nın son cevabını bildir')} style={[st.icon, { backgroundColor: c.surface }]}>
+                  <Text style={{ fontSize: 15 }}>🚩</Text>
                 </Squish>
-                <Squish onPress={clear} accessibilityLabel="Sohbeti temizle" style={[st.icon, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 16 }}>🧹</Text>
+                <Squish onPress={clear} accessibilityLabel={tx('Sohbeti temizle')} style={[st.icon, { backgroundColor: c.surface }]}>
+                  <Text style={{ fontSize: 15 }}>🧹</Text>
                 </Squish>
               </View>
             }
           />
         </View>
-        <T v="tiny" style={{ textAlign: 'center', opacity: 0.8 }}>
-          Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
-        </T>
       </View>
 
       {notes ? (
@@ -259,7 +266,8 @@ export default function MokaChat() {
           <NotesList />
         </ScrollView>
       ) : (
-        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
+        <Animated.ScrollView ref={scroll as never} scrollEventThrottle={16} onScroll={onScroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
+          <MokaHero mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} level={lv.level} title={mokaTitle(lv.level)} busy={busy} typing={!!text.trim()} size={heroSize} />
           {items.map(i => (
             <Appear key={i.id}>
               <Bubble item={i} typed={!reduce && fresh.has(i.id)} onUndo={undoItem} onConfirm={confirmItem} />
@@ -281,7 +289,10 @@ export default function MokaChat() {
               ))}
             </View>
           )}
-        </ScrollView>
+          <T v="tiny" style={{ textAlign: 'center', opacity: 0.7, marginTop: 6 }}>
+            Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+          </T>
+        </Animated.ScrollView>
       )}
 
       {left ? (
@@ -397,6 +408,55 @@ function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean
   );
 }
 
+/** Sohbetin üstündeki büyük Moka: sahne, giriş animasyonu, duruma göre durum etiketi. */
+function MokaHero({ mood, talking, thinking, pop, level, title, busy, typing, size }: { mood: FaceMood; talking: boolean; thinking: boolean; pop: number; level: number; title: string; busy: boolean; typing: boolean; size: number }) {
+  const c = useColors();
+  const reduce = useReduceMotion();
+  const active = useActive();
+  const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  const [glow] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce) return;
+    const a = Animated.spring(enter, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [reduce, enter]);
+  // Arka plandaki hale: düşünürken/yazarken hızlı, boştayken yavaş atar.
+  useEffect(() => {
+    if (reduce || !active) return;
+    const d = busy || talking ? 600 : typing ? 900 : 1800;
+    const a = Animated.loop(Animated.sequence([
+      Animated.timing(glow, { toValue: 1, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(glow, { toValue: 0, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    a.start();
+    return () => a.stop();
+  }, [reduce, active, busy, talking, typing, glow]);
+  const status = busy ? tx('Moka düşünüyor…') : talking ? tx('Moka anlatıyor…') : typing ? tx('Moka seni dinliyor…') : tx('Moka seni bekliyor ☕');
+  const halo = size * 1.15;
+  return (
+    <View style={st.hero} accessibilityRole="header">
+      <Animated.View
+        style={{
+          width: halo, height: halo, borderRadius: halo / 2, backgroundColor: c.peachSoft, position: 'absolute', top: 0,
+          opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0.95] }),
+          transform: [{ scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1.04] }) }],
+        }}
+      />
+      <Animated.View style={{ opacity: enter, transform: [{ scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }, { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
+        <MokaFace size={size} mood={mood} talking={talking} thinking={thinking} pop={pop} />
+      </Animated.View>
+      <Animated.View style={{ opacity: enter, alignItems: 'center', marginTop: 4 }}>
+        <T v="h3">{tx('Moka · seviye {}').replace('{}', String(level))}</T>
+        <T v="tiny" style={{ opacity: 0.8 }}>{tx(title)}</T>
+        <View style={[st.chip, { backgroundColor: c.surface }]}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{status}</Text>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
 function NotesList() {
   const c = useColors();
   const { state: S, update } = useStore();
@@ -420,11 +480,14 @@ function NotesList() {
 }
 
 const st = StyleSheet.create({
-  top: { paddingHorizontal: 16, paddingBottom: 10, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  mini: { position: 'absolute', left: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  top: { paddingHorizontal: 16, paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
-  avatarImg: { width: 54, height: 54 },
-  icon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
+  avatarImg: { width: 40, height: 40 },
+  icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  hero: { alignItems: 'center', justifyContent: 'flex-start', paddingBottom: 8 },
+  chip: { marginTop: 6, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 },
   list: { padding: 16, gap: 10, flexGrow: 1 },
   bubble: { maxWidth: '86%', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
   moka: { borderBottomLeftRadius: 6, alignSelf: 'flex-start' },

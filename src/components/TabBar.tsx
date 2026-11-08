@@ -15,11 +15,13 @@ import { haptic } from '@/lib/sfx';
 
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
+import { TAB_TONE, type Tone } from './ScreenBackground';
 import { Chip, Sheet, T } from './ui';
 
 type IconName = 'home' | 'today' | 'growth' | 'me';
 /** Alt menüde görünen sekmeler; listede olmayan rota (ör. odalar) gizli kalır. */
 const ICONS: Record<string, IconName> = { index: 'home', bugun: 'today', gelisim: 'growth', hesap: 'me' };
+const TONE_OF: Record<IconName, Tone> = { home: 'peach', today: 'rose', growth: 'sky', me: 'lavender' };
 const BUBBLE: Record<IconName, 'peachSoft' | 'sageSoft' | 'roseSoft' | 'lavenderSoft'> = { home: 'peachSoft', today: 'roseSoft', growth: 'sageSoft', me: 'lavenderSoft' };
 
 /**
@@ -107,16 +109,24 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
 function Tab({ name, label, focused, onPress }: { name: IconName; label: string; focused: boolean; onPress: () => void }) {
   const c = useColors();
+  const dark = useIsDark();
+  const tone = TAB_TONE[TONE_OF[name]];
+  const mode = dark ? 'dark' : 'light';
   const [v] = useState(() => new Animated.Value(1));
+  const [f] = useState(() => new Animated.Value(focused ? 1 : 0));
+  useEffect(() => {
+    Animated.timing(f, { toValue: focused ? 1 : 0, duration: 320, useNativeDriver: false }).start();
+  }, [focused, f]);
+  const pillBg = f.interpolate({ inputRange: [0, 1], outputRange: ['rgba(0,0,0,0)', tone.pill[mode]] });
   useEffect(() => {
     if (!focused) return;
     v.setValue(0.8);
     Animated.spring(v, { toValue: 1.06, friction: 3, tension: 200, useNativeDriver: true }).start();
   }, [focused, v]);
-  const color = focused ? c.ink : c.muted;
+  const color = focused ? tone.ink[mode] : c.muted;
   return (
     <Squish onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} quiet style={st.tabOuter}>
-      <Animated.View style={[st.tab, focused && { backgroundColor: c.accentSoft }, { transform: [{ scale: v }] }]}>
+      <Animated.View style={[st.tab, { backgroundColor: pillBg, transform: [{ scale: v }] }]}>
         <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
         <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
       </Animated.View>

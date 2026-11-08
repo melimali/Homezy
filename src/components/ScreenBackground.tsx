@@ -10,6 +10,15 @@ import { useReduceMotion } from './motion';
 /** Sekme başına renk tonu: üst köşe, orta ve alt renkleri. */
 export type Tone = 'peach' | 'sage' | 'lavender' | 'rose' | 'sky';
 
+/** Sekme vurgusu (alt menüde seçili simge/yazı/hap) ve sayfanın en üstündeki doygun renk. */
+export const TAB_TONE: Record<Tone, { ink: { light: string; dark: string }; pill: { light: string; dark: string }; top: { light: string; dark: string } }> = {
+  peach: { ink: { light: '#A8512B', dark: '#F2B697' }, pill: { light: '#FADCC8', dark: '#5A4238' }, top: { light: '#F7C9A8', dark: '#4A3A3A' } },
+  rose: { ink: { light: '#A63F58', dark: '#F0A3B5' }, pill: { light: '#F8D3DB', dark: '#573844' }, top: { light: '#F4BCC8', dark: '#4A3445' } },
+  sky: { ink: { light: '#336C92', dark: '#95C2DE' }, pill: { light: '#D0E3EF', dark: '#2F4A60' }, top: { light: '#B3D3E6', dark: '#26435C' } },
+  lavender: { ink: { light: '#6A4CA0', dark: '#BFAEE6' }, pill: { light: '#E2D8F2', dark: '#463E66' }, top: { light: '#D3C3EC', dark: '#3C3560' } },
+  sage: { ink: { light: '#3F7050', dark: '#A9D3B4' }, pill: { light: '#D5E7D8', dark: '#35503F' }, top: { light: '#BCD9C3', dark: '#2C4A3A' } },
+};
+
 const TONES: Record<Tone, { light: [string, string, string]; dark: [string, string, string]; dot: string }> = {
   peach: { light: ['#F8EFE4', '#F7F2EA', '#F4ECE1'], dark: ['#222A3B', '#1C2230', '#1A202D'], dot: '#F7C9B0' },
   sage: { light: ['#EEF1E6', '#F7F2EA', '#F4ECE1'], dark: ['#202B33', '#1C2230', '#1A202D'], dot: '#BFD8C4' },
@@ -74,14 +83,15 @@ export const ScreenBackground = memo(function ScreenBackground({ tone = 'peach' 
   const dark = useIsDark();
   const reduce = useReduceMotion();
   const t = TONES[tone];
-  const [a, b, c] = dark ? t.dark : t.light;
+  const [, b, c] = dark ? t.dark : t.light;
+  const a = TAB_TONE[tone].top[dark ? 'dark' : 'light'];
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" preserveAspectRatio="none">
         <Defs>
-          <LinearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+          <LinearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={a} />
-            <Stop offset="0.5" stopColor={b} />
+            <Stop offset="0.45" stopColor={b} />
             <Stop offset="1" stopColor={c} />
           </LinearGradient>
         </Defs>

@@ -28,6 +28,7 @@ function TabsNav({ bg }: { bg: string }) {
       tabBar={props => <TabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        animation: 'fade',
         sceneStyle: { backgroundColor: bg },
         tabBarStyle: { position: 'absolute' },
       }}

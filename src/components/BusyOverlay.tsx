@@ -9,14 +9,16 @@ import { useReduceMotion } from './motion';
 /** Hızlı işlerde perde hiç açılmasın diye bu kadar bekler. */
 const SHOW_AFTER_MS = 300;
 
-type Ctx = { push: () => () => void };
-const BusyCtx = createContext<Ctx>({ push: () => () => {} });
+type Ctx = { push: () => () => void; pause: () => () => void };
+const noop = () => () => {};
+const BusyCtx = createContext<Ctx>({ push: noop, pause: noop });
 
 /** Yükleme sırasında ekran hafif kararır, küçük Moka animasyonu çıkar; iş bitince yumuşakça söner. */
 export function BusyProvider({ children }: { children: ReactNode }) {
   const c = useColors();
   const reduce = useReduceMotion();
   const [count, setCount] = useState(0);
+  const [paused, setPaused] = useState(0);
   const [mounted, setMounted] = useState(false);
   const fade = useRef(new Animated.Value(0)).current;
 
@@ -29,9 +31,18 @@ export function BusyProvider({ children }: { children: ReactNode }) {
       setCount(n => Math.max(0, n - 1));
     };
   }, []);
-  const ctx = useMemo(() => ({ push }), [push]);
+  const pause = useCallback(() => {
+    setPaused(n => n + 1);
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      setPaused(n => Math.max(0, n - 1));
+    };
+  }, []);
+  const ctx = useMemo(() => ({ push, pause }), [push, pause]);
 
-  const active = count > 0;
+  const active = count > 0 && paused === 0;
   useEffect(() => {
     if (active) {
       const t = setTimeout(() => {
@@ -64,6 +75,12 @@ export function BusyProvider({ children }: { children: ReactNode }) {
 export function useBusy(on: boolean) {
   const { push } = useContext(BusyCtx);
   useEffect(() => (on ? push() : undefined), [on, push]);
+}
+
+/** `usePauseBusy(on)`: true iken perde gizlenir (ör. robot doğrulama kutusu açıkken). */
+export function usePauseBusy(on: boolean) {
+  const { pause } = useContext(BusyCtx);
+  useEffect(() => (on ? pause() : undefined), [on, pause]);
 }
 
 /** Bileşen state'i olmayan yerler için: `await withBusy(promise)`. */

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { usePauseBusy } from '@/components/BusyOverlay';
 import { fonts, radius, useColors } from '@/theme';
 
 /**
@@ -70,6 +71,7 @@ export function CaptchaHost() {
   const [phase, setPhase] = useState<Phase>('load');
   const [attempt, setAttempt] = useState(0);
   const queue = useRef<Pending[]>([]);
+  usePauseBusy(!!job);
 
   const done = (token?: string) => {
     job?.resolve(token);

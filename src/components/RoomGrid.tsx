@@ -33,6 +33,10 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
         const scene = ROOM_ART[r.type];
         const okN = mine.filter(x => x.s.k === 'ok').length;
         const n = rc.late + rc.today;
+        // Aynı türden 2., 3. ... oda: sıraya göre sabit renk tonu + köşe süsü.
+        const v = S.order.slice(0, S.order.indexOf(id)).filter(x => S.rooms[x]?.type === r.type).length;
+        const tint = v > 0 ? TINTS[(v - 1) % TINTS.length] : null;
+        const deco = v > 0 ? DECOS[(v - 1) % DECOS.length] : null;
         return (
           <Appear key={id} index={start + i} style={row ? styles.rowCell : styles.cell}>
             <Squish
@@ -42,12 +46,18 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
               style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadow, }]}
             >
               {scene ? (
-                <View style={styles.photo}><SceneImage source={scene} height={116} /></View>
+                <View style={styles.photo}>
+                  <SceneImage source={scene} height={116} />
+                  {tint && <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: 0.28 }]} />}
+                  {deco && <Text style={styles.deco}>{deco}</Text>}
+                </View>
               ) : (
                 <View style={[styles.noScene, styles.photo, { backgroundColor: c.room[r.type] }]}>
                   <Float amp={n ? 4 : 2} dur={1700 + (i % 3) * 250} delay={i * 120}>
+                    {tint && <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint, opacity: 0.28 }]} />}
                     <Text style={{ fontSize: 46, lineHeight: 56 }}>{roomEmoji(r.type, S.order.slice(0, S.order.indexOf(id)).filter(x => S.rooms[x]?.type === r.type).length)}</Text>
                   </Float>
+                  {deco && <Text style={styles.deco}>{deco}</Text>}
                 </View>
               )}
               <View style={styles.body}>
@@ -82,6 +92,9 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
   return <View style={styles.grid}>{cards}{modal}</View>;
 }
 
+const TINTS = ['#E58C7E', '#78A1BB', '#F2C46D', '#7FB28A'];
+const DECOS = ['🪴', '🕯️', '🧸', '🌸'];
+
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 20, marginTop: 4 },
   cell: { width: '48%' },
@@ -90,6 +103,7 @@ const styles = StyleSheet.create({
   rowCell: { width: 158 },
   card: { borderRadius: 22, padding: 8, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4 },
   photo: { borderRadius: 16, overflow: 'hidden' },
+  deco: { position: 'absolute', left: 8, bottom: 4, fontSize: 24 },
   noScene: { height: 116, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 6, gap: 8 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },

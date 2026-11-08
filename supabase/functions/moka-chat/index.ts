@@ -6,6 +6,7 @@
 // - Araç çağrıları burada şemaya ve uygulamanın gönderdiği listeye göre doğrulanır (kimlikler listede olmalı,
 //   sayılar aralıkta, metinler kısa). Geçersiz çağrı atılır. Uygulama da aynı doğrulamayı tekrar yapar.
 // - Sadece üyelik (anonim misafir reddedilir) + Premium. `chat_reserve`: günde 10, ayda 300 mesaj, dakikada 6. Cevap alınamazsa hak geri verilir.
+// - Kriz algılama (_shared/safety.ts): kendine zarar / intihar ifadelerinde model çağrılmadan sabit destek cevabı (112) döner.
 // - Mesajlar ve ev verisi sunucuda saklanmaz.
 //
 // Gizli değişken: ANTHROPIC_API_KEY. İsteğe bağlı: CHAT_MODEL (varsayılan claude-haiku-5-5).
@@ -15,6 +16,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk';
 import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
 import { guard } from '../_shared/guard.ts';
 import { admin } from '../_shared/subscription.ts';
+import { crisisReply, isCrisis } from '../_shared/safety.ts';
 import { ACTION_RE, toolSchemas, validate, type Action, type Ctx } from '../_shared/chatTools.ts';
 
 // Zaman aşımı 30 sn, otomatik yeniden deneme yok.
@@ -152,6 +154,11 @@ Deno.serve(async req => {
   if (lastRaw.length > MAX_MSG) return json({ error: 'too_long', max: MAX_MSG }, 413);
   const messages = cleanHistory(body.messages);
   if (!ctx || !messages.length || messages[messages.length - 1].role !== 'user') return json({ error: 'bad_request' }, 400);
+
+  // Kriz (kendine zarar / intihar): model çağrılmaz, hak düşmez; sabit, güvenli destek cevabı döner.
+  if (isCrisis(messages[messages.length - 1].content)) {
+    return json({ reply: crisisReply(body.lang), actions: [], crisis: true });
+  }
 
   const { data: slot, error: slotErr } = await admin.rpc('chat_reserve', { p_user: userId });
   if (slotErr) return json({ error: 'server' }, 500);

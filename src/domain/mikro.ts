@@ -1,5 +1,6 @@
 import type { DayKey, Growth } from './types';
 import type { DiscAnswers, TypeId } from './kisilik';
+import type { Kind } from './havuz';
 
 /**
  * Mini öneriler: Moka tipine göre kısa, ev dışı ya da beden odaklı isteğe bağlı fikirler
@@ -30,6 +31,14 @@ export const MIKRO: Mikro[] = [
   M('uyku', '😴', 'Bu akşam ekranı 30 dk erken kapat', 'Uykun sana teşekkür eder.', 1, 'saglik'),
   M('yapma', '☕', 'Hiçbir şey yapmadan bir kahve iç', 'Telefon yok, 5 dakika.', 5, 'ruh'),
   M('erken', '⚡', 'Beklettiğin küçük işi hemen yap', '2 dakikadan kısa olanı.', 2, 'ev'),
+  M('gunes', '☀️', '5 dakika gün ışığına çık', 'Sabah ışığı uykunu da düzenler.', 5, 'saglik'),
+  M('sayfa', '📖', '10 sayfa kitap oku', 'Ne olursa, elindeki kitap.', 10, 'gelisim'),
+  M('yuru10', '🚶', '10 dakika kısa yürüyüş', 'Mahallede bir tur.', 10, 'spor'),
+  M('merdiven', '🪜', 'Bugün merdiveni kullan', 'Asansör yerine bir kat.', 2, 'spor'),
+  M('meyve', '🍎', 'Bir meyve ye', 'Atıştırmalık yerine.', 2, 'saglik'),
+  M('dans', '🎵', 'Bir şarkı boyunca dans et', 'Kimse bakmıyor.', 3, 'spor'),
+  M('dik', '🧍', '1 dakika dik dur, omuzlar geride', 'Ekran başında da olur.', 1, 'saglik'),
+  M('telefon', '📵', '15 dakika telefonsuz kal', 'Bildirimleri sessize al.', 15, 'ruh'),
 ];
 
 /** Tip başına tercih sırası: ilk üçü önce önerilir, alan seçimine göre öne alınır. */
@@ -44,6 +53,16 @@ const BY_TYPE: Record<TypeId, string[]> = {
   dengeli: ['su', 'plank', 'yuru', 'nefes', 'mesaj', 'esne', 'ogren', 'minnet'],
 };
 
+/** Kişi türüne göre ek öneriler (havuz.ts `kindsOf`): tipin listesine eklenir, ev dışı mikro işler. */
+const BY_KIND: Record<Kind, string[]> = {
+  ogrenci: ['sayfa', 'telefon', 'gunes', 'meyve'],
+  calisan: ['yuru10', 'gunes', 'dik', 'merdiven'],
+  ebeveyn: ['nefes', 'yapma', 'gunes', 'dans'],
+  tek: ['mesaj', 'yuru10', 'dans', 'meyve'],
+  ertelemeci: ['erken', 'saat', 'telefon', 'dik'],
+  duzenli: ['plan', 'sayfa', 'merdiven', 'telefon'],
+};
+
 const KEYS: Record<string, MikroArea> = { spor: 'spor', saglik: 'saglik', ruh: 'ruh', gelisim: 'gelisim', para: 'para', ev: 'ev' };
 
 const dayNum = (k: DayKey) => {
@@ -52,17 +71,19 @@ const dayNum = (k: DayKey) => {
 };
 
 /** Bugünün 3 önerisi: tipin listesi, kullanıcının seçtiği alanlar öne, gün geçtikçe döner (deterministik). */
-export function mikroToday(day: DayKey, type: TypeId | null | undefined, answers?: DiscAnswers): Mikro[] {
-  const pool = BY_TYPE[type ?? 'dengeli'].map(id => MIKRO.find(m => m.id === id)!).filter(Boolean);
+export function mikroToday(day: DayKey, type: TypeId | null | undefined, answers?: DiscAnswers, kinds: Kind[] = []): Mikro[] {
+  const ids = [...BY_TYPE[type ?? 'dengeli'], ...kinds.flatMap(k => BY_KIND[k] ?? [])].filter((x, i, a) => a.indexOf(x) === i);
+  const pool = ids.map(id => MIKRO.find(m => m.id === id)!).filter(Boolean);
   const raw = answers?.areas;
   const areas = (Array.isArray(raw) ? raw : []).map(a => KEYS[a]).filter(Boolean);
   // Odak süresi ya da vakit kısaysa en uzun işleri sona it.
   const budget = Number(answers?.budget) || 30;
   const maxMin = budget <= 15 ? 3 : 10;
   const ranked = [...pool].sort((a, b) => score(b, areas, maxMin) - score(a, areas, maxMin));
-  const top = ranked.slice(0, 6);
+  // Daha geniş havuz: ilk 9 aday, her gün 3'er kayarak döner (aynı öneri 3 günden önce gelmez).
+  const top = ranked.slice(0, 9);
   const n = dayNum(day);
-  return [0, 1, 2].map(i => top[(n + i) % top.length]);
+  return [0, 1, 2].map(i => top[(n * 3 + i) % top.length]).filter((m, i, a) => a.indexOf(m) === i);
 }
 
 const score = (m: Mikro, areas: MikroArea[], maxMin: number) => (areas.includes(m.area) ? 2 : 0) + (m.min <= maxMin ? 1 : 0);

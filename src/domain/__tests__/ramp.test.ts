@@ -18,10 +18,17 @@ describe('ramp', () => {
     S.settings.rampOff = true;
     expect(dailyCap(S, NOON)).toBe(Infinity);
     S.settings.rampOff = false;
-    S.play.days = Array.from({ length: 20 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    S.play.days = [...Array.from({ length: 19 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`), '2026-11-10'];
     expect(dailyCap(S, NOON)).toBe(5);
     S.settings.lightDay = '2026-11-11';
     expect(dailyCap(S, NOON)).toBe(2);
+  });
+  it('geri dönüş: 2+ gün ara verince bugün tek iş, ilk iş sayılınca normale döner', () => {
+    const S = emptyState();
+    S.play.days = Array.from({ length: 20 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    expect(dailyCap(S, NOON)).toBe(1);
+    S.play.days.push('2026-11-11');
+    expect(dailyCap(S, NOON)).toBe(5);
   });
   it('en iyi seri ve hafta hedefi', () => {
     const S = emptyState();
@@ -41,7 +48,7 @@ describe('ramp', () => {
   });
   it('yorgun sabah cevabı hafif gün sayılır', () => {
     const S = emptyState();
-    S.play.days = Array.from({ length: 20 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    S.play.days = [...Array.from({ length: 19 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`), '2026-11-10'];
     S.play.checkins = { '2026-11-11': { feel: 'yorgun', busy: 'evde', at: NOON } };
     expect(isLightDay(S, NOON)).toBe(true);
     expect(dailyCap(S, NOON)).toBe(2);

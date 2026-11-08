@@ -82,6 +82,8 @@ export type Settings = {
   rampSeen?: number;
   /** "Hafif gün": bu gün anahtarı bugünse Bugün sadece 1-2 iş gösterir; gün yine de sayılır. */
   lightDay?: string | null;
+  /** If-then niyet: "ne zaman / nerede / ne" (src/domain/niyet.ts). Bir güne bağlı; başka günde yok sayılır. */
+  intent?: { day: string; when: string; task: string; place: string } | null;
   /** Tek oda modu: doluysa işler, bildirimler ve puan sadece bu odaya göre (oda kimliği). Yoksa tüm ev. */
   solo?: string | null;
   /** "HH:MM" */

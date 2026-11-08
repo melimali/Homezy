@@ -1,5 +1,5 @@
 import { answered } from './mood';
-import { addDays, dayKey } from './play';
+import { addDays, dayKey, progressOf } from './play';
 import type { AppState, DayKey, Play } from './types';
 
 /**
@@ -37,7 +37,10 @@ export function isLightDay(S: AppState, now = Date.now()): boolean {
 export function dailyCap(S: AppState, now = Date.now()): number {
   if (S.settings.rampOff) return Infinity;
   const cap = stageFor(S.play.days.length).cap;
-  const c = isLightDay(S, now) ? Math.min(cap, 2) : cap;
+  let c = isLightDay(S, now) ? Math.min(cap, 2) : cap;
+  // Geri dönüş: 2+ gün ara verildiyse bugün tek küçük işle başlanır; ilk iş bitince (gün sayılınca) normale döner.
+  const p = S.play.days.length ? progressOf(S.play, now) : null;
+  if (p && !p.today && p.resting >= 2) c = Math.min(c, 1);
   return c >= 99 ? Infinity : c;
 }
 

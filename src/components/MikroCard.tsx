@@ -3,6 +3,7 @@ import { Squish } from '@/components/motion';
 import { Card, SecHead, T } from '@/components/ui';
 import { gKey } from '@/domain/growth';
 import { TYPES } from '@/domain/kisilik';
+import { kindsOf } from '@/domain/havuz';
 import { mikroState, mikroToday, setMikro } from '@/domain/mikro';
 import { useNow } from '@/hooks/useNow';
 import { usePersona } from '@/profile/usePersona';
@@ -14,9 +15,9 @@ export function MikroCard() {
   const c = useColors();
   const now = useNow();
   const { state: S, update } = useStore();
-  const { disc } = usePersona();
+  const { disc, answers, done: asked } = usePersona();
   const day = gKey(now);
-  const items = mikroToday(day, disc?.type, disc?.answers);
+  const items = mikroToday(day, disc?.type, disc?.answers, kindsOf(asked ? answers : null, disc?.type, disc?.answers));
   const t = disc ? TYPES[disc.type] : null;
   return (
     <Card bare>

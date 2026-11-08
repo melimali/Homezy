@@ -6,7 +6,8 @@ import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
 import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
-import { BonusCard } from '@/components/BonusCard';
+import { BonusCard, BonusLocked } from '@/components/BonusCard';
+import { OdakCard } from '@/components/OdakCard';
 import { MikroCard } from '@/components/MikroCard';
 import { GrowthCard } from '@/components/GrowthCard';
 import { SelfCareCard } from '@/components/SelfCareCard';
@@ -92,6 +93,7 @@ export default function Bugun() {
       <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
       <RampCard />
       {next && <View {...tour.mark('next')}><NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} /></View>}
+      <OdakCard next={next} total={total} doneN={doneN} />
 
       {places.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
@@ -128,8 +130,10 @@ export default function Bugun() {
       {hiddenN > 0 && S.mode?.k !== 'tatil' && (
         <Btn kind="soft" block label={total === doneN ? `Bugünlük tamam 🎉 İstersen biraz daha (${hiddenN} iş)` : `${hiddenN} iş daha var · İstersen göster`} onPress={() => setShowAll(true)} />
       )}
+      {/* Bonus katmanı tamamen isteğe bağlı: günün ana işleri bitince açılır (puan / seri etkilemez). */}
       {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
-      {S.mode?.k !== 'tatil' && <MikroCard />}
+      {total === doneN && S.mode?.k !== 'tatil' && <MikroCard />}
+      {total > doneN && S.mode?.k !== 'tatil' && <BonusLocked left={total - doneN} />}
       <MedsToday />
       <DailyGoals now={now} />
       <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>

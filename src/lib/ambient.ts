@@ -5,7 +5,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
  * Plak çaların sürekli (loop) çalan parçaları: lofi ve ambiyans sesleri. Birden fazlası aynı anda açılıp
  * karıştırılabilir (ör. lofi + yağmur). Dosyalar assets/sounds/ altında. Yerel ses modülü yoksa hiçbir şey çalmaz.
  */
-export type AmbientId = 'lofi' | 'rain' | 'fireplace' | 'nature' | 'sea' | 'night' | 'storm' | 'slowlofi' | 'deepsea' | 'wind';
+export type AmbientId = 'lofi' | 'rain' | 'fireplace' | 'nature' | 'sea' | 'night' | 'storm' | 'slowlofi' | 'deepsea' | 'windharsh' | 'winterwind' | 'boil' | 'fan' | 'rainbirds' | 'drizzle' | 'piano' | 'emotional' | 'roma';
 
 const SOURCES: Record<AmbientId, number> = {
   lofi: require('../../assets/sounds/lofi.mp3'),
@@ -18,14 +18,22 @@ const SOURCES: Record<AmbientId, number> = {
   storm: require('../../assets/sounds/rain.mp3'),
   slowlofi: require('../../assets/sounds/lofi.mp3'),
   deepsea: require('../../assets/sounds/sea.mp3'),
-  wind: require('../../assets/sounds/sea.mp3'),
+  windharsh: require('../../assets/sounds/wind-harsh.mp3'),
+  winterwind: require('../../assets/sounds/wind-winter.mp3'),
+  boil: require('../../assets/sounds/boiling-water.mp3'),
+  fan: require('../../assets/sounds/fan.mp3'),
+  rainbirds: require('../../assets/sounds/rain-birds.mp3'),
+  drizzle: require('../../assets/sounds/drizzle.mp3'),
+  piano: require('../../assets/sounds/piano-calm.mp3'),
+  emotional: require('../../assets/sounds/emotional.mp3'),
+  roma: require('../../assets/sounds/emotional-roma.mp3'),
 };
 
 /** Parçanın çalma hızı (1 = özgün). Perde düzeltmeli: yavaşlayınca tiz-bas bozulmaz. */
-const RATE: Partial<Record<AmbientId, number>> = { storm: 1.3, slowlofi: 0.85, deepsea: 0.8, wind: 1.5 };
+const RATE: Partial<Record<AmbientId, number>> = { storm: 1.3, slowlofi: 0.85, deepsea: 0.8 };
 
 /** Lofi ana müzik, ambiyanslar altta durur ki karışınca birbirini bastırmasın. */
-const VOLUME: Record<AmbientId, number> = { lofi: 0.7, rain: 0.5, fireplace: 0.5, nature: 0.5, sea: 0.5, night: 0.5, storm: 0.8, slowlofi: 0.7, deepsea: 0.55, wind: 0.3 };
+const VOLUME: Record<AmbientId, number> = { lofi: 0.7, rain: 0.5, fireplace: 0.5, nature: 0.5, sea: 0.5, night: 0.5, storm: 0.8, slowlofi: 0.7, deepsea: 0.55, windharsh: 0.5, winterwind: 0.4, boil: 0.5, fan: 0.5, rainbirds: 0.5, drizzle: 0.5, piano: 0.6, emotional: 0.6, roma: 0.6 };
 
 let Audio: typeof import('expo-audio') | null | undefined;
 function audio() {
@@ -140,9 +148,12 @@ export type Combo = { id: string; emoji: string; name: string; desc: string; lay
 export const COMBOS: Combo[] = [
   { id: 'rainy-coffee', emoji: '☕', name: 'Yağmurlu Kahve', desc: 'Yumuşak lo-fi, pencerede yağmur', layers: { lofi: 0.6, rain: 0.45 } },
   { id: 'night-focus', emoji: '🌙', name: 'Gece Odak', desc: 'Yavaş lo-fi ve uzaktan cırcır böcekleri', layers: { slowlofi: 0.65, night: 0.3 } },
-  { id: 'fire-evening', emoji: '🪵', name: 'Şömine Akşamı', desc: 'Çıtırdayan odun ve hafif rüzgâr', layers: { fireplace: 0.6, wind: 0.2 } },
+  { id: 'fire-evening', emoji: '🪵', name: 'Şömine Akşamı', desc: 'Çıtırdayan odun ve hafif rüzgâr', layers: { fireplace: 0.6, winterwind: 0.3 } },
   { id: 'forest-morning', emoji: '🌿', name: 'Orman Sabahı', desc: 'Kuş sesleri, uzaktan lo-fi', layers: { nature: 0.6, lofi: 0.3 } },
   { id: 'storm-cozy', emoji: '⛈️', name: 'Fırtınalı Kış', desc: 'Dışarıda fırtına, içeride şömine', layers: { storm: 0.7, fireplace: 0.45 } },
+  { id: 'piano-rain', emoji: '🎹', name: 'Piyano ve Yağmur', desc: 'Sakin piyano, uzaktan yağmur ve kuşlar', layers: { piano: 0.6, rainbirds: 0.35 } },
+  { id: 'sad-evening', emoji: '🥹', name: 'Duygusal Akşam', desc: 'Duygusal melodi ve ince çiseleme', layers: { emotional: 0.6, drizzle: 0.3 } },
+  { id: 'fan-sleep', emoji: '🌀', name: 'Fanlı Uyku', desc: 'Sabit fan sesi ve hafif çiseleme', layers: { fan: 0.55, drizzle: 0.25 } },
   { id: 'deep-sleep', emoji: '😴', name: 'Derin Uyku', desc: 'Derin dalgalar ve hafif yağmur', layers: { deepsea: 0.55, rain: 0.25 } },
 ];
 

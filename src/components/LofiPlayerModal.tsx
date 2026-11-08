@@ -27,7 +27,15 @@ const TRACKS: Track[] = [
   { id: 'storm', emoji: '⛈️', name: 'Gök Gürültülü Fırtına', desc: 'Sert yağmur, pencerede fırtına', soundType: 'storm' },
   { id: 'slowlofi', emoji: '🌌', name: 'Yavaş Lo-Fi', desc: 'Gece geç saat için ağır, uykulu ritimler', soundType: 'slowlofi' },
   { id: 'deepsea', emoji: '🐋', name: 'Derin Okyanus', desc: 'Yavaş, derin ve sakin dalgalar', soundType: 'deepsea' },
-  { id: 'wind', emoji: '🍃', name: 'Hafif Rüzgâr', desc: 'Perdeyi sallayan serin esinti', soundType: 'wind' },
+  { id: 'windharsh', emoji: '🌬️', name: 'Sert Rüzgâr', desc: 'Pencereyi zorlayan güçlü rüzgâr', soundType: 'windharsh' },
+  { id: 'winterwind', emoji: '❄️', name: 'Kış Rüzgârı', desc: 'Soğuk, uzaktan uğuldayan kış rüzgârı', soundType: 'winterwind' },
+  { id: 'boil', emoji: '🫖', name: 'Kaynayan Su', desc: 'Ocakta kaynayan çaydanlık, sıcak mutfak', soundType: 'boil' },
+  { id: 'fan', emoji: '🌀', name: 'Fan Sesi', desc: 'Uykuya dalmak için sabit beyaz gürültü', soundType: 'fan' },
+  { id: 'rainbirds', emoji: '🐦', name: 'Yağmur ve Kuşlar', desc: 'Uzaktan hafif yağmur, uyku için kuş sesleri', soundType: 'rainbirds' },
+  { id: 'drizzle', emoji: '💧', name: 'Derin Çiseleme', desc: 'Yeşil gürültü tonunda yumuşak çiseleme', soundType: 'drizzle' },
+  { id: 'piano', emoji: '🎹', name: 'Sakin Piyano', desc: 'Dinlendiren yavaş piyano melodisi', soundType: 'piano' },
+  { id: 'emotional', emoji: '🥹', name: 'Duygusal Müzik', desc: 'Yumuşak, duygusal bir melodi', soundType: 'emotional' },
+  { id: 'roma', emoji: '🌹', name: 'Roma Duygusal', desc: 'Romantik ve duygusal enstrümantal', soundType: 'roma' },
 ];
 
 type Props = {

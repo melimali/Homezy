@@ -1,7 +1,7 @@
 import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, Easing, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Keyboard, Linking, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
@@ -75,12 +75,14 @@ export default function MokaChat() {
   const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();
-  const heroSize = Math.round(Math.min(200, Math.max(120, winW * 0.5)));
-  const [scrollY] = useState(() => new Animated.Value(0));
-  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true });
-  // Büyük Moka kayıp gidince üst çubukta küçük Moka belirir.
-  const miniOp = scrollY.interpolate({ inputRange: [heroSize * 0.5, heroSize * 0.85], outputRange: [0, 1], extrapolate: 'clamp' });
-  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [kb, setKb] = useState(false);
+  useEffect(() => {
+    const sh = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKb(true));
+    const hd = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKb(false));
+    return () => { sh.remove(); hd.remove(); };
+  }, []);
+  // Moka sabit: %20 küçük (en çok 160); klavye açıkken biraz daha küçülür.
+  const heroSize = Math.round(Math.min(160, Math.max(96, winW * 0.4)) * (kb ? 0.7 : 1));
   const lv = mokaLevel(S.play.moka);
   // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
   const last = [...items].reverse().find(i => i.role === 'assistant' && !i.error);
@@ -239,12 +241,6 @@ export default function MokaChat() {
             label=""
             right={
               <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Animated.View style={[st.mini, { opacity: miniOp, transform: [{ scale: miniOp }] }]} pointerEvents="none">
-                  <View style={[st.avatar, { backgroundColor: c.peachSoft }]}>
-                    <MokaFace size={st.avatarImg.width} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
-                  </View>
-                  <T v="h3" numberOfLines={1} style={{ flexShrink: 1 }}>Moka</T>
-                </Animated.View>
                 <View style={{ flex: 1 }} />
                 <Squish onPress={() => setNotes(n => !n)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
                   <Text style={{ fontSize: 16 }}>📝</Text>
@@ -261,13 +257,14 @@ export default function MokaChat() {
         </View>
       </View>
 
+      <MokaHero mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} level={lv.level} title={mokaTitle(lv.level)} busy={busy} typing={!!text.trim()} size={heroSize} compact={kb} />
+
       {notes ? (
         <ScrollView contentContainerStyle={st.list}>
           <NotesList />
         </ScrollView>
       ) : (
-        <Animated.ScrollView ref={scroll as never} scrollEventThrottle={16} onScroll={onScroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
-          <MokaHero mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} level={lv.level} title={mokaTitle(lv.level)} busy={busy} typing={!!text.trim()} size={heroSize} />
+        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
           {items.map(i => (
             <Appear key={i.id}>
               <Bubble item={i} typed={!reduce && fresh.has(i.id)} onUndo={undoItem} onConfirm={confirmItem} />
@@ -292,7 +289,7 @@ export default function MokaChat() {
           <T v="tiny" style={{ textAlign: 'center', opacity: 0.7, marginTop: 6 }}>
             Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
           </T>
-        </Animated.ScrollView>
+        </ScrollView>
       )}
 
       {left ? (
@@ -409,7 +406,7 @@ function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean
 }
 
 /** Sohbetin üstündeki büyük Moka: sahne, giriş animasyonu, duruma göre durum etiketi. */
-function MokaHero({ mood, talking, thinking, pop, level, title, busy, typing, size }: { mood: FaceMood; talking: boolean; thinking: boolean; pop: number; level: number; title: string; busy: boolean; typing: boolean; size: number }) {
+function MokaHero({ mood, talking, thinking, pop, level, title, busy, typing, size, compact }: { mood: FaceMood; talking: boolean; thinking: boolean; pop: number; level: number; title: string; busy: boolean; typing: boolean; size: number; compact?: boolean }) {
   const c = useColors();
   const reduce = useReduceMotion();
   const active = useActive();
@@ -448,10 +445,10 @@ function MokaHero({ mood, talking, thinking, pop, level, title, busy, typing, si
       </Animated.View>
       <Animated.View style={{ opacity: enter, alignItems: 'center', marginTop: 4 }}>
         <T v="h3">{tx('Moka · seviye {}').replace('{}', String(level))}</T>
-        <T v="tiny" style={{ opacity: 0.8 }}>{tx(title)}</T>
-        <View style={[st.chip, { backgroundColor: c.surface }]}>
+        {!compact && <T v="tiny" style={{ opacity: 0.8 }}>{tx(title)}</T>}
+        {!compact && <View style={[st.chip, { backgroundColor: c.surface }]}>
           <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{status}</Text>
-        </View>
+        </View>}
       </Animated.View>
     </View>
   );
@@ -480,7 +477,6 @@ function NotesList() {
 }
 
 const st = StyleSheet.create({
-  mini: { position: 'absolute', left: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
   top: { paddingHorizontal: 16, paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },

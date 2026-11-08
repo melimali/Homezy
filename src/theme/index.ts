@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, type ReactNode } from 'react';
+import { createContext, createElement, useContext, useSyncExternalStore, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
 import type { RoomType } from '@/domain/types';
@@ -60,9 +60,28 @@ const LockedScheme = createContext<'light' | 'dark' | null>(null);
 export function ForceScheme({ scheme, children }: { scheme: 'light' | 'dark'; children: ReactNode }) {
   return createElement(LockedScheme.Provider, { value: scheme }, children);
 }
+
+/** Kullanıcının seçtiği görünüm (Ayarlar > Görünüm). 'system': telefonun temasını izler. */
+export type Appearance = 'system' | 'light' | 'dark';
+let appearance: Appearance = 'system';
+const listeners = new Set<() => void>();
+export function setAppearance(a: Appearance | undefined) {
+  const next = a ?? 'system';
+  if (next === appearance) return;
+  appearance = next;
+  listeners.forEach(l => l());
+}
+const subscribe = (l: () => void) => {
+  listeners.add(l);
+  return () => void listeners.delete(l);
+};
+const getAppearance = () => appearance;
+
 function useScheme() {
   const sys = useColorScheme();
-  return useContext(LockedScheme) ?? (sys === 'dark' ? 'dark' : 'light');
+  const pick = useSyncExternalStore(subscribe, getAppearance, getAppearance);
+  const base = pick === 'system' ? (sys === 'dark' ? 'dark' : 'light') : pick;
+  return useContext(LockedScheme) ?? base;
 }
 
 export function useColors(): Colors {

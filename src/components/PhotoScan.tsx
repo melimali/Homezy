@@ -1,6 +1,6 @@
 import { useRouter } from '@/lib/nav';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { LV, WASH } from '@/domain/constants';
 import { uid } from '@/domain/logic';
@@ -14,7 +14,7 @@ import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
 import type { PhotoLook } from './Outfits';
-import { MokaMascot } from './MokaMascot';
+import { MokaLoading } from './MokaLoading';
 import { useToast } from './Toast';
 import { Btn, SecHead, T } from './ui';
 
@@ -269,16 +269,9 @@ export function WardrobeScan({ rid, onLook }: { rid: string; onLook: (look: Phot
 /* ---------- ortak parçalar ---------- */
 
 function Working({ text, onStop }: { text: string; onStop: () => void }) {
-  const c = useColors();
   return (
     <View style={{ gap: 8 }} accessibilityRole="progressbar" accessibilityLiveRegion="polite">
-      <View style={styles.row}>
-        <MokaMascot pose="analyzing" size="sm" showBubble={false} />
-        <View style={{ flex: 1, gap: 6 }}>
-          <T v="small">{text}</T>
-          <ActivityIndicator color={c.hi} style={{ alignSelf: 'flex-start' }} />
-        </View>
-      </View>
+      <MokaLoading text={text} />
       <Btn small kind="ghost" label="Durdur" onPress={onStop} style={{ alignSelf: 'flex-start' }} />
     </View>
   );

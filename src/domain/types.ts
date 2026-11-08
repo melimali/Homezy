@@ -86,6 +86,8 @@ export type Settings = {
   intent?: { day: string; when: string; task: string; place: string } | null;
   /** Tek oda modu: doluysa işler, bildirimler ve puan sadece bu odaya göre (oda kimliği). Yoksa tüm ev. */
   solo?: string | null;
+  /** Görünüm: telefonu izle / açık / koyu. Yoksa telefonu izler. */
+  appearance?: 'system' | 'light' | 'dark';
   /** "HH:MM" */
   time: string;
   routine: boolean;

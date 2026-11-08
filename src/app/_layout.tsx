@@ -34,7 +34,7 @@ import { usePersona, usePersonaSync } from '@/profile/usePersona';
 import { PurchasesProvider, usePurchases } from '@/purchases/PurchasesProvider';
 import { AppStoreProvider, useStore } from '@/store/AppStore';
 import { useCloudSync } from '@/sync/cloud';
-import { useColors } from '@/theme';
+import { setAppearance, useColors, useIsDark } from '@/theme';
 
 initCrashReporting();
 installTranslationPatch();
@@ -70,7 +70,7 @@ export default function RootLayout() {
           <AppStoreProvider>
             <ToastProvider>
               <FamilyProvider>
-                <StatusBar style="auto" />
+                <AppStatusBar />
                 <RootStack />
                 <LaunchChoice />
                 <CaptchaHost />
@@ -87,6 +87,13 @@ export default function RootLayout() {
       </AuthProvider>
     </SafeAreaProvider>
   );
+}
+
+function AppStatusBar() {
+  const { state } = useStore();
+  const dark = useIsDark();
+  useEffect(() => setAppearance(state.settings.appearance), [state.settings.appearance]);
+  return <StatusBar style={dark ? 'light' : 'dark'} />;
 }
 
 function RootStack() {

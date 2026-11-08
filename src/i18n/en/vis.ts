@@ -1,0 +1,20 @@
+/** Görünüm ayarı, ayar ekranı bölümleri, paylaşım kartı, yükleniyor ekranı. */
+export const EN_VIS: Record<string, string> = {
+  'Sabah özeti': 'Morning summary',
+  'Ev hatırlatmaları': 'Home reminders',
+  'Alışkanlık ve sağlık': 'Habits & health',
+  'Görünüm': 'Appearance',
+  'Düzen': 'Routine',
+  'Tema': 'Theme',
+  '📱 Telefonu izle': '📱 Follow phone',
+  '☀️ Açık': '☀️ Light',
+  '🌙 Koyu': '🌙 Dark',
+  'Moka bakıyor…': 'Moka is looking…',
+  'Evim': 'My home',
+  'Evimi paylaş': 'Share my home',
+  'Evimi paylaş 📤': 'Share my home 📤',
+  'Arkadaşlarına evinin kartını gönder.': 'Send your home card to your friends.',
+  'Bu hafta': 'This week',
+  'Ev kartını arkadaşlarına gönder': 'Send your home card to your friends',
+  'Küçük işler, büyük huzur 🏡 homezy': 'Small chores, big calm 🏡 homezy',
+};

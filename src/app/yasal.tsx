@@ -7,7 +7,7 @@ import { Linking, Platform, Share, StyleSheet, Switch, Text, View } from 'react-
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Divider, ListRow, Screen, T } from '@/components/ui';
 import { aiConsent, locationOk } from '@/lib/consent';
-import { LEGAL, legalUrl } from '@/lib/links';
+import { LEGAL, legalUrl, openLink } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
 import { fonts, useColors } from '@/theme';
 
@@ -60,7 +60,7 @@ export default function Yasal() {
   };
 
   const link = (label: string, url: string, icon: string) => (
-    <ListRow icon={icon} title={label} onPress={() => Linking.openURL(url)} accessibilityLabel={label} />
+    <ListRow icon={icon} title={label} onPress={() => openLink(url)} accessibilityLabel={label} />
   );
 
   return (

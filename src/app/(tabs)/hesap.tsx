@@ -4,7 +4,7 @@ import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { MokaReact } from '@/components/MokaReact';
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
@@ -21,7 +21,7 @@ import { homeScore, emptyState } from '@/domain/logic';
 import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
-import { legalUrl } from '@/lib/links';
+import { legalUrl, openLink } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
 import Constants from 'expo-constants';
 import { sendTestError } from '@/lib/crash';
@@ -254,11 +254,11 @@ export default function Hesap() {
       <View style={[st.card, { backgroundColor: c.surface2 }]}>
         <T v="h3">{t('about')}</T>
         <View style={st.legal}>
-          <Squish onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
+          <Squish onPress={() => openLink(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
           </Squish>
           <Text style={{ color: c.muted }}>•</Text>
-          <Squish onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
+          <Squish onPress={() => openLink(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
           </Squish>
         </View>

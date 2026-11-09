@@ -7,7 +7,6 @@ import {
   Easing,
   Image,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -22,7 +21,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { validEmail } from "@/auth/errors";
 import { Btn, Card, Field, T, XBtn } from "@/components/ui";
 import { cloudEnabled } from "@/lib/supabase";
-import { legalUrl } from "@/lib/links";
+import { legalUrl, openLink } from "@/lib/links";
 import { useStore } from "@/store/AppStore";
 import { ForceScheme, fonts, radius, useColors } from "@/theme";
 import { Squish, useReduceMotion } from "@/components/motion";
@@ -285,14 +284,14 @@ function GirisBody(p: {
               Hesap oluşturarak{" "}
               <Text
                 style={{ color: c.ink, fontFamily: fonts.bodyBold }}
-                onPress={() => Linking.openURL(legalUrl("terms", state.settings.language))}
+                onPress={() => openLink(legalUrl("terms", state.settings.language))}
               >
                 Kullanım koşulları
               </Text>
               {en ? " and the " : "'nı ve "}
               <Text
                 style={{ color: c.ink, fontFamily: fonts.bodyBold }}
-                onPress={() => Linking.openURL(legalUrl("privacy", state.settings.language))}
+                onPress={() => openLink(legalUrl("privacy", state.settings.language))}
               >
                 Gizlilik politikası
               </Text>

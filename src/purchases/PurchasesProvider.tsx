@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { getLang, onLangChange } from '@/i18n/runtime';
 import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 
@@ -31,6 +32,10 @@ export type Plan = 'monthly' | 'annual';
 export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
 /** İlk aya özel fiyat. Gerçek teklif Google Play'de aylık plana "giriş teklifi" olarak tanımlanır. */
 export const INTRO_PRICE = '$4.99';
+
+/** Dil Türkçeyken mağaza TL fiyatı vermiyorsa (bölge farklı ya da okunamadı) gösterilen sabit TL fiyatlar. */
+const TL = { monthly: 149.99, annual: 1564.99, intro: 119.99 };
+const tl = (n: number) => `${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
 
 export type Premium = {
   active: boolean;
@@ -225,13 +230,18 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     await Linking.openURL(managementURL.current ?? fallback).catch(() => {});
   }, []);
 
-  const monthly = pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly;
-  const annual = pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual;
-  const annualPerMonth = pkgs.annual?.product.pricePerMonthString ?? null;
-  const m = pkgs.monthly?.product.price ?? 6.99;
-  const y = pkgs.annual?.product.price ?? 59.99;
+  const [lang, setLangState] = useState(getLang());
+  useEffect(() => onLangChange(() => setLangState(getLang())), []);
+  // Türkçe seçiliyken mağaza fiyatı TL değilse sabit TL fiyatları göster; mağaza TL veriyorsa onu koru.
+  const trFixed = lang === 'tr' && (pkgs.monthly?.product.currencyCode ?? pkgs.annual?.product.currencyCode ?? '') !== 'TRY';
+  const monthly = trFixed ? tl(TL.monthly) : (pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly);
+  const annual = trFixed ? tl(TL.annual) : (pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual);
+  const annualPerMonth = trFixed ? tl(TL.annual / 12) : (pkgs.annual?.product.pricePerMonthString ?? null);
+  const m = trFixed ? TL.monthly : (pkgs.monthly?.product.price ?? 6.99);
+  const y = trFixed ? TL.annual : (pkgs.annual?.product.price ?? 59.99);
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
-  const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
+  const introStore = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
+  const introPrice = trFixed && introStore ? tl(TL.intro) : introStore;
   const value = useMemo(
     () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
     [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],

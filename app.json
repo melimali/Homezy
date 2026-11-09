@@ -10,6 +10,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.meikai.homezy",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.meikai.homezy"]
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -40,6 +43,7 @@
     },
     "plugins": [
       "expo-router",
+      "@bacons/apple-targets",
       "expo-status-bar",
       "expo-sqlite",
       [

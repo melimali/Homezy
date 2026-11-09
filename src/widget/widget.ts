@@ -16,6 +16,7 @@ import { setLang } from '@/i18n/runtime';
 import { markDose } from '@/domain/meds';
 
 import { miniData, widgetData } from './data';
+import { refreshIosWidget } from './ios';
 import type * as MiniTypes from './MiniWidget';
 import type * as TodayTypes from './TodayWidget';
 
@@ -63,6 +64,7 @@ export function rememberPremium(active: boolean) {
 
 /** Uygulama açıkken veri değişince çağrılır: ekrandaki bütün "Bugün" widget'larını yeniler. */
 export async function refreshWidgets(S: AppState, now = Date.now()) {
+  if (Platform.OS === 'ios') return refreshIosWidget(S, now);
   if (!lib) return;
   setLang(S.settings?.language);
   const data = widgetData(S, now);

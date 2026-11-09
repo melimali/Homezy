@@ -27,6 +27,7 @@ type Auth = {
   signUp: (name: string, email: string, password: string) => Promise<Result>;
   signIn: (email: string, password: string) => Promise<Result>;
   resetPassword: (email: string) => Promise<Result>;
+  updateAccount: (changes: { name?: string; password?: string }) => Promise<Result>;
   continueAsGuest: () => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<Result>;
@@ -126,6 +127,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
+  const updateAccount = useCallback(async (changes: { name?: string; password?: string }): Promise<Result> => {
+    if (!supabase) return offline;
+    const off = await noNet();
+    if (off) return off;
+    try {
+      const { error } = await supabase.auth.updateUser({
+        ...(changes.password ? { password: changes.password } : {}),
+        ...(changes.name ? { data: { name: changes.name.trim() } } : {}),
+      });
+      if (error) return { ok: false, error: error.code === 'same_password' ? 'Yeni şifre eskisiyle aynı olamaz.' : authErrorText(error) };
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Bir sorun oldu. Biraz sonra tekrar dene.' };
+    }
+  }, []);
+
   const continueAsGuest = useCallback(async () => {
     if (supabase) {
       const captchaToken = await requestCaptcha();
@@ -167,8 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, signOut]);
 
   const value = useMemo<Auth>(
-    () => ({ status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, continueAsGuest, signOut, deleteAccount }),
-    [status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, continueAsGuest, signOut, deleteAccount],
+    () => ({ status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, updateAccount, continueAsGuest, signOut, deleteAccount }),
+    [status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, updateAccount, continueAsGuest, signOut, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

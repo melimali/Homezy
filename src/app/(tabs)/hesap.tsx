@@ -64,7 +64,7 @@ export default function Hesap() {
   const router = useRouter();
   const toast = useToast();
   const { t } = useTranslation();
-  const { status, user, signOut, deleteAccount } = useAuth();
+  const { status, user, signOut, deleteAccount, updateAccount } = useAuth();
   const { premium, restore, manage } = usePurchases();
   const { state, replace, update } = useStore();
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | 'lang' | null>(null);
@@ -117,12 +117,34 @@ export default function Hesap() {
     { label: 'Yıldız Ev', art: 'yildiz', on: allDone >= 100, hint: '100 iş tamamla' },
   ];
 
+  // Sonuç mesajları Sheet'in içinde gösterilir: iOS'ta Modal üstünde toast/uyarı görünmüyordu.
+  const [msg, setMsg] = useState<{ key: 'restore' | 'acct'; ok: boolean; text: string } | null>(null);
+  const [edit, setEdit] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [savingAcct, setSavingAcct] = useState(false);
   const doRestore = async () => {
     setBusy('restore');
+    setMsg(null);
     const r = await restore();
     setBusy(null);
-    if (!r.ok) toast(r.error);
-    else toast(r.active ? 'Premium üyeliğin geri yüklendi.' : 'Bu mağaza hesabında etkin bir üyelik bulunamadı.');
+    if (!r.ok) setMsg({ key: 'restore', ok: false, text: r.error });
+    else setMsg({ key: 'restore', ok: r.active, text: r.active ? 'Premium üyeliğin geri yüklendi.' : 'Bu mağaza hesabında etkin bir üyelik bulunamadı.' });
+  };
+  const saveAcct = async () => {
+    setMsg(null);
+    const name = newName.trim();
+    if (!name && !newPw) return setMsg({ key: 'acct', ok: false, text: 'Değiştirmek için yeni ad ya da yeni şifre yaz.' });
+    if (newPw && newPw.length < 8) return setMsg({ key: 'acct', ok: false, text: 'Şifre en az 8 karakter olmalı.' });
+    setSavingAcct(true);
+    const r = await updateAccount({ name: name || undefined, password: newPw || undefined });
+    setSavingAcct(false);
+    if (!r.ok) return setMsg({ key: 'acct', ok: false, text: r.error });
+    if (name) saveNickname(name);
+    setNewPw('');
+    setNewName('');
+    setEdit(false);
+    setMsg({ key: 'acct', ok: true, text: newPw ? 'Şifren güncellendi.' : 'Bilgilerin güncellendi.' });
   };
 
   const doSignOut = () =>
@@ -189,6 +211,7 @@ export default function Hesap() {
               <T v="small" style={{ textDecorationLine: 'underline' }}>{busy === 'restore' ? 'Kontrol ediliyor…' : t('restorePurchases')}</T>
             </Squish>
           )}
+          {msg?.key === 'restore' && <T v="small" style={{ textAlign: 'center', color: msg.ok ? c.ok : c.late }}>{msg.text}</T>}
         </View>
       )}
 
@@ -200,10 +223,20 @@ export default function Hesap() {
             : 'Şu an misafir olarak kullanıyorsun. Hesaba geç, evin ve serin kaybolmasın.'}
         </T>
         {account ? (
-          <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => { setCat(null); router.push('/giris'); }} block />
+          edit ? (
+            <View style={{ gap: 10 }}>
+              <TextInput value={newName} onChangeText={setNewName} placeholder="Yeni ad (isteğe bağlı)" placeholderTextColor={c.muted} autoCapitalize="words" style={[st.fld, { color: c.ink, backgroundColor: c.bg }]} />
+              <TextInput value={newPw} onChangeText={setNewPw} placeholder="Yeni şifre (en az 8 karakter)" placeholderTextColor={c.muted} secureTextEntry autoCapitalize="none" autoCorrect={false} textContentType="newPassword" style={[st.fld, { color: c.ink, backgroundColor: c.bg }]} />
+              <Btn label={savingAcct ? 'Kaydediliyor…' : 'Kaydet'} kind="primary" onPress={saveAcct} disabled={savingAcct} block />
+              <Btn label="Vazgeç" kind="soft" onPress={() => { setEdit(false); setMsg(null); }} block />
+            </View>
+          ) : (
+            <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => { setMsg(null); setEdit(true); }} block />
+          )
         ) : (
           <Btn label="Hesap aç veya giriş yap" kind="primary" onPress={() => { setCat(null); router.push('/giris'); }} block />
         )}
+        {msg?.key === 'acct' && <T v="small" style={{ textAlign: 'center', color: msg.ok ? c.ok : c.late }}>{msg.text}</T>}
       </View>
 
       {isOwner(user) && (
@@ -489,6 +522,7 @@ const PIN_KEY: Record<string, string> = { 'İlaçlarım': 'ilac', 'Günlük': 'g
 const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 'hesap', ayar: 'ayar' };
 
 const st = StyleSheet.create({
+  fld: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, fontFamily: fonts.body },
   stats: { flexDirection: 'row', gap: 8 },
   stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2, ...elevation.md },
   hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, ...elevation.md },

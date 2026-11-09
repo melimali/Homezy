@@ -67,7 +67,7 @@ export default function Hesap() {
   const { status, user, signOut, deleteAccount } = useAuth();
   const { premium, restore, manage } = usePurchases();
   const { state, replace, update } = useStore();
-  const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
+  const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | 'lang' | null>(null);
   useBusy(!!busy);
   const [langOpen, setLangOpen] = useState(false);
   const [cat, setCat] = useState<string | null>(null);
@@ -448,9 +448,13 @@ export default function Hesap() {
                   disabled={!!l.soon}
                   onPress={() => {
                     if (l.soon) return;
-                    update(D => void (D.settings.language = l.code));
                     setLangOpen(false);
-                    toast(`${l.flag} ${l.label} seçildi.`);
+                    setBusy('lang');
+                    setTimeout(() => {
+                      update(D => void (D.settings.language = l.code));
+                      toast(`${l.flag} ${l.label} seçildi.`);
+                      setTimeout(() => setBusy(b => (b === 'lang' ? null : b)), 500);
+                    }, 450);
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={l.label}

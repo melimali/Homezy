@@ -21,7 +21,8 @@ import { Burst, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
 import { IntroDeco, type DecoKind } from '@/components/IntroDeco';
 import { MOKA_ASSETS } from '@/constants/moka';
-import { POSE_SCENES } from '@/constants/scenes';
+import { MOKA_ASSETS } from '@/constants/moka';
+import { HERO_SCENES } from '@/domain/heroScenes';
 import { sfx } from '@/lib/sfx';
 import { ForceScheme, brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
 
@@ -32,7 +33,7 @@ const BOTTOM = 132; // noktalar + düğme
 const native = Platform.OS !== 'web';
 
 type Copy = { eyebrow: string; title: string; text: string; /** Polaroid alt yazı şeridi. */ caption: string };
-type Page = { tr: Copy; en: Copy; scene: ImageSourcePropType; tint: (c: Colors) => string; deco: DecoKind };
+type Page = { tr: Copy; en: Copy; scene: IntroScene; tint: (c: Colors) => string; deco: DecoKind };
 type Lang = 'tr' | 'en';
 
 // Hikâye: küçük günlük işler → ev büyür (ihmalde toz, dönünce parlar) → bahçe → kendin için.
@@ -41,46 +42,80 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Tanışalım', title: 'Merhaba, ben Moka', text: 'Ev işlerini küçük, kolay adımlara bölerim. Sen her gün biraz yaparsın, gerisini birlikte hallederiz.', caption: 'Hazır mısın?' },
     en: { eyebrow: 'Say hello', title: 'Hi, I’m Moka', text: 'I break housework into small, easy steps. You do a little each day, and we handle the rest together.', caption: 'Ready?' },
-    scene: POSE_SCENES.happy!,
+    scene: SCENES.hello,
     deco: 'hello',
     tint: c => c.peachSoft,
   },
   {
     tr: { eyebrow: 'Plan', title: 'Evini çiz', text: 'Odalarını birkaç dokunuşla yerleştir. Her odanın işleri kendiliğinden hazırlanır.', caption: 'Önce planı çizelim' },
     en: { eyebrow: 'Plan', title: 'Draw your home', text: 'Place your rooms with a few taps. Each room gets its own chores, ready to go.', caption: 'Let’s sketch it first' },
-    scene: POSE_SCENES.handyman!,
+    scene: SCENES.draw,
     deco: 'draw',
     tint: c => c.sageSoft,
   },
   {
     tr: { eyebrow: 'Her gün', title: 'Günde birkaç iş', text: 'Bugün ne yapacağını tek listede gör, bitirdikçe işaretle. Küçük adımlar zamanla alışkanlığa dönüşür.', caption: 'Süpürge hazır' },
     en: { eyebrow: 'Every day', title: 'A few tasks a day', text: 'See today’s to-dos in one list and tick them off. Small steps quietly turn into habits.', caption: 'Broom ready' },
-    scene: POSE_SCENES.sweeping!,
+    scene: SCENES.sweep,
     deco: 'tasks',
     tint: c => c.roseSoft,
   },
   {
     tr: { eyebrow: 'Evin', title: 'Evin seninle büyür', text: 'Düzenli kaldıkça evine yeni katlar eklenir. Ara verirsen toz tutar; döndüğünde yeniden parlar.', caption: 'Vay, ne büyüdü!' },
     en: { eyebrow: 'Your home', title: 'Your home grows', text: 'Stay consistent and new floors appear. Take a break and dust settles; come back and it shines again.', caption: 'Wow, look at it!' },
-    scene: POSE_SCENES.amazed!,
+    scene: SCENES.wow,
     deco: 'house',
     tint: c => c.peachSoft,
   },
   {
     tr: { eyebrow: 'Bahçe', title: 'Bahçen çiçek açar', text: 'Bitirdiğin her iş bahçene yeni bir çiçek ekler. İstikrarlı oldukça bahçen renklenir.', caption: 'Birlikte sulayalım' },
     en: { eyebrow: 'Garden', title: 'Your garden blooms', text: 'Every task you finish plants a new flower. The steadier you are, the more colorful it gets.', caption: 'Let’s water it' },
-    scene: POSE_SCENES.watering!,
+    scene: SCENES.garden,
     deco: 'garden',
     tint: c => c.sageSoft,
   },
   {
     tr: { eyebrow: 'Kendin için', title: 'Sıra sende', text: 'Evin düzene girince spor, günlük ve huzur için vakit ayır. Disiplin evde başlar, hayatına yayılır.', caption: 'Sen de değerlisin' },
     en: { eyebrow: 'For you', title: 'Now it’s your turn', text: 'Once home is in order, make time for workouts, journaling and calm. Discipline starts at home and spreads to everything.', caption: 'You matter too' },
-    scene: POSE_SCENES.reading!,
+    scene: SCENES.read,
     deco: 'self',
     tint: c => c.lavenderSoft,
   },
 ];
+
+/**
+ * Polaroid sahnesi: sabit arka plan + ayrı Moka çıkartması. Konum arka plan RESMİNE göre
+ * (x = yatay merkez, bottom = ayakların resmin üstünden uzaklığı, size = çıkartma genişliği; hepsi resim oranı).
+ * Resim "cover" ile kırpılsa da Moka resimde aynı yerde kalır (ana ekrandaki HeroMoka ile aynı mantık).
+ */
+type IntroScene = { background: ImageSourcePropType; sticker: ImageSourcePropType; x: number; bottom: number; size: number };
+const heroScene = (id: string): IntroScene => {
+  const s = HERO_SCENES.find(h => h.id === id)!;
+  return { background: s.background, sticker: s.sticker, x: s.x, bottom: s.bottom, size: s.size };
+};
+const SCENES: Record<string, IntroScene> = {
+  hello: heroScene('salon-kanepe'),
+  draw: { background: require('../../assets/arkaplan/merdiven.jpg'), sticker: MOKA_ASSETS.handyman, x: 0.46, bottom: 0.9, size: 0.4 },
+  sweep: { background: require('../../assets/arkaplan/koridor.jpg'), sticker: MOKA_ASSETS.sweeping, x: 0.5, bottom: 0.9, size: 0.4 },
+  wow: { background: require('../../assets/arkaplan/salon_tv.jpg'), sticker: MOKA_ASSETS.amazed, x: 0.5, bottom: 0.9, size: 0.36 },
+  garden: heroScene('bitki-kosesi'),
+  read: heroScene('pencere-sedir'),
+};
+
+function SceneView({ scene, w, h }: { scene: IntroScene; w: number; h: number }) {
+  const src = Image.resolveAssetSource(scene.background);
+  const iw = src?.width || 1, ih = src?.height || 1;
+  const k = Math.max(w / iw, h / ih);
+  const offX = (w - iw * k) / 2, offY = (h - ih * k) / 2;
+  const sz = Math.round(scene.size * iw * k);
+  const feetY = offY + scene.bottom * ih * k;
+  return (
+    <View style={{ width: w, height: h, borderRadius: 6, overflow: 'hidden' }}>
+      <Image source={scene.background} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h }} resizeMode="cover" accessibilityIgnoresInvertColors />
+      <Image source={scene.sticker} style={{ position: 'absolute', width: sz, height: sz, left: Math.round(offX + scene.x * iw * k - sz / 2), top: Math.round(feetY - sz) }} resizeMode="contain" accessibilityIgnoresInvertColors />
+    </View>
+  );
+}
 
 const UI = {
   tr: { skip: 'Atla', next: 'Devam', start: 'Hadi başlayalım', page: 'Sayfa', hintStart: 'Hesap ekranına geçer', hintNext: 'Sonraki sayfaya geçer', poke: 'Moka’ya dokun' },
@@ -260,7 +295,7 @@ function PageView({ p: page, i, w, h, x, top, bottom, active, lang, c, onPoke }:
       <Animated.View style={{ transform: [{ translateX: sceneX }, { rotate }, { scale }, { rotate: i % 2 ? '2.5deg' : '-2.5deg' }] }}>
         <Squish quiet onPress={onPoke} accessibilityLabel={UI[lang].poke} style={[st.polaroid, { width: card, backgroundColor: PAPER, shadowColor: c.shadow }]}>
           <View style={[st.tape, { backgroundColor: p.tint(c) }]} />
-          <Image source={p.scene} style={{ width: card - 28, height: ((card - 28) * 3) / 4, borderRadius: 6 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+          <SceneView scene={p.scene} w={card - 28} h={((card - 28) * 3) / 4} />
           <View style={st.strip}>
             <Text style={[st.caption, { color: brand.navy }, card < 230 && { fontSize: 15.5, lineHeight: 20 }]}>{p.caption}</Text>
           </View>

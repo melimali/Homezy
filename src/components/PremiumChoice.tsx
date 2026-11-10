@@ -80,7 +80,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       <View style={styles.plans}>
         <View style={[styles.plan, { backgroundColor: c.surface, borderColor: c.line }]}>
           <Text style={[styles.planName, { color: c.ink }]}>Ücretsiz</Text>
-          <Text style={[styles.price, { color: c.ink }]}>$0</Text>
+          <Text style={[styles.price, { color: c.ink }]}>{S.settings.language === 'tr' ? '0 TL' : '$0'}</Text>
           <T v="small">her zaman</T>
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>

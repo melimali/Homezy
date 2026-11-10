@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Modal, StyleSheet, View, type AlertButton } from 'react-native';
+import { Alert, Image, Modal, Platform, StyleSheet, View, type AlertButton } from 'react-native';
 
 import { MOKA_ASSETS } from '@/constants/moka';
 import { radius, useColors } from '@/theme';
@@ -30,11 +30,20 @@ export function AppAlertHost() {
     };
   }, []);
   const cur = queue[0];
+  // iOS: kapanmakta olan Sheet/Modal varken ikinci Modal açılmaz; kısa bekleyip göster.
+  const [ready, setReady] = useState(Platform.OS !== 'ios');
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    setReady(false);
+    if (!cur) return;
+    const id = setTimeout(() => setReady(true), 450);
+    return () => clearTimeout(id);
+  }, [cur]);
   const done = (b?: AlertButton) => {
     setQueue(q => q.slice(1));
     b?.onPress?.();
   };
-  if (!cur) return null;
+  if (!cur || !ready) return null;
   const cancel = cur.buttons.find(b => b.style === 'cancel');
   return (
     <Modal transparent animationType="fade" onRequestClose={() => {

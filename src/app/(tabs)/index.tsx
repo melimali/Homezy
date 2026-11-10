@@ -2,7 +2,7 @@ import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { LayoutAnimation, Platform, UIManager } from 'react-native';
 
 
@@ -13,6 +13,8 @@ import { MokaMascot } from '@/components/MokaMascot';
 import { LevelUpPeek } from '@/components/LevelUpPeek';
 import { PremiumEndedCard, StreakMoment } from '@/components/PaywallMoments';
 import { Fade } from '@/components/SceneImage';
+import { EditTabBtn } from '@/components/TabEditor';
+import { useTabLayout } from '@/lib/tabLayout';
 import { RoomGrid } from '@/components/RoomGrid';
 import { PetsCard } from '@/components/PetsCard';
 import { ShopCard } from '@/components/ShopCard';
@@ -99,72 +101,18 @@ export default function Home() {
   // Kırmızı/uyarı yok: ev geri gitmez, sadece dinlenir.
   const warn = !hp.today && hp.level > 0;
 
+  const layout = useTabLayout('ev');
   const tour = useTabTour('ev', [...TOUR]);
   const mark = tour.mark;
-  return (
-    <Screen header={false} tab tone="peach" {...tour.screen}>
-      {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
-      <View style={styles.heroWrap} {...mark('hero')}>
-        <HeroMoka scene={heroScene} ratio={0.8} reserveTop={insets.top + 140} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
-          <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
-            {/* Moka'nın konuşma baloncuğu */}
-            <View style={styles.speechBubble}>
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, borderRadius: radius.card }]} />
-              <View style={[styles.bubbleTail, { backgroundColor: c.surface }]} />
-              <T v="h1" style={{ fontSize: 23, lineHeight: 28 }}>{greet(new Date(now), name)}</T>
-              <T v="bold" style={[styles.heroLead, { color: c.ink, fontSize: 13.5, lineHeight: 18 }]}>
-                {shown.length ? `Bugün ${shown.length} küçük iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
-              </T>
-            </View>
-            <IconBtn icon="🔔" label="Bildirimler" badge={bell} onPress={() => router.push('/bildirimler')} />
-          </Appear>
-        </HeroMoka>
-
-        <Appear index={1} style={[styles.mokaCard, { backgroundColor: c.surface }]}>
-          <View style={styles.mokaRow}>
-            <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
-              <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
-                <MokaReact anim={spriteAnim} size={54} />
-              </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                <T v="bold" numberOfLines={1}>{moka.title}</T>
-                <T v="small" numberOfLines={3} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
-              </View>
-            </Squish>
-            <IconBtn icon={<Chevron color={c.ink} size={16} dir="right" />} label="Bugünün işleri" size={36} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
-          </View>
-          <View style={styles.mokaFoot}>
-            <Bar value={doneN / Math.max(1, doneN + due.length)} color={c.accent} height={7} style={{ flex: 1 }} />
-            <T v="tiny">{doneN}/{doneN + due.length}</T>
-          </View>
-        </Appear>
-      </View>
-
-      {/* Üç küçük rakam: seri, puan, ev seviyesi. Dokununca ilgili ekran. */}
+  const blk: Record<string, ReactNode> = {
+    stats: (
       <View {...mark('stats')}><Appear index={2} style={styles.stats}>
         <Stat emoji="🔥" value={String(hp.streak)} label="gün seri" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
         <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.surface} onPress={() => router.push('/magaza' as Href)} />
         <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.surface} onPress={() => router.push('/hikaye')} />
       </Appear></View>
-
-      {!!S.settings.solo && S.rooms[S.settings.solo] && (
-        <Squish onPress={() => router.navigate('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 22 }}>🚪</Text>
-          <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>Tek oda modu: {S.rooms[S.settings.solo].name}</Text>
-          <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
-        </Squish>
-      )}
-      {weekReady && (
-        <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 26 }}>🗓️</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
-            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
-          </View>
-          <Chevron color={c.muted} size={14} dir="right" />
-        </Squish>
-      )}
-
+    ),
+    isler: (
       <View {...mark('isler')}><Card bare index={2}>
         <SecHead title="Bugünün işleri" h="h3" right={due.length > shown.length ? (
           <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
@@ -195,7 +143,8 @@ export default function Home() {
           </View>
         ) : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
       </Card></View>
-
+    ),
+    evim: (
       <View {...mark('evim')}><Card index={3} style={styles.sec}>
         <SecHead title={`${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
@@ -245,8 +194,8 @@ export default function Home() {
           <Chevron color={c.muted} size={16} dir="right" />
         </Squish>
       </Card></View>
-
-      {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
+    ),
+    odalar: (
       <Card index={4} style={styles.sec}>
         <SecHead title="Odalarım" h="h3" right={
           <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
@@ -255,20 +204,10 @@ export default function Home() {
         } />
         <RoomGrid state={S} now={now} start={3} row />
       </Card>
-
-      <PetsCard />
-      <ShopCard />
-
-      {houseOpen && (
-        <HouseViewer
-          state={S}
-          build={hp}
-          theme={themeFor(S.settings.theme, premium.active)}
-          now={now}
-          onClose={() => setHouseOpen(false)}
-        />
-      )}
-
+    ),
+    pets: <PetsCard />,
+    shop: <ShopCard />,
+    keyif: (
       <View style={{ gap: 12 }}>
         <SecHead title="Keyif köşesi" h="h3" />
         <Appear index={5} style={styles.quick}>
@@ -280,10 +219,83 @@ export default function Home() {
           )}
         </Appear>
       </View>
+    ),
+  };
+
+  return (
+    <Screen header={false} tab tone="peach" {...tour.screen}>
+      {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
+      <View style={styles.heroWrap} {...mark('hero')}>
+        <HeroMoka scene={heroScene} ratio={0.8} reserveTop={insets.top + 140} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>
+          <Appear style={[styles.heroTop, { paddingTop: insets.top + 18 }]}>
+            {/* Moka'nın konuşma baloncuğu */}
+            <View style={styles.speechBubble}>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: c.surface, borderRadius: radius.card }]} />
+              <View style={[styles.bubbleTail, { backgroundColor: c.surface }]} />
+              <T v="h1" style={{ fontSize: 23, lineHeight: 28 }}>{greet(new Date(now), name)}</T>
+              <T v="bold" style={[styles.heroLead, { color: c.ink, fontSize: 13.5, lineHeight: 18 }]}>
+                {shown.length ? `Bugün ${shown.length} küçük iş var. ${line}` : `Bugün her şey yolunda. ${line}`}
+              </T>
+            </View>
+            <IconBtn icon="🔔" label="Bildirimler" badge={bell} onPress={() => router.push('/bildirimler')} />
+          </Appear>
+        </HeroMoka>
+
+        <Appear index={1} style={[styles.mokaCard, { backgroundColor: c.surface }]}>
+          <View style={styles.mokaRow}>
+            <Squish quiet onPress={() => { sfx('tap'); moka.next(); }} accessibilityRole="button" accessibilityLabel={`Moka: ${moka.title}. ${moka.message}`} style={styles.mokaTap}>
+              <View style={[styles.mokaIcon, { backgroundColor: c.surface2 }]}>
+                <MokaReact anim={spriteAnim} size={54} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <T v="bold" numberOfLines={1}>{moka.title}</T>
+                <T v="small" numberOfLines={3} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
+              </View>
+            </Squish>
+            <IconBtn icon={<Chevron color={c.ink} size={16} dir="right" />} label="Bugünün işleri" size={36} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
+          </View>
+          <View style={styles.mokaFoot}>
+            <Bar value={doneN / Math.max(1, doneN + due.length)} color={c.accent} height={7} style={{ flex: 1 }} />
+            <T v="tiny">{doneN}/{doneN + due.length}</T>
+          </View>
+        </Appear>
+      </View>
+
+      {!!S.settings.solo && S.rooms[S.settings.solo] && (
+        <Squish onPress={() => router.navigate('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ fontSize: 22 }}>🚪</Text>
+          <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>Tek oda modu: {S.rooms[S.settings.solo].name}</Text>
+          <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
+        </Squish>
+      )}
+      {weekReady && (
+        <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ fontSize: 26 }}>🗓️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
+            <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
+          </View>
+          <Chevron color={c.muted} size={14} dir="right" />
+        </Squish>
+      )}
+
+      {layout.ids.map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
+
+      {houseOpen && (
+        <HouseViewer
+          state={S}
+          build={hp}
+          theme={themeFor(S.settings.theme, premium.active)}
+          now={now}
+          onClose={() => setHouseOpen(false)}
+        />
+      )}
+
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
       <PremiumEndedCard />
       <AdBanner />
+      <View style={{ alignItems: 'center' }}><EditTabBtn tab="ev" wide /></View>
 
       <Celebrate level={hp.level} />
       <StreakMoment />

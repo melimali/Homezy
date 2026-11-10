@@ -1,5 +1,5 @@
 import { useRouter } from '@/lib/nav';
-import { useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { Image, LayoutAnimation, Platform, Pressable, UIManager, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ring } from '@/components/charts';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
@@ -28,6 +28,8 @@ import { taskMin, bayramList, billStatus, MODE_KINDS, MODES, seasonalNow, thawVa
 import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { orderByFit } from '@/domain/formulas';
 import { dailyCap } from '@/domain/ramp';
+import { EditTabBtn } from '@/components/TabEditor';
+import { useTabLayout } from '@/lib/tabLayout';
 import { RampCard } from '@/components/RampCard';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
 import type { ModeKind } from '@/domain/types';
@@ -92,21 +94,18 @@ export default function Bugun() {
   const filt = only && places.some(([rid]) => rid === only) ? only : null;
 
   const tour = useTabTour('bugun', [...TOUR]);
-  return (
-    <Screen header={false} tab tone="rose" {...tour.screen}>
-      <TitleBar title="Bugün" right={(
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <IconBtn icon="🔎" label="Ara" onPress={() => router.push('/ara' as never)} />
-          <IconBtn icon="📅" label="Takvim" onPress={() => router.push('/takvim' as never)} />
-          <IconBtn icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />
-        </View>
-      )} />
+  const layout = useTabLayout('bugun');
+  const blk: Record<string, ReactNode> = {
+    hafta: <>
       <WeekStrip now={now} />
+</>,
+    hero: <>
       <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
       <RampCard />
       {next && <View {...tour.mark('next')}><NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} /></View>}
       <OdakCard next={next} total={total} doneN={doneN} />
-
+</>,
+    filtre: <>
       {places.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills} style={{ marginHorizontal: -24 }}>
           <FilterPill label={`Tümü (${total})`} on={!filt} onPress={() => setOnly(null)} />
@@ -115,8 +114,8 @@ export default function Bugun() {
           ))}
         </ScrollView>
       )}
-
-      {!S.home.asked && <ProfilePrompt />}
+</>,
+    liste: <>
       <View {...tour.mark('liste')}>
       {(() => { let left = openAll ? Infinity : 3; return visible.map(([label, hint, arr], gi) => {
         const all = filt ? arr.filter(x => x.rid === filt) : arr;
@@ -149,15 +148,23 @@ export default function Bugun() {
       {hiddenN > 0 && S.mode?.k !== 'tatil' && (
         <Btn kind="soft" block label={total === doneN ? `Bugünlük tamam 🎉 İstersen biraz daha (${hiddenN} iş)` : `${hiddenN} iş daha var · İstersen göster`} onPress={() => setShowAll(true)} />
       )}
+</>,
+    bonus: <>
       <SecimCard />
       {/* Bonus katmanı tamamen isteğe bağlı: günün ana işleri bitince açılır (puan / seri etkilemez). */}
       {total === doneN && S.mode?.k !== 'tatil' && <BonusCard />}
       {total === doneN && S.mode?.k !== 'tatil' && <MikroCard />}
       {total === doneN && <FunCard />}
       {total > doneN && S.mode?.k !== 'tatil' && <BonusLocked left={total - doneN} />}
+</>,
+    ilac: <>
       <MedsToday />
       <PetsToday />
+</>,
+    hedef: <>
       <DailyGoals now={now} />
+</>,
+    daha: <>
       <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
         <Text style={{ fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>
         <T v="bold" style={{ flex: 1 }}>{more ? 'Daha az göster' : 'Yemek, kendine zaman, büyüme'}</T>
@@ -171,6 +178,8 @@ export default function Bugun() {
           <SelfCareCard />
         </>
       )}
+</>,
+    buhafta: <>
       {S.mode?.k !== 'tatil' && week.length > 0 && (
         <Card bare>
           <Squish onPress={() => setShowWeek(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: showWeek }} style={styles.modeHead}>
@@ -181,15 +190,34 @@ export default function Bugun() {
         </Card>
       )}
       {later > 0 && S.mode?.k !== 'tatil' && <T v="small" style={{ textAlign: 'center' }}>Bir haftadan sonra {later} iş daha var.</T>}
-      <HomeDue now={now} />
+</>,
+    alinacak: <>
       {shop.length > 0 && (
         <Card>
           <ShopList items={shop} title="Alınacaklar" h="h2" />
           <Btn small kind="soft" label="Alışveriş listem ›" onPress={() => router.push('/alisveris' as never)} />
         </Card>
       )}
+</>,
+    mod: <>
       <ModeCard now={now} />
       <TimeBudget now={now} />
+</>,
+    bakim: <>
+      <HomeDue now={now} />
+</>,
+  };
+  return (
+    <Screen header={false} tab tone="rose" {...tour.screen}>
+      <TitleBar title="Bugün" after={<EditTabBtn tab="bugun" />} right={(
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          <IconBtn size={36} icon="🔎" label="Ara" onPress={() => router.push('/ara' as never)} />
+          <IconBtn size={36} icon="📅" label="Takvim" onPress={() => router.push('/takvim' as never)} />
+          <IconBtn size={36} icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />
+        </View>
+      )} />
+      {layout.ids.map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
+      {!S.home.asked && <ProfilePrompt />}
       <AdBanner />
       {tour.node}
     </Screen>

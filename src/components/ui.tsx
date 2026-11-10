@@ -247,11 +247,14 @@ export function ListRow({
 }
 
 /** Sekme başlığı (tasarımdaki gibi): solda büyük başlık, sağda yuvarlak simge düğmesi. */
-export function TitleBar({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
+export function TitleBar({ title, sub, right, after }: { title: string; sub?: string; right?: ReactNode; after?: ReactNode }) {
   return (
     <Appear style={styles.titleBar}>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <T v="h1">{title}</T>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <T v="h1">{title}</T>
+          {after}
+        </View>
         {!!sub && <T v="small" style={{ marginTop: 2 }}>{sub}</T>}
       </View>
       {right}

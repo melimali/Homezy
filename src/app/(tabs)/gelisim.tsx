@@ -1,8 +1,10 @@
 import { useRouter } from '@/lib/nav';
 import { useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState, type ReactNode } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
+import { EditTabBtn } from '@/components/TabEditor';
+import { useTabLayout } from '@/lib/tabLayout';
 import { HeatmapCard } from '@/components/HeatmapCard';
 import { MoodLine, Ring, RoomBars, StatPill, StreakDots, WeekBars } from '@/components/charts';
 import { MokaWeekCard, MoodWeekCard } from '@/components/MokaReport';
@@ -71,10 +73,9 @@ export default function Gelisim() {
   useFocusEffect(useCallback(() => { setRk(k => k + 1); }, []));
 
   const tour = useTabTour('gelisim', [...TOUR]);
-  return (
-    <Screen header={false} tab tone="sky" {...tour.screen}>
-      <TitleBar title="Gelişim" sub="Küçük adımların, büyüyen evin" />
-
+  const layout = useTabLayout('gelisim');
+  const blk: Record<string, ReactNode> = {
+    hero: <>
       <View {...tour.mark('hero')}><Appear index={1} style={[st.hero, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
         <MokaMascot pose={pose} size="sm" showBubble={false} />
         <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
@@ -82,7 +83,8 @@ export default function Gelisim() {
           <T v="small" numberOfLines={3}>{weekLine(bars)}</T>
         </View>
       </Appear></View>
-
+</>,
+    tip: <>
       <Appear index={2}>
         <View style={[st.hero, { backgroundColor: tipe?.bg ?? c.surface, shadowColor: c.shadow }]}>
           {tipe && <Image source={tipe.img} style={{ width: 72, height: 72 }} resizeMode="contain" accessibilityIgnoresInvertColors />}
@@ -96,7 +98,8 @@ export default function Gelisim() {
           </View>
         </View>
       </Appear>
-
+</>,
+    buyume: <>
       <Appear index={2}>
         <Squish onPress={() => router.push('/buyume')} accessibilityRole="link" accessibilityLabel="Kendini geliştir" style={[st.hero, { backgroundColor: c.sageSoft, shadowColor: c.shadow }]}>
           <Ring pct={goalPct(S.play.growth, gKey(now))} size={64} stroke={9} color={c.sage} />
@@ -110,7 +113,8 @@ export default function Gelisim() {
           </View>
         </Squish>
       </Appear>
-
+</>,
+    moka: <>
       <View {...tour.mark('moka')}><Card index={2}>
         <SecHead title={`Moka seviye ${ml.level}`} h="h3" right={mokaTitle(ml.level)} />
         <Bar value={ml.pct / 100} />
@@ -146,7 +150,8 @@ export default function Gelisim() {
         })}
         {extrasUnlocked(S.play.days.length, now) && <Btn kind="primary" label="🍅 Odaklan (Pomodoro)" block onPress={() => router.push('/odak')} />}
       </Card></View>
-
+</>,
+    halkalar: <>
       <Appear key={`r${rk}`} index={2} style={st.rings}>
         <View style={[st.ringCard, { backgroundColor: c.surface }]}>
           <Ring pct={todayPct} color={c.peach} label="bugün" size={104} />
@@ -157,50 +162,65 @@ export default function Gelisim() {
           <T v="tiny">{week || doneN ? 'rutinlerin tazeliği' : 'ilk işini yapınca başlar'}</T>
         </View>
       </Appear>
-
+</>,
+    seri: <>
       <Appear key={`p${rk}`} index={3} style={st.pills}>
         <StatPill emoji="🔥" n={hp.streak} label="gün seri" tint={c.peachSoft} />
         <StatPill emoji="📅" n={S.play.days.length} label="toplam gün" tint={c.lavenderSoft} />
         <StatPill emoji="🏅" n={Math.max(best, hp.streak)} label="en iyi seri" tint={c.sageSoft} />
       </Appear>
-
+</>,
+    bars: <>
       <View {...tour.mark('hafta')}><Card index={4}>
         <SecHead title="Bu hafta" h="h3" right={`${week} iş`} />
         <WeekBars key={`w${rk}`} bars={bars} />
-      </Card>
-
+      </Card></View>
+</>,
+    takvim: <>
       <Card index={5}>
         <SecHead title="Seri takvimi" h="h3" right={`❄️ ${freezeLeft}/${lim.freezes}`} />
         <T v="small">{`Bu hafta hedefin ${wk.goal} gün: ${Math.min(wk.done, wk.goal)}/${wk.goal} ✓ Toplam ${S.play.days.length} günün hiç silinmez.`}</T>
         <StreakDots key={`s${rk}`} dots={monthDots(S.play, now)} />
         <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
       </Card>
-
-      </View>
+</>,
+    isi: <>
       <HeatmapCard key={`h${rk}`} state={S} now={now} />
+</>,
+    mokahafta: <>
       <MokaWeekCard index={5} />
 
       <MoodWeekCard index={6} />
-
+</>,
+    ruh: <>
       <View {...tour.mark('ruh')}><Card index={6}>
         <SecHead title="Ruh hali" h="h3" right="14 gün" />
         <MoodLine key={`m${rk}`} points={mood} />
         <T v="small">{moodLineOf(mood)}</T>
       </Card></View>
-
+</>,
+    odabars: <>
       {rooms.length > 0 && (
         <Card index={7}>
           <SecHead title="Odalar" h="h3" right={`%${score}`} />
           <RoomBars key={`b${rk}`} rooms={rooms} emoji={ROOM_EMOJI} />
         </Card>
       )}
-
+</>,
+    linkler: <>
       <Appear index={8} style={st.links}>
         <LinkTile emoji="🗓️" label="Haftam" sub="Paylaşılabilir kart" tint={c.roseSoft} onPress={() => router.push('/hafta')} />
         <LinkTile emoji="🌤️" label="Günüm" sub="Moka ile paylaş" tint={c.roseSoft} onPress={() => router.push('/gunum')} />
         <LinkTile emoji="🏆" label="Sıralama" sub="Ev puanı" tint={c.peachSoft} onPress={() => router.push('/siralama' as Href)} />
         {extrasUnlocked(S.play.days.length, now) && <LinkTile emoji="🎬" label="Evimin hikâyesi" sub="Baştan bugüne" tint={c.lavenderSoft} onPress={() => router.push('/hikaye')} />}
       </Appear>
+</>,
+  };
+  return (
+    <Screen header={false} tab tone="sky" {...tour.screen}>
+      <TitleBar title="Gelişim" sub="Küçük adımların, büyüyen evin" after={<EditTabBtn tab="gelisim" />} />
+
+      {layout.ids.map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
       {tour.node}
     </Screen>
   );

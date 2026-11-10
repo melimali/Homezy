@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Squish } from '@/components/motion';
 import { Btn, T } from '@/components/ui';
 import { saveLayout, useTabLayout, type TabId } from '@/lib/tabLayout';
+import { tx } from '@/i18n/runtime';
 import { fonts, radius, useColors } from '@/theme';
 
 /** Başlığın yanındaki küçük "Sekmeyi düzenle" düğmesi; dokununca düzenleme penceresi açılır. */
@@ -13,7 +14,7 @@ export function EditTabBtn({ tab, wide }: { tab: TabId; wide?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Squish onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel="Sekmeyi düzenle" style={[st.btn, { backgroundColor: c.surface2 }, wide && { maxWidth: undefined, paddingHorizontal: 18, paddingVertical: 9 }]}>
+      <Squish onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={tx('Sekmeyi düzenle')} style={[st.btn, { backgroundColor: c.surface2 }, wide && { maxWidth: undefined, paddingHorizontal: 18, paddingVertical: 9 }]}>
         <Text style={[st.btnT, { color: c.ink }]}>✏️ Sekmeyi düzenle</Text>
       </Squish>
       {open && <TabEditor tab={tab} onClose={() => setOpen(false)} />}
@@ -37,7 +38,7 @@ function TabEditor({ tab, onClose }: { tab: TabId; onClose: () => void }) {
   const toggle = (i: number) => write(items.map((x, k) => (k === i ? { ...x, visible: !x.visible } : x)));
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable style={st.scrim} onPress={onClose} accessibilityLabel="Kapat" />
+      <Pressable style={st.scrim} onPress={onClose} accessibilityLabel={tx('Kapat')} />
       <View style={[st.sheet, { backgroundColor: c.bg, paddingBottom: insets.bottom + 16 }]}>
         <T v="h2">Sekmeyi düzenle</T>
         <T v="small">Blokları aç-kapa, ▲▼ ile yerlerini değiştir. 🔒 olanlar hep durur.</T>
@@ -46,7 +47,7 @@ function TabEditor({ tab, onClose }: { tab: TabId; onClose: () => void }) {
             <View key={x.id} style={[st.row, { backgroundColor: c.surface, opacity: x.visible ? 1 : 0.6 }]}>
               <Text style={{ fontSize: 22 }}>{x.emoji}</Text>
               <T v="bold" style={{ flex: 1 }} numberOfLines={2}>{x.title}</T>
-              {x.fixed ? <Text style={{ fontSize: 18 }}>🔒</Text> : <Switch value={x.visible} onValueChange={() => toggle(i)} accessibilityLabel={x.title} trackColor={{ true: c.accent }} />}
+              {x.fixed ? <Text style={{ fontSize: 18 }}>🔒</Text> : <Switch value={x.visible} onValueChange={() => toggle(i)} accessibilityLabel={tx(x.title)} trackColor={{ true: c.accent }} />}
               <Arrow label="Yukarı" ch="▲" off={i === 0} onPress={() => move(i, -1)} />
               <Arrow label="Aşağı" ch="▼" off={i === items.length - 1} onPress={() => move(i, 1)} />
             </View>
@@ -64,7 +65,7 @@ function TabEditor({ tab, onClose }: { tab: TabId; onClose: () => void }) {
 function Arrow({ ch, label, off, onPress }: { ch: string; label: string; off: boolean; onPress: () => void }) {
   const c = useColors();
   return (
-    <Pressable onPress={onPress} disabled={off} hitSlop={6} accessibilityRole="button" accessibilityLabel={label} style={[st.arrow, { backgroundColor: c.surface2, opacity: off ? 0.3 : 1 }]}>
+    <Pressable onPress={onPress} disabled={off} hitSlop={6} accessibilityRole="button" accessibilityLabel={tx(label)} style={[st.arrow, { backgroundColor: c.surface2, opacity: off ? 0.3 : 1 }]}>
       <Text style={{ color: c.ink, fontSize: 13 }}>{ch}</Text>
     </Pressable>
   );

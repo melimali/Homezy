@@ -9,7 +9,7 @@ import { cartTotal, listTotal, lastMonths, money, parsePrice, setLimit, setPrice
 import { dayKey } from '@/domain/play';
 import { addShop, catOf, clearChecked, forgetUsual, forgotHints, removeShop, SHOP_CATS, shopLeft, shopText, suggestions, toggleShop } from '@/domain/shopping';
 import type { ShopCat } from '@/domain/types';
-import { dateLocale, tx } from '@/i18n/runtime';
+import { dateLocale, isEn, tx } from '@/i18n/runtime';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, useColors } from '@/theme';
@@ -165,7 +165,7 @@ export default function Alisveris() {
                         <Pressable onPress={() => { setEditing(i.id); setPriceTxt(i.price ? String(i.price).replace('.', ',') : ''); }} hitSlop={8}
                           accessibilityRole="button" accessibilityLabel={tx(i.price ? `${i.name} fiyatı` : `${i.name} için fiyat ekle`)}
                           style={[st.price, { backgroundColor: 'rgba(40,48,68,0.1)' }]}>
-                          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>{i.price ? money(i.price) : '₺ +'}</Text>
+                          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>{i.price ? money(i.price) : isEn() ? '$ +' : '₺ +'}</Text>
                         </Pressable>
                         <XBtn label={`${i.name} ürününü sil`} onPress={() => update(D => void removeShop(D, i.id))} />
                       </View>

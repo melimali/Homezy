@@ -42,7 +42,7 @@ export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant; /**
   const flat = StyleSheet.flatten([base, style]) as TextStyle;
   // Emoji/büyük yazı: satır yüksekliği yazı boyutundan küçükse iOS'ta kırpılır.
   const fix: TextStyle | undefined =
-    typeof flat.fontSize === 'number' && flat.fontSize > 18 && (flat.lineHeight ?? 0) < flat.fontSize * 1.25
+    typeof flat.fontSize === 'number' && flat.fontSize > 16 && (flat.lineHeight ?? 0) < flat.fontSize * 1.25
       ? { lineHeight: Math.round(flat.fontSize * 1.3), includeFontPadding: true }
       : undefined;
   return <Text maxFontSizeMultiplier={type.maxScale} {...rest} style={[base, style, fix]} />;
@@ -52,7 +52,7 @@ function textStyle(v: Variant, c: Colors): TextStyle {
   switch (v) {
     case 'h1': return { fontFamily: fonts.displayBold, fontSize: type.h1, lineHeight: 34, color: c.ink, letterSpacing: -0.4 };
     case 'h2': return { fontFamily: fonts.displayBold, fontSize: type.h2, lineHeight: 26, color: c.ink, letterSpacing: -0.2 };
-    case 'h3': return { fontFamily: fonts.displayBold, fontSize: type.h3, lineHeight: 22, color: c.ink };
+    case 'h3': return { fontFamily: fonts.displayBold, fontSize: type.h3, lineHeight: 26, color: c.ink };
     case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: type.bold, lineHeight: 22, color: c.ink };
     case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
     case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: type.tiny, lineHeight: 16, color: c.muted };

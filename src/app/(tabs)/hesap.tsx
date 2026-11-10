@@ -535,7 +535,7 @@ const st = StyleSheet.create({
   stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2, ...elevation.md },
   hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, ...elevation.md },
   pinsCard: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 8, flexDirection: 'row', gap: 4 },
-  sec: { paddingHorizontal: 4 },
+  sec: { paddingHorizontal: 4, paddingLeft: 6 },
   pinIn: { alignItems: 'center', gap: 6 },
   tileWrap: { width: '48.5%' },
   pins: { flexDirection: 'row', gap: 8 },

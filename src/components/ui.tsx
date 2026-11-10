@@ -38,7 +38,14 @@ type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'bold' | 'small' | 'tiny' | 'eyebro
 
 export function T({ v = 'body', style, ...rest }: TextProps & { v?: Variant; /** Metin çevrilmesin (ör. Türkçe öğrenilen kelime). */ noTx?: boolean }) {
   const c = useColors();
-  return <Text maxFontSizeMultiplier={type.maxScale} {...rest} style={[textStyle(v, c), style]} />;
+  const base = textStyle(v, c);
+  const flat = StyleSheet.flatten([base, style]) as TextStyle;
+  // Emoji/büyük yazı: satır yüksekliği yazı boyutundan küçükse iOS'ta kırpılır.
+  const fix: TextStyle | undefined =
+    typeof flat.fontSize === 'number' && flat.fontSize > 18 && (flat.lineHeight ?? 0) < flat.fontSize * 1.25
+      ? { lineHeight: Math.round(flat.fontSize * 1.3), includeFontPadding: true }
+      : undefined;
+  return <Text maxFontSizeMultiplier={type.maxScale} {...rest} style={[base, style, fix]} />;
 }
 
 function textStyle(v: Variant, c: Colors): TextStyle {

@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
+import { offlineMsg, online } from '@/lib/net';
 import { useTranslation } from '@/i18n/i18n';
 import { lbJoin, lbLeave, lbTop, type LbBoard, type LbData, type LbPeriod, type LbRow } from '@/leaderboard/leaderboard';
 import { useNickname } from '@/profile/useName';
@@ -38,6 +39,7 @@ export default function Siralama() {
   }, [account, period, board, tick]);
 
   const join = async () => {
+    if (!(await online())) return toast(offlineMsg());
     setBusy(true);
     const err = await lbJoin(nick);
     setBusy(false);
@@ -47,6 +49,7 @@ export default function Siralama() {
     load();
   };
   const leave = async () => {
+    if (!(await online())) return toast(offlineMsg());
     setBusy(true);
     const ok = await lbLeave();
     setBusy(false);
@@ -113,7 +116,7 @@ export default function Siralama() {
           <Btn kind="ghost" label={t('Sıralamadan çık')} block disabled={busy} onPress={leave} />
         </>
       )}
-      {account && !data && !loading && <Card><T v="small">{t('Sıralama yüklenemedi. İnterneti kontrol et.')}</T></Card>}
+      {account && !data && !loading && <Card><T v="small">{offlineMsg()}</T></Card>}
     </Screen>
   );
 }

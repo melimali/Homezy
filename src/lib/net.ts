@@ -4,7 +4,7 @@ import { tx } from '@/i18n/runtime';
  * Hafif bağlantı kontrolü (native modül yok). Uygulama internetsiz de açılır; internet gereken
  * yerler `online()` ile sorar ve çevrimdışıysa `OFFLINE_MSG` ile nazikçe uyarır.
  */
-export const OFFLINE_MSG = 'İnternet gerekiyor ☕ Bağlantını kontrol edip tekrar dene; evin yine de telefonunda güvende.';
+export const OFFLINE_MSG = 'Bağlantı yok ☕ İnternetini kontrol edip tekrar dene; evin yine de telefonunda güvende.';
 export const offlineMsg = () => tx(OFFLINE_MSG);
 
 /** Süre dolarsa `fallback` ile devam eder; asla sonsuza kadar beklemez. */

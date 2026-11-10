@@ -31,6 +31,5 @@ insert into public.play_items (id, price, premium) values
   ('fotograf_makinesi', 135, false),
   ('bambu', 90, false),
   ('duvar_rafi', 40, false),
-  ('masa_lambasi', 50, false),
-  ('kisilik_sicak', 0, false)
+  ('masa_lambasi', 50, false)
 on conflict (id) do update set price = excluded.price, premium = excluded.premium;

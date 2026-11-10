@@ -21,7 +21,6 @@ import { Burst, Squish, useReduceMotion } from '@/components/motion';
 import { Btn } from '@/components/ui';
 import { IntroDeco, type DecoKind } from '@/components/IntroDeco';
 import { MOKA_ASSETS } from '@/constants/moka';
-import { MOKA_ASSETS } from '@/constants/moka';
 import { HERO_SCENES } from '@/domain/heroScenes';
 import { sfx } from '@/lib/sfx';
 import { ForceScheme, brand, fonts, radius, useColors, useIsDark, type Colors } from '@/theme';
@@ -35,6 +34,25 @@ const native = Platform.OS !== 'web';
 type Copy = { eyebrow: string; title: string; text: string; /** Polaroid alt yazı şeridi. */ caption: string };
 type Page = { tr: Copy; en: Copy; scene: IntroScene; tint: (c: Colors) => string; deco: DecoKind };
 type Lang = 'tr' | 'en';
+
+/**
+ * Polaroid sahnesi: sabit arka plan + ayrı Moka çıkartması. Konum arka plan RESMİNE göre
+ * (x = yatay merkez, bottom = ayakların resmin üstünden uzaklığı, size = çıkartma genişliği; hepsi resim oranı).
+ * Resim "cover" ile kırpılsa da Moka resimde aynı yerde kalır (ana ekrandaki HeroMoka ile aynı mantık).
+ */
+type IntroScene = { background: ImageSourcePropType; sticker: ImageSourcePropType; x: number; bottom: number; size: number };
+const heroScene = (id: string): IntroScene => {
+  const s = HERO_SCENES.find(h => h.id === id)!;
+  return { background: s.background, sticker: s.sticker, x: s.x, bottom: s.bottom, size: s.size };
+};
+const SCENES: Record<string, IntroScene> = {
+  hello: heroScene('salon-kanepe'),
+  draw: { background: require('../../assets/arkaplan/merdiven.jpg'), sticker: MOKA_ASSETS.handyman, x: 0.46, bottom: 0.9, size: 0.4 },
+  sweep: { background: require('../../assets/arkaplan/koridor.jpg'), sticker: MOKA_ASSETS.sweeping, x: 0.5, bottom: 0.9, size: 0.4 },
+  wow: { background: require('../../assets/arkaplan/salon_tv.jpg'), sticker: MOKA_ASSETS.amazed, x: 0.5, bottom: 0.9, size: 0.36 },
+  garden: heroScene('bitki-kosesi'),
+  read: heroScene('pencere-sedir'),
+};
 
 // Hikâye: küçük günlük işler → ev büyür (ihmalde toz, dönünce parlar) → bahçe → kendin için.
 // Her sayfa: kısa başlık + başlığı tekrar etmeyen iki cümle. Metinler iki dilde ayrı yazılır, dil karışmaz.
@@ -83,24 +101,6 @@ const PAGES: Page[] = [
   },
 ];
 
-/**
- * Polaroid sahnesi: sabit arka plan + ayrı Moka çıkartması. Konum arka plan RESMİNE göre
- * (x = yatay merkez, bottom = ayakların resmin üstünden uzaklığı, size = çıkartma genişliği; hepsi resim oranı).
- * Resim "cover" ile kırpılsa da Moka resimde aynı yerde kalır (ana ekrandaki HeroMoka ile aynı mantık).
- */
-type IntroScene = { background: ImageSourcePropType; sticker: ImageSourcePropType; x: number; bottom: number; size: number };
-const heroScene = (id: string): IntroScene => {
-  const s = HERO_SCENES.find(h => h.id === id)!;
-  return { background: s.background, sticker: s.sticker, x: s.x, bottom: s.bottom, size: s.size };
-};
-const SCENES: Record<string, IntroScene> = {
-  hello: heroScene('salon-kanepe'),
-  draw: { background: require('../../assets/arkaplan/merdiven.jpg'), sticker: MOKA_ASSETS.handyman, x: 0.46, bottom: 0.9, size: 0.4 },
-  sweep: { background: require('../../assets/arkaplan/koridor.jpg'), sticker: MOKA_ASSETS.sweeping, x: 0.5, bottom: 0.9, size: 0.4 },
-  wow: { background: require('../../assets/arkaplan/salon_tv.jpg'), sticker: MOKA_ASSETS.amazed, x: 0.5, bottom: 0.9, size: 0.36 },
-  garden: heroScene('bitki-kosesi'),
-  read: heroScene('pencere-sedir'),
-};
 
 function SceneView({ scene, w, h }: { scene: IntroScene; w: number; h: number }) {
   const src = Image.resolveAssetSource(scene.background);

@@ -37,4 +37,12 @@ export const EN_TABEDIT: Record<string, string> = {
   'Ruh hali': 'Mood',
   'Oda puanları': 'Room scores',
   'Haftam, Günüm, Sıralama': 'My week, My day, Ranking',
+  'Değiştirmek için yeni ad ya da yeni şifre yaz.': 'Enter a new name or a new password to change it.',
+  'Şifren güncellendi.': 'Your password was updated.',
+  'Bilgilerin güncellendi.': 'Your details were updated.',
+  'Yeni ad (isteğe bağlı)': 'New name (optional)',
+  'Yeni şifre (en az 8 karakter)': 'New password (at least 8 characters)',
+  'Yeni şifre eskisiyle aynı olamaz.': 'The new password can’t be the same as the old one.',
+  'yıllık abonelik (her yıl yenilenir)': 'yearly subscription (renews every year)',
+  'aylık abonelik (her ay yenilenir)': 'monthly subscription (renews every month)',
 };

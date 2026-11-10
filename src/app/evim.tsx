@@ -34,7 +34,7 @@ export default function Evim() {
       router.replace('/');
       toast('Evin hazır. Rutinlerini cevaplarına göre ayarladım 🏡');
     } else {
-      router.back();
+      router.canGoBack() ? router.back() : router.replace("/");
       toast('Cevapların kaydedildi, rutinler güncellendi.');
     }
   };

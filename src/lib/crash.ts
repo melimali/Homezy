@@ -61,7 +61,7 @@ export async function sendTestError(): Promise<boolean> {
   try {
     if (!S) return false;
     S.captureException(new Error('Homezy Sentry test hatası (' + new Date().toISOString() + ')'));
-    await S.flush(4000);
+    await (S as any).flush?.(4000);
     return true;
   } catch {
     return false;

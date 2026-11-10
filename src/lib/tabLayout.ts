@@ -60,7 +60,9 @@ const cache = new Map<string, Layout>();
 function read(t: TabId): Saved | null {
   try {
     const raw = prefs.get(key(t));
-    return raw ? (JSON.parse(raw) as Saved) : null;
+    const v = raw ? (JSON.parse(raw) as Partial<Saved>) : null;
+    if (!v || !Array.isArray(v.order)) return null;
+    return { order: v.order.filter(x => typeof x === 'string'), on: Array.isArray(v.on) ? v.on.filter(x => typeof x === 'string') : [] };
   } catch {
     return null;
   }

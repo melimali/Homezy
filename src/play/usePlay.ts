@@ -10,6 +10,7 @@ import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
+import { reportError } from '@/lib/crash';
 import { track, trackActiveDay } from '@/lib/events';
 import { offlineMsg, online } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
@@ -182,11 +183,15 @@ export function usePlay() {
         const { data, error } = await supabase.rpc('play_buy', { p_item: id });
         if (error) {
           const m = error.message || '';
+          reportError(new Error(`play_buy ${id}: ${error.code ?? ''} ${m}`));
+          const net = !error.code && /network|fetch|timeout|abort/i.test(m);
           return {
             ok: false,
-            error: m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
+            error: net ? offlineMsg()
+              : m.includes('unknown item') || error.code === 'PGRST202' ? 'Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
+              : m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
               : m.includes('premium') ? `${item.name} Premium üyelere özel ⭐`
-              : 'Satın alınamadı. İnternet bağlantını kontrol edip tekrar dene.',
+              : 'Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.',
           };
         }
         apply(update, data as Summary);

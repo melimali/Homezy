@@ -67,6 +67,13 @@ Moka ile günde 10 sohbet mesajı, günde 5 yapay zekâ taraması, 2. kat, ayda 
 
 Verilerin önce telefonunda durur; istersen hesap açıp yedekleyebilirsin. Kart bilgilerin bize hiç gelmez. Yapay zekâ taramalarında fotoğrafın sadece tanıma için işlenir, saklanmaz.
 
+## App Store: Kullanım Koşulları (EULA) satırı — 3.1.2 zorunlu
+
+Uzun açıklamanın (Description) en sonuna, TR ve EN her dil için ekle:
+
+- TR: `Kullanım Koşulları (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ · Gizlilik Politikası: https://themeikai.com/homezy/gizlilik`
+- EN: `Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ · Privacy Policy: https://themeikai.com/homezy/privacy`
+
 ## Premium açıklaması (abonelik ekranı için, App Store inceleme notu)
 
 Homezy Premium aylık ya da yıllık otomatik yenilenen bir aboneliktir. Premium ile günde 5 yapay zekâ fotoğraf taraması, ayda 3 seri dondurma hakkı, 1,5 kat puan, 5 eve kadar ev, ev temaları, aile paylaşımı, fotoğraf yedeği ve reklamsız kullanım açılır. Ödeme App Store hesabından alınır; abonelik dönem bitmeden en az 24 saat önce iptal edilmezse yenilenir. Gizlilik politikası: https://themeikai.com/homezy/gizlilik · Kullanım koşulları: https://themeikai.com/homezy/kosullar

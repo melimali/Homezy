@@ -147,8 +147,16 @@ export default function Hesap() {
     setMsg({ key: 'acct', ok: true, text: newPw ? 'Şifren güncellendi.' : 'Bilgilerin güncellendi.' });
   };
 
+  // iOS'ta açık bir Modal (Sheet) varken ikinci Modal (onay penceresi) açılmaz; önce sayfayı kapat.
+  const afterSheet = (fn: () => void) => {
+    if (Platform.OS === 'ios' && open) {
+      setCat(null);
+      setTimeout(fn, 500);
+    } else fn();
+  };
+
   const doSignOut = () =>
-    confirm(
+    afterSheet(() => confirm(
       t('signOut'),
       account
         ? 'Evin hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.'
@@ -173,10 +181,10 @@ export default function Hesap() {
         }
         replace(emptyState());
       },
-    );
+    ));
 
   const doDelete = () =>
-    confirm(
+    afterSheet(() => confirm(
       t('deleteAccount'),
       'Hesabın, evin ve üyelik kaydın kalıcı olarak silinir, uygulama baştan başlar. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
       t('deleteAccount'),
@@ -188,7 +196,7 @@ export default function Hesap() {
         replace(emptyState());
         toast('Hesabın silindi.');
       },
-    );
+    ));
 
   const accountPanel = (
     <View style={{ gap: 12 }}>

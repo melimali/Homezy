@@ -233,7 +233,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState(getLang());
   useEffect(() => onLangChange(() => setLangState(getLang())), []);
   // Türkçe seçiliyken mağaza fiyatı TL değilse sabit TL fiyatları göster; mağaza TL veriyorsa onu koru.
-  const trFixed = lang === 'tr' && (pkgs.monthly?.product.currencyCode ?? pkgs.annual?.product.currencyCode ?? '') !== 'TRY';
+  // Apple 3.1.2: gösterilen fiyat mağazanın gerçekten tahsil edeceği fiyat olmalı; sabit TL yalnızca mağaza ürünü hiç okunamadıysa.
+  const trFixed = lang === 'tr' && !pkgs.monthly && !pkgs.annual && Platform.OS !== 'ios';
   const monthly = trFixed ? tl(TL.monthly) : (pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly);
   const annual = trFixed ? tl(TL.annual) : (pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual);
   const annualPerMonth = trFixed ? tl(TL.annual / 12) : (pkgs.annual?.product.pricePerMonthString ?? null);

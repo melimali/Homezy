@@ -201,7 +201,10 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
       return { ok: true, active: !!customerInfo.entitlements.active[ENTITLEMENT] };
     } catch (e) {
       if ((e as { userCancelled?: boolean }).userCancelled) return { ok: false, cancelled: true, error: '' };
-      return { ok: false, error: 'Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.' };
+      const err = e as { code?: string | number; message?: string };
+      console.warn('Homezy: satın alma hatası', err);
+      const detail = [err.code, err.message?.slice(0, 120)].filter(Boolean).join(' · ');
+      return { ok: false, error: `Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.${detail ? `\n(${detail})` : ''}` };
     }
   }, [pkgs, apply]);
 

@@ -9,7 +9,7 @@ import { RoomSwitcher } from '@/components/RoomSwitcher';
 import { RenameRoom } from '@/components/RenameRoom';
 import { RoomBody } from '@/components/RoomBody';
 import { SceneImage } from '@/components/SceneImage';
-import { BackLink, Screen, T } from '@/components/ui';
+import { Screen, T } from '@/components/ui';
 import { ROOM_SCENES } from '@/constants/scenes';
 import { roomMokaScene } from '@/constants/curated-scenes';
 import { ROOM_EMOJI, TYPES } from '@/domain/constants';
@@ -34,8 +34,7 @@ export default function RoomScreen() {
   return (
     <Screen header={false}>
       <RenameRoom id={renaming ? r.id : null} onClose={() => setRenaming(false)} />
-      <BackLink label="" />
-      <RoomSwitcher state={S} id={r.id} now={now} onGo={rid => router.setParams({ id: rid })} />
+      <RoomSwitcher state={S} id={r.id} now={now} onGo={rid => router.setParams({ id: rid })} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       {ROOM_SCENES[r.type] && (
         <Appear key={`scene-${r.id}`}>
           <SceneImage source={roomMokaScene(r.type, ROOM_SCENES[r.type])!} ratio={16 / 10} radius={radius.card} />

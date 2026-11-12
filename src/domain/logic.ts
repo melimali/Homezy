@@ -68,13 +68,17 @@ export function agoText(ts: number | null | undefined, now = Date.now()) {
 
 export const everyText = (every: number) => (every === 1 ? 'her gün' : `${every} günde bir`);
 
+/** Tek oda modundaki oda (yoksa ya da silindiyse null). */
+export const soloRoom = (S: AppState) => (S.settings?.solo && S.rooms[S.settings.solo] ? S.settings.solo : null);
+
 export function allTasks(S: AppState, now = Date.now()): TaskRef[] {
   const out: TaskRef[] = [];
-  for (const rid of S.order) {
+  const solo = soloRoom(S);
+  for (const rid of solo ? [solo] : S.order) {
     (S.tasks[rid] || []).forEach(t => out.push({ t, rid, list: 'tasks', s: statusIn(S, t, now) }));
     (S.mod[rid]?.plants || []).forEach(t => out.push({ t, rid, list: 'plants', s: statusIn(S, t, now) }));
   }
-  (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
+  if (!solo) (S.care || []).forEach(t => out.push({ t, rid: CARE, list: 'care', s: statusIn(S, t, now) }));
   return out;
 }
 

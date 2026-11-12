@@ -72,6 +72,8 @@ export type RoomExtras = {
 };
 
 export type Settings = {
+  /** Tek oda odak modu: dolu ise sadece bu odanın işleri ve kartı görünür. */
+  solo?: string | null;
   /** "HH:MM" */
   time: string;
   routine: boolean;

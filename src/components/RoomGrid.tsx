@@ -6,7 +6,7 @@ import { SceneImage } from '@/components/SceneImage';
 import { Bar, T } from '@/components/ui';
 import { ROOM_ART } from '@/constants/room-art';
 import { ROOM_EMOJI } from '@/domain/constants';
-import { allTasks, roomClean, roomCounts } from '@/domain/logic';
+import { allTasks, roomClean, roomCounts, soloRoom } from '@/domain/logic';
 import type { AppState } from '@/domain/types';
 import { fonts, useColors } from '@/theme';
 
@@ -18,7 +18,8 @@ export function RoomGrid({ state: S, now, start = 0, row }: { state: AppState; n
   const c = useColors();
   const router = useRouter();
   const refs = allTasks(S, now);
-  const rooms = S.order
+  const solo = soloRoom(S);
+  const rooms = (solo ? [solo] : S.order)
     .map(id => ({ id, r: S.rooms[id], rc: roomCounts(S, id, now), clean: roomClean(S, id, now), mine: refs.filter(x => x.rid === id) }))
     .filter(x => x.r)
     .sort((a, b) => b.rc.late - a.rc.late || b.rc.today - a.rc.today);

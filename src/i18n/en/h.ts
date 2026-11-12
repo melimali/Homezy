@@ -21,4 +21,11 @@ export const EN_H: Record<string, string> = {
   "Moka ve fotoğraf taraması yapay zekâ ile çalışır; cevapları hatalı olabilir. Moka tıbbi, psikolojik, hukuki ya da finansal tavsiye vermez ve bir uzmanın yerini tutmaz. Kendine zarar verme düşüncen ya da acil bir durum varsa Moka’ya değil hemen 112’yi (başka ülkedeysen oradaki acil numarayı) ara ya da bir uzmandan yardım iste. Homezy 13 yaş ve üzeri içindir.": "Moka and photo scanning use AI; answers may be wrong. Moka does not give medical, psychological, legal or financial advice and is no substitute for an expert. If you have thoughts of harming yourself or face an emergency, call your local emergency number (112 in Türkiye) right away instead of asking Moka, or reach out to a professional. Homezy is for ages 13 and over.",
   "Arsa hazır. İlk işini yap, evin temeli atılsın.": "The plot is ready. Do your first chore to lay the foundation.",
   "rutinlerin tazeliği": "how fresh your routines are",
+  "Tek oda modu": "Single-room mode",
+  "Sadece kendi odan": "Just your own room",
+  "Sadece {}": "Only {}",
+  "Tek oda modu açık 🚪": "Single-room mode on 🚪",
+  "Bütün ev geri geldi 🏡": "Whole home is back 🏡",
+  "Sadece kendi odanın işlerini görürsün. Diğer odalar ve ev işleri gizlenir, silinmez.": "You only see your own room's chores. Other rooms and home chores are hidden, not deleted.",
+  "Modu kapat, bütün evi göster": "Turn off, show the whole home",
 };

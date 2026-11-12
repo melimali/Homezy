@@ -96,6 +96,7 @@ export function CaptchaHost() {
   const [job, setJob] = useState<Pending | null>(null);
   const [phase, setPhase] = useState<Phase>('load');
   const [attempt, setAttempt] = useState(0);
+  const [errCode, setErrCode] = useState('');
   const queue = useRef<Pending[]>([]);
   usePauseBusy(!!job);
 
@@ -122,21 +123,25 @@ export function CaptchaHost() {
   // Yüklenme sınırı: arka planda 8 sn'de vazgeçilir; kişinin karşısındayken hata ekranı çıkar.
   useEffect(() => {
     if (!job || phase !== 'load') return;
-    const t = setTimeout(() => (job.silent ? done(undefined) : setPhase('err')), job.silent ? SILENT_TIMEOUT_MS : LOAD_TIMEOUT_MS);
+    const t = setTimeout(() => (job.silent ? done(undefined) : (setErrCode('zaman aşımı'), setPhase('err'))), job.silent ? SILENT_TIMEOUT_MS : LOAD_TIMEOUT_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job, phase, attempt]);
 
   if (!job || !WebView || !SITE_KEY) return null;
 
-  const fail = () => (job.silent ? done(undefined) : setPhase('err'));
+  const fail = (code?: string) => {
+    if (job.silent) return done(undefined);
+    setErrCode(typeof code === 'string' ? code : '');
+    setPhase('err');
+  };
   const web = (
     <WebView
       key={attempt}
       source={{ html: html(SITE_KEY), baseUrl: ORIGIN }}
       originWhitelist={['*']}
       // Sadece Cloudflare Turnstile ve kendi sayfamız; başka bir adrese gidilemez (WebView açık yönlendirme / kimlik avı yüzeyi olmasın).
-      onShouldStartLoadWithRequest={req => /^(about|data|blob):/i.test(req.url) || req.url.startsWith(ORIGIN) || /^https:\/\/([a-z0-9-]+\.)*cloudflare\.com(\/|$)/i.test(req.url)}
+      onShouldStartLoadWithRequest={req => req.isTopFrame === false || /^(about|data|blob):/i.test(req.url) || req.url.startsWith(ORIGIN) || /^https:\/\/([a-z0-9-]+\.)*cloudflare\.com(\/|$)/i.test(req.url)}
       javaScriptEnabled
       domStorageEnabled
       setSupportMultipleWindows={false}
@@ -147,7 +152,7 @@ export function CaptchaHost() {
         try {
           const m = JSON.parse(e.nativeEvent.data) as { t?: string; e?: string; ui?: number };
           if (m.t) done(m.t);
-          else if (m.e) fail();
+          else if (m.e) fail(m.e);
           else if (m.ui != null) {
             // Arka plandaki istek sınav kutusu açmaz; vazgeçilir.
             if (m.ui && job.silent) done(undefined);
@@ -157,8 +162,8 @@ export function CaptchaHost() {
           // Beklenmeyen mesaj yok sayılır.
         }
       }}
-      onError={fail}
-      onRenderProcessGone={fail}
+      onError={() => fail('webview')}
+      onRenderProcessGone={() => fail('render')}
     />
   );
 
@@ -174,7 +179,7 @@ export function CaptchaHost() {
   const title = phase === 'err' ? 'Doğrulama yapılamadı' : 'Robot olmadığını doğrula';
   const hint =
     phase === 'err'
-      ? 'Doğrulama sayfası açılamadı. Tekrar dene; olmazsa biraz sonra yeniden dene.'
+      ? `Doğrulama kutusu açılamadı${errCode ? ` (${errCode})` : ''}. Tekrar dene ya da doğrulamadan devam et; gerekirse sunucu ayrıca sorar.`
       : phase === 'ui'
         ? 'Aşağıdaki kutuya dokun, doğrulama bitince devam edeceğiz.'
         : 'Kısa bir güvenlik kontrolü yapıyoruz. Genelde kendiliğinden biter, bir şey yapman gerekmez.';
@@ -201,7 +206,7 @@ export function CaptchaHost() {
           </View>
         )}
         <Text onPress={() => done(undefined)} accessibilityRole="button" style={{ fontFamily: fonts.bodyBold, color: c.muted, fontSize: 14, padding: 8 }}>
-          Vazgeç
+          {phase === 'err' ? 'Doğrulamadan devam et' : 'Vazgeç'}
         </Text>
       </View>
     </View>

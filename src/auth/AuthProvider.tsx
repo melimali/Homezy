@@ -5,7 +5,7 @@ import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { removeAllPhotos } from '@/sync/photos';
 
-import { captchaEnabled, requestCaptcha } from './captcha';
+import { requestCaptcha } from './captcha';
 import { authErrorText } from './errors';
 
 /**
@@ -146,10 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const continueAsGuest = useCallback(async () => {
     if (supabase) {
       const captchaToken = await requestCaptcha();
-      // Captcha açıksa doğrulama şart: token yoksa misafir girişi yapılmaz, kişi tekrar dener.
-      if (captchaEnabled() && !captchaToken) {
-        return { ok: false, error: 'Robot olmadığını doğrulayamadık. Kutudaki doğrulamayı tamamlayıp "Hesapsız devam et"e tekrar dokun.' };
-      }
+      // Doğrulama kutusu yüklenemese de misafir girişi kilitlenmez; token yoksa sunucu reddederse oturum sonra arka planda yeniden denenir.
       setGuestFlag(true);
       await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
     } else {

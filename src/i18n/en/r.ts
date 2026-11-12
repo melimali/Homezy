@@ -47,6 +47,8 @@ export const EN_R: Record<string, string> = {
   '← Uzaklaş': '← Zoom out',
   'Odaya gir →': 'Enter room →',
   '⟲ Sıfırla': '⟲ Reset',
+  'Uzaklaş': 'Zoom out',
+  'Yakınlaş': 'Zoom in',
   'Aç ›': 'Open ›',
   '🎯 Sana göre işler': '🎯 Tasks picked for you',
   'Daha fazlası ister misin?': 'Want more?',

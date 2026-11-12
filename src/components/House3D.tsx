@@ -1276,6 +1276,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   // Kapılar: iki oda arasındaki her duvarda bir kapı (en arkadaki ortak blokta), giriş kapısı antrede.
   const doors = new Set<string>();
   const seenPair = new Set<string>();
+  const hasDoor = new Set<string>();
   // Antre (koridor) varsa odalar sadece antreye açılır; odalar arası kapı yok.
   const hallway = cells.some(cid => cid && S.rooms[cid]?.type === 'antre');
   for (const i of order) {
@@ -1287,6 +1288,19 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
       if (seenPair.has(pair)) continue;
       seenPair.add(pair);
       doors.add(i + dir);
+      hasDoor.add(id); hasDoor.add(nb);
+    }
+  }
+  // Antreye bitişik olmayan oda (ör. balkon) kapısız kalmasın: ilk komşusuna açılır.
+  if (hallway) {
+    for (const i of order) {
+      const id = cells[i]!;
+      if (hasDoor.has(id) || S.rooms[id]?.type === 'antre') continue;
+      const r = Math.floor(i / cols), col = i % cols;
+      for (const [dir, nb] of [['n', at(r - 1, col)], ['w', at(r, col - 1)]] as const) {
+        if (!nb || nb === id || hasDoor.has(id)) continue;
+        doors.add(i + dir); hasDoor.add(id);
+      }
     }
   }
   let entrance = '';

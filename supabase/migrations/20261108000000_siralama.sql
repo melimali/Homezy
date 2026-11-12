@@ -4,7 +4,7 @@
 -- temizlik yüzdesi gelir ve 0-100'e kırpılır. Tablolara uygulama doğrudan yazamaz/okuyamaz; sadece fonksiyonlar.
 -- Hızlı tamamla uyarısında geri alınan işler play_events'ten de silindiği için sıralamaya yansımaz.
 
-create table public.lb_profiles (
+create table if not exists public.lb_profiles (
   user_id uuid primary key references auth.users (id) on delete cascade,
   nick text not null check (char_length(nick) between 2 and 16),
   clean integer not null default 0 check (clean between 0 and 100),
@@ -15,7 +15,7 @@ create table public.lb_profiles (
 );
 
 -- Günlük temizlik görüntüsü (haftalık "en temiz" için). Kullanıcı başına günde bir satır.
-create table public.lb_daily (
+create table if not exists public.lb_daily (
   user_id uuid not null references public.lb_profiles (user_id) on delete cascade,
   day date not null,
   clean integer not null check (clean between 0 and 100),
@@ -27,7 +27,7 @@ alter table public.lb_daily enable row level security;
 -- Politika yok: doğrudan okuma/yazma kapalı. Erişim yalnız security definer fonksiyonlarla.
 
 -- Katıl / takma adı değiştir.
-create function public.lb_join(p_nick text) returns void
+create or replace function public.lb_join(p_nick text) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();
@@ -45,14 +45,14 @@ end;
 $$;
 
 -- Ayrıl: satırlar silinir.
-create function public.lb_leave() returns void
+create or replace function public.lb_leave() returns void
 language sql security definer set search_path = '' as $$
   delete from public.lb_profiles where user_id = auth.uid();
 $$;
 
 -- Puan gönder. Seviye = puan alınan gün sayısı (en çok 100), seri = üst üste gün; ikisi de sunucuda hesaplanır.
 -- En az 10 dakikada bir işlenir. Katılmamışsa hiçbir şey yapmaz.
-create function public.lb_publish(p_clean integer) returns void
+create or replace function public.lb_publish(p_clean integer) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();
@@ -89,7 +89,7 @@ $$;
 -- Ağırlıkları değiştirirsen src/domain/leaderboard.ts içindeki açıklamayı da güncelle.
 -- Haftalık: bu hafta alınan eşya ve harcanan bahçe puanı + bu haftaki günlük temizlik ortalaması.
 -- En az 3 gün işi olmayan ev listeye girmez (sahte yüzde ile tepeye çıkmayı önler).
-create function public.lb_top(p_period text) returns jsonb
+create or replace function public.lb_top(p_period text) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();

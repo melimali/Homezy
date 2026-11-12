@@ -2,11 +2,11 @@
 -- 20261108000000_siralama.sql ve 20261108120000_siralama_moka.sql'den SONRA, Supabase SQL Editor'de bir kez çalıştır.
 -- Puan = round(min(eşya+bahçe, yaş_gün*12+30) / clamp(sqrt(blok/24), 0.6, 1.6)) + temizlik. Haftalıkta yaş en çok 7 gün sayılır.
 
-alter table public.lb_profiles add column cells integer not null default 24 check (cells between 1 and 400);
+alter table public.lb_profiles add column if not exists cells integer not null default 24 check (cells between 1 and 400);
 
-drop function public.lb_publish(integer, integer);
+drop function if exists public.lb_publish(integer, integer);
 
-create function public.lb_publish(p_clean integer, p_xp integer default 0, p_cells integer default 24) returns void
+create or replace function public.lb_publish(p_clean integer, p_xp integer default 0, p_cells integer default 24) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();

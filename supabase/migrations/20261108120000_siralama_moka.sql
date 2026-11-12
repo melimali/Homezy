@@ -2,11 +2,11 @@
 -- Moka exp'i telefonda tutulur; sunucu gelen toplamı "günde en çok 28 exp" sınırıyla kırpar
 -- (src/domain/mokaLevel.ts DAILY_XP_CAP toplamı: 12 + 10 + 6) ve puan alınan gün sayısıyla çarpar.
 
-alter table public.lb_profiles add column moka_xp integer not null default 0 check (moka_xp >= 0);
+alter table public.lb_profiles add column if not exists moka_xp integer not null default 0 check (moka_xp >= 0);
 
-drop function public.lb_publish(integer);
+drop function if exists public.lb_publish(integer);
 
-create function public.lb_publish(p_clean integer, p_xp integer default 0) returns void
+create or replace function public.lb_publish(p_clean integer, p_xp integer default 0) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();
@@ -40,7 +40,7 @@ end;
 $$;
 
 -- Moka seviyesi: seviye L'den L+1'e geçmek için 5 + 5L exp (src/domain/mokaLevel.ts needFor).
-create function public.lb_moka_level(p_xp integer) returns integer
+create or replace function public.lb_moka_level(p_xp integer) returns integer
 language plpgsql immutable set search_path = '' as $$
 declare lvl integer := 1; rest integer := p_xp;
 begin
@@ -53,7 +53,7 @@ end;
 $$;
 
 -- Moka Şampiyonları: ilk 50 + kendi sırası (tüm zamanlar). En az 3 gün işi olmayan listeye girmez.
-create function public.lb_moka_top() returns jsonb
+create or replace function public.lb_moka_top() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();

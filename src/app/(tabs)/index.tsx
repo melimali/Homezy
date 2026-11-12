@@ -103,6 +103,7 @@ export default function Home() {
   const warn = !hp.today && hp.level > 0;
 
   const layout = useTabLayout('ev');
+  const soloOn = !!S.settings.solo && !!S.rooms[S.settings.solo];
   const tour = useTabTour('ev', [...TOUR]);
   const mark = tour.mark;
   const blk: Record<string, ReactNode> = {
@@ -199,11 +200,11 @@ export default function Home() {
     ),
     odalar: (
       <Card index={4} style={styles.sec}>
-        <SecHead title="Odalarım" h="h3" right={
+        <SecHead title="Odalarım" h="h3" right={soloOn ? undefined : (
           <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
             <T v="small">Planı düzenle</T>
           </Squish>
-        } />
+        )} />
         <RoomGrid state={S} now={now} start={3} row />
       </Card>
     ),
@@ -281,7 +282,7 @@ export default function Home() {
         </Squish>
       )}
 
-      {layout.ids.map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
+      {layout.ids.filter(id => !(soloOn && id === 'evim')).map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
 
       {houseOpen && (
         <HouseViewer

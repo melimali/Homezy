@@ -110,6 +110,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   );
   const [pkgs, setPkgs] = useState<Packages>({ monthly: null, annual: null });
   const [serverPremium, setServerPremium] = useState<Premium>(none);
+  // iOS: Apple, deneme/giriş teklifini daha önce kullanmış hesaba da introPrice gösterir; uygunluk ayrıca sorulur (Apple 3.1.2).
+  const [eligible, setEligible] = useState<Record<string, boolean>>({});
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
 
@@ -155,6 +157,24 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     }, 15000);
     return () => clearInterval(t);
   }, [pkgs.monthly, pkgs.annual, ready]);
+
+  useEffect(() => {
+    if (!apiKey || Platform.OS !== 'ios') return;
+    const ids = [pkgs.monthly, pkgs.annual].filter((x): x is PurchasesPackage => !!x?.product.introPrice).map(x => x.product.identifier);
+    if (!ids.length) return;
+    let off = false;
+    Purchases.checkTrialOrIntroductoryPriceEligibility(ids).then(r => {
+      if (off) return;
+      const next: Record<string, boolean> = {};
+      for (const id of ids) next[id] = r[id]?.status !== 1; // 1 = uygun değil; bilinmiyorsa (0) gösterme riskini mağaza ekranı karşılar
+      setEligible(next);
+    }).catch(() => {
+      if (!off) setEligible(Object.fromEntries(ids.map(id => [id, false])));
+    });
+    return () => {
+      off = true;
+    };
+  }, [pkgs.monthly, pkgs.annual, user?.id]);
 
   // Giriş / çıkış yapılınca RevenueCat'teki kullanıcıyı değiştir.
   const lastId = useRef<string | null | undefined>(undefined);
@@ -267,6 +287,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const trialOf = (pkg: typeof pkgs.monthly | typeof pkgs.annual): number => {
     const ip = pkg?.product.introPrice;
     if (!ip || ip.price !== 0) return 0;
+    if (Platform.OS === 'ios' && eligible[pkg.product.identifier] !== true) return 0;
     const n = ip.periodNumberOfUnits * (ip.cycles || 1);
     return ip.periodUnit === 'DAY' ? n : ip.periodUnit === 'WEEK' ? n * 7 : 0;
   };

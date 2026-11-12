@@ -1,4 +1,3 @@
-import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -71,7 +70,6 @@ export default function MokaChat() {
   const [items, setItems] = useState<Item[]>(memory);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  useBusy(!!busy);
   const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();

@@ -156,10 +156,18 @@ export async function loadState(): Promise<AppState | null> {
   return normalize(S);
 }
 
+/** Son yazılan meta değerleri ve tablo imzası; değişmeyen kısım tekrar yazılmaz (her dokunuşta tüm tabloyu baştan yazmak takılma yaratıyordu). */
+let lastMeta: Record<string, string> | null = null;
+let lastTables = '';
+
 export async function saveState(S: AppState): Promise<void> {
   const db = await getDb();
+  const tables = JSON.stringify([S.order, S.rooms, S.mod, S.tasks, S.care, S.cells]);
+  const tablesChanged = tables !== lastTables;
+  const prevMeta = lastMeta;
+  const nextMeta: Record<string, string> = {};
   await db.withExclusiveTransactionAsync(async tx => {
-    await tx.execAsync('DELETE FROM meta; DELETE FROM rooms; DELETE FROM cells; DELETE FROM tasks; DELETE FROM clothes; DELETE FROM stock;');
+    if (tablesChanged) await tx.execAsync('DELETE FROM rooms; DELETE FROM cells; DELETE FROM tasks; DELETE FROM clothes; DELETE FROM stock;');
     const meta: [string, string][] = [
       ['schema', String(SCHEMA_VERSION)],
       ['setup', S.setup ? '1' : '0'],
@@ -187,7 +195,12 @@ export async function saveState(S: AppState): Promise<void> {
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],
     ];
-    for (const [k, v] of meta) await tx.runAsync('INSERT INTO meta (key, value) VALUES (?, ?)', k, v);
+    for (const [k, v] of meta) {
+      nextMeta[k] = v;
+      if (prevMeta && prevMeta[k] === v) continue;
+      await tx.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', k, v);
+    }
+    if (!tablesChanged) return;
 
     for (const [ord, id] of S.order.entries()) {
       const r = S.rooms[id];
@@ -211,6 +224,8 @@ export async function saveState(S: AppState): Promise<void> {
     for (const [idx, rid] of S.cells.entries())
       if (rid) await tx.runAsync('INSERT INTO cells (idx, room_id) VALUES (?, ?)', idx, rid);
   });
+  lastMeta = nextMeta;
+  lastTables = tables;
 }
 
 function insertTask(tx: SQLite.SQLiteDatabase, t: Task, roomId: string, list: TaskList, ord: number) {

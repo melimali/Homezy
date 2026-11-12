@@ -234,4 +234,5 @@ export const EN_P: Record<string, string> = {
   'Durdur': 'Stop',
   '2 dakika oldu! Başlamak en zor kısımdı. İstersen bitir, istersen burada bırak.': '2 minutes done! Starting was the hardest part. Finish if you like, or stop here.',
   'Burada bırak': 'Stop here',
+  'Bu fotoğrafta sayaç görünmüyor. Sayacın rakamlı ekranını yakından çekip tekrar dene 📸': "I can't see a meter in this photo. Take a close-up of the meter's number display and try again 📸",
 };

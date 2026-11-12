@@ -207,6 +207,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors,
 const BRICK = '#DDA48C';
 const BEAM = '#A9825F';
 const GOLD = '#F2C46D';
+/** Halı renkleri [zemin, desen], oda türüne göre. */
+const RUG: Partial<Record<RoomType, [string, string]>> = { salon: ['#C98A6B', '#F3E8D3'], yatak: ['#9CB9D0', '#EEF3F7'], cocuk: ['#F2C46D', '#FBEBD8'], calisma: ['#7FB28A', '#E3EFE2'] };
 /** İç pencere çerçevesi ve denizliği: beyaz duvarda da seçilsin diye açık ahşap. */
 const WIN_FRAME = '#B79377';
 
@@ -889,14 +891,18 @@ function Burst({ vb, cx, cy, spread }: { vb: string; cx: number; cy: number; spr
 }
 
 /** Gökyüzü zemini: hava durumuna göre renk, gece yıldız (parlar) ve ay, gündüz güneş. `bleed` ev kutusunun dışındaki boşluğu da boyar. */
-function SkyBackdrop({ colors, w, h, bleed, night, sun, twA, twB, breath }: {
+function SkyBackdrop({ colors, w, h, bleed, night, sun, sunT, twA, twB, breath }: {
   colors: [string, string]; w: number; h: number; bleed: boolean; night: boolean; sun: boolean;
+  /** Güneşin gün içindeki yeri: 0 gün doğumu (solda, alçak), 0.5 öğle (tepede), 1 gün batımı (sağda, alçak). */
+  sunT: number;
   twA: Animated.AnimatedInterpolation<number>; twB: Animated.AnimatedInterpolation<number>; breath: Animated.AnimatedInterpolation<number>;
 }) {
   const pad = bleed ? 500 : 0;
   const vb = `${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}`;
   const pos = { position: 'absolute' as const, left: -pad, top: -pad };
   const stars = useMemo(() => scatter(bleed ? 90 : 36, 7), [bleed]);
+  const sx = w * (0.14 + 0.72 * sunT), sy = h * (0.36 - 0.26 * Math.sin(Math.PI * sunT));
+  const sunC = mix('#FFD25A', '#FF9E5A', (2 * sunT - 1) ** 2);
   const starEls = (parity: number) =>
     stars.filter((_, i) => i % 2 === parity).map(([u, v, k], i) => (
       <Circle key={'bs' + parity + i} cx={-pad + u * (w + 2 * pad)} cy={-pad + v * (h * 0.6 + pad)} r={0.8 + k * 1.4} fill="#FFF6D8" opacity={0.5 + k * 0.5} />
@@ -931,9 +937,9 @@ function SkyBackdrop({ colors, w, h, bleed, night, sun, twA, twB, breath }: {
       {sun && (
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: breath }]}>
           <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>
-            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.16} fill="#FFE9A6" opacity={0.3} />
-            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.09} fill="#FFE08A" opacity={0.6} />
-            <Circle cx={w * 0.82} cy={h * 0.14} r={Math.min(w, h) * 0.055} fill="#FFD25A" />
+            <Circle cx={sx} cy={sy} r={Math.min(w, h) * 0.16} fill={mix(sunC, '#FFFFFF', 0.45)} opacity={0.3} />
+            <Circle cx={sx} cy={sy} r={Math.min(w, h) * 0.09} fill={mix(sunC, '#FFFFFF', 0.25)} opacity={0.6} />
+            <Circle cx={sx} cy={sy} r={Math.min(w, h) * 0.055} fill={sunC} />
           </Svg>
         </Animated.View>
       )}
@@ -1163,9 +1169,13 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   setProjection(angle, centerR, centerC);
   const at = (r: number, col: number) => (r >= 0 && r < rows && col >= 0 && col < cols ? cells[r * cols + col] : null);
 
-  const wallFace = dark ? c.surface2 : WHITE;
-  const cap = c.wall;
-  const slab = dark ? '#5A4F50' : '#BFA89E';
+  // Günün ışığı evin renklerine de siner: sabah sıcak sarı, akşam turuncu, gece (açık temada) lacivert gölge.
+  const toneC: [string, number] | null =
+    theme !== 'gunduz' ? null : phase === 'gece' ? (dark ? null : ['#2B3556', 0.34]) : phase === 'aksam' ? ['#F5A97A', 0.13] : phase === 'sabah' ? ['#FFDDB0', 0.1] : null;
+  const tone = (hex: string) => (toneC ? mix(hex, toneC[0], toneC[1]) : hex);
+  const wallFace = tone(dark ? c.surface2 : WHITE);
+  const cap = tone(c.wall);
+  const slab = tone(dark ? '#5A4F50' : '#BFA89E');
 
   // Memoize room clean percentages & anchors
   const clean = useMemo(() => {
@@ -1291,7 +1301,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const wallTint = (rid: string, outer: boolean) => {
     const hex = (outer && facade) || wallOf(S, rid)?.color;
     if (!hex || !painted) return wallColor;
-    return dark ? shade(hex, -0.45) : hex;
+    return tone(dark ? shade(hex, -0.45) : hex);
   };
   // Kapılar: iki oda arasındaki her duvarda bir kapı (en arkadaki ortak blokta), giriş kapısı antrede.
   const doors = new Set<string>();
@@ -1359,6 +1369,33 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     }
   };
 
+  /** Duvarın iç yüzünde nokta: `u` duvar boyunca 0..1, `z` yükseklik. */
+  const onWall = (r: number, col: number, axis: 'n' | 'w') => (u: number, z: number) => (axis === 'n' ? P(r + T, col + u, z) : P(r + u, col + T, z));
+  const f1 = (p: Pt) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+  const quadD = (a: Pt, b: Pt, c2: Pt, d: Pt) => `M${f1(a)}L${f1(b)}L${f1(c2)}L${f1(d)}Z`;
+  const CURTAIN: Partial<Record<RoomType, string>> = { yatak: '#E9B7C0', cocuk: '#F2C46D', salon: '#D9A08A', mutfak: '#A9CDA8', calisma: '#9CB9D0', antre: '#EADFCF' };
+  /** Perde: pencerenin iki yanında toplanmış kumaş ve ahşap korniş. */
+  const curtain = (key: string, r: number, col: number, axis: 'n' | 'w', type: RoomType) => {
+    const fill = CURTAIN[type];
+    if (!fill) return;
+    const q = onWall(r, col, axis);
+    els.push(
+      <Path key={key + 'cu'} d={quadD(q(0.25, 11.5), q(0.35, 12.5), q(0.34, 26.5), q(0.25, 26.5)) + quadD(q(0.65, 12.5), q(0.75, 11.5), q(0.75, 26.5), q(0.66, 26.5))} fill={tone(fill)} stroke={shade(fill, -0.18)} strokeWidth={0.4} strokeLinejoin="round" />,
+      <Path key={key + 'cr'} d={`M${f1(q(0.22, 27))}L${f1(q(0.78, 27))}`} stroke={BEAM} strokeWidth={1.2} strokeLinecap="round" fill="none" />,
+    );
+  };
+  const ART = [['#9CC9EC', '#7FB28A'], ['#F9B98A', '#B8584C'], ['#E9E0F5', '#78A1BB'], ['#FCE3C6', '#C98A6B']];
+  /** Tablo: penceresiz dış duvarda minik çerçeveli manzara. */
+  const art = (key: string, r: number, col: number, axis: 'n' | 'w', v: number) => {
+    const q = onWall(r, col, axis);
+    const [sky2, land] = ART[v % ART.length];
+    els.push(
+      <Path key={key + 'af'} d={quadD(q(0.36, 15), q(0.64, 15), q(0.64, 25), q(0.36, 25))} fill={WIN_FRAME} />,
+      <Path key={key + 'as'} d={quadD(q(0.39, 16.5), q(0.61, 16.5), q(0.61, 23.5), q(0.39, 23.5))} fill={sky2} />,
+      <Path key={key + 'al'} d={`M${f1(q(0.39, 16.5))}L${f1(q(0.61, 16.5))}L${f1(q(0.61, 18.5))}L${f1(q(0.52, 20.5))}L${f1(q(0.46, 18.6))}L${f1(q(0.39, 19.6))}Z`} fill={land} />,
+    );
+  };
+
   // Üst katta: zemin kat altta kapalı bir kütle. Öne bakan yüzlerinde pencereler, giriş kapısı; üstü açıkta kalan yerler teras.
   if (floor === 1 && L >= 3) {
     const gat = (r: number, col: number) => (r >= 0 && r < rows && col >= 0 && col < cols ? ground[r * cols + col] : null);
@@ -1420,10 +1457,23 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const p = clean[id] ?? 100;
     const fl = floorOf(S, id);
     const floorHex = fl ? ((r + col) % 2 && fl.alt ? fl.alt : fl.color) : '#D3B99A';
-    const base = painted ? mix(dark ? shade(floorHex, -0.2) : floorHex, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
+    const base = painted ? tone(mix(dark ? shade(floorHex, -0.2) : floorHex, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8)) : WOOD;
     add({ key: k + 'f', fill: base, points: tile, onPress: open, stroke: base, strokeWidth: 0.2 });
     // Duvar dibi gölgesi: arka duvarların zeminle birleştiği yerde yumuşak koyuluk, odaya derinlik verir.
     if (painted) {
+      // Zemin dokusu: parkede tahta araları ve ek yerleri, fayansta derz. Blok başına tek Path.
+      const fid = fl?.id ?? 'parke';
+      let tx = '';
+      const seg = (a: Pt, b: Pt) => { tx += `M${f1(a)}L${f1(b)}`; };
+      if (fid === 'parke' || fid === 'acik' || fid === 'koyu') {
+        for (const u of [0.25, 0.5, 0.75]) seg(P(r + u, col), P(r + u, col + 1));
+        seg(P(r, col + 0.35), P(r + 0.25, col + 0.35)); seg(P(r + 0.25, col + 0.7), P(r + 0.5, col + 0.7));
+        seg(P(r + 0.5, col + 0.2), P(r + 0.75, col + 0.2)); seg(P(r + 0.75, col + 0.55), P(r + 1, col + 0.55));
+      } else if (fid === 'fayans' || fid === 'mermer' || fid === 'terrakota') {
+        seg(P(r + 0.5, col), P(r + 0.5, col + 1)); seg(P(r, col + 0.5), P(r + 1, col + 0.5));
+        seg(P(r, col), P(r, col + 1)); seg(P(r, col), P(r + 1, col));
+      }
+      if (tx) els.push(<Path key={k + 'tx'} d={tx} stroke={shade(base, -0.16)} strokeWidth={0.5} strokeOpacity={0.5} fill="none" />);
       const ao = (key: string, ps: Pt[], o: number) =>
         els.push(<Polygon key={key} points={pts(ps)} fill="#283044" fillOpacity={o} onPress={open} />);
       if (at(r - 1, col) !== id) {
@@ -1469,12 +1519,38 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const wm = winOf(S, id);
     const winOn = (parity: number) => wm === 2 || (wm === 1 && (r + col) % 2 === parity);
     const winFill = isNight && p >= 70 ? '#FFF2B2' : c.hi;
+    const balcony = room.type === 'balkon';
+    const winN = !n && !balcony && L >= 5 && winOn(0) && entrance !== i + 'n';
+    const winW = !w && !balcony && L >= 5 && winOn(1) && entrance !== i + 'w';
+    // Pencereden zemine düşen güneş: sabah bir yana, akşam öbür yana uzar, öğlen kısa. Gerçek saate göre.
+    if (painted && !isNight && (!wx || wx.kind === 'clear')) {
+      const sk = phase === 'sabah' ? 0.18 : phase === 'aksam' ? -0.18 : 0.05;
+      const len = phase === 'ogle' ? 0.5 : 0.74;
+      const sun = phase === 'aksam' ? '#FFD49A' : '#FFF4CF';
+      if (winN)
+        els.push(<Polygon key={k + 'sn'} points={pts([P(r + T + 0.03, col + 0.34), P(r + T + 0.03, col + 0.66), P(r + T + len, col + 0.66 + sk), P(r + T + len, col + 0.34 + sk)])} fill={sun} fillOpacity={0.3} onPress={open} />);
+      if (winW)
+        els.push(<Polygon key={k + 'sw'} points={pts([P(r + 0.34, col + T + 0.03), P(r + 0.66, col + T + 0.03), P(r + 0.66 + sk, col + T + len), P(r + 0.34 + sk, col + T + len)])} fill={sun} fillOpacity={0.3} onPress={open} />);
+    }
+    // Halı: odanın orta bloğunda (eşya ve merdiven yoksa), oda türüne göre renk.
+    const rug = RUG[room.type];
+    if (painted && L >= 6 && rug && i === anchors[id] && i !== props[id] && i !== stairAt && !itemAt[i]?.length && !fl?.id.startsWith('hali')) {
+      const rq = (a: number, b: number) => pts([P(r + a, col + a), P(r + a, col + b), P(r + b, col + b), P(r + b, col + a)]);
+      els.push(
+        <G key={k + 'rug'} onPress={open}>
+          <Polygon points={rq(0.14, 0.86)} fill={tone(rug[0])} stroke={tone(shade(rug[0], -0.15))} strokeWidth={0.6} strokeLinejoin="round" />
+          <Polygon points={rq(0.22, 0.78)} fill="none" stroke={tone(rug[1])} strokeWidth={1} strokeLinejoin="round" />
+          <Polygon points={pts([P(r + 0.5, col + 0.34), P(r + 0.66, col + 0.5), P(r + 0.5, col + 0.66), P(r + 0.34, col + 0.5)])} fill={tone(rug[1])} />
+        </G>,
+      );
+    }
     if (n !== id && L >= 2) {
       const balc = S.rooms[id]?.type === 'balkon';
       const h = wallH(n ? INNER_H : balc ? RAIL_H : WALL_H);
       if (L === 2) frame(k + 'n', r, col, T * 0.7, 1, h);
       else {
         wall(k + 'n', r, col, T, 1, h, wallTint(id, !n));
+        if (painted && !balc) add({ key: k + 'nb', fill: shade(wallTint(id, !n), -0.13), points: pts([P(r + T, col, 0), P(r + T, col + 1, 0), P(r + T, col + 1, 2.6), P(r + T, col, 2.6)]) });
         if (L >= 5 && doors.has(i + 'n')) door(k + 'n', r, col, 'n', false);
         if (L >= 5 && entrance === i + 'n') door(k + 'n', r, col, 'n', true);
         else if (!n && !balc && L >= 5 && winOn(0)) {
@@ -1483,6 +1559,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
             <Path key={k + 'nwm'} d={`M${P(r + T, col + 0.5, 13).join(' ')}L${P(r + T, col + 0.5, 25).join(' ')}M${P(r + T, col + 0.32, 19).join(' ')}L${P(r + T, col + 0.68, 19).join(' ')}`} stroke={WIN_FRAME} strokeWidth={0.8} fill="none" />,
             <Polygon key={k + 'nws'} points={pts([P(r + T, col + 0.29, 11.5), P(r + T, col + 0.71, 11.5), P(r + T, col + 0.71, 13), P(r + T, col + 0.29, 13)])} fill={WIN_FRAME} />,
           );
+          if (L >= 6) curtain(k + 'n', r, col, 'n', room.type);
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + T + 0.1, col + 0.5, 19);
             const [bx, by] = P(r + 0.55, col + 0.5, 0);
@@ -1492,6 +1569,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
             );
           }
         }
+        if (!n && !balc && L >= 6 && !winN && entrance !== i + 'n' && !doors.has(i + 'n') && (r * 5 + col * 3) % 3 === 0) art(k + 'n', r, col, 'n', r + col);
         if (idle >= 2 && (r + col) % 2 === 1)
           crack(k + 'nc', [P(r + T, col + 0.5, h - 2), P(r + T, col + 0.6, h - 7), P(r + T, col + 0.47, h - 11), P(r + T, col + 0.58, h - 16)]);
         if (!n && !balc && L >= 26)
@@ -1508,6 +1586,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       if (L === 2) frame(k + 'w', r, col, 1, T * 0.7, h);
       else {
         wall(k + 'w', r0, col, r + 1 - r0, T, h, wallTint(id, !w));
+        if (painted && !balc) add({ key: k + 'wb', fill: shade(wallTint(id, !w), -0.2), points: pts([P(r0, col + T, 0), P(r + 1, col + T, 0), P(r + 1, col + T, 2.6), P(r0, col + T, 2.6)]) });
         if (L >= 5 && doors.has(i + 'w')) door(k + 'w', r, col, 'w', false);
         if (L >= 5 && entrance === i + 'w') door(k + 'w', r, col, 'w', true);
         else if (!w && !balc && L >= 5 && winOn(1)) {
@@ -1516,6 +1595,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
             <Path key={k + 'wwm'} d={`M${P(r + 0.5, col + T, 13).join(' ')}L${P(r + 0.5, col + T, 25).join(' ')}M${P(r + 0.32, col + T, 19).join(' ')}L${P(r + 0.68, col + T, 19).join(' ')}`} stroke={WIN_FRAME} strokeWidth={0.8} fill="none" />,
             <Polygon key={k + 'wws'} points={pts([P(r + 0.29, col + T, 11.5), P(r + 0.71, col + T, 11.5), P(r + 0.71, col + T, 13), P(r + 0.29, col + T, 13)])} fill={WIN_FRAME} />,
           );
+          if (L >= 6) curtain(k + 'w', r, col, 'w', room.type);
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + 0.5, col + T + 0.1, 19);
             const [bx, by] = P(r + 0.5, col + 0.55, 0);
@@ -1525,6 +1605,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
             );
           }
         }
+        if (!w && !balc && L >= 6 && !winW && entrance !== i + 'w' && !doors.has(i + 'w') && (r * 5 + col * 3) % 3 === 1) art(k + 'w', r, col, 'w', r + col + 1);
         if (idle >= 2 && (r + col) % 2 === 0)
           crack(k + 'wc', [P(r + 0.5, col + T, h - 3), P(r + 0.4, col + T, h - 8), P(r + 0.55, col + T, h - 12), P(r + 0.45, col + T, h - 17)]);
       }
@@ -1842,6 +1923,22 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day));
   const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
+  // Gece ateş böcekleri (sırayla yanıp söner), gündüz ışıkta süzülen altın zerreler.
+  const motes: ReactElement[] = [];
+  if (L >= 5 && floor === 0) {
+    if (isNight) {
+      scatter(8, 31).forEach(([u, v, k2], i) => {
+        const fx = houseCenterX + (u - 0.5) * halfW * 1.8, fy = houseCenterY + v * (houseMaxY - houseCenterY);
+        (i % 2 ? life.twA : life.twB).push(
+          <Circle key={'ffh' + i} cx={fx} cy={fy} r={4 + k2 * 2} fill="url(#h3dLamp)" />,
+          <Circle key={'ff' + i} cx={fx} cy={fy} r={0.9 + k2 * 0.7} fill="#FFF6B0" />,
+        );
+      });
+    } else if (!wx || wx.kind === 'clear') {
+      scatter(9, 53).forEach(([u, v, k2], i) =>
+        motes.push(<Circle key={'mo' + i} cx={houseCenterX + (u - 0.5) * halfW * 1.3} cy={houseMinY + 30 + v * (houseMaxY - houseMinY - 50)} r={0.7 + k2 * 0.8} fill={phase === 'aksam' ? '#FFD49A' : '#FFF4CF'} opacity={0.55 + k2 * 0.4} />));
+    }
+  }
   const sc = boxW > 0 ? boxW / vbW : 0;
   const ZMAX = 3, ZMIN = 0.7;
   focusFn.current = (id: string | null) => {
@@ -2059,6 +2156,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
+      {sc > 0 && !reduce && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-16} dx={7} ms={7000} restart fade reduce={reduce}>{motes}</Drift>}
       {sc > 0 && !reduce && air.smoke.length > 0 && <Drift vb={vb} scale={sc} dy={-12} dx={4} ms={3200} restart fade reduce={reduce}>{air.smoke}</Drift>}
       {sc > 0 && !reduce && air.rain.length > 0 && (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
@@ -2100,6 +2198,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     </View>
   ) : null;
   const colors = skyColors(theme, dark, wx, phase);
+  const dnow = new Date(now);
+  const sunT = Math.min(1, Math.max(0, (dnow.getHours() + dnow.getMinutes() / 60 - 5.5) / 14.5));
   const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
   const content = onPressHouse ? (
     <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={handlePressHouse} style={{ width: '100%' }}>
@@ -2109,7 +2209,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   if (!colors) return <View style={{ width: '100%' }}>{content}{focusBar}</View>;
   return (
     <View style={{ width: '100%' }}>
-      {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear'} twA={twOpA} twB={twOpB} breath={breathOp} />}
+      {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear'} sunT={sunT} twA={twOpA} twB={twOpB} breath={breathOp} />}
       {content}
       {focusBar}
     </View>

@@ -123,7 +123,7 @@ export function medNotifs(S: AppState, now = Date.now()) {
     for (const dose of dosesOn(S, day)) {
       if (dose.mark) continue;
       const t = minutesOf(dose.time);
-      const label = dose.med.dose ? `${dose.med.name} · ${dose.med.dose}` : dose.med.name;
+      const label = dose.med.dose ? `${dose.med.name} (${dose.med.dose})` : dose.med.name;
       const first = new Date(dayTs(day));
       first.setHours(Math.floor(t / 60), t % 60, 0, 0);
       if (first.getTime() > now) out.push({ id: `ilac-${dose.key}-${day}`, at: first, key: dose.key, ...medNudge(label, dose.key, first.getTime()) });

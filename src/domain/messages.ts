@@ -1,3 +1,4 @@
+import { tx } from '@/i18n/runtime';
 import type { RoomType, StatusKind, StockItem } from './types';
 
 /**
@@ -70,7 +71,7 @@ const CARE_LINES = ['Evin küçük bir bakım istiyor 🔧🏡', 'Minik bir bak�
 
 /** Rutin, bitki ya da ev bakımı bildirimi. `type` null ise ev bakımı. */
 export function taskLine(o: { name: string; type: RoomType | null; plant: boolean; k: StatusKind; key: string; now: number }) {
-  if (o.plant) return `${o.name} ${pick(WATER_LINES, o.key, o.now)}`;
+  if (o.plant) return `${tx(o.name)} ${tx(pick(WATER_LINES, o.key, o.now))}`;
   const pool = TASK_LINES.find(([re]) => re.test(o.name))?.[1] ?? (o.type ? ROOM_LINES[o.type] : CARE_LINES);
   return pick(pool, o.key, o.now);
 }

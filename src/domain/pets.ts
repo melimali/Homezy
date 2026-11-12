@@ -1,3 +1,4 @@
+import { tx } from '@/i18n/runtime';
 import { DAY } from '@/domain/constants';
 import { uid } from '@/domain/logic';
 import type { AppState, Pet, PetItem, PetKind } from '@/domain/types';
@@ -163,6 +164,6 @@ export function petNotifs(S: AppState, now = Date.now()) {
 
 /** Bildirim metni. Başlıkta hayvanın adı, gövdede ne yapılacağı. */
 export const petNudge = (pet: Pet, it: PetItem) => ({
-  title: `${petEmoji(pet)} ${pet.name}: ${it.name}`,
+  title: `${petEmoji(pet)} ${pet.name}: ${tx(it.name)}`,
   body: 'Vakti geldi. Yaptıysan “Yaptım”a dokun, Moka not alsın ☕',
 });

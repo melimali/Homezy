@@ -40,7 +40,7 @@ describe('evcil hayvan bakımı', () => {
     const { S, pet } = withPet();
     const ns = petNotifs(S, t0 + H);
     expect(ns.length).toBeGreaterThanOrEqual(2);
-    expect(ns[0].title).toContain('Pamuk: Mama');
+    expect(ns[0].title).toMatch(/Pamuk: (Mama|Food)/);
     pet.items[0].remind = false;
     expect(petNotifs(S, t0 + H).some(n => n.key.endsWith(pet.items[0].id))).toBe(false);
     S.settings.pets = false;

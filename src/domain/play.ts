@@ -1,5 +1,5 @@
 import { DAY } from './constants';
-import { deviceLang } from '@/i18n/runtime';
+import { deviceLang, tx } from '@/i18n/runtime';
 import type { Garden } from './garden';
 import { emptyGrowth } from './growth';
 import { emptyHabits } from './habits';
@@ -338,7 +338,7 @@ export function awardToast(r: AwardResult, what: string) {
   if (!r.awarded) return `${what} bugün zaten tamam ✓`;
   const up = r.after.level > r.before.level ? stageFor(r.after.level) : null;
   const repaired = r.before.idle > 0 ? ' Ev toparlanıyor 🔨' : '';
-  if (up && up.level === r.after.level) return `+${r.points} puan ⭐ ${up.emoji} ${up.name}!${repaired}`;
+  if (up && up.level === r.after.level) return `+${r.points} puan ⭐ ${up.emoji} ${tx(up.name)}!${repaired}`;
   if (!r.before.today && r.after.streak > 1) return `+${r.points} puan ⭐ 🔥 ${r.after.streak} günlük seri!${repaired}`;
   return `+${r.points} puan ⭐ ${what} tamam.${repaired}`;
 }

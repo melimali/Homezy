@@ -74,23 +74,23 @@ export function configureNotifications() {
 async function ensureChannel(N: NotificationsModule) {
   if (Platform.OS === 'android') {
     await N.setNotificationChannelAsync(CHANNEL, {
-      name: 'Sabah özeti',
+      name: tx('Sabah özeti'),
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(NUDGE, {
-      name: 'Spor ve seri hatırlatmaları',
+      name: tx('Spor ve seri hatırlatmaları'),
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(TASKS, {
-      name: 'İş hatırlatmaları (Yaptım / Yapmadım)',
+      name: tx('İş hatırlatmaları (Yaptım / Yapmadım)'),
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(MEDS, {
-      name: 'İlaç hatırlatmaları',
+      name: tx('İlaç hatırlatmaları'),
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(FEEDBACK_CHANNEL, {
-      name: 'Bildirimden tamamlanan işler',
+      name: tx('Bildirimden tamamlanan işler'),
       importance: N.AndroidImportance.LOW,
     });
   }
@@ -120,11 +120,11 @@ export async function requestPermission(): Promise<boolean> {
 export function summaryFor(ns: Notice[], at = new Date(), urgent = ns.filter(n => n.k !== 'ok').length): { title: string; body: string; url: string } | null {
   if (!ns.length) return null;
   // Özet saati kullanıcının seçimi; akşama kurduysa "İyi akşamlar" der.
-  const title = `${greet(at)} ${summaryTail(urgent)}`;
+  const title = `${greet(at)} ${tx(summaryTail(urgent))}`;
   // İlk hatırlatmanın tatlı cümlesi de görünsün, diğerleri kısa başlık olarak.
   const shown = ns.slice(0, 3).map((n, i) => (i ? n.title : `${n.title}\n${n.text}`));
   const more = ns.length - shown.length;
-  const body = shown.join('\n') + (more > 0 ? `\nve ${more} hatırlatma daha` : '');
+  const body = shown.join('\n') + (more > 0 ? `\n${tx('ve {} hatırlatma daha').replace('{}', String(more))}` : '');
   const rooms = new Set(ns.map(n => n.rid));
   const url = rooms.size === 1 ? ns[0].url ?? `/oda/${ns[0].rid}` : '/bugun';
   return { title, body, url };

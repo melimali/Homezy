@@ -27,6 +27,12 @@ export default function RoomScreen() {
   const r = id && Object.hasOwn(S.rooms, id) ? S.rooms[id] : undefined;
   if (!r) return <Redirect href="/" />;
 
+  const order = S.order.filter(x => S.rooms[x]);
+  const idx = order.indexOf(r.id);
+  const go = (d: number) => {
+    if (order.length < 2) return;
+    router.setParams({ id: order[(idx + d + order.length) % order.length] });
+  };
   const n = cellCount(S, r.id);
   const clean = roomClean(S, r.id, now);
 
@@ -35,6 +41,11 @@ export default function RoomScreen() {
       {/* Geri düğmesi ve yanında odalar arasında geri dönmeden geçmek için emoji şeridi. */}
       <View style={styles.topRow}>
         <BackLink label="" />
+        {order.length > 1 && (
+          <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
+            <Text style={{ fontFamily: fonts.bodyBold, fontSize: 24, lineHeight: 28, color: c.ink }}>‹</Text>
+          </Squish>
+        )}
         {S.order.length > 1 && (
           <ScrollView style={{ flex: 1 }} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
             {S.order.map(rid => {
@@ -57,6 +68,11 @@ export default function RoomScreen() {
               );
             })}
           </ScrollView>
+        )}
+        {order.length > 1 && (
+          <Squish onPress={() => go(1)} accessibilityRole="button" accessibilityLabel="Sonraki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
+            <Text style={{ fontFamily: fonts.bodyBold, fontSize: 24, lineHeight: 28, color: c.ink }}>›</Text>
+          </Squish>
         )}
       </View>
 
@@ -95,6 +111,7 @@ export default function RoomScreen() {
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
+  arrow: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', top: -2, right: -2, width: 13, height: 13, borderRadius: 7, borderWidth: 2 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 20, paddingHorizontal: 18, borderRadius: radius.card },

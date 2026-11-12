@@ -59,10 +59,8 @@ export async function requestCaptcha(opts?: { silent?: boolean }): Promise<strin
   } catch {
     // Saklama okunamazsa kutu normal açılır.
   }
-  if (!silent && verified) {
-    const quiet = await ask(true);
-    if (quiet) return quiet;
-  }
+  // Bir kere doğrulanan cihazda kutu bir daha açılmaz: sadece görünmez denenir, olmazsa tokensiz devam edilir.
+  if (verified) return ask(true);
   const token = await ask(silent);
   if (token && !verified) {
     try {
@@ -176,7 +174,7 @@ export function CaptchaHost() {
   const title = phase === 'err' ? 'Doğrulama yapılamadı' : 'Robot olmadığını doğrula';
   const hint =
     phase === 'err'
-      ? 'İnternetini kontrol edip tekrar dene. Olmazsa vazgeçip birkaç dakika sonra yeniden dene.'
+      ? 'Doğrulama sayfası açılamadı. Tekrar dene; olmazsa biraz sonra yeniden dene.'
       : phase === 'ui'
         ? 'Aşağıdaki kutuya dokun, doğrulama bitince devam edeceğiz.'
         : 'Kısa bir güvenlik kontrolü yapıyoruz. Genelde kendiliğinden biter, bir şey yapman gerekmez.';

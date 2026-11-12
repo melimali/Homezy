@@ -44,11 +44,14 @@ const PROBE = process.env.EXPO_PUBLIC_SUPABASE_URL
 export async function online(): Promise<boolean> {
   if (last && Date.now() - last.at < 8000) return last.ok;
   let ok = false;
-  try {
-    await fetchWithTimeout(4000)(PROBE, { method: 'HEAD' });
-    ok = true;
-  } catch {
-    ok = false;
+  // Yavaş ağda tek denemede yanlış "bağlantı yok" çıkmasın: iki kez denenir.
+  for (let i = 0; i < 2 && !ok; i++) {
+    try {
+      await fetchWithTimeout(6000)(PROBE, { method: 'GET' });
+      ok = true;
+    } catch {
+      ok = false;
+    }
   }
   last = { at: Date.now(), ok };
   return ok;

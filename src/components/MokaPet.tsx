@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import { fonts } from '@/theme';
@@ -66,6 +66,8 @@ function route(from: number, to: number, set: Set<number>, cols: number): number
   return null;
 }
 
+// Moka'nın sığdığı kutu (ev koordinatı): ayak noktasından sola/yukarı.
+const BX = 22, BY = 38, BW = 44, BH = 46;
 const MARGIN = 0.28;
 const inCell = (i: number, cols: number): [number, number] => [Math.floor(i / cols) + rnd(MARGIN, 1 - MARGIN), (i % cols) + rnd(MARGIN, 1 - MARGIN)];
 
@@ -92,6 +94,20 @@ export function MokaPet({
   const nightRef = useRef(night);
   nightRef.current = night;
   const [frame, setFrame] = useState<Frame | null>(null);
+  // Küçük Svg kutusu native transform ile gezer; her karede sadece küçük kutu çizilir (tam ev katmanı değil).
+  const [lay, setLay] = useState({ w: 0, h: 0 });
+  const layRef = useRef(lay);
+  layRef.current = lay;
+  const pos = useRef(new Animated.ValueXY()).current;
+  const [vx, vy, vw, vh] = vb.split(' ').map(Number);
+  const lastXY = useRef<[number, number]>([0, 0]);
+  const place = (x: number, y: number) => {
+    lastXY.current = [x, y];
+    const { w, h } = layRef.current;
+    if (!w) return;
+    pos.setValue({ x: ((x - BX - vx) / vw) * w, y: ((y - BY - vy) / vh) * h });
+  };
+  useEffect(() => { if (lay.w) place(lastXY.current[0], lastXY.current[1]); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [lay.w, lay.h, vb]);
 
   useEffect(() => {
     walk.current = walkable(roomCells, blocked);
@@ -214,11 +230,12 @@ export function MokaPet({
       if (s.mode === 'cheer') { lift = Math.abs(Math.sin(s.t * 6.5)) * 7; wing = 40 + Math.sin(s.t * 26) * 12; happy = true; cheer = true; squash = 1 + Math.sin(s.t * 13) * 0.05; rot = Math.sin(s.t * 6.5) * 6; head = Math.sin(s.t * 6.5) * 8; bob = 0; }
       const eye = s.mode === 'sleep' ? 0 : s.blink >= 0 ? Math.abs(1 - s.blink * 2) : 1;
       const [x, y] = proj.current(s.r, s.c, 0);
-      setFrame({ x, y, f: s.f, bob, lift, squash, rot, head, headX, wing, fluff, eye, happy, sit, sleep, step: ph, zzz: s.zzz, cheer, t: s.t });
+      place(x, y);
+      setFrame({ x: 0, y: 0, f: s.f, bob, lift, squash, rot, head, headX, wing, fluff, eye, happy, sit, sleep, step: ph, zzz: s.zzz, cheer, t: s.t });
     };
     if (reduce) {
       const s = sim.current;
-      if (s) { const [x, y] = proj.current(s.r, s.c, 0); setFrame({ x, y, f: 1, bob: 0, lift: 0, squash: 1, rot: 0, head: 0, headX: 0, wing: 0, fluff: 0, eye: 1, happy: false, sit: 0, sleep: false, step: 0, zzz: 0, cheer: false, t: 0 }); }
+      if (s) { const [x, y] = proj.current(s.r, s.c, 0); place(x, y); setFrame({ x: 0, y: 0, f: 1, bob: 0, lift: 0, squash: 1, rot: 0, head: 0, headX: 0, wing: 0, fluff: 0, eye: 1, happy: false, sit: 0, sleep: false, step: 0, zzz: 0, cheer: false, t: 0 }); }
       return;
     }
     raf = requestAnimationFrame(tick);
@@ -227,11 +244,22 @@ export function MokaPet({
 
   if (!frame) return null;
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Svg width="100%" height="100%" viewBox={vb}>
-        <MokaBody fr={frame} />
-        {bubble && <Bubble text={bubble} x={frame.x} y={frame.y - frame.lift} vb={vb} />}
-      </Svg>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={(e: LayoutChangeEvent) => setLay({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {lay.w > 0 && (
+        <Animated.View
+          pointerEvents="none"
+          style={{ position: 'absolute', left: 0, top: 0, width: (BW / vw) * lay.w, height: (BH / vh) * lay.h, transform: pos.getTranslateTransform() }}
+        >
+          <Svg width="100%" height="100%" viewBox={`${-BX} ${-BY} ${BW} ${BH}`}>
+            <MokaBody fr={frame} />
+          </Svg>
+        </Animated.View>
+      )}
+      {bubble && (
+        <Svg width="100%" height="100%" viewBox={vb} style={StyleSheet.absoluteFill}>
+          <Bubble text={bubble} x={lastXY.current[0]} y={lastXY.current[1] - frame.lift} vb={vb} />
+        </Svg>
+      )}
     </View>
   );
 }

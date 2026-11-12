@@ -683,7 +683,7 @@ function Drift({ vb, scale, dx = 0, dy = 0, ms, restart, fade, reduce, children 
   }, [v, ms, restart, reduce]);
   const from = restart ? 0 : -1;
   return (
-    <Animated.View
+    <Animated.View renderToHardwareTextureAndroid
       pointerEvents="none"
       style={[
         StyleSheet.absoluteFill,
@@ -845,7 +845,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
   const lie = mode === 'sleep' ? 2.5 * scale : 0;
   const [hx, hy] = home;
   return (
-    <Animated.View
+    <Animated.View renderToHardwareTextureAndroid
       pointerEvents="none"
       style={[
         StyleSheet.absoluteFill,
@@ -880,7 +880,7 @@ function Burst({ vb, cx, cy, spread }: { vb: string; cx: number; cy: number; spr
     return sparkle('bs' + i, cx + Math.cos(t) * d, cy + Math.sin(t) * d * 0.55, 4 + (i % 3) * 2, cols[i % 4]);
   });
   return (
-    <Animated.View
+    <Animated.View renderToHardwareTextureAndroid
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, { opacity: v.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.25] }) }] }]}
     >
@@ -925,16 +925,16 @@ function SkyBackdrop({ colors, w, h, bleed, night, sun, sunT, twA, twB, breath }
       </Svg>
       {night && (
         <>
-          <Animated.View style={[StyleSheet.absoluteFill, { opacity: twA }]}>
+          <Animated.View renderToHardwareTextureAndroid style={[StyleSheet.absoluteFill, { opacity: twA }]}>
             <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>{starEls(0)}</Svg>
           </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, { opacity: twB }]}>
+          <Animated.View renderToHardwareTextureAndroid style={[StyleSheet.absoluteFill, { opacity: twB }]}>
             <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>{starEls(1)}</Svg>
           </Animated.View>
         </>
       )}
       {sun && (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: breath }]}>
+        <Animated.View renderToHardwareTextureAndroid style={[StyleSheet.absoluteFill, { opacity: breath }]}>
           <Svg style={pos} width={w + 2 * pad} height={h + 2 * pad} viewBox={vb}>
             <Circle cx={sx} cy={sy} r={Math.min(w, h) * 0.16} fill={mix(sunC, '#FFFFFF', 0.45)} opacity={0.3} />
             <Circle cx={sx} cy={sy} r={Math.min(w, h) * 0.09} fill={mix(sunC, '#FFFFFF', 0.25)} opacity={0.6} />
@@ -2079,7 +2079,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const sc2 = pinch.interpolate({ inputRange: [0, s1, s0, 1.01, 4], outputRange: [1, 1, 0.82, 0.82, 0.82], extrapolate: 'clamp' });
     const dy = floor === 1 ? WALL_H + SLAB : 0;
     return (
-      <Animated.View key={'ring' + k} pointerEvents="none" style={{ position: 'absolute', left: `${((g.cx - g.hw - minX) / vbW) * 100}%`, top: `${((g.cy - g.hh + dy - minY) / vbH) * 100}%`, width: `${((2 * g.hw) / vbW) * 100}%`, height: `${((2 * g.hh) / vbH) * 100}%`, opacity: op, transform: [{ scale: sc2 }] }}>
+      <Animated.View renderToHardwareTextureAndroid key={'ring' + k} pointerEvents="none" style={{ position: 'absolute', left: `${((g.cx - g.hw - minX) / vbW) * 100}%`, top: `${((g.cy - g.hh + dy - minY) / vbH) * 100}%`, width: `${((2 * g.hw) / vbW) * 100}%`, height: `${((2 * g.hh) / vbH) * 100}%`, opacity: op, transform: [{ scale: sc2 }] }}>
         <Svg width="100%" height="100%" viewBox={`${g.cx - g.hw} ${g.cy - g.hh} ${2 * g.hw} ${2 * g.hh}`}>{g.els}</Svg>
       </Animated.View>
     );
@@ -2148,9 +2148,9 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const twOpA = twinkle.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.4, 1] });
   const twOpB = twinkle.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.4, 1, 0.4] });
   const vb = `${minX} ${minY} ${vbW} ${vbH}`;
-  const layer = (key: string, opacity: Animated.AnimatedInterpolation<number> | Animated.Value, children: ReactElement[], scale?: Animated.AnimatedInterpolation<number>) =>
+  const layer = (key: string, opacity: number | Animated.AnimatedInterpolation<number> | Animated.Value, children: ReactElement[], scale?: Animated.AnimatedInterpolation<number>) =>
     children.length > 0 && (
-      <Animated.View key={key} pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity, transform: scale ? [{ scale }] : [] }]}>
+      <Animated.View renderToHardwareTextureAndroid key={key} pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity, transform: scale ? [{ scale }] : [] }]}>
         <Svg width="100%" height="100%" viewBox={vb}>{lightDefs}{children}</Svg>
       </Animated.View>
     );
@@ -2164,7 +2164,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     });
 
   const model = (
-    <Animated.View
+    <Animated.View renderToHardwareTextureAndroid={!pinchZoom && zoom <= 1}
       onLayout={(e: LayoutChangeEvent) => setBoxW(e.nativeEvent.layout.width)}
       onTouchStart={e => {
         const g = pinchRef.current;
@@ -2227,7 +2227,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         transform: [
           { translateX: pan.x },
           { translateY: pan.y },
-          { translateY: floatY },
+          ...(!pinchZoom && zoom <= 1 ? [{ translateY: floatY }] : []),
           { scale: zoom },
           { scale: pinch },
           { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
@@ -2246,21 +2246,21 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         {scene.front}
         {svgLabels}
       </Svg>
-      {layer('breath', breathOp, life.breath, breathScale)}
-      {layer('twa', twOpA, [...life.twA, ...wings(true)])}
-      {layer('twb', twOpB, [...life.twB, ...wings(false)])}
+      {layer('breath', 0.8, life.breath)}
+      {layer('twa', 0.75, [...life.twA, ...wings(true)])}
+      {layer('twb', 0.55, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && moka && <MokaPet vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} say={onPickCell ? undefined : mokaSays} />}
       {sc > 0 && !reduce && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-14} dx={6} ms={11000} restart fade reduce={reduce}>{motes}</Drift>}
       {/* Çatı ve dış görünüm en üstte: çatı kapanınca içerideki ışıklar, Moka ve evcil hayvanlar çatının altında kalır, havada asılı durmaz. */}
       {extEls.length > 0 && pinchZoom && (
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: extOp }]}>
+        <Animated.View renderToHardwareTextureAndroid pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: extOp }]}>
           <Svg width="100%" height="100%" viewBox={vb}>{extEls}</Svg>
         </Animated.View>
       )}
       {roofEls.length > 0 && pinchZoom && (
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp }]}>
+        <Animated.View renderToHardwareTextureAndroid pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: roofOp }]}>
           <Svg width="100%" height="100%" viewBox={vb}>{roofEls}</Svg>
         </Animated.View>
       )}
@@ -2279,7 +2279,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         </View>
       )}
       {garden.sprouts.length > 0 && (
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: sproutOpacity, transform: [{ scale: sproutScale }] }]}>
+        <Animated.View renderToHardwareTextureAndroid pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: sproutOpacity, transform: [{ scale: sproutScale }] }]}>
           <Svg width="100%" height="100%" viewBox={vb}>
             <G>{garden.sprouts}</G>
           </Svg>

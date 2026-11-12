@@ -1,4 +1,4 @@
-import { AppState as RNAppState, InteractionManager } from 'react-native';
+import { AppState as RNAppState } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { setLang } from '@/i18n/runtime';
@@ -50,7 +50,7 @@ function createSaver(delay = 500) {
     pending = S;
     if (timer) return;
     // Animasyon/kaydırma bitince yaz: JS thread'i meşgulken kayıt takılma yaratmasın.
-    timer = setTimeout(() => { InteractionManager.runAfterInteractions(() => void run()); }, delay);
+    timer = setTimeout(() => { requestIdleCallback(() => void run()); }, delay);
   };
   save.flush = () => {
     if (timer) clearTimeout(timer);

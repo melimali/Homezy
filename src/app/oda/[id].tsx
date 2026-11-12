@@ -39,40 +39,14 @@ export default function RoomScreen() {
   return (
     <Screen header={false}>
       <RenameRoom id={renaming ? r.id : null} onClose={() => setRenaming(false)} />
-      {/* Geri düğmesi ve yanında odalar arasında geri dönmeden geçmek için emoji şeridi. */}
-      <View style={styles.topRow}>
-        <BackLink label="" />
-        {S.order.length > 1 && (
-          <ScrollView style={{ flex: 1 }} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
-            {S.order.map(rid => {
-              const x = S.rooms[rid];
-              if (!x) return null;
-              const on = rid === r.id;
-              const rc = roomCounts(S, rid, now);
-              const dot = rc.late || rc.today ? c.today : null;
-              return (
-                <Squish
-                  key={rid}
-                  onPress={() => !on && router.setParams({ id: rid })}
-                  accessibilityLabel={x.name}
-                  accessibilityState={{ selected: on }}
-                  style={[styles.hop, { backgroundColor: on ? c.room[x.type] : c.surface }, on && { transform: [{ scale: 1.08 }] }]}
-                >
-                  <Text style={{ lineHeight: 29, fontSize: 22 }}>{ROOM_EMOJI[x.type]}</Text>
-                  {dot && <View style={[styles.dot, { backgroundColor: dot, borderColor: c.bg }]} />}
-                </Squish>
-              );
-            })}
-          </ScrollView>
-        )}
-      </View>
-
+      {/* Geri düğmesi üstte; altında önceki/sonraki oda okları, onun altında emoji şeridi. */}
+      <BackLink label="" />
       {order.length > 1 && (
         <View style={styles.navRow}>
           <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
             <Text style={[styles.arrowTxt, { color: c.ink }]}>‹</Text>
           </Squish>
-          <Text numberOfLines={1} style={[styles.navName, { color: c.ink }]}>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.navName, { color: c.ink }]}>
             {r.name} · {idx + 1}/{order.length}
           </Text>
           <Squish onPress={() => go(1)} accessibilityRole="button" accessibilityLabel="Sonraki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
@@ -80,7 +54,28 @@ export default function RoomScreen() {
           </Squish>
         </View>
       )}
-
+      {order.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+          {order.map(rid => {
+            const x = S.rooms[rid];
+            const on = rid === r.id;
+            const rc = roomCounts(S, rid, now);
+            const dot = rc.late || rc.today ? c.today : null;
+            return (
+              <Squish
+                key={rid}
+                onPress={() => !on && router.setParams({ id: rid })}
+                accessibilityLabel={x.name}
+                accessibilityState={{ selected: on }}
+                style={[styles.hop, { backgroundColor: on ? c.room[x.type] : c.surface }, on && { transform: [{ scale: 1.08 }] }]}
+              >
+                <Text style={{ lineHeight: 29, fontSize: 22 }}>{ROOM_EMOJI[x.type]}</Text>
+                {dot && <View style={[styles.dot, { backgroundColor: dot, borderColor: c.bg }]} />}
+              </Squish>
+            );
+          })}
+        </ScrollView>
+      )}
       {ROOM_SCENES[r.type] && (
         <Appear key={`scene-${r.id}`}>
           <SceneImage source={roomMokaScene(r.type, ROOM_SCENES[r.type])!} ratio={16 / 10} radius={radius.card} />
@@ -114,7 +109,6 @@ export default function RoomScreen() {
 }
 
 const styles = StyleSheet.create({
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   navName: { flex: 1, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 14 },

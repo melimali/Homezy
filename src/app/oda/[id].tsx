@@ -41,11 +41,6 @@ export default function RoomScreen() {
       {/* Geri düğmesi ve yanında odalar arasında geri dönmeden geçmek için emoji şeridi. */}
       <View style={styles.topRow}>
         <BackLink label="" />
-        {order.length > 1 && (
-          <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
-            <Text style={{ fontFamily: fonts.bodyBold, fontSize: 24, lineHeight: 28, color: c.ink }}>‹</Text>
-          </Squish>
-        )}
         {S.order.length > 1 && (
           <ScrollView style={{ flex: 1 }} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
             {S.order.map(rid => {
@@ -69,12 +64,21 @@ export default function RoomScreen() {
             })}
           </ScrollView>
         )}
-        {order.length > 1 && (
-          <Squish onPress={() => go(1)} accessibilityRole="button" accessibilityLabel="Sonraki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
-            <Text style={{ fontFamily: fonts.bodyBold, fontSize: 24, lineHeight: 28, color: c.ink }}>›</Text>
-          </Squish>
-        )}
       </View>
+
+      {order.length > 1 && (
+        <View style={styles.navRow}>
+          <Squish onPress={() => go(-1)} accessibilityRole="button" accessibilityLabel="Önceki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
+            <Text style={[styles.arrowTxt, { color: c.ink }]}>‹</Text>
+          </Squish>
+          <Text numberOfLines={1} style={[styles.navName, { color: c.ink }]}>
+            {r.name} · {idx + 1}/{order.length}
+          </Text>
+          <Squish onPress={() => go(1)} accessibilityRole="button" accessibilityLabel="Sonraki oda" style={[styles.arrow, { backgroundColor: c.surface }]}>
+            <Text style={[styles.arrowTxt, { color: c.ink }]}>›</Text>
+          </Squish>
+        </View>
+      )}
 
       {ROOM_SCENES[r.type] && (
         <Appear key={`scene-${r.id}`}>
@@ -111,7 +115,10 @@ export default function RoomScreen() {
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   strip: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
-  arrow: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  navName: { flex: 1, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 14 },
+  arrow: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  arrowTxt: { fontFamily: fonts.bodyBold, fontSize: 22, lineHeight: 26, includeFontPadding: false },
   hop: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', top: -2, right: -2, width: 13, height: 13, borderRadius: 7, borderWidth: 2 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 20, paddingHorizontal: 18, borderRadius: radius.card },

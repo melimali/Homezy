@@ -1,5 +1,5 @@
 import { useActive } from '@/hooks/useActive';
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text as RNText, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -207,6 +207,8 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors,
 const BRICK = '#DDA48C';
 const BEAM = '#A9825F';
 const GOLD = '#F2C46D';
+/** İç pencere çerçevesi ve denizliği: beyaz duvarda da seçilsin diye açık ahşap. */
+const WIN_FRAME = '#B79377';
 
 /** Mağazadan alınan eşyalar (src/domain/items.ts). Koordinatlar blok içinde 0–1 arası. */
 function itemShape(id: string, r: number, c: number, k: string): ReactElement[] {
@@ -940,15 +942,29 @@ function SkyBackdrop({ colors, w, h, bleed, night, sun, twA, twB, breath }: {
 }
 
 /** Gökyüzü renkleri [üst, alt]. Hava yoksa temanın kendi gökyüzü; gündüz varsayılanı gökyüzü çizmez. */
-function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null): [string, string] | null {
+type DayPhase = 'sabah' | 'ogle' | 'aksam' | 'gece';
+/** Günün bölümü, telefonun saatine göre. Canlı hava "gündüz" diyorsa gece yerine akşam, "gece" diyorsa gece. */
+function dayPhase(now: number, wx: Sky | null): DayPhase {
+  const d = new Date(now);
+  const h = d.getHours() + d.getMinutes() / 60;
+  const byClock: DayPhase = h >= 5.5 && h < 9 ? 'sabah' : h >= 9 && h < 17 ? 'ogle' : h >= 17 && h < 20 ? 'aksam' : 'gece';
+  if (!wx?.live) return byClock;
+  if (!wx.day) return 'gece';
+  return byClock === 'gece' ? (h < 12 ? 'sabah' : 'aksam') : byClock;
+}
+/** Gökyüzü gerçek saate göre: sabah pembe-sarı, öğle mavi, akşam turuncu, gece lacivert. Uygulamanın koyu teması geceyi zorlamaz, sadece tonu biraz derinleştirir. */
+function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null, phase: DayPhase = 'ogle'): [string, string] | null {
   if (wx) {
-    if (dark || !wx.day) return wx.kind === 'clear' ? ['#141B30', '#2B3556'] : ['#1B2336', '#3A445E'];
+    if (phase === 'gece') return wx.kind === 'clear' ? ['#141B30', '#2B3556'] : ['#1B2336', '#3A445E'];
+    const deep = (cs: [string, string]): [string, string] => (dark ? [mix(cs[0], '#283044', 0.28), mix(cs[1], '#283044', 0.28)] : cs);
+    const warm = (cs: [string, string]): [string, string] =>
+      phase === 'sabah' ? [mix(cs[0], '#F6C9A6', 0.25), mix(cs[1], '#FCE3C6', 0.45)] : phase === 'aksam' ? [mix(cs[0], '#6A6FA8', 0.4), mix(cs[1], '#F5A97A', 0.5)] : cs;
     switch (wx.kind) {
-      case 'clear': return ['#8CC8F0', '#E4F3FB'];
-      case 'cloudy': return ['#AEBCCB', '#DCE4EB'];
-      case 'rain': case 'storm': return ['#7F8FA3', '#B4BFCC'];
-      case 'fog': return ['#C4CCD3', '#E6EAED'];
-      case 'snow': return ['#C7D4E1', '#EEF3F7'];
+      case 'clear': return deep(phase === 'sabah' ? ['#9CC9EC', '#FCE3C6'] : phase === 'aksam' ? ['#6F7FB8', '#F9B98A'] : ['#8CC8F0', '#E4F3FB']);
+      case 'cloudy': return deep(warm(['#AEBCCB', '#DCE4EB']));
+      case 'rain': case 'storm': return deep(warm(['#7F8FA3', '#B4BFCC']));
+      case 'fog': return deep(warm(['#C4CCD3', '#E6EAED']));
+      case 'snow': return deep(warm(['#C7D4E1', '#EEF3F7']));
     }
   }
   const t = SKY[theme];
@@ -958,7 +974,7 @@ function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null): [string, s
 /** Hava: gündüz bulut ve kuş, yağmur ya da kar; ev bitince bacadan duman. */
 function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
   const { theme, dark, wx, L, box: { x, y, w, h }, chimney } = o;
-  const night = dark || theme === 'gece' || (!!wx && !wx.day);
+  const night = theme === 'gece' || (wx ? !wx.day : dark);
   const rain = wx ? wx.kind === 'rain' || wx.kind === 'storm' : !night && theme === 'sonbahar';
   const snow = theme === 'kis' || wx?.kind === 'snow';
   const overcast = !!wx && wx.kind !== 'clear';
@@ -1048,7 +1064,7 @@ type Props = {
   floor?: Floor;
 };
 
-export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false }: Props) {
+function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1056,7 +1072,9 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const now = nowProp ?? tick;
   const dark = useIsDark();
   const sky = useSky(theme === 'gunduz');
-  const wx = theme === 'gunduz' ? sky : null;
+  const phase = dayPhase(now, theme === 'gunduz' ? sky : null);
+  // Gündüz/gece tek kaynaktan (phase): bulut, yıldız, güneş, pencere ışıkları hep aynı kararı kullanır.
+  const wx = useMemo(() => (theme === 'gunduz' ? { ...sky, day: phase !== 'gece' } : null), [theme, sky, phase]);
 
   // Açılışta ev hafifçe zıplayarak yerine otursun.
   const [pop] = useState(() => new Animated.Value(0));
@@ -1076,6 +1094,8 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   const [pan] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
   const pinchRef = useRef({ d: 0, base: 1, cur: 1, px: 0, py: 0, lx: 0, ly: 0, moved: false });
   const [focus, setFocus] = useState<string | null>(null);
+  /** İki parmakla yakınlaştırılmış / uzaklaştırılmış: "Sıfırla" düğmesi görünür. */
+  const [zoomed, setZoomed] = useState(false);
   const focusFn = useRef<(id: string | null) => void>(() => {});
   const prevIdle = useRef(idle);
   useEffect(() => {
@@ -1258,7 +1278,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     onPressHouse?.();
   };
 
-  const isNight = dark || theme === 'gece' || (!!wx && !wx.day);
+  const isNight = theme === 'gece' || (wx ? phase === 'gece' : dark);
   /** Bekleyen işi olan odalar: gecikme varsa true, sadece bugün varsa false. */
   const roomLate: Record<string, boolean> = {};
   for (const id of S.order) {
@@ -1402,6 +1422,19 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
     const floorHex = fl ? ((r + col) % 2 && fl.alt ? fl.alt : fl.color) : '#D3B99A';
     const base = painted ? mix(dark ? shade(floorHex, -0.2) : floorHex, DUSTY, Math.min(1, Math.max(0, (95 - p) / 65)) * 0.8) : WOOD;
     add({ key: k + 'f', fill: base, points: tile, onPress: open, stroke: base, strokeWidth: 0.2 });
+    // Duvar dibi gölgesi: arka duvarların zeminle birleştiği yerde yumuşak koyuluk, odaya derinlik verir.
+    if (painted) {
+      const ao = (key: string, ps: Pt[], o: number) =>
+        els.push(<Polygon key={key} points={pts(ps)} fill="#283044" fillOpacity={o} onPress={open} />);
+      if (at(r - 1, col) !== id) {
+        ao(k + 'an', [P(r + T, col), P(r + T, col + 1), P(r + T + 0.2, col + 1), P(r + T + 0.2, col)], 0.07);
+        ao(k + 'an2', [P(r + T, col), P(r + T, col + 1), P(r + T + 0.09, col + 1), P(r + T + 0.09, col)], 0.08);
+      }
+      if (at(r, col - 1) !== id) {
+        ao(k + 'aw', [P(r, col + T), P(r + 1, col + T), P(r + 1, col + T + 0.2), P(r, col + T + 0.2)], 0.05);
+        ao(k + 'aw2', [P(r, col + T), P(r + 1, col + T), P(r + 1, col + T + 0.09), P(r, col + T + 0.09)], 0.06);
+      }
+    }
     // Kirli oda: zeminde toz topakları. Ne kadar kirliyse o kadar çok.
     if (p < 80) {
       const n = p < 40 ? 3 : p < 60 ? 2 : (r + col) % 2 === 0 ? 1 : 0;
@@ -1445,7 +1478,11 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         if (L >= 5 && doors.has(i + 'n')) door(k + 'n', r, col, 'n', false);
         if (L >= 5 && entrance === i + 'n') door(k + 'n', r, col, 'n', true);
         else if (!n && !balc && L >= 5 && winOn(0)) {
-          add({ key: k + 'nw', fill: winFill, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
+          add({ key: k + 'nw', fill: winFill, stroke: WIN_FRAME, strokeWidth: 1.3, points: pts([P(r + T, col + 0.32, 13), P(r + T, col + 0.68, 13), P(r + T, col + 0.68, 25), P(r + T, col + 0.32, 25)]) });
+          els.push(
+            <Path key={k + 'nwm'} d={`M${P(r + T, col + 0.5, 13).join(' ')}L${P(r + T, col + 0.5, 25).join(' ')}M${P(r + T, col + 0.32, 19).join(' ')}L${P(r + T, col + 0.68, 19).join(' ')}`} stroke={WIN_FRAME} strokeWidth={0.8} fill="none" />,
+            <Polygon key={k + 'nws'} points={pts([P(r + T, col + 0.29, 11.5), P(r + T, col + 0.71, 11.5), P(r + T, col + 0.71, 13), P(r + T, col + 0.29, 13)])} fill={WIN_FRAME} />,
+          );
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + T + 0.1, col + 0.5, 19);
             const [bx, by] = P(r + 0.55, col + 0.5, 0);
@@ -1474,7 +1511,11 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         if (L >= 5 && doors.has(i + 'w')) door(k + 'w', r, col, 'w', false);
         if (L >= 5 && entrance === i + 'w') door(k + 'w', r, col, 'w', true);
         else if (!w && !balc && L >= 5 && winOn(1)) {
-          add({ key: k + 'ww', fill: winFill, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
+          add({ key: k + 'ww', fill: winFill, stroke: WIN_FRAME, strokeWidth: 1.3, points: pts([P(r + 0.32, col + T, 13), P(r + 0.68, col + T, 13), P(r + 0.68, col + T, 25), P(r + 0.32, col + T, 25)]) });
+          els.push(
+            <Path key={k + 'wwm'} d={`M${P(r + 0.5, col + T, 13).join(' ')}L${P(r + 0.5, col + T, 25).join(' ')}M${P(r + 0.32, col + T, 19).join(' ')}L${P(r + 0.68, col + T, 19).join(' ')}`} stroke={WIN_FRAME} strokeWidth={0.8} fill="none" />,
+            <Polygon key={k + 'wws'} points={pts([P(r + 0.29, col + T, 11.5), P(r + 0.71, col + T, 11.5), P(r + 0.71, col + T, 13), P(r + 0.29, col + T, 13)])} fill={WIN_FRAME} />,
+          );
           if (p >= 70 && (isNight || p >= 100)) {
             const [gx, gy] = P(r + 0.5, col + T + 0.1, 19);
             const [bx, by] = P(r + 0.5, col + 0.55, 0);
@@ -1799,12 +1840,13 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   minY -= showLabels ? PAD + TAG_H / 2 : 10; maxY += showLabels ? PAD + TAG_H / 2 : 10;
   const vbW = maxX - minX, vbH = maxY - minY;
 
-  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day && !dark));
+  const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day));
   const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
   const sc = boxW > 0 ? boxW / vbW : 0;
   const ZMAX = 3, ZMIN = 0.7;
   focusFn.current = (id: string | null) => {
     setFocus(id);
+    setZoomed(false);
     if (!id || !sc) {
       Animated.parallel([
         Animated.spring(pinch, { toValue: 1, friction: 8, tension: 60, useNativeDriver: true }),
@@ -1961,6 +2003,7 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         if (!g.d) return;
         g.d = 0;
         // Bırakınca kalır; 1'e yakınsa tam 1'e oturur.
+        setZoomed(Math.abs(g.cur - 1) >= 0.08);
         if (Math.abs(g.cur - 1) < 0.08) {
           g.cur = 1; g.px = 0; g.py = 0;
           Animated.parallel([
@@ -2049,8 +2092,14 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
         </Pressable>
       )}
     </View>
+  ) : pinchZoom && zoomed ? (
+    <View pointerEvents="box-none" style={st3.reset}>
+      <Pressable accessibilityRole="button" onPress={() => focusFn.current(null)} hitSlop={8} style={[st3.btn, { backgroundColor: c.surface, borderColor: c.line, borderWidth: 1 }]}>
+        <SvgLessText color={c.ink} bold>⟲ Sıfırla</SvgLessText>
+      </Pressable>
+    </View>
   ) : null;
-  const colors = skyColors(theme, dark, wx);
+  const colors = skyColors(theme, dark, wx, phase);
   const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
   const content = onPressHouse ? (
     <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={handlePressHouse} style={{ width: '100%' }}>
@@ -2060,11 +2109,36 @@ export function House3D({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = 
   if (!colors) return <View style={{ width: '100%' }}>{content}{focusBar}</View>;
   return (
     <View style={{ width: '100%' }}>
-      {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear' && !dark} twA={twOpA} twB={twOpB} breath={breathOp} />}
+      {sc > 0 && <SkyBackdrop colors={colors} w={boxW} h={boxH} bleed={bleed} night={isNight} sun={!!wx && wx.day && wx.kind === 'clear'} twA={twOpA} twB={twOpB} breath={breathOp} />}
       {content}
       {focusBar}
     </View>
   );
+}
+
+/** `build` her çizimde yeni nesne gelebilir; alanlarına göre karşılaştır ki ev boşuna yeniden çizilmesin. */
+const sameProps = (a: Props, b: Props) => {
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof Props>) {
+    if (k === 'build') {
+      if (a.build?.level !== b.build?.level || a.build?.idle !== b.build?.idle) return false;
+    } else if (a[k] !== b[k]) return false;
+  }
+  return true;
+};
+const House3DMemo = memo(House3DInner, sameProps);
+
+/**
+ * Dış kabuk: dokunma geri çağrılarını sabitler. Üst ekran her çizimde yeni fonksiyon verse bile
+ * (ör. `onPressHouse={() => ...}`) ağır SVG sahnesi sadece veri değişince yeniden kurulur.
+ */
+export function House3D({ onOpenRoom, onPressHouse, ...rest }: Props) {
+  const cb = useRef({ onOpenRoom, onPressHouse });
+  useEffect(() => {
+    cb.current = { onOpenRoom, onPressHouse };
+  });
+  const openRoom = useCallback((id: string) => cb.current.onOpenRoom?.(id), []);
+  const pressHouse = useCallback(() => cb.current.onPressHouse?.(), []);
+  return <House3DMemo {...rest} onOpenRoom={onOpenRoom ? openRoom : undefined} onPressHouse={onPressHouse ? pressHouse : undefined} />;
 }
 
 function SvgLessText({ children, color, bold }: { children: React.ReactNode; color: string; bold?: boolean }) {
@@ -2072,5 +2146,6 @@ function SvgLessText({ children, color, bold }: { children: React.ReactNode; col
 }
 const st3 = StyleSheet.create({
   bar: { position: 'absolute', left: 12, right: 12, bottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 8, borderRadius: 999, borderWidth: 1 },
+  reset: { position: 'absolute', left: 0, right: 0, bottom: 8, alignItems: 'center' },
   btn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
 });

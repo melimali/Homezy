@@ -45,6 +45,8 @@ export const EN_R: Record<string, string> = {
   'Nasıl yapılır': 'How to do it',
   'Nasıl yapılır?': 'How to do it',
   '← Uzaklaş': '← Zoom out',
+  'Odaya gir →': 'Enter room →',
+  '⟲ Sıfırla': '⟲ Reset',
   'Aç ›': 'Open ›',
   '🎯 Sana göre işler': '🎯 Tasks picked for you',
   'Daha fazlası ister misin?': 'Want more?',

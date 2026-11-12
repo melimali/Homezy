@@ -200,6 +200,8 @@ export type Play = {
   placed: Record<string, string | null>;
   /** Eşya kimliği → konduğu bloğun sırası (`cells` indeksi). Yoksa oda içinde boş bir yere kendisi dizilir. */
   spots?: Record<string, number>;
+  /** Çevrilmiş eşyalar: eşya kuzey duvarı yerine batı duvarına bakar (blok içinde köşegenden ayna). */
+  turned?: Record<string, boolean>;
   /** Evin görünümü: zemin, duvar, pencere, dış cephe (src/domain/look.ts). */
   look?: HouseLook;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */

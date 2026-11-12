@@ -215,11 +215,12 @@ const RUG: Partial<Record<RoomType, [string, string]>> = { salon: ['#C98A6B', '#
 const WIN_FRAME = '#B79377';
 
 /** Mağazadan alınan eşyalar (src/domain/items.ts). Koordinatlar blok içinde 0–1 arası. */
-function itemShape(id: string, r: number, c: number, k: string): ReactElement[] {
+function itemShape(id: string, r: number, c: number, k: string, turn = false): ReactElement[] {
+  // `turn`: blok içinde köşegenden ayna; kuzey duvarına yaslı eşya batı duvarına yaslanır.
   const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
-    box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
+    turn ? box(k + n, r + v, c + u, dv, du, z, h, color, 0.35) : box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
   const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string, op = 1) => {
-    const [x, y] = P(r + u, c + v, z);
+    const [x, y] = turn ? P(r + v, c + u, z) : P(r + u, c + v, z);
     return <Circle key={k + n} cx={x} cy={y} r={rad} fill={fill} fillOpacity={op} />;
   };
   let faces: Face[] = [];
@@ -1070,9 +1071,17 @@ type Props = {
    * altında kapalı bir kütle olarak durur, pencereleri ve kapısıyla.
    */
   floor?: Floor;
+  /** Düzenleme modu (Evini kendine benzet): bloğa ya da eşyaya dokununca bloğun sırasıyla çağrılır; oda açılmaz. */
+  onPickCell?: (i: number) => void;
+  /** Vurgulanan oda (seçili oda). */
+  hiRoom?: string | null;
+  /** Vurgulanan blok (seçili eşyanın yeri). */
+  hiCell?: number | null;
+  /** Eşya yerleştiriliyor: konabilecek bloklar kesik çizgiyle işaretlenir. */
+  placing?: boolean;
 };
 
-function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false }: Props) {
+function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1448,7 +1457,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     if (!room) continue;
     const r = Math.floor(i / cols), col = i % cols;
     for (const pt of [P(r, col, WALL_H), P(r + 1, col + 1, -SLAB), P(r + 1, col, -SLAB), P(r, col + 1, -SLAB), P(r, col, WALL_H + 8)]) grow(pt);
-    const open = onOpenRoom ? () => handleOpenRoom(id) : handlePressHouse;
+    const open = onPickCell ? () => { haptic('light'); onPickCell(i); } : onOpenRoom ? () => handleOpenRoom(id) : handlePressHouse;
     const k = 'c' + i;
     const tile = pts([P(r, col), P(r, col + 1), P(r + 1, col + 1), P(r + 1, col)]);
 
@@ -1538,6 +1547,11 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const wm = winOf(S, id);
     const winOn = (parity: number) => wm === 2 || (wm === 1 && (r + col) % 2 === parity);
     const winFill = isNight && p >= 70 ? '#FFF2B2' : c.hi;
+    // Düzenleme modu: seçili oda altın tonla parlar, eşya konabilecek bloklar kesik çizgili, seçili eşyanın bloğu çerçeveli.
+    if (hiRoom === id) els.push(<Polygon key={k + 'hr'} points={tile} fill={GOLD} fillOpacity={0.2} onPress={open} />);
+    if (placing && hiCell !== i)
+      els.push(<Polygon key={k + 'pl'} points={pts([P(r + 0.14, col + 0.14), P(r + 0.14, col + 0.86), P(r + 0.86, col + 0.86), P(r + 0.86, col + 0.14)])} fill={c.ink} fillOpacity={0.04} stroke={c.ink} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="3 3" strokeLinejoin="round" onPress={open} />);
+    if (hiCell === i) els.push(<Polygon key={k + 'hc'} points={tile} fill={GOLD} fillOpacity={0.32} stroke={GOLD} strokeWidth={2} strokeLinejoin="round" onPress={open} />);
     const balcony = room.type === 'balkon';
     const winN = !n && !balcony && L >= 5 && winOn(0) && entrance !== i + 'n';
     const winW = !w && !balcony && L >= 5 && winOn(1) && entrance !== i + 'w';
@@ -1655,7 +1669,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         });
         pets.push({ id: item, el: <G key={k + 'i' + item}>{itemShape(item, r, col, k + 'i' + item)}</G>, nodes, start: idxOf.get(i) ?? 0, home: P(r + 0.5, col + 0.5, 14) });
       }
-      else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item)}</G>);
+      else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item, !!S.play.turned?.[item])}</G>);
     }
 
     // 3. günden sonra: moloz.
@@ -2281,14 +2295,15 @@ const House3DMemo = memo(House3DInner, sameProps);
  * Dış kabuk: dokunma geri çağrılarını sabitler. Üst ekran her çizimde yeni fonksiyon verse bile
  * (ör. `onPressHouse={() => ...}`) ağır SVG sahnesi sadece veri değişince yeniden kurulur.
  */
-export function House3D({ onOpenRoom, onPressHouse, ...rest }: Props) {
-  const cb = useRef({ onOpenRoom, onPressHouse });
+export function House3D({ onOpenRoom, onPressHouse, onPickCell, ...rest }: Props) {
+  const cb = useRef({ onOpenRoom, onPressHouse, onPickCell });
   useEffect(() => {
-    cb.current = { onOpenRoom, onPressHouse };
+    cb.current = { onOpenRoom, onPressHouse, onPickCell };
   });
+  const pickCell = useCallback((i: number) => cb.current.onPickCell?.(i), []);
   const openRoom = useCallback((id: string) => cb.current.onOpenRoom?.(id), []);
   const pressHouse = useCallback(() => cb.current.onPressHouse?.(), []);
-  return <House3DMemo {...rest} onOpenRoom={onOpenRoom ? openRoom : undefined} onPressHouse={onPressHouse ? pressHouse : undefined} />;
+  return <House3DMemo {...rest} onOpenRoom={onOpenRoom ? openRoom : undefined} onPressHouse={onPressHouse ? pressHouse : undefined} onPickCell={onPickCell ? pickCell : undefined} />;
 }
 
 function SvgLessText({ children, color, bold }: { children: React.ReactNode; color: string; bold?: boolean }) {

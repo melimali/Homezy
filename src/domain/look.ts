@@ -94,6 +94,13 @@ export function placeItem(S: AppState, item: string, cell: number, floor: 0 | 1 
   (S.play.spots ||= {})[item] = cell + (floor === 1 ? S.cols * S.rows : 0);
 }
 
+/** Eşyayı çevirir: sırtını öbür arka duvara verir. */
+export function turnItem(S: AppState, item: string) {
+  const t = (S.play.turned ||= {});
+  if (t[item]) delete t[item];
+  else t[item] = true;
+}
+
 /** Eşyayı yerinden alır (depoya). */
 export function storeItem(S: AppState, item: string) {
   S.play.placed[item] = null;

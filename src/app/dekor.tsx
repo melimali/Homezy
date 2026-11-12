@@ -1,7 +1,7 @@
 import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HouseFloors } from '@/components/HouseFloors';
 import { Squish } from '@/components/motion';
@@ -10,7 +10,7 @@ import { BackLink, Btn, Card, Chip, Screen, Tabs, T, Chevron } from '@/component
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEM } from '@/domain/items';
 import {
-  applyLookToAll, FACADES, FLOORS, itemsAt, placeItem, setRoomLook, spotOf, storeItem, WALLS, WINDOW_MODES, type Swatch,
+  applyLookToAll, FACADES, FLOORS, itemsAt, placeItem, setRoomLook, spotOf, storeItem, turnItem, WALLS, WINDOW_MODES, type Swatch,
 } from '@/domain/look';
 import { floorCells, hasUpper, roomFloor, type Floor } from '@/domain/plan-templates';
 import { themeFor } from '@/domain/premium';
@@ -24,7 +24,8 @@ type Tab = 'oda' | 'dis' | 'esya';
 
 /**
  * Evini kendine benzet: 3B evi gerçek evine benzetmek için oda oda zemin, duvar rengi ve pencere;
- * evin dış cephesi; mağazadan alınan eşyaları istediğin bloğa koyma. Dubleks evde ▲ / ▼ ile kat seçilir.
+ * evin dış cephesi; mağazadan alınan eşyaları istediğin bloğa koyma. Hepsi 3B evin üzerinde: odaya dokun = seç,
+ * eşyaya dokun = al, bloğa dokun = koy. Dubleks evde ▲ / ▼ ile kat seçilir.
  * Kurallar src/domain/look.ts'te; çizim House3D.tsx'te. 👑 olanlar Premium'da ek çeşit.
  */
 export default function Dekor() {
@@ -55,17 +56,49 @@ export default function Dekor() {
     setPick(null);
   };
 
+  /** Seçili eşya (Eşyalar sekmesi). */
+  const [selRaw, setSel] = useState<string | null>(null);
+  const sel = selRaw && S.play.owned.includes(selRaw) ? selRaw : null;
+  const cells = floorCells(S, f);
+  const selSpot = sel && S.play.placed[sel] ? spotOf(S, sel) : null;
+  /** 3B evde bir bloğa (ya da üstündeki eşyaya) dokunuldu. */
+  const pickCell = (i: number) => {
+    const room = cells[i];
+    if (!room) return;
+    if (tab !== 'esya') {
+      if (tab === 'dis') setTab('oda');
+      setPick(room);
+      sfx('tap');
+      return;
+    }
+    const here = itemsAt(S, i, f);
+    const other = here.find(x => x !== sel);
+    if (other && (!sel || !here.includes(sel))) {
+      setSel(other);
+      sfx('tap');
+      return;
+    }
+    if (!sel) return toast('Evdeki bir eşyaya dokun ya da aşağıdan seç.');
+    update(D => placeItem(D, sel, i, f));
+    sfx('pop');
+  };
+
   return (
     <Screen header={false}>
       <BackLink />
       <View>
         <T v="eyebrow">Ev kurucu</T>
         <T v="h1">Evini kendine benzet 🎨</T>
-        <T v="lead">Zemini, duvarları, pencereleri ve eşyaların yerini gerçek evindeki gibi seç.</T>
+        <T v="lead">Evin üzerinde dokunarak düzenle: odayı seç, eşyayı al, istediğin yere koy.</T>
       </View>
 
       <View style={[st.preview, { backgroundColor: c.surface }]}>
-        <HouseFloors state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} labels={false} floor={f} onFloorChange={changeFloor} />
+        <HouseFloors state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} labels={false} floor={f} onFloorChange={changeFloor}
+          onPickCell={pickCell}
+          hiRoom={tab === 'oda' ? rid : null}
+          hiCell={tab === 'esya' && selSpot && selSpot.floor === f ? selSpot.i : null}
+          placing={tab === 'esya' && !!sel}
+        />
       </View>
       {!hasUpper(S) && (
         <Squish onPress={() => router.push('/plan')} accessibilityRole="button" style={[st.tip, { backgroundColor: c.surface2 }]}>
@@ -151,7 +184,7 @@ export default function Dekor() {
         </Card>
       )}
 
-      {tab === 'esya' && <Placer floor={f} />}
+      {tab === 'esya' && <Placer sel={sel} setSel={setSel} />}
     </Screen>
   );
 }
@@ -177,17 +210,12 @@ function Swatches({ list, value, premium, onPick }: { list: Swatch[]; value: str
   );
 }
 
-/** Eşyayı seç, sonra plandaki bir bloğa dokun: eşya oraya taşınır (gerekirse başka odaya). */
-function Placer({ floor }: { floor: Floor }) {
+/** Eşya tepsisi: eşyayı buradan ya da 3B evde üstüne dokunarak seç, sonra evde bir bloğa dokun. Çevir ve depoya kaldır düğmeleri. */
+function Placer({ sel, setSel }: { sel: string | null; setSel: (id: string | null) => void }) {
   const c = useColors();
   const router = useRouter();
-  const toast = useToast();
   const { state: S, update } = useStore();
-  const [sel, setSel] = useState<string | null>(null);
-  const [w, setW] = useState(0);
   const owned = S.play.owned.filter(id => ITEM[id]);
-  const cells = floorCells(S, floor);
-  const size = w / S.cols;
 
   if (!owned.length)
     return (
@@ -205,68 +233,28 @@ function Placer({ floor }: { floor: Floor }) {
     const fl = sp ? sp.floor : roomFloor(S, rid);
     return `${S.rooms[rid].name}${hasUpper(S) ? ` · ${fl + 1}. kat` : ''}`;
   };
-
-  const tap = (i: number) => {
-    if (!sel) {
-      const here = itemsAt(S, i, floor);
-      if (here.length) setSel(here[0]);
-      else toast('Önce aşağıdan bir eşya seç.');
-      return;
-    }
-    if (!cells[i]) return toast('Boş bloğa konmaz; bir odaya dokun.');
-    update(D => placeItem(D, sel, i, floor));
-    sfx('pop');
-    toast(`${ITEM[sel]?.emoji} ${S.rooms[cells[i]!]?.name ?? ''} odasına kondu`);
-    setSel(null);
-  };
+  const pet = sel === 'kedi' || sel === 'kopek';
 
   return (
-    <>
-      <Card>
-        <T v="h3">{sel ? `${ITEM[sel]?.emoji} ${ITEM[sel]?.name}: nereye?` : 'Eşyanı seç'}</T>
-        <View style={st.swWrap}>
-          {owned.map(id => (
-            <Squish key={id} onPress={() => setSel(sel === id ? null : id)} accessibilityLabel={ITEM[id]!.name} style={[st.item, { backgroundColor: sel === id ? c.ink : c.surface2 }]}>
-              <Text style={{ lineHeight: 29, fontSize: 22 }}>{ITEM[id]!.emoji}</Text>
-              <Text numberOfLines={1} style={[st.itemT, { color: sel === id ? c.bg : c.muted }]}>{where(id)}</Text>
-            </Squish>
-          ))}
+    <Card>
+      <T v="h3">{sel ? `${ITEM[sel]?.emoji} ${ITEM[sel]?.name}` : 'Eşyanı seç'}</T>
+      <T v="small">{sel ? 'Evde koymak istediğin bloğa dokun.' : 'Evdeki eşyaya ya da aşağıdan birine dokun.'}</T>
+      {sel && (
+        <View style={st.row}>
+          {!pet && <Btn small label="🔄 Çevir" onPress={() => { update(D => turnItem(D, sel)); sfx('tap'); }} />}
+          <Btn small label="📦 Depoya kaldır" onPress={() => { update(D => storeItem(D, sel)); setSel(null); }} />
+          <Btn small kind="ghost" label="Tamam" onPress={() => setSel(null)} />
         </View>
-        {sel && (
-          <View style={st.row}>
-            <Btn small label="📦 Depoya kaldır" onPress={() => { update(D => storeItem(D, sel)); setSel(null); }} />
-            <Btn small kind="ghost" label="Vazgeç" onPress={() => setSel(null)} />
-          </View>
-        )}
-      </Card>
-
-      <View style={[st.grid, { backgroundColor: c.surface }]} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width - 24)}>
-        {size > 0 && (
-          <View style={{ width: size * S.cols, height: size * S.rows }}>
-            {cells.map((id, i) => {
-              const room = id ? S.rooms[id] : null;
-              const here = itemsAt(S, i, floor);
-              return (
-                <Squish
-                  key={i}
-                  quiet
-                  onPress={() => tap(i)}
-                  accessibilityLabel={room ? room.name : 'Boş'}
-                  style={[st.cell, {
-                    left: (i % S.cols) * size, top: Math.floor(i / S.cols) * size, width: size - 2, height: size - 2,
-                    backgroundColor: room ? c.room[room.type] : 'transparent', borderColor: sel && room ? c.ink : c.line,
-                    borderStyle: room ? 'solid' : 'dashed',
-                  }]}
-                >
-                  <Text style={{ fontSize: Math.min(18, size * 0.38) }}>{here.map(x => ITEM[x]?.emoji).join('') || ''}</Text>
-                </Squish>
-              );
-            })}
-          </View>
-        )}
+      )}
+      <View style={st.swWrap}>
+        {owned.map(id => (
+          <Squish key={id} onPress={() => setSel(sel === id ? null : id)} accessibilityLabel={ITEM[id]!.name} style={[st.item, { backgroundColor: sel === id ? c.ink : c.surface2 }]}>
+            <Text style={{ lineHeight: 29, fontSize: 22 }}>{ITEM[id]!.emoji}</Text>
+            <Text numberOfLines={1} style={[st.itemT, { color: sel === id ? c.bg : c.muted }]}>{where(id)}</Text>
+          </Squish>
+        ))}
       </View>
-      <T v="tiny" style={{ textAlign: 'center' }}>Eşya seç, sonra plandan bir bloğa dokun. Evin 6. seviyesinden sonra 3B evde görünür.</T>
-    </>
+    </Card>
   );
 }
 
@@ -284,6 +272,4 @@ const st = StyleSheet.create({
   crown: { position: 'absolute', top: 1, right: 3, fontSize: 12 },
   item: { width: 74, alignItems: 'center', gap: 2, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 4 },
   itemT: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  grid: { borderRadius: radius.card, padding: 12, alignItems: 'center' },
-  cell: { position: 'absolute', borderRadius: 8, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

@@ -548,7 +548,7 @@ const st = StyleSheet.create({
   segThumb: { position: "absolute", left: 4, top: 4, bottom: 4, borderRadius: radius.pill },
   segBtn: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 11, paddingHorizontal: 8 },
   field: { flex: 0, alignSelf: "stretch", paddingVertical: 13, paddingLeft: 46 },
-  ico: { position: "absolute", left: 16, fontSize: 17 },
+  ico: { position: "absolute", left: 16, lineHeight: 22, fontSize: 17 },
   pwToggle: { position: "absolute", right: 16, paddingVertical: 8 },
   gradBtn: {
     height: 54, borderRadius: radius.pill, overflow: "hidden", alignItems: "center", justifyContent: "center",

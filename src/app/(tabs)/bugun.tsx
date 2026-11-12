@@ -166,7 +166,7 @@ export default function Bugun() {
 </>,
     daha: <>
       <View {...tour.mark('daha')}><Squish onPress={() => setMore(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: more }} style={[styles.moreBtn, { backgroundColor: c.surface2 }]}>
-        <Text style={{ fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>
+        <Text style={{ lineHeight: 23, fontSize: 18 }}>{more ? '🔼' : '✨'}</Text>
         <T v="bold" style={{ flex: 1 }}>{more ? 'Daha az göster' : 'Yemek, kendine zaman, büyüme'}</T>
         <T v="small">{more ? '' : 'Aç ›'}</T>
       </Squish></View>
@@ -340,7 +340,7 @@ function ModeCard({ now }: { now: number }) {
                 accessibilityRole="button"
                 style={({ pressed }) => [styles.modeRow, { backgroundColor: c.surface2 }, pressed && { transform: [{ translateY: 1 }] }]}
               >
-                <Text style={{ fontSize: 24 }}>{MODES[k].emoji}</Text>
+                <Text style={{ lineHeight: 31, fontSize: 24 }}>{MODES[k].emoji}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <T v="bold" style={{ fontSize: 15 }}>{MODES[k].label}</T>
                   <T v="small">{MODES[k].text}</T>
@@ -359,7 +359,7 @@ function ModeCard({ now }: { now: number }) {
   return (
     <Card style={{ backgroundColor: c.todaySoft }}>
       <View style={styles.modeHead}>
-        <Text style={{ fontSize: 28 }}>{m.emoji}</Text>
+        <Text style={{ lineHeight: 36, fontSize: 28 }}>{m.emoji}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T v="h2">{m.label}</T>
           <T v="small">{mode.k === 'tatil' ? `${days} gündür tatildesin. Rutinler dondu, hatırlatma yok.` : m.text}</T>
@@ -382,7 +382,7 @@ function ModeCard({ now }: { now: number }) {
               })}
               style={styles.check}
             >
-              <Text style={{ fontSize: 18 }}>{x.done ? '✅' : '⬜'}</Text>
+              <Text style={{ lineHeight: 23, fontSize: 18 }}>{x.done ? '✅' : '⬜'}</Text>
               <T style={[{ flex: 1, fontSize: 15 }, x.done && { color: c.muted, textDecorationLine: 'line-through' }]}>{x.name}</T>
             </Pressable>
           ))}
@@ -477,7 +477,7 @@ function DailyGoals({ now }: { now: number }) {
             accessibilityRole={g.go ? 'button' : undefined}
             style={[goalStyle.row, { backgroundColor: g.done ? c.okSoft : c.surface2 }]}
           >
-            <Text style={{ fontSize: 20 }}>{g.done ? '✅' : g.emoji}</Text>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{g.done ? '✅' : g.emoji}</Text>
             <Text style={[goalStyle.label, { color: g.done ? c.ok : c.ink }]}>{g.label}</Text>
             <Text style={[goalStyle.pts, { color: g.done ? c.ok : c.warm }]}>{g.done ? 'tamam' : `${g.pts} ⭐`}</Text>
             {g.go && !g.done && <Chevron color={c.muted} size={16} dir="right" />}

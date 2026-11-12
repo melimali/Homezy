@@ -230,11 +230,11 @@ export function MokaFlap({ best, onOver }: { best: number; onOver: (score: numbe
             <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: starOp }]}>
               {STARS.map(([x, y], i) => <T key={i} style={{ position: 'absolute', left: x, top: y, fontSize: 9 + (i % 3) * 3, color: '#FFF8E8' }}>✦</T>)}
             </Animated.View>
-            <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 24, top: 22, opacity: dayOp }}><T style={{ fontSize: 38 }}>☀️</T></Animated.View>
-            <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 24, top: 22, opacity: v.nt }}><T style={{ fontSize: 38 }}>🌙</T></Animated.View>
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 24, top: 22, opacity: dayOp }}><T style={{ lineHeight: 49, fontSize: 38 }}>☀️</T></Animated.View>
+            <Animated.View pointerEvents="none" style={{ position: 'absolute', right: 24, top: 22, opacity: v.nt }}><T style={{ lineHeight: 49, fontSize: 38 }}>🌙</T></Animated.View>
             <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: CLOUD_SPAN * 2, height: 160, opacity: 0.8, transform: [{ translateX: v.clouds }] }}>
               {[0, 1].map(c => CLOUDS.map(([x, y, k], i) => (
-                <T key={`${c}${i}`} style={{ position: 'absolute', left: x + c * CLOUD_SPAN, top: y, fontSize: 34 * k }}>☁️</T>
+                <T key={`${c}${i}`} style={{ position: 'absolute', left: x + c * CLOUD_SPAN, top: y, lineHeight: 44, fontSize: 34 * k }}>☁️</T>
               )))}
             </Animated.View>
             <Hills tx={v.far} color={FAR} h={110} r={90} w={260} hi="#BDE0CF" />

@@ -43,5 +43,5 @@ export default function RuhHali() {
 
 const st = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
-  emoji: { fontSize: 26 },
+  emoji: { lineHeight: 34, fontSize: 26 },
 });

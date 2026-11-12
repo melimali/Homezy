@@ -30,7 +30,7 @@ export default function Rozetler() {
               {items.map(a => (
                 <View key={a.id} accessibilityLabel={`${t(a.name)}: ${a.on ? t('Kazanıldı ✓') : t(a.hint)}`} style={[st.badge, { backgroundColor: a.on ? c.sageSoft : c.surface2 }]}>
                   <View style={[st.icon, !a.on && { opacity: 0.35 }]}>
-                    {a.art ? <Image source={BADGE_ART[a.art]} style={st.img} resizeMode="contain" accessibilityIgnoresInvertColors /> : <T style={{ fontSize: 38 }}>{a.emoji}</T>}
+                    {a.art ? <Image source={BADGE_ART[a.art]} style={st.img} resizeMode="contain" accessibilityIgnoresInvertColors /> : <T style={{ lineHeight: 49, fontSize: 38 }}>{a.emoji}</T>}
                   </View>
                   <T v="bold" style={[{ textAlign: 'center' }, !a.on && { opacity: 0.6 }]} numberOfLines={2}>{t(a.name)}</T>
                   <T v="tiny" style={{ textAlign: 'center' }} numberOfLines={2}>

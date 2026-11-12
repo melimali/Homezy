@@ -327,7 +327,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
             const arm = tplArm === t.id;
             return (
               <Squish key={t.id} onPress={() => pickTemplate(t.id)} accessibilityLabel={`${t.label} şablonu`} style={[st.tpl, { backgroundColor: arm ? c.peach : c.surface }]}>
-                <Text style={{ fontSize: 26 }}>{t.emoji}</Text>
+                <Text style={{ lineHeight: 34, fontSize: 26 }}>{t.emoji}</Text>
                 <Text style={[st.tplT, { color: c.ink }]}>{t.label}</Text>
                 <Text style={[st.tplS, { color: c.muted }]}>{arm ? 'Tekrar dokun' : t.id === recId && !rooms.length ? '⭐ Sana uygun' : t.sub}</Text>
               </Squish>
@@ -349,7 +349,7 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
           {ROOM_TYPES.map(k => (
             <Squish key={k} onPress={() => addRoom(k)} accessibilityLabel={`${TYPES[k].label} ekle`} style={st.pal}>
               <View style={[st.palIcon, { backgroundColor: c.room[k] }]}>
-                <Text style={{ fontSize: 26 }}>{ROOM_EMOJI[k]}</Text>
+                <Text style={{ lineHeight: 34, fontSize: 26 }}>{ROOM_EMOJI[k]}</Text>
                 <View style={[st.palPlus, { backgroundColor: c.surface }]}><Text style={[st.palPlusT, { color: c.ink }]}>+</Text></View>
               </View>
               <Text numberOfLines={1} style={[st.palT, { color: c.ink }]}>{TYPES[k].label.replace(' odası', '')}</Text>

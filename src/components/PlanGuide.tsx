@@ -27,7 +27,7 @@ export function PlanGuide({ ready }: { ready: boolean }) {
       <Sheet open={open && ready} onClose={close} pose="handyman">
         <View style={{ gap: 12, alignItems: 'center', paddingTop: 8 }}>
           <T v="tiny">{`${i + 1} / ${STEPS.length}`}</T>
-          <Text style={{ fontSize: 56 }}>{s.emoji}</Text>
+          <Text style={{ lineHeight: 73, fontSize: 56 }}>{s.emoji}</Text>
           <T v="h2" style={{ textAlign: 'center' }}>{s.title}</T>
           <T style={{ textAlign: 'center', fontSize: 16, lineHeight: 25, color: c.ink }}>{s.text}</T>
           <View style={{ flexDirection: 'row', gap: 6 }}>

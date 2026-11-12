@@ -34,7 +34,7 @@ export function PetsCard() {
             const nl = p.items.filter(i => itemState(i, now).k === 'late').length;
             return (
               <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={{ fontSize: 24 }}>{petEmoji(p)}</Text>
+                <Text style={{ lineHeight: 31, fontSize: 24 }}>{petEmoji(p)}</Text>
                 <T v="bold" style={{ flex: 1 }}>{p.name}</T>
                 <T v="small" style={{ color: nl ? c.late : c.muted }}>{n.length ? `${n.length} iş${nl ? ' · gecikti' : ''}` : p.items.length ? 'Hepsi tamam ✓' : 'İş ekle'}</T>
               </View>

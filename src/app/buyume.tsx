@@ -221,7 +221,7 @@ function BooksTab() {
         <Appear key={b.id} index={i}>
           <Card>
             <View style={st.row}>
-              <T style={{ fontSize: 30 }}>📖</T>
+              <T style={{ lineHeight: 39, fontSize: 30 }}>📖</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" numberOfLines={2}>{b.title}</T>
                 {!!b.author && <T v="tiny">{b.author}</T>}
@@ -244,7 +244,7 @@ function BooksTab() {
           <SecHead title="Bitirdiklerin" h="h3" right={`${done.length} kitap`} />
           {done.map(b => (
             <View key={b.id} style={[st.row, { gap: 8 }]}>
-              <T style={{ fontSize: 20 }}>✅</T>
+              <T style={{ lineHeight: 26, fontSize: 20 }}>✅</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" numberOfLines={1}>{b.title}</T>
                 <T v="tiny" style={{ color: c.muted }}>{b.done}</T>
@@ -302,7 +302,7 @@ function WatchTab() {
         <Appear key={w.id} index={i}>
           <Card>
             <View style={st.row}>
-              <T style={{ fontSize: 28 }}>{kindEmoji(w.kind)}</T>
+              <T style={{ lineHeight: 36, fontSize: 28 }}>{kindEmoji(w.kind)}</T>
               <T v="bold" style={{ flex: 1 }} numberOfLines={2}>{w.title}</T>
               <XBtn label="Sil" onPress={() => update(D => void (D.play.growth.watch = D.play.growth.watch.filter(x => x.id !== w.id)))} />
             </View>
@@ -491,7 +491,7 @@ function SummaryTab() {
             const on = !!G.badges[b.id];
             return (
               <Squish key={b.id} accessibilityLabel={`${b.name}: ${b.hint}`} style={[st.badge, { backgroundColor: on ? c.sageSoft : c.surface2, opacity: on ? 1 : 0.55 }]}>
-                <T style={{ fontSize: 28 }}>{on ? b.emoji : '🔒'}</T>
+                <T style={{ lineHeight: 36, fontSize: 28 }}>{on ? b.emoji : '🔒'}</T>
                 <T v="tiny" style={{ textAlign: 'center' }} numberOfLines={2}>{on ? b.name : b.hint}</T>
               </Squish>
             );

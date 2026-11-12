@@ -45,9 +45,9 @@ function TabEditor({ tab, onClose }: { tab: TabId; onClose: () => void }) {
         <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
           {items.map((x, i) => (
             <View key={x.id} style={[st.row, { backgroundColor: c.surface, opacity: x.visible ? 1 : 0.6 }]}>
-              <Text style={{ fontSize: 22 }}>{x.emoji}</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.emoji}</Text>
               <T v="bold" style={{ flex: 1 }} numberOfLines={2}>{x.title}</T>
-              {x.fixed ? <Text style={{ fontSize: 18 }}>🔒</Text> : <Switch value={x.visible} onValueChange={() => toggle(i)} accessibilityLabel={tx(x.title)} trackColor={{ true: c.accent }} />}
+              {x.fixed ? <Text style={{ lineHeight: 23, fontSize: 18 }}>🔒</Text> : <Switch value={x.visible} onValueChange={() => toggle(i)} accessibilityLabel={tx(x.title)} trackColor={{ true: c.accent }} />}
               <Arrow label="Yukarı" ch="▲" off={i === 0} onPress={() => move(i, -1)} />
               <Arrow label="Aşağı" ch="▼" off={i === items.length - 1} onPress={() => move(i, 1)} />
             </View>

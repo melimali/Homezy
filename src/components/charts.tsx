@@ -228,7 +228,7 @@ function RoomBar({ r, i, emoji, color }: { r: { name: string; pct: number }; i: 
   const v = useGrow(i * 70);
   return (
     <View style={st.roomRow} accessibilityLabel={`${r.name} yüzde ${r.pct} temiz`}>
-      <View style={[st.roomIcon, { backgroundColor: color }]}><Text style={{ fontSize: 17 }}>{emoji}</Text></View>
+      <View style={[st.roomIcon, { backgroundColor: color }]}><Text style={{ lineHeight: 22, fontSize: 17 }}>{emoji}</Text></View>
       <View style={{ flex: 1, gap: 5 }}>
         <View style={st.roomHead}>
           <Text numberOfLines={1} style={[st.roomName, { color: c.ink }]}>{r.name}</Text>
@@ -247,7 +247,7 @@ export function StatPill({ emoji, n, label, tint }: { emoji: string; n: string |
   const c = useColors();
   return (
     <View style={[st.pill, { backgroundColor: tint }]}>
-      <Text style={{ fontSize: 20 }}>{emoji}</Text>
+      <Text style={{ lineHeight: 26, fontSize: 20 }}>{emoji}</Text>
       {typeof n === 'number' ? <CountText value={n} style={[st.pillN, { color: c.ink }]} /> : <Text style={[st.pillN, { color: c.ink }]}>{n}</Text>}
       <Text style={[st.pillL, { color: c.muted }]} numberOfLines={1}>{label}</Text>
     </View>
@@ -267,7 +267,7 @@ const st = StyleSheet.create({
   dotHead: { width: 34, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 11 },
   dot: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dotE: { fontSize: 14 },
-  moodE: { position: 'absolute', fontSize: 18, width: 22, textAlign: 'center' },
+  moodE: { position: 'absolute', lineHeight: 23, fontSize: 18, width: 22, textAlign: 'center' },
   moodAxis: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 16 },
   moodL: { position: 'absolute', width: 20, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 10.5 },
   roomRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

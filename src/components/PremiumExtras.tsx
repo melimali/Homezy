@@ -48,14 +48,14 @@ export function Recipes({ rid }: { rid: string }) {
       {list.map(({ r, missing }, i) => (
         <View key={r.name} style={[styles.item, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
           <Squish onPress={() => setOpen(open === r.name ? null : r.name)} accessibilityRole="button" style={styles.head}>
-            <Text style={{ fontSize: 24 }}>{r.emoji}</Text>
+            <Text style={{ lineHeight: 31, fontSize: 24 }}>{r.emoji}</Text>
             <View style={{ flex: 1 }}>
               <T v="bold">{r.name}</T>
               <T v="small" style={{ color: missing.length ? c.warm : c.ok }}>
                 {missing.length ? `Eksik: ${missing.map(titleCase).join(', ')}` : 'Her şey var ✓'} · {r.min} dk
               </T>
             </View>
-            <Text style={{ color: c.muted, fontSize: 18 }}>{open === r.name ? '⌃' : '⌄'}</Text>
+            <Text style={{ color: c.muted, lineHeight: 23, fontSize: 18 }}>{open === r.name ? '⌃' : '⌄'}</Text>
           </Squish>
           {open === r.name && (
             <View style={{ gap: 8 }}>

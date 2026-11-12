@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.displayBold,
     fontSize: 20,
-    lineHeight: 24,
+    lineHeight: 26,
   },
   sub: {
     fontFamily: fonts.bodyBold,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   badgeEmoji: {
-    fontSize: 22,
+    lineHeight: 29, fontSize: 22,
   },
   badgeTitle: {
     fontFamily: fonts.bodyBlack,

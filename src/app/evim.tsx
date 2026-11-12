@@ -51,7 +51,7 @@ export default function Evim() {
       <Card>
         {PROFILE.map((p, i) => (
           <View key={p.k} style={[styles.row, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ fontSize: 26 }}>{p.emoji}</Text>
+            <Text style={{ lineHeight: 34, fontSize: 26 }}>{p.emoji}</Text>
             <View style={{ flex: 1, minWidth: 0 }}>
               <T v="bold" style={{ fontSize: 15 }}>{p.q}</T>
               <T v="small" numberOfLines={2}>{p.tasks.map(t => t.name).join(', ')}</T>

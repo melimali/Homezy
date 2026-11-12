@@ -75,7 +75,7 @@ export default function Ilac() {
               const bg = state === 'taken' ? c.okSoft : state === 'missed' ? c.todaySoft : c.surface2;
               return (
                 <View key={d.key} style={[st.dose, { backgroundColor: bg }]}>
-                  <Text style={{ fontSize: 24 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : d.med.kind === 'takviye' ? '🌿' : '💊'}</Text>
+                  <Text style={{ lineHeight: 31, fontSize: 24 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : d.med.kind === 'takviye' ? '🌿' : '💊'}</Text>
                   <View style={{ flex: 1 }}>
                     <T v="bold" style={{ fontSize: 15 }}>{d.med.name}</T>
                     <T v="small">

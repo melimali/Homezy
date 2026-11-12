@@ -44,7 +44,7 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
           </Float>
           {[[0.18, 0.2, 0], [0.72, 0.12, 300], [0.86, 0.38, 600], [0.1, 0.5, 900]].map(([x, y, d], i) => (
             <Float key={i} amp={5} dur={1800 + i * 300} delay={d} style={[st.star, { left: `${x * 100}%`, top: `${y * 100}%` }]}>
-              <Text style={{ fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
             </Float>
           ))}
         </View>
@@ -55,7 +55,7 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
           </Appear>
           {points > 0 && (
             <Appear index={1} style={[st.points, { backgroundColor: c.cream }]}>
-              <Text style={{ fontSize: 24 }}>⭐</Text>
+              <Text style={{ lineHeight: 31, fontSize: 24 }}>⭐</Text>
               <Text style={[st.pointsT, { color: c.night }]}>+{points} puan</Text>
             </Appear>
           )}

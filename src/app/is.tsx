@@ -78,7 +78,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
           <Appear style={[st.card, { backgroundColor: c.surface }]}>
             <View style={st.head}>
               <View style={[st.icon, { backgroundColor: c.surface2 }]}>
-                {pose ? <Image source={MOKA_ASSETS[pose]} style={st.iconImg} resizeMode="contain" /> : <Text style={{ fontSize: 30 }}>{k.emoji}</Text>}
+                {pose ? <Image source={MOKA_ASSETS[pose]} style={st.iconImg} resizeMode="contain" /> : <Text style={{ lineHeight: 39, fontSize: 30 }}>{k.emoji}</Text>}
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="h2" numberOfLines={2}>{t.name}</T>
@@ -86,7 +86,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
               </View>
             </View>
             <View style={st.pointsRow}>
-              <Text style={{ fontSize: 20 }}>⭐</Text>
+              <Text style={{ lineHeight: 26, fontSize: 20 }}>⭐</Text>
               <Text style={[st.points, { color: c.warm }]}>+{POINTS.gorev} puan</Text>
               <Bar value={k.doneToday ? 1 : n / art.steps.length} color={c.accent} style={{ flex: 1, marginLeft: 8 }} />
             </View>

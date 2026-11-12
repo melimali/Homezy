@@ -37,7 +37,7 @@ export function NextUp({ t, rid, list, left }: { t: Task; rid: string; list: Tas
         accessibilityLabel={`${t.name}, ayrıntı`}
         style={[styles.name, { backgroundColor: c.surface }]}
       >
-        <Text style={{ fontSize: 28 }}>{k.emoji}</Text>
+        <Text style={{ lineHeight: 36, fontSize: 28 }}>{k.emoji}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T v="h3" numberOfLines={2}>{t.name}</T>
           <T v="small" numberOfLines={1} style={{ color: tone }}>{k.place.name} · {k.s.label} · {k.min} dk</T>

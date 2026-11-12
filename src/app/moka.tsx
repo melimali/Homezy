@@ -469,7 +469,7 @@ function NotesList() {
             <T>{n.text}</T>
           </View>
           <Pressable onPress={() => update(D => void (D.play.notes = D.play.notes.filter(x => x.id !== n.id)))} accessibilityLabel="Notu sil" hitSlop={8}>
-            <Text style={{ color: c.muted, fontSize: 20 }}>×</Text>
+            <Text style={{ color: c.muted, lineHeight: 26, fontSize: 20 }}>×</Text>
           </Pressable>
         </View>
       ))}

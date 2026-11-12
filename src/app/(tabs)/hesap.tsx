@@ -207,7 +207,7 @@ export default function Hesap() {
               <T v="h3">Homezy Premium</T>
               <T v="small">{premium.active ? 'Sınırsız ev, özel temalar ve fazlası açık' : 'Tüm özellikleri aç'}</T>
             </View>
-            <Text style={{ fontSize: 32 }}>👑</Text>
+            <Text style={{ lineHeight: 42, fontSize: 32 }}>👑</Text>
           </View>
           {premium.active ? (
             <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
@@ -408,7 +408,7 @@ export default function Hesap() {
           { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },
         ]).map(x => (
           <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
-            <Text style={{ fontSize: 22 }}>{x.e}</Text>
+            <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.e}</Text>
             <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{x.n}</Text>
             <T v="tiny" numberOfLines={1}>{x.l}</T>
           </View>
@@ -421,7 +421,7 @@ export default function Hesap() {
           {pins.map(x => (
             <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
               <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
-                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 26 }}>{x.emoji}</Text></View>
+                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 34, fontSize: 26 }}>{x.emoji}</Text></View>
                 <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
               </Squish>
             </View>
@@ -436,7 +436,7 @@ export default function Hesap() {
             {sec.keys.map(k => cats.find(x => x.key === k)!).map((x, i) => (
               <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)}>
                 <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
-                  <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
+                  <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 31, fontSize: 24 }}>{x.emoji}</Text></View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <T v="h3" numberOfLines={1}>{x.title}</T>
                     <T v="tiny" numberOfLines={1}>{x.sub}</T>
@@ -461,7 +461,7 @@ export default function Hesap() {
               <View style={[st.group, { backgroundColor: c.surface2 }]}>
                 {open.items.map((x, i) => (
                   <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
-                    <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 20 }}>{x.emoji}</Text></View>
+                    <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 26, fontSize: 20 }}>{x.emoji}</Text></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
                       {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
@@ -504,7 +504,7 @@ export default function Hesap() {
                     { backgroundColor: selected ? c.accentSoft : c.surface2, borderColor: selected ? c.hi : c.line, opacity: l.soon ? 0.55 : 1 },
                   ]}
                 >
-                  <Text style={{ fontSize: 22 }}>{l.flag}</Text>
+                  <Text style={{ lineHeight: 29, fontSize: 22 }}>{l.flag}</Text>
                   <Text style={[st.langText, { color: c.ink }]}>{l.label}</Text>
                   {l.soon && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{l.soon}</Text>}
                   {selected && <Text style={{ fontFamily: fonts.bodyBlack, color: c.ok }}>✓</Text>}

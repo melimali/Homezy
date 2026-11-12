@@ -47,7 +47,7 @@ const st = StyleSheet.create({
   card: { borderRadius: radius.card, borderWidth: 3, padding: 20, alignItems: 'center', gap: 6, alignSelf: 'stretch' },
   logo: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 },
   wordmark: { width: 96, height: 24 },
-  house: { fontSize: 44, marginTop: 4 },
+  house: { lineHeight: 57, fontSize: 44, marginTop: 4 },
   moka: { width: 150, height: 150 },
   big: { fontFamily: fonts.displayBold, fontSize: 24, textAlign: 'center' },
   sub: { fontFamily: fonts.bodyBold, fontSize: 14, textAlign: 'center' },

@@ -13,7 +13,7 @@ export function PremiumLock({ title, text, emoji = '👑' }: { title: string; te
   return (
     <View style={[styles.box, { backgroundColor: c.todaySoft, borderColor: c.line }]}>
       <View style={styles.head}>
-        <Text style={{ fontSize: 22 }}>{emoji}</Text>
+        <Text style={{ lineHeight: 29, fontSize: 22 }}>{emoji}</Text>
         <T v="bold" style={{ flex: 1 }}>{title}</T>
         <View style={[styles.tag, { backgroundColor: brand.clay }]}>
           <Text style={styles.tagText}>PREMIUM</Text>

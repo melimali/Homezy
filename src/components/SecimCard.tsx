@@ -61,7 +61,7 @@ export function SecimCard() {
       {showPicker && (
         <>
           <Squish onPress={() => setOpen(o => !o)} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel="Kendin seç" style={[st.head, { backgroundColor: c.surface2 }]}>
-            <T style={{ fontSize: 22 }}>🧭</T>
+            <T style={{ lineHeight: 29, fontSize: 22 }}>🧭</T>
             <View style={{ flex: 1 }}>
               <T v="bold">{first ? 'Daha fazlası ister misin?' : 'İstersen kendin seç'}</T>
               <T v="tiny">Bakım, sağlık, ders, para, dijital, sosyal... Tamamen isteğe bağlı.</T>
@@ -79,7 +79,7 @@ export function SecimCard() {
               {!list.length && <T v="small">Bu kategoride şimdilik iş kalmadı. Başka bir kategoriye bak.</T>}
 
               <Squish onPress={() => setEdit(e => !e)} accessibilityRole="button" accessibilityLabel="Evde neler yaparsın" style={[st.head, { backgroundColor: c.surface2 }]}>
-                <T style={{ fontSize: 20 }}>🏡</T>
+                <T style={{ lineHeight: 26, fontSize: 20 }}>🏡</T>
                 <T v="bold" style={{ flex: 1 }}>Evde neler yaparsın?</T>
                 <T v="small">{tx(`${acts.length} seçili`)}</T>
               </Squish>
@@ -107,7 +107,7 @@ function Row({ t, day, G, update }: { t: CTask; day: string; G: Growth; update: 
   return (
     <View style={[st.row, { backgroundColor: c.surface2 }]}>
       <Squish onPress={() => setHow(h => !h)} accessibilityRole="button" accessibilityState={{ expanded: how }} accessibilityLabel={`Nasıl yapılır: ${tx(t.title)}`} style={st.line}>
-        <T style={{ fontSize: 26 }}>{s === 'done' ? '✅' : t.emoji}</T>
+        <T style={{ lineHeight: 34, fontSize: 26 }}>{s === 'done' ? '✅' : t.emoji}</T>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T v="bold" numberOfLines={2} style={s === 'done' ? { textDecorationLine: 'line-through' } : undefined}>{tx(t.title)}</T>
           <T v="tiny">{`${tx(CATS.find(k => k.id === t.cat)?.label ?? '')} · ${t.min} ${tx('dk')}${t.after ? ' · ' + tx('zincir') : ''} · ${tx(how ? 'Gizle' : 'Nasıl?')}`}</T>

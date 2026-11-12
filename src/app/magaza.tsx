@@ -69,7 +69,7 @@ export default function Magaza() {
 
       <Appear index={1}>
         <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>
-          <Float amp={3} dur={1800}><Text style={{ fontSize: 28 }}>⭐</Text></Float>
+          <Float amp={3} dur={1800}><Text style={{ lineHeight: 36, fontSize: 28 }}>⭐</Text></Float>
           <Pulse on={P.points}><Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text></Pulse>
           <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
           <Text style={[styles.walletL, { color: c.muted, marginLeft: 'auto' }]}>{`🎁 ${ownedN}/${ITEMS.length}`}</Text>
@@ -78,7 +78,7 @@ export default function Magaza() {
 
       <Appear index={2}>
       <Squish onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
-        <Text style={{ fontSize: 30 }}>🌷</Text>
+        <Text style={{ lineHeight: 39, fontSize: 30 }}>🌷</Text>
         <View style={{ flex: 1 }}>
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
           <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
@@ -142,7 +142,7 @@ function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected:
     <Card style={[styles.item, { width: '100%' }, owned && { opacity: selected ? 1 : 0.85 }]}>
       <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${item.price} puan`} style={{ alignItems: 'center', gap: 4 }}>
         <View style={[styles.bubble, { backgroundColor: locked ? c.surface2 : c.peachSoft }]}>
-          <Text style={{ fontSize: 38 }}>{item.emoji}</Text>
+          <Text style={{ lineHeight: 49, fontSize: 38 }}>{item.emoji}</Text>
           {item.premium && <Text style={styles.crown}>👑</Text>}
         </View>
         <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{item.name}</T>

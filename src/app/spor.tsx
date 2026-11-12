@@ -146,7 +146,7 @@ export default function Spor() {
         <SecHead title="Son sporlar" />
         {history.map((x, i) => (
           <View key={x.id} style={[styles.row, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ fontSize: 20 }}>{EMOJI[x.type] ?? '💪'}</Text>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{EMOJI[x.type] ?? '💪'}</Text>
             <View style={{ flex: 1 }}>
               <T v="bold" style={{ fontSize: 14 }}>{x.type} · {x.min} dk</T>
               <T v="small">{new Date(dayTs(x.day)).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</T>
@@ -237,7 +237,7 @@ function WorkoutPlan({ now, onPick }: { now: number; onPick: (type: string, min:
           accessibilityLabel={`${p.what}, ${p.min} dakika. Seç`}
           style={[styles.row, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}
         >
-          <Text style={{ fontSize: 20 }}>{done.has(p.day) ? '✅' : EMOJI[p.type] ?? '💪'}</Text>
+          <Text style={{ lineHeight: 26, fontSize: 20 }}>{done.has(p.day) ? '✅' : EMOJI[p.type] ?? '💪'}</Text>
           <View style={{ flex: 1 }}>
             <T v="bold" style={{ fontSize: 14, color: p.day === today ? c.ok : c.ink }}>
               {new Date(dayTs(p.day)).toLocaleDateString(dateLocale(), { weekday: 'long' })}{p.day === today ? ' · bugün' : ''}

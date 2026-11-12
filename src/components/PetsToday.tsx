@@ -21,7 +21,7 @@ export function PetsToday() {
       <View style={{ gap: 10 }}>
         {due.slice(0, 6).map(({ pet, item, s }) => (
           <View key={`${pet.id}${item.id}`} style={[st.row, { backgroundColor: s.k === 'late' ? c.todaySoft : c.surface2 }]}>
-            <Text style={{ fontSize: 22 }}>{item.emoji}</Text>
+            <Text style={{ lineHeight: 29, fontSize: 22 }}>{item.emoji}</Text>
             <View style={{ flex: 1 }}>
               <T v="bold" style={{ fontSize: 15 }}>{petEmoji(pet)} {pet.name} · {item.name}</T>
               <T v="small" style={{ color: s.k === 'late' ? c.late : c.muted, fontFamily: fonts.bodyBold }}>{stateText(s)}</T>

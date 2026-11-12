@@ -177,7 +177,7 @@ export function WardrobeArt({ t }: Props) {
             <Text style={{ color: c.fashionInk, fontFamily: fonts.displayBold, fontSize: 18 }}>Bugünkü kombin</Text>
           </View>
           <Animated.View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.fashion, transform: [{ scale: pulse }] }}>
-            <Text style={{ fontSize: 18 }}>✦</Text>
+            <Text style={{ lineHeight: 23, fontSize: 18 }}>✦</Text>
           </Animated.View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -185,7 +185,7 @@ export function WardrobeArt({ t }: Props) {
             { e: '🧥', bg: '#DCE7E1' }, { e: '👕', bg: '#EBDDD2' }, { e: '👖', bg: '#DCE3EE' },
           ].map((x, i) => (
             <View key={i} style={{ flex: 1, height: 76, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: x.bg }}>
-              <Text style={{ fontSize: 34 }}>{x.e}</Text>
+              <Text style={{ lineHeight: 44, fontSize: 34 }}>{x.e}</Text>
             </View>
           ))}
         </View>
@@ -224,11 +224,11 @@ export function FridgeArt({ t }: Props) {
           <View style={{ alignSelf: 'flex-end', width: 5, height: 35, borderRadius: 4, backgroundColor: c.warm }} />
           <View style={{ height: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
-            <Text style={{ fontSize: 25 }}>🥛</Text><Text style={{ fontSize: 25 }}>🥕</Text>
+            <Text style={{ lineHeight: 33, fontSize: 25 }}>🥛</Text><Text style={{ lineHeight: 33, fontSize: 25 }}>🥕</Text>
           </View>
           <View style={{ height: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
-            <Text style={{ fontSize: 25 }}>🧀</Text><Text style={{ fontSize: 25 }}>🍋</Text>
+            <Text style={{ lineHeight: 33, fontSize: 25 }}>🧀</Text><Text style={{ lineHeight: 33, fontSize: 25 }}>🍋</Text>
           </View>
         </View>
       </Animated.View>

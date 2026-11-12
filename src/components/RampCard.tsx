@@ -63,7 +63,7 @@ export function RampCard() {
   return (
     <Card>
       <View style={styles.row}>
-        <T style={{ fontSize: 34 }}>{light ? '🫖' : st.emoji}</T>
+        <T style={{ lineHeight: 44, fontSize: 34 }}>{light ? '🫖' : st.emoji}</T>
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
           <T v="bold">{light ? 'Hafif gün: bugün sadece 1-2 iş' : `${tx(st.name)} · ${tx(st.line)}`}</T>
           {!!S.settings.why && WHY_LINE[S.settings.why] && days < 7 && <T v="tiny">{`${tx('Hatırla')}: ${tx(WHY_LINE[S.settings.why])}`}</T>}

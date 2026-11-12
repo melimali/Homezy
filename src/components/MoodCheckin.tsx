@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   feels: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   feel: { width: 92, paddingVertical: 12, borderRadius: 20, alignItems: 'center', gap: 4 },
   feelTxt: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
-  emoji: { fontSize: 28 },
+  emoji: { lineHeight: 36, fontSize: 28 },
   busy: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 999 },
   card: { borderRadius: radius.card, padding: 16 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },

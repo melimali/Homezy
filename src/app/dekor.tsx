@@ -69,7 +69,7 @@ export default function Dekor() {
       </View>
       {!hasUpper(S) && (
         <Squish onPress={() => router.push('/plan')} accessibilityRole="button" style={[st.tip, { backgroundColor: c.surface2 }]}>
-          <Text style={{ fontSize: 22 }}>🏘️</Text>
+          <Text style={{ lineHeight: 29, fontSize: 22 }}>🏘️</Text>
           <T v="small" style={{ flex: 1 }}>Evin dubleks mi? Ev planında 2. kat çizebilirsin{premium.active ? '' : ' (Premium 👑)'}.</T>
           <Chevron color={c.muted} size={16} dir="right" />
         </Squish>
@@ -227,7 +227,7 @@ function Placer({ floor }: { floor: Floor }) {
         <View style={st.swWrap}>
           {owned.map(id => (
             <Squish key={id} onPress={() => setSel(sel === id ? null : id)} accessibilityLabel={ITEM[id]!.name} style={[st.item, { backgroundColor: sel === id ? c.ink : c.surface2 }]}>
-              <Text style={{ fontSize: 22 }}>{ITEM[id]!.emoji}</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>{ITEM[id]!.emoji}</Text>
               <Text numberOfLines={1} style={[st.itemT, { color: sel === id ? c.bg : c.muted }]}>{where(id)}</Text>
             </Squish>
           ))}

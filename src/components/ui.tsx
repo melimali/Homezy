@@ -138,7 +138,7 @@ export function AppHeader() {
             hitSlop={6}
             style={({ pressed }) => [styles.bell, { backgroundColor: c.surface, borderColor: c.line }, pressed && { transform: [{ scale: 0.96 }] }]}
           >
-            <Text style={{ fontSize: 17 }}>🔔</Text>
+            <Text style={{ lineHeight: 22, fontSize: 17 }}>🔔</Text>
             {n > 0 && (
               <View style={[styles.badge, { backgroundColor: c.late }]}>
                 <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: '#fff' }}>{n}</Text>
@@ -236,7 +236,7 @@ export function ListRow({
     <>
       {icon != null && (
         <View style={[styles.rowIcon, { backgroundColor: tint ?? c.surface2 }]}>
-          {typeof icon === 'string' ? <Text style={{ fontSize: 19 }}>{icon}</Text> : icon}
+          {typeof icon === 'string' ? <Text style={{ lineHeight: 25, fontSize: 19 }}>{icon}</Text> : icon}
         </View>
       )}
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -517,7 +517,7 @@ export function Tabs<K extends string>({
             accessibilityLabel={it.badge ? `${it.label}, ${it.badge}` : it.label}
             style={[styles.tab, { backgroundColor: on ? c.accent : c.surface }, on && styles.lift]}
           >
-            <Text style={{ fontSize: 20 }}>{it.emoji}</Text>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{it.emoji}</Text>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.ink }}>{it.label}</Text>
             {!!it.badge && (
               <View style={[styles.tabBadge, { backgroundColor: c.late }]}>

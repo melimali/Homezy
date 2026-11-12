@@ -144,7 +144,7 @@ export default function Aile() {
               {goals.map(g => (
                 <View key={g.id} style={[styles.goal, { borderColor: c.line }]}>
                   <View style={styles.row}>
-                    <Text style={{ fontSize: 24 }}>{g.done ? '🏆' : g.emoji}</Text>
+                    <Text style={{ lineHeight: 31, fontSize: 24 }}>{g.done ? '🏆' : g.emoji}</Text>
                     <View style={{ flex: 1 }}>
                       <T v="bold">{g.title}</T>
                       <T v="small">{g.total}/{g.target} {g.unit} · %{goalPct(g)}</T>

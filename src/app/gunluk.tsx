@@ -271,7 +271,7 @@ export default function Gunluk() {
               <Animated.View style={[styles.face, { backgroundColor: c.ink, opacity: frontOp }]}>
                 <View style={[styles.spine, { backgroundColor: c.accent }]} />
                 <View style={[styles.label, { backgroundColor: c.bg }]}>
-                  <Text style={{ fontSize: 44 }}>📔</Text>
+                  <Text style={{ lineHeight: 57, fontSize: 44 }}>📔</Text>
                   <Text style={[styles.coverTx, { color: c.ink }]}>Günlüğüm</Text>
                 </View>
                 <Text style={[styles.hint, { color: c.bg }]}>açmak için dokun</Text>
@@ -423,7 +423,7 @@ function MoodBtn({ emoji, on, onPress }: { emoji: string; on: boolean; onPress: 
     >
       <Animated.Text
         style={{
-          fontSize: 26,
+          lineHeight: 34, fontSize: 26,
           transform: [
             { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) },
             { rotate: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['0deg', '-14deg', '0deg'] }) },

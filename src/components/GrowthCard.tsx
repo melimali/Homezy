@@ -24,7 +24,7 @@ export function GrowthCard() {
   const met = goalMet(G, day);
   return (
     <Squish onPress={() => router.push('/buyume')} accessibilityRole="link" accessibilityLabel={`Moka'nın önerisi: ${sug.title}`} style={[st.card, { backgroundColor: c.lavenderSoft }]}>
-      <T style={{ fontSize: 30 }}>{met ? '🌷' : kindEmoji(sug.kind)}</T>
+      <T style={{ lineHeight: 39, fontSize: 30 }}>{met ? '🌷' : kindEmoji(sug.kind)}</T>
       <View style={{ flex: 1, minWidth: 0 }}>
         <T v="tiny">{met ? 'OKUMA HEDEFİ TAMAM' : 'MOKA ÖNERİYOR'}</T>
         <T v="bold" numberOfLines={1}>{sug.title}</T>

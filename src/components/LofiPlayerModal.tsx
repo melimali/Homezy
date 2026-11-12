@@ -131,7 +131,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   return (
     <Sheet open={open} onClose={onClose} pose="cozy_plant" scroll>
       <View style={{ alignItems: 'center', gap: 16, paddingVertical: 10 }}>
-        <Text style={{ fontSize: 48 }}>🎵</Text>
+        <Text style={{ lineHeight: 62, fontSize: 48 }}>🎵</Text>
         <T v="h2">Moka&apos;nın Pikapı</T>
         <T v="small" style={{ textAlign: 'center' }}>
           Plağı seç, iğneyi bırak: temizlik ve dinlenme için huzurlu sesler.
@@ -180,7 +180,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             <T v="bold">Katman Sesleri</T>
             {TRACKS.filter(t => active.includes(t.id)).map(t => (
               <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={{ fontSize: 20 }}>{t.emoji}</Text>
+                <Text style={{ lineHeight: 26, fontSize: 20 }}>{t.emoji}</Text>
                 <Pressable onPress={() => setLevel(t.id, getLevel(t.id) - 0.1)} accessibilityRole="button" accessibilityLabel="Kıs" style={styles.lvlBtn}>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 18, color: c.ink }}>−</Text>
                 </Pressable>
@@ -234,7 +234,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
                 accessibilityLabel={k.name}
                 style={[styles.trackRow, { backgroundColor: on ? c.accentSoft : c.surface, borderColor: on ? c.hi : c.line }]}
               >
-                <Text style={{ fontSize: 24 }}>{k.emoji}</Text>
+                <Text style={{ lineHeight: 31, fontSize: 24 }}>{k.emoji}</Text>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={[styles.trackName, { color: c.ink }]}>{k.name}</Text>
                   <Text style={[styles.trackDesc, { color: c.muted }]}>{k.desc}</Text>
@@ -261,7 +261,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
                   { backgroundColor: isPlaying ? c.accentSoft : c.surface, borderColor: isPlaying ? c.hi : c.line },
                 ]}
               >
-                <Text style={{ fontSize: 24 }}>{t.emoji}</Text>
+                <Text style={{ lineHeight: 31, fontSize: 24 }}>{t.emoji}</Text>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={[styles.trackName, { color: c.ink }]}>{t.name}</Text>
                   <Text style={[styles.trackDesc, { color: c.muted }]}>{t.desc}</Text>

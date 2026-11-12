@@ -71,7 +71,7 @@ export function LevelUpPeek() {
           <View style={styles.row}>
             {items.map(i => (
               <View key={i.id} style={[styles.item, { backgroundColor: c.surface2 }]}>
-                <Text style={{ fontSize: 34 }}>{i.emoji}</Text>
+                <Text style={{ lineHeight: 44, fontSize: 34 }}>{i.emoji}</Text>
                 <T v="small" style={{ textAlign: 'center' }}>{i.name}</T>
               </View>
             ))}

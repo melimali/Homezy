@@ -51,7 +51,7 @@ export default function RoomScreen() {
                   accessibilityState={{ selected: on }}
                   style={[styles.hop, { backgroundColor: on ? c.room[x.type] : c.surface }, on && { transform: [{ scale: 1.08 }] }]}
                 >
-                  <Text style={{ fontSize: 22 }}>{ROOM_EMOJI[x.type]}</Text>
+                  <Text style={{ lineHeight: 29, fontSize: 22 }}>{ROOM_EMOJI[x.type]}</Text>
                   {dot && <View style={[styles.dot, { backgroundColor: dot, borderColor: c.bg }]} />}
                 </Squish>
               );
@@ -69,7 +69,7 @@ export default function RoomScreen() {
       <Appear key={`hero-${r.id}`} style={[styles.hero, { backgroundColor: c.room[r.type] }]}>
         <Float amp={4}>
           <View style={[styles.emoji, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 34 }}>{ROOM_EMOJI[r.type]}</Text>
+            <Text style={{ lineHeight: 44, fontSize: 34 }}>{ROOM_EMOJI[r.type]}</Text>
           </View>
         </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>

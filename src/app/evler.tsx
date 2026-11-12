@@ -155,7 +155,7 @@ export default function Evler() {
                 accessibilityLabel={`${t.name} teması${locked ? ', Premium' : ''}`}
                 style={[styles.theme, { backgroundColor: on ? c.accentSoft : c.surface2, borderColor: on ? c.hi : 'transparent' }]}
               >
-                <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
+                <Text style={{ lineHeight: 36, fontSize: 28 }}>{t.emoji}</Text>
                 <Text style={[styles.themeName, { color: c.ink }]}>{t.name}</Text>
                 {locked && <Text style={{ fontSize: 12 }}>👑</Text>}
               </Pressable>
@@ -167,7 +167,7 @@ export default function Evler() {
       <Modal transparent visible={!!peekTheme} animationType="fade" onRequestClose={() => setPeek(null)}>
         <View style={[styles.bg, { backgroundColor: c.shadow }]}>
           <View style={[styles.sheet, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 64 }}>{peekTheme?.emoji}</Text>
+            <Text style={{ lineHeight: 83, fontSize: 64 }}>{peekTheme?.emoji}</Text>
             <T v="h1" style={{ textAlign: 'center' }}>{peekTheme?.name} teması</T>
             <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin bu temayla başka görünür. İlerlemen ve eşyaların aynen kalır, istediğin zaman Gündüz&apos;e dönebilirsin.</T>
             <Btn kind="primary" label="Premium'a bak ⭐" block onPress={() => { setPeek(null); router.push(premiumHref('theme')); }} />

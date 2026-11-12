@@ -76,12 +76,12 @@ export default function Yemek() {
           <Appear key={p.meal.id} index={i}>
             <Card>
               <Squish onPress={() => setOpen(on ? null : p.meal.id)} accessibilityRole="button" accessibilityLabel={p.meal.name} style={st.head}>
-                <Text style={{ fontSize: 34 }}>{p.meal.emoji}</Text>
+                <Text style={{ lineHeight: 44, fontSize: 34 }}>{p.meal.emoji}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <T v="bold" style={{ fontSize: 16 }}>{p.meal.name}</T>
                   <T v="small">{p.why} · ⏱ {p.meal.min} dk</T>
                 </View>
-                <Text style={{ color: c.muted, fontSize: 18 }}>{on ? '⌃' : '⌄'}</Text>
+                <Text style={{ color: c.muted, lineHeight: 23, fontSize: 18 }}>{on ? '⌃' : '⌄'}</Text>
               </Squish>
               <View style={st.badges}>
                 <Badge text={`🌿 ${p.meal.health}/5 ${healthLabel(p.meal.health)}`} bg={p.meal.health >= 4 ? c.accentSoft : c.surface2} fg={c.ink} />

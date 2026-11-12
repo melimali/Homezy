@@ -264,7 +264,7 @@ export function TaskRow({
             <Image source={MOKA_ASSETS[k.pose]} style={[styles.sticker, k.doneToday && { opacity: 0.5 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
           ) : (
             <View style={[styles.bubble, { backgroundColor: c.surface2 }]}>
-              <Text style={{ fontSize: 24 }}>{k.emoji}</Text>
+              <Text style={{ lineHeight: 31, fontSize: 24 }}>{k.emoji}</Text>
             </View>
           )}
         </Pressable>
@@ -369,7 +369,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
       </Animated.View>
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={styles.sheetHead}>
-          <Text style={{ fontSize: 40 }}>{k.emoji}</Text>
+          <Text style={{ lineHeight: 52, fontSize: 40 }}>{k.emoji}</Text>
           <View style={{ flex: 1, minWidth: 0 }}>
             <T v="h2">{t.name}</T>
             <View style={styles.meta}>
@@ -402,7 +402,7 @@ function Stepper({ label, a11y = label, value, text, steps, onChange }: { label:
   const next = steps.find(x => x > value);
   return (
     <View style={styles.stepRow}>
-      <T v="bold" style={{ fontSize: 18, width: 30 }} accessibilityLabel={a11y}>{label}</T>
+      <T v="bold" style={{ lineHeight: 23, fontSize: 18, width: 30 }} accessibilityLabel={a11y}>{label}</T>
       <StepBtn label="−" a11y={`${a11y} azalt`} disabled={prev == null} onPress={() => prev != null && onChange(prev)} />
       <Text style={{ flex: 1, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{text}</Text>
       <StepBtn label="+" a11y={`${a11y} artır`} disabled={next == null} onPress={() => next != null && onChange(next)} />

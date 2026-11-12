@@ -44,7 +44,7 @@ export function MedsToday() {
           const bg = state === 'taken' ? c.okSoft : state === 'missed' ? c.todaySoft : c.surface2;
           return (
             <View key={d.key} style={[st.dose, { backgroundColor: bg }]}>
-              <Text style={{ fontSize: 22 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '💊'}</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '💊'}</Text>
               <View style={{ flex: 1 }}>
                 <T v="bold" style={{ fontSize: 15 }}>{d.med.name}</T>
                 <T v="small">

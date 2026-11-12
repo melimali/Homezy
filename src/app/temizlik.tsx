@@ -85,7 +85,7 @@ export default function Clean() {
             return (
               <Appear key={id} index={i + 1}>
                 <Squish onPress={() => pick(id)} accessibilityLabel={`${r.name}, ${n} iş`} style={[st.room, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 30 }}>{ROOM_EMOJI[r.type]}</Text>
+                  <Text style={{ lineHeight: 39, fontSize: 30 }}>{ROOM_EMOJI[r.type]}</Text>
                   <T v="bold" style={{ flex: 1 }}>{r.name}</T>
                   <Pill k={n ? 'today' : 'ok'} label={n ? `${n} iş` : 'Temiz'} />
                 </Squish>

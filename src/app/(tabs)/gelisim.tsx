@@ -229,7 +229,7 @@ export default function Gelisim() {
 function LinkTile({ emoji, label, sub, tint, onPress }: { emoji: string; label: string; sub: string; tint: string; onPress: () => void }) {
   return (
     <Squish onPress={onPress} accessibilityRole="link" accessibilityLabel={label} style={[st.link, { backgroundColor: tint }]}>
-      <T style={{ fontSize: 28 }}>{emoji}</T>
+      <T style={{ lineHeight: 36, fontSize: 28 }}>{emoji}</T>
       <T v="bold" numberOfLines={1}>{label}</T>
       <T v="tiny" numberOfLines={1}>{sub}</T>
     </Squish>

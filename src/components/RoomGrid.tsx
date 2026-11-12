@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   rowCell: { width: 158 },
   card: { borderRadius: 22, padding: 8, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4 },
   photo: { borderRadius: 16, overflow: 'hidden' },
-  deco: { position: 'absolute', left: 8, bottom: 4, fontSize: 24 },
+  deco: { position: 'absolute', left: 8, bottom: 4, lineHeight: 31, fontSize: 24 },
   noScene: { height: 116, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: 8, paddingTop: 10, paddingBottom: 6, gap: 8 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: 8 },

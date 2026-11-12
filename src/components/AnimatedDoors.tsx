@@ -120,7 +120,7 @@ const st = StyleSheet.create({
   rail: { position: 'absolute', top: 18, left: 8, right: 8, height: 4, borderRadius: 2 },
   shelf: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderBottomWidth: 4, borderRadius: 2, paddingBottom: 2, minHeight: 52 },
   hang: { borderBottomWidth: 0, paddingTop: 14 },
-  emoji: { fontSize: 34 },
+  emoji: { lineHeight: 44, fontSize: 34 },
   hint: { textAlign: 'center' },
   door: { position: 'absolute', top: 0, borderWidth: 3, borderRadius: 18, backfaceVisibility: 'hidden' },
   seam: { position: 'absolute', left: 0, right: 0, height: 3 },

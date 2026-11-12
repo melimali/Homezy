@@ -26,7 +26,7 @@ export function MealCard() {
     <Squish onPress={() => router.push('/yemek' as Href)} accessibilityRole="button" accessibilityLabel="Yemek önerisi">
       <Card style={{ backgroundColor: c.peachSoft }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Text style={{ fontSize: 34 }}>{top.meal.emoji}</Text>
+          <Text style={{ lineHeight: 44, fontSize: 34 }}>{top.meal.emoji}</Text>
           <View style={{ flex: 1 }}>
             <T v="eyebrow" style={{ marginBottom: 0 }}>{slot === 'aksam' ? 'Bu gece' : 'Yarın sabah'}</T>
             <T v="bold">{top.meal.name}</T>

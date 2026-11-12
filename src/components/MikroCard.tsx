@@ -28,7 +28,7 @@ export function MikroCard() {
           const s = mikroState(S.play.growth, day, m.id);
           return (
             <View key={m.id} style={[st.row, { backgroundColor: c.surface2, opacity: s === 'skip' ? 0.55 : 1 }]}>
-              <T style={{ fontSize: 26 }}>{s === 'done' ? '✅' : m.emoji}</T>
+              <T style={{ lineHeight: 34, fontSize: 26 }}>{s === 'done' ? '✅' : m.emoji}</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" numberOfLines={2} style={s === 'done' ? { textDecorationLine: 'line-through' } : undefined}>{m.title}</T>
                 <T v="tiny" numberOfLines={2}>{m.hint}</T>

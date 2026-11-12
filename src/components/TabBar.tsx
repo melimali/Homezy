@@ -72,7 +72,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
             accessibilityLabel="Moka ile sohbet"
             style={[st.opt, { backgroundColor: c.peachSoft }]}
           >
-            <Text style={{ fontSize: 28 }}>💬</Text>
+            <Text style={{ lineHeight: 36, fontSize: 28 }}>💬</Text>
             <View style={{ flex: 1 }}>
               <T v="bold">Moka ile sohbet</T>
               <T v="small">İş ekle, not aldır, sohbet et</T>
@@ -83,7 +83,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
             accessibilityLabel="İş ekle"
             style={[st.opt, { backgroundColor: c.surface2 }]}
           >
-            <Text style={{ fontSize: 28 }}>📝</Text>
+            <Text style={{ lineHeight: 36, fontSize: 28 }}>📝</Text>
             <View style={{ flex: 1 }}>
               <T v="bold">İş ekle</T>
               <T v="small">Odaya yeni bir iş yaz</T>
@@ -94,7 +94,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
             accessibilityLabel="Temizlik başlat"
             style={[st.opt, { backgroundColor: c.accent }]}
           >
-            <Text style={{ fontSize: 28 }}>🧹</Text>
+            <Text style={{ lineHeight: 36, fontSize: 28 }}>🧹</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.onAccent }}>Temizlik başlat</Text>
               <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.onAccent, opacity: 0.85 }}>Moka sırayı seçsin, sen yap</Text>

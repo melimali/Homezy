@@ -38,7 +38,7 @@ export default function Evcil() {
       {S.pets.map(p => (
         <Card key={p.id}>
           <View style={st.head}>
-            <Text style={{ fontSize: 30 }}>{petEmoji(p)}</Text>
+            <Text style={{ lineHeight: 39, fontSize: 30 }}>{petEmoji(p)}</Text>
             <View style={{ flex: 1 }}>
               <T v="h3">{p.name}</T>
               <T v="small">{PET_KINDS.find(k => k.id === p.kind)?.label}</T>
@@ -83,7 +83,7 @@ function ItemRow({ pet, it, now, onDone, onUndo, onRemind, onDelete }: { pet: Pe
   return (
     <View style={[st.item, { backgroundColor: bg }]}>
       <View style={st.itemTop}>
-        <Text style={{ fontSize: 24 }}>{it.emoji}</Text>
+        <Text style={{ lineHeight: 31, fontSize: 24 }}>{it.emoji}</Text>
         <View style={{ flex: 1 }}>
           <T v="bold" style={{ fontSize: 15 }}>{it.name}</T>
           <T v="small">{everyText(it.everyH)} · {lastText(it, now)}</T>

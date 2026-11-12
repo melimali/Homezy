@@ -67,7 +67,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
 function Row({ t, c }: { t: WidgetTask; c: WColors }) {
   return (
     <FlexWidget {...OPEN} style={{ width: 'match_parent', height: 40, flexDirection: 'row', alignItems: 'center' }}>
-      <TextWidget text={t.emoji} style={{ fontSize: 18, marginRight: 10 }} />
+      <TextWidget text={t.emoji} style={{ lineHeight: 23, fontSize: 18, marginRight: 10 }} />
       <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
         <TextWidget text={tx(t.name)} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }} maxLines={1} truncate="END" />
         <TextWidget text={tx(`${t.room} · ${t.label}`)} style={{ fontFamily: fonts.body, fontSize: 12, color: t.late ? c.late : c.muted }} maxLines={1} truncate="END" />

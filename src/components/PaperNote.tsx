@@ -74,6 +74,6 @@ const st = StyleSheet.create({
   box: { fontSize: 24, lineHeight: 28 },
   textWrap: { flexShrink: 1, justifyContent: 'center' },
   txt: { fontFamily: fonts.hand, fontSize: 26, lineHeight: 32 },
-  big: { fontSize: 30 },
+  big: { lineHeight: 39, fontSize: 30 },
   strike: { position: 'absolute', left: -2, top: '55%', height: 3, borderRadius: 2, transform: [{ rotate: '-2deg' }] },
 });

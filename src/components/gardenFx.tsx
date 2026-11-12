@@ -239,6 +239,6 @@ export function Wander({ children, range = 40, dur = 7000, style }: { children: 
 const styles = StyleSheet.create({
   fly: { position: 'absolute', left: 8, zIndex: 3 },
   shower: { ...StyleSheet.absoluteFill as object, zIndex: 6 },
-  drop: { position: 'absolute', fontSize: 18 },
+  drop: { position: 'absolute', lineHeight: 23, fontSize: 18 },
   twinkle: { position: 'absolute', top: 6, fontSize: 14, zIndex: 4 },
 });

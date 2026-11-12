@@ -170,7 +170,7 @@ export default function Home() {
               accessibilityLabel="İlk işini yap"
               style={[styles.plot, { backgroundColor: c.surface }]}
             >
-              <Text style={{ fontSize: 22 }}>🪵</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>🪵</Text>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold">Arsa hazır</T>
                 <T v="small">İlk işini yap, evin temeli atılsın.</T>
@@ -182,7 +182,7 @@ export default function Home() {
         </View>
         <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: c.surface2 }]}>
           <View style={[styles.nextIcon, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 24 }}>{warn ? '😴' : next?.emoji ?? '🏡'}</Text>
+            <Text style={{ lineHeight: 31, fontSize: 24 }}>{warn ? '😴' : next?.emoji ?? '🏡'}</Text>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             {warn || !next ? (
@@ -266,14 +266,14 @@ export default function Home() {
 
       {!!S.settings.solo && S.rooms[S.settings.solo] && (
         <Squish onPress={() => router.navigate('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 22 }}>🚪</Text>
+          <Text style={{ lineHeight: 29, fontSize: 22 }}>🚪</Text>
           <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>Tek oda modu: {S.rooms[S.settings.solo].name}</Text>
           <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
         </Squish>
       )}
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ fontSize: 26 }}>🗓️</Text>
+          <Text style={{ lineHeight: 34, fontSize: 26 }}>🗓️</Text>
           <View style={{ flex: 1 }}>
             <Text style={[styles.weekT, { color: c.ink }]}>Haftalık özetin hazır</Text>
             <Text style={[styles.statL, { color: c.muted }]}>Bu hafta neler yaptın? Bak ve paylaş</Text>
@@ -413,7 +413,7 @@ function Stat({ emoji, value, label, tint, onPress }: { emoji: string; value: st
   const c = useColors();
   return (
     <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${value} ${label}`} style={[styles.stat, { backgroundColor: tint }]}>
-      <Text style={{ fontSize: 22 }}>{emoji}</Text>
+      <Text style={{ lineHeight: 29, fontSize: 22 }}>{emoji}</Text>
       <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{value}</Text>
       <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{label}</Text>
     </Squish>
@@ -425,7 +425,7 @@ function Quick({ emoji, label, sub, tint, onPress }: { emoji: string; label: str
   return (
     <Squish onPress={onPress} accessibilityLabel={label} style={[styles.q, { backgroundColor: tint }]}>
       <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 22 }}>{emoji}</Text>
+        <Text style={{ lineHeight: 29, fontSize: 22 }}>{emoji}</Text>
       </View>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
       <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{sub}</Text>

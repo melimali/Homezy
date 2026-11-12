@@ -176,7 +176,7 @@ function Seasonal() {
           const done = S.seasonal[x.id] === year;
           return (
             <View key={x.id} style={[styles.line, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-              <Text style={{ fontSize: 22 }}>{x.emoji}</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.emoji}</Text>
               <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
                 <T v="bold" style={{ fontSize: 15 }}>{x.name}</T>
                 <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>

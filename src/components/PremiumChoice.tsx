@@ -66,7 +66,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}
     >
       <View style={{ alignItems: 'center', gap: 6 }}>
-        <Text style={{ fontSize: 48 }}>🏡</Text>
+        <Text style={{ lineHeight: 62, fontSize: 48 }}>🏡</Text>
         <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
         <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium: Moka sohbeti, daha çok tarama, 2. kat ve temalar, 5 ev, aile paylaşımı ve reklamsız deneyim."}</T>
       </View>
@@ -131,7 +131,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
         {ROWS.map(r => (
           <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{r.emoji}</Text>
             <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13.5 }}>{r.label}</T>
             <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
             <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
@@ -210,5 +210,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
   cell: { width: 62, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
-  check: { fontSize: 20 },
+  check: { lineHeight: 26, fontSize: 20 },
 });

@@ -76,7 +76,7 @@ export function BonusCard() {
                     accessibilityLabel={`Yaptım: ${p.title}`}
                     style={st.lvlLine}
                   >
-                    <T style={{ fontSize: 22 }}>{s === 'done' ? '✅' : p.emoji}</T>
+                    <T style={{ lineHeight: 29, fontSize: 22 }}>{s === 'done' ? '✅' : p.emoji}</T>
                     <T v="bold" numberOfLines={2} style={[{ flex: 1 }, s === 'done' ? { textDecorationLine: 'line-through' } : null]}>{p.title}</T>
                     <T v="tiny" style={{ color: c.accent }}>{`${LVL[p.lvl].emoji} ${LVL[p.lvl].label}`}</T>
                   </Squish>
@@ -94,7 +94,7 @@ export function BonusCard() {
       <View style={{ gap: 10, marginTop: 10 }}>
         {rows.map(r => (
           <View key={r.key} style={[st.row, { backgroundColor: c.surface2, opacity: r.state === 'skip' ? 0.55 : 1 }]}>
-            <T style={{ fontSize: 26 }}>{r.state === 'done' ? '✅' : r.emoji}</T>
+            <T style={{ lineHeight: 34, fontSize: 26 }}>{r.state === 'done' ? '✅' : r.emoji}</T>
             <View style={{ flex: 1, minWidth: 0 }}>
               <T v="bold" numberOfLines={2} style={r.state === 'done' ? { textDecorationLine: 'line-through' } : undefined}>{r.title}</T>
               <T v="tiny" numberOfLines={2}>{r.hint}</T>
@@ -119,7 +119,7 @@ export function BonusLocked({ left }: { left: number }) {
   const c = useColors();
   return (
     <View style={[st.lock, { backgroundColor: c.surface2 }]}>
-      <T style={{ fontSize: 20 }}>🎁</T>
+      <T style={{ lineHeight: 26, fontSize: 20 }}>🎁</T>
       <T v="small" style={{ flex: 1 }}>{`Bonus, ${left} iş daha bitince açılır. İsteğe bağlı.`}</T>
     </View>
   );

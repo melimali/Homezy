@@ -98,7 +98,7 @@ export default function Bahce() {
 
       <Appear index={1}>
         <Glass scrim style={styles.wallet}>
-          <Float amp={3} dur={1800}><Text style={{ fontSize: 26 }}>⭐</Text></Float>
+          <Float amp={3} dur={1800}><Text style={{ lineHeight: 34, fontSize: 26 }}>⭐</Text></Float>
           <Pulse on={P.points}><Text style={[styles.walletN, { color: '#FFFFFF' }]}>{P.points}</Text></Pulse>
           <Text style={[styles.walletL, { color: '#E6C9BD' }]}>puanın var</Text>
         </Glass>
@@ -489,7 +489,7 @@ function ExtraCard({ x, onOwned }: { x: Extra; onOwned?: { on: boolean; pick: ()
 
   return (
     <Card style={[styles.item, onOwned?.on && { backgroundColor: c.glow }]}>
-      <Text style={{ fontSize: 36 }}>{x.emoji}</Text>
+      <Text style={{ lineHeight: 47, fontSize: 36 }}>{x.emoji}</Text>
       <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{x.name}</T>
       <T v="tiny" style={{ textAlign: 'center' }}>{x.about}</T>
       {owned ? (
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
   decor: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', minHeight: 4 },
-  decorE: { fontSize: 24 },
+  decorE: { lineHeight: 31, fontSize: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 14 },
   rowT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   rowS: { fontFamily: fonts.bodyBold, fontSize: 12 },

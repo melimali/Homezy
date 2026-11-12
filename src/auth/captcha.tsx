@@ -60,7 +60,11 @@ export async function requestCaptcha(opts?: { silent?: boolean }): Promise<strin
     // Saklama okunamazsa kutu normal açılır.
   }
   // Bir kere doğrulanan cihazda kutu bir daha açılmaz: sadece görünmez denenir, olmazsa tokensiz devam edilir.
-  if (verified) return ask(true);
+  if (verified) {
+    const quiet = await ask(true);
+    // Kişinin bastığı düğmede görünmez deneme olmadıysa kutu açılır (sunucu tokensiz isteği reddeder).
+    return quiet || silent ? quiet : ask(false);
+  }
   const token = await ask(silent);
   if (token && !verified) {
     try {

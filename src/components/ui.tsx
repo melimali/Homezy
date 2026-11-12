@@ -1,6 +1,8 @@
-import { useEffect, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   Animated,
+  Easing,
   Image,
   Modal,
   Pressable,
@@ -29,7 +31,7 @@ import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import Svg, { Path } from 'react-native-svg';
 import { elevation, fonts, hit, warmShadow, radius, space, type, useColors, useIsDark, type Colors } from '@/theme';
 
-import { Appear, Float, Squish } from './motion';
+import { Appear, Float, Squish, useReduceMotion } from './motion';
 import { DEEP, ScreenBackground, type Tone } from './ScreenBackground';
 
 /* ---------- metin ---------- */
@@ -80,6 +82,18 @@ export function Screen({
     const id = y.addListener(({ value }) => onScrollY(value));
     return () => y.removeListener(id);
   }, [y, onScrollY]);
+  // Sekme ekranı her açıldığında içerik hafifçe aşağıdan süzülüp belirir (yerel sürücü).
+  const [enter] = useState(() => new Animated.Value(tab ? 0 : 1));
+  const reduce = useReduceMotion();
+  useFocusEffect(
+    useCallback(() => {
+      if (!tab || reduce) { enter.setValue(1); return; }
+      enter.setValue(0);
+      const a = Animated.timing(enter, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+      a.start();
+      return () => a.stop();
+    }, [tab, reduce, enter]),
+  );
   const deep = DEEP[tone][dark ? 'dark' : 'light'];
   const shift = y.interpolate({ inputRange: [0, Math.max(400, height * 1.2)], outputRange: [0, 1], extrapolate: 'clamp' });
   // Şerit tam opak: kaydırılan içerik çentik/saat arkasından görünmesin. Tepede (kaydırma yokken) saydam, sahne görünür.
@@ -90,6 +104,7 @@ export function Screen({
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       {!image && <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
+      <Animated.View style={{ flex: 1, opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
       <Animated.ScrollView
         ref={scrollRef as never}
         onScroll={onScroll}
@@ -102,6 +117,7 @@ export function Screen({
         {header && <AppHeader />}
         {children}
       </Animated.ScrollView>
+      </Animated.View>
       {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın; şerit de zeminle birlikte renk değiştirir. */}
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top + 1 }}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, opacity: stripOp }]} />

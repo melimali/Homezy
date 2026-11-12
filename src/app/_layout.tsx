@@ -152,7 +152,7 @@ function RootStack() {
   const inside = introSeen && (status === 'guest' || status === 'account');
 
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: c.bg } }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', animationDuration: 260, contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Protected guard={!introSeen}>
         <Stack.Screen name="tanitim" options={{ animation: 'fade' }} />
       </Stack.Protected>

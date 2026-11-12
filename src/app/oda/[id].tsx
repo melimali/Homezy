@@ -38,6 +38,7 @@ export default function RoomScreen() {
 
   return (
     <Screen header={false}>
+      <RenameRoom id={renaming ? r.id : null} onClose={() => setRenaming(false)} />
       {/* Geri düğmesi ve yanında odalar arasında geri dönmeden geçmek için emoji şeridi. */}
       <View style={styles.topRow}>
         <BackLink label="" />

@@ -58,6 +58,10 @@ export function startAds(): Promise<boolean> {
       console.warn('Homezy: reklamlar başlatılamadı', e);
       return false;
     }
-  })();
+  })().then(ok => {
+    // Başarısızlık (zaman aşımı, onay yok) kalıcı olmasın: sonraki çağrı yeniden denesin.
+    if (!ok) ready = null;
+    return ok;
+  });
   return ready;
 }

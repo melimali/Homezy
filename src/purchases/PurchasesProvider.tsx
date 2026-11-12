@@ -207,7 +207,19 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
       syncServer();
       return { ok: true, active: !!customerInfo.entitlements.active[ENTITLEMENT] };
     } catch (e) {
-      if ((e as { userCancelled?: boolean }).userCancelled) return { ok: false, cancelled: true, error: '' };
+      const err = e as { userCancelled?: boolean; code?: string | number };
+      if (err.userCancelled) return { ok: false, cancelled: true, error: '' };
+      if (String(err.code) === '8') return { ok: false, error: 'Ödeme onay bekliyor. Onaylanınca Premium otomatik açılır.' };
+      if (String(err.code) === '6') {
+        try {
+          const info = await Purchases.restorePurchases();
+          apply(info);
+          syncServer();
+          if (info.entitlements.active[ENTITLEMENT]) return { ok: true, active: true };
+        } catch {
+          // Aşağıdaki genel hata dönsün.
+        }
+      }
       return { ok: false, error: 'Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.' };
     }
   }, [pkgs, apply]);

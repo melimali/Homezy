@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
+
+import { fonts } from '@/theme';
 
 /**
  * Evin içinde dolaşan minik Moka (kakapo). Saf SVG; yeni native modül yok.
@@ -68,7 +70,7 @@ const MARGIN = 0.28;
 const inCell = (i: number, cols: number): [number, number] => [Math.floor(i / cols) + rnd(MARGIN, 1 - MARGIN), (i % cols) + rnd(MARGIN, 1 - MARGIN)];
 
 export function MokaPet({
-  vb, roomCells, blocked, cols, project, reduce, celebrate, night,
+  vb, roomCells, blocked, cols, project, reduce, celebrate, night, say,
 }: {
   vb: string;
   roomCells: number[];
@@ -79,6 +81,8 @@ export function MokaPet({
   /** Her artışta Moka kutlama yapar (görev bitti). */
   celebrate: number;
   night: boolean;
+  /** Moka'nın ara sıra balonla söyleyeceği kısa cümleler. Boşsa konuşmaz. */
+  say?: string[];
 }) {
   const walk = useRef(walkable(roomCells, blocked));
   const key = roomCells.join(',') + '|' + blocked + '|' + cols;
@@ -97,6 +101,32 @@ export function MokaPet({
     sim.current = { r, c, f: 1, mode: 'stand', t: 0, dur: 1.2, path: [], step: 0, look: 0, lookNow: 0, blinkIn: rnd(1.5, 4), blink: -1, zzz: 0 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
+
+  // Sohbet balonu: açılıştan birkaç saniye sonra selam, sonra arada bir kısa cümle. Uyurken konuşmaz.
+  const [bubble, setBubble] = useState<string | null>(null);
+  const sayRef = useRef(say);
+  sayRef.current = say;
+  const talks = !!say?.length;
+  useEffect(() => {
+    if (!talks) return;
+    let n = 0;
+    let hide: ReturnType<typeof setTimeout> | undefined;
+    let next: ReturnType<typeof setTimeout>;
+    const speak = () => {
+      const lines = sayRef.current ?? [];
+      const s = sim.current;
+      if (lines.length && s && s.mode !== 'sleep') {
+        // İlk söz selam, sonrakiler sırayla.
+        setBubble(lines[n % lines.length]);
+        n++;
+        if (s.mode !== 'cheer') { s.mode = 'hop'; s.t = 0; s.dur = 1.3; s.path = []; }
+        hide = setTimeout(() => setBubble(null), 4600);
+      }
+      next = setTimeout(speak, 26000 + Math.random() * 20000);
+    };
+    next = setTimeout(speak, 3200);
+    return () => { clearTimeout(next); if (hide) clearTimeout(hide); };
+  }, [talks, key]);
 
   const lastCel = useRef(celebrate);
   useEffect(() => {
@@ -200,8 +230,36 @@ export function MokaPet({
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" viewBox={vb}>
         <MokaBody fr={frame} />
+        {bubble && <Bubble text={bubble} x={frame.x} y={frame.y - frame.lift} vb={vb} />}
       </Svg>
     </View>
+  );
+}
+
+/** Konuşma balonu: Moka'nın üstünde, kadrajdan taşmaz. Uzun cümle iki satıra bölünür. */
+function Bubble({ text, x, y, vb }: { text: string; x: number; y: number; vb: string }) {
+  const [vx, , vw] = vb.split(' ').map(Number);
+  const words = text.split(' ');
+  const lines: string[] = [];
+  for (const w of words) {
+    const last = lines[lines.length - 1];
+    if (last != null && (last + ' ' + w).length <= 20) lines[lines.length - 1] = last + ' ' + w;
+    else lines.push(w);
+  }
+  const FS = 12, LH = 15;
+  const w = Math.max(...lines.map(l => l.length)) * FS * 0.56 + 18;
+  const h = lines.length * LH + 10;
+  const cx = Math.min(vx + vw - w / 2 - 4, Math.max(vx + w / 2 + 4, x + 6));
+  const top = y - 34 - h;
+  return (
+    <G>
+      <Rect x={cx - w / 2} y={top} width={w} height={h} rx={10} fill="#FFFDF9" stroke="#E8DFD2" strokeWidth={1} />
+      <Path d={`M${x + 2} ${top + h - 0.5}L${x + 4} ${top + h + 7}L${x + 11} ${top + h - 0.5}Z`} fill="#FFFDF9" stroke="#E8DFD2" strokeWidth={1} strokeLinejoin="round" />
+      <Rect x={x + 2.5} y={top + h - 2} width={8} height={2.4} fill="#FFFDF9" />
+      {lines.map((l, i) => (
+        <SvgText key={i} x={cx} y={top + 5 + LH * (i + 1) - 4} fontSize={FS} fontFamily={fonts.bodyBold} fill={INK} textAnchor="middle">{l}</SvgText>
+      ))}
+    </G>
   );
 }
 

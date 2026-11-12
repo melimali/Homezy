@@ -48,6 +48,7 @@ export const EN_R: Record<string, string> = {
   'Odaya gir →': 'Enter room →',
   '⟲ Sıfırla': '⟲ Reset',
   'Uzaklaş': 'Zoom out',
+  'Sıfırla': 'Reset',
   'Evin üzerinde dokunarak düzenle: odayı seç, eşyayı al, istediğin yere koy.': 'Edit right on the house: pick a room, grab an item, drop it where you like.',
   'Evde koymak istediğin bloğa dokun.': 'Tap the block in the house where it should go.',
   'Evdeki eşyaya ya da aşağıdan birine dokun.': 'Tap an item in the house or pick one below.',

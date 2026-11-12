@@ -1041,6 +1041,8 @@ const lightDefs = (
   </Defs>
 );
 
+export type ZoomApi = { step: (dir: 1 | -1) => void; reset: () => void };
+
 type Props = {
   state: AppState;
   onOpenRoom?: (id: string) => void;
@@ -1071,6 +1073,8 @@ type Props = {
    * altında kapalı bir kütle olarak durur, pencereleri ve kapısıyla.
    */
   floor?: Floor;
+  /** Zoom düğmeleri ekranın başka yerinde (ör. alt kenarda) çizilecekse: ev buraya `step` / `reset` koyar, kendi düğmelerini çizmez. */
+  zoomRef?: { current: ZoomApi | null };
   /** Düzenleme modu (Evini kendine benzet): bloğa ya da eşyaya dokununca bloğun sırasıyla çağrılır; oda açılmaz. */
   onPickCell?: (i: number) => void;
   /** Vurgulanan oda (seçili oda). */
@@ -1081,7 +1085,7 @@ type Props = {
   placing?: boolean;
 };
 
-function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing }: Props) {
+function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing, zoomRef }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1113,6 +1117,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   /** İki parmakla yakınlaştırılmış / uzaklaştırılmış: "Sıfırla" düğmesi görünür. */
   const [zoomed, setZoomed] = useState(false);
   const focusFn = useRef<(id: string | null) => void>(() => {});
+  const zoomStepRef = useRef<(dir: 1 | -1) => void>(() => {});
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
@@ -1980,6 +1985,21 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         motes.push(<Circle key={'mo' + i} cx={houseCenterX + (u - 0.5) * halfW * 1.3} cy={houseMinY + 30 + v * (houseMaxY - houseMinY - 50)} r={0.7 + k2 * 0.8} fill={phase === 'aksam' ? '#FFD49A' : '#FFF4CF'} opacity={0.55 + k2 * 0.4} />));
     }
   }
+  // Moka'nın ara sıra söyledikleri: günün saatine ve bekleyen işlere göre, uygulamanın dilinde.
+  const waiting = Object.keys(roomLate).length;
+  const en = (S.settings?.language ?? 'tr') !== 'tr';
+  const mokaSays = (() => {
+    const hi = {
+      sabah: en ? ['Good morning ☀️', 'Coffee first? ☕'] : ['Günaydın ☀️', 'Önce kahve mi? ☕'],
+      ogle: en ? ['Hi there 👋', 'Home looks lovely ✨'] : ['Selam 👋', 'Ev bugün çok güzel ✨'],
+      aksam: en ? ['Good evening 🌇', 'Nice work today'] : ['İyi akşamlar 🌇', 'Bugün iyi iş çıkardın'],
+      gece: en ? ['Good night 🌙', 'Time to rest 😴'] : ['İyi geceler 🌙', 'Dinlenme vakti 😴'],
+    }[phase];
+    const task = waiting > 0
+      ? (en ? [`${waiting} ${waiting === 1 ? 'room needs' : 'rooms need'} you 💪`, 'One small task? 🧹'] : [`${waiting} oda seni bekliyor 💪`, 'Küçük bir iş yapalım mı? 🧹'])
+      : (en ? ['All done, enjoy 🎉'] : ['Her şey tamam, keyfine bak 🎉']);
+    return [...hi, ...task];
+  })();
   const sc = boxW > 0 ? boxW / vbW : 0;
   const ZMAX = 3, ZMIN = 0.7;
   focusFn.current = (id: string | null) => {
@@ -2022,6 +2042,12 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const ease = { duration: 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: true };
     Animated.parallel([Animated.timing(pinch, { toValue: next, ...ease }), Animated.timing(pan, { toValue: { x: g.px, y: g.py }, ...ease })]).start();
   };
+  zoomStepRef.current = zoomStep;
+  useEffect(() => {
+    if (!zoomRef) return;
+    zoomRef.current = { step: d => zoomStepRef.current(d), reset: () => focusFn.current(null) };
+    return () => { zoomRef.current = null; };
+  }, [zoomRef]);
   // Zoom'a bağlı sürekli geçiş: yaklaştıkça çatı yükselip büyüyerek solar, çevre detayları da silikleşir.
   const roofOp = pinch.interpolate({ inputRange: [ZMIN, 0.84, 0.98], outputRange: [1, 1, 0], extrapolate: 'clamp' });
   const extOp = pinch.interpolate({ inputRange: [ZMIN, 1, 1.8], outputRange: [1, 1, 0.2], extrapolate: 'clamp' });
@@ -2206,7 +2232,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       {layer('twb', twOpB, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
-      {sc > 0 && moka && <MokaPet vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} />}
+      {sc > 0 && moka && <MokaPet vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} say={onPickCell ? undefined : mokaSays} />}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
@@ -2246,7 +2272,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         </Pressable>
       )}
     </View>
-  ) : pinchZoom ? (
+  ) : pinchZoom && !zoomRef ? (
     <View pointerEvents="box-none" style={st3.reset}>
       <Pressable accessibilityRole="button" accessibilityLabel="Uzaklaş" onPress={() => zoomStep(-1)} hitSlop={6} style={[st3.round, { backgroundColor: c.surface, borderColor: c.line }]}>
         <SvgLessText color={c.ink} bold>−</SvgLessText>

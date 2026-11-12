@@ -2,11 +2,11 @@ import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { LayoutAnimation, Platform, UIManager } from 'react-native';
 
 
-import { House3D } from '@/components/House3D';
+import { House3D, type ZoomApi } from '@/components/House3D';
 import { HouseFloors } from '@/components/HouseFloors';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
@@ -333,6 +333,7 @@ function HouseViewer({
   const [zoom] = useState(() => new Animated.Value(0.72));
   const [opacity] = useState(() => new Animated.Value(0));
   const [closing, setClosing] = useState(false);
+  const zoomApi = useRef<ZoomApi | null>(null);
 
   useEffect(() => {
     Animated.parallel([
@@ -355,7 +356,7 @@ function HouseViewer({
       <View style={[styles.viewer, { backgroundColor: c.bg }]}>
         <Animated.View style={[styles.viewerScene, { opacity, transform: [{ scale: zoom }] }]}>
           <View style={styles.viewerModel}>
-            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed pinchZoom roomZoom labels={false} onOpenRoom={id => { onClose(); router.push(`/oda/${id}` as Href); }} />
+            <HouseFloors state={state} now={now} build={build} theme={theme} zoom={1.2} bleed pinchZoom roomZoom labels={false} zoomRef={zoomApi} onOpenRoom={id => { onClose(); router.push(`/oda/${id}` as Href); }} />
           </View>
         </Animated.View>
         <Pressable
@@ -367,6 +368,14 @@ function HouseViewer({
         >
           <Text style={[styles.viewerCloseText, { color: c.ink }]}>×</Text>
         </Pressable>
+        {/* Zoom düğmeleri: ekranın alt kenarında sabit. */}
+        <View pointerEvents="box-none" style={[styles.viewerZoom, { bottom: insets.bottom + 22 }]}>
+          {([['−', 'Uzaklaş', () => zoomApi.current?.step(-1)], ['⟲', 'Sıfırla', () => zoomApi.current?.reset()], ['+', 'Yakınlaş', () => zoomApi.current?.step(1)]] as const).map(([sym, label, fn]) => (
+            <Pressable key={sym} accessibilityRole="button" accessibilityLabel={label} onPress={fn} hitSlop={8} style={[styles.viewerZoomBtn, { backgroundColor: c.surface, borderColor: c.line }]}>
+              <Text style={[styles.viewerZoomText, { color: c.ink }]}>{sym}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </Modal>
   );
@@ -467,5 +476,8 @@ const styles = StyleSheet.create({
   viewerScene: { width: '100%', paddingHorizontal: 8 },
   viewerModel: { width: '100%' },
   viewerClose: { position: 'absolute', right: 18, width: 46, height: 46, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
+  viewerZoom: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 14 },
+  viewerZoomBtn: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  viewerZoomText: { fontSize: 26, lineHeight: 30, fontFamily: fonts.bodyBold },
   viewerCloseText: { fontSize: 32, lineHeight: 36, fontFamily: fonts.bodyBold },
 });

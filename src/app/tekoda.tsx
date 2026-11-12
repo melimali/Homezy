@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
+import { BackLink, Btn, Screen, T } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { soloRoom } from '@/domain/logic';
 import { useStore } from '@/store/AppStore';

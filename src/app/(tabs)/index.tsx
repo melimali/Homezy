@@ -20,7 +20,7 @@ import { checkinOf, dayPlan } from '@/domain/mood';
 import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T } from '@/components/ui';
 import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
-import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
+import { allTasks, doneToday as isDoneToday, greet, greeting, notifs, soloRoom } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
 import { AdBanner } from '@/ads/AdBanner';
@@ -50,6 +50,7 @@ export default function Home() {
   const { status, user } = useAuth();
   const name = status === 'account' ? displayName(user) : null;
   const all = allTasks(S, now);
+  const solo = soloRoom(S);
   // Ana ekranda sadece en acil üç iş; gerisi Bugün sekmesinde.
   const due = all.filter(x => x.s.k !== 'ok').sort((a, b) => a.s.diff - b.s.diff);
   const lastDone = all.filter(x => isDoneToday(x.t, now)).sort((a, b) => (b.t.last ?? 0) - (a.t.last ?? 0))[0];
@@ -175,14 +176,15 @@ export default function Home() {
 
       {/* Odalar sekmesi yok; odalar evin içinde (docs/skeleton-v3.md). */}
       <View style={{ gap: 10 }}>
-        <SecHead title="Odalarım" h="h3" right={
+        <SecHead title="Odalarım" h="h3" right={solo ? undefined : (
           <Squish onPress={() => router.push('/plan')} accessibilityRole="link" accessibilityLabel="Ev planını düzenle" hitSlop={8}>
             <T v="small">✏️ Planı düzenle</T>
           </Squish>
-        } />
+        )} />
         <RoomGrid state={S} now={now} start={3} row />
       </View>
 
+      {!solo && (
       <View style={{ gap: 12 }}>
         <SecHead title="Evim" h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
@@ -225,6 +227,7 @@ export default function Home() {
           <T v="tiny" style={{ textAlign: 'center' }}>❄️ Bu ay {freezeLeft}/{lim.freezes} seri dondurma hakkın var. Bir gün kaçırırsan evin yıkılmaz.</T>
         )}
       </View>
+      )}
 
       {houseOpen && (
         <HouseViewer

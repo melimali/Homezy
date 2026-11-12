@@ -20,6 +20,7 @@ import { PetsCard } from '@/components/PetsCard';
 import { ShopCard } from '@/components/ShopCard';
 import { MokaSprite, type SpriteAnim } from '@/components/MokaSprite';
 import { MokaReact } from '@/components/MokaReact';
+import { RestGame } from '@/components/RestGame';
 import { TaskRow } from '@/components/TaskRow';
 import { WelcomeBack } from '@/components/WelcomeBack';
 import { FeatureTip } from '@/components/FeatureTip';
@@ -140,6 +141,7 @@ export default function Home() {
           <View style={{ alignItems: 'center', gap: 6 }}>
             <MokaSprite anim="party" size={120} />
             <T v="bold" style={{ textAlign: 'center' }}>{`Bugün iş kalmadı. ${doneN} işi bitirdin, harikasın! Biraz dinlen 🌿`}</T>
+            <RestGame />
           </View>
         ) : <EmptyMsg pose="sparkling_complete">Bugünlük her şey tamam. Biraz dinlen.</EmptyMsg>)}
       </Card></View>

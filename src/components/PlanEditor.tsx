@@ -101,9 +101,11 @@ export function PlanEditor({ onSaved, footer }: { onSaved: (first: boolean, next
       else toast('Önce aşağıdan bir oda seç.');
       return;
     }
-    if (first) remember();
     const val = cur === 'erase' ? null : cur;
     const f = floorRef.current;
+    const curCells = f === 1 ? stateRef.current.cells2 : stateRef.current.cells;
+    if (!first && (curCells?.[i] ?? null) === val) return;
+    if (first) remember();
     update(D => {
       if (f === 1) addUpper(D);
       const cells = f === 1 ? D.cells2! : D.cells;

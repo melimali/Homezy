@@ -2,7 +2,12 @@ import { Platform } from 'react-native';
 
 import type { AppState } from '@/domain/types';
 
+import { taskEmoji } from '@/domain/icons';
+
 import { widgetData } from './data';
+
+/** Parantez içini at, uzun başlık widget'ta kesilmesin. */
+const shortName = (n: string) => n.replace(/\s*\(.*$/, '').trim().slice(0, 28);
 
 /** Swift widget'ı (targets/widget) ile paylaşılan app group; aynı kimlik expo-target.config.js'te. */
 const GROUP = 'group.com.meikai.homezy';
@@ -32,7 +37,13 @@ export async function refreshIosWidget(S: AppState, now = Date.now()) {
   if (!l) return;
   const d = widgetData(S, now);
   const payload = {
-    tasks: d.tasks.slice(0, 4).map(t => ({ emoji: t.emoji, name: t.name, room: t.room, label: t.label, late: t.late })),
+    tasks: d.tasks.slice(0, 4).map(t => ({
+      emoji: taskEmoji(t.name, t.emoji === '🪴'),
+      name: shortName(t.name),
+      room: t.room,
+      label: t.late ? 'Gecikti' : '',
+      late: t.late,
+    })),
     left: d.left,
     done: d.done,
     streak: d.streak,

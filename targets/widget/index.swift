@@ -75,7 +75,7 @@ struct WidgetView: View {
                         Text(t.emoji).font(.system(size: 14))
                         Text(t.name).font(.system(size: 13, weight: .semibold, design: .rounded)).lineLimit(1)
                         Spacer(minLength: 0)
-                        if family != .systemSmall {
+                        if family != .systemSmall && !t.label.isEmpty {
                             Text(t.label).font(.system(size: 11, weight: .bold)).foregroundColor(t.late ? late : mint.opacity(0.7))
                         }
                     }

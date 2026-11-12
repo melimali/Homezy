@@ -15,7 +15,7 @@ export function EditTabBtn({ tab, wide }: { tab: TabId; wide?: boolean }) {
   return (
     <>
       <Squish onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={tx('Sekmeyi düzenle')} style={[st.btn, { backgroundColor: c.surface2 }, wide && { maxWidth: undefined, paddingHorizontal: 18, paddingVertical: 9 }]}>
-        <Text style={[st.btnT, { color: c.ink }]}>✏️ Sekmeyi düzenle</Text>
+        <Text style={[st.btnT, { color: c.ink }]}>✏️ {tx('Sekmeyi düzenle')}</Text>
       </Squish>
       {open && <TabEditor tab={tab} onClose={() => setOpen(false)} />}
     </>

@@ -30,11 +30,9 @@ export type Plan = 'monthly' | 'annual';
 
 /** Mağaza fiyatı henüz okunamadıysa gösterilen fiyatlar. Gerçek fiyat mağaza panelinde girilir. */
 export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
-/** İlk aya özel fiyat. Gerçek teklif Google Play'de aylık plana "giriş teklifi" olarak tanımlanır. */
-export const INTRO_PRICE = '$4.99';
 
 /** Dil Türkçeyken mağaza TL fiyatı vermiyorsa (bölge farklı ya da okunamadı) gösterilen sabit TL fiyatlar. */
-const TL = { monthly: 149.99, annual: 1564.99, intro: 119.99 };
+const TL = { monthly: 149.99, annual: 1564.99 };
 const tl = (n: number) => `${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
 
 export type Premium = {
@@ -61,11 +59,6 @@ type PurchasesCtx = {
   annualPerMonth: string | null;
   /** Yıllık planın 12 aylık fiyata göre indirim oranı (yüzde, ör. 28). */
   annualSave: number;
-  /**
-   * Aylık planın ilk ay fiyatı (ör. "$4.99"). Mağaza teklifi sadece hak kazanan (daha önce abone
-   * olmamış) kullanıcıya gösterir; mağaza okunduysa ve teklif yoksa null.
-   */
-  introPrice: string | null;
   /** Mağaza ücretsiz deneme tanımlıysa ve kullanıcı hak kazanıyorsa gün sayısı (ör. 3); yoksa 0. Plan başına. */
   trialDays: Record<Plan, number>;
   buy: (plan: Plan) => Promise<BuyResult>;
@@ -263,8 +256,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState(getLang());
   useEffect(() => onLangChange(() => setLangState(getLang())), []);
   // Türkçe seçiliyken mağaza fiyatı TL değilse sabit TL fiyatları göster; mağaza TL veriyorsa onu koru.
-  // Apple 3.1.2: gösterilen fiyat mağazanın gerçekten tahsil edeceği fiyat olmalı; sabit TL yalnızca mağaza ürünü hiç okunamadıysa.
-  const trFixed = lang === 'tr' && !pkgs.monthly && !pkgs.annual && Platform.OS !== 'ios';
+  // Mağaza ürünü okunduysa her zaman mağazanın (tahsil edilecek) fiyatı gösterilir (Apple 3.1.2); yedek: TR → TL, diğer diller → USD.
+  const trFixed = lang === 'tr' && !pkgs.monthly && !pkgs.annual;
   const monthly = trFixed ? tl(TL.monthly) : (pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly);
   const annual = trFixed ? tl(TL.annual) : (pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual);
   const annualPerMonth = trFixed ? tl(TL.annual / 12) : (pkgs.annual?.product.pricePerMonthString ?? null);
@@ -278,12 +271,9 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     return ip.periodUnit === 'DAY' ? n : ip.periodUnit === 'WEEK' ? n * 7 : 0;
   };
   const trialDays: Record<Plan, number> = { monthly: trialOf(pkgs.monthly), annual: trialOf(pkgs.annual) };
-  const paidIntro = pkgs.monthly?.product.introPrice && pkgs.monthly.product.introPrice.price !== 0 ? pkgs.monthly.product.introPrice.priceString : null;
-  const introStore = pkgs.monthly ? paidIntro : INTRO_PRICE;
-  const introPrice = trFixed && introStore ? tl(TL.intro) : introStore;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, trialDays, buy, restore, manage }),
-    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, trialDays, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, trialDays, buy, restore, manage }),
+    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, trialDays, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

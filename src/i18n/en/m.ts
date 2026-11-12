@@ -20,7 +20,6 @@ export const EN_M: Record<string, string> = {
   'Ödemeyi mağaza alır': 'The store takes the payment',
   'kart bilgilerin bize gelmez': 'we never see your card details',
   'Satın alarak Kullanım Koşulları’nı kabul edersin': 'By purchasing you accept the Terms of Use',
-  'İlk ay {}': 'First month {}',
   'sonra her ay {}': 'then {} a month',
   // Quiz: ad sorusu
   'Sana nasıl seslenelim?': 'What should we call you?',

@@ -4,7 +4,7 @@ Amaç: kullanıcı her gün dönsün, Premium'u "zorunlu" olduğu için değil "
 
 ## 1. Mevcut durum (integration/tum-pr)
 
-Zaten var: RevenueCat paywall (`PremiumChoice`, yıllık/aylık, ilk ay teklifi, TR fiyatı), tek kaynak `src/domain/premium.ts` (`LIMITS`, `THEMES`, `FEATURES`), `PremiumLock` kilit kartı, seri + seri dondurma (ücretsiz 1 / Premium 3), puan çarpanı, 5 ev, ev temaları (Gündüz + Cottagecore ücretsiz; Gece/Kış/Sonbahar/Minimal/Lavanta Premium), Moka gardırobu (`MokaWardrobe`, `MokaWearLayer`), bahçe, haftalık kart (`WeekCard`, `hafta.tsx`), ruh hali (`MoodCheckin`), öz bakım kartı, yerel bildirimler.
+Zaten var: RevenueCat paywall (`PremiumChoice`, yıllık/aylık, 3 gün deneme, TR fiyatı), tek kaynak `src/domain/premium.ts` (`LIMITS`, `THEMES`, `FEATURES`), `PremiumLock` kilit kartı, seri + seri dondurma (ücretsiz 1 / Premium 3), puan çarpanı, 5 ev, ev temaları (Gündüz + Cottagecore ücretsiz; Gece/Kış/Sonbahar/Minimal/Lavanta Premium), Moka gardırobu (`MokaWardrobe`, `MokaWearLayer`), bahçe, haftalık kart (`WeekCard`, `hafta.tsx`), ruh hali (`MoodCheckin`), öz bakım kartı, yerel bildirimler.
 
 Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an" yok); deneme süresi vurgusu yok; yıllık plan varsayılan seçili değil (aylık seçili); Premium bitince "ne kaybediyorsun" görünmüyor; ayrıntılı rapor yok; mevsim paketi / etkinlik yok.
 
@@ -39,7 +39,7 @@ Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme
 
 ## 4. Deneme ve paywall
 
-- **7 gün deneme** (mağaza tarafında): Google Play'de `ilk-ay` teklifi yanına 7 günlük ücretsiz deneme teklifi; App Store'da giriş teklifi. Ürün kimlikleri `docs/odeme-kurulumu.md` içine eklenir.
+- **Deneme** (mağaza tarafında, şu an 3 gün): Google Play'de 7 günlük ücretsiz deneme teklifi; App Store'da giriş teklifi. Ürün kimlikleri `docs/odeme-kurulumu.md` içine eklenir.
 - **Deneme bitince "ne kaybediyorsun" kartı:** yalnız görünüm kaybolur (Premium tema Gündüz'e döner, `themeFor` zaten böyle; seçim silinmez), **ilerleme kilitlenmez**. Kart: "Geri dönersen şunlar seni bekliyor: Gece teması, 6 Moka kıyafeti…".
 - **Paywall'u gösterme anları** (hepsi kapatılabilir):
   1. Onboarding sonu (zaten var: `LaunchChoice`).

@@ -55,14 +55,14 @@ EAS bulut derlemesi `.env.local` dosyasını **görmez**. Takip edilen `.env` do
 |---|---|
 | Yetki (entitlement) kod ve sunucuda `premium` (`PurchasesProvider.tsx`, `_shared/subscription.ts`) | ✅ |
 | Offering: kod `getOfferings().current` okuyor; paketler `$rc_monthly` / `$rc_annual` | ✅ kodda; 🖐 panelde default offering'in **current** olduğunu doğrula |
-| Ürün kimlikleri: Play `homezy_premium` ürünü, temel planlar `aylik` / `yillik`, teklif `ilk-ay` (`homezy_premium:aylik`, `:yillik`) | ❓ Eski notlarda `layfapp_premium` geçiyor; güncel belge `docs/odeme-kurulumu.md` `homezy_premium`. RevenueCat'te içe aktarılan ürünün adını kontrol et |
+| Ürün kimlikleri: Play `homezy_premium` ürünü, temel planlar `aylik` / `yillik`, 3 gün deneme teklifi (`homezy_premium:aylik`, `:yillik`) | ❓ Eski notlarda `layfapp_premium` geçiyor; güncel belge `docs/odeme-kurulumu.md` `homezy_premium`. RevenueCat'te içe aktarılan ürünün adını kontrol et |
 | `goog_` genel anahtar `.env`'de | ✅ |
 | Play servis hesabı JSON'unu RevenueCat Google uygulamasına yükleme + Play'de izin | 🖐 (en sık takılma noktası; yükledikten sonra RevenueCat "Credentials valid" göstermeli, 36 saate kadar sürebilir) |
 | Webhook: `https://gkccsimguzabfrsumjtv.supabase.co/functions/v1/revenuecat-webhook`, Authorization = `Bearer <REVENUECAT_WEBHOOK_SECRET>` | ✅ fonksiyon hazır, 🖐 panelde değerleri doğrula, "Send test event" → 200 |
 | Webhook fonksiyonu `--no-verify-jwt` ile deploy edilmeli, secret yoksa her isteği reddeder | ✅ kodda, 🖐 deploy |
 | Kullanıcı kimliği: uygulama RevenueCat'e Supabase kullanıcı UUID'sini verir; anonim RC kimlikleri atlanır | ✅ |
 | Satın alımı geri yükle, abonelik yönetimi bağlantısı (Play / App Store) | ✅ |
-| Fiyatlar: USD 6,99 / 59,99 / ilk ay 4,99; TR 149,99 / 1.564,99 / 119,99 TL | 🖐 Play Console'da elle girilir (paywall mağaza fiyatını gösterir, kodda sabit fiyat yok) |
+| Fiyatlar: USD 6,99 / 59,99; TR 149,99 / 1.564,99 TL | 🖐 Play Console'da elle girilir (paywall mağaza fiyatını gösterir, kodda sabit fiyat yok) |
 | Sandbox / lisans testi (Gmail'i ekle) | 🖐 |
 
 ## 5. Supabase (proje `gkccsimguzabfrsumjtv`, Frankfurt)
@@ -121,7 +121,7 @@ EAS bulut derlemesi `.env.local` dosyasını **görmez**. Takip edilen `.env` do
 | Hesap onayı (kimlik + telefon/cihaz doğrulama) | 🖐 beklemede olabilir |
 | **Kişisel hesap kuralı:** yeni kişisel hesaplarda production'dan önce **kapalı test: en az 12 test kullanıcısı, 14 gün kesintisiz** | ❓ Kural değişebilir; Play Console > Pano'daki "Production erişimi" kartında **güncel şartı** oku. Testçi toplamaya şimdiden başla |
 | Uygulama oluştur (TR, uygulama, ücretsiz) | 🖐 |
-| Abonelik ürünü + base plan + `ilk-ay` teklifi + TR/USD fiyatları | 🖐 |
+| Abonelik ürünü + base plan + 3 gün deneme teklifi + TR/USD fiyatları | 🖐 |
 | Dahili test → kapalı test → production | 🖐 |
 | Play App Signing | 🖐 varsayılan açık bırak |
 | Lisans test hesabı | 🖐 |

@@ -9,10 +9,9 @@ Kod tarafı hazır: ödeme ekranı (`src/components/PremiumChoice.tsx`), satın 
 | Plan | Fiyat | Not |
 |---|---|---|
 | Aylık | **6,99 $** | |
-| Aylık, ilk ay | **4,99 $** | Sadece daha önce abone olmamış kişiye. Google Play'de "giriş teklifi" olarak tanımlanır. |
 | Yıllık | **59,99 $** | Ekranda 12 aylık fiyata göre indirim oranı yazar (≈ %28), mağaza fiyatından hesaplanır. |
 
-**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim). İlk ay teklifi **119,99 TL**.
+**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim).
 
 Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı mağazaya girilen TL fiyatını görür, kodda TL yazılı değil. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
 
@@ -43,7 +42,7 @@ Play Console → **Para kazanma → Ürünler → Abonelikler → Abonelik oluş
 2. İki **temel plan**:
    - `aylik`: otomatik yenilenen, 1 ay, **geriye dönük uyumlu (backwards compatible)** olarak işaretli, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, sonra listede **Türkiye**'yi bul ve fiyatı elle **149,99 TRY** yap.
    - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**; Türkiye için elle **1.564,99 TRY**.
-3. `aylik` planına **teklif** ekle: kimlik `ilk-ay`, uygunluk "Yeni müşteri edinme" (daha önce bu aboneliği almamış olanlar), aşama "Tek ödeme" ya da "Sabit fiyat", **1 ay, 4,99 USD**; Türkiye için elle **119,99 TRY**. Etkinleştir.
+3. Her plana (`aylik`, `yillik`) **teklif** ekle: uygunluk "Yeni müşteri edinme", aşama "Ücretsiz deneme", **3 gün**. Etkinleştir.
 4. Temel planları ve teklifi **etkinleştir**.
 
 ### 4. RevenueCat
@@ -62,7 +61,7 @@ Play Console → **Para kazanma → Ürünler → Abonelikler → Abonelik oluş
    - **Monthly** (`$rc_monthly`) → `homezy_premium:aylik`
    - **Annual** (`$rc_annual`) → `homezy_premium:yillik`
 
-   Paket türleri önemli: uygulama "Monthly" ve "Annual" paketlerini arıyor. İlk ay teklifini ayrıca seçmek gerekmez; RevenueCat hak kazanan kişiye teklifi kendiliğinden uygular.
+   Paket türleri önemli: uygulama "Monthly" ve "Annual" paketlerini arıyor. Deneme teklifini ayrıca seçmek gerekmez; RevenueCat hak kazanan kişiye teklifi kendiliğinden uygular.
 7. **Project settings → API keys**:
    - Android **public** anahtarı (`goog_...`). Bunu bana gönderebilirsin: herkese açık bir anahtar, repodaki `.env` dosyasına ekleyeceğim (EAS bulut derlemesi `.env.local`'ı görmüyor).
    - **+ New secret API key**, sürüm **V1**, adı "supabase" (`sk_...`). Bu **gizli**, kimseye ve bana yazma; sadece 5. adımda Supabase'e girilecek.
@@ -99,13 +98,13 @@ RevenueCat → **Integrations → Webhooks → + New**:
    npx.cmd eas-cli@latest build --platform android --profile development
    ```
    Telefonda Play Store aynı Gmail ile açık olmalı ve 2. adımdaki dahili teste katılmış olmalısın.
-3. Uygulamada Hesabım → Premium → Aylık → **Premium ile başla · ilk ay 4,99 $**. Google'ın ödeme penceresinde "Test kartı, her zaman onaylanır".
+3. Uygulamada Hesabım → Premium → Aylık → **3 gün ücretsiz dene**. Google'ın ödeme penceresinde "Test kartı, her zaman onaylanır".
 4. Kontrol: Supabase → Table editor → `subscriptions`: `active = true`, `product_id = homezy_premium:aylik`. RevenueCat → Customers'ta da görünür.
 5. Uygulamayı silip kur, misafir olarak gir, **Satın alımları geri yükle** → Premium geri gelmeli.
 
 ## iOS (sonra)
 
 1. Apple Developer Program (99 $/yıl).
-2. App Store Connect → uygulama → **Abonelikler**: grup "Homezy Premium", iki ürün `homezy_premium_aylik` (6,99 $; Türkiye için elle 149,99 TL) ve `homezy_premium_yillik` (59,99 $; Türkiye için elle 1.564,99 TL). Aylık ürüne **Giriş teklifi**: "Kullandıkça öde", 1 ay, 4,99 $ (Türkiye 119,99 TL).
+2. App Store Connect → uygulama → **Abonelikler**: grup "Homezy Premium", iki ürün `homezy_premium_aylik` (6,99 $; Türkiye için elle 149,99 TL) ve `homezy_premium_yillik` (59,99 $; Türkiye için elle 1.564,99 TL). Her iki ürüne **Giriş teklifi**: "Ücretsiz deneme", 3 gün.
 3. RevenueCat → App Store uygulaması ekle (App Store Connect API anahtarı ve "In-App Purchase Key"), ürünleri içe aktar, aynı `premium` entitlement'ına ve aynı offering'deki Monthly / Annual paketlerine bağla.
 4. iOS public anahtarı (`appl_...`) `.env`'e eklenir.

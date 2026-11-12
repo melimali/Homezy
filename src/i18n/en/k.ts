@@ -39,7 +39,6 @@ export const EN_K: Record<string, string> = {
   '{} yüzde {}': '{} percent {}',
   ' · en verimli gün {}': ' · most productive day {}',
   ' · ruh hali {} {}': ' · mood {} {}',
-  'İlk ay {}, sonra her ay {}. ': 'First month {}, then {} every month. ',
   'Turu tekrar göster': 'Show the tour again',
   'Ben sayfasının tanıtımı': 'Intro to the Me page',
   ' Gübreyle {} büyüme daha hızlanabilir.': ' Fertilizer can speed up growth by {} more.',

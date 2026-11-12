@@ -59,7 +59,6 @@ export const EN_L: Record<string, string> = {
   'Süre bitti: {} puan (en iyi {}) 🎉': "Time's up: {} points (best {}) 🎉",
   ' · en verimli gün {}': ' · most productive day {}',
   '{} iş · en verimli gün {}': '{} tasks · most productive day {}',
-  'İlk ay {}, sonra her ay {}.': 'First month {}, then {} a month.',
   'Yatağını topla': 'Make your bed',
   'Kirli kıyafetleri sepete at': 'Put dirty clothes in the basket',
   'Yerdeki eşyaları topla': 'Pick up things from the floor',

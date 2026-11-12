@@ -130,7 +130,7 @@ Hazır cevaplar: `docs/yasal/magaza-formlari.md`.
 - [ ] Ürün kimliği `homezy_premium`, ad "Homezy Premium"
 - [ ] Temel plan **`aylik`** (otomatik yenilenen, aylık): ABD 6,99 $, **Türkiye 149,99 TL**; diğer ülkeler "fiyatları dönüştür" ile
 - [ ] Temel plan **`yillik`** (yıllık): 59,99 $, **Türkiye 1.564,99 TL**
-- [ ] `aylik` planına **Teklif `ilk-ay`**: yeni müşteriler, 1 ay indirimli: 4,99 $, **Türkiye 119,99 TL**
+- [ ] Her plana (`aylik`, `yillik`) **3 gün ücretsiz deneme** teklifi: yeni müşteriler
 - [ ] Planları ve teklifi **etkinleştir**
 - [ ] Ayarlar > **Lisans testi**: kendi Gmail'ini ekle (para çekilmeden satın alma denemek için)
 
@@ -171,7 +171,7 @@ npx.cmd eas build -p android --profile production
 - [ ] Buzdolabı ve kıyafet taraması (hesaplı), Moka sohbeti (Premium dışında sadece tanıtım mesajı), misafir ise tarama/sohbet kapalı
 - [ ] Ücretsiz planda Ev ve Bugün altında **afiş reklam** çıkıyor mu (test cihazı olarak); Premium'da çıkmıyor
 - [ ] Avrupa onay penceresi (VPN ile ya da AdMob test cihazı + "EEA" ayarıyla) — çıkıyor mu
-- [ ] Satın alma (lisans testi hesabıyla): aylık, yıllık, "ilk ay" teklifi, **Premium açıldı mı**; Supabase `subscriptions` tablosunda satır oluştu mu; "Satın alımı geri yükle"; iptal edince Premium düşüyor mu
+- [ ] Satın alma (lisans testi hesabıyla): aylık, yıllık, deneme teklifi, **Premium açıldı mı**; Supabase `subscriptions` tablosunda satır oluştu mu; "Satın alımı geri yükle"; iptal edince Premium düşüyor mu
 - [ ] Bildirim izni + sabah özeti saati; konum izni reddedince de çalışıyor
 - [ ] Hesabı sil → tekrar giriş yapılamaz, veri gitti
 - [ ] Koyu tema, küçük ekran, uygulamayı kapat-aç

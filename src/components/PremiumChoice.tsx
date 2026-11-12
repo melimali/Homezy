@@ -26,13 +26,12 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { premium, prices, annualPerMonth, annualSave, introPrice, trialDays, buy, restore } = usePurchases();
+  const { premium, prices, annualPerMonth, annualSave, trialDays, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
   const trial = trialDays[plan];
-  const intro = !trial && plan === 'monthly' ? introPrice : null;
   useEffect(() => {
     track('paywall_view', moment ?? 'manual');
   }, [moment]);
@@ -96,8 +95,6 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
           </Text>
           {trial ? (
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{trial} gün ücretsiz dene</Text>
-          ) : intro ? (
-            <Text style={{ fontFamily: fonts.body, fontSize: 12, color: 'rgba(235,245,238,0.75)' }}>İlk ay {intro}</Text>
           ) : null}
         </View>
       </View>
@@ -117,8 +114,8 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
             onPress={() => setPlan('monthly')}
             title="Aylık"
             price={`${prices.monthly}/ay`}
-            note={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz, sonra ${prices.monthly}/ay` : introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
-            badge={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz` : introPrice ? 'İlk aya özel' : undefined}
+            note={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz, sonra ${prices.monthly}/ay` : undefined}
+            badge={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz` : undefined}
           />
         </View>
       )}
@@ -151,7 +148,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
-        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
+        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
       </T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
         <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>

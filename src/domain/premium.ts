@@ -28,29 +28,20 @@ export const themeFor = (theme: HouseTheme | undefined, premium: boolean): House
   theme && (premium || !THEMES.find(t => t.id === theme)?.premium) ? theme : 'gunduz';
 
 /**
- * Ödeme ekranındaki karşılaştırma. `free` / `premium`: '✓', '—' ya da kısa bir açıklama.
- * Sıra: önce herkese ücretsiz olan disiplin çekirdeği, sonra Premium'un konfor / yapay zekâ / süs katmanı.
+ * Ödeme ekranındaki karşılaştırma: kısa liste. `free` / `premium`: '✓', '—' ya da kısa bir açıklama.
+ * Ücretsizde de olan çekirdek tek satırda toplanır; tabloda sadece fark yaratanlar kalır.
  * Sayılar `LIMITS` ve sunucudaki sınırlarla (…_ai_limits_25_10.sql, …_dondurma_2.sql) aynı olmalı.
  */
 export const FEATURES: { emoji: string; label: string; free: string; premium: string }[] = [
-  { emoji: '🏠', label: 'Ev planı, odalar, rutinler, hatırlatmalar', free: '✓', premium: '✓' },
-  { emoji: '🔥', label: 'Seri ve günlük görevler', free: '✓', premium: '✓' },
-  { emoji: '👕', label: 'Gardırop, buzdolabı, stok, bitkiler', free: '✓', premium: '✓' },
-  { emoji: '📔', label: 'Günlük, spor kaydı, haftalık özet', free: '✓', premium: '✓' },
-  { emoji: '❄️', label: 'Seri dondurma', free: `Ayda ${LIMITS.free.freezes}`, premium: `Ayda ${LIMITS.premium.freezes}` },
-  { emoji: '⭐', label: 'Görev puanı', free: '1 kat', premium: `${LIMITS.premium.mult.toString().replace('.', ',')} kat` },
-  { emoji: '📸', label: 'Fotoğraf tarama (buzdolabı + kıyafet)', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
-  { emoji: '💬', label: 'Moka ile sohbet', free: '—', premium: `Günde ${LIMITS.premium.chats} mesaj` },
-  { emoji: '🧊', label: '3D ev: 2. kat ve Premium eşyalar', free: 'Temel', premium: '✓' },
-  { emoji: '🌙', label: 'Ev temaları', free: 'Temel', premium: '✓' },
-  { emoji: '🏡', label: 'Ev sayısı', free: `${LIMITS.free.homes} ev`, premium: `${LIMITS.premium.homes} ev` },
+  { emoji: '📸', label: 'Fotoğraf tarama', free: `Haftada ${LIMITS.free.scans}`, premium: `Günde ${LIMITS.premium.scans}` },
+  { emoji: '💬', label: 'Moka ile sohbet', free: '—', premium: `Günde ${LIMITS.premium.chats}` },
+  { emoji: '🏡', label: '2. kat, temalar, birden çok ev', free: 'Temel', premium: '✓' },
   { emoji: '👨‍👩‍👧', label: 'Aile paylaşımı', free: '—', premium: '✓' },
-  { emoji: '🍳', label: 'Buzdolabından tarif önerisi', free: '—', premium: '✓' },
-  { emoji: '🧥', label: 'Haftalık kombin planı', free: '—', premium: '✓' },
-  { emoji: '📚', label: 'Gelişim önerisi', free: 'Günde 1 öneri', premium: `Günde ${LIMITS.premium.picks} öneri` },
-  { emoji: '📊', label: 'Ayrıntılı rapor, ruh hali grafiği, "geçen yıl bugün"', free: 'Özet', premium: '✓' },
-  { emoji: '🏃', label: 'Spor grafikleri ve antrenman planı', free: 'Kayıt', premium: '✓' },
-  { emoji: '🔔', label: 'Akıllı bildirim saatleri', free: 'Sabit saat', premium: '✓' },
-  { emoji: '☁️', label: 'Bulut yedeği', free: 'Ev verisi', premium: '+ fotoğraflar' },
-  { emoji: '🚫', label: 'Reklam', free: 'Az reklam', premium: 'Yok' },
+  { emoji: '🍳', label: 'Tarif ve haftalık kombin planı', free: '—', premium: '✓' },
+  { emoji: '📊', label: 'Ayrıntılı raporlar', free: 'Özet', premium: '✓' },
+  { emoji: '⭐', label: 'Puan ve seri dondurma', free: 'Temel', premium: `${LIMITS.premium.mult.toString().replace('.', ',')} kat` },
+  { emoji: '🚫', label: 'Reklam', free: 'Az', premium: 'Yok' },
 ];
+
+/** Tablonun üstünde tek satırda: ev işleri her iki planda da ücretsiz. */
+export const FREE_CORE = 'Ev planı, rutinler, gardırop, buzdolabı, günlük ve seri her iki planda ücretsiz.';

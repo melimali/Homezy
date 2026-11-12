@@ -66,6 +66,8 @@ type PurchasesCtx = {
    * olmamış) kullanıcıya gösterir; mağaza okunduysa ve teklif yoksa null.
    */
   introPrice: string | null;
+  /** Mağaza ücretsiz deneme tanımlıysa ve kullanıcı hak kazanıyorsa gün sayısı (ör. 3); yoksa 0. Plan başına. */
+  trialDays: Record<Plan, number>;
   buy: (plan: Plan) => Promise<BuyResult>;
   restore: () => Promise<RestoreResult>;
   /** Mağazanın abonelik yönetim sayfasını açar (iptal etme, plan değiştirme). */
@@ -241,11 +243,19 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   const m = trFixed ? TL.monthly : (pkgs.monthly?.product.price ?? 6.99);
   const y = trFixed ? TL.annual : (pkgs.annual?.product.price ?? 59.99);
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
-  const introStore = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
+  const trialOf = (pkg: typeof pkgs.monthly | typeof pkgs.annual): number => {
+    const ip = pkg?.product.introPrice;
+    if (!ip || ip.price !== 0) return 0;
+    const n = ip.periodNumberOfUnits * (ip.cycles || 1);
+    return ip.periodUnit === 'DAY' ? n : ip.periodUnit === 'WEEK' ? n * 7 : 0;
+  };
+  const trialDays: Record<Plan, number> = { monthly: trialOf(pkgs.monthly), annual: trialOf(pkgs.annual) };
+  const paidIntro = pkgs.monthly?.product.introPrice && pkgs.monthly.product.introPrice.price !== 0 ? pkgs.monthly.product.introPrice.priceString : null;
+  const introStore = pkgs.monthly ? paidIntro : INTRO_PRICE;
   const introPrice = trFixed && introStore ? tl(TL.intro) : introStore;
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
-    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, trialDays, buy, restore, manage }),
+    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, trialDays, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
-import { FEATURES, LIMITS } from '@/domain/premium';
+import { FEATURES, FREE_CORE, LIMITS } from '@/domain/premium';
 import { track } from '@/lib/events';
 import { legalUrl, openLink } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
@@ -26,12 +26,13 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
+  const { premium, prices, annualPerMonth, annualSave, introPrice, trialDays, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
   const unit = plan === 'annual' ? 'yıl' : 'ay';
-  const intro = plan === 'monthly' ? introPrice : null;
+  const trial = trialDays[plan];
+  const intro = !trial && plan === 'monthly' ? introPrice : null;
   useEffect(() => {
     track('paywall_view', moment ?? 'manual');
   }, [moment]);
@@ -91,7 +92,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
           <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
             {plan === 'annual' ? 'yıllık abonelik (her yıl yenilenir)' : 'aylık abonelik (her ay yenilenir)'}
           </Text>
-          {intro ? (
+          {trial ? (
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{trial} gün ücretsiz dene</Text>
+          ) : intro ? (
             <Text style={{ fontFamily: fonts.body, fontSize: 12, color: 'rgba(235,245,238,0.75)' }}>İlk ay {intro}</Text>
           ) : null}
         </View>
@@ -104,19 +107,21 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
             onPress={() => setPlan('annual')}
             title="Yıllık"
             price={`${prices.annual}/yıl`}
-            note={annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
-            badge={annualSave > 0 ? `%${annualSave} indirim` : undefined}
+            note={trialDays.annual ? `${trialDays.annual} gün ücretsiz, sonra ${prices.annual}/yıl` : annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
+            badge={trialDays.annual ? `${trialDays.annual} gün ücretsiz` : annualSave > 0 ? `%${annualSave} indirim` : undefined}
           />
           <PlanRow
             selected={plan === 'monthly'}
             onPress={() => setPlan('monthly')}
             title="Aylık"
             price={`${prices.monthly}/ay`}
-            note={introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
-            badge={introPrice ? 'İlk aya özel' : undefined}
+            note={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz, sonra ${prices.monthly}/ay` : introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
+            badge={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz` : introPrice ? 'İlk aya özel' : undefined}
           />
         </View>
       )}
+
+      <T v="small" style={{ textAlign: 'center' }}>{FREE_CORE}</T>
 
       <View style={[styles.table, { backgroundColor: c.surface }]}>
         <View style={styles.row}>
@@ -138,13 +143,13 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         {premium.active ? (
           <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
         ) : (
-          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : `Premium ile başla · ${prices[plan]}/${unit}`} onPress={doBuy} disabled={!!busy} />
+          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : trial ? `${trial} gün ücretsiz dene` : `Premium ile başla · ${prices[plan]}/${unit}`} onPress={doBuy} disabled={!!busy} />
         )}
         <Btn kind="ghost" label={onClose ? 'Kapat' : 'Ücretsiz devam et'} onPress={onClose ?? onDone} disabled={!!busy} />
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
-        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
+        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
       </T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
         <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>

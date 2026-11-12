@@ -1,5 +1,17 @@
 /** Kişilik / disiplin testi (src/domain/kisilik.ts, src/app/taniyalim.tsx): Türkçe metin → İngilizce. */
 export const EN_M: Record<string, string> = {
+  // Deneme ve sadeleşen karşılaştırma (PremiumChoice, premium.ts)
+  '{} gün ücretsiz dene': 'Try free for {} days',
+  '{} gün ücretsiz': '{} days free',
+  '{} gün ücretsiz, sonra {}/yıl': '{} days free, then {}/year',
+  '{} gün ücretsiz, sonra {}/ay': '{} days free, then {}/month',
+  'Fotoğraf tarama': 'Photo scanning',
+  '2. kat, temalar, birden çok ev': '2nd floor, themes, multiple homes',
+  'Tarif ve haftalık kombin planı': 'Recipes and weekly outfit plan',
+  'Ayrıntılı raporlar': 'Detailed reports',
+  'Puan ve seri dondurma': 'Points and streak freezes',
+  'Az': 'Few',
+  'Ev planı, rutinler, gardırop, buzdolabı, günlük ve seri her iki planda ücretsiz.': 'Home plan, routines, wardrobe, fridge, journal and streak are free on both plans.',
   // Plan seçimi (PremiumChoice) ve ana ekran
   'Düzenle': 'Edit',
   'Buzdolabından tarif önerisi': 'Recipe suggestions from your fridge',

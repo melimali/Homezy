@@ -1,5 +1,5 @@
-import { AppState as RNAppState } from 'react-native';
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState as RNAppState, InteractionManager } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
@@ -24,7 +24,7 @@ const clone = (S: AppState): AppState => JSON.parse(JSON.stringify(S));
  * Kayıtları sıraya koyar. Arka arkaya gelen değişiklikler (parmakla boyama, hızlı dokunuşlar)
  * kısa bir süre toplanır ve yalnızca en sonuncusu yazılır; uygulama arka plana giderken `flush` ile hemen yazılır.
  */
-function createSaver(delay = 300) {
+function createSaver(delay = 500) {
   let pending: AppState | null = null;
   let running = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -49,7 +49,8 @@ function createSaver(delay = 300) {
   const save = (S: AppState) => {
     pending = S;
     if (timer) return;
-    timer = setTimeout(() => void run(), delay);
+    // Animasyon/kaydırma bitince yaz: JS thread'i meşgulken kayıt takılma yaratmasın.
+    timer = setTimeout(() => { InteractionManager.runAfterInteractions(() => void run()); }, delay);
   };
   save.flush = () => {
     if (timer) clearTimeout(timer);
@@ -134,8 +135,9 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
 
   const get = useCallback(() => current.current!, []);
 
-  if (!state) return <>{fallback ?? null}</>;
-  return <StoreContext.Provider value={{ state, update, replace, get }}>{children}</StoreContext.Provider>;
+  const value = useMemo(() => (state ? { state, update, replace, get } : null), [state, update, replace, get]);
+  if (!value) return <>{fallback ?? null}</>;
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
 export function useStore() {

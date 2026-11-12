@@ -312,13 +312,13 @@ export function Bar({ value, color, track, height = 8, style }: { value: number;
   const [w] = useState(() => new Animated.Value(v));
   // Değer değişince çubuk yumuşakça dolar.
   useEffect(() => {
-    Animated.timing(w, { toValue: v, duration: 450, useNativeDriver: false }).start();
+    Animated.timing(w, { toValue: v, duration: 450, useNativeDriver: true }).start();
   }, [v, w]);
   return (
     <View style={[{ height, borderRadius: height / 2, overflow: 'hidden', backgroundColor: track ?? c.surface2 }, style]}>
       <Animated.View
         style={{
-          width: w.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+          width: '100%', transformOrigin: 'left center', transform: [{ scaleX: w.interpolate({ inputRange: [0, 1], outputRange: [0.001, 1] }) }],
           height: '100%', borderRadius: height / 2, backgroundColor: color ?? c.hi,
         }}
       />

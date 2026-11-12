@@ -83,7 +83,7 @@ const html = (key: string) => `<!doctype html><html><head><meta name="viewport" 
 function send(m){window.ReactNativeWebView.postMessage(JSON.stringify(m))}
 var tries=0;(function init(){
   if(!window.turnstile){if(tries++<100)return setTimeout(init,150);return send({e:'load'})}
-  turnstile.render('#t',{sitekey:${JSON.stringify(key)},theme:'light',callback:function(t){send({t:t})},
+  turnstile.render('#t',{sitekey:${JSON.stringify(key)},theme:'light',retry:'auto','retry-interval':2000,'refresh-expired':'auto',callback:function(t){send({t:t})},
   'error-callback':function(c){send({e:String(c||'error')})},'expired-callback':function(){send({e:'expired'})},
   'timeout-callback':function(){send({e:'timeout'})},
   'before-interactive-callback':function(){send({ui:1})},'after-interactive-callback':function(){send({ui:0})}});
@@ -101,6 +101,9 @@ export function CaptchaHost() {
   const [phase, setPhase] = useState<Phase>('load');
   const [attempt, setAttempt] = useState(0);
   const [errCode, setErrCode] = useState('');
+  // Widget çizildi mi (Turnstile betiği yüklendi). Çizildikten sonra kişi karşısındayken süre sınırı yok:
+  // Cloudflare dokunuştan sonra birkaç saniye (yavaş ağda daha uzun) düşünebilir, "zaman aşımı" yanlış hata olurdu.
+  const [rendered, setRendered] = useState(false);
   const queue = useRef<Pending[]>([]);
   usePauseBusy(!!job);
 
@@ -108,6 +111,7 @@ export function CaptchaHost() {
     job?.resolve(token);
     setPhase('load');
     setAttempt(0);
+    setRendered(false);
     setJob(queue.current.shift() ?? null);
   };
 
@@ -126,11 +130,11 @@ export function CaptchaHost() {
 
   // Yüklenme sınırı: arka planda 8 sn'de vazgeçilir; kişinin karşısındayken hata ekranı çıkar.
   useEffect(() => {
-    if (!job || phase !== 'load') return;
+    if (!job || phase !== 'load' || (rendered && !job.silent)) return;
     const t = setTimeout(() => (job.silent ? done(undefined) : (setErrCode('zaman aşımı'), setPhase('err'))), job.silent ? SILENT_TIMEOUT_MS : LOAD_TIMEOUT_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job, phase, attempt]);
+  }, [job, phase, attempt, rendered]);
 
   if (!job || !WebView || !SITE_KEY) return null;
 
@@ -149,13 +153,13 @@ export function CaptchaHost() {
       javaScriptEnabled
       domStorageEnabled
       setSupportMultipleWindows={false}
-      androidLayerType="software"
       backgroundColor="#FFFFFF"
       style={st.web}
       onMessage={e => {
         try {
-          const m = JSON.parse(e.nativeEvent.data) as { t?: string; e?: string; ui?: number };
-          if (m.t) done(m.t);
+          const m = JSON.parse(e.nativeEvent.data) as { t?: string; e?: string; ui?: number; r?: number };
+          if (m.r) setRendered(true);
+          else if (m.t) done(m.t);
           else if (m.e) fail(m.e);
           else if (m.ui != null) {
             // Arka plandaki istek sınav kutusu açmaz; vazgeçilir.
@@ -197,6 +201,7 @@ export function CaptchaHost() {
             accessibilityRole="button"
             onPress={() => {
               setPhase('load');
+              setRendered(false);
               setAttempt(a => a + 1);
             }}
             style={[st.btn, { backgroundColor: c.accent }]}

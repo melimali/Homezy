@@ -147,6 +147,22 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apply]);
 
+  // Fiyatlar ilk denemede okunamadıysa (ağ yok) birkaç kez daha dene.
+  useEffect(() => {
+    if (!apiKey || !configured.current || pkgs.monthly || pkgs.annual) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      if (++tries > 4) return clearInterval(t);
+      loadPackages().then(p => {
+        if (p.monthly || p.annual) {
+          setPkgs(p);
+          clearInterval(t);
+        }
+      }).catch(() => {});
+    }, 15000);
+    return () => clearInterval(t);
+  }, [pkgs.monthly, pkgs.annual, ready]);
+
   // Giriş / çıkış yapılınca RevenueCat'teki kullanıcıyı değiştir.
   const lastId = useRef<string | null | undefined>(undefined);
   useEffect(() => {

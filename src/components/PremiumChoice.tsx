@@ -44,8 +44,10 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
     setBusy(null);
     if (r.ok) {
       track('paywall_buy', moment ?? 'manual');
-      if (r.active) toast('Premium açıldı. Hoş geldin! 🎉');
-      onDone();
+      if (r.active) {
+        toast('Premium açıldı. Hoş geldin! 🎉');
+        onDone();
+      } else toast('Ödeme alındı, Premium birazdan açılır. Açılmazsa "Satın alımları geri yükle"ye dokun.');
     } else if (!r.cancelled) toast(r.error);
   };
 

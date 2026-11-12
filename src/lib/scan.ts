@@ -115,3 +115,23 @@ async function prepare(uri: string): Promise<string | null> {
 
 /** Türkçe büyük-küçük harf duyarsız karşılaştırma için. */
 export const trLow = (s: string | null | undefined) => String(s ?? '').toLocaleLowerCase('tr-TR').trim();
+
+/**
+ * Sayaç fotoğrafı gerçekten bir sayaç mı? Tarama hakkından düşmez. Sadece yapay zekâ açıkça "değil" derse
+ * false döner; internet yok, hesap yok, rıza yok ya da sunucu hatasında fotoğraf kabul edilir (kullanıcıyı engelleme).
+ */
+export async function checkMeterPhoto(uri: string): Promise<{ ok: boolean; reason?: string }> {
+  try {
+    if (!supabase || !(await online())) return { ok: true };
+    const { data: auth } = await supabase.auth.getSession();
+    if (!auth.session) return { ok: true };
+    if (!(await ensureAiConsent('scan'))) return { ok: true };
+    const image = await prepare(uri);
+    if (!image) return { ok: true };
+    const { data, error } = await supabase.functions.invoke('scan', { body: { kind: 'meter', image, mediaType: 'image/jpeg' }, timeout: 30_000 });
+    if (error || typeof data?.ok !== 'boolean') return { ok: true };
+    return { ok: data.ok, reason: typeof data.reason === 'string' ? data.reason : undefined };
+  } catch {
+    return { ok: true };
+  }
+}

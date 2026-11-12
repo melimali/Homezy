@@ -58,6 +58,10 @@ Sadece şu biçimde JSON döndür, başka metin yazma:
 {"items":[{"name":"Süt","qty":"yarım şişe","lvl":"az","match":"Süt","conf":"kesin","exp":null}],"missing":["Tereyağı"],"note":"Süt azalmış, domates hiç yok."}`;
 }
 
+const METER_PROMPT = `Bu fotoğraf elektrik, su ya da doğalgaz sayacı mı? Sayaç göstergesi (rakamlı ekran ya da çarklar) görünüyorsa ok=true. Başka bir şeyin fotoğrafıysa (kişi, oda, yiyecek, manzara, boş ya da karanlık kare) ok=false.
+Sadece JSON döndür: {"ok":true,"reason":"kısa Türkçe açıklama"}`;
+const METER_SCHEMA = { type: 'object', properties: { ok: { type: 'boolean' }, reason: { type: 'string' } }, required: ['ok', 'reason'], additionalProperties: false };
+
 function lookPrompt(known: string[]) {
   return `Bu fotoğrafta kıyafetler var: ya bir kişinin üzerinde giyilmiş bir kombin ya da yan yana serilmiş, askıda ya da dolapta duran parçalar. Görünen her kıyafet parçasını ve ayakkabıyı ayrı ayrı, dikkatle çıkar.
 
@@ -111,23 +115,49 @@ Deno.serve(async req => {
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);
-  // Hesapsız (anonim) kullanıcı taramaya ulaşamaz: üyelik (e-posta ile giriş) gerekir.
-  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
   // Gövde boyutu, kimlik doğrulamadan sonra ve JSON ayrıştırılmadan önce sınırlanır.
   const parsed0 = await readJson(req, MAX_IMAGE + 20_000);
   if ('error' in parsed0) return json({ error: parsed0.error }, parsed0.error === 'too_large' ? 413 : 400);
   const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown; lang?: unknown };
+  const isMeter = body.kind === 'meter';
   const kind = body.kind === 'fridge' || body.kind === 'look' ? body.kind : null;
   const image = typeof body.image === 'string' ? body.image : '';
-  if (!kind || !image) return json({ error: 'bad_request' }, 400);
+  if ((!kind && !isMeter) || !image) return json({ error: 'bad_request' }, 400);
   if (image.length > MAX_IMAGE) return json({ error: 'too_large' }, 413);
   // Sadece gerçek JPEG / PNG / WebP kabul edilir; hak ayrılmadan önce kontrol edilir.
   if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image.slice(0, 4096))) return json({ error: 'bad_image' }, 400);
   const mediaType = sniff(image);
   if (!mediaType) return json({ error: 'bad_image' }, 415);
   const known = (Array.isArray(body.known) ? body.known : []).map(x => str(x, 60)).filter(Boolean).slice(0, 80);
+
+  // Sayaç kontrolü: ucuz tek soru (evet/hayır). Tarama hakkından düşmez; sadece guard (dakika/IP/genel tavan) uygulanır. Misafir de kullanabilir.
+  if (isMeter) {
+    const gm = await guard(req, userId, 'scan');
+    if (!gm.ok) return json({ error: gm.error }, gm.status);
+    try {
+      const res = await anthropic.beta.messages.create({
+        model: MODEL,
+        max_tokens: 300,
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: METER_SCHEMA } },
+        ...FALLBACK,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+          { type: 'text', text: METER_PROMPT },
+        ] }],
+      });
+      const r = parseJson(res.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join(''));
+      if (!r || typeof r.ok !== 'boolean') { await gm.release(); return json({ error: 'unreadable' }, 422); }
+      return json({ ok: r.ok, reason: str(r.reason, 120) });
+    } catch (e) {
+      await gm.release();
+      console.error('meter failed', e);
+      return json({ error: 'ai' }, 502);
+    }
+  }
+  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
+  if (!kind) return json({ error: 'bad_request' }, 400);
 
   // Maliyet koruması: dakika sınırı, IP ve genel günlük tavan (kullanıcı hakkından önce, ucuz kontrol).
   const g = await guard(req, userId, 'scan');

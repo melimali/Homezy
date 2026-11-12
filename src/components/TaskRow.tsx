@@ -12,6 +12,7 @@ import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { useNow } from '@/hooks/useNow';
 import { persistPhoto } from '@/lib/photos';
+import { checkMeterPhoto } from '@/lib/scan';
 import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
@@ -168,6 +169,8 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.6 };
       const res = Platform.OS === 'web' ? await ImagePicker.launchImageLibraryAsync(opts) : await ImagePicker.launchCameraAsync(opts);
       if (res.canceled || !res.assets?.[0]) return;
+      const chk = await checkMeterPhoto(res.assets[0].uri);
+      if (!chk.ok) return toast(tr('Bu fotoğrafta sayaç görünmüyor. Sayacın rakamlı ekranını yakından çekip tekrar dene 📸'));
       done(persistPhoto(res.assets[0].uri, 'sayac', t.photo));
     } catch (e) {
       console.warn(e);

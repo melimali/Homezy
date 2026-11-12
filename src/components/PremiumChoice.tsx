@@ -1,12 +1,15 @@
 import { useBusy } from './BusyOverlay';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
-import { FEATURES, FREE_CORE, LIMITS } from '@/domain/premium';
+import { PAYWALL_COPY } from '@/domain/paywallCopy';
+import { FEATURES, FREE_CORE } from '@/domain/premium';
+import { MOKA_ASSETS } from '@/constants/moka';
+import { Appear, Float } from '@/components/motion';
 import { track } from '@/lib/events';
 import { legalUrl, openLink } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
@@ -30,7 +33,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
-  const unit = plan === 'annual' ? 'yıl' : 'ay';
+  const lang = S.settings.language === 'tr' ? 'tr' : 'en';
+  const L = PAYWALL_COPY[lang];
+  const unit = plan === 'annual' ? L.unitY : L.unitM;
   const trial = trialDays[plan];
   useEffect(() => {
     track('paywall_view', moment ?? 'manual');
@@ -66,24 +71,47 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       style={{ flex: 1, backgroundColor: c.bg }}
       contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}
     >
-      <View style={{ alignItems: 'center', gap: 6 }}>
-        <Text style={{ lineHeight: 62, fontSize: 48 }}>🏡</Text>
-        <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium: Moka sohbeti, daha çok tarama, 2. kat ve temalar, 5 ev, aile paylaşımı ve reklamsız deneyim."}</T>
+      <View style={[styles.hero, { backgroundColor: brand.navy }]}>
+        <Float amp={5} dur={2200}>
+          <Image source={MOKA_ASSETS.love} style={styles.mokaImg} resizeMode="contain" />
+        </Float>
+        <Text style={[styles.eyebrow, { color: brand.clay }]}>{L.eyebrow}</Text>
+        <Text style={[styles.heroTitle, { color: brand.mint }]}>{L.title}</Text>
+        {copy ? <Text style={[styles.heroMoment, { color: brand.clay }]}>{copy.title}: {copy.text}</Text> : null}
+        <Text style={[styles.heroSub, { color: 'rgba(235,245,238,0.85)' }]}>{L.sub}</Text>
       </View>
 
-      <View style={[styles.limits, { backgroundColor: c.surface, borderColor: c.line }]}>
-        <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink, textAlign: 'center' }}>
-          💬 Günde {LIMITS.premium.chats} Moka mesajı · 📸 Günde {LIMITS.premium.scans} tarama
-        </Text>
-        <T v="tiny" style={{ textAlign: 'center' }}>Ücretsizde fotoğraf taraması haftada {LIMITS.free.scans}; sohbet Premium'a özel.</T>
+      <View style={[styles.chatCard, { backgroundColor: c.surface, borderColor: c.line }]}>
+        <T v="h2">💬 {L.chatTitle}</T>
+        <T v="small">{L.chatSub}</T>
+        {L.chat.map((m, i) => (
+          <Appear key={i} index={i}>
+            <View style={[styles.bubble, m.who === 'me' ? { alignSelf: 'flex-end', backgroundColor: brand.blue } : { alignSelf: 'flex-start', backgroundColor: c.bg, borderColor: c.line, borderWidth: 1.5 }]}>
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, lineHeight: 20, color: m.who === 'me' ? brand.navy : c.ink }}>{m.text}</Text>
+            </View>
+          </Appear>
+        ))}
       </View>
 
+      <View style={{ gap: 8 }}>
+        <T v="h2">🔒 {L.lockedTitle}</T>
+        {L.locked.map(f => (
+          <View key={f.title} style={[styles.lockRow, { backgroundColor: c.surface }]}>
+            <Text style={{ fontSize: 26, lineHeight: 32 }}>{f.emoji}</Text>
+            <View style={{ flex: 1 }}>
+              <T v="bold">{f.title}</T>
+              <T v="small">{f.text}</T>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <T v="h2">{L.plansTitle}</T>
       <View style={styles.plans}>
         <View style={[styles.plan, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <Text style={[styles.planName, { color: c.ink }]}>Ücretsiz</Text>
+          <Text style={[styles.planName, { color: c.ink }]}>{lang === 'tr' ? 'Ücretsiz' : 'Free'}</Text>
           <Text style={[styles.price, { color: c.ink }]}>{S.settings.language === 'tr' ? '0 TL' : '$0'}</Text>
-          <T v="small">her zaman</T>
+          <T v="small">{lang === 'tr' ? 'her zaman' : 'always'}</T>
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
@@ -91,11 +119,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
           </View>
           <Text style={[styles.price, { color: brand.mint }]}>{prices[plan]}</Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
-            {plan === 'annual' ? 'yıllık abonelik (her yıl yenilenir)' : 'aylık abonelik (her ay yenilenir)'}
+            {plan === 'annual' ? (lang === 'tr' ? 'yıllık abonelik (her yıl yenilenir)' : 'yearly (renews every year)') : (lang === 'tr' ? 'aylık abonelik (her ay yenilenir)' : 'monthly (renews every month)')}
           </Text>
-          {trial ? (
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{trial} gün ücretsiz dene</Text>
-          ) : null}
+          {trial ? <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{L.trialLine(trial)}</Text> : null}
         </View>
       </View>
 
@@ -120,6 +146,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
       )}
 
+      <T v="h2">{L.compare}</T>
       <T v="small" style={{ textAlign: 'center' }}>{FREE_CORE}</T>
 
       <View style={[styles.table, { backgroundColor: c.surface }]}>
@@ -142,9 +169,12 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         {premium.active ? (
           <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
         ) : (
-          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : trial ? `${trial} gün ücretsiz dene` : `Premium ile başla · ${prices[plan]}/${unit}`} onPress={doBuy} disabled={!!busy} />
+          <>
+          <Btn kind="primary" label={busy === 'buy' ? '…' : trial ? L.ctaTrial(trial) : L.ctaBuy(prices[plan], unit)} onPress={doBuy} disabled={!!busy} />
+          {trial ? <T v="small" style={{ textAlign: 'center' }}>{L.ctaNote}</T> : null}
+          </>
         )}
-        <Btn kind="ghost" label={onClose ? 'Kapat' : 'Ücretsiz devam et'} onPress={onClose ?? onDone} disabled={!!busy} />
+        <Btn kind="ghost" label={L.skip} onPress={onClose ?? onDone} disabled={!!busy} />
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
@@ -195,7 +225,15 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
 }
 
 const styles = StyleSheet.create({
-  limits: { borderRadius: 18, borderWidth: 1.5, paddingVertical: 12, paddingHorizontal: 14, gap: 4, alignItems: 'center' },
+  hero: { borderRadius: 28, paddingHorizontal: 20, paddingVertical: 22, alignItems: 'center', gap: 8 },
+  mokaImg: { width: 150, height: 150 },
+  eyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.2 },
+  heroTitle: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, textAlign: 'center' },
+  heroMoment: { fontFamily: fonts.bodyBold, fontSize: 13, textAlign: 'center' },
+  heroSub: { fontFamily: fonts.body, fontSize: 14.5, lineHeight: 21, textAlign: 'center' },
+  chatCard: { borderRadius: 22, borderWidth: 1.5, padding: 14, gap: 10 },
+  bubble: { maxWidth: '88%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 9 },
+  lockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18 },
   planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },

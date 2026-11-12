@@ -190,7 +190,7 @@ export function MokaPet({
       acc += dt;
       // Yürürken/oynarken ~24 kare, dururken ~8 kare: JS iş parçacığı + SVG yeniden çizimi ucuz kalsın.
       const busy = s.mode === 'walk' || s.mode === 'hop' || s.mode === 'cheer' || s.mode === 'fluff';
-      if (acc < (busy ? 1 / 24 : 1 / 8)) return;
+      if (acc < (busy ? 1 / 14 : 1 / 4)) return;
       const d = acc; acc = 0;
       s.t += d;
       // göz kırpma

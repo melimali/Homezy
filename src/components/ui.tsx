@@ -82,6 +82,8 @@ export function Screen({
   }, [y, onScrollY]);
   const deep = DEEP[tone][dark ? 'dark' : 'light'];
   const shift = y.interpolate({ inputRange: [0, Math.max(400, height * 1.2)], outputRange: [0, 1], extrapolate: 'clamp' });
+  // Şerit tam opak: kaydırılan içerik çentik/saat arkasından görünmesin. Tepede (kaydırma yokken) saydam, sahne görünür.
+  const stripOp = y.interpolate({ inputRange: [0, 16], outputRange: [0, 1], extrapolate: 'clamp' });
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
   const bottom = tab ? 148 + insets.bottom : (header ? 42 : insets.bottom + 42);
   return (
@@ -101,8 +103,8 @@ export function Screen({
         {children}
       </Animated.ScrollView>
       {/* Kaydırılan içerik saat ve pil simgelerinin altına girip çakışmasın; şerit de zeminle birlikte renk değiştirir. */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top }}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, opacity: 0.94 }]} />
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top + 1 }}>
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, opacity: stripOp }]} />
         {!image && <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
       </View>
     </View>

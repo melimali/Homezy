@@ -41,6 +41,7 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
   const first = useRef(true);
   const [live, setLive] = useState<Rect2>({ x: W / 2, y: H / 2, w: 0, h: 0 });
   const step = steps[i];
+  const finish = () => Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: false }).start(() => onDone());
   const safeTop = insets.top + 16;
   const safeBottom = H - insets.bottom - 16;
 
@@ -73,11 +74,14 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
       }
       return prev;
     };
+    const skip = () => { if (i >= steps.length - 1) finish(); else setI(i + 1); };
     (async () => {
       Animated.timing(bub, { toValue: 0, duration: 120, useNativeDriver: false }).start();
       await wait(first.current ? 450 : 80);
       let r = await measure();
-      if (dead || !r) return;
+      if (dead) return;
+      // Hedef bulunamazsa (gizli ya da çizilmemiş blok) tur takılmasın: sıradaki adıma geç, sonuncuysa bitir.
+      if (!r) return skip();
       // Hedefi görünür bandın üst kısmına getir (balon için alt yarı boş kalsın).
       const want = safeTop + 24;
       const fits = r.y >= safeTop && r.y + r.h <= H * 0.62;
@@ -86,7 +90,8 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
         await wait(250);
         if (dead) return;
         r = await measure();
-        if (dead || !r) return;
+        if (dead) return;
+        if (!r) return skip();
       }
       setRect(r);
       if (first.current) {
@@ -107,7 +112,6 @@ export function BenTour({ steps, targets, getY, scrollTo, onDone }: {
   }, [i]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const last = i === steps.length - 1;
-  const finish = () => Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: false }).start(onDone);
 
   // Balon: hedefin altına, sığmazsa üstüne; ekran dışına asla taşmaz.
   let top = safeTop;

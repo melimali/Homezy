@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { usePauseBusy } from '@/components/BusyOverlay';
+import { prefs } from '@/lib/supabase';
 import { fonts, radius, useColors } from '@/theme';
 
 /**
@@ -40,10 +41,37 @@ function webview() {
 
 export const captchaEnabled = () => !!SITE_KEY && Platform.OS !== 'web' && !!webview();
 
-/** Captcha token'ı ister. Kapalıysa ya da çözülemezse undefined döner (istek yine denenir). */
-export function requestCaptcha(opts?: { silent?: boolean }): Promise<string | undefined> {
-  if (!captchaEnabled() || !listener) return Promise.resolve(undefined);
-  return new Promise(resolve => listener!({ resolve, silent: !!opts?.silent }));
+function ask(silent: boolean): Promise<string | undefined> {
+  return new Promise(resolve => listener!({ resolve, silent }));
+}
+
+/**
+ * Captcha token'ı ister. Kapalıysa ya da çözülemezse undefined döner (istek yine denenir).
+ * Kişi doğrulamayı bir kere geçtiyse sonrakiler önce görünmez denenir; kutu sadece Cloudflare
+ * gerçekten sınav isterse açılır ("robot musun" tekrar tekrar sorulmaz).
+ */
+export async function requestCaptcha(opts?: { silent?: boolean }): Promise<string | undefined> {
+  if (!captchaEnabled() || !listener) return undefined;
+  const silent = !!opts?.silent;
+  let verified = false;
+  try {
+    verified = prefs.get('captcha.ok') === '1';
+  } catch {
+    // Saklama okunamazsa kutu normal açılır.
+  }
+  if (!silent && verified) {
+    const quiet = await ask(true);
+    if (quiet) return quiet;
+  }
+  const token = await ask(silent);
+  if (token && !verified) {
+    try {
+      prefs.set('captcha.ok', '1');
+    } catch {
+      // Yazılamazsa sorun değil.
+    }
+  }
+  return token;
 }
 
 const html = (key: string) => `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">

@@ -28,6 +28,7 @@ function createSaver(delay = 500) {
   let pending: AppState | null = null;
   let running = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  let blocked = false;
   async function run() {
     timer = null;
     if (running) return;
@@ -47,10 +48,19 @@ function createSaver(delay = 500) {
     }
   }
   const save = (S: AppState) => {
+    // Okuma başarısız olduysa boş durumla diskteki gerçek veriyi ezme.
+    if (blocked) return;
     pending = S;
     if (timer) return;
     // Animasyon/kaydırma bitince yaz: JS thread'i meşgulken kayıt takılma yaratmasın.
-    timer = setTimeout(() => { requestIdleCallback(() => void run()); }, delay);
+    timer = setTimeout(() => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => void run());
+      else void run();
+    }, delay);
+  };
+  save.block = () => {
+    blocked = true;
+    pending = null;
   };
   save.flush = () => {
     if (timer) clearTimeout(timer);
@@ -89,7 +99,8 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
       }
       if (!S) {
         S = emptyState();
-        if (!failed) saver(S);
+        if (failed) saver.block();
+        else saver(S);
       }
       if (alive) {
         current.current = S;

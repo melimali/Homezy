@@ -4,6 +4,13 @@
     "slug": "homezy",
     "scheme": "homezy",
     "version": "1.0.2",
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": {
+      "url": "https://u.expo.dev/b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

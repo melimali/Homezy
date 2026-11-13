@@ -198,3 +198,19 @@ Kapsam: gün/saat dilimi ve DST, seri/puan, veri büyümesi, şema, bildirim pla
 - PurchasesProvider içinde mevcut 2 eslint `set-state-in-effect` hatası (önceden vardı, davranışı bozmuyor; ayrı temizlik).
 - Takvim/dil: `growth.ts`/`bonus.ts` gün numarası UTC bölme kullanıyor; UTC±12 dışındaki saat dilimlerinde sorun çıkarmaz.
 - BUILD GEREKTİRİR: OTA (expo-updates) yok (yukarıdaki bölüm); bu yüzden bu düzeltmelerden sonra çıkacak hatalar yeni mağaza sürümü ister. Son build'den önce expo-updates eklenmesi öneri.
+
+## Sunucu/hesap riskleri (son build hakkı öncesi)
+
+### Düzeltildi
+- 125e9e5 `chat_reserve`: aylık kontrol ile günlük artış arasında yarış vardı; kullanıcı başına `pg_advisory_xact_lock` eklendi (migration 20261113100000_chat_reserve_kilit.sql, imza/yetki aynı).
+- 1d2669f `src/auth/owner.ts`: sahip araçları yalnız `__DEV__` ya da derlemede `EXPO_PUBLIC_OWNER_TOOLS=1` iken açık; üretimde kapalı. Daha önce ayarlanmış `play.debugLevel` değeri durumda kalır (kaybolmaz), sadece düğmeler görünmez.
+- 7ca61e8 `subscription.ts`: secret `ALLOW_SANDBOX=false` ise is_sandbox abonelik Premium olmaz; secret yoksa davranış aynı (izinli).
+- d0057ee `sync/cloud.ts`: `useCloudStatus()` (idle/syncing/ok/error/toolarge/conflict) export edildi, UI bağlanmadı; yazmadan önce 1,95 MB bayt kontrolü (aşarsa yazılmaz, 'toolarge'). Sunucuda `push_home(p_state, p_expected)` koşullu güncelleme rpc'si (geriye uyumlu: rpc yoksa eski yola düşer).
+
+### Melih'in elle yapacakları
+- Supabase SQL: 20261113100000_chat_reserve_kilit.sql ve 20261113110000_push_home_kosullu.sql dosyalarını çalıştır.
+- Edge function deploy: subscription-sync ve revenuecat-webhook (ortak _shared/subscription.ts değişti). Mağaza yayınından önce secret `ALLOW_SANDBOX=false` ayarla.
+- UI bağlama (ayrı iş): `useCloudStatus()` ile hesap ekranında uyarı.
+
+### Çözülmeyen / not
+- İstemci (PurchasesProvider) Premium'u RevenueCat SDK entitlement'ından okuyor; sandbox ayrımı yapmıyor. Gerçek sınır sunucuda (tarama/sohbet limitleri is_premium ile), bu yüzden istemciye dokunulmadı.

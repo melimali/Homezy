@@ -67,9 +67,10 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}
+      style={{ flex: 1 }}
+      contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: 24 }]}
     >
       <View style={[styles.hero, { backgroundColor: brand.navy }]}>
         <Float amp={5} dur={2200}>
@@ -125,6 +126,37 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
       </View>
 
+      <T v="h2">{L.compare}</T>
+      <T v="small" style={{ textAlign: 'center' }}>{FREE_CORE}</T>
+
+      <View style={[styles.table, { backgroundColor: c.surface }]}>
+        <View style={styles.row}>
+          <View style={{ flex: 1 }} />
+          <Text style={[styles.colHead, { color: c.muted }]}>Ücretsiz</Text>
+          <Text style={[styles.colHead, { color: c.warm }]}>Premium</Text>
+        </View>
+        {ROWS.map(r => (
+          <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{r.emoji}</Text>
+            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13.5 }}>{r.label}</T>
+            <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
+            <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
+          </View>
+        ))}
+      </View>
+
+      <T v="small" style={{ textAlign: 'center' }}>
+        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
+      </T>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('privacy', S.settings.language))} accessibilityRole="link">Gizlilik Politikası</T>
+      </View>
+      {!premium.active && (
+        <Btn kind="ghost" small label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} style={{ alignSelf: 'center' }} />
+      )}
+    </ScrollView>
+    <View style={[styles.footer, { backgroundColor: c.bg, borderTopColor: c.line, paddingBottom: Math.max(insets.bottom, 12) }]}>
       {!premium.active && (
         <View style={{ gap: 10 }}>
           <PlanRow
@@ -146,26 +178,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
       )}
 
-      <T v="h2">{L.compare}</T>
-      <T v="small" style={{ textAlign: 'center' }}>{FREE_CORE}</T>
-
-      <View style={[styles.table, { backgroundColor: c.surface }]}>
-        <View style={styles.row}>
-          <View style={{ flex: 1 }} />
-          <Text style={[styles.colHead, { color: c.muted }]}>Ücretsiz</Text>
-          <Text style={[styles.colHead, { color: c.warm }]}>Premium</Text>
-        </View>
-        {ROWS.map(r => (
-          <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ lineHeight: 26, fontSize: 20 }}>{r.emoji}</Text>
-            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13.5 }}>{r.label}</T>
-            <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
-            <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={{ gap: 10 }}>
+      <View style={{ gap: 8 }}>
         {premium.active ? (
           <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
         ) : (
@@ -177,17 +190,8 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         <Btn kind="ghost" label={L.skip} onPress={onClose ?? onDone} disabled={!!busy} />
       </View>
 
-      <T v="small" style={{ textAlign: 'center' }}>
-        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
-      </T>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
-        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>
-        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('privacy', S.settings.language))} accessibilityRole="link">Gizlilik Politikası</T>
-      </View>
-      {!premium.active && (
-        <Btn kind="ghost" small label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} style={{ alignSelf: 'center' }} />
-      )}
-    </ScrollView>
+    </View>
+    </View>
   );
 }
 
@@ -237,6 +241,7 @@ const styles = StyleSheet.create({
   planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },
+  footer: { paddingHorizontal: 18, paddingTop: 12, gap: 10, borderTopWidth: 1.5, width: '100%', maxWidth: 520, alignSelf: 'center' },
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
   plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 0, gap: 2 },

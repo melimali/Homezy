@@ -30,7 +30,8 @@ import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
 import { prefs } from '@/lib/supabase';
 import { pinMiniWidget, pinTodayWidget, widgetAvailable } from '@/widget/widget';
-import { fonts, radius, useColors, elevation } from '@/theme';
+import { brand, fonts, radius, useColors, elevation } from '@/theme';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { appAlert } from '@/components/AppAlert';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
@@ -65,7 +66,7 @@ export default function Hesap() {
   const toast = useToast();
   const { t } = useTranslation();
   const { status, user, signOut, deleteAccount, updateAccount } = useAuth();
-  const { premium, restore, manage } = usePurchases();
+  const { premium, restore, manage, trialDays } = usePurchases();
   const { state, replace, update } = useStore();
   const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | 'lang' | null>(null);
   useBusy(!!busy);
@@ -403,10 +404,23 @@ export default function Hesap() {
       {purchasesEnabled && (
         <Appear index={2} style={[st.hero, { backgroundColor: c.surface2, flexDirection: 'column', alignItems: 'stretch', gap: 10 }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Text style={{ lineHeight: 42, fontSize: 32 }}>👑</Text>
-            <View style={{ flex: 1, gap: 2 }}>
-              <T v="h3">Homezy Premium</T>
-              <T v="small">{premium.active ? 'Premium üyesin ✓ Tüm özellikler açık' : 'Moka sohbeti, 1,5 kat puan, reklamsız ve fazlası'}</T>
+            <Float amp={4} dur={2200}>
+              <Image source={MOKA_ASSETS.love} style={{ width: 84, height: 84 }} resizeMode="contain" />
+            </Float>
+            <View style={{ flex: 1, gap: 4 }}>
+              <T v="h3">👑 Homezy Premium</T>
+              {!premium.active && Math.max(trialDays.annual, trialDays.monthly) > 0 ? (
+                <View style={{ alignSelf: 'flex-start', backgroundColor: brand.clay, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>
+                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
+                  </Text>
+                </View>
+              ) : null}
+              <T v="small">
+                {premium.active
+                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : 'You are Premium ✓ Everything is unlocked')
+                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
+              </T>
             </View>
           </View>
           {premium.active ? (

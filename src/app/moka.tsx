@@ -74,6 +74,10 @@ export default function MokaChat() {
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  // Ekrandan çıkınca bekleyen gecikmeli işlemler (yönlendirme, balon ekleme) iptal edilir.
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const later = (fn: () => void, ms: number) => void timers.current.push(setTimeout(fn, ms));
   const [kb, setKb] = useState(false);
   useEffect(() => {
     const sh = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKb(true));
@@ -128,7 +132,7 @@ export default function MokaChat() {
       sfx('tap');
       const gid = nextId++;
       fresh.add(gid);
-      setTimeout(() => push(p => [...p, { id: gid, role: 'assistant', ...gate }]), 500);
+      later(() => push(p => [...p, { id: gid, role: 'assistant', ...gate }]), 500);
       return;
     }
     const ctx = chatCtx(get());
@@ -138,7 +142,7 @@ export default function MokaChat() {
       sfx('tap');
       const rid2 = nextId++;
       fresh.add(rid2);
-      setTimeout(() => push(p => [...p, { id: rid2, role: 'assistant', content: tx('Bunu az önce konuştuk ☕ Başka bir şey eklemek ister misin?') }]), 450);
+      later(() => push(p => [...p, { id: rid2, role: 'assistant', content: tx('Bunu az önce konuştuk ☕ Başka bir şey eklemek ister misin?') }]), 450);
       return;
     }
     // Selam / teşekkür / hoşça kal: hazır cevap, sunucu çağrılmaz, hak düşmez.
@@ -147,7 +151,7 @@ export default function MokaChat() {
       sfx('tap');
       const cid = nextId++;
       fresh.add(cid);
-      setTimeout(() => push(p => [...p, { id: cid, role: 'assistant', content: canned }]), 450);
+      later(() => push(p => [...p, { id: cid, role: 'assistant', content: canned }]), 450);
       return;
     }
     setBusy(true);
@@ -185,10 +189,10 @@ export default function MokaChat() {
     fresh.add(rid);
     push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done, ...(undo.length ? { undo } : {}), ...(confirm.length ? { confirm } : {}) }]);
     const go = got.go;
-    if (go) setTimeout(() => router.push(go as never), 700);
+    if (go) later(() => router.push(go as never), 700);
     const f = got.focus;
     if (f) {
-      setTimeout(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
+      later(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
     }
   };
 

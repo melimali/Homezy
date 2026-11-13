@@ -14,11 +14,20 @@ export const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('S
 
 /** Kullanıcının durumunu RevenueCat'ten okuyup yazar. Hata olursa açıklamasını döner. */
 export async function syncSubscriber(userId: string, lastEvent: string | null): Promise<{ active: boolean } | { error: string }> {
-  const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
-    headers: { Authorization: `Bearer ${Deno.env.get('REVENUECAT_API_KEY')}` },
-  });
-  if (!res.ok) return { error: `revenuecat ${res.status}` };
-  const { subscriber } = await res.json();
+  const key = Deno.env.get('REVENUECAT_API_KEY');
+  if (!key) return { error: 'revenuecat key missing' };
+  let subscriber: any;
+  try {
+    // Zaman aşımı: RevenueCat yanıt vermezse fonksiyon asılı kalmaz.
+    const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return { error: `revenuecat ${res.status}` };
+    ({ subscriber } = await res.json());
+  } catch (e) {
+    return { error: `revenuecat fetch: ${e instanceof Error ? e.name : 'error'}` };
+  }
   const ent = subscriber?.entitlements?.[ENTITLEMENT];
   const productId: string | undefined = ent?.product_identifier;
   const sub = productId ? subscriber?.subscriptions?.[productId] : undefined;

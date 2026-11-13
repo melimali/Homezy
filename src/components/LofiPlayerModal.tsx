@@ -53,6 +53,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
   const { state: S } = useStore();
   const sleepAt = getSleepAt();
   const custom = getCustom();
+  const [cat, setCat] = useState<'sesler' | 'kombolar'>('sesler');
   const live = useActive(); // Ekran odakta değilken animasyon dönmesin
   const spinning = playing && live;
   const [spinAnim] = useState(() => new Animated.Value(0));
@@ -207,6 +208,13 @@ export function LofiPlayerModal({ open, onClose }: Props) {
           </View>
         </View>
 
+        {/* Kategori seçici */}
+        <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
+          <Chip label="🎧 Sesler" on={cat === 'sesler'} onPress={() => setCat('sesler')} />
+          <Chip label="🎛️ Kombolar" on={cat === 'kombolar'} onPress={() => setCat('kombolar')} />
+        </View>
+
+        {cat === 'kombolar' && (
         <Btn
           kind="soft"
           label="✨ Moka'nın seçimi"
@@ -218,9 +226,11 @@ export function LofiPlayerModal({ open, onClose }: Props) {
           }}
         />
 
+        )}
+
         {/* Hazır kombolar */}
+        {cat === 'kombolar' && (
         <View style={{ width: '100%', gap: 8 }}>
-          <T v="bold">Hazır Kombolar</T>
           {(custom ? [custom, ...COMBOS] : COMBOS).map(k => {
             const on = comboActive(k);
             return (
@@ -244,9 +254,10 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             );
           })}
         </View>
+        )}
 
-        <T v="bold" style={{ width: '100%' }}>Tek Plaklar</T>
         {/* Parça Listesi */}
+        {cat === 'sesler' && (
         <View style={{ width: '100%', gap: 8 }}>
           {TRACKS.map(t => {
             const isPlaying = active.includes(t.id);
@@ -273,6 +284,7 @@ export function LofiPlayerModal({ open, onClose }: Props) {
             );
           })}
         </View>
+        )}
 
         <Btn label="Kapat" onPress={onClose} block style={{ marginTop: 10 }} />
       </View>

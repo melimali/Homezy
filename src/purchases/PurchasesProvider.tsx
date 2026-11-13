@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
@@ -142,6 +142,18 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apply]);
 
+  // Uzun oturumda abonelik bitmiş/yenilenmiş olabilir: uygulama öne her gelişinde müşteri bilgisi ve sunucu satırı tazelenir.
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!apiKey && !supabase) return;
+    const sub = AppState.addEventListener('change', st => {
+      if (st !== 'active') return;
+      if (apiKey && configured.current) withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).catch(() => {});
+      setTick(t => t + 1);
+    });
+    return () => sub.remove();
+  }, [apply]);
+
   // Fiyatlar ilk denemede okunamadıysa (ağ yok) birkaç kez daha dene.
   useEffect(() => {
     if (!apiKey || !configured.current || pkgs.monthly || pkgs.annual) return;
@@ -218,7 +230,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     return () => {
       off = true;
     };
-  }, [user]);
+  }, [user, tick]);
 
   const buy = useCallback(async (plan: Plan): Promise<BuyResult> => {
     if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };

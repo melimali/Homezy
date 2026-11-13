@@ -1,7 +1,8 @@
 import type { NotificationResponse } from 'expo-notifications';
 import { type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { useToast } from '@/components/Toast';
 import { sfx } from '@/lib/sfx';
@@ -44,6 +45,27 @@ export function useNotificationSync() {
     }, 1500);
     return () => clearTimeout(t);
   }, [state, active]);
+
+  // Uygulama saatlerce/günlerce arka planda kaldıysa veri değişmese de özetler (ve 7 günlük ufuk) yenilenmeli.
+  const latest = useRef({ state, active });
+  useEffect(() => {
+    latest.current = { state, active };
+  });
+  useEffect(() => {
+    if (!getNotifications()) return;
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const sub = AppState.addEventListener('change', st => {
+      if (st !== 'active') return;
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        rescheduleMorningSummaries(latest.current.state, latest.current.active).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
+      }, 2000);
+    });
+    return () => {
+      if (t) clearTimeout(t);
+      sub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const N = getNotifications();

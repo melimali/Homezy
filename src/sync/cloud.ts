@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { AppState as RNAppState } from 'react-native';
 
 import { useAuth } from '@/auth/AuthProvider';
@@ -25,9 +25,55 @@ export async function fetchHome(userId: string): Promise<RemoteHome | null> {
 /** Bu telefonun bulutta en son gördüğü ya da yazdığı sürümün zamanı (başka telefon yazdıysa farklı çıkar). */
 const STAMP = 'cloudStamp';
 
+/** Bulut yedeğinin durumu (arayüz bağlamak için dışarı açılır). 'toolarge': ev verisi 2 MB sınırını aşıyor, yazılmaz. */
+export type CloudStatus = 'idle' | 'syncing' | 'ok' | 'error' | 'toolarge' | 'conflict';
+let cloudStatus: CloudStatus = 'idle';
+const listeners = new Set<() => void>();
+function setCloudStatus(s: CloudStatus) {
+  if (cloudStatus === s) return;
+  cloudStatus = s;
+  listeners.forEach(l => l());
+}
+export const getCloudStatus = () => cloudStatus;
+/** Bulut yedeğinin son durumunu verir; hata olunca kullanıcıya gösterge çizmek için. */
+export function useCloudStatus(): CloudStatus {
+  return useSyncExternalStore(
+    cb => {
+      listeners.add(cb);
+      return () => void listeners.delete(cb);
+    },
+    () => cloudStatus,
+    () => cloudStatus,
+  );
+}
+
+/** Veritabanındaki homes.state sınırı 2.000.000 bayt (homes_state_boyut); biraz pay bırakılır. */
+export const HOME_MAX_BYTES = 1_950_000;
+export class HomeTooLargeError extends Error {
+  constructor() {
+    super('home-too-large');
+    this.name = 'HomeTooLargeError';
+  }
+}
+function utf8Bytes(str: string) {
+  let n = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff) {
+      n += 4;
+      i++;
+    } else n += 3;
+  }
+  return n;
+}
+
 export async function pushHome(userId: string, S: AppState) {
   if (!supabase) return;
-  const { data, error } = await supabase.from('homes').upsert({ user_id: userId, state: forCloud(S) }).select('updated_at').maybeSingle();
+  const cloud = forCloud(S);
+  if (utf8Bytes(JSON.stringify(cloud)) > HOME_MAX_BYTES) throw new HomeTooLargeError();
+  const { data, error } = await supabase.from('homes').upsert({ user_id: userId, state: cloud }).select('updated_at').maybeSingle();
   if (error) throw error;
   if (data?.updated_at) prefs.set(STAMP, data.updated_at as string);
 }
@@ -49,6 +95,22 @@ async function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflic
   const rs = await remoteStamp(userId);
   // Yerel damga yoksa (veri temizlendi, yeniden kurulum) bulutta satır varsa körlemesine ezme: kullanıcıya sor.
   if (rs && rs !== known) return 'conflict';
+  // Sunucuda koşullu yazma (push_home) varsa kontrol ile yazma tek işlemde olur; yoksa (migration henüz uygulanmadıysa) eski yol.
+  if (supabase) {
+    const cloud = forCloud(S);
+    if (utf8Bytes(JSON.stringify(cloud)) > HOME_MAX_BYTES) throw new HomeTooLargeError();
+    const { data, error } = await supabase.rpc('push_home', { p_state: cloud, p_expected: rs });
+    if (!error && data && typeof data === 'object') {
+      const r = data as { ok?: boolean; updated_at?: string };
+      if (r.ok && r.updated_at) {
+        prefs.set(STAMP, r.updated_at);
+        return 'ok';
+      }
+      return 'conflict';
+    }
+    const missing = error?.code === 'PGRST202' || error?.code === '42883' || /push_home/.test(error?.message ?? '');
+    if (error && !missing) throw error;
+  }
   await pushHome(userId, S);
   return 'ok';
 }
@@ -202,7 +264,13 @@ export function useCloudSync() {
         {
           text: 'Bu telefondakini',
           onPress: () => {
-            pushHome(uid, latest.current).then(() => void (dirty.current = false)).catch(() => {}).finally(done);
+            pushHome(uid, latest.current)
+              .then(() => {
+                dirty.current = false;
+                setCloudStatus('ok');
+              })
+              .catch(() => setCloudStatus('error'))
+              .finally(done);
           },
         },
         {
@@ -226,12 +294,24 @@ export function useCloudSync() {
   }, [replace]);
 
   const writeNow = useCallback(async (uid: string) => {
+    setCloudStatus('syncing');
     try {
       const r = await pushChecked(uid, latest.current);
-      if (r === 'conflict') return resolveConflict(uid);
+      if (r === 'conflict') {
+        setCloudStatus('conflict');
+        return resolveConflict(uid);
+      }
       dirty.current = false;
       fails.current = 0;
+      setCloudStatus('ok');
     } catch (e) {
+      if (e instanceof HomeTooLargeError) {
+        // Tekrar denemenin anlamı yok: veri küçülmeden yazılamaz. Değişince (state) yeniden denenir.
+        setCloudStatus('toolarge');
+        console.warn('Homezy: ev verisi bulut yedeği sınırını aşıyor');
+        return;
+      }
+      setCloudStatus('error');
       fails.current++;
       console.warn('Homezy: bulut yedeği yazılamadı', e);
       if (timer.current) clearTimeout(timer.current);

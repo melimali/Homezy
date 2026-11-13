@@ -4,6 +4,7 @@
 //
 // Gizli değişken: REVENUECAT_API_KEY (RevenueCat gizli API anahtarı, sk_...). SUPABASE_URL ve
 // SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik verilir.
+// İsteğe bağlı: ALLOW_SANDBOX=false -> sandbox (test) abonelikleri Premium sayılmaz (varsayılan: sayılır).
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -35,7 +36,10 @@ export async function syncSubscriber(userId: string, lastEvent: string | null): 
   // Google Play ödeme sorununda birkaç gün ek süre verir; RevenueCat bu sürede de entitlement'ı açık tutar.
   const grace = ent?.grace_period_expires_date ? new Date(ent.grace_period_expires_date) : null;
   const until = grace && expires && grace > expires ? grace : expires;
-  const active = !!ent && (until === null || until.getTime() > Date.now());
+  let active = !!ent && (until === null || until.getTime() > Date.now());
+  // Sandbox (TestFlight / Play iç test) alımları varsayılan olarak Premium sayılır. Mağaza yayınında kapatmak için
+  // gizli değişken ALLOW_SANDBOX=false yazılır; o zaman is_sandbox=true abonelik Premium yapmaz.
+  if (active && sub?.is_sandbox === true && Deno.env.get('ALLOW_SANDBOX')?.trim().toLowerCase() === 'false') active = false;
 
   const { error } = await admin.from('subscriptions').upsert({
     user_id: userId,

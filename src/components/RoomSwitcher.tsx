@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions, type ScrollViewInstance } from 'react-native';
 
 import { Squish } from '@/components/motion';
 import { ROOM_EMOJI } from '@/domain/constants';
@@ -14,7 +14,7 @@ const GAP = 8;
 export function RoomSwitcher({ state: S, id, now, onGo, onBack }: { state: AppState; id: string; now: number; onGo: (rid: string) => void; onBack: () => void }) {
   const c = useColors();
   const { width } = useWindowDimensions();
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<ScrollViewInstance>(null);
   const order = S.order.filter(x => S.rooms[x]);
   const idx = order.indexOf(id);
   const step = (d: number) => onGo(order[(idx + d + order.length) % order.length]);

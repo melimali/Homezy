@@ -65,7 +65,7 @@ export function PullMoka({ y, hop }: { y: Animated.Value; hop: Animated.Value })
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center' },
-  img: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  img: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   cheek: { position: 'absolute', top: '46%', width: '17%', height: '15%', borderRadius: 40, backgroundColor: '#E5574A' },
   anger: { position: 'absolute', top: -2, right: 6 },
   angerTxt: { fontSize: 26 },

@@ -222,3 +222,11 @@ Kapsam: gün/saat dilimi ve DST, seri/puan, veri büyümesi, şema, bildirim pla
 - Tarama: src/app, src/components, src/hooks içindeki timer/listener/Animated.loop kullanımlarının geri kalanında temizlik mevcut; inline context value yok; `eslint src --quiet` temiz.
 - Yapılmadı: `update()` içindeki JSON klonu. `structuredClone` Hermes'te güvenilir değil; davranış riski var. ScrollView->FlatList dönüşümleri görsel risk nedeniyle yapılmadı.
 - BUILD GEREKTİRİR: bu kapsamda yok.
+
+## Saf JS dayanıklılık (saat dilimi, kuyruk, şema, bildirim)
+
+- Düzeltildi (77aa392): saat dilimi değişimi (`safeToday`): yerel tarih geri giderse en son kayıtlı gün (en çok +1) bugün sayılır; seri, ödül, dondurma buna göre; aynı gün iki kez ödüllenmez. Test: `src/domain/__tests__/timezone.test.ts` (TZ=UTC/Asia/Tokyo/America/Los_Angeles/Pacific/Kiritimati ile çalıştırıldı).
+- Düzeltildi (77aa392): `play.pending` 7 günden eski olaylar ve 200 üstü en eskiler elenir (`prunePending`, awardLocal ve normalize'da).
+- Düzeltildi (b645514): bildirim yeniden zamanlama önce yenileri kurar, sonra eskileri iptal eder.
+- Düzeltildi (b5fda1e): şema geçişi (`src/data/migrate.ts`, db.ts, db.web.ts): sürüm okunur, adımlar sıralı, veri silmez, hatada sürüm yükselmez, `backup_meta_v*` ve `migrate_error` anahtarı kalır. Şu an adım yok (v2/v3 sütun eklemeydi).
+- Kalan: src/app ve components içinde `dayKey(Date.now())` kullanan yerler (ör. TaskRow pending eşlemesi, günlük/spor/ilaç günleri) ham yerel tarih kullanır; puan günü dışında kritik değil. Kapsam dışı olduğu için dokunulmadı.

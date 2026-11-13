@@ -47,7 +47,8 @@ async function remoteStamp(userId: string): Promise<string | null> {
 async function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflict'> {
   const known = prefs.get(STAMP);
   const rs = await remoteStamp(userId);
-  if (known && rs && rs !== known) return 'conflict';
+  // Yerel damga yoksa (veri temizlendi, yeniden kurulum) bulutta satır varsa körlemesine ezme: kullanıcıya sor.
+  if (rs && rs !== known) return 'conflict';
   await pushHome(userId, S);
   return 'ok';
 }

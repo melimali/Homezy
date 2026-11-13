@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 import { CARE, TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
+import { runMigrations, storedVersion, type Migration } from './migrate';
 import type {
   AppState, Bill, Budget, Med, MedLog, Pet, ShopItem, ShopUsual, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
 } from '@/domain/types';
@@ -20,6 +21,16 @@ const ADDED_COLUMNS: [string, string, string][] = [
   // Sürüm 3: kombin önerisi için kıyafetin türü, rengi ve kumaşı (fotoğraf taramasından ya da addan).
   ['clothes', 'kind', 'TEXT'], ['clothes', 'color', 'TEXT'], ['clothes', 'hex', 'TEXT'], ['clothes', 'fabric', 'TEXT'], ['clothes', 'pattern', 'TEXT'],
 ];
+
+/**
+ * Sürümler arası geçiş adımları (`steps[v]`: v-1 → v). Sürüm 2 ve 3 sadece sütun eklemekti (aşağıda `ADDED_COLUMNS`,
+ * tekrar çalışmaya dayanıklı); ileride silme/yeniden adlandırma gerekirse buraya yeni adım yazılır, `SCHEMA_VERSION` artırılır.
+ * Adımlar veri silmez.
+ */
+const MIGRATIONS: Record<number, Migration<SQLite.SQLiteDatabase>> = {};
+
+/** Geçiş başarısızsa saveState sürümü yükseltmesin (eski veri bir sonraki açılışta yeniden denenir). */
+let schemaToWrite = SCHEMA_VERSION;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -52,10 +63,34 @@ function getDb() {
         const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
         if (!cols.some(c => c.name === col)) await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
       }
+      await migrate(db);
       return db;
     })();
   }
   return dbPromise;
+}
+
+async function migrate(db: SQLite.SQLiteDatabase) {
+  try {
+    const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'schema'");
+    const from = storedVersion(row?.value);
+    if (!row || from >= SCHEMA_VERSION) return;
+    // Yedek: geçişten önceki meta satırları (tablolar adımlarca silinmez).
+    const all = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM meta WHERE key NOT LIKE 'backup_%'");
+    await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', `backup_meta_v${from}`, JSON.stringify(all));
+    const res = await runMigrations(from, SCHEMA_VERSION, MIGRATIONS, db, async v => {
+      await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'schema', String(v));
+    });
+    if (!res.ok) {
+      schemaToWrite = res.to;
+      await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'migrate_error', `${from}->${res.to}: ${res.error}`);
+      console.warn('Homezy: şema geçişi yarım kaldı, veri korundu', res.error);
+    }
+  } catch (e) {
+    // Geçiş kontrolü uygulamayı açılmaktan alıkoymasın; sürüm yükseltilmez.
+    schemaToWrite = 0;
+    console.warn('Homezy: şema geçişi denenemedi', e);
+  }
 }
 
 type RoomRow = {
@@ -179,7 +214,7 @@ export async function saveState(S: AppState): Promise<void> {
   await db.withExclusiveTransactionAsync(async tx => {
     if (tablesChanged) await tx.execAsync('DELETE FROM rooms; DELETE FROM cells; DELETE FROM tasks; DELETE FROM clothes; DELETE FROM stock;');
     const meta: [string, string][] = [
-      ['schema', String(SCHEMA_VERSION)],
+      ...(schemaToWrite > 0 ? [['schema', String(schemaToWrite)] as [string, string]] : []),
       ['setup', S.setup ? '1' : '0'],
       ['cols', String(S.cols)],
       ['rows', String(S.rows)],

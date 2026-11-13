@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Card, Screen, T } from '@/components/ui';
@@ -28,6 +28,9 @@ export default function Evim() {
   // İlk kurulumda cevaplar kişiye göre önceden seçili gelir (öğrenci: bulaşık makinesi yok…).
   const [ans, setAns] = useState<HomeProfile>(() => (!S.home.asked && persona ? { ...S.home, ...PLAN[persona].home } : S.home));
 
+  const yes = PROFILE.filter(p => ans[p.k] === true).length;
+  const extra = PROFILE.filter(p => ans[p.k] === true).reduce((n, p) => n + p.tasks.length, 0);
+
   const save = () => {
     update(D => applyProfile(D, ans));
     if (first) {
@@ -44,37 +47,48 @@ export default function Evim() {
       {!first && <BackLink />}
       <View>
         <T v="eyebrow">{first ? 'Son bir adım' : 'Evim hakkında'}</T>
-        <T v="h1">Evini biraz tanıyalım</T>
-        <T v="lead">Cevaplarına göre rutinler eklerim. Sonra Plan ekranından istediğin zaman değiştirebilirsin.</T>
+        <T v="h1">Evini sana göre ayarlayalım</T>
+        <T v="lead">Evinde olan şeylere "Evet" de. Sadece onlar için iş eklerim, olmayanlar listende görünmez. Sonra istediğin zaman değiştirebilirsin.</T>
       </View>
 
       <Card>
-        {PROFILE.map((p, i) => (
-          <View key={p.k} style={[styles.row, i > 0 && { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ lineHeight: 34, fontSize: 26 }}>{p.emoji}</Text>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <T v="bold" style={{ fontSize: 15 }}>{p.q}</T>
-              <T v="small" numberOfLines={2}>{p.tasks.map(t => t.name).join(', ')}</T>
-            </View>
-            <View style={[styles.seg, { backgroundColor: c.surface2 }]} accessibilityRole="radiogroup" accessibilityLabel={p.q}>
-              {([[true, 'Evet'], [false, 'Hayır']] as const).map(([v, l]) => {
-                const on = ans[p.k] === v;
-                return (
-                  <Pressable
-                    key={l}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: on }}
-                    onPress={() => setAns(a => ({ ...a, [p.k]: v }))}
-                    style={[styles.segBtn, on && { backgroundColor: v ? c.accent : c.muted }]}
-                  >
-                    <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: on ? c.onAccent : c.muted }}>{l}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        ))}
+        <T v="bold">🏡 Evinin adı</T>
+        <TextInput
+          value={S.homeName}
+          onChangeText={v => update(D => void (D.homeName = v.slice(0, 24)))}
+          placeholder="Örn. Bizim ev"
+          placeholderTextColor={c.muted}
+          maxLength={24}
+          returnKeyType="done"
+          accessibilityLabel="Evinin adı"
+          style={[styles.input, { backgroundColor: c.surface2, color: c.ink, fontFamily: fonts.bodyBold }]}
+        />
       </Card>
+
+      <T v="small" style={{ textAlign: 'center' }}>{yes === 0 ? 'Henüz hiçbirine evet demedin.' : `${yes} şey için ${extra} ekstra iş eklenecek`}</T>
+
+      {PROFILE.map(p => {
+        const on = ans[p.k] === true;
+        return (
+          <Pressable
+            key={p.k}
+            accessibilityRole="switch"
+            accessibilityLabel={p.q}
+            accessibilityState={{ checked: on }}
+            onPress={() => setAns(a => ({ ...a, [p.k]: !on }))}
+            style={[styles.tile, { backgroundColor: on ? c.surface2 : c.surface, borderColor: on ? c.accent : c.line }]}
+          >
+            <Text style={{ lineHeight: 40, fontSize: 32 }}>{p.emoji}</Text>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <T v="bold" style={{ fontSize: 15.5 }}>{p.q}</T>
+              <T v="small" numberOfLines={2}>{on ? 'Eklenen işler: ' : 'Evet dersen eklenir: '}{p.tasks.map(t => t.name).join(', ')}</T>
+            </View>
+            <View style={[styles.check, { backgroundColor: on ? c.accent : 'transparent', borderColor: on ? c.accent : c.line }]}>
+              {on && <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 15 }}>✓</Text>}
+            </View>
+          </Pressable>
+        );
+      })}
 
       <Btn kind="primary" label={first ? 'Evimi aç' : 'Kaydet'} onPress={save} block />
       {first && <Btn kind="ghost" label="Şimdilik geç" onPress={() => { update(D => void (D.home.asked = true)); router.replace('/'); }} block />}
@@ -83,7 +97,7 @@ export default function Evim() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
-  seg: { flexDirection: 'row', borderRadius: radius.pill, padding: 3 },
-  segBtn: { borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 11 },
+  tile: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 2 },
+  check: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  input: { borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, marginTop: 8 },
 });

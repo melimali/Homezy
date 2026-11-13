@@ -72,5 +72,8 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     }
+  },
+  "overrides": {
+    "typescript": "$typescript"
   }
 }

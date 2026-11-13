@@ -42,6 +42,18 @@ export const dayTs = (k: DayKey) => {
 };
 export const addDays = (k: DayKey, n: number) => dayKey(dayTs(k) + n * DAY);
 
+/**
+ * "Bugün" anahtarı, saat dilimi değişimine (uçuş) dayanıklı: batıya uçunca yerel tarih geri gider; kayıtlı en son gün
+ * yerel bugünden en fazla 1 gün ilerideyse o gün "bugün" sayılır. Böylece aynı gün iki kez ödüllenmez, seri bozulmaz.
+ * Sunucu da bugün+1'e kadar kabul eder. 1 günden fazla ileri bir kayıt (saat oynama) yok sayılır.
+ */
+export const safeToday = (days: readonly DayKey[], now = Date.now()): DayKey => {
+  const local = dayKey(now);
+  let last = '';
+  for (const d of days) if (d > last) last = d;
+  return last > local && last <= addDays(local, 1) ? last : local;
+};
+
 export const emptyPlay = (): Play => ({
   points: 0, days: [], owned: [], placed: {}, awarded: {}, log: {}, sport: [], journal: {}, pending: [], celebrated: 0,
   frozen: [], times: [], welcomed: null, weekSeen: null, garden: emptyGarden(), persona: 'sicak', checkins: {}, moka: emptyMoka(), notes: [], growth: emptyGrowth(), habits: emptyHabits(),
@@ -94,6 +106,7 @@ export function normalize(S: AppState): AppState {
   for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;
   // Sınırsız büyüyen kayıtlar (100+ gün kullanımda şişmesin): spor 400 kayıt, ilaç işaretleri 200 gün.
   if (Array.isArray(S.play.sport) && S.play.sport.length > 400) S.play.sport = S.play.sport.slice(0, 400);
+  prunePending(S.play, now);
   const medMin = dayKey(now - 200 * DAY);
   for (const k of Object.keys(S.medLog)) if (k < medMin) delete S.medLog[k];
   return S;
@@ -183,7 +196,7 @@ export type HouseProgress = {
  * Bugün henüz bir şey yapılmadıysa bugün ceza sayılmaz; gün bitince sayılır.
  */
 export function houseProgress(days: DayKey[], now = Date.now(), frozen: DayKey[] = []): HouseProgress {
-  const today = dayKey(now);
+  const today = safeToday(days, now);
   const set = new Set(days);
   // Dondurulan gün ne ilerletir ne bozar: seri ve ev olduğu gibi kalır. Affedilen tek boşluk da öyle.
   const ice = new Set(frozen);
@@ -232,7 +245,7 @@ export const freezesUsed = (P: Play, now = Date.now()) => {
  * Dondurulan günleri döner. Hak `limit` (ücretsiz 1, Premium 3) ile sınırlı; sunucu da aynısını sayar.
  */
 export function autoFreeze(P: Play, limit: number, now = Date.now()): DayKey[] {
-  const today = dayKey(now);
+  const today = safeToday(P.days, now);
   const done = new Set(P.days);
   const ice = new Set(P.frozen);
   const last = [...P.days].filter(d => d < today).sort().pop();
@@ -264,7 +277,7 @@ export function idleAhead(p: HouseProgress, d: number, freezeLeft = 0) {
 
 /** `d` gün sonra, son bir şey yapılan günün üstünden kaç gün geçmiş olacak (hiç yapılmadıysa null). */
 export function awayAhead(P: Play, d: number, now = Date.now()) {
-  const today = dayKey(now);
+  const today = safeToday(P.days, now);
   const last = [...P.days].filter(x => x <= today).sort().pop();
   if (!last) return null;
   return Math.round((dayTs(today) - dayTs(last)) / DAY) + d;
@@ -277,7 +290,7 @@ export type DayMark = { key: DayKey; mark: 'done' | 'ice' | 'miss' | 'today'; n:
 
 /** Son 7 günün her biri: iş yapıldı, dondurmayla korundu, kaçırıldı ya da bugün (henüz bir şey yok). */
 export function lastWeek(P: Play, now = Date.now()): DayMark[] {
-  const today = dayKey(now);
+  const today = safeToday(P.days, now);
   const done = new Set(P.days);
   const ice = new Set([...P.frozen, ...forgivenGaps(P.days, P.frozen, today)]);
   return Array.from({ length: 7 }, (_, i) => {
@@ -303,7 +316,7 @@ export function houseLine(p: HouseProgress) {
 /* ---------- puan ---------- */
 
 export const awardKey = (kind: PlayKind, ref: string) => (kind === 'gorev' ? `gorev:${ref}` : kind);
-export const awardedToday = (P: Play, kind: PlayKind, ref: string, now = Date.now()) => P.awarded[awardKey(kind, ref)] === dayKey(now);
+export const awardedToday = (P: Play, kind: PlayKind, ref: string, now = Date.now()) => P.awarded[awardKey(kind, ref)] === safeToday(P.days, now);
 
 export type AwardResult = { awarded: boolean; points: number; before: HouseProgress; after: HouseProgress };
 
@@ -313,7 +326,7 @@ export type AwardResult = { awarded: boolean; points: number; before: HouseProgr
  */
 export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: string, now = Date.now(), mult = 1): AwardResult {
   const P = S.play;
-  const day = dayKey(now);
+  const day = safeToday(P.days, now);
   const before = progressOf(P, now);
   const key = awardKey(kind, ref);
   if (P.awarded[key] === day) return { awarded: false, points: 0, before, after: before };
@@ -331,10 +344,24 @@ export function awardLocal(S: AppState, kind: PlayKind, ref: string, label: stri
   P.points += pts;
   (P.log[day] ||= []).push(label);
   P.pending.push({ kind, ref: kind === 'gorev' ? ref : kind, day });
+  prunePending(P, now);
   const d = new Date(now);
   if (pts > 0 || kind !== 'gorev') gainFromAward(P, kind, now);
   P.times = [...P.times, d.getHours() * 60 + d.getMinutes()].slice(-40);
   return { awarded: true, points: pts, before, after: progressOf(P, now) };
+}
+
+/** Sunucu bugün-7'den eski günü reddeder; bekleyen kuyruk da sınırsız büyümesin. */
+export const PENDING_MAX = 200;
+export const PENDING_DAYS = 7;
+
+/** Sunucunun kabul etmeyeceği kadar eski ya da sınırı aşan en eski bekleyen olayları eler (puan zaten telefonda yazılı). */
+export function prunePending(P: Play, now = Date.now()) {
+  if (!Array.isArray(P.pending) || !P.pending.length) return;
+  const min = addDays(safeToday(P.days, now), -PENDING_DAYS);
+  let next = P.pending.filter(e => e.day >= min);
+  if (next.length > PENDING_MAX) next = next.slice(next.length - PENDING_MAX);
+  if (next.length !== P.pending.length) P.pending = next;
 }
 
 /** Puan alındıktan sonraki kısa mesaj; ev bir seviye atladıysa onu söyler. */

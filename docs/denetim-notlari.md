@@ -16,3 +16,7 @@ Kapsam: supabase/functions, migrations/RLS, src/auth, purchases, sync, family, l
 - src/auth/owner.ts: sahip e-postaları ve kullanıcı kimliği istemci koduna gömülü (sadece gizli geliştirici araçları; sunucu yetkisi vermez). Ortam değişkenine taşınması önerilir.
 - RevenueCat sandbox satın alımları da premium sayılır (TestFlight/test için kabul edilebilir; yayında istenmiyorsa sunucuda is_sandbox elenmeli).
 - Deploy gerekli: supabase functions deploy scan moka-chat subscription-sync; revenuecat-webhook (--no-verify-jwt).
+
+## OTA (expo-updates) — BUILD GEREKTİRİR
+- Açık: `expo-updates` pakete yok; `app.json` / `app.config.ts` içinde `updates` ve `runtimeVersion` yok; `eas.json` build profillerinde `channel` yok. Yani JS düzeltmeleri build'siz ulaşamaz.
+- Gerekenler (hepsi yeni build ister, bu yüzden DEĞİŞTİRİLMEDİ): `npx expo install expo-updates`, `eas update:configure`, `runtimeVersion: { policy: "appVersion" }`, `eas.json` her profile `channel` (preview/production). Sonra `eas update --channel production` ile JS yaması gönderilir. Son build'e eklenecekse build'den ÖNCE yapılmalı.

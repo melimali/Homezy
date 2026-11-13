@@ -38,7 +38,6 @@ import { taskMin } from '@/domain/home';
 import { allTasks, doneToday as isDoneToday, greet, greeting, notifs } from '@/domain/logic';
 import { extrasUnlocked } from '@/lib/events';
 import { sfx } from '@/lib/sfx';
-import { AdBanner } from '@/ads/AdBanner';
 import { addDays, BUILT, dayKey, houseLine, nextStage, progressOf } from '@/domain/play';
 import { themeFor } from '@/domain/premium';
 import { FLOWER, growth, houseMood } from '@/domain/garden';
@@ -297,7 +296,6 @@ export default function Home() {
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
       <PremiumEndedCard />
-      <AdBanner />
       <View style={{ alignItems: 'center' }}><EditTabBtn tab="ev" wide /></View>
 
       <Celebrate level={hp.level} />

@@ -1,5 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { useAdDockInset } from '@/ads/AdBanner';
 import {
   Animated,
   Easing,
@@ -109,7 +110,8 @@ export function Screen({
   // Şerit tam opak: kaydırılan içerik çentik/saat arkasından görünmesin. Tepede (kaydırma yokken) saydam, sahne görünür.
   const stripOp = y.interpolate({ inputRange: [0, 16], outputRange: [0, 1], extrapolate: 'clamp' });
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
-  const bottom = tab ? 148 + insets.bottom : (header ? 42 : insets.bottom + 42);
+  const adInset = useAdDockInset();
+  const bottom = tab ? 148 + insets.bottom + adInset : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}

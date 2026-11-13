@@ -4,7 +4,6 @@ import { Image, LayoutAnimation, Platform, Pressable, UIManager, ScrollView, Sty
 import { Ring } from '@/components/charts';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 
-import { AdBanner } from '@/ads/AdBanner';
 import { DayPlanCard } from '@/components/MoodCheckin';
 import { BonusCard, BonusLocked } from '@/components/BonusCard';
 import { OdakCard } from '@/components/OdakCard';
@@ -218,7 +217,6 @@ export default function Bugun() {
       )} />
       {layout.ids.map(id => <Fragment key={id}>{blk[id]}</Fragment>)}
       {!S.home.asked && <ProfilePrompt />}
-      <AdBanner />
       {tour.node}
     </Screen>
   );

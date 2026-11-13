@@ -11,6 +11,7 @@ import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
 
+import { AdBanner } from '@/ads/AdBanner';
 import { haptic } from '@/lib/sfx';
 
 import { Squish } from './motion';
@@ -50,6 +51,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
 
   return (
     <View pointerEvents="box-none" style={[st.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <AdBanner dock />
       <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.06)' : c.line, shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
         <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle: Moka sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>

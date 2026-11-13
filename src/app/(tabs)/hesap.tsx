@@ -400,6 +400,23 @@ export default function Hesap() {
       </Appear>
       </View>
 
+      {purchasesEnabled && (
+        <Appear index={2} style={[st.hero, { backgroundColor: c.surface2, flexDirection: 'column', alignItems: 'stretch', gap: 10 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ lineHeight: 42, fontSize: 32 }}>👑</Text>
+            <View style={{ flex: 1, gap: 2 }}>
+              <T v="h3">Homezy Premium</T>
+              <T v="small">{premium.active ? 'Premium üyesin ✓ Tüm özellikler açık' : 'Moka sohbeti, 1,5 kat puan, reklamsız ve fazlası'}</T>
+            </View>
+          </View>
+          {premium.active ? (
+            <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
+          ) : (
+            <Btn label={t('goPremium')} kind="primary" onPress={() => router.push('/premium')} block />
+          )}
+        </Appear>
+      )}
+
       <Appear index={2} style={st.stats}>
         {([
           { e: '🔥', n: hp.streak, l: 'gün seri', tint: c.peachSoft },

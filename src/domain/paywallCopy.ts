@@ -12,7 +12,7 @@ const F = LIMITS.free;
 export const PAYWALL_COPY = {
   tr: {
     eyebrow: 'MOKA\'DAN SANA',
-    title: 'Seni her gün yanında görmek istiyorum',
+    title: 'Her gün yanında olacağım',
     sub: 'Evin işleri hep ücretsiz kalacak. Ama ben Premium\'da seninle gerçekten konuşabiliyorum: bugün neye ihtiyacın varsa, birlikte çözeriz ☕',
     chatTitle: 'Moka seni takip eder',
     chatSub: `Günde ${P.chats} mesaja kadar benimle konuş. Seni tanırım, dünü hatırlarım, bugünü birlikte planlarız.`,

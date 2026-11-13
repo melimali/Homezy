@@ -26,26 +26,29 @@ const clone = (S: AppState): AppState => JSON.parse(JSON.stringify(S));
  */
 function createSaver(delay = 500) {
   let pending: AppState | null = null;
-  let running = false;
+  let current: Promise<void> | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let blocked = false;
-  async function run() {
-    timer = null;
-    if (running) return;
-    running = true;
-    try {
-      while (pending) {
-        const next = pending;
-        pending = null;
-        try {
-          await saveState(next);
-        } catch (e) {
-          console.warn('Homezy: kayıt başarısız', e);
-        }
+  async function drain() {
+    while (pending) {
+      const next = pending;
+      pending = null;
+      try {
+        await saveState(next);
+      } catch (e) {
+        console.warn('Homezy: kayıt başarısız', e);
       }
-    } finally {
-      running = false;
     }
+  }
+  /** Devam eden bir kayıt varsa onu döndürür (flush bekleyebilsin), yoksa yenisini başlatır. */
+  function run(): Promise<void> {
+    timer = null;
+    if (current) return current.then(() => (pending ? run() : undefined));
+    const p: Promise<void> = drain().finally(() => {
+      if (current === p) current = null;
+    });
+    current = p;
+    return p;
   }
   const save = (S: AppState) => {
     // Okuma başarısız olduysa boş durumla diskteki gerçek veriyi ezme.
@@ -64,6 +67,7 @@ function createSaver(delay = 500) {
   };
   save.flush = () => {
     if (timer) clearTimeout(timer);
+    timer = null;
     return run();
   };
   return save;

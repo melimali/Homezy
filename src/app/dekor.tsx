@@ -18,6 +18,7 @@ import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
+import { tx } from '@/i18n/runtime';
 import { fonts, radius, useColors } from '@/theme';
 
 type Tab = 'hazir' | 'oda' | 'dis' | 'esya';
@@ -46,7 +47,7 @@ export default function Dekor() {
   /** 👑 seçenek: Premium değilse ödeme ekranına. */
   const gate = (s: Swatch) => {
     if (!s.premium || premium.active) return true;
-    toast(`${s.name} Premium'da açık 👑`);
+    toast(`${tx(s.name)} Premium'da açık 👑`);
     router.push('/premium' as Href);
     return false;
   };
@@ -144,13 +145,13 @@ export default function Dekor() {
                 accessibilityLabel={p.name}
                 onPress={() => {
                   if (p.premium && !premium.active) {
-                    toast(`${p.name} Premium'da açık 👑`);
+                    toast(`${tx(p.name)} Premium'da açık 👑`);
                     router.push('/premium' as Href);
                     return;
                   }
                   update(D => applyPreset(D, p.id));
                   sfx('pop');
-                  toast(`${p.name} uygulandı ✨`);
+                  toast(`${tx(p.name)} uygulandı ✨`);
                 }}
                 style={[st.preset, { backgroundColor: c.surface2 }]}>
                 <Text style={{ lineHeight: 34, fontSize: 28 }}>{p.emoji}</Text>
@@ -313,7 +314,7 @@ function Placer({ sel, setSel, room, setRoom, rooms }: {
         ))}
       </ScrollView>
       {room ? <Btn small kind="ghost" label="🔭 Bütün eve uzaklaş" onPress={() => setRoom(null)} /> : null}
-      <T v="h3">{sel ? `2. ${ITEM[sel]?.emoji} ${ITEM[sel]?.name}` : '2. Eşyanı seç'}</T>
+      <T v="h3">{sel ? `2. ${ITEM[sel]?.emoji} ${tx(ITEM[sel]?.name ?? '')}` : '2. Eşyanı seç'}</T>
       <T v="small">
         {!sel ? 'Aşağıdan bir eşya seç ya da odadaki eşyaya dokun.'
           : !room ? 'Önce yukarıdan eşyayı koyacağın odayı seç.'

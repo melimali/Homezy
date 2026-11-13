@@ -24,4 +24,14 @@ export const EN_DEKOR: Record<string, string> = {
   'Çatı rengi': 'Roof color',
   'Evi iki parmakla yakınlaştırınca çatı görünür.': 'Pinch the house with two fingers to see the roof.',
   'Kiremit': 'Tiles', 'Yosun': 'Moss', 'Gri': 'Gray', 'Kahve': 'Brown', 'Mavi': 'Blue', 'Pudra': 'Powder',
+  'Sesler': 'Sounds', 'Kombolar': 'Mixes',
+  'Evini sana göre ayarlayalım': "Let's set up your home",
+  'Evinde olan şeylere "Evet" de. Sadece onlar için iş eklerim, olmayanlar listende görünmez. Sonra istediğin zaman değiştirebilirsin.': 'Say "Yes" to what you have at home. I only add chores for those; the rest stay off your list. You can change this anytime.',
+  'Evinin adı': 'Home name',
+  'Örn. Bizim ev': 'e.g. Our place',
+  'Henüz hiçbirine evet demedin.': "You haven't said yes to anything yet.",
+  '{} şey için {} ekstra iş eklenecek': 'For {} things, {} extra chores will be added',
+  'Eklenen işler:': 'Added chores:',
+  'Evet dersen eklenir:': 'Added if you say yes:',
+
 };

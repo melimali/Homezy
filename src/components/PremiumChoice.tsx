@@ -146,7 +146,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       </View>
 
       <T v="small" style={{ textAlign: 'center' }}>
-        {`Homezy Premium (${plan === 'annual' ? 'Yıllık' : 'Aylık'}): ${prices[plan]}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${prices[plan]}/${unit} tahsil edilir. ` : ''}Ödeme satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`}
+        {L.legal(plan === 'annual' ? L.planY : L.planM, prices[plan], unit, trial)}
       </T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
         <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>

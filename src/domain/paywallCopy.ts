@@ -39,6 +39,9 @@ export const PAYWALL_COPY = {
     compare: 'Ücretsiz ile Premium karşılaştırması',
     skip: 'Şimdilik ücretsiz devam',
     unitY: 'yıl', unitM: 'ay',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `İlk ${trial} gün ücretsiz; deneme bitmeden iptal etmezsen ${price}/${unit} tahsil edilir. ` : ''}Ödeme, satın alma onayında Apple ID / Google Play hesabından alınır. Abonelik, dönem bitiminden en az 24 saat önce iptal edilmezse her ${unit} kendiliğinden yenilenir. İptal ve yönetim: App Store / Google Play abonelik ayarları. Kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı (Apple standart EULA dahil) ve Gizlilik Politikası’nı kabul edersin.`,
+    planY: 'Yıllık', planM: 'Aylık',
   },
   en: {
     eyebrow: 'FROM MOKA',
@@ -69,5 +72,8 @@ export const PAYWALL_COPY = {
     compare: 'Free vs Premium',
     skip: 'Continue free for now',
     unitY: 'year', unitM: 'month',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Free for the first ${trial} days; if you don't cancel before the trial ends, ${price}/${unit} is charged. ` : ''}Payment is charged to your Apple ID / Google Play account at purchase confirmation. The subscription renews automatically every ${unit} unless canceled at least 24 hours before the end of the current period. Manage or cancel in your App Store / Google Play subscription settings. We never receive your card details. By subscribing you accept the Terms of Use (including Apple's standard EULA) and the Privacy Policy.`,
+    planY: 'Yearly', planM: 'Monthly',
   },
 } as const;

@@ -9,6 +9,7 @@ import { applyProfile, PROFILE } from '@/domain/home';
 import type { HomeProfile } from '@/domain/types';
 import { PLAN } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
+import { tx } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
@@ -81,7 +82,7 @@ export default function Evim() {
             <Text style={{ lineHeight: 40, fontSize: 32 }}>{p.emoji}</Text>
             <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
               <T v="bold" style={{ fontSize: 15.5 }}>{p.q}</T>
-              <T v="small" numberOfLines={2}>{on ? 'Eklenen işler: ' : 'Evet dersen eklenir: '}{p.tasks.map(t => t.name).join(', ')}</T>
+              <T v="small" numberOfLines={2}>{tx(on ? 'Eklenen işler: ' : 'Evet dersen eklenir: ')}{p.tasks.map(t => tx(t.name)).join(', ')}</T>
             </View>
             <View style={[styles.check, { backgroundColor: on ? c.accent : 'transparent', borderColor: on ? c.accent : c.line }]}>
               {on && <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBlack, fontSize: 15 }}>✓</Text>}

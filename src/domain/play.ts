@@ -92,6 +92,10 @@ export function normalize(S: AppState): AppState {
   // Eski kıyafetlerin eklenme tarihi bilinmiyor; bağış önerisi hemen çıkmasın diye bugünden say.
   const now = Date.now();
   for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;
+  // Sınırsız büyüyen kayıtlar (100+ gün kullanımda şişmesin): spor 400 kayıt, ilaç işaretleri 200 gün.
+  if (Array.isArray(S.play.sport) && S.play.sport.length > 400) S.play.sport = S.play.sport.slice(0, 400);
+  const medMin = dayKey(now - 200 * DAY);
+  for (const k of Object.keys(S.medLog)) if (k < medMin) delete S.medLog[k];
   return S;
 }
 
@@ -153,7 +157,7 @@ export function forgivenGaps(days: DayKey[], frozen: DayKey[], today: DayKey): S
   for (let d = sorted[0]; d <= today; d = addDays(d, 1)) {
     if (done.has(d)) run++;
     else if (ice.has(d)) continue;
-    else if (d < today && done.has(addDays(d, 1)) && run >= FORGIVE_MIN_RUN && (!last || (dayTs(d) - dayTs(last)) / DAY >= FORGIVE_COOLDOWN)) {
+    else if (d < today && done.has(addDays(d, 1)) && run >= FORGIVE_MIN_RUN && (!last || Math.round((dayTs(d) - dayTs(last)) / DAY) >= FORGIVE_COOLDOWN)) {
       out.add(d);
       last = d;
     } else run = 0;

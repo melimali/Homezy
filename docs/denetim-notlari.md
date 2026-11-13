@@ -160,3 +160,16 @@ Kapsam: supabase/functions, migrations/RLS, src/auth, purchases, sync, family, l
 ## Sürüm / OTA notu
 - Mağazadaki son sürüm 1.0.3 (Melih, 2026-11-13; ChatGPT numaralamış). Repo 1.0.4'e çekildi (app.json, package.json). Build numarası (iOS buildNumber, Android versionCode) `appVersionSource: remote` + `autoIncrement` ile EAS'ta tutulur, elle artırma.
 - OTA `runtimeVersion: appVersion`: 1.0.4 build'i kendi runtime'ına bağlanır. Mağazadaki 1.0.3 kullanıcılarına bu OTA GİTMEZ (expo-updates o build'de yok). OTA sadece 1.0.4 ve sonrası build'lere ulaşır. Native değişiklik varsa sürümü artır.
+
+## İstemci
+
+Düzeltildi (saf JS, build gerektirmez):
+- fd1b584 `src/data/db.ts`: bozuk bir meta JSON'u (play, others, ...) bütün yüklemeyi düşürüyordu; artık o alan varsayılana döner. Bilinmeyen oda türü (`TYPES[r.type]` undefined) çökertmesin diye atlanır.
+- 5be2c2f `src/store/AppStore.tsx`: veri okuma iki kez başarısız olursa boş durum diskteki gerçek verinin üstüne yazılabiliyordu (ilk dokunuşta tüm tablolar silinip yeniden yazılır); bu durumda kayıt kapatıldı. `requestIdleCallback` yoksa doğrudan çalıştırılır.
+- 0f72291 `src/components/MokaFace.tsx`: göz kırpma ve boşta animasyon zincirleri bileşen kalkınca/hareketi azalt açılınca bitmiyor, kendini yeniden zamanlıyordu (sızıntı); `dead` bayrağı eklendi.
+
+Açık:
+- `src/store/AppStore.tsx` satır ~150: `react-hooks/refs` lint hatası (önceden var, davranışı etkilemiyor).
+- `saveState` her tablo değişiminde tüm tabloları siler ve yeniden yazar (tek işlemde, güvenli ama büyük evlerde yavaş olabilir).
+- Başka bir ajanın aynı çalışma ağacında yaptığı `src/domain` ve `src/notifications/schedule.ts` değişiklikleri (yaz saati, iOS 64 bildirim sınırı) bu bölüme dahil değil.
+- BUILD GEREKTİRİR: bu turda build gerektiren bulgu çıkmadı; native modüller (ads, widget, notifications) zaten guard'lı.

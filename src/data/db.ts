@@ -73,7 +73,15 @@ type ClothRow = {
 };
 type StockRow = { id: string; room_id: string; name: string; lvl: StockLevel; exp: number | null };
 
-const json = <T,>(v: string | undefined, fallback: T): T => (v ? (JSON.parse(v) as T) : fallback);
+/** Bozuk bir meta satırı bütün veriyi okunamaz yapmasın: o alan varsayılana döner. */
+const json = <T,>(v: string | undefined, fallback: T): T => {
+  if (!v) return fallback;
+  try {
+    return JSON.parse(v) as T;
+  } catch {
+    return fallback;
+  }
+};
 
 export async function loadState(): Promise<AppState | null> {
   const db = await getDb();
@@ -94,10 +102,10 @@ export async function loadState(): Promise<AppState | null> {
     tasks: {},
     mod: {},
     settings: json<Settings>(m.settings, {} as Settings),
-    play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
+    play: json<Play>(m.play, emptyPlay()),
     homeId: m.homeId || 'ev1',
     homeName: m.homeName || 'Evim',
-    others: m.others ? (JSON.parse(m.others) as SavedHome[]) : [],
+    others: json<SavedHome[]>(m.others, []),
     // Eksikse `normalize` doldurur.
     home: json<HomeProfile>(m.home, undefined as unknown as HomeProfile),
     mode: json<Mode | null>(m.mode, null),
@@ -117,6 +125,8 @@ export async function loadState(): Promise<AppState | null> {
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
+    // Bilinmeyen oda türü (eski/bozuk kayıt) uygulamayı çökertmesin.
+    if (!TYPES[r.type]) continue;
     S.rooms[r.id] = { id: r.id, type: r.type, name: r.name };
     S.order.push(r.id);
     S.tasks[r.id] = [];

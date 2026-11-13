@@ -10,7 +10,7 @@ import { BackLink, Btn, Card, Chip, Screen, Tabs, T, Chevron } from '@/component
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEM } from '@/domain/items';
 import {
-  applyLookToAll, FACADES, FLOORS, itemsAt, placeItem, setRoomLook, spotOf, storeItem, turnItem, WALLS, WINDOW_MODES, type Swatch,
+  applyLookToAll, applyPreset, FACADES, FLOORS, itemsAt, LOOK_PRESETS, placeItem, resetRoomLook, ROOFS, setRoomLook, spotOf, storeItem, turnItem, WALLS, WINDOW_MODES, type Swatch,
 } from '@/domain/look';
 import { floorCells, hasUpper, roomFloor, type Floor } from '@/domain/plan-templates';
 import { themeFor } from '@/domain/premium';
@@ -20,7 +20,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
 
-type Tab = 'oda' | 'dis' | 'esya';
+type Tab = 'hazir' | 'oda' | 'dis' | 'esya';
 
 /**
  * Evini kendine benzet: 3B evi gerçek evine benzetmek için oda oda zemin, duvar rengi ve pencere;
@@ -89,7 +89,7 @@ export default function Dekor() {
       <View>
         <T v="eyebrow">Ev kurucu</T>
         <T v="h1">Evini kendine benzet 🎨</T>
-        <T v="lead">Evin üzerinde dokunarak düzenle: odayı seç, eşyayı al, istediğin yere koy.</T>
+        <T v="lead">Önce hazır bir görünüm seç, sonra oda oda zemin, duvar, pencere ve çatıyı değiştir. Her değişiklik evin üstünde hemen görünür.</T>
       </View>
 
       <View style={[st.preview, { backgroundColor: c.surface }]}>
@@ -110,16 +110,56 @@ export default function Dekor() {
 
       <Tabs<Tab>
         items={[
-          { k: 'oda', emoji: '🎨', label: 'Odalar' },
-          { k: 'dis', emoji: '🏠', label: 'Dış cephe' },
+          { k: 'hazir', emoji: '✨', label: 'Hazır görünüm' },
+          { k: 'oda', emoji: '🎨', label: 'Oda içi' },
+          { k: 'dis', emoji: '🏠', label: 'Dış görünüm' },
           { k: 'esya', emoji: '🛋️', label: 'Eşyalar' },
         ]}
         value={tab}
         onChange={setTab}
       />
 
+      {tab === 'hazir' && (
+        <Card>
+          <T v="h3">Hazır görünümler</T>
+          <T v="small">Tek dokunuşla bütün odaların zemini, duvarı, dış cephesi ve çatısı değişir. Sonra istediğin odayı ayrıca düzenleyebilirsin.</T>
+          <View style={st.swWrap}>
+            {LOOK_PRESETS.map(p => (
+              <Squish
+                key={p.id}
+                accessibilityRole="button"
+                accessibilityLabel={p.name}
+                onPress={() => {
+                  if (p.premium && !premium.active) {
+                    toast(`${p.name} Premium'da açık 👑`);
+                    router.push('/premium' as Href);
+                    return;
+                  }
+                  update(D => applyPreset(D, p.id));
+                  sfx('pop');
+                  toast(`${p.name} uygulandı ✨`);
+                }}
+                style={[st.preset, { backgroundColor: c.surface2 }]}>
+                <Text style={{ lineHeight: 34, fontSize: 28 }}>{p.emoji}</Text>
+                <Text numberOfLines={1} style={[st.swT, { color: c.ink }]}>{p.name}{p.premium && !premium.active ? ' 👑' : ''}</Text>
+              </Squish>
+            ))}
+          </View>
+          <Btn
+            small
+            kind="ghost"
+            label="↩️ Hepsini ilk haline döndür"
+            onPress={() => {
+              update(D => { D.play.look = { rooms: {} }; });
+              toast('Ev ilk görünümüne döndü');
+            }}
+          />
+        </Card>
+      )}
+
       {tab === 'oda' && rid && (
         <>
+          <T v="small">1. Düzenlenecek odayı seç (evde de dokunabilirsin). 2. Zemin, duvar ve pencereyi seç.</T>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={st.bleed}>
             {(onFloor.length ? onFloor : S.order).map(id => (
               <Chip key={id} label={`${ROOM_EMOJI[S.rooms[id].type]} ${S.rooms[id].name}`} on={id === rid} onPress={() => setPick(id)} />
@@ -127,7 +167,7 @@ export default function Dekor() {
           </ScrollView>
 
           <Card>
-            <T v="h3">Zemin</T>
+            <View style={st.hd}><T v="h3">Zemin</T><T v="small">{FLOORS.find(x => x.id === (look.floor ?? 'parke'))?.name ?? ''}</T></View>
             <Swatches
               list={FLOORS}
               value={look.floor ?? 'parke'}
@@ -137,7 +177,7 @@ export default function Dekor() {
           </Card>
 
           <Card>
-            <T v="h3">Duvar rengi</T>
+            <View style={st.hd}><T v="h3">Duvar rengi</T><T v="small">{WALLS.find(x => x.id === (look.wall ?? 'beyaz'))?.name ?? ''}</T></View>
             <Swatches
               list={WALLS}
               value={look.wall ?? 'beyaz'}
@@ -156,6 +196,7 @@ export default function Dekor() {
             <T v="tiny">Dışarıya bakan duvarlarda. Odalar arasına kapı, antreye giriş kapısı kendiliğinden konur.</T>
           </Card>
 
+          <Btn small kind="ghost" label="↩️ Bu odayı ilk haline döndür" onPress={() => update(D => resetRoomLook(D, rid))} />
           <Btn
             label="Bu görünümü bütün odalara uygula"
             onPress={() => {
@@ -169,7 +210,7 @@ export default function Dekor() {
 
       {tab === 'dis' && (
         <Card>
-          <T v="h3">Dış cephe</T>
+          <T v="h3">Dış duvar rengi</T>
           <T v="small">Evin dışarıya bakan duvarları. &quot;Odanın rengi&quot; seçiliyse her oda kendi rengini dışarı da taşır.</T>
           <Swatches
             list={FACADES}
@@ -178,6 +219,17 @@ export default function Dekor() {
             onPick={s => gate(s) && update(D => {
               D.play.look ||= { rooms: {} };
               D.play.look.facade = s.id === 'varsayilan' ? undefined : s.id;
+            })}
+          />
+          <T v="h3">Çatı rengi</T>
+          <T v="small">Evi iki parmakla yakınlaştırınca çatı görünür.</T>
+          <Swatches
+            list={ROOFS}
+            value={S.play.look?.roof ?? 'kiremit'}
+            premium={premium.active}
+            onPick={s => gate(s) && update(D => {
+              D.play.look ||= { rooms: {} };
+              D.play.look.roof = s.id === 'kiremit' ? undefined : s.id;
             })}
           />
           <Btn small label="🌙 Evin teması: gündüz, gece, kış…" onPress={() => router.push('/evler' as Href)} />
@@ -202,7 +254,7 @@ function Swatches({ list, value, premium, onPick }: { list: Swatch[]; value: str
               <Text style={{ fontSize: 16 }}>{s.emoji}</Text>
               {s.premium && !premium && <Text style={st.crown}>👑</Text>}
             </View>
-            <Text numberOfLines={1} style={[st.swT, { color: on ? c.ink : c.muted }]}>{s.name}</Text>
+            <Text numberOfLines={2} style={[st.swT, { color: on ? c.ink : c.muted, textAlign: 'center' }]}>{s.name}</Text>
           </Squish>
         );
       })}
@@ -263,9 +315,11 @@ const st = StyleSheet.create({
   tip: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, padding: 12 },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   bleed: { marginHorizontal: -22, paddingHorizontal: 22 },
+  hd: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   swWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  sw: { width: 62, alignItems: 'center', gap: 4 },
+  preset: { width: 92, alignItems: 'center', gap: 4, borderRadius: radius.tile, paddingVertical: 12, paddingHorizontal: 4 },
+  sw: { width: 66, alignItems: 'center', gap: 4 },
   swDot: { width: 50, height: 50, borderRadius: 25, borderWidth: 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   swAlt: { position: 'absolute', right: 0, bottom: 0, width: 25, height: 25 },
   swT: { fontFamily: fonts.bodyBold, fontSize: 12 },

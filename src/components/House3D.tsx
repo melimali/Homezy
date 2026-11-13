@@ -5,7 +5,7 @@ import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Polygon, Pol
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { type Mood } from '@/domain/garden';
-import { facadeOf, floorOf, spotOf, wallOf, winOf } from '@/domain/look';
+import { facadeOf, floorOf, roofOf, spotOf, wallOf, winOf } from '@/domain/look';
 import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
@@ -1700,7 +1700,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const EAVE_OV = 0.16, SL = 11.5, CAP = 3;
     const WIN_Z0 = WALL_H * 0.36, WIN_Z1 = WIN_Z0 + WALL_H * 0.35; // window height = 0.35 wall height
     const WIN_W = 0.3; // window width as a share of one tile
-    const roofBase = dark ? '#8A5C52' : '#C8826B';
+    const roofPick = roofOf(S)?.color;
+    const roofBase = roofPick ? (dark ? shade(roofPick, -0.25) : roofPick) : dark ? '#8A5C52' : '#C8826B';
     const snowy = theme === 'kis';
     const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
     const alongC = cMax - cMin >= rMax - rMin; // ridge along columns when the house is wider than deep

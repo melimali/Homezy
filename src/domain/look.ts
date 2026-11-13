@@ -41,6 +41,24 @@ export const FACADES: Swatch[] = [
   { id: 'tugla', name: 'Tuğla', emoji: '🧱', color: '#DDA48C' },
 ];
 
+export const ROOFS: Swatch[] = [
+  { id: 'kiremit', name: 'Kiremit', emoji: '🧱', color: '#C8826B' },
+  { id: 'gri', name: 'Gri', emoji: '🩶', color: '#8E96A3' },
+  { id: 'kahve', name: 'Kahve', emoji: '🌰', color: '#8A6A56' },
+  { id: 'yesil', name: 'Yosun', emoji: '🌿', color: '#7E9F85' },
+  { id: 'mavi', name: 'Mavi', emoji: '🫧', color: '#7FA3C2', premium: true },
+  { id: 'pembe', name: 'Pudra', emoji: '🌸', color: '#D9A1A8', premium: true },
+];
+
+/** Hazır görünümler: tek dokunuşla bütün evin zemini, duvarı, cephesi ve çatısı. */
+export const LOOK_PRESETS: { id: string; name: string; emoji: string; floor: string; wall: string; facade: string; roof: string; premium?: boolean }[] = [
+  { id: 'sicak', name: 'Sıcak ev', emoji: '☕', floor: 'parke', wall: 'krem', facade: 'krem', roof: 'kiremit' },
+  { id: 'modern', name: 'Modern', emoji: '🏙️', floor: 'gri', wall: 'beyaz', facade: 'beyaz', roof: 'gri' },
+  { id: 'pastel', name: 'Pastel', emoji: '🍬', floor: 'acik', wall: 'pembe', facade: 'mavi', roof: 'yesil' },
+  { id: 'doga', name: 'Doğa', emoji: '🌳', floor: 'hali_yesil', wall: 'mint', facade: 'mint', roof: 'kahve' },
+  { id: 'toprak', name: 'Toprak', emoji: '🏺', floor: 'terrakota', wall: 'toprak', facade: 'tugla', roof: 'kahve', premium: true },
+];
+
 export type WindowMode = 0 | 1 | 2;
 export const WINDOW_MODES: { v: WindowMode; label: string; emoji: string }[] = [
   { v: 0, label: 'Yok', emoji: '🧱' },
@@ -49,7 +67,7 @@ export const WINDOW_MODES: { v: WindowMode; label: string; emoji: string }[] = [
 ];
 
 export type RoomLook = { floor?: string; wall?: string; win?: WindowMode };
-export type HouseLook = { rooms: Record<string, RoomLook>; facade?: string };
+export type HouseLook = { rooms: Record<string, RoomLook>; facade?: string; roof?: string };
 
 export const emptyLook = (): HouseLook => ({ rooms: {} });
 
@@ -57,6 +75,7 @@ const find = (list: Swatch[], id?: string) => list.find(s => s.id === id);
 export const floorOf = (S: AppState, rid: string) => find(FLOORS, S.play?.look?.rooms?.[rid]?.floor);
 export const wallOf = (S: AppState, rid: string) => find(WALLS, S.play?.look?.rooms?.[rid]?.wall);
 export const winOf = (S: AppState, rid: string): WindowMode => S.play?.look?.rooms?.[rid]?.win ?? 1;
+export const roofOf = (S: AppState) => find(ROOFS, S.play?.look?.roof);
 export const facadeOf = (S: AppState) => {
   const f = find(FACADES, S.play?.look?.facade);
   return f && f.color ? f : undefined;
@@ -114,4 +133,19 @@ export function itemsAt(S: AppState, cell: number, floor: 0 | 1 = 0) {
     const sp = spotOf(S, id);
     return sp && sp.floor === floor && sp.i === cell && S.play.placed[id] === cells[cell];
   });
+}
+
+/** Odanın görünümünü varsayılana döndürür. */
+export function resetRoomLook(S: AppState, rid: string) {
+  if (S.play.look?.rooms) delete S.play.look.rooms[rid];
+}
+
+/** Hazır görünümü bütün eve uygular. */
+export function applyPreset(S: AppState, id: string) {
+  const p = LOOK_PRESETS.find(x => x.id === id);
+  if (!p) return;
+  applyLookToAll(S, { floor: p.floor, wall: p.wall });
+  const look = (S.play.look ||= emptyLook());
+  look.facade = p.facade;
+  look.roof = p.roof;
 }

@@ -214,3 +214,11 @@ Kapsam: gün/saat dilimi ve DST, seri/puan, veri büyümesi, şema, bildirim pla
 
 ### Çözülmeyen / not
 - İstemci (PurchasesProvider) Premium'u RevenueCat SDK entitlement'ından okuyor; sandbox ayrımı yapmıyor. Gerçek sınır sunucuda (tarama/sohbet limitleri is_premium ile), bu yüzden istemciye dokunulmadı.
+
+## Arayüz/Store temizliği (son build hakkı, saf JS)
+
+- Düzeltildi (fe00bab): `saver.flush()` devam eden kaydı da bekliyor (B2).
+- Düzeltildi (e786c43): `moka.tsx` gecikmeli yönlendirme/balon zamanlayıcıları ekrandan çıkınca iptal.
+- Tarama: src/app, src/components, src/hooks içindeki timer/listener/Animated.loop kullanımlarının geri kalanında temizlik mevcut; inline context value yok; `eslint src --quiet` temiz.
+- Yapılmadı: `update()` içindeki JSON klonu. `structuredClone` Hermes'te güvenilir değil; davranış riski var. ScrollView->FlatList dönüşümleri görsel risk nedeniyle yapılmadı.
+- BUILD GEREKTİRİR: bu kapsamda yok.

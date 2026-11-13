@@ -37,7 +37,7 @@ export default function Evim() {
       router.replace('/');
       toast('Evin hazır. Rutinlerini cevaplarına göre ayarladım 🏡');
     } else {
-      router.canGoBack() ? router.back() : router.replace("/");
+      if (router.canGoBack()) router.back(); else router.replace("/");
       toast('Cevapların kaydedildi, rutinler güncellendi.');
     }
   };
@@ -48,7 +48,7 @@ export default function Evim() {
       <View>
         <T v="eyebrow">{first ? 'Son bir adım' : 'Evim hakkında'}</T>
         <T v="h1">Evini sana göre ayarlayalım</T>
-        <T v="lead">Evinde olan şeylere "Evet" de. Sadece onlar için iş eklerim, olmayanlar listende görünmez. Sonra istediğin zaman değiştirebilirsin.</T>
+        <T v="lead">Evinde olan şeylere &ldquo;Evet&rdquo; de. Sadece onlar için iş eklerim, olmayanlar listende görünmez. Sonra istediğin zaman değiştirebilirsin.</T>
       </View>
 
       <Card>

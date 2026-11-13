@@ -1,6 +1,6 @@
 {
   "name": "homezy",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "main": "index.ts",
   "dependencies": {
     "@bacons/apple-targets": "^5.0.0",

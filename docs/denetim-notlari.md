@@ -156,3 +156,7 @@ Kapsam: supabase/functions, migrations/RLS, src/auth, purchases, sync, family, l
 ## OTA (expo-updates) — BUILD GEREKTİRİR
 - Açık: `expo-updates` pakete yok; `app.json` / `app.config.ts` içinde `updates` ve `runtimeVersion` yok; `eas.json` build profillerinde `channel` yok. Yani JS düzeltmeleri build'siz ulaşamaz.
 - Gerekenler (hepsi yeni build ister, bu yüzden DEĞİŞTİRİLMEDİ): `npx expo install expo-updates`, `eas update:configure`, `runtimeVersion: { policy: "appVersion" }`, `eas.json` her profile `channel` (preview/production). Sonra `eas update --channel production` ile JS yaması gönderilir. Son build'e eklenecekse build'den ÖNCE yapılmalı.
+
+## Sürüm / OTA notu
+- Mağazadaki son sürüm 1.0.3 (Melih, 2026-11-13; ChatGPT numaralamış). Repo 1.0.4'e çekildi (app.json, package.json). Build numarası (iOS buildNumber, Android versionCode) `appVersionSource: remote` + `autoIncrement` ile EAS'ta tutulur, elle artırma.
+- OTA `runtimeVersion: appVersion`: 1.0.4 build'i kendi runtime'ına bağlanır. Mağazadaki 1.0.3 kullanıcılarına bu OTA GİTMEZ (expo-updates o build'de yok). OTA sadece 1.0.4 ve sonrası build'lere ulaşır. Native değişiklik varsa sürümü artır.

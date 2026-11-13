@@ -104,7 +104,7 @@ Genel: RLS/RPC tarafı (revoke/grant, `search_path=''`, `security definer`, JWT 
 - [ ] **P2 · O · Kayıt her değişiklikte tüm tabloları DELETE + yeniden INSERT ediyor (tablo imzası değişince).** `src/data/db.ts:162-205`. İmza için her kayıtta `JSON.stringify([order, rooms, mod, tasks, care, cells])` hesaplanıyor: iş tamamlama bile tüm tabloyu yazar (görev satırı `last` değişimi imzayı değiştirir). Çözüm: satır bazlı diff (`INSERT OR REPLACE` yalnız değişen satır) ya da en az imza için `hash`.
 - [ ] **P3 · O · Bildirim yeniden zamanlama ardışık `await` native çağrılarla (≈40+) ve her `state` değişiminde.** `src/notifications/useNotificationSync.ts:42-49`, `schedule.ts:176-270`. Her `state` değişimi (XP, su, kaydırma sonrası ayar vb.) tetikler. Çözüm: yalnız bildirim girdisini etkileyen alanların `hash`'i değişince çalıştır; çağrıları `Promise.all` ile gruplayarak yaz.
 - [ ] **P4 · O · Bulut yedeği her `state` değişiminde 3 sn sonra tüm JSON'u gönderiyor (≤2 MB).** `src/sync/cloud.ts:240-256`. Mobil veri ve pil. Çözüm: `forCloud(S)` hash'ini sakla, değişmediyse atla; değişikliklerde en az 15-30 sn birleştir; hücresel bağlantıda ertele.
-- [ ] **P5 · O · `House3D.tsx` 2396 satır, tek dosya.** `src/components/House3D.tsx`. Hava/kuş/bulut animasyonları, `setInterval` ve çok sayıda efekt bir arada; düşük cihazlarda kare düşüşü. Çözüm: `FPS` sınırı + "Düşük hareket" ayarı (zaten `reduceMotion` var mı kontrol et), bileşeni bölüp `React.memo`; ekran dışındayken (sekme odakta değil) animasyonu durdur (`useIsFocused`).
+- [ ] **P5 · D (3D ev incelendi: döngüler native driver, `reduceMotion` destekli; yine de ekran odakta değilken durdurulmuyor, `useIsFocused` hiç kullanılmıyor) · BGY · `House3D.tsx` 2396 satır, tek dosya.** `src/components/House3D.tsx`. Hava/kuş/bulut animasyonları, `setInterval` ve çok sayıda efekt bir arada; düşük cihazlarda kare düşüşü. Çözüm: `FPS` sınırı + "Düşük hareket" ayarı (zaten `reduceMotion` var mı kontrol et), bileşeni bölüp `React.memo`; ekran dışındayken (sekme odakta değil) animasyonu durdur (`useIsFocused`).
 - [ ] **P6 · D · `useNow` ve 4+ ayrı `setInterval` (1 sn) ekran başına.** `src/components/OdakCard.tsx:137`, `RestGame.tsx:24-28`, `app/odak.tsx:66`, `app/moka.tsx:355`. Sekmeden çıkıldığında temizleniyor mu kontrol et; aynı saati paylaşan tek bir `useTick` kancası.
 
 ## 4. UX
@@ -129,7 +129,7 @@ Genel: RLS/RPC tarafı (revoke/grant, `search_path=''`, `security definer`, JWT 
 
 ---
 
-_Tur 2'de eklenecek: sekmeler (Ev/Bugün/Moka/Gelişim/Ben), 3D ev ayrıntısı, onboarding, aile paylaşımı, reklam/ödeme duvarı akışı, erişilebilirlik, i18n tutarlılığı._
+_Henüz derinlemesine bakılmayanlar (sonraki tur): her sekmenin ekran içi akışı, onboarding (`tanitim.tsx`), aile paylaşımı istemcisi, erişilebilirlik (232 `accessibilityLabel` / 71 `Pressable`: oran düşük, etiketsiz dokunma alanları olabilir), TR/EN eksik `tx()` taraması (jest `i18n/__tests__/gaps.test.ts` çalıştırılmalı)._
 
 ---
 

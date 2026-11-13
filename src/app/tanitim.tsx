@@ -153,6 +153,7 @@ function TanitimInner() {
   const reduce = useReduceMotion();
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
   const [page, setPage] = useState(0);
+  const pageRef = useRef(0);
   const [pop, setPop] = useState(0);
   const scroll = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const [x] = useState(() => new Animated.Value(0));
@@ -163,10 +164,13 @@ function TanitimInner() {
     listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!w) return;
       const p = Math.max(0, Math.min(PAGES.length - 1, Math.round(e.nativeEvent.contentOffset.x / w)));
-      setPage(cur => {
-        if (cur !== p) sfx('tap');
-        return p;
-      });
+      // Yan etki (ses) state güncelleyicisinin içinde olmasın: iOS'ta çizim sırasında ses oynatıcıları kurulup takılıyordu.
+      if (pageRef.current === p) return;
+      pageRef.current = p;
+      setPage(p);
+      setTimeout(() => {
+        try { sfx('tap'); } catch { /* ses olmasa da olur */ }
+      }, 0);
     },
   });
 
@@ -175,7 +179,7 @@ function TanitimInner() {
   const logoW = Math.max(84, Math.min(156, w - 252));
   const next = () => {
     if (last) finishIntro();
-    else scroll.current?.scrollTo({ x: (page + 1) * w, animated: !reduce });
+    else scroll.current?.scrollTo({ x: (page + 1) * w, animated: !reduce && Platform.OS !== 'ios' });
   };
 
   return (

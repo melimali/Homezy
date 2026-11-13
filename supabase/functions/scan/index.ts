@@ -127,7 +127,7 @@ Deno.serve(async req => {
   if ((!kind && !isMeter) || !image) return json({ error: 'bad_request' }, 400);
   if (image.length > MAX_IMAGE) return json({ error: 'too_large' }, 413);
   // Sadece gerçek JPEG / PNG / WebP kabul edilir; hak ayrılmadan önce kontrol edilir.
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image.slice(0, 4096))) return json({ error: 'bad_image' }, 400);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image) || image.length % 4 === 1) return json({ error: 'bad_image' }, 400);
   const mediaType = sniff(image);
   if (!mediaType) return json({ error: 'bad_image' }, 415);
   const known = (Array.isArray(body.known) ? body.known : []).map(x => str(x, 60)).filter(Boolean).slice(0, 80);

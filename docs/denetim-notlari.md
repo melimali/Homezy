@@ -173,3 +173,28 @@ Açık:
 - `saveState` her tablo değişiminde tüm tabloları siler ve yeniden yazar (tek işlemde, güvenli ama büyük evlerde yavaş olabilir).
 - Başka bir ajanın aynı çalışma ağacında yaptığı `src/domain` ve `src/notifications/schedule.ts` değişiklikleri (yaz saati, iOS 64 bildirim sınırı) bu bölüme dahil değil.
 - BUILD GEREKTİRİR: bu turda build gerektiren bulgu çıkmadı; native modüller (ads, widget, notifications) zaten guard'lı.
+
+## 100 gün
+
+Kapsam: gün/saat dilimi ve DST, seri/puan, veri büyümesi, şema, bildirim planlama, abonelik ve oturum (istemci), uzun oturum. Kural: yalnız JS/TS düzeltmesi; build gerektirenler işaretli.
+
+### Düzeltildi
+- 448cafa schedule.ts: gün hesabı `now + d * DAY` yaz saati geçişinde geceye yakın saatlerde bir günü atlayıp tekrarlayabiliyordu; `setDate` ile aynı yerel saatte günlere geçilir (sabah özeti, spor, su, haftalık, alışveriş hatırlatmaları).
+- 448cafa schedule.ts: iOS 64 bekleyen bildirim sınırı: en kötü durumda özet + iş + hatırlatma + ilaç + evcil hayvan 77'yi aşabiliyordu (iOS fazlasını sessizce atar). İlaç/evcil hayvana önce yer ayrılır, kalan 60'a kadar zamanlanır (yalnız iOS).
+- 448cafa schedule.ts: iki yeniden zamanlama iç içe girerse bildirimler ikiye katlanıyordu (eylem + durum değişimi); artık sıraya girer.
+- 448cafa logic.ts `weekSummary`: son 7 gün `now - i*DAY` ile DST günü kaydırıyordu; `setDate` kullanılır.
+- 448cafa play.ts `forgivenGaps`: 14 günlük af bekleme süresi DST'de 13,96 gün çıkıp affı bir gün geciktirebiliyordu; yuvarlanır. (Seri/puan mantığı geri kalanı gün anahtarı + öğle saati ile DST'ye dayanıklı, testler geçti.)
+- 448cafa play.ts `normalize`: spor kaydı 400, ilaç işaretleri (`medLog`) 200 günle sınırlandı (sınırsız büyüyordu; açılışta ve buluttan alırken uygulanır). Diğer listeler zaten sınırlı: log 120 gün, su/uyku 60, check-in 120, bütçe 12 ay, notlar 200, okuma 600, odak 200.
+- 7a510a9 useNotificationSync: veri değişmezse uygulama öne gelince bildirimler yenilenmiyordu; saatlerce/günlerce arkadaki uygulamada özetler bayatlıyor, 7 günlük ufuk eriyordu. Öne gelince (2 sn bekleyip) yeniden zamanlanır.
+- 7a510a9 PurchasesProvider: uzun oturumda abonelik bitişi/yenilenmesi ancak yeniden açılınca görünüyordu; öne gelince RevenueCat müşteri bilgisi ve sunucu `subscriptions` satırı tazelenir (grace/iptal/yenileme durumları RevenueCat entitlement'ından okunmaya devam eder).
+- (başka ajan, db.ts/AppStore.tsx) bozuk meta JSON'u, bilinmeyen oda türü, okuma hatasında boş durumla diskteki veriyi ezme engeli.
+
+### Açık
+- Şema: `SCHEMA_VERSION` yazılıyor ama okunup sürüme göre geçiş yapılmıyor; geçiş bugün "eksik sütunu ekle" (ADDED_COLUMNS) + `normalize` varsayılanlarıyla yapılıyor. Yeni sütun/alan eklenirken ADDED_COLUMNS ve normalize'a eklemek şart; sütun silme/yeniden adlandırma geçişi yok.
+- `journal` (günlük metin/foto yolu), `days`, `frozen` kullanıcı verisi olduğu için budanmıyor (yılda ~365 küçük kayıt; 100 günde sorun değil). `play.pending` internetsiz kalınca sınırsız birikir (kayıt başına küçük).
+- Bildirim zamanlaması hâlâ "hepsini iptal et, yeniden kur" biçiminde; kur sırasında uygulama öldürülürse o dönem bildirim kalmaz (sonraki açılışta düzelir). Kalıcı çözüm sabit kimlikli fark-bazlı zamanlama.
+- Saat dilimi değişimi (uçuş): gün anahtarı yerel saatten türediği için gün tekrar/atlama olabilir; seri affı ve dondurma bunu büyük oranda karşılar. Sunucu puan tarafı ayrı denetlenmedi.
+- RevenueCat'in 8 sn sonra `getCustomerInfo` zaman aşımı sonrası `ready` açılır; ilk açılışta çevrimdışıysa Premium özellikler ~6 sn kilitli görünebilir (önbellekten gelirse hızlı). Bilinen/kabul edilebilir.
+- PurchasesProvider içinde mevcut 2 eslint `set-state-in-effect` hatası (önceden vardı, davranışı bozmuyor; ayrı temizlik).
+- Takvim/dil: `growth.ts`/`bonus.ts` gün numarası UTC bölme kullanıyor; UTC±12 dışındaki saat dilimlerinde sorun çıkarmaz.
+- BUILD GEREKTİRİR: OTA (expo-updates) yok (yukarıdaki bölüm); bu yüzden bu düzeltmelerden sonra çıkacak hatalar yeni mağaza sürümü ister. Son build'den önce expo-updates eklenmesi öneri.

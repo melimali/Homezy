@@ -1079,9 +1079,14 @@ type Props = {
   hiCell?: number | null;
   /** Eşya yerleştiriliyor: konabilecek bloklar kesik çizgiyle işaretlenir. */
   placing?: boolean;
+  /**
+   * Dışarıdan kamera: oda kimliği verilirse kamera o odaya yaklaşır, null verilirse uzaklaşır (yerleştirme modu).
+   * Verilmezse (undefined) kamera eskisi gibi dokunmayla yönetilir; verilince "Uzaklaş" çubuğu çizilmez.
+   */
+  focusRoom?: string | null;
 };
 
-function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing, zoomRef }: Props) {
+function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing, zoomRef, focusRoom: focusProp }: Props) {
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   const c = useColors();
@@ -1112,7 +1117,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const [focus, setFocus] = useState<string | null>(null);
   /** İki parmakla yakınlaştırılmış / uzaklaştırılmış: "Sıfırla" düğmesi görünür. */
   const [zoomed, setZoomed] = useState(false);
-  const focusFn = useRef<(id: string | null) => void>(() => {});
+  const focusFn = useRef<(id: string | null, fit?: boolean) => void>(() => {});
   const zoomStepRef = useRef<(dir: 1 | -1) => void>(() => {});
   const prevIdle = useRef(idle);
   useEffect(() => {
@@ -2022,7 +2027,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   })();
   const sc = boxW > 0 ? boxW / vbW : 0;
   const ZMAX = 3, ZMIN = 0.7;
-  focusFn.current = (id: string | null) => {
+  focusFn.current = (id: string | null, fit?: boolean) => {
     setFocus(id);
     setZoomed(false);
     if (!id || !sc) {
@@ -2034,8 +2039,21 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       return;
     }
     const a = anchors[id];
-    const [fx, fy] = P(Math.floor(a / cols) + 0.5, (a % cols) + 0.5, 6);
-    const Z = 2.4;
+    let fr = Math.floor(a / cols) + 0.5, fc = (a % cols) + 0.5, Z = 2.4;
+    if (fit) {
+      // Odanın tamamı kadraja sığsın: blokların ortasına git, odanın boyuna göre yakınlaş.
+      let r0 = 99, r1 = -1, c0 = 99, c1 = -1;
+      cells.forEach((x, i) => {
+        if (x !== id) return;
+        const rr = Math.floor(i / cols), cc = i % cols;
+        r0 = Math.min(r0, rr); r1 = Math.max(r1, rr); c0 = Math.min(c0, cc); c1 = Math.max(c1, cc);
+      });
+      if (r1 >= 0) {
+        fr = (r0 + r1 + 1) / 2; fc = (c0 + c1 + 1) / 2;
+        Z = Math.max(1.4, Math.min(2.6, 5 / Math.max(r1 - r0 + 1, c1 - c0 + 1, 1.5)));
+      }
+    }
+    const [fx, fy] = P(fr, fc, 6);
     const total = Z * zoom;
     const ox = (fx - (minX + vbW / 2)) * sc, oy = (fy - (minY + vbH / 2)) * sc;
     const tx = -ox * total, ty = -oy * total;
@@ -2063,6 +2081,12 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     Animated.parallel([Animated.timing(pinch, { toValue: next, ...ease }), Animated.timing(pan, { toValue: { x: g.px, y: g.py }, ...ease })]).start();
   };
   zoomStepRef.current = zoomStep;
+  // Dışarıdan oda seçimi (eşya yerleştirme): kamera odaya kayar; boyut ölçülünce de çalışır.
+  useEffect(() => {
+    if (focusProp === undefined || !sc) return;
+    focusFn.current(focusProp && S.rooms[focusProp] ? focusProp : null, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusProp, sc > 0, floorProp]);
   useEffect(() => {
     if (!zoomRef) return;
     zoomRef.current = { step: d => zoomStepRef.current(d), reset: () => focusFn.current(null) };
@@ -2288,7 +2312,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       )}
     </Animated.View>
   );
-  const focusRoom = focus ? S.rooms[focus] : null;
+  const focusRoom = focus && focusProp === undefined ? S.rooms[focus] : null;
   const focusBar = focusRoom ? (
     <View style={[st3.bar, { backgroundColor: c.surface, borderColor: c.line }]}>
       <Pressable accessibilityRole="button" onPress={() => focusFn.current(null)} hitSlop={8} style={st3.btn}>

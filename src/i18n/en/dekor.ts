@@ -1,5 +1,13 @@
 /** Ev kişiselleştirme ekranı (dekor.tsx) yeni metinler. */
 export const EN_DEKOR: Record<string, string> = {
+  '1. Odayı seç': '1. Pick the room',
+  'Odayı seçince kamera ona yaklaşır. Evde odaya dokunarak da seçebilirsin.': 'The camera zooms into the room you pick. You can also tap a room in the house.',
+  '🔭 Bütün eve uzaklaş': '🔭 Zoom out to the whole house',
+  '2. Eşyanı seç': '2. Pick the item',
+  'Aşağıdan bir eşya seç ya da odadaki eşyaya dokun.': 'Pick an item below or tap one in the room.',
+  'Önce yukarıdan eşyayı koyacağın odayı seç.': 'First pick the room for it above.',
+  'Taşımak için odada boş bir bloğa dokun. Çevirebilir ya da depoya kaldırabilirsin.': 'To move it, tap an empty block in the room. You can also rotate it or move it to storage.',
+  'Odada eşyayı koymak istediğin bloğa dokun.': 'Tap the block in the room where you want it.',
   'Önce hazır bir görünüm seç, sonra oda oda zemin, duvar, pencere ve çatıyı değiştir. Her değişiklik evin üstünde hemen görünür.': 'Pick a ready-made look first, then change floor, walls, windows and roof room by room. Every change shows on the house right away.',
   'Hazır görünüm': 'Ready looks',
   'Oda içi': 'Inside rooms',

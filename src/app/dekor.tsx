@@ -58,6 +58,9 @@ export default function Dekor() {
 
   /** Seçili eşya (Eşyalar sekmesi). */
   const [selRaw, setSel] = useState<string | null>(null);
+  /** Eşya yerleştirirken seçili oda: kamera ona yaklaşır, bloklar sadece onda seçilir. */
+  const [roomRaw, setPlaceRoom] = useState<string | null>(null);
+  const placeRoom = tab === 'esya' && roomRaw && S.rooms[roomRaw] && onFloor.includes(roomRaw) ? roomRaw : null;
   const sel = selRaw && S.play.owned.includes(selRaw) ? selRaw : null;
   const cells = floorCells(S, f);
   const selSpot = sel && S.play.placed[sel] ? spotOf(S, sel) : null;
@@ -71,6 +74,14 @@ export default function Dekor() {
       sfx('tap');
       return;
     }
+    // Oda oda: başka odaya dokunulunca kamera o odaya geçer, eşya henüz konmaz.
+    if (room !== placeRoom) {
+      setPlaceRoom(room);
+      const inRoom = itemsAt(S, i, f)[0];
+      if (inRoom && (!sel || !itemsAt(S, i, f).includes(sel))) setSel(inRoom);
+      sfx('tap');
+      return;
+    }
     const here = itemsAt(S, i, f);
     const other = here.find(x => x !== sel);
     if (other && (!sel || !here.includes(sel))) {
@@ -79,6 +90,7 @@ export default function Dekor() {
       return;
     }
     if (!sel) return toast('Evdeki bir eşyaya dokun ya da aşağıdan seç.');
+    if (S.play.placed[sel] === room && spotOf(S, sel)?.i === i && spotOf(S, sel)?.floor === f) return;
     update(D => placeItem(D, sel, i, f));
     sfx('pop');
   };
@@ -95,9 +107,10 @@ export default function Dekor() {
       <View style={[st.preview, { backgroundColor: c.surface }]}>
         <HouseFloors state={S} now={now} theme={themeFor(S.settings.theme, premium.active)} labels={false} floor={f} onFloorChange={changeFloor}
           onPickCell={pickCell}
-          hiRoom={tab === 'oda' ? rid : null}
           hiCell={tab === 'esya' && selSpot && selSpot.floor === f ? selSpot.i : null}
-          placing={tab === 'esya' && !!sel}
+          placing={tab === 'esya' && !!sel && !!placeRoom}
+          hiRoom={tab === 'esya' ? placeRoom : tab === 'oda' ? rid : null}
+          focusRoom={tab === 'esya' ? placeRoom : null}
         />
       </View>
       {!hasUpper(S) && (
@@ -236,7 +249,7 @@ export default function Dekor() {
         </Card>
       )}
 
-      {tab === 'esya' && <Placer sel={sel} setSel={setSel} />}
+      {tab === 'esya' && <Placer sel={sel} setSel={setSel} room={placeRoom} setRoom={setPlaceRoom} rooms={onFloor} />}
     </Screen>
   );
 }
@@ -263,7 +276,9 @@ function Swatches({ list, value, premium, onPick }: { list: Swatch[]; value: str
 }
 
 /** Eşya tepsisi: eşyayı buradan ya da 3B evde üstüne dokunarak seç, sonra evde bir bloğa dokun. Çevir ve depoya kaldır düğmeleri. */
-function Placer({ sel, setSel }: { sel: string | null; setSel: (id: string | null) => void }) {
+function Placer({ sel, setSel, room, setRoom, rooms }: {
+  sel: string | null; setSel: (id: string | null) => void; room: string | null; setRoom: (id: string | null) => void; rooms: string[];
+}) {
   const c = useColors();
   const router = useRouter();
   const { state: S, update } = useStore();
@@ -286,11 +301,25 @@ function Placer({ sel, setSel }: { sel: string | null; setSel: (id: string | nul
     return `${S.rooms[rid].name}${hasUpper(S) ? ` · ${fl + 1}. kat` : ''}`;
   };
   const pet = sel === 'kedi' || sel === 'kopek';
+  const placed = sel && S.play.placed[sel] ? S.play.placed[sel] : null;
 
   return (
     <Card>
-      <T v="h3">{sel ? `${ITEM[sel]?.emoji} ${ITEM[sel]?.name}` : 'Eşyanı seç'}</T>
-      <T v="small">{sel ? 'Evde koymak istediğin bloğa dokun.' : 'Evdeki eşyaya ya da aşağıdan birine dokun.'}</T>
+      <T v="h3">1. Odayı seç</T>
+      <T v="small">Odayı seçince kamera ona yaklaşır. Evde odaya dokunarak da seçebilirsin.</T>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={st.bleed}>
+        {rooms.map(id => (
+          <Chip key={id} label={`${ROOM_EMOJI[S.rooms[id].type]} ${S.rooms[id].name}`} on={id === room} onPress={() => setRoom(id === room ? null : id)} />
+        ))}
+      </ScrollView>
+      {room ? <Btn small kind="ghost" label="🔭 Bütün eve uzaklaş" onPress={() => setRoom(null)} /> : null}
+      <T v="h3">{sel ? `2. ${ITEM[sel]?.emoji} ${ITEM[sel]?.name}` : '2. Eşyanı seç'}</T>
+      <T v="small">
+        {!sel ? 'Aşağıdan bir eşya seç ya da odadaki eşyaya dokun.'
+          : !room ? 'Önce yukarıdan eşyayı koyacağın odayı seç.'
+          : placed === room ? 'Taşımak için odada boş bir bloğa dokun. Çevirebilir ya da depoya kaldırabilirsin.'
+          : 'Odada eşyayı koymak istediğin bloğa dokun.'}
+      </T>
       {sel && (
         <View style={st.row}>
           {!pet && <Btn small label="🔄 Çevir" onPress={() => { update(D => turnItem(D, sel)); sfx('tap'); }} />}

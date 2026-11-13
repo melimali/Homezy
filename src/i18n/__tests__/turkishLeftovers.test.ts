@@ -28,7 +28,7 @@ function walk(d: string, out: string[] = []) {
 // Bu dosyalarda Türkçe metin bilerek kalır (İngilizce modda Türkçe öğretmek, geliştirici günlüğü).
 const SKIP_FILES = [/domain[\\/]growth\.ts$/, /domain[\\/]havuz\.ts$/, /theme[\\/]index\.ts$/, /useName\.ts$/,
   // Dile göre ayrı yazılmış (tr/en) metinler:
-  /domain[\\/]chatCanned\.ts$/, /app[\\/]tanitim\.tsx$/];
+  /domain[\\/]chatCanned\.ts$/, /domain[\\/]paywallCopy\.ts$/, /app[\\/]tanitim\.tsx$/];
 // Geliştirici hata iletileri ve tarayıcının kaçırdığı kaçışlı tırnak parçaları.
 const LOG = /^Homezy: |içinde kullanılmalı|^(den|dan|deki|a|e|ya) |^"\}de |, cta: /;
 
@@ -68,8 +68,8 @@ it('koddaki Türkçe metinlerin İngilizce karşılığı var', () => {
 
 // Veri havuzları (src/domain, src/constants): eşya, görev, ürün, adım, öneri metinleri koddan değil
 // dışa aktarılan nesnelerden okunur; böylece yeni eklenen her havuz maddesi de İngilizce istenir.
-const POOL_SKIP_FILES = /^(growth|havuz|plan-templates)\.ts$/; // dil öğrenme kartları, iç kimlikler, ızgara kodları
-const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…']);
+const POOL_SKIP_FILES = /^(growth|havuz|plan-templates|paywallCopy)\.ts$/; // dil öğrenme kartları, iç kimlikler, ızgara kodları
+const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Modern', 'Pastel', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…']);
 it('veri havuzlarındaki her metnin İngilizce karşılığı var', () => {
   setLang('en');
   const out = new Map<string, string>();

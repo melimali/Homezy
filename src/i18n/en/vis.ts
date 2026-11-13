@@ -31,4 +31,12 @@ export const EN_VIS: Record<string, string> = {
   'Efsane Moka': 'Legendary Moka',
   'Merhaba, ben Moka ☕ Bana iş ekletebilir, alışveriş listene ürün yazdırabilir, yaptıklarını (su, spor, ilaç, hayvan bakımı) işaretletebilir, günlük ve takvim notu yazdırabilir ya da sadece sohbet edebilirsin!': "Hi, I'm Moka ☕ You can have me add tasks, put items on your shopping list, tick off what you've done (water, workout, meds, pet care), write journal and calendar notes, or just chat!",
   "Henüz not yok. Moka'ya \"yarın için not al: …\" de.": 'No notes yet. Tell Moka "take a note for tomorrow: …".',
+  'zaman aşımı': 'timed out',
+  'Doğrulamadan devam et': 'Continue without verifying',
+  'Önce kahve mi? ☕': 'Coffee first? ☕',
+  'Ev bugün çok güzel ✨': 'Home looks lovely ✨',
+  'Bugün iyi iş çıkardın': 'Nice work today',
+  'Küçük bir iş yapalım mı? 🧹': 'One small task? 🧹',
+  'Ödeme alındı, Premium birazdan açılır. Açılmazsa "Satın alımları geri yükle"ye dokun.': 'Payment received, Premium will unlock shortly. If it does not, tap "Restore purchases".',
+  'Önceki oda': 'Previous room',
 };

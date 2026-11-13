@@ -179,14 +179,14 @@ Açık:
 Kapsam: gün/saat dilimi ve DST, seri/puan, veri büyümesi, şema, bildirim planlama, abonelik ve oturum (istemci), uzun oturum. Kural: yalnız JS/TS düzeltmesi; build gerektirenler işaretli.
 
 ### Düzeltildi
-- 448cafa schedule.ts: gün hesabı `now + d * DAY` yaz saati geçişinde geceye yakın saatlerde bir günü atlayıp tekrarlayabiliyordu; `setDate` ile aynı yerel saatte günlere geçilir (sabah özeti, spor, su, haftalık, alışveriş hatırlatmaları).
-- 448cafa schedule.ts: iOS 64 bekleyen bildirim sınırı: en kötü durumda özet + iş + hatırlatma + ilaç + evcil hayvan 77'yi aşabiliyordu (iOS fazlasını sessizce atar). İlaç/evcil hayvana önce yer ayrılır, kalan 60'a kadar zamanlanır (yalnız iOS).
-- 448cafa schedule.ts: iki yeniden zamanlama iç içe girerse bildirimler ikiye katlanıyordu (eylem + durum değişimi); artık sıraya girer.
-- 448cafa logic.ts `weekSummary`: son 7 gün `now - i*DAY` ile DST günü kaydırıyordu; `setDate` kullanılır.
-- 448cafa play.ts `forgivenGaps`: 14 günlük af bekleme süresi DST'de 13,96 gün çıkıp affı bir gün geciktirebiliyordu; yuvarlanır. (Seri/puan mantığı geri kalanı gün anahtarı + öğle saati ile DST'ye dayanıklı, testler geçti.)
-- 448cafa play.ts `normalize`: spor kaydı 400, ilaç işaretleri (`medLog`) 200 günle sınırlandı (sınırsız büyüyordu; açılışta ve buluttan alırken uygulanır). Diğer listeler zaten sınırlı: log 120 gün, su/uyku 60, check-in 120, bütçe 12 ay, notlar 200, okuma 600, odak 200.
-- 7a510a9 useNotificationSync: veri değişmezse uygulama öne gelince bildirimler yenilenmiyordu; saatlerce/günlerce arkadaki uygulamada özetler bayatlıyor, 7 günlük ufuk eriyordu. Öne gelince (2 sn bekleyip) yeniden zamanlanır.
-- 7a510a9 PurchasesProvider: uzun oturumda abonelik bitişi/yenilenmesi ancak yeniden açılınca görünüyordu; öne gelince RevenueCat müşteri bilgisi ve sunucu `subscriptions` satırı tazelenir (grace/iptal/yenileme durumları RevenueCat entitlement'ından okunmaya devam eder).
+- 288cec6 schedule.ts: gün hesabı `now + d * DAY` yaz saati geçişinde geceye yakın saatlerde bir günü atlayıp tekrarlayabiliyordu; `setDate` ile aynı yerel saatte günlere geçilir (sabah özeti, spor, su, haftalık, alışveriş hatırlatmaları).
+- 288cec6 schedule.ts: iOS 64 bekleyen bildirim sınırı: en kötü durumda özet + iş + hatırlatma + ilaç + evcil hayvan 77'yi aşabiliyordu (iOS fazlasını sessizce atar). İlaç/evcil hayvana önce yer ayrılır, kalan 60'a kadar zamanlanır (yalnız iOS).
+- 288cec6 schedule.ts: iki yeniden zamanlama iç içe girerse bildirimler ikiye katlanıyordu (eylem + durum değişimi); artık sıraya girer.
+- 288cec6 logic.ts `weekSummary`: son 7 gün `now - i*DAY` ile DST günü kaydırıyordu; `setDate` kullanılır.
+- 288cec6 play.ts `forgivenGaps`: 14 günlük af bekleme süresi DST'de 13,96 gün çıkıp affı bir gün geciktirebiliyordu; yuvarlanır. (Seri/puan mantığı geri kalanı gün anahtarı + öğle saati ile DST'ye dayanıklı, testler geçti.)
+- 288cec6 play.ts `normalize`: spor kaydı 400, ilaç işaretleri (`medLog`) 200 günle sınırlandı (sınırsız büyüyordu; açılışta ve buluttan alırken uygulanır). Diğer listeler zaten sınırlı: log 120 gün, su/uyku 60, check-in 120, bütçe 12 ay, notlar 200, okuma 600, odak 200.
+- bf0cabb useNotificationSync: veri değişmezse uygulama öne gelince bildirimler yenilenmiyordu; saatlerce/günlerce arkadaki uygulamada özetler bayatlıyor, 7 günlük ufuk eriyordu. Öne gelince (2 sn bekleyip) yeniden zamanlanır.
+- bf0cabb PurchasesProvider: uzun oturumda abonelik bitişi/yenilenmesi ancak yeniden açılınca görünüyordu; öne gelince RevenueCat müşteri bilgisi ve sunucu `subscriptions` satırı tazelenir (grace/iptal/yenileme durumları RevenueCat entitlement'ından okunmaya devam eder).
 - (başka ajan, db.ts/AppStore.tsx) bozuk meta JSON'u, bilinmeyen oda türü, okuma hatasında boş durumla diskteki veriyi ezme engeli.
 
 ### Açık

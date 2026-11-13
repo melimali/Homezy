@@ -194,6 +194,10 @@ async function doReschedule(S: AppState, premium = false) {
   await ensureCategories(N).catch(e => console.warn('Homezy: bildirim düğmeleri kurulamadı', e));
   // Çalışan odak zamanlayıcısının bitiş bildirimi silinmesin.
   // Ertelenmiş hatırlatmalar da kalır; ama dozu zaten işaretlenmişse gitsin.
+  // Önce yenileri zamanla, sonra eskileri iptal et: arada uygulama kapanırsa bildirimsiz kalınmaz (en kötü geçici kopya olur, sonraki açılışta temizlenir).
+  const stale: string[] = [];
+  const fresh = new Set<string>();
+  const sched = async (req: Parameters<typeof N.scheduleNotificationAsync>[0]) => void fresh.add(await N.scheduleNotificationAsync(req));
   for (const n of await N.getAllScheduledNotificationsAsync()) {
     if ((n.content.data as { focus?: boolean } | undefined)?.focus === true) continue;
     const rem = reminderDataOf(n.content);
@@ -204,7 +208,7 @@ async function doReschedule(S: AppState, premium = false) {
       const t = allTasks(S, now0).find(x => x.t.id === td.tid)?.t;
       if (t && !doneToday(t, now0) && !(t.snooze != null && t.snooze > now0)) continue;
     }
-    await N.cancelScheduledNotificationAsync(n.identifier);
+    stale.push(n.identifier);
   }
   await dismissStale(N, S).catch(() => {});
 
@@ -230,7 +234,7 @@ async function doReschedule(S: AppState, premium = false) {
     for (const n of own) {
       if (budget-- <= 0) break;
       const data: TaskData = { url: n.url ?? `/oda/${n.rid}`, tid: n.tid!, list: n.list!, premium };
-      await N.scheduleNotificationAsync({
+      await sched({
         identifier: `gorev-${n.tid}-${dayKey(at.getTime())}`,
         content: {
           title: tx(n.title),
@@ -244,13 +248,13 @@ async function doReschedule(S: AppState, premium = false) {
     }
     const msg = summaryFor(ns.filter(n => !own.includes(n)), at, ns.filter(n => n.k !== 'ok').length);
     if (!msg || budget-- <= 0) continue;
-    await N.scheduleNotificationAsync({
+    await sched({
       content: { title: tx(msg.title), body: tx(msg.body), data: { url: msg.url } },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
     });
   }
   for (const n of thinNudges(nudges(S, now, smart, premium, every), (hh || 0) * 60 + (mm || 0), ownPerDay).slice(0, Math.max(0, budget)))
-    await N.scheduleNotificationAsync({
+    await sched({
       content: {
         title: tx(n.title),
         body: tx(n.body),
@@ -261,7 +265,7 @@ async function doReschedule(S: AppState, premium = false) {
     });
   // İlaç hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen doz atlanır.
   for (const n of meds)
-    await N.scheduleNotificationAsync({
+    await sched({
       identifier: n.id,
       content: {
         title: tx(n.title),
@@ -273,7 +277,7 @@ async function doReschedule(S: AppState, premium = false) {
     });
   // Evcil hayvan bakımı (mama, yıkama, aşı…): kullanıcının eklediği işlerin vaktinde.
   for (const n of pets)
-    await N.scheduleNotificationAsync({
+    await sched({
       identifier: n.id,
       content: {
         title: tx(n.title),
@@ -283,6 +287,8 @@ async function doReschedule(S: AppState, premium = false) {
       },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
+  // Aynı kimlikle yeniden zamanlananlar (görev, ilaç, evcil) zaten üzerine yazıldı; onları iptal etme.
+  for (const id of stale) if (!fresh.has(id)) await N.cancelScheduledNotificationAsync(id).catch(() => {});
 }
 
 /**

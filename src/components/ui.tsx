@@ -27,6 +27,7 @@ import { tx } from '@/i18n/runtime';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import type { StatusKind } from '@/domain/types';
+import { PullMoka } from './PullMoka';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import Svg, { Path } from 'react-native-svg';
 import { elevation, fonts, hit, warmShadow, radius, space, type, useColors, useIsDark, type Colors } from '@/theme';
@@ -68,14 +69,23 @@ function textStyle(v: Variant, c: Colors): TextStyle {
 /* ---------- ekran ---------- */
 
 export function Screen({
-  children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef, onScrollY,
-}: { children: ReactNode; onScrollY?: (y: number) => void; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
+  children, scrollEnabled = true, header = true, tone = 'peach', tab, image, scrollRef, onScrollY, pullMoka,
+}: { pullMoka?: boolean; children: ReactNode; onScrollY?: (y: number) => void; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; scrollEnabled?: boolean; header?: boolean; tone?: Tone; tab?: boolean; image?: ImageSourcePropType }) {
   const c = useColors();
   const dark = useIsDark();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   // Aşağı kaydırdıkça zemin yavaşça sekmenin koyu tonuna geçer (yerel sürücü, her kare JS'e uğramaz).
   const [y] = useState(() => new Animated.Value(0));
+  const [hop] = useState(() => new Animated.Value(0));
+  const onEndDrag = useCallback((e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    if (!pullMoka || e.nativeEvent.contentOffset.y > -50) return;
+    hop.setValue(0);
+    Animated.sequence([
+      Animated.timing(hop, { toValue: -22, duration: 140, useNativeDriver: true }),
+      Animated.spring(hop, { toValue: 0, friction: 3, tension: 140, useNativeDriver: true }),
+    ]).start();
+  }, [pullMoka, hop]);
   const [onScroll] = useState(() => Animated.event([{ nativeEvent: { contentOffset: { y } } }], { useNativeDriver: true }));
   useEffect(() => {
     if (!onScrollY) return;
@@ -104,10 +114,12 @@ export function Screen({
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       {!image && <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
+      {pullMoka && !reduce && <PullMoka y={y} hop={hop} />}
       <Animated.View style={{ flex: 1, opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
       <Animated.ScrollView
         ref={scrollRef as never}
         onScroll={onScroll}
+        onScrollEndDrag={pullMoka ? onEndDrag : undefined}
         scrollEventThrottle={16}
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}

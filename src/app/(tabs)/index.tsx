@@ -226,7 +226,7 @@ export default function Home() {
   };
 
   return (
-    <Screen header={false} tab tone="peach" {...tour.screen}>
+    <Screen header={false} tab pullMoka tone="peach" {...tour.screen}>
       {/* Tasarımdaki gibi: ekranın üstünü kaplayan sahne, üstünde selam ve zil, altında Moka kartı. */}
       <View style={styles.heroWrap} {...mark('hero')}>
         <HeroMoka scene={heroScene} ratio={0.8} reserveTop={insets.top + 140} marginTop={-insets.top - 12} below={<><Fade edge="top" color={c.bg} size="30%" to={0.9} /><Fade edge="bottom" color={c.bg} size="24%" /></>}>

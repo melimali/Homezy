@@ -27,7 +27,9 @@ type Summary = { points: number; days: DayKey[]; owned: string[]; frozen?: DayKe
 type Update = (fn: (draft: AppState) => void) => AppState;
 
 /** Sunucu bu isteği kesin olarak reddetti (ör. çok eski gün); tekrar denemenin anlamı yok. */
-const rejected = (e: { code?: string }) => e.code === 'P0001' || e.code?.startsWith('22') || e.code?.startsWith('23');
+const rejected = (e: { code?: string; message?: string }) =>
+  // 'not signed in' (oturum süresi dolmuş) da P0001 gelir; o durumda olayı silme, giriş gelince gönderilir.
+  (e.code === 'P0001' && !/not signed in/i.test(e.message ?? '')) || e.code?.startsWith('22') || e.code?.startsWith('23');
 
 function apply(update: Update, s: Summary) {
   update(D => {

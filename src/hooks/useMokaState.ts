@@ -32,6 +32,7 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     const day = Number(status.day.replace(/\D/g, '')) + shift;
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
+    if (lang === 'ja') return { ...q, message: `${name}、${tx(q.message)}` };
     const en = lang === 'en';
     const msg = en ? tx(q.message) : q.message;
     const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);

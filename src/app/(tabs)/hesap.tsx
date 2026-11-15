@@ -412,14 +412,14 @@ export default function Hesap() {
               {!premium.active && Math.max(trialDays.annual, trialDays.monthly) > 0 ? (
                 <View style={{ alignSelf: 'flex-start', backgroundColor: brand.clay, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>
-                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
+                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : state.settings.language === 'ja' ? `🎁 最初の${Math.max(trialDays.annual, trialDays.monthly)}日間は無料！` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
                   </Text>
                 </View>
               ) : null}
               <T v="small">
                 {premium.active
-                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : 'You are Premium ✓ Everything is unlocked')
-                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
+                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : state.settings.language === 'ja' ? 'プレミアム会員です ✓ すべての機能が使えます' : 'You are Premium ✓ Everything is unlocked')
+                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : state.settings.language === 'ja' ? 'モカとのおしゃべり、ポイント1.5倍、広告なしなど。いつでも解約できます。' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
               </T>
             </View>
           </View>

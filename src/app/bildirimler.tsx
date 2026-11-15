@@ -60,7 +60,7 @@ export default function Bildirimler() {
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
-          {S.settings.language === 'en' ? 'Every morning at ' : 'Homezy her sabah '}<Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{S.settings.language === 'en' ? ' Homezy sends these to your phone as a notification.' : "'da bunları telefonuna bildirim olarak gönderir."}
+          {S.settings.language === 'ja' ? '毎朝 ' : S.settings.language === 'en' ? 'Every morning at ' : 'Homezy her sabah '}<Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{S.settings.language === 'ja' ? ' にHomezyがこれらを通知でスマホにお届けします。' : S.settings.language === 'en' ? ' Homezy sends these to your phone as a notification.' : "'da bunları telefonuna bildirim olarak gönderir."}
         </T>
       </View>
 

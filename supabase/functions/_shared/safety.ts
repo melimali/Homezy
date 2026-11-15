@@ -29,4 +29,9 @@ const REPLY_EN =
   'If you might hurt yourself, please call your local emergency number right now (112 in Turkey and the EU, 988 in the US) and talk to someone you trust or a professional. ' +
   'You are not alone, and this feeling can pass. I\'ll be here whenever you\'re ready.';
 
-export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : REPLY_TR);
+const REPLY_JA =
+  '話してくれてありがとう。そばにいるよ 💛 わたしはAIだけど、あなたを支えてくれる本当の人たちがいます。' +
+  '自分を傷つけてしまいそうなときは、今すぐ119番か、よりそいホットライン（0120-279-338、24時間・無料）に電話して、信頼できる人や専門家に話してください。' +
+  'あなたはひとりじゃないし、この気持ちは過ぎ去っていきます。準備ができたら、いつでもここにいるよ。';
+
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'ja' ? REPLY_JA : REPLY_TR);

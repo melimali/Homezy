@@ -12,6 +12,7 @@ const CRISIS = [
   /quiero\s+morir/, /quitarme\s+la\s+vida/, /acabar\s+con\s+mi\s+vida/, /no\s+quiero\s+vivir/, /hacerme\s+da[ñn]o/, /matarme/, /autolesi/, /mejor\s+(estar[ií]a\s+)?muert/,
   /죽고\s*싶/, /자살/, /자해/, /목숨을?\s*끊/, /살고\s*싶지\s*않/, /죽어버리/, /생을\s*마감/,
   /انتحار/, /[اأإ]نتحر/, /[اأإ]قتل\s+نفسي/, /[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]موت/, /لا\s+[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]عيش/, /[اأإ]ؤذي\s+نفسي/, /[اأإ]يذاء\s+نفسي/, /[اأإ]نهي\s+حياتي/,
+  /quero\s+morrer/, /tirar\s+(a\s+)?minha\s+vida/, /acabar\s+com\s+(a\s+)?minha\s+vida/, /n[ãa]o\s+quero\s+(mais\s+)?viver/, /me\s+machucar/, /me\s+matar/, /autoles/, /melhor\s+(eu\s+)?(estar\s+)?morto/,
   /self[\s-]?harm/, /hurt\s+my\s*self/, /cut\s+my\s*self/, /better\s+off\s+(dead|without\s+me)/,
 ];
 
@@ -68,3 +69,9 @@ const REPLY_AR =
   'لست وحدك، وهذا الشعور يمكن أن يزول. سأكون هنا متى كنت مستعدًا.';
 
 export const crisisReply = (lang: unknown) => (lang === 'ar' ? REPLY_AR : lang === 'en' ? REPLY_EN : REPLY_TR);
+const REPLY_PT =
+  'Obrigada por me contar, estou aqui com você 💛 Sou uma IA, e existem pessoas de verdade que podem te ajudar com isso. ' +
+  'Se você pode se machucar, por favor ligue agora para o número de emergência local (192 ou 188 no Brasil, 112 em Portugal) e fale com alguém de confiança ou com um profissional. ' +
+  'Você não está sozinho(a) e esse sentimento pode passar. Estarei aqui quando você estiver pronto(a).';
+
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'pt' ? REPLY_PT : REPLY_TR);

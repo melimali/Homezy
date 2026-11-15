@@ -39,6 +39,8 @@ const KO_RULE = EN_RULE.replace(/English/g, 'Korean').replace('(e.g. "Milk", "ha
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'ko' ? prompt + KO_RULE : prompt);
 const AR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in Arabic. Write name, qty and note in natural Modern Standard Arabic (e.g. "حليب", "نصف زجاجة", "قميص كتان كحلي"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
 const withLang = (prompt: string, lang: unknown) => (lang === 'ar' ? prompt + AR_RULE : lang === 'en' ? prompt + EN_RULE : prompt);
+const PT_RULE = EN_RULE.replace(/English/g, 'Brazilian Portuguese').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leite", "meia garrafa", "Camisa de linho azul-marinho")');
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'pt' ? prompt + PT_RULE : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

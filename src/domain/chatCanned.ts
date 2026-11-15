@@ -9,12 +9,18 @@ type Lang = 'tr' | 'en' | 'fr';
 type Lang = 'tr' | 'en' | 'de';
 type Lang = 'tr' | 'en' | 'ja';
 type Lang = 'tr' | 'en' | 'ar';
+type Lang = 'tr' | 'en' | 'pt';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
     greet: ['selam', 'merhaba', 'meraba', 'mrb', 'sa', 'slm', 'naber', 'nbr', 'nasilsin', 'nasilsin moka', 'selam moka', 'merhaba moka', 'gunaydin', 'iyi aksamlar', 'hey', 'hey moka'],
     thanks: ['tesekkurler', 'tesekkur ederim', 'sagol', 'sag ol', 'eyvallah', 'tsk', 'cok sagol', 'tesekkurler moka', 'sagol moka'],
     bye: ['gorusuruz', 'hoscakal', 'hosca kal', 'bye', 'bay bay', 'iyi geceler', 'bb', 'sonra konusuruz'],
+  },
+  pt: {
+    greet: ['oi', 'ola', 'oi moka', 'ola moka', 'e ai', 'eai', 'tudo bem', 'como vai', 'bom dia', 'boa tarde', 'boa noite', 'opa', 'oie'],
+    thanks: ['obrigado', 'obrigada', 'valeu', 'muito obrigado', 'muito obrigada', 'obrigado moka', 'obrigada moka', 'brigado', 'brigada'],
+    bye: ['tchau', 'ate logo', 'ate mais', 'ate amanha', 'xau', 'fui', 'flw', 'tchau moka'],
   },
   en: {
     greet: ['hi', 'hello', 'hey', 'hey moka', 'hi moka', 'hello moka', 'yo', 'sup', 'whats up', 'how are you', 'good morning', 'good evening'],
@@ -61,6 +67,10 @@ function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
     if (ctx.late > 0) return `مرحبًا! ☕ لديك ${ctx.late} مهام متأخرة. هل نختار واحدة وننجزها معًا؟ 💛`;
     if (ctx.due > 0) return `مرحبًا! ☕ لديك ${ctx.due} مهام اليوم. أنا جاهزة متى شئت 💛`;
     return ['مرحبًا! ☕ لا شيء ينتظرك اليوم، أحسنت!', 'أهلًا! ☕ المنزل هادئ. هل تحتاج شيئًا؟'][n % 2];
+  if (lang === 'pt') {
+    if (ctx.late > 0) return `Oi! ☕ Você tem ${ctx.late} ${ctx.late > 1 ? 'tarefas atrasadas' : 'tarefa atrasada'}. Que tal escolher uma e resolver juntos? 💛`;
+    if (ctx.due > 0) return `Oi! ☕ Você tem ${ctx.due} ${ctx.due > 1 ? 'tarefas' : 'tarefa'} hoje. Quando estiver pronto, vamos 💛`;
+    return ['Oi! ☕ Nada pendente hoje, parabéns!', 'Olá! ☕ A casa está tranquila. Precisa de alguma coisa?'][n % 2];
   }
   if (lang === 'en') {
     if (ctx.late > 0) return `Hi! ☕ ${ctx.late} task${ctx.late > 1 ? 's are' : ' is'} running late. Want to pick one and tackle it together? 💛`;
@@ -85,6 +95,10 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   tr: {
     thanks: ['Rica ederim! ☕', 'Ne demek, her zaman 💛', 'Ne demek! Kahve molası da unutma ☕'],
     bye: ['Görüşürüz! ☕', 'İyi dinlen, yarın yine buradayım 💛', 'Hoşça kal! ☕'],
+  },
+  pt: {
+    thanks: ['De nada! ☕', 'Sempre que precisar 💛', 'Imagina! Não esqueça a pausa para o café ☕'],
+    bye: ['Até logo! ☕', 'Descanse bem, amanhã estou aqui 💛', 'Tchau! ☕'],
   },
   en: {
     thanks: ["You're welcome! ☕", 'Anytime 💛', "Happy to help! Don't forget a coffee break ☕"],

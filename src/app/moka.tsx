@@ -18,7 +18,7 @@ import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL, openLink } from '@/lib/links';
 import { cannedReply } from '@/domain/chatCanned';
 import { askMoka } from '@/lib/mokaChat';
-import { getLang, tx } from '@/i18n/runtime';
+import { getUiLang, tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
@@ -146,7 +146,7 @@ export default function MokaChat() {
       return;
     }
     // Selam / teşekkür / hoşça kal: hazır cevap, sunucu çağrılmaz, hak düşmez.
-    const canned = cannedReply(msg, getLang(), ctx, cannedN++);
+    const canned = cannedReply(msg, getUiLang(), ctx, cannedN++);
     if (canned) {
       sfx('tap');
       const cid = nextId++;

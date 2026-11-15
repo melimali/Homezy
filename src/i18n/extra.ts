@@ -2,6 +2,8 @@
  * Birkaç ekranda dile göre elle yazılmış cümlelerin sözlük karşılıkları (hepsi tek tabloda, `tx()` ile).
  * Türkçe metin anahtardır; runtime.ts bunları ilgili dilin sözlüğünün üstüne bindirir.
  */
+import { ROZET_ROWS } from './rozet';
+
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
@@ -28,4 +30,4 @@ export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';
 const ORDER: ExtraLang[] = ['en', 'de', 'es', 'fr', 'pt', 'ja', 'ko', 'ar'];
 
 export const EXTRA: Record<ExtraLang, Record<string, string>> = { en: {}, de: {}, es: {}, fr: {}, pt: {}, ja: {}, ko: {}, ar: {} };
-for (const row of ROWS) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });
+for (const row of [...ROWS, ...ROZET_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });

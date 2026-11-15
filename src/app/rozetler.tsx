@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Appear } from '@/components/motion';
 import { BackLink, Card, Screen, SecHead, T } from '@/components/ui';
 import { BADGE_ART } from '@/constants/badges';
-import { ACH_GROUPS, achievements } from '@/domain/achievements';
+import { ACH_TIERS, achievements } from '@/domain/achievements';
 import { useNow } from '@/hooks/useNow';
 import { useTranslation } from '@/i18n/i18n';
 import { useStore } from '@/store/AppStore';
@@ -21,8 +21,8 @@ export default function Rozetler() {
       <BackLink />
       <T v="h1">{t('Rozetlerin 🏆')}</T>
       <T v="tiny">{t('{} / {} rozet kazandın').replace('{}', String(all.filter(a => a.on).length)).replace('{}', String(all.length))}</T>
-      {ACH_GROUPS.map((g, gi) => {
-        const items = all.filter(a => a.group === g.id);
+      {ACH_TIERS.map((g, gi) => {
+        const items = all.filter(a => a.tier === g.id);
         return (
           <Card key={g.id}>
             <SecHead title={`${g.emoji} ${t(g.title)}`} h="h3" right={`${items.filter(a => a.on).length}/${items.length}`} />

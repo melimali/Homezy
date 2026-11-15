@@ -30,6 +30,7 @@ import { useTabTour } from '@/components/useTabTour';
 import { useStep } from '@/lib/firstRun';
 import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
+import { HouseGarden } from '@/components/HouseGarden';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T, Chevron } from '@/components/ui';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
@@ -66,6 +67,7 @@ export default function Home() {
   const router = useRouter();
   const { state: S } = useStore();
   const [houseOpen, setHouseOpen] = useState(false);
+  const [gardenOpen, setGardenOpen] = useState(false);
   const [openAll, setOpenAll] = useState(false);
   const [lofiOpen, setLofiOpen] = useState(false);
   const now = useNow();
@@ -150,6 +152,9 @@ export default function Home() {
       <View {...mark('evim')}><Card index={3} style={styles.sec}>
         <SecHead title={`${ownTitle(name, homeWord, 'Evim', lang)}`} h="h3" right={
           <View style={{ flexDirection: 'row', gap: 14 }}>
+            <Squish onPress={() => setGardenOpen(o => !o)} accessibilityRole="button" accessibilityLabel={gardenOpen ? 'Bahçeyi gizle' : 'Bahçeyi göster'} hitSlop={8}>
+              <T v="small">🌷 Bahçe</T>
+            </Squish>
             <Squish onPress={() => router.push('/dekor' as Href)} accessibilityRole="button" accessibilityLabel="Evini kendine benzet" hitSlop={8}>
               <T v="small">Düzenle</T>
             </Squish>
@@ -179,6 +184,11 @@ export default function Home() {
           )}
           <HouseFloors state={S} onPressHouse={() => setHouseOpen(true)} zoom={1.08} labels={false} now={now} build={hp} theme={themeFor(S.settings.theme, premium.active)} mood={mood} />
         </View>
+        {gardenOpen && (
+          <Appear>
+            <HouseGarden play={S.play} now={now} hp={hp} onOpen={() => router.push('/bahce' as Href)} />
+          </Appear>
+        )}
         <Squish onPress={() => router.push('/hikaye')} accessibilityLabel={houseLine(hp)} style={[styles.nextCard, { backgroundColor: c.surface2 }]}>
           <View style={[styles.nextIcon, { backgroundColor: c.surface }]}>
             <Text style={{ lineHeight: 31, fontSize: 24 }}>{warn ? '😴' : next?.emoji ?? '🏡'}</Text>

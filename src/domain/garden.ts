@@ -204,3 +204,24 @@ export function personaOf(P: Play): PersonaId {
   const want = P.persona ?? 'sicak';
   return want === 'sicak' || P.owned.includes(`kisilik_${want}`) ? want : 'sicak';
 }
+
+/* ---------- ev bahçesi: tek kaynak ---------- */
+
+export type GardenPlant = { key: string; flower: Flower; stage: number };
+
+/** Evin yanındaki bahçe ve Moka bahçesi aynı listeyi gösterir: önce saksılar, sonra albümdeki çiçekler. */
+export function gardenPlants(P: Play, now = Date.now(), max = 12): GardenPlant[] {
+  const out: GardenPlant[] = [];
+  for (const p of P.garden.plots) {
+    const f = FLOWER[p.flower];
+    if (f) out.push({ key: p.id, flower: f, stage: p.bloomed ? 5 : stageOf(growth(P, p, now), f.grow) });
+  }
+  for (const [id, n] of Object.entries(P.garden.album)) {
+    const f = FLOWER[id];
+    for (let i = 0; f && i < Math.min(n, 3); i++) out.push({ key: `a${id}${i}`, flower: f, stage: 5 });
+  }
+  return out.slice(0, max);
+}
+
+/** Seri kopunca (ev dinleniyor) çiçekler solar; bir iş yapılınca hemen canlanır. Sadece görüntü, ceza yok. */
+export const plantsWilted = (p: HouseProgress) => p.resting >= 1;

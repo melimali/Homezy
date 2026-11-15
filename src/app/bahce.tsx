@@ -15,10 +15,10 @@ import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
   FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, gardenRank, growth,
-  isPlotLovedToday, monthFlower, stageOf, type Flower, type Plot,
+  isPlotLovedToday, monthFlower, plantsWilted, stageOf, type Flower, type Plot,
 } from '@/domain/garden';
 import { DECOR, PERSONAS, type Extra } from '@/domain/items';
-import { dayKey } from '@/domain/play';
+import { dayKey, houseProgress } from '@/domain/play';
 import type { MokaPose } from '@/constants/moka';
 import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
@@ -56,6 +56,7 @@ export default function Bahce() {
   const sky = useSky();
   const hour = new Date(now).getHours();
 
+  const wilt = plantsWilted(houseProgress(P.days, now, P.frozen));
   const grown = G.plots.map(p => ({ p, f: FLOWER[p.flower], g: growth(P, p, now) }));
 
   // Hedefe ulaşan saksı açar: bir kere kutlama.
@@ -75,7 +76,9 @@ export default function Bahce() {
   const growing = grown.filter(x => x.f && !x.p.bloomed);
   const hasHammock = P.owned.includes('hamak');
   const pose: MokaPose = anyBloom ? 'party' : growing.length ? 'plants' : hasHammock ? 'rest' : 'cozy_plant';
-  const message = anyBloom
+  const message = wilt && G.plots.length
+    ? 'Çiçekler susadı. Bir iş yap, hemen canlanırlar 🥀'
+    : anyBloom
     ? 'Çiçek açtı! Albüme al, evinin bahçesine koyayım 🌸'
     : growing.length
       ? `Her iş saksılara 1 büyüme verir (günde en fazla ${GROW_PER_DAY}). Gübre de hızlandırır.`
@@ -146,7 +149,7 @@ export default function Bahce() {
           {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
             x ? (
               <Appear key={x.p.id} index={i} style={styles.plotCell}>
-                <PlotCard plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
+                <PlotCard wilt={wilt} plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
               </Appear>
             ) : (
               <Appear key={'e' + i} index={i} style={styles.plotCell}>
@@ -243,7 +246,7 @@ export default function Bahce() {
   );
 }
 
-function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flower; g: number; on: boolean; onPress: () => void }) {
+function PlotCard({ plot, flower, g, on, onPress, wilt }: { wilt?: boolean; plot: Plot; flower?: Flower; g: number; on: boolean; onPress: () => void }) {
   const c = useColors();
   if (!flower) return null;
   const stage = stageOf(g, flower.grow);
@@ -260,11 +263,11 @@ function PlotCard({ plot, flower, g, on, onPress }: { plot: Plot; flower?: Flowe
           {plot.bloomed ? (
             <Breathe amp={0.08} dur={1200}>
               <Float amp={3} dur={1900}>
-                <PlantArt flower={flower} stage={stage} size={54} />
+                <PlantArt flower={flower} stage={stage} size={54} wilt={wilt} />
               </Float>
             </Breathe>
           ) : (
-            <PlantArt flower={flower} stage={stage} size={54} />
+            <PlantArt flower={flower} stage={stage} size={54} wilt={wilt} />
           )}
         </GrowIn>
       </Sway>

@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { isDe, isEn } from '@/i18n/runtime';
-import { isEn, isJa } from '@/i18n/runtime';
+import { getUiLang, type UiLang } from '@/i18n/runtime';
 import { brand, fonts } from '@/theme';
 
 /**
@@ -17,6 +16,9 @@ import { brand, fonts } from '@/theme';
 const CREAM = '#F7F2EA';
 const expo = Easing.bezier(0.16, 1, 0.3, 1);
 const exitEase = Easing.bezier(0.7, 0, 0.3, 1);
+const SKIP: Record<UiLang, string> = { tr: 'Açılışı geç', en: 'Skip intro', de: 'Intro \u00FCberspringen', es: 'Saltar intro', fr: 'Passer l’intro', pt: 'Pular intro', ja: 'イントロをスキップ', ko: '인트로 건너뛰기', ar: 'تخطي المقدمة' };
+const SKIP_SHORT: Record<UiLang, string> = { tr: 'Geç', en: 'Skip', de: 'Weiter', es: 'Saltar', fr: 'Passer', pt: 'Pular', ja: 'スキップ', ko: '건너뛰기', ar: 'تخطي' };
+const TAG: Record<UiLang, string> = { tr: 'EV · RUTİN · SEN', en: 'HOME · ROUTINE · YOU', de: 'ZUHAUSE · ROUTINE · DU', es: 'HOGAR · RUTINA · TÚ', fr: 'MAISON · ROUTINE · TOI', pt: 'CASA · ROTINA · VOCÊ', ja: 'おうち · ルーティン · あなた', ko: '집 · 루틴 · 나', ar: 'المنزل · الروتين · أنت' };
 const LETTERS = 'Homezy'.split('');
 
 /**
@@ -77,8 +79,7 @@ export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?
   return (
     <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: CREAM, opacity: lerp(v.out, 1, 0) }]}>
       <StatusBar style="dark" />
-      <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel={isDe() ? 'Intro überspringen' : isEn() ? 'Skip intro' : 'Açılışı geç'}>
-      <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel={isJa() ? 'イントロをスキップ' : isEn() ? 'Skip intro' : 'Açılışı geç'}>
+      <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel={SKIP[getUiLang()]}>
         <View style={st.center} pointerEvents="none">
           {/* Sıcak ışık */}
           <Animated.View
@@ -138,14 +139,12 @@ export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?
             </Animated.View>
 
             <Animated.Text style={[st.sub, { opacity: v.sub, transform: [{ translateY: lerp(v.sub, 6, 0) }] }]}>
-              {isDe() ? 'ZUHAUSE · ROUTINE · DU' : isEn() ? 'HOME · ROUTINE · YOU' : 'EV · RUTİN · SEN'}
-              {isJa() ? 'おうち · ルーティン · あなた' : isEn() ? 'HOME · ROUTINE · YOU' : 'EV · RUTİN · SEN'}
+              {TAG[getUiLang()]}
             </Animated.Text>
           </Animated.View>
         </View>
 
-        <Text style={[st.skip, { color: brand.cocoa }]}>{isDe() ? 'Weiter' : isEn() ? 'Skip' : 'Geç'}</Text>
-        <Text style={[st.skip, { color: brand.cocoa }]}>{isJa() ? 'スキップ' : isEn() ? 'Skip' : 'Geç'}</Text>
+        <Text style={[st.skip, { color: brand.cocoa }]}>{SKIP_SHORT[getUiLang()]}</Text>
       </Pressable>
     </Animated.View>
   );

@@ -49,14 +49,19 @@ export function possessive(name: string | null): string | null {
 }
 
 /** "Ayşe'nin Evi" / yurt-öğrenci için "Ayşe'nin Odası". Ad yoksa genel başlık. */
-export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string, lang: 'tr' | 'en' | 'fr' = 'tr'): string {
-  if (lang === 'en') {
-    const n = name?.trim();
-    return n ? `${n}'s ${what === 'Ev' ? 'Home' : what === 'Oda' ? 'Room' : 'Plan'}` : generic;
-  }
-  if (lang === 'fr') {
-    const n = name?.trim();
-    return n ? `${what === 'Ev' ? 'Maison' : what === 'Oda' ? 'Chambre' : 'Plan'} de ${n}` : generic;
+export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string, lang: string = 'tr'): string {
+  const n = name?.trim();
+  if (lang !== 'tr' && !n) return generic;
+  const k = what === 'Ev' ? 0 : what === 'Oda' ? 1 : 2;
+  switch (lang) {
+    case 'en': return `${n}'s ${['Home', 'Room', 'Plan'][k]}`;
+    case 'fr': return `${['Maison', 'Chambre', 'Plan'][k]} de ${n}`;
+    case 'es': return `${['Casa', 'Habitación', 'Plan'][k]} de ${n}`;
+    case 'pt': return `${['Casa', 'Quarto', 'Plano'][k]} de ${n}`;
+    case 'de': return `${/[sßxz]$/i.test(n!) ? `${n}'` : `${n}s`} ${['Zuhause', 'Zimmer', 'Plan'][k]}`;
+    case 'ja': return `${n}の${['家', '部屋', 'プラン'][k]}`;
+    case 'ko': return `${n}의 ${['집', '방', '플랜'][k]}`;
+    case 'ar': return `${['منزل', 'غرفة', 'خطة'][k]} ${n}`;
   }
   const p = possessive(name);
   if (!p) return generic;
@@ -67,4 +72,20 @@ export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', gener
 export function useHomeWord(): 'Ev' | 'Oda' {
   const { answers, done } = usePersona();
   return done && answers.who === 'ogrenci' ? 'Oda' : 'Ev';
+}
+
+/** "Ayşe'nin Odaları" başlığı, her dilde. */
+export function roomsTitle(name: string, lang: string = 'tr'): string {
+  const n = name.trim();
+  switch (lang) {
+    case 'tr': return `${possessive(n)} Odaları`;
+    case 'en': return `${n}'s Rooms`;
+    case 'de': return `${/[sßxz]$/i.test(n) ? `${n}'` : `${n}s`} Räume`;
+    case 'es': return `Habitaciones de ${n}`;
+    case 'fr': return `Pièces de ${n}`;
+    case 'pt': return `Cômodos de ${n}`;
+    case 'ja': return `${n}の部屋`;
+    case 'ko': return `${n}의 방`;
+    default: return `غرف ${n}`;
+  }
 }

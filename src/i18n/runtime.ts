@@ -4,37 +4,80 @@
  * Anahtarda `{}` değişken yerini tutar: 'Tümü ({})' → 'All ({})'.
  * Sözlükte olmayan metin olduğu gibi (Türkçe) görünür.
  */
+import { AR } from './ar';
+import { DE } from './de';
 import { EN } from './en';
+import { ES } from './es';
 import { FR } from './fr';
+import { JA } from './ja';
+import { KO } from './ko';
+import { PT } from './pt';
+import { EXTRA } from './extra';
 
-export type AppLang = 'tr' | 'en' | 'fr';
-let LANG: AppLang = deviceLang();
-const listeners = new Set<() => void>();
+/** Çevrilen arayüz dilleri; hepsi tek tabloda. Eksik anahtar İngilizceye düşer (Türkçe sızmaz). */
+export type UiLang = 'tr' | 'en' | 'de' | 'es' | 'ja' | 'ko' | 'fr' | 'pt' | 'ar';
+export const UI_LANGS: UiLang[] = ['tr', 'en', 'de', 'es', 'ja', 'ko', 'fr', 'pt', 'ar'];
+/** Elle yazılmış iki dilli satır içi metinler: 'tr' ya da 'en' (Türkçe dışı hepsi 'en'). */
+export type AppLang = 'tr' | 'en';
+const DICTS: Record<Exclude<UiLang, 'tr' | 'en'>, Record<string, string>> = { de: DE, es: ES, ja: JA, ko: KO, fr: FR, pt: PT, ar: AR };
+const LOCALE: Record<UiLang, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-DE', es: 'es-ES', ja: 'ja-JP', ko: 'ko-KR', fr: 'fr-FR', pt: 'pt-BR', ar: 'ar-u-nu-latn' };
 
-/** Cihaz dili Türkçe değilse İngilizce. */
-export function deviceLang(): AppLang {
+const toUi = (code: string | undefined | null): UiLang => {
+  const c = (code ?? 'tr').toLowerCase().slice(0, 2);
+  return (UI_LANGS as string[]).includes(c) ? (c as UiLang) : 'en';
+};
+
+/** Cihaz dili: desteklenen dillerden biri, değilse İngilizce. */
+export function deviceUiLang(): UiLang {
   try {
-    const loc = Intl.DateTimeFormat().resolvedOptions().locale || 'tr';
-    const l = loc.toLowerCase();
-    return l.startsWith('tr') ? 'tr' : l.startsWith('fr') ? 'fr' : 'en';
+    return toUi(Intl.DateTimeFormat().resolvedOptions().locale || 'tr');
   } catch {
     return 'tr';
   }
 }
+export const deviceLang = deviceUiLang;
 
-/** Ayardaki dil kodunu (tr, en ya da başka) çalışan dile çevirir: Türkçe dışı her şey İngilizce. */
+let UI: UiLang = deviceUiLang();
+let LANG: AppLang = UI === 'tr' ? 'tr' : 'en';
+const listeners = new Set<() => void>();
+
+/** Ayardaki dil kodunu çalışan dile çevirir; desteklenmeyen her şey İngilizce. */
 export function setLang(code: string | undefined) {
-  const next: AppLang = !code || code === 'tr' ? 'tr' : code === 'fr' ? 'fr' : 'en';
-  if (next === LANG) return;
-  LANG = next;
+  const next = !code ? 'tr' : toUi(code);
+  if (next === UI) return;
+  UI = next;
+  LANG = next === 'tr' ? 'tr' : 'en';
   cache.clear();
   listeners.forEach(l => l());
 }
 export const getLang = () => LANG;
+/** Gerçek arayüz dili (sunucuya gönderilen dil budur). */
+export const getUiLang = () => UI;
+/** Türkçe dışı: satır içi metinlerde İngilizce yedek kullanılır. */
 export const isEn = () => LANG === 'en';
-/** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
-export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : LANG === 'fr' ? `${Math.max(1, Math.round(n / 40))} €` : `${n} TL`);
-export const dateLocale = () => (LANG === 'en' ? 'en-US' : LANG === 'fr' ? 'fr-FR' : 'tr-TR');
+export const isDe = () => UI === 'de';
+export const isEs = () => UI === 'es';
+export const isFr = () => UI === 'fr';
+export const isPt = () => UI === 'pt';
+export const isJa = () => UI === 'ja';
+export const isKo = () => UI === 'ko';
+export const isAr = () => UI === 'ar';
+/** Yemek fiyatları TL tahminidir; diğer dillerde yaklaşık yerel para (40 TL = 1 $). */
+export const tlText = (n: number) => {
+  const usd = Math.max(1, Math.round(n / 40));
+  switch (UI) {
+    case 'tr': return `${n} TL`;
+    case 'en': return `$${usd}`;
+    case 'ar': return `${usd} $`;
+    case 'ja': return `約${Math.max(10, Math.round((n * 4) / 10) * 10).toLocaleString('ja-JP')}円`;
+    case 'ko': return `약 ${(Math.max(1, Math.round((n * 35) / 1000)) * 1000).toLocaleString('ko-KR')}원`;
+    case 'pt': return `R$ ${Math.max(1, Math.round(n / 8))}`;
+    default: return `${Math.max(1, Math.round(n / 45))} €`;
+  }
+};
+/** Para birimi simgesi (kullanıcının yazdığı fiyatlar için). */
+export const currencySym = () => ({ tr: '₺', en: '$', ar: '$', de: '€', es: '€', fr: '€', pt: 'R$', ja: '¥', ko: '₩' } as Record<UiLang, string>)[UI];
+export const dateLocale = () => LOCALE[UI];
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);
   return () => void listeners.delete(fn);
@@ -53,14 +96,15 @@ const split = (s: string) => {
   const trail = TRAIL.exec(rest)?.[0] ?? '';
   return { lead, core: rest.slice(0, rest.length - trail.length), trail };
 };
-let exact = new Map<string, string>();
-let canon = new Map<string, string>();
-let patterns: { re: RegExp; out: string; lit: number }[] = [];
-const tables: Partial<Record<AppLang, { exact: typeof exact; canon: typeof canon; patterns: typeof patterns }>> = {};
+type Table = { exact: Map<string, string>; canon: Map<string, string>; patterns: { re: RegExp; out: string; lit: number }[] };
+const tables: Partial<Record<UiLang, Table>> = {};
+let exact: Table['exact'] = new Map();
+let canon: Table['canon'] = new Map();
+let patterns: Table['patterns'] = [];
 /** Etkin dilin sözlük tablolarını (ilk kullanımda) kurar. */
 function loadTables() {
-  const L: AppLang = LANG === 'fr' ? 'fr' : 'en';
-  const t = (tables[L] ??= buildTables(L === 'fr' ? FR : EN));
+  const L = UI === 'tr' ? 'en' : UI;
+  const t = (tables[L] ??= buildTables(L === 'en' ? { ...EN, ...EXTRA.en } : { ...EN, ...DICTS[L], ...EXTRA[L] }));
   exact = t.exact; canon = t.canon; patterns = t.patterns;
 }
 function buildTables(dict: Record<string, string>) {
@@ -122,7 +166,7 @@ function direct(s: string, depth: number): string | undefined {
   const { lead, core, trail } = split(s);
   if (!core) return undefined;
   const c = canon.get(lower(core));
-  if (c !== undefined) return lead + (isUpper(core) ? c.toLocaleUpperCase('en-US') : c) + trail;
+  if (c !== undefined) return lead + (isUpper(core) ? c.toLocaleUpperCase(LOCALE[UI === 'tr' ? 'en' : UI]) : c) + trail;
   if (lead || trail) {
     const p2 = matchPattern(norm(core), depth);
     if (p2 !== undefined) return lead + p2 + trail;
@@ -160,9 +204,10 @@ export function tx<T>(s: T): T {
   const hit = cache.get(s);
   if (hit !== undefined) return hit as T;
   loadTables();
-  // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%. Fransızcada boşluklu: 50 %.
   const tr0 = translate(s);
-  const r = LANG === 'fr' ? tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2 %') : tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2%');
+  // Yüzde: İngilizce/Korece/Japonca/Arapça "50%", diğerleri "50 %".
+  const spaced = UI === 'fr' || UI === 'de' || UI === 'es' || UI === 'pt';
+  const r = tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, spaced ? '$1$2 %' : '$1$2%');
   if (cache.size > 4000) cache.clear();
   cache.set(s, r);
   return r as T;

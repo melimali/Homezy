@@ -12,6 +12,7 @@ import { Appear, Float, Squish } from '@/components/motion';
 import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar, Chevron } from '@/components/ui';
 import { useStep } from '@/lib/firstRun';
 import { useToast } from '@/components/Toast';
+import { tx } from '@/i18n/runtime';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
 import { saveNickname, useName } from '@/profile/useName';
@@ -412,14 +413,14 @@ export default function Hesap() {
               {!premium.active && Math.max(trialDays.annual, trialDays.monthly) > 0 ? (
                 <View style={{ alignSelf: 'flex-start', backgroundColor: brand.clay, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>
-                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : state.settings.language === 'fr' ? `🎁 ${Math.max(trialDays.annual, trialDays.monthly)} premiers jours gratuits !` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
+                    {tx(`🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!`)}
                   </Text>
                 </View>
               ) : null}
               <T v="small">
                 {premium.active
-                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : state.settings.language === 'fr' ? 'Tu es Premium ✓ Tout est débloqué' : 'You are Premium ✓ Everything is unlocked')
-                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : state.settings.language === 'fr' ? 'Discute avec Moka, points ×1,5, sans pub et plus encore. Résilie quand tu veux.' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
+                  ? tx('Premium üyesin ✓ Tüm özellikler açık')
+                  : tx('Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.')}
               </T>
             </View>
           </View>

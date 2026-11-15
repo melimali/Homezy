@@ -12,6 +12,7 @@ import { MOKA_ASSETS } from '@/constants/moka';
 import { Appear, Float } from '@/components/motion';
 import { track } from '@/lib/events';
 import { legalUrl, openLink } from '@/lib/links';
+import { currencySym, tx } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
@@ -33,7 +34,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
-  const lang: PaywallLang = S.settings.language === 'tr' ? 'tr' : S.settings.language === 'fr' ? 'fr' : 'en';
+  const lang: PaywallLang = (S.settings.language ?? 'tr') in PAYWALL_COPY ? ((S.settings.language ?? 'tr') as PaywallLang) : 'en';
   const L = PAYWALL_COPY[lang];
   const unit = plan === 'annual' ? L.unitY : L.unitM;
   const trial = trialDays[plan];
@@ -110,9 +111,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       <T v="h2">{L.plansTitle}</T>
       <View style={styles.plans}>
         <View style={[styles.plan, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <Text style={[styles.planName, { color: c.ink }]}>{lang === 'tr' ? 'Ücretsiz' : lang === 'fr' ? 'Gratuit' : 'Free'}</Text>
-          <Text style={[styles.price, { color: c.ink }]}>{lang === 'tr' ? '0 TL' : lang === 'fr' ? '0 €' : '$0'}</Text>
-          <T v="small">{lang === 'tr' ? 'her zaman' : lang === 'fr' ? 'toujours' : 'always'}</T>
+          <Text style={[styles.planName, { color: c.ink }]}>{tx('Ücretsiz')}</Text>
+          <Text style={[styles.price, { color: c.ink }]}>{lang === 'tr' ? '0 TL' : `${currencySym()}0`}</Text>
+          <T v="small">{tx('her zaman')}</T>
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
@@ -120,7 +121,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
           </View>
           <Text style={[styles.price, { color: brand.mint }]}>{prices[plan]}</Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
-            {plan === 'annual' ? (lang === 'tr' ? 'yıllık abonelik (her yıl yenilenir)' : lang === 'fr' ? 'abonnement annuel (se renouvelle chaque année)' : 'yearly (renews every year)') : (lang === 'tr' ? 'aylık abonelik (her ay yenilenir)' : lang === 'fr' ? 'abonnement mensuel (se renouvelle chaque mois)' : 'monthly (renews every month)')}
+            {plan === 'annual' ? tx('yıllık abonelik (her yıl yenilenir)') : tx('aylık abonelik (her ay yenilenir)')}
           </Text>
           {trial ? <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{L.trialLine(trial)}</Text> : null}
         </View>

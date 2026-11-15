@@ -28,19 +28,15 @@ type Media = (typeof MEDIA)[number];
 /** İngilizce modda: kullanıcıya görünen metinler İngilizce olsun; `match`/`missing` listedeki yazımla kalır, enum alanlar (kind, color, fabric, pattern, wash, lvl) aynen kalır. */
 const EN_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in English. Write name, qty and note in natural English (e.g. "Milk", "half a bottle", "Navy linen shirt"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
 const FR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in French. Write name, qty and note in natural French (informal "tu" where addressing the user). \`match\`/\`missing\` entries keep the exact spelling from the known list; enum fields (kind, color, fabric, pattern, wash, lvl) stay unchanged.`;
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'fr' ? prompt + FR_RULE : prompt);
 const ES_RULE = EN_RULE.replace(/English/g, 'Spanish').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leche", "media botella", "Camisa de lino azul marino")');
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'es' ? prompt + ES_RULE : prompt);
 const DE_RULE = EN_RULE.replace(/in English/, 'in German').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural German (e.g. "Milch", "eine halbe Flasche", "Marineblaues Leinenhemd")');
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'de' ? prompt + DE_RULE : prompt);
 const JA_RULE = EN_RULE.replace(/in English/, 'in Japanese').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural Japanese (e.g. "牛乳", "半分", "ネイビーのリネンシャツ")');
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'ja' ? prompt + JA_RULE : prompt);
 const KO_RULE = EN_RULE.replace(/English/g, 'Korean').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "우유", "반 병", "네이비 린넨 셔츠")');
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'ko' ? prompt + KO_RULE : prompt);
 const AR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in Arabic. Write name, qty and note in natural Modern Standard Arabic (e.g. "حليب", "نصف زجاجة", "قميص كتان كحلي"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
-const withLang = (prompt: string, lang: unknown) => (lang === 'ar' ? prompt + AR_RULE : lang === 'en' ? prompt + EN_RULE : prompt);
 const PT_RULE = EN_RULE.replace(/English/g, 'Brazilian Portuguese').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leite", "meia garrafa", "Camisa de linho azul-marinho")');
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'pt' ? prompt + PT_RULE : prompt);
+
+const RULES: Record<string, string> = { en: EN_RULE, fr: FR_RULE, es: ES_RULE, de: DE_RULE, ja: JA_RULE, ko: KO_RULE, ar: AR_RULE, pt: PT_RULE };
+const withLang = (prompt: string, lang: unknown) => (typeof lang === 'string' && RULES[lang] ? prompt + RULES[lang] : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

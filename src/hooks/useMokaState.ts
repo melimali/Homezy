@@ -7,7 +7,7 @@ import { personaLine } from '@/domain/persona';
 import { usePersona } from '@/profile/usePersona';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { getLang, tx } from '@/i18n/runtime';
+import { getUiLang, tx } from '@/i18n/runtime';
 
 /**
  * Moka'nın şu anki pozu ve sözü: gecikmiş işler, ev puanı, açık oda, mod ve saate göre.
@@ -19,7 +19,7 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
   const { persona } = usePersona();
   const now = useNow();
   const [shift, setShift] = useState(0);
-  const lang = getLang();
+  const lang = getUiLang();
   const status = useMemo(() => mokaStatus(S, now, roomId), [S, now, roomId]);
   const m = useMemo(() => {
     let q = pickMoka(status, shift);
@@ -32,16 +32,20 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     const day = Number(status.day.replace(/\D/g, '')) + shift;
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
-    if (lang === 'de') {
-      // Almancada isimler büyük yazılır: sadece işlev sözcükleriyle başlayan cümlede ilk harf küçülür.
+    if (lang !== 'tr') {
       const dm = tx(q.message);
-      const small = /^(ich|du|wir|es|heute|jetzt|hier|schon|noch|nur|gerade|gleich|dein|deine|dir|dich|mein|meine|der|die|das|ein|eine|wenn|dass|komm|lass|mach|fang|hey|hi|na)\b/i.test(dm);
-      return { ...q, message: `${name}, ${small ? dm.charAt(0).toLocaleLowerCase('de') : dm.charAt(0)}${dm.slice(1)}` };
+      if (lang === 'ja') return { ...q, message: `${name}、${dm}` };
+      if (lang === 'ko' || lang === 'ar') return { ...q, message: `${name}, ${dm}` };
+      if (lang === 'de') {
+        // Almancada isimler büyük yazılır: sadece işlev sözcükleriyle başlayan cümlede ilk harf küçülür.
+        const small = /^(ich|du|wir|es|heute|jetzt|hier|schon|noch|nur|gerade|gleich|dein|deine|dir|dich|mein|meine|der|die|das|ein|eine|wenn|dass|komm|lass|mach|fang|hey|hi|na)\b/i.test(dm);
+        return { ...q, message: `${name}, ${small ? dm.charAt(0).toLocaleLowerCase('de') : dm.charAt(0)}${dm.slice(1)}` };
+      }
+      const keep = /^(I\b|[A-Z]{2})/.test(dm);
+      return { ...q, message: `${name}, ${keep ? dm.charAt(0) : dm.charAt(0).toLocaleLowerCase(lang)}${dm.slice(1)}` };
     }
-    const en = lang === 'en';
-    const msg = en ? tx(q.message) : q.message;
-    const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);
-    const first = keepCase ? msg.charAt(0) : msg.charAt(0).toLocaleLowerCase(en ? 'en' : 'tr');
+    const msg = q.message;
+    const first = msg.charAt(0).toLocaleLowerCase('tr');
     return { ...q, message: `${name}, ${first}${msg.slice(1)}` };
   }, [status, shift, name, persona, roomId, lang]);
   const next = useCallback(() => setShift(x => x + 1), []);

@@ -1,4 +1,4 @@
-import { isDe, isEn, tlText } from '@/i18n/runtime';
+import { tlText, tx } from '@/i18n/runtime';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -105,7 +105,7 @@ export default function Yemek() {
                   <T style={{ fontSize: 14 }}>{p.meal.steps}</T>
                   {p.missing.length > 0 && (
                     <>
-                      <T v="small">{isDe() ? `Die fehlenden Zutaten kosten etwa ${tlText(p.missingPrice)}. Preise sind Schätzungen.` : isEn() ? `The missing items cost about ${tlText(p.missingPrice)}. Prices are estimates.` : `Eksikler yaklaşık ${p.missingPrice} TL tutar. Fiyatlar tahminidir.`}</T>
+                      <T v="small">{tx(`Eksikler yaklaşık ${tlText(p.missingPrice)} tutar. Fiyatlar tahminidir.`)}</T>
                       <Btn small kind="primary" label="Eksikleri listeye ekle 🛒" onPress={() => addMissing(p)} style={{ alignSelf: 'flex-start' }} />
                     </>
                   )}

@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "冷蔵庫や一日の写真を撮るために、Homezyはカメラを使います。",
+  "NSPhotoLibraryUsageDescription": "冷蔵庫や日記の写真をギャラリーから選べるように、Homezyは写真へのアクセスが必要です。",
+  "NSLocationWhenInUseUsageDescription": "位置情報は、おうちの空と天気を表示するためだけに使われ、保存されません。"
+}

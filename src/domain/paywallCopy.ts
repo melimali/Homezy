@@ -4,11 +4,8 @@ import { LIMITS } from './premium';
  * Ödeme ekranı metinleri (Moka'nın ağzından). Sayılar `LIMITS`'ten gelir; sunucu sınırlarıyla aynı kalır.
  * Dil: 'tr' Türkçe, 'ko' Korece, diğer her şey İngilizce (src/i18n/i18n.ts ile aynı kural).
  */
-export type PaywallLang = 'tr' | 'en' | 'fr';
-export type PaywallLang = 'tr' | 'en' | 'de';
-export type PaywallLang = 'tr' | 'en' | 'ja';
-export type PaywallLang = 'tr' | 'en' | 'ko';
-export type PaywallLang = 'tr' | 'en' | 'ar';
+
+export type PaywallLang = 'tr' | 'en' | 'fr' | 'de' | 'ja' | 'ko' | 'ar' | 'es' | 'pt';
 
 const P = LIMITS.premium;
 const F = LIMITS.free;
@@ -112,6 +109,7 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy Premium (${plan}) : ${price}/${unit}. ${trial ? `Gratuit les ${trial} premiers jours ; si tu ne résilies pas avant la fin de l’essai, ${price}/${unit} sera prélevé. ` : ''}Le paiement est débité sur ton compte Apple ID / Google Play à la confirmation de l’achat. L’abonnement se renouvelle automatiquement chaque ${unit}, sauf résiliation au moins 24 heures avant la fin de la période en cours. Gère ou résilie ton abonnement dans les réglages d’abonnement de l’App Store / Google Play. Nous ne recevons jamais les données de ta carte. En t’abonnant, tu acceptes les Conditions d’utilisation (y compris le CLUF standard d’Apple) et la Politique de confidentialité.`,
     planY: 'Annuel', planM: 'Mensuel',
+  },
   de: {
     eyebrow: 'VON MOKA',
     title: 'Ich möchte dich jeden Tag hier sehen',
@@ -144,6 +142,7 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Die ersten ${trial} Tage sind kostenlos; wenn du nicht vor Ende der Testphase kündigst, werden ${price}/${unit} berechnet. ` : ''}Die Zahlung wird bei Kaufbestätigung deinem Apple-ID- bzw. Google-Play-Konto belastet. Das Abo verlängert sich automatisch jeden ${unit}, es sei denn, es wird mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt. Verwaltung und Kündigung in den Abo-Einstellungen von App Store / Google Play. Deine Kartendaten erhalten wir nie. Mit dem Abschluss akzeptierst du die Nutzungsbedingungen (einschließlich Apples Standard-EULA) und die Datenschutzerklärung.`,
     planY: 'Jährlich', planM: 'Monatlich',
+  },
   ja: {
     eyebrow: 'モカより',
     title: '毎日あなたのそばにいたいな',
@@ -176,6 +175,7 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy プレミアム（${plan}）：${price}/${unit}。${trial ? `最初の${trial}日間は無料です。お試し期間が終了する前に解約しない場合、${price}/${unit}が請求されます。` : ''}お支払いは購入確定時にApple IDまたはGoogle Playのアカウントに請求されます。サブスクリプションは、現在の期間が終了する24時間前までに解約しない限り、毎${unit}自動的に更新されます。購入後は、Apple IDまたはGoogle Playのアカウント設定から管理・解約できます。`,
     planY: '年額', planM: '月額',
+  },
   ko: {
     eyebrow: '모카가 전해요',
     title: '매일 곁에 있을게요',
@@ -208,6 +208,7 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy 프리미엄(${plan}): ${price}/${unit}. ${trial ? `처음 ${trial}일은 무료이며, 체험 종료 전에 취소하지 않으면 ${price}/${unit}이(가) 청구됩니다. ` : ''}결제는 구매 확인 시 Apple ID / Google Play 계정으로 청구됩니다. 현재 기간이 끝나기 최소 24시간 전에 취소하지 않으면 구독은 ${unit}마다 자동으로 갱신됩니다. 관리 및 취소는 App Store / Google Play 구독 설정에서 할 수 있습니다. 카드 정보는 저희에게 전달되지 않습니다. 구독하면 이용약관(Apple 표준 EULA 포함)과 개인정보 처리방침에 동의하는 것으로 간주됩니다.`,
     planY: '연간', planM: '월간',
+  },
   ar: {
     eyebrow: 'من موكا إليك',
     title: 'أريد أن أراك هنا كل يوم',
@@ -240,5 +241,71 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `مجانًا لأول ${trial} أيام؛ إذا لم تلغِ قبل انتهاء التجربة فسيُخصم ${price}/${unit}. ` : ''}يُخصم المبلغ من حساب Apple ID / Google Play عند تأكيد الشراء. يتجدد الاشتراك تلقائيًا كل ${unit} ما لم يُلغَ قبل نهاية الفترة الحالية بـ 24 ساعة على الأقل. للإدارة أو الإلغاء: إعدادات الاشتراك في App Store / Google Play. لا تصلنا بيانات بطاقتك أبدًا. بالاشتراك فإنك توافق على شروط الاستخدام (بما فيها اتفاقية EULA القياسية من Apple) وسياسة الخصوصية.`,
     planY: 'سنوي', planM: 'شهري',
+  },
+  es: {
+    eyebrow: 'DE PARTE DE MOKA',
+    title: 'Quiero estar contigo cada día',
+    sub: 'Las tareas de la casa serán siempre gratis. Pero con Premium puedo hablar contigo de verdad: lo que necesites hoy, lo resolvemos juntos ☕',
+    chatTitle: 'Moka te acompaña',
+    chatSub: `Habla conmigo hasta ${P.chats} mensajes al día. Te conozco, recuerdo lo de ayer y planeamos hoy juntos.`,
+    chat: [
+      { who: 'moka', text: '¡Buenos días! Ayer dejaste el baño a medias. ¿Tienes 10 minutos hoy? Lo terminamos juntos 🧽' },
+      { who: 'me', text: 'Esta noche vienen invitados, no voy a llegar…' },
+      { who: 'moka', text: 'Tranquilo. Elegí 3 tareas pequeñas: salón, encimera de la cocina y entrada. Las añadí a tu calendario. Dime cuando termines cada una y la marco ✓' },
+    ],
+    lockedTitle: 'Lo que está bloqueado ahora',
+    locked: [
+      { emoji: '💬', title: 'Chatear con Moka', text: `${P.chats} mensajes al día. Añade tareas desde el chat, marca lo hecho y apunta cosas en el calendario.` },
+      { emoji: '📸', title: 'Más escaneos de fotos', text: `${P.scans} escaneos al día (gratis: ${F.scans} por semana): armario, nevera, looks.` },
+      { emoji: '🧊', title: 'Congelar racha', text: `Protege tu racha ${P.freezes} veces al mes, aunque estés enfermo o de viaje.` },
+      { emoji: '⭐', title: `Puntos ×${String(P.mult).replace('.', ',')}`, text: 'Más puntos en cada tarea, tu casa crece más rápido.' },
+      { emoji: '🏡', title: '2.º piso, temas, 5 casas', text: 'Decora a tu gusto; la casa de la abuela también puede estar en tu lista.' },
+      { emoji: '👨‍👩‍👧', title: 'Compartir en familia', text: 'Hagan las tareas juntos y vean quién hizo qué.' },
+      { emoji: '🚫', title: 'Sin anuncios', text: 'Solo tú, la casa y yo.' },
+    ],
+    plansTitle: 'Elige tu plan',
+    trialLine: (d: number) => `Prueba gratis ${d} días. Cancela cuando quieras.`,
+    ctaTrial: (d: number) => `Empezar ${d} días gratis`,
+    ctaBuy: (price: string, unit: string) => `Empezar con Premium · ${price}/${unit}`,
+    ctaNote: 'Si cancelas antes de que acabe la prueba, no pagas nada.',
+    compare: 'Gratis vs Premium',
+    skip: 'Seguir gratis por ahora',
+    unitY: 'año', unitM: 'mes',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Gratis los primeros ${trial} días; si no cancelas antes de que acabe la prueba, se cobrarán ${price}/${unit}. ` : ''}El pago se carga a tu cuenta de Apple ID / Google Play al confirmar la compra. La suscripción se renueva automáticamente cada ${unit}, salvo que la canceles al menos 24 horas antes del final del periodo actual. Gestiona o cancela tu suscripción en los ajustes de suscripciones de la App Store / Google Play. Nunca recibimos los datos de tu tarjeta. Al suscribirte aceptas las Condiciones de uso (incluido el CLUF estándar de Apple) y la Política de privacidad.`,
+    planY: 'Anual', planM: 'Mensual',
+  },
+  pt: {
+    eyebrow: 'DA MOKA PARA VOCÊ',
+    title: 'Quero estar com você todo dia',
+    sub: 'As tarefas da casa continuam grátis para sempre. Mas com o Premium posso conversar de verdade com você: o que precisar hoje, resolvemos juntos ☕',
+    chatTitle: 'A Moka te acompanha',
+    chatSub: `Converse comigo até ${P.chats} mensagens por dia. Eu te conheço, lembro de ontem e planejamos o dia juntos.`,
+    chat: [
+      { who: 'moka', text: 'Bom dia! Ontem você deixou o banheiro pela metade. Tem 10 minutos hoje? Vamos terminar juntos 🧽' },
+      { who: 'me', text: 'Hoje à noite chegam visitas, acho que não vou conseguir…' },
+      { who: 'moka', text: 'Calma. Escolhi 3 tarefinhas: sala, bancada da cozinha e entrada. Já pus no seu calendário. Me avise quando terminar cada uma e eu marco ✓' },
+    ],
+    lockedTitle: 'O que está bloqueado agora',
+    locked: [
+      { emoji: '💬', title: 'Conversar com a Moka', text: `${P.chats} mensagens por dia. Adicione tarefas pelo chat, marque o que foi feito e anote no calendário.` },
+      { emoji: '📸', title: 'Mais escaneamentos de foto', text: `${P.scans} escaneamentos por dia (grátis: ${F.scans} por semana): guarda-roupa, geladeira, looks.` },
+      { emoji: '🧊', title: 'Congelar sequência', text: `Proteja sua sequência ${P.freezes} vezes por mês, mesmo doente ou viajando.` },
+      { emoji: '⭐', title: `Pontos ×${String(P.mult).replace('.', ',')}`, text: 'Mais pontos em cada tarefa, sua casa cresce mais rápido.' },
+      { emoji: '🏡', title: '2º andar, temas, 5 casas', text: 'Decore do seu jeito; a casa da vovó também pode ficar na sua lista.' },
+      { emoji: '👨‍👩‍👧', title: 'Compartilhar em família', text: 'Façam as tarefas juntos e vejam quem fez o quê.' },
+      { emoji: '🚫', title: 'Sem anúncios', text: 'Só você, a casa e eu.' },
+    ],
+    plansTitle: 'Escolha seu plano',
+    trialLine: (d: number) => `Teste grátis por ${d} dias. Cancele quando quiser.`,
+    ctaTrial: (d: number) => `Começar ${d} dias grátis`,
+    ctaBuy: (price: string, unit: string) => `Começar o Premium · ${price}/${unit}`,
+    ctaNote: 'Se cancelar antes do fim do teste, você não paga nada.',
+    compare: 'Grátis vs Premium',
+    skip: 'Continuar grátis por enquanto',
+    unitY: 'ano', unitM: 'mês',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Grátis nos primeiros ${trial} dias; se você não cancelar antes do fim do teste, será cobrado ${price}/${unit}. ` : ''}O pagamento é debitado na sua conta Apple ID / Google Play na confirmação da compra. A assinatura renova automaticamente a cada ${unit}, a menos que seja cancelada pelo menos 24 horas antes do fim do período atual. Gerencie ou cancele nas configurações de assinaturas da App Store / Google Play. Nunca recebemos os dados do seu cartão. Ao assinar, você aceita os Termos de Uso (incluindo o EULA padrão da Apple) e a Política de Privacidade.`,
+    planY: 'Anual', planM: 'Mensal',
   },
 } as const;

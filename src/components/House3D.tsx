@@ -2012,18 +2012,31 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   }
   // Moka'nın ara sıra söyledikleri: günün saatine ve bekleyen işlere göre, uygulamanın dilinde.
   const waiting = Object.keys(roomLate).length;
-  const en = (S.settings?.language ?? 'tr') !== 'tr';
-  const pt = S.settings?.language === 'pt';
+  const ul = (S.settings?.language ?? 'tr') as string;
+  const SAYS: Record<string, { hi: Record<string, string[]>; room1: string; roomN: string; roomEnd: string[]; none: string[] }> = {
+    tr: { hi: { sabah: ['Günaydın ☀️', 'Önce kahve mi? ☕'], ogle: ['Selam 👋', 'Ev bugün çok güzel ✨'], aksam: ['İyi akşamlar 🌇', 'Bugün iyi iş çıkardın'], gece: ['İyi geceler 🌙', 'Dinlenme vakti 😴'] }, room1: '', roomN: '', roomEnd: [], none: ['Her şey tamam, keyfine bak 🎉'] },
+    en: { hi: { sabah: ['Good morning ☀️', 'Coffee first? ☕'], ogle: ['Hi there 👋', 'Home looks lovely ✨'], aksam: ['Good evening 🌇', 'Nice work today'], gece: ['Good night 🌙', 'Time to rest 😴'] }, room1: 'room needs', roomN: 'rooms need', roomEnd: ['you 💪', 'One small task? 🧹'], none: ['All done, enjoy 🎉'] },
+    de: { hi: { sabah: ['Guten Morgen ☀️', 'Erst mal Kaffee? ☕'], ogle: ['Hallo 👋', 'Zuhause sieht heute toll aus ✨'], aksam: ['Guten Abend 🌇', 'Heute gut gemacht'], gece: ['Gute Nacht 🌙', 'Zeit zum Ausruhen 😴'] }, room1: 'Raum braucht', roomN: 'Räume brauchen', roomEnd: ['dich 💪', 'Eine kleine Aufgabe? 🧹'], none: ['Alles erledigt, genieß es 🎉'] },
+    es: { hi: { sabah: ['Buenos días ☀️', '¿Primero un café? ☕'], ogle: ['Hola 👋', 'Qué bonita está la casa hoy ✨'], aksam: ['Buenas tardes 🌇', 'Buen trabajo hoy'], gece: ['Buenas noches 🌙', 'Hora de descansar 😴'] }, room1: 'habitación te necesita', roomN: 'habitaciones te necesitan', roomEnd: ['💪', '¿Una tarea pequeña? 🧹'], none: ['Todo listo, disfruta 🎉'] },
+    fr: { hi: { sabah: ['Bonjour ☀️', 'D’abord un café ? ☕'], ogle: ['Salut 👋', 'La maison est belle aujourd’hui ✨'], aksam: ['Bonsoir 🌇', 'Beau travail aujourd’hui'], gece: ['Bonne nuit 🌙', 'C’est l’heure de se reposer 😴'] }, room1: 'pièce a besoin de toi', roomN: 'pièces ont besoin de toi', roomEnd: ['💪', 'Une petite tâche ? 🧹'], none: ['Tout est fait, profites-en 🎉'] },
+    pt: { hi: { sabah: ['Bom dia ☀️', 'Primeiro um café? ☕'], ogle: ['Oi 👋', 'A casa está linda hoje ✨'], aksam: ['Boa noite 🌇', 'Você foi muito bem hoje'], gece: ['Boa noite 🌙', 'Hora de descansar 😴'] }, room1: 'cômodo precisa de você', roomN: 'cômodos precisam de você', roomEnd: ['💪', 'Uma tarefinha? 🧹'], none: ['Tudo pronto, aproveite 🎉'] },
+    ja: { hi: { sabah: ['おはよう ☀️', 'まずはコーヒー？ ☕'], ogle: ['やあ 👋', '今日もおうちがすてき ✨'], aksam: ['こんばんは 🌇', '今日もよくがんばったね'], gece: ['おやすみ 🌙', '休む時間だよ 😴'] }, room1: '部屋があなたを待っています', roomN: '部屋があなたを待っています', roomEnd: ['💪', 'ひとつだけやってみる？ 🧹'], none: ['ぜんぶ完了、ゆっくりしよう 🎉'] },
+    ko: { hi: { sabah: ['좋은 아침 ☀️', '먼저 커피 한 잔? ☕'], ogle: ['안녕 👋', '오늘 집이 정말 예뻐요 ✨'], aksam: ['좋은 저녁 🌇', '오늘 잘했어요'], gece: ['잘 자요 🌙', '쉴 시간이에요 😴'] }, room1: '개의 방이 기다리고 있어요', roomN: '개의 방이 기다리고 있어요', roomEnd: ['💪', '작은 일 하나 할까요? 🧹'], none: ['모두 끝! 여유를 즐겨요 🎉'] },
+    ar: { hi: { sabah: ['صباح الخير ☀️', 'القهوة أولًا؟ ☕'], ogle: ['أهلًا 👋', 'المنزل جميل اليوم ✨'], aksam: ['مساء الخير 🌇', 'أحسنت اليوم'], gece: ['تصبح على خير 🌙', 'حان وقت الراحة 😴'] }, room1: 'غرفة تنتظرك', roomN: 'غرف تنتظرك', roomEnd: ['💪', 'مهمة صغيرة؟ 🧹'], none: ['كل شيء تمام، استمتع 🎉'] },
+  };
+  const says = SAYS[ul] ?? SAYS.en!;
   const mokaSays = (() => {
-    const hi = {
-      sabah: pt ? ['Bom dia ☀️', 'Primeiro um café? ☕'] : en ? ['Good morning ☀️', 'Coffee first? ☕'] : ['Günaydın ☀️', 'Önce kahve mi? ☕'],
-      ogle: pt ? ['Oi 👋', 'A casa está linda hoje ✨'] : en ? ['Hi there 👋', 'Home looks lovely ✨'] : ['Selam 👋', 'Ev bugün çok güzel ✨'],
-      aksam: pt ? ['Boa noite 🌇', 'Você foi muito bem hoje'] : en ? ['Good evening 🌇', 'Nice work today'] : ['İyi akşamlar 🌇', 'Bugün iyi iş çıkardın'],
-      gece: pt ? ['Boa noite 🌙', 'Hora de descansar 😴'] : en ? ['Good night 🌙', 'Time to rest 😴'] : ['İyi geceler 🌙', 'Dinlenme vakti 😴'],
-    }[phase];
+    const hi = says.hi[phase] ?? [];
+    const plural = waiting === 1 ? says.room1 : says.roomN;
     const task = waiting > 0
-      ? (pt ? [`${waiting} ${waiting === 1 ? 'cômodo precisa' : 'cômodos precisam'} de você 💪`, 'Uma tarefinha? 🧹'] : en ? [`${waiting} ${waiting === 1 ? 'room needs' : 'rooms need'} you 💪`, 'One small task? 🧹'] : [`${waiting} oda seni bekliyor 💪`, 'Küçük bir iş yapalım mı? 🧹'])
-      : (pt ? ['Tudo pronto, aproveite 🎉'] : en ? ['All done, enjoy 🎉'] : ['Her şey tamam, keyfine bak 🎉']);
+      ? ul === 'tr'
+        ? [`${waiting} oda seni bekliyor 💪`, 'Küçük bir iş yapalım mı? 🧹']
+        : ul === 'ko' || ul === 'ja'
+          ? [`${waiting}${plural} ${says.roomEnd[0]}`, says.roomEnd[1]!]
+          : ul === 'ar' ? [`${waiting} ${plural} ${says.roomEnd[0]}`, says.roomEnd[1]!]
+          : ul === 'en' || ul === 'de' ? [`${waiting} ${plural} ${says.roomEnd[0]}`, says.roomEnd[1]!]
+          : [`${waiting} ${plural} ${says.roomEnd[0]}`, says.roomEnd[1]!]
+      : says.none;
     return [...hi, ...task];
   })();
   const sc = boxW > 0 ? boxW / vbW : 0;

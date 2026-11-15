@@ -4,7 +4,9 @@
     "slug": "homezy",
     "scheme": "homezy",
     "version": "1.0.4",
-    "runtimeVersion": { "policy": "appVersion" },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "updates": {
       "url": "https://u.expo.dev/b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3",
       "enabled": true,
@@ -18,19 +20,55 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.meikai.homezy",
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.meikai.homezy"]
+        "com.apple.security.application-groups": [
+          "group.com.meikai.homezy"
+        ]
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "tr",
-        "CFBundleLocalizations": ["tr", "en", "fr"]
+        "CFBundleLocalizations": [
+          "tr",
+          "en",
+          "de",
+          "es",
+          "fr",
+          "pt",
+          "ja",
+          "ko",
+          "ar"
+        ]
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
-          { "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults", "NSPrivacyAccessedAPITypeReasons": ["CA92.1", "1C8F.1"] },
-          { "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp", "NSPrivacyAccessedAPITypeReasons": ["C617.1", "3B52.1", "0A2A.1"] },
-          { "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace", "NSPrivacyAccessedAPITypeReasons": ["E174.1", "85F4.1"] },
-          { "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime", "NSPrivacyAccessedAPITypeReasons": ["35F9.1"] }
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1",
+              "1C8F.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1",
+              "3B52.1",
+              "0A2A.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "E174.1",
+              "85F4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          }
         ]
       }
     },
@@ -165,7 +203,13 @@
         }
       ],
       "expo-sharing",
-      ["@sentry/react-native/expo", { "organization": "meikai-digital", "project": "homezy" }],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "meikai-digital",
+          "project": "homezy"
+        }
+      ],
       [
         "react-native-android-widget",
         {
@@ -220,6 +264,16 @@
       "eas": {
         "projectId": "b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3"
       }
+    },
+    "locales": {
+      "en": "./locales/en.json",
+      "de": "./locales/de.json",
+      "es": "./locales/es.json",
+      "fr": "./locales/fr.json",
+      "pt": "./locales/pt.json",
+      "ja": "./locales/ja.json",
+      "ko": "./locales/ko.json",
+      "ar": "./locales/ar.json"
     }
   }
 }

@@ -12,6 +12,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+import { tx } from '@/i18n/runtime';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -60,7 +61,7 @@ export default function Bildirimler() {
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
-          {S.settings.language === 'de' ? 'Jeden Morgen um ' : S.settings.language === 'en' ? 'Every morning at ' : 'Homezy her sabah '}<Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{S.settings.language === 'de' ? ' Uhr sendet Homezy dir diese als Benachrichtigung aufs Handy.' : S.settings.language === 'en' ? ' Homezy sends these to your phone as a notification.' : "'da bunları telefonuna bildirim olarak gönderir."}
+          {tx("Homezy her sabah {}'da bunları telefonuna bildirim olarak gönderir.").split('{}').flatMap((part, i) => i === 0 ? [part] : [<Text key={i} style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>, part])}
         </T>
       </View>
 

@@ -29,6 +29,8 @@ type Media = (typeof MEDIA)[number];
 const EN_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in English. Write name, qty and note in natural English (e.g. "Milk", "half a bottle", "Navy linen shirt"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
 const FR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in French. Write name, qty and note in natural French (informal "tu" where addressing the user). \`match\`/\`missing\` entries keep the exact spelling from the known list; enum fields (kind, color, fabric, pattern, wash, lvl) stay unchanged.`;
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'fr' ? prompt + FR_RULE : prompt);
+const ES_RULE = EN_RULE.replace(/English/g, 'Spanish').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leche", "media botella", "Camisa de lino azul marino")');
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'es' ? prompt + ES_RULE : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

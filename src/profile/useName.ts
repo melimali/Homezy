@@ -49,10 +49,14 @@ export function possessive(name: string | null): string | null {
 }
 
 /** "Ayşe'nin Evi" / yurt-öğrenci için "Ayşe'nin Odası". Ad yoksa genel başlık. */
-export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string, lang: 'tr' | 'en' = 'tr'): string {
+export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string, lang: 'tr' | 'en' | 'fr' = 'tr'): string {
   if (lang === 'en') {
     const n = name?.trim();
     return n ? `${n}'s ${what === 'Ev' ? 'Home' : what === 'Oda' ? 'Room' : 'Plan'}` : generic;
+  }
+  if (lang === 'fr') {
+    const n = name?.trim();
+    return n ? `${what === 'Ev' ? 'Maison' : what === 'Oda' ? 'Chambre' : 'Plan'} de ${n}` : generic;
   }
   const p = possessive(name);
   if (!p) return generic;

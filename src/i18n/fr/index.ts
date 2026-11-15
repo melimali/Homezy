@@ -1,0 +1,37 @@
+import { FR_A1 } from './a1';
+import { FR_A2 } from './a2';
+import { FR_A3 } from './a3';
+import { FR_A4 } from './a4';
+import { FR_B } from './b';
+import { FR_C } from './c';
+import { FR_D } from './d';
+import { FR_E } from './e';
+import { FR_F } from './f';
+import { FR_G } from './g';
+import { FR_H } from './h';
+import { FR_I } from './i';
+import { FR_J } from './j';
+import { FR_K } from './k';
+import { FR_L } from './l';
+import { FR_M } from './m';
+import { FR_N } from './n';
+import { FR_O } from './o';
+import { FR_P } from './p';
+import { FR_Q } from './q';
+import { FR_R } from './r';
+import { FR_S } from './s';
+import { FR_T } from './t';
+import { FR_U } from './u';
+import { FR_NOTIF } from './notif';
+import { FR_PET } from './pets';
+import { FR_SHOP } from './shopping';
+import { FR_TIPS } from './tips';
+import { FR_FUN } from './fun';
+import { FR_VIS } from './vis';
+import { FR_KISISEL } from './kisisel';
+import { FR_TABEDIT } from './tabedit';
+import { FR_DEKOR } from './dekor';
+import { FR_REVIEW } from './review';
+
+/** Türkçe metin → Fransızca. `{}` değişken yeridir (sırayla). */
+export const FR: Record<string, string> = { ...FR_A1, ...FR_A2, ...FR_A3, ...FR_A4, ...FR_B, ...FR_C, ...FR_D, ...FR_E, ...FR_F, ...FR_G, ...FR_H, ...FR_I, ...FR_J, ...FR_K, ...FR_L, ...FR_M, ...FR_N, ...FR_O, ...FR_P, ...FR_Q, ...FR_R, ...FR_S, ...FR_T, ...FR_U, ...FR_NOTIF, ...FR_PET, ...FR_SHOP, ...FR_TIPS, ...FR_FUN, ...FR_VIS, ...FR_KISISEL, ...FR_TABEDIT, ...FR_DEKOR, ...FR_REVIEW };

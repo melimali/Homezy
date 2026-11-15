@@ -32,8 +32,8 @@ const BOTTOM = 132; // noktalar + düğme
 const native = Platform.OS !== 'web';
 
 type Copy = { eyebrow: string; title: string; text: string; /** Polaroid alt yazı şeridi. */ caption: string };
-type Page = { tr: Copy; en: Copy; scene: IntroScene; tint: (c: Colors) => string; deco: DecoKind };
-type Lang = 'tr' | 'en';
+type Page = { tr: Copy; en: Copy; fr: Copy; scene: IntroScene; tint: (c: Colors) => string; deco: DecoKind };
+type Lang = 'tr' | 'en' | 'fr';
 
 /**
  * Polaroid sahnesi: sabit arka plan + ayrı Moka çıkartması. Konum arka plan RESMİNE göre
@@ -60,6 +60,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Tanışalım', title: 'Merhaba, ben Moka', text: 'Ev işlerini küçük, kolay adımlara bölerim. Sen her gün biraz yaparsın, gerisini birlikte hallederiz.', caption: 'Hazır mısın?' },
     en: { eyebrow: 'Say hello', title: 'Hi, I’m Moka', text: 'I break housework into small, easy steps. You do a little each day, and we handle the rest together.', caption: 'Ready?' },
+    fr: { eyebrow: 'Faisons connaissance', title: 'Salut, moi c’est Moka', text: 'Je découpe les tâches ménagères en petites étapes faciles. Tu en fais un peu chaque jour, et on s’occupe du reste ensemble.', caption: 'Prêt·e ?' },
     scene: SCENES.hello,
     deco: 'hello',
     tint: c => c.peachSoft,
@@ -67,6 +68,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Plan', title: 'Evini çiz', text: 'Odalarını birkaç dokunuşla yerleştir. Her odanın işleri kendiliğinden hazırlanır.', caption: 'Önce planı çizelim' },
     en: { eyebrow: 'Plan', title: 'Draw your home', text: 'Place your rooms with a few taps. Each room gets its own chores, ready to go.', caption: 'Let’s sketch it first' },
+    fr: { eyebrow: 'Plan', title: 'Dessine ta maison', text: 'Place tes pièces en quelques touches. Chaque pièce reçoit ses propres tâches, prêtes à l’emploi.', caption: 'On dessine d’abord le plan' },
     scene: SCENES.draw,
     deco: 'draw',
     tint: c => c.sageSoft,
@@ -74,6 +76,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Her gün', title: 'Günde birkaç iş', text: 'Bugün ne yapacağını tek listede gör, bitirdikçe işaretle. Küçük adımlar zamanla alışkanlığa dönüşür.', caption: 'Süpürge hazır' },
     en: { eyebrow: 'Every day', title: 'A few tasks a day', text: 'See today’s to-dos in one list and tick them off. Small steps quietly turn into habits.', caption: 'Broom ready' },
+    fr: { eyebrow: 'Chaque jour', title: 'Quelques tâches par jour', text: 'Vois les tâches du jour dans une seule liste et coche-les. Les petits pas deviennent doucement des habitudes.', caption: 'Le balai est prêt' },
     scene: SCENES.sweep,
     deco: 'tasks',
     tint: c => c.roseSoft,
@@ -81,6 +84,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Evin', title: 'Evin seninle büyür', text: 'Düzenli kaldıkça evine yeni katlar eklenir. Ara verirsen toz tutar; döndüğünde yeniden parlar.', caption: 'Vay, ne büyüdü!' },
     en: { eyebrow: 'Your home', title: 'Your home grows', text: 'Stay consistent and new floors appear. Take a break and dust settles; come back and it shines again.', caption: 'Wow, look at it!' },
+    fr: { eyebrow: 'Ta maison', title: 'Ta maison grandit', text: 'Reste régulier·ère et de nouveaux étages apparaissent. Fais une pause et la poussière s’installe ; reviens et tout brille à nouveau.', caption: 'Waouh, regarde ça !' },
     scene: SCENES.wow,
     deco: 'house',
     tint: c => c.peachSoft,
@@ -88,6 +92,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Bahçe', title: 'Bahçen çiçek açar', text: 'Bitirdiğin her iş bahçene yeni bir çiçek ekler. İstikrarlı oldukça bahçen renklenir.', caption: 'Birlikte sulayalım' },
     en: { eyebrow: 'Garden', title: 'Your garden blooms', text: 'Every task you finish plants a new flower. The steadier you are, the more colorful it gets.', caption: 'Let’s water it' },
+    fr: { eyebrow: 'Jardin', title: 'Ton jardin fleurit', text: 'Chaque tâche terminée plante une nouvelle fleur. Plus tu es constant·e, plus il se colore.', caption: 'On arrose ensemble' },
     scene: SCENES.garden,
     deco: 'garden',
     tint: c => c.sageSoft,
@@ -95,6 +100,7 @@ const PAGES: Page[] = [
   {
     tr: { eyebrow: 'Kendin için', title: 'Sıra sende', text: 'Evin düzene girince spor, günlük ve huzur için vakit ayır. Disiplin evde başlar, hayatına yayılır.', caption: 'Sen de değerlisin' },
     en: { eyebrow: 'For you', title: 'Now it’s your turn', text: 'Once home is in order, make time for workouts, journaling and calm. Discipline starts at home and spreads to everything.', caption: 'You matter too' },
+    fr: { eyebrow: 'Pour toi', title: 'C’est ton tour', text: 'Une fois la maison en ordre, prends du temps pour le sport, ton journal et le calme. La discipline commence à la maison et se répand partout.', caption: 'Tu comptes aussi' },
     scene: SCENES.read,
     deco: 'self',
     tint: c => c.lavenderSoft,
@@ -120,6 +126,7 @@ function SceneView({ scene, w, h }: { scene: IntroScene; w: number; h: number })
 const UI = {
   tr: { skip: 'Atla', next: 'Devam', start: 'Hadi başlayalım', page: 'Sayfa', hintStart: 'Hesap ekranına geçer', hintNext: 'Sonraki sayfaya geçer', poke: 'Moka’ya dokun' },
   en: { skip: 'Skip', next: 'Continue', start: 'Let’s begin', page: 'Page', hintStart: 'Opens the account screen', hintNext: 'Goes to the next page', poke: 'Tap Moka' },
+  fr: { skip: 'Passer', next: 'Continuer', start: 'C’est parti', page: 'Page', hintStart: 'Ouvre l’écran du compte', hintNext: 'Passe à la page suivante', poke: 'Touche Moka' },
 };
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. Her zaman krem (açık) temada. */
@@ -138,11 +145,11 @@ function TanitimInner() {
   const { state: appState, update } = useStore();
   const code = appState.settings.language;
   // i18n/runtime.setLang ile aynı kural: ayar yoksa ya da tr ise Türkçe, başka her şey İngilizce.
-  const lang: Lang = !code || code === 'tr' ? 'tr' : 'en';
+  const lang: Lang = !code || code === 'tr' ? 'tr' : code === 'fr' ? 'fr' : 'en';
   const [switching, setSwitching] = useState(false);
   const langTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => langTimers.current.forEach(clearTimeout), []);
-  const pickLang = (l: 'tr' | 'en') => {
+  const pickLang = (l: Lang) => {
     if (l === lang || switching) return;
     setSwitching(true);
     // Önce yükleme ekranı çizilsin, sonra dil değişsin; çeviri oturunca kapat.
@@ -229,8 +236,8 @@ function TanitimInner() {
       {/* Üst: logo ve "Atla" */}
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
         <View style={[st.langPill, { backgroundColor: c.surface }]} accessibilityRole="radiogroup">
-          {(['tr', 'en'] as const).map(l => (
-            <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
+          {(['tr', 'en', 'fr'] as const).map(l => (
+            <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : l === 'fr' ? 'Français' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
             </Pressable>
           ))}

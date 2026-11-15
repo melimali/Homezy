@@ -5,8 +5,9 @@
  * Sözlükte olmayan metin olduğu gibi (Türkçe) görünür.
  */
 import { EN } from './en';
+import { FR } from './fr';
 
-export type AppLang = 'tr' | 'en';
+export type AppLang = 'tr' | 'en' | 'fr';
 let LANG: AppLang = deviceLang();
 const listeners = new Set<() => void>();
 
@@ -14,7 +15,8 @@ const listeners = new Set<() => void>();
 export function deviceLang(): AppLang {
   try {
     const loc = Intl.DateTimeFormat().resolvedOptions().locale || 'tr';
-    return loc.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    const l = loc.toLowerCase();
+    return l.startsWith('tr') ? 'tr' : l.startsWith('fr') ? 'fr' : 'en';
   } catch {
     return 'tr';
   }
@@ -22,7 +24,7 @@ export function deviceLang(): AppLang {
 
 /** Ayardaki dil kodunu (tr, en ya da başka) çalışan dile çevirir: Türkçe dışı her şey İngilizce. */
 export function setLang(code: string | undefined) {
-  const next: AppLang = !code || code === 'tr' ? 'tr' : 'en';
+  const next: AppLang = !code || code === 'tr' ? 'tr' : code === 'fr' ? 'fr' : 'en';
   if (next === LANG) return;
   LANG = next;
   cache.clear();
@@ -31,8 +33,8 @@ export function setLang(code: string | undefined) {
 export const getLang = () => LANG;
 export const isEn = () => LANG === 'en';
 /** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
-export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
-export const dateLocale = () => (LANG === 'en' ? 'en-US' : 'tr-TR');
+export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : LANG === 'fr' ? `${Math.max(1, Math.round(n / 40))} €` : `${n} TL`);
+export const dateLocale = () => (LANG === 'en' ? 'en-US' : LANG === 'fr' ? 'fr-FR' : 'tr-TR');
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);
   return () => void listeners.delete(fn);
@@ -51,10 +53,21 @@ const split = (s: string) => {
   const trail = TRAIL.exec(rest)?.[0] ?? '';
   return { lead, core: rest.slice(0, rest.length - trail.length), trail };
 };
+let exact = new Map<string, string>();
+let canon = new Map<string, string>();
+let patterns: { re: RegExp; out: string; lit: number }[] = [];
+const tables: Partial<Record<AppLang, { exact: typeof exact; canon: typeof canon; patterns: typeof patterns }>> = {};
+/** Etkin dilin sözlük tablolarını (ilk kullanımda) kurar. */
+function loadTables() {
+  const L: AppLang = LANG === 'fr' ? 'fr' : 'en';
+  const t = (tables[L] ??= buildTables(L === 'fr' ? FR : EN));
+  exact = t.exact; canon = t.canon; patterns = t.patterns;
+}
+function buildTables(dict: Record<string, string>) {
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
 const patterns: { re: RegExp; out: string; lit: number }[] = [];
-for (const [k0, v0] of Object.entries(EN)) {
+for (const [k0, v0] of Object.entries(dict)) {
   // Baştaki/sondaki boşluk eşleşmeyi bozmasın: çeviri çekirdek metin üzerinden aranır.
   const k = k0.trim() || k0;
   const v = k === k0 ? v0 : v0.trim();
@@ -79,6 +92,8 @@ for (const [k0, v0] of Object.entries(EN)) {
 }
 // Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
 patterns.sort((a, b) => b.lit - a.lit);
+return { exact, canon, patterns };
+}
 
 const cache = new Map<string, string>();
 
@@ -141,11 +156,13 @@ function translate(s: string, depth = 0): string {
 
 /** Metni geçerli dile çevirir. Türkçe iken olduğu gibi döner. */
 export function tx<T>(s: T): T {
-  if (LANG !== 'en' || typeof s !== 'string') return s;
+  if (LANG === 'tr' || typeof s !== 'string') return s;
   const hit = cache.get(s);
   if (hit !== undefined) return hit as T;
-  // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%.
-  const r = translate(s).replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2%');
+  loadTables();
+  // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%. Fransızcada boşluklu: 50 %.
+  const tr0 = translate(s);
+  const r = LANG === 'fr' ? tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2 %') : tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, '$1$2%');
   if (cache.size > 4000) cache.clear();
   cache.set(s, r);
   return r as T;

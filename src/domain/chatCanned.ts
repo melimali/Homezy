@@ -5,7 +5,7 @@ import type { ChatCtx } from './chat';
  * verilir, sunucu çağrılmaz, günlük hak düşmez. Türkçe ve İngilizce ayrı listelerdir; uygulama diline göre biri seçilir.
  */
 type Kind = 'greet' | 'thanks' | 'bye';
-type Lang = 'tr' | 'en';
+type Lang = 'tr' | 'en' | 'fr';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
@@ -18,18 +18,29 @@ const WORDS: Record<Lang, Record<Kind, string[]>> = {
     thanks: ['thanks', 'thank you', 'thx', 'ty', 'thanks moka', 'thank you moka', 'many thanks'],
     bye: ['bye', 'goodbye', 'see you', 'see ya', 'good night', 'gn', 'later'],
   },
+  fr: {
+    greet: ['salut', 'bonjour', 'coucou', 'hello', 'hey', 'hey moka', 'salut moka', 'bonjour moka', 'bonsoir', 'ca va', 'comment ca va'],
+    thanks: ['merci', 'merci moka', 'merci beaucoup', 'mrc', 'thanks'],
+    bye: ['au revoir', 'a bientot', 'a plus', 'bye', 'bonne nuit', 'salut a plus', 'ciao'],
+  },
 };
 
 const norm = (s: string) =>
   s
     .toLocaleLowerCase('tr')
     .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİ]/g, 'i').replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/['’]/g, '')
     .replace(/[^a-z0-9 ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
 function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
+  if (lang === 'fr') {
+    if (ctx.late > 0) return `Salut ! ☕ ${ctx.late} tâche${ctx.late > 1 ? 's sont' : ' est'} en retard. On en choisit une et on s’y met ensemble ? 💛`;
+    if (ctx.due > 0) return `Salut ! ☕ Tu as ${ctx.due} tâche${ctx.due > 1 ? 's' : ''} aujourd’hui. Quand tu es prêt·e, on y va 💛`;
+    return ['Salut ! ☕ Rien ne t’attend aujourd’hui, bravo !', 'Coucou ! ☕ Tout est calme à la maison. Tu as besoin de quelque chose ?'][n % 2];
+  }
   if (lang === 'en') {
     if (ctx.late > 0) return `Hi! ☕ ${ctx.late} task${ctx.late > 1 ? 's are' : ' is'} running late. Want to pick one and tackle it together? 💛`;
     if (ctx.due > 0) return `Hi! ☕ You have ${ctx.due} task${ctx.due > 1 ? 's' : ''} today. Ready when you are 💛`;
@@ -48,6 +59,10 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   en: {
     thanks: ["You're welcome! ☕", 'Anytime 💛', "Happy to help! Don't forget a coffee break ☕"],
     bye: ['See you! ☕', "Rest well, I'll be here tomorrow 💛", 'Bye for now! ☕'],
+  },
+  fr: {
+    thanks: ['Avec plaisir ! ☕', 'Quand tu veux 💛', 'Avec plaisir ! N’oublie pas ta pause café ☕'],
+    bye: ['À bientôt ! ☕', 'Repose-toi bien, je serai là demain 💛', 'À plus ! ☕'],
   },
 };
 

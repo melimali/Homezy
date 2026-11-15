@@ -81,6 +81,10 @@ function cleanHistory(raw: unknown): { role: 'user' | 'assistant'; content: stri
 
 /** Cevap dili zorunlu: uygulama dili İngilizce ise (ya da kullanıcı açıkça başka dilde yazıyorsa) o dilde cevap verilir. */
 function withLang(sys: string, lang: unknown) {
+  if (lang === 'fr') {
+    const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in French. ALWAYS reply in French, informal "tu", in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
+    return `${rule}\n\n${sys}\n\n${rule}`;
+  }
   if (lang === 'en') {
     const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in English. ALWAYS reply in English, in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
     return `${rule}\n\n${sys}\n\n${rule}`;

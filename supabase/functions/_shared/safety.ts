@@ -29,4 +29,9 @@ const REPLY_EN =
   'If you might hurt yourself, please call your local emergency number right now (112 in Turkey and the EU, 988 in the US) and talk to someone you trust or a professional. ' +
   'You are not alone, and this feeling can pass. I\'ll be here whenever you\'re ready.';
 
-export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : REPLY_TR);
+
+const REPLY_FR =
+  'Merci de m’en parler, je suis là avec toi 💛 Je suis une IA, et il existe de vraies personnes qui peuvent t’aider. ' +
+  'Si tu risques de te faire du mal, appelle tout de suite le numéro d’urgence local (112 en Europe, 3114 en France pour la prévention du suicide) et parle à quelqu’un de confiance ou à un professionnel. ' +
+  'Tu n’es pas seul·e, et cette sensation peut passer. Je suis là quand tu veux.';
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'fr' ? REPLY_FR : REPLY_TR);

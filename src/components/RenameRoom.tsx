@@ -10,7 +10,7 @@ import { radius, useColors } from '@/theme';
 export function RenameRoom({ id, onClose }: { id: string | null; onClose: () => void }) {
   const c = useColors();
   const { lang } = useTranslation();
-  const en = lang === 'en';
+  const en = lang !== 'tr';
   const { state: S, update } = useStore();
   const [v, setV] = useState('');
   useEffect(() => { if (id) setV(S.rooms[id]?.name ?? ''); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -9,6 +9,7 @@ const CRISIS = [
   /hayat[ıi]ma\s+son/, /hayata\s+veda/, /bile[ğg]imi\s+kes/, /bileklerimi\s+kes/, /(ölsem|olsem)\s+(daha\s+iyi|keşke)/,
   /ya[sş]ama(m|y[ıi]|k)?\s+(art[ıi]k\s+)?anlams[ıi]z/, /kendimi\s+(zarar|incit)/,
   /suicid/, /kill\s+my\s*self/, /end\s+my\s+life/, /take\s+my\s+(own\s+)?life/, /want\s+to\s+die/, /wanna\s+die/, /don'?t\s+want\s+to\s+(live|be\s+alive)/,
+  /죽고\s*싶/, /자살/, /자해/, /목숨을?\s*끊/, /살고\s*싶지\s*않/, /죽어버리/, /생을\s*마감/,
   /self[\s-]?harm/, /hurt\s+my\s*self/, /cut\s+my\s*self/, /better\s+off\s+(dead|without\s+me)/,
 ];
 
@@ -29,4 +30,9 @@ const REPLY_EN =
   'If you might hurt yourself, please call your local emergency number right now (112 in Turkey and the EU, 988 in the US) and talk to someone you trust or a professional. ' +
   'You are not alone, and this feeling can pass. I\'ll be here whenever you\'re ready.';
 
-export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : REPLY_TR);
+const REPLY_KO =
+  '말씀해 주셔서 고마워요, 제가 곁에 있을게요 💛 저는 AI이고, 이 일은 실제로 도와줄 수 있는 사람들이 있어요. ' +
+  '스스로를 해칠 수도 있을 것 같다면 지금 바로 가까운 응급 번호(한국은 112·119, 자살예방상담전화 109)로 전화하고, 믿을 수 있는 사람이나 전문가와 이야기해 주세요. ' +
+  '당신은 혼자가 아니고, 이 마음은 지나갈 수 있어요. 준비되면 언제든 여기 있을게요.';
+
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'ko' ? REPLY_KO : REPLY_TR);

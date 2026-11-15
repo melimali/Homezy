@@ -33,7 +33,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
-  const lang = S.settings.language === 'tr' ? 'tr' : 'en';
+  const lang = S.settings.language === 'tr' ? 'tr' : S.settings.language === 'ko' ? 'ko' : 'en';
   const L = PAYWALL_COPY[lang];
   const unit = plan === 'annual' ? L.unitY : L.unitM;
   const trial = trialDays[plan];

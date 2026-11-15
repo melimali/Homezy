@@ -27,7 +27,8 @@ type Media = (typeof MEDIA)[number];
 
 /** İngilizce modda: kullanıcıya görünen metinler İngilizce olsun; `match`/`missing` listedeki yazımla kalır, enum alanlar (kind, color, fabric, pattern, wash, lvl) aynen kalır. */
 const EN_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in English. Write name, qty and note in natural English (e.g. "Milk", "half a bottle", "Navy linen shirt"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
-const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : prompt);
+const KO_RULE = EN_RULE.replace(/English/g, 'Korean').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "우유", "반 병", "네이비 린넨 셔츠")');
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'ko' ? prompt + KO_RULE : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

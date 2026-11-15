@@ -9,7 +9,7 @@ export const LANGUAGES: { code: Lang; label: string; flag: string; soon?: string
   { code: 'fr', label: 'Français', flag: '🇫🇷', soon: 'Bientôt' },
   { code: 'pt', label: 'Português', flag: '🇧🇷', soon: 'Em breve' },
   { code: 'ja', label: '日本語', flag: '🇯🇵', soon: '近日公開' },
-  { code: 'ko', label: '한국어', flag: '🇰🇷', soon: '곧 출시' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
   { code: 'ar', label: 'العربية', flag: '🇸🇦', soon: 'قريبًا' },
 ];
 

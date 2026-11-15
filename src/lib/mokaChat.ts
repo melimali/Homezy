@@ -1,4 +1,4 @@
-import { getLang, tx } from '@/i18n/runtime';
+import { getUiLang, tx } from '@/i18n/runtime';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import type { ChatAction, ChatCtx, ChatMsg } from '@/domain/chat';
@@ -23,7 +23,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   // Hesapsız (anonim) oturum sohbete giremez; sunucu da reddeder.
   const { data: auth } = await supabase.auth.getSession();
   if (!auth.session || auth.session.user.is_anonymous) return { ok: false, account: true, message: tx(CHAT_ACCOUNT_NEEDED) };
-  const { data, error } = await supabase.functions.invoke('moka-chat', { body: { messages, ctx, lang: getLang() }, timeout: TIMEOUT });
+  const { data, error } = await supabase.functions.invoke('moka-chat', { body: { messages, ctx, lang: getUiLang() }, timeout: TIMEOUT });
   if (!error) return { ok: true, reply: String(data.reply ?? ''), actions: Array.isArray(data.actions) ? data.actions : [], used: data.used, limit: data.limit, mused: data.mused, mlimit: data.mlimit, premium: !!data.premium };
 
   if (!(error instanceof FunctionsHttpError)) return { ok: false, message: tx('Bağlantıda bir sorun oldu. İnternetini kontrol edip tekrar dene.') };

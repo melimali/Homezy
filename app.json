@@ -23,7 +23,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "tr",
-        "CFBundleLocalizations": ["tr", "en"]
+        "CFBundleLocalizations": ["tr", "en", "ko"]
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [

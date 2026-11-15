@@ -32,6 +32,12 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     const day = Number(status.day.replace(/\D/g, '')) + shift;
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
+    if (lang === 'de') {
+      // Almancada isimler büyük yazılır: sadece işlev sözcükleriyle başlayan cümlede ilk harf küçülür.
+      const dm = tx(q.message);
+      const small = /^(ich|du|wir|es|heute|jetzt|hier|schon|noch|nur|gerade|gleich|dein|deine|dir|dich|mein|meine|der|die|das|ein|eine|wenn|dass|komm|lass|mach|fang|hey|hi|na)\b/i.test(dm);
+      return { ...q, message: `${name}, ${small ? dm.charAt(0).toLocaleLowerCase('de') : dm.charAt(0)}${dm.slice(1)}` };
+    }
     const en = lang === 'en';
     const msg = en ? tx(q.message) : q.message;
     const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);

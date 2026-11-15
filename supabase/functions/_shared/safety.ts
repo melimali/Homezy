@@ -42,3 +42,9 @@ const REPLY_ES =
   'No estás solo y este sentimiento puede pasar. Aquí estaré cuando estés listo.';
 
 export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'es' ? REPLY_ES : REPLY_TR);
+const REPLY_DE =
+  'Danke, dass du es mir sagst, ich bin bei dir 💛 Ich bin eine KI, und es gibt echte Menschen, die dir dabei helfen können. ' +
+  'Wenn du dir etwas antun könntest, ruf bitte jetzt den Notruf an (112 in Deutschland, Österreich und der EU) oder die Telefonseelsorge (0800 111 0 111, kostenlos und rund um die Uhr) und sprich mit jemandem, dem du vertraust, oder mit einer Fachperson. ' +
+  'Du bist nicht allein, und dieses Gefühl kann vorübergehen. Ich bin hier, wenn du bereit bist.';
+
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'de' ? REPLY_DE : REPLY_TR);

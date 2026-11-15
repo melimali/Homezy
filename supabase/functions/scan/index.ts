@@ -31,6 +31,8 @@ const FR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): t
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'fr' ? prompt + FR_RULE : prompt);
 const ES_RULE = EN_RULE.replace(/English/g, 'Spanish').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leche", "media botella", "Camisa de lino azul marino")');
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'es' ? prompt + ES_RULE : prompt);
+const DE_RULE = EN_RULE.replace(/in English/, 'in German').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural German (e.g. "Milch", "eine halbe Flasche", "Marineblaues Leinenhemd")');
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'de' ? prompt + DE_RULE : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

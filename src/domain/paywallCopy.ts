@@ -5,6 +5,7 @@ import { LIMITS } from './premium';
  * Dil: 'tr' Türkçe, diğer her şey İngilizce (src/i18n/i18n.ts ile aynı kural).
  */
 export type PaywallLang = 'tr' | 'en' | 'fr';
+export type PaywallLang = 'tr' | 'en' | 'de';
 
 const P = LIMITS.premium;
 const F = LIMITS.free;
@@ -108,5 +109,37 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy Premium (${plan}) : ${price}/${unit}. ${trial ? `Gratuit les ${trial} premiers jours ; si tu ne résilies pas avant la fin de l’essai, ${price}/${unit} sera prélevé. ` : ''}Le paiement est débité sur ton compte Apple ID / Google Play à la confirmation de l’achat. L’abonnement se renouvelle automatiquement chaque ${unit}, sauf résiliation au moins 24 heures avant la fin de la période en cours. Gère ou résilie ton abonnement dans les réglages d’abonnement de l’App Store / Google Play. Nous ne recevons jamais les données de ta carte. En t’abonnant, tu acceptes les Conditions d’utilisation (y compris le CLUF standard d’Apple) et la Politique de confidentialité.`,
     planY: 'Annuel', planM: 'Mensuel',
+  de: {
+    eyebrow: 'VON MOKA',
+    title: 'Ich möchte dich jeden Tag hier sehen',
+    sub: 'Deine Hausarbeit bleibt für immer kostenlos. Aber mit Premium kann ich wirklich mit dir reden: Was auch immer du heute brauchst, wir lösen es zusammen ☕',
+    chatTitle: 'Moka bleibt an dir dran',
+    chatSub: `Schreib mir bis zu ${P.chats} Nachrichten am Tag. Ich kenne dich, ich erinnere mich an gestern, und wir planen heute zusammen.`,
+    chat: [
+      { who: 'moka', text: 'Guten Morgen! Gestern hast du das Bad halb fertig gelassen. Hast du heute 10 Minuten? Machen wir es zusammen fertig 🧽' },
+      { who: 'me', text: 'Heute Abend kommt Besuch, das schaffe ich nicht…' },
+      { who: 'moka', text: 'Ganz ruhig. Ich habe 3 kleine Aufgaben ausgesucht: Wohnzimmer, Küchenarbeitsplatte, Flur. Sie stehen schon in deinem Kalender. Sag mir Bescheid, wenn eine fertig ist, dann hake ich sie ab ✓' },
+    ],
+    lockedTitle: 'Was gerade gesperrt ist',
+    locked: [
+      { emoji: '💬', title: 'Chat mit Moka', text: `${P.chats} Nachrichten am Tag. Füge Aufgaben per Chat hinzu, hak Erledigtes ab, hinterlass Notizen im Kalender.` },
+      { emoji: '📸', title: 'Mehr Foto-Scans', text: `${P.scans} Scans am Tag (kostenlos: ${F.scans} pro Woche): Kleiderschrank, Kühlschrank, Outfits.` },
+      { emoji: '🧊', title: 'Serien-Freeze', text: `Schütze deine Serie ${P.freezes}-mal im Monat, auch wenn du krank oder unterwegs bist.` },
+      { emoji: '⭐', title: `${String(P.mult).replace('.', ',')}-fache Punkte`, text: 'Mehr Punkte für jede Aufgabe, dein Zuhause wächst schneller.' },
+      { emoji: '🏡', title: '2. Etage, Themes, 5 Zuhause', text: 'Richte dich ein, wie du willst; das Haus deiner Oma darf auch auf deiner Liste stehen.' },
+      { emoji: '👨‍👩‍👧', title: 'Familienfreigabe', text: 'Erledigt Aufgaben gemeinsam und seht, wer was gemacht hat.' },
+      { emoji: '🚫', title: 'Keine Werbung', text: 'Nur du, dein Zuhause und ich.' },
+    ],
+    plansTitle: 'Wähle deinen Tarif',
+    trialLine: (d: number) => `${d} Tage kostenlos testen. Jederzeit kündbar.`,
+    ctaTrial: (d: number) => `${d} Tage kostenlos starten`,
+    ctaBuy: (price: string, unit: string) => `Premium holen · ${price}/${unit}`,
+    ctaNote: 'Kündigst du vor Ende der Testphase, wird nichts berechnet.',
+    compare: 'Kostenlos vs. Premium',
+    skip: 'Vorerst kostenlos weitermachen',
+    unitY: 'Jahr', unitM: 'Monat',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Die ersten ${trial} Tage sind kostenlos; wenn du nicht vor Ende der Testphase kündigst, werden ${price}/${unit} berechnet. ` : ''}Die Zahlung wird bei Kaufbestätigung deinem Apple-ID- bzw. Google-Play-Konto belastet. Das Abo verlängert sich automatisch jeden ${unit}, es sei denn, es wird mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt. Verwaltung und Kündigung in den Abo-Einstellungen von App Store / Google Play. Deine Kartendaten erhalten wir nie. Mit dem Abschluss akzeptierst du die Nutzungsbedingungen (einschließlich Apples Standard-EULA) und die Datenschutzerklärung.`,
+    planY: 'Jährlich', planM: 'Monatlich',
   },
 } as const;

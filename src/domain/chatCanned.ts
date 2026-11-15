@@ -8,6 +8,7 @@ type Kind = 'greet' | 'thanks' | 'bye';
 type Lang = 'tr' | 'en' | 'fr';
 type Lang = 'tr' | 'en' | 'de';
 type Lang = 'tr' | 'en' | 'ja';
+type Lang = 'tr' | 'en' | 'ar';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
@@ -32,6 +33,10 @@ const WORDS: Record<Lang, Record<Kind, string[]>> = {
     greet: ['hi', 'hello', 'hey', 'hey moka', 'hi moka', 'こんにちは', 'こんにちわ', 'こんばんは', 'おはよう', 'おはようございます', 'やあ', 'もしもし', 'モカ', 'こんにちは モカ', 'おはよう モカ'],
     thanks: ['ありがとう', 'ありがとうございます', 'ありがとう モカ', 'どうも', 'サンキュー', 'thx', 'thanks', 'ありがと', '感謝'],
     bye: ['バイバイ', 'じゃあね', 'またね', 'さようなら', 'おやすみ', 'おやすみなさい', 'また明日', 'bye', 'ばいばい'],
+  ar: {
+    greet: ['مرحبا', 'مرحبا موكا', 'اهلا', 'اهلا موكا', 'السلام عليكم', 'سلام', 'هلا', 'هاي', 'صباح الخير', 'مساء الخير', 'كيف حالك', 'كيفك', 'شلونك'],
+    thanks: ['شكرا', 'شكرا موكا', 'شكرا لك', 'شكرا جزيلا', 'مشكور', 'يعطيك العافية', 'تسلم'],
+    bye: ['وداعا', 'مع السلامة', 'الى اللقاء', 'تصبح على خير', 'تصبحين على خير', 'اراك لاحقا', 'باي'],
   },
 };
 
@@ -41,7 +46,9 @@ const norm = (s: string) =>
     .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİ]/g, 'i').replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/['’]/g, '')
-    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+    .replace(/[^a-z0-9\u0621-\u064A ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -50,6 +57,10 @@ function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
     if (ctx.late > 0) return `Salut ! ☕ ${ctx.late} tâche${ctx.late > 1 ? 's sont' : ' est'} en retard. On en choisit une et on s’y met ensemble ? 💛`;
     if (ctx.due > 0) return `Salut ! ☕ Tu as ${ctx.due} tâche${ctx.due > 1 ? 's' : ''} aujourd’hui. Quand tu es prêt·e, on y va 💛`;
     return ['Salut ! ☕ Rien ne t’attend aujourd’hui, bravo !', 'Coucou ! ☕ Tout est calme à la maison. Tu as besoin de quelque chose ?'][n % 2];
+  if (lang === 'ar') {
+    if (ctx.late > 0) return `مرحبًا! ☕ لديك ${ctx.late} مهام متأخرة. هل نختار واحدة وننجزها معًا؟ 💛`;
+    if (ctx.due > 0) return `مرحبًا! ☕ لديك ${ctx.due} مهام اليوم. أنا جاهزة متى شئت 💛`;
+    return ['مرحبًا! ☕ لا شيء ينتظرك اليوم، أحسنت!', 'أهلًا! ☕ المنزل هادئ. هل تحتاج شيئًا؟'][n % 2];
   }
   if (lang === 'en') {
     if (ctx.late > 0) return `Hi! ☕ ${ctx.late} task${ctx.late > 1 ? 's are' : ' is'} running late. Want to pick one and tackle it together? 💛`;
@@ -88,6 +99,9 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   ja: {
     thanks: ['どういたしまして！☕', 'いつでもどうぞ 💛', 'お役に立てて嬉しいです！コーヒーブレイクも忘れずに ☕'],
     bye: ['またね！☕', 'ゆっくり休んでね、明日もここにいるよ 💛', 'いったんバイバイ！☕'],
+  ar: {
+    thanks: ['عفوًا! ☕', 'في أي وقت 💛', 'يسعدني ذلك! ولا تنسَ استراحة القهوة ☕'],
+    bye: ['إلى اللقاء! ☕', 'استرح جيدًا، سأكون هنا غدًا 💛', 'مع السلامة! ☕'],
   },
 };
 

@@ -11,6 +11,7 @@ const CRISIS = [
   /suicid/, /kill\s+my\s*self/, /end\s+my\s+life/, /take\s+my\s+(own\s+)?life/, /want\s+to\s+die/, /wanna\s+die/, /don'?t\s+want\s+to\s+(live|be\s+alive)/,
   /quiero\s+morir/, /quitarme\s+la\s+vida/, /acabar\s+con\s+mi\s+vida/, /no\s+quiero\s+vivir/, /hacerme\s+da[ñn]o/, /matarme/, /autolesi/, /mejor\s+(estar[ií]a\s+)?muert/,
   /죽고\s*싶/, /자살/, /자해/, /목숨을?\s*끊/, /살고\s*싶지\s*않/, /죽어버리/, /생을\s*마감/,
+  /انتحار/, /[اأإ]نتحر/, /[اأإ]قتل\s+نفسي/, /[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]موت/, /لا\s+[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]عيش/, /[اأإ]ؤذي\s+نفسي/, /[اأإ]يذاء\s+نفسي/, /[اأإ]نهي\s+حياتي/,
   /self[\s-]?harm/, /hurt\s+my\s*self/, /cut\s+my\s*self/, /better\s+off\s+(dead|without\s+me)/,
 ];
 
@@ -61,3 +62,9 @@ const REPLY_KO =
   '당신은 혼자가 아니고, 이 마음은 지나갈 수 있어요. 준비되면 언제든 여기 있을게요.';
 
 export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'ko' ? REPLY_KO : REPLY_TR);
+const REPLY_AR =
+  'شكرًا لأنك أخبرتني، أنا معك 💛 أنا ذكاء اصطناعي، وهناك أشخاص حقيقيون يستطيعون مساعدتك في هذا. ' +
+  'إذا كنت تفكّر في إيذاء نفسك، فاتصل الآن برقم الطوارئ في بلدك (112 في تركيا والاتحاد الأوروبي، 988 في الولايات المتحدة) وتحدّث مع شخص تثق به أو مع مختص. ' +
+  'لست وحدك، وهذا الشعور يمكن أن يزول. سأكون هنا متى كنت مستعدًا.';
+
+export const crisisReply = (lang: unknown) => (lang === 'ar' ? REPLY_AR : lang === 'en' ? REPLY_EN : REPLY_TR);

@@ -147,7 +147,7 @@ function PlanImpl({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd, o
     <View style={[styles.wrap, { backgroundColor: c.surface }]}>
       <View
         onLayout={e => setWidth(e.nativeEvent.layout.width)}
-        style={{ width: '100%', aspectRatio: cols / rows }}
+        style={{ width: '100%', aspectRatio: cols / rows, direction: 'ltr' }}
         // Çizim sadece araç (oda/silgi) seçiliyken; yoksa sayfa normal kayar.
         {...(edit && activeId ? responder.panHandlers : null)}
       >

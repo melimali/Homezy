@@ -97,6 +97,8 @@ function withLang(sys: string, lang: unknown) {
     const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in Japanese. ALWAYS reply in natural, warm, friendly Japanese (polite but casual, です・ます調 softened with a cozy tone), in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
   if (lang === 'ko') {
     const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in Korean. ALWAYS reply in natural, warm Korean (polite 해요체), in every message, even if the earlier messages, room names or task names are Turkish or English. Only switch language if the user explicitly asks for another one.';
+  if (lang === 'ar') {
+    const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in Arabic. ALWAYS reply in clear, warm Modern Standard Arabic (الفصحى المبسّطة), in every message, even if the earlier messages, room names or task names are Turkish or English. Only switch language if the user explicitly asks for another one.';
     return `${rule}\n\n${sys}\n\n${rule}`;
   }
   const rule = 'DİL KURALI: Varsayılan dil Türkçe. Kullanıcı açıkça başka bir dilde yazıyorsa ya da o dili isterse o dilde cevap ver.';

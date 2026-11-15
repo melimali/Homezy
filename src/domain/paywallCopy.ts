@@ -8,6 +8,7 @@ export type PaywallLang = 'tr' | 'en' | 'fr';
 export type PaywallLang = 'tr' | 'en' | 'de';
 export type PaywallLang = 'tr' | 'en' | 'ja';
 export type PaywallLang = 'tr' | 'en' | 'ko';
+export type PaywallLang = 'tr' | 'en' | 'ar';
 
 const P = LIMITS.premium;
 const F = LIMITS.free;
@@ -207,5 +208,37 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy 프리미엄(${plan}): ${price}/${unit}. ${trial ? `처음 ${trial}일은 무료이며, 체험 종료 전에 취소하지 않으면 ${price}/${unit}이(가) 청구됩니다. ` : ''}결제는 구매 확인 시 Apple ID / Google Play 계정으로 청구됩니다. 현재 기간이 끝나기 최소 24시간 전에 취소하지 않으면 구독은 ${unit}마다 자동으로 갱신됩니다. 관리 및 취소는 App Store / Google Play 구독 설정에서 할 수 있습니다. 카드 정보는 저희에게 전달되지 않습니다. 구독하면 이용약관(Apple 표준 EULA 포함)과 개인정보 처리방침에 동의하는 것으로 간주됩니다.`,
     planY: '연간', planM: '월간',
+  ar: {
+    eyebrow: 'من موكا إليك',
+    title: 'أريد أن أراك هنا كل يوم',
+    sub: 'ستبقى مهام المنزل مجانية دائمًا. لكن مع بريميوم أستطيع أن أتحدث معك حقًا: مهما احتجت اليوم، نحلّه معًا ☕',
+    chatTitle: 'موكا تتابعك',
+    chatSub: `تحدّث معي حتى ${P.chats} رسالة في اليوم. أعرفك، وأتذكّر الأمس، ونخطّط لليوم معًا.`,
+    chat: [
+      { who: 'moka', text: 'صباح الخير! تركتَ الحمّام نصف منجز أمس. هل لديك 10 دقائق اليوم؟ لننهِه معًا 🧽' },
+      { who: 'me', text: 'سيأتي ضيوف الليلة، لن أستطيع إنهاءه…' },
+      { who: 'moka', text: 'اطمئن. اخترتُ لك 3 مهام صغيرة: الصالون، سطح المطبخ، المدخل. أضفتها إلى تقويمك. أخبرني عند إنهاء كل واحدة وسأضع علامة ✓' },
+    ],
+    lockedTitle: 'ما هو مقفل الآن',
+    locked: [
+      { emoji: '💬', title: 'الدردشة مع موكا', text: `${P.chats} رسالة في اليوم. أضف مهامّ من الدردشة، وعلّم ما أُنجز، وأضف ملاحظات إلى التقويم.` },
+      { emoji: '📸', title: 'مسح صور أكثر', text: `${P.scans} عمليات مسح في اليوم (المجاني: ${F.scans} في الأسبوع): الخزانة والثلاجة والإطلالات.` },
+      { emoji: '🧊', title: 'تجميد السلسلة', text: `احمِ سلسلتك ${P.freezes} مرات في الشهر، حتى لو كنت مريضًا أو مسافرًا.` },
+      { emoji: '⭐', title: `نقاط ×${P.mult}`, text: 'نقاط أكثر في كل مهمة، فيكبر منزلك أسرع.' },
+      { emoji: '🏡', title: 'الطابق الثاني والسمات و5 منازل', text: 'زيّن منزلك كما تحب، وأبقِ بيت الجدة في قائمتك أيضًا.' },
+      { emoji: '👨‍👩‍👧', title: 'مشاركة العائلة', text: 'أنجزوا المهام معًا وانظروا من فعل ماذا.' },
+      { emoji: '🚫', title: 'بلا إعلانات', text: 'أنت والمنزل وأنا فقط.' },
+    ],
+    plansTitle: 'اختر خطتك',
+    trialLine: (d: number) => `جرّب مجانًا لمدة ${d} أيام. ألغِ في أي وقت.`,
+    ctaTrial: (d: number) => `ابدأ ${d} أيام مجانًا`,
+    ctaBuy: (price: string, unit: string) => `اشترك في بريميوم · ${price}/${unit}`,
+    ctaNote: 'إذا ألغيت قبل انتهاء التجربة فلن يُخصم منك شيء.',
+    compare: 'المجاني مقابل بريميوم',
+    skip: 'المتابعة مجانًا الآن',
+    unitY: 'سنة', unitM: 'شهر',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `مجانًا لأول ${trial} أيام؛ إذا لم تلغِ قبل انتهاء التجربة فسيُخصم ${price}/${unit}. ` : ''}يُخصم المبلغ من حساب Apple ID / Google Play عند تأكيد الشراء. يتجدد الاشتراك تلقائيًا كل ${unit} ما لم يُلغَ قبل نهاية الفترة الحالية بـ 24 ساعة على الأقل. للإدارة أو الإلغاء: إعدادات الاشتراك في App Store / Google Play. لا تصلنا بيانات بطاقتك أبدًا. بالاشتراك فإنك توافق على شروط الاستخدام (بما فيها اتفاقية EULA القياسية من Apple) وسياسة الخصوصية.`,
+    planY: 'سنوي', planM: 'شهري',
   },
 } as const;

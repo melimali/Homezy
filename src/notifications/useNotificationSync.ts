@@ -10,7 +10,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 
 import { DONE, feedbackFor, handleTaskAction, setLiveStore } from './actions';
-import { getNotifications, rescheduleMorningSummaries } from './schedule';
+import { getNotifications, refreshChannels, rescheduleMorningSummaries } from './schedule';
 
 /**
  * Veri değiştikçe sabah özetlerini yeniler, bildirime dokununca ilgili ekranı açar ve
@@ -37,6 +37,13 @@ export function useNotificationSync() {
     });
     return () => setLiveStore(null);
   }, [update, toast]);
+
+  // Android kanal adları açılışta ve dil değişince yeni dille yazılır (izin ya da ev kurulumu beklemeden).
+  const language = state.settings.language;
+  useEffect(() => {
+    const t = setTimeout(() => void refreshChannels(), 400);
+    return () => clearTimeout(t);
+  }, [language]);
 
   useEffect(() => {
     if (!getNotifications()) return;

@@ -104,6 +104,12 @@ async function ensureChannel(N: NotificationsModule) {
   }
 }
 
+/** Android kanal adlarını geçerli dille yeniden yazar (aynı kimlik; ad güncellenir, önem derecesi değişmez). */
+export async function refreshChannels() {
+  const N = getNotifications();
+  if (N) await ensureChannel(N).catch(e => console.warn('Homezy: bildirim kanalları güncellenemedi', e));
+}
+
 export async function getPermission(): Promise<'granted' | 'denied' | 'undetermined'> {
   const N = getNotifications();
   if (!N) return 'denied';

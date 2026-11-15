@@ -9,6 +9,7 @@ const CRISIS = [
   /hayat[ıi]ma\s+son/, /hayata\s+veda/, /bile[ğg]imi\s+kes/, /bileklerimi\s+kes/, /(ölsem|olsem)\s+(daha\s+iyi|keşke)/,
   /ya[sş]ama(m|y[ıi]|k)?\s+(art[ıi]k\s+)?anlams[ıi]z/, /kendimi\s+(zarar|incit)/,
   /suicid/, /kill\s+my\s*self/, /end\s+my\s+life/, /take\s+my\s+(own\s+)?life/, /want\s+to\s+die/, /wanna\s+die/, /don'?t\s+want\s+to\s+(live|be\s+alive)/,
+  /انتحار/, /[اأإ]نتحر/, /[اأإ]قتل\s+نفسي/, /[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]موت/, /لا\s+[اأإ]ريد\s+([اأإ]ن\s+)?[اأإ]عيش/, /[اأإ]ؤذي\s+نفسي/, /[اأإ]يذاء\s+نفسي/, /[اأإ]نهي\s+حياتي/,
   /self[\s-]?harm/, /hurt\s+my\s*self/, /cut\s+my\s*self/, /better\s+off\s+(dead|without\s+me)/,
 ];
 
@@ -29,4 +30,9 @@ const REPLY_EN =
   'If you might hurt yourself, please call your local emergency number right now (112 in Turkey and the EU, 988 in the US) and talk to someone you trust or a professional. ' +
   'You are not alone, and this feeling can pass. I\'ll be here whenever you\'re ready.';
 
-export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : REPLY_TR);
+const REPLY_AR =
+  'شكرًا لأنك أخبرتني، أنا معك 💛 أنا ذكاء اصطناعي، وهناك أشخاص حقيقيون يستطيعون مساعدتك في هذا. ' +
+  'إذا كنت تفكّر في إيذاء نفسك، فاتصل الآن برقم الطوارئ في بلدك (112 في تركيا والاتحاد الأوروبي، 988 في الولايات المتحدة) وتحدّث مع شخص تثق به أو مع مختص. ' +
+  'لست وحدك، وهذا الشعور يمكن أن يزول. سأكون هنا متى كنت مستعدًا.';
+
+export const crisisReply = (lang: unknown) => (lang === 'ar' ? REPLY_AR : lang === 'en' ? REPLY_EN : REPLY_TR);

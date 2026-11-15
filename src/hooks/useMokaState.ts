@@ -33,6 +33,7 @@ export function useMokaState(roomId?: string | null): MokaPayload & { status: Mo
     if (!name || name === 'Misafir' || day % 3 !== 0 || !q.message) return q;
     // Adla birleştirmeden önce çevrilir; yoksa "Melih, ev bekler..." bütün cümle olarak eşleşmez.
     const en = lang === 'en';
+    if (lang === 'ar') return { ...q, message: `${name}، ${tx(q.message)}` };
     const msg = en ? tx(q.message) : q.message;
     const keepCase = en && /^(I\b|[A-Z]{2})/.test(msg);
     const first = keepCase ? msg.charAt(0) : msg.charAt(0).toLocaleLowerCase(en ? 'en' : 'tr');

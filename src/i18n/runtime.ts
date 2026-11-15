@@ -4,9 +4,10 @@
  * Anahtarda `{}` değişken yerini tutar: 'Tümü ({})' → 'All ({})'.
  * Sözlükte olmayan metin olduğu gibi (Türkçe) görünür.
  */
+import { AR } from './ar';
 import { EN } from './en';
 
-export type AppLang = 'tr' | 'en';
+export type AppLang = 'tr' | 'en' | 'ar';
 let LANG: AppLang = deviceLang();
 const listeners = new Set<() => void>();
 
@@ -14,7 +15,8 @@ const listeners = new Set<() => void>();
 export function deviceLang(): AppLang {
   try {
     const loc = Intl.DateTimeFormat().resolvedOptions().locale || 'tr';
-    return loc.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    const l = loc.toLowerCase();
+    return l.startsWith('tr') ? 'tr' : l.startsWith('ar') ? 'ar' : 'en';
   } catch {
     return 'tr';
   }
@@ -22,17 +24,20 @@ export function deviceLang(): AppLang {
 
 /** Ayardaki dil kodunu (tr, en ya da başka) çalışan dile çevirir: Türkçe dışı her şey İngilizce. */
 export function setLang(code: string | undefined) {
-  const next: AppLang = !code || code === 'tr' ? 'tr' : 'en';
+  const next: AppLang = !code || code === 'tr' ? 'tr' : code === 'ar' ? 'ar' : 'en';
   if (next === LANG) return;
   LANG = next;
+  if (next !== 'tr') loadTables(dictFor(next));
   cache.clear();
   listeners.forEach(l => l());
 }
 export const getLang = () => LANG;
-export const isEn = () => LANG === 'en';
+/** Türkçe dışı (İngilizce ve Arapça): satır içi metinlerde İngilizce yedek kullanılır. */
+export const isEn = () => LANG !== 'tr';
+export const isAr = () => LANG === 'ar';
 /** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
-export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
-export const dateLocale = () => (LANG === 'en' ? 'en-US' : 'tr-TR');
+export const tlText = (n: number) => (LANG === 'ar' ? `${Math.max(1, Math.round(n / 40))} $` : LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
+export const dateLocale = () => (LANG === 'ar' ? 'ar-u-nu-latn' : LANG === 'en' ? 'en-US' : 'tr-TR');
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);
   return () => void listeners.delete(fn);
@@ -54,7 +59,12 @@ const split = (s: string) => {
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
 const patterns: { re: RegExp; out: string; lit: number }[] = [];
-for (const [k0, v0] of Object.entries(EN)) {
+/** Geçerli dilin sözlüğünü kurar. Arapça eksik anahtarlarda İngilizceye düşer. */
+function loadTables(dict: Record<string, string>) {
+exact.clear();
+canon.clear();
+patterns.length = 0;
+for (const [k0, v0] of Object.entries(dict)) {
   // Baştaki/sondaki boşluk eşleşmeyi bozmasın: çeviri çekirdek metin üzerinden aranır.
   const k = k0.trim() || k0;
   const v = k === k0 ? v0 : v0.trim();
@@ -79,6 +89,9 @@ for (const [k0, v0] of Object.entries(EN)) {
 }
 // Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
 patterns.sort((a, b) => b.lit - a.lit);
+}
+const dictFor = (l: AppLang) => (l === 'ar' ? { ...EN, ...AR } : EN);
+loadTables(dictFor(LANG));
 
 const cache = new Map<string, string>();
 
@@ -141,7 +154,7 @@ function translate(s: string, depth = 0): string {
 
 /** Metni geçerli dile çevirir. Türkçe iken olduğu gibi döner. */
 export function tx<T>(s: T): T {
-  if (LANG !== 'en' || typeof s !== 'string') return s;
+  if (LANG === 'tr' || typeof s !== 'string') return s;
   const hit = cache.get(s);
   if (hit !== undefined) return hit as T;
   // İngilizcede yüzde sayıdan sonra yazılır: %50 → 50%.

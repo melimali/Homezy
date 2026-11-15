@@ -33,7 +33,7 @@ const native = Platform.OS !== 'web';
 
 type Copy = { eyebrow: string; title: string; text: string; /** Polaroid alt yazı şeridi. */ caption: string };
 type Page = { tr: Copy; en: Copy; scene: IntroScene; tint: (c: Colors) => string; deco: DecoKind };
-type Lang = 'tr' | 'en';
+type Lang = 'tr' | 'en' | 'ar';
 
 /**
  * Polaroid sahnesi: sabit arka plan + ayrı Moka çıkartması. Konum arka plan RESMİNE göre
@@ -101,6 +101,15 @@ const PAGES: Page[] = [
   },
 ];
 
+// Arapça metinler (sayfa sırasıyla).
+const AR_COPY: Copy[] = [
+  { eyebrow: 'لنتعارف', title: 'مرحبًا، أنا موكا', text: 'أقسّم أعمال المنزل إلى خطوات صغيرة وسهلة. أنت تفعل القليل كل يوم، ونتدبّر الباقي معًا.', caption: 'هل أنت مستعد؟' },
+  { eyebrow: 'الخطة', title: 'ارسم منزلك', text: 'ضع غرفك بلمسات قليلة. تتجهّز مهام كل غرفة تلقائيًا.', caption: 'لنرسم الخطة أولًا' },
+  { eyebrow: 'كل يوم', title: 'بضع مهام في اليوم', text: 'شاهد ما عليك اليوم في قائمة واحدة وعلّم ما أنجزته. الخطوات الصغيرة تتحوّل مع الوقت إلى عادة.', caption: 'المكنسة جاهزة' },
+  { eyebrow: 'منزلك', title: 'منزلك يكبر معك', text: 'كلما واظبت أُضيفت طوابق جديدة إلى منزلك. وإن انقطعت تراكم الغبار، وحين تعود يلمع من جديد.', caption: 'واو، كم كبر!' },
+  { eyebrow: 'الحديقة', title: 'حديقتك تزهر', text: 'كل مهمة تنجزها تزرع زهرة جديدة في حديقتك. وكلما واظبت ازدادت ألوانها.', caption: 'لنسقِها معًا' },
+  { eyebrow: 'لأجلك', title: 'جاء دورك', text: 'حين يستقر المنزل، خصّص وقتًا للرياضة واليوميات والهدوء. الانضباط يبدأ في البيت ثم يمتد إلى كل شيء.', caption: 'أنت مهم أيضًا' },
+];
 
 function SceneView({ scene, w, h }: { scene: IntroScene; w: number; h: number }) {
   const src = Image.resolveAssetSource(scene.background);
@@ -120,6 +129,7 @@ function SceneView({ scene, w, h }: { scene: IntroScene; w: number; h: number })
 const UI = {
   tr: { skip: 'Atla', next: 'Devam', start: 'Hadi başlayalım', page: 'Sayfa', hintStart: 'Hesap ekranına geçer', hintNext: 'Sonraki sayfaya geçer', poke: 'Moka’ya dokun' },
   en: { skip: 'Skip', next: 'Continue', start: 'Let’s begin', page: 'Page', hintStart: 'Opens the account screen', hintNext: 'Goes to the next page', poke: 'Tap Moka' },
+  ar: { skip: 'تخطّي', next: 'متابعة', start: 'هيا نبدأ', page: 'صفحة', hintStart: 'ينتقل إلى شاشة الحساب', hintNext: 'ينتقل إلى الصفحة التالية', poke: 'المس موكا' },
 };
 
 /** İlk açılış: yana kaydırılan, Moka sahneli tanıtım. Her zaman krem (açık) temada. */
@@ -137,12 +147,12 @@ function TanitimInner() {
   const { finishIntro } = useAuth();
   const { state: appState, update } = useStore();
   const code = appState.settings.language;
-  // i18n/runtime.setLang ile aynı kural: ayar yoksa ya da tr ise Türkçe, başka her şey İngilizce.
-  const lang: Lang = !code || code === 'tr' ? 'tr' : 'en';
+  // i18n/runtime.setLang ile aynı kural: ayar yoksa ya da tr ise Türkçe, ar ise Arapça, başka her şey İngilizce.
+  const lang: Lang = !code || code === 'tr' ? 'tr' : code === 'ar' ? 'ar' : 'en';
   const [switching, setSwitching] = useState(false);
   const langTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => langTimers.current.forEach(clearTimeout), []);
-  const pickLang = (l: 'tr' | 'en') => {
+  const pickLang = (l: Lang) => {
     if (l === lang || switching) return;
     setSwitching(true);
     // Önce yükleme ekranı çizilsin, sonra dil değişsin; çeviri oturunca kapat.
@@ -229,8 +239,8 @@ function TanitimInner() {
       {/* Üst: logo ve "Atla" */}
       <View pointerEvents="box-none" style={[st.top, { top: insets.top + 10 }]}>
         <View style={[st.langPill, { backgroundColor: c.surface }]} accessibilityRole="radiogroup">
-          {(['tr', 'en'] as const).map(l => (
-            <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
+          {(['tr', 'en', 'ar'] as const).map(l => (
+            <Pressable key={l} onPress={() => pickLang(l)} hitSlop={6} accessibilityRole="radio" accessibilityState={{ selected: lang === l }} accessibilityLabel={l === 'tr' ? 'Türkçe' : l === 'ar' ? 'العربية' : 'English'} style={[st.langOpt, lang === l && { backgroundColor: c.ink }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: lang === l ? c.bg : c.muted }}>{l.toUpperCase()}</Text>
             </Pressable>
           ))}
@@ -280,7 +290,7 @@ function TanitimInner() {
 }
 
 function PageView({ p: page, i, w, h, x, top, bottom, active, lang, c, onPoke }: { p: Page; lang: Lang; i: number; w: number; h: number; x: Animated.Value; top: number; bottom: number; active: boolean; c: Colors; onPoke: () => void }) {
-  const p = { ...page, ...page[lang] };
+  const p = { ...page, ...(lang === 'ar' ? AR_COPY[i] : page[lang]) };
   const r = [(i - 1) * w, i * w, (i + 1) * w];
   // Kaydırırken sahne metinden yavaş kayar (parallax) ve hafifçe döner; gelen sayfa büyüyerek belirir.
   const sceneX = x.interpolate({ inputRange: r, outputRange: [w * 0.35, 0, -w * 0.35], extrapolate: 'clamp' });
@@ -307,7 +317,7 @@ function PageView({ p: page, i, w, h, x, top, bottom, active, lang, c, onPoke }:
       </Animated.View>
 
       <Animated.View style={{ opacity: fade, transform: [{ translateY: textY }], width: Math.min(440, w - 48), marginTop: 22 }}>
-        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US')}</Text>
+        <Text style={[st.eyebrow, { color: c.warm }]}>{`${i + 1} / ${PAGES.length} · ${p.eyebrow}`.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : lang === 'ar' ? 'ar' : 'en-US')}</Text>
         <Text style={[st.title, { color: c.ink }]}>{p.title}</Text>
         <Text style={[st.text, { color: c.muted }]}>{p.text}</Text>
       </Animated.View>

@@ -5,7 +5,7 @@ import type { ChatCtx } from './chat';
  * verilir, sunucu çağrılmaz, günlük hak düşmez. Türkçe ve İngilizce ayrı listelerdir; uygulama diline göre biri seçilir.
  */
 type Kind = 'greet' | 'thanks' | 'bye';
-type Lang = 'tr' | 'en';
+type Lang = 'tr' | 'en' | 'ar';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
@@ -18,6 +18,11 @@ const WORDS: Record<Lang, Record<Kind, string[]>> = {
     thanks: ['thanks', 'thank you', 'thx', 'ty', 'thanks moka', 'thank you moka', 'many thanks'],
     bye: ['bye', 'goodbye', 'see you', 'see ya', 'good night', 'gn', 'later'],
   },
+  ar: {
+    greet: ['مرحبا', 'مرحبا موكا', 'اهلا', 'اهلا موكا', 'السلام عليكم', 'سلام', 'هلا', 'هاي', 'صباح الخير', 'مساء الخير', 'كيف حالك', 'كيفك', 'شلونك'],
+    thanks: ['شكرا', 'شكرا موكا', 'شكرا لك', 'شكرا جزيلا', 'مشكور', 'يعطيك العافية', 'تسلم'],
+    bye: ['وداعا', 'مع السلامة', 'الى اللقاء', 'تصبح على خير', 'تصبحين على خير', 'اراك لاحقا', 'باي'],
+  },
 };
 
 const norm = (s: string) =>
@@ -25,11 +30,18 @@ const norm = (s: string) =>
     .toLocaleLowerCase('tr')
     .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİ]/g, 'i').replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u')
     .replace(/['’]/g, '')
-    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+    .replace(/[^a-z0-9\u0621-\u064A ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
 function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
+  if (lang === 'ar') {
+    if (ctx.late > 0) return `مرحبًا! ☕ لديك ${ctx.late} مهام متأخرة. هل نختار واحدة وننجزها معًا؟ 💛`;
+    if (ctx.due > 0) return `مرحبًا! ☕ لديك ${ctx.due} مهام اليوم. أنا جاهزة متى شئت 💛`;
+    return ['مرحبًا! ☕ لا شيء ينتظرك اليوم، أحسنت!', 'أهلًا! ☕ المنزل هادئ. هل تحتاج شيئًا؟'][n % 2];
+  }
   if (lang === 'en') {
     if (ctx.late > 0) return `Hi! ☕ ${ctx.late} task${ctx.late > 1 ? 's are' : ' is'} running late. Want to pick one and tackle it together? 💛`;
     if (ctx.due > 0) return `Hi! ☕ You have ${ctx.due} task${ctx.due > 1 ? 's' : ''} today. Ready when you are 💛`;
@@ -48,6 +60,10 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   en: {
     thanks: ["You're welcome! ☕", 'Anytime 💛', "Happy to help! Don't forget a coffee break ☕"],
     bye: ['See you! ☕', "Rest well, I'll be here tomorrow 💛", 'Bye for now! ☕'],
+  },
+  ar: {
+    thanks: ['عفوًا! ☕', 'في أي وقت 💛', 'يسعدني ذلك! ولا تنسَ استراحة القهوة ☕'],
+    bye: ['إلى اللقاء! ☕', 'استرح جيدًا، سأكون هنا غدًا 💛', 'مع السلامة! ☕'],
   },
 };
 

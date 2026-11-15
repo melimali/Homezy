@@ -1,6 +1,7 @@
 import { AppState as RNAppState } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import { applyDirection } from '@/i18n/rtl';
 import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
 import { emptyState } from '@/domain/logic';
@@ -81,7 +82,10 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
 
   const langCode = state?.settings?.language;
   useEffect(() => {
-    if (langCode) setLang(langCode);
+    if (langCode) {
+      setLang(langCode);
+      applyDirection(langCode === 'ar');
+    }
   }, [langCode]);
 
   useEffect(() => {

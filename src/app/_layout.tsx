@@ -1,5 +1,6 @@
 import { initCrashReporting } from '@/lib/crash';
 import { installTranslationPatch } from '@/i18n/patch';
+import '@/i18n/rtl';
 import { Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';

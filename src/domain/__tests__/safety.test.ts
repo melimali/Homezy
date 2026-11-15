@@ -16,6 +16,8 @@ describe('kriz algılama', () => {
     'quiero morir',
     'ya no quiero vivir',
     'pienso en quitarme la vida',
+    '죽고 싶어',
+    '자살하고 싶다는 생각이 들어',
   ])('yakalar: %s', t => expect(isCrisis(t)).toBe(true));
 
   it.each(['mutfağı temizledim', 'yaşamak güzel, bugün 3 iş yaptım', 'bulaşık ölüm gibi yorucu', 'ne zaman ölçüm yapayım', 'add a task to kill the mold'])(
@@ -27,5 +29,6 @@ describe('kriz algılama', () => {
     expect(crisisReply('tr')).toContain('112');
     expect(crisisReply('en')).toContain('112');
     expect(crisisReply('es')).toContain('112');
+    expect(crisisReply('ko')).toContain('112');
   });
 });

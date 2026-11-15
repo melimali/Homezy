@@ -14,6 +14,7 @@ const ROWS: Row[] = [
   ['Kaydet', 'Save', 'Speichern', 'Guardar', 'Enregistrer', 'Salvar', '保存', '저장', 'حفظ'],
   ['Oda adı', 'Room name', 'Raumname', 'Nombre de la habitación', 'Nom de la pièce', 'Nome do cômodo', '部屋の名前', '방 이름', 'اسم الغرفة'],
   ['Oda adını değiştir', 'Rename room', 'Raum umbenennen', 'Renombrar habitación', 'Renommer la pièce', 'Renomear cômodo', '部屋の名前を変更', '방 이름 바꾸기', 'تغيير اسم الغرفة'],
+  ['Çeviri hatası mı gördün? Bize yaz, birlikte düzeltelim 💛', 'Spotted a translation mistake? Write to us and we’ll fix it together 💛', 'Einen Übersetzungsfehler entdeckt? Schreib uns, wir korrigieren ihn gemeinsam 💛', '¿Viste un error de traducción? Escríbenos y lo arreglamos juntos 💛', 'Une erreur de traduction ? Écris-nous, on la corrige ensemble 💛', 'Viu um erro de tradução? Escreva para nós e corrigimos juntos 💛', '翻訳のミスを見つけたら、ぜひ教えてください。いっしょに直しましょう 💛', '번역 오류를 발견하셨나요? 알려주세요, 함께 고쳐요 💛', 'هل لاحظت خطأً في الترجمة؟ راسلنا وسنصلحه معًا 💛'],
 ];
 
 export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';

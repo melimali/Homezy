@@ -4,7 +4,7 @@ import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
 import { MokaReact } from '@/components/MokaReact';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { BenTour, type TourStep } from '@/components/BenTour';
@@ -512,6 +512,10 @@ export default function Hesap() {
       <Sheet open={langOpen} onClose={() => setLangOpen(false)}>
         <View style={{ gap: 12, paddingVertical: 10 }}>
           <T v="h2">{t('selectLanguage')}</T>
+          <Pressable onPress={() => void Linking.openURL('mailto:info@themeikai.com')} accessibilityRole="link" accessibilityLabel="info@themeikai.com" style={{ gap: 2 }}>
+            <T v="small">{tx('Çeviri hatası mı gördün? Bize yaz, birlikte düzeltelim 💛')}</T>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi, textDecorationLine: 'underline' }}>info@themeikai.com</Text>
+          </Pressable>
           <View style={{ gap: 8 }}>
             {LANGUAGES.map(l => {
               const selected = (state.settings.language ?? 'tr') === l.code;

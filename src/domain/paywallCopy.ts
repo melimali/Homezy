@@ -6,6 +6,7 @@ import { LIMITS } from './premium';
  */
 export type PaywallLang = 'tr' | 'en' | 'fr';
 export type PaywallLang = 'tr' | 'en' | 'de';
+export type PaywallLang = 'tr' | 'en' | 'ja';
 
 const P = LIMITS.premium;
 const F = LIMITS.free;
@@ -141,5 +142,37 @@ export const PAYWALL_COPY = {
     legal: (plan: string, price: string, unit: string, trial: number) =>
       `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Die ersten ${trial} Tage sind kostenlos; wenn du nicht vor Ende der Testphase kündigst, werden ${price}/${unit} berechnet. ` : ''}Die Zahlung wird bei Kaufbestätigung deinem Apple-ID- bzw. Google-Play-Konto belastet. Das Abo verlängert sich automatisch jeden ${unit}, es sei denn, es wird mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt. Verwaltung und Kündigung in den Abo-Einstellungen von App Store / Google Play. Deine Kartendaten erhalten wir nie. Mit dem Abschluss akzeptierst du die Nutzungsbedingungen (einschließlich Apples Standard-EULA) und die Datenschutzerklärung.`,
     planY: 'Jährlich', planM: 'Monatlich',
+  ja: {
+    eyebrow: 'モカより',
+    title: '毎日あなたのそばにいたいな',
+    sub: 'おうちのタスクはずっと無料です。でもプレミアムなら、わたしとちゃんとおしゃべりできます。今日必要なことを、いっしょに解決しましょう ☕',
+    chatTitle: 'モカがあなたをサポート',
+    chatSub: `1日${P.chats}件までメッセージを送れます。あなたのことを知っていて、昨日のことも覚えていて、今日をいっしょに計画します。`,
+    chat: [
+      { who: 'moka', text: 'おはよう！昨日はお風呂掃除が途中だったね。今日10分ある？いっしょに終わらせよう 🧽' },
+      { who: 'me', text: '今夜お客さんが来るから、間に合わないかも…' },
+      { who: 'moka', text: '落ち着いて。小さなタスクを3つ選んだよ：リビング、キッチンのカウンター、玄関。カレンダーに入れておいたよ。終わったら教えてね、チェックしておくから ✓' },
+    ],
+    lockedTitle: '今ロックされている機能',
+    locked: [
+      { emoji: '💬', title: 'モカとおしゃべり', text: `1日${P.chats}件のメッセージ。チャットからタスクを追加したり、終わったものにチェックを入れたり、カレンダーにメモを残せます。` },
+      { emoji: '📸', title: '写真スキャンをもっと', text: `1日${P.scans}回スキャン（無料は週${F.scans}回）：クローゼット、冷蔵庫、コーデ。` },
+      { emoji: '🧊', title: 'ストリークフリーズ', text: `月に${P.freezes}回、ストリークを守れます。病気や外出中でも途切れません。` },
+      { emoji: '⭐', title: `ポイント${P.mult}倍`, text: 'どのタスクでもポイントがたくさん、おうちがもっと早く成長します。' },
+      { emoji: '🏡', title: '2階、テーマ、5つの家', text: '好きなようにおうちを飾れます。おばあちゃんの家もリストに入れておけます。' },
+      { emoji: '👨‍👩‍👧', title: 'ファミリー共有', text: 'いっしょにタスクをこなして、だれが何をしたか見られます。' },
+      { emoji: '🚫', title: '広告なし', text: 'あなたと、おうちと、わたしだけ。' },
+    ],
+    plansTitle: 'プランを選ぶ',
+    trialLine: (d: number) => `${d}日間無料でお試し。いつでも解約できます。`,
+    ctaTrial: (d: number) => `${d}日間無料で始める`,
+    ctaBuy: (price: string, unit: string) => `プレミアムを始める · ${price}/${unit}`,
+    ctaNote: 'お試し期間が終わる前に解約すれば、料金はかかりません。',
+    compare: '無料とプレミアムの比較',
+    skip: '今は無料で続ける',
+    unitY: '年', unitM: '月',
+    legal: (plan: string, price: string, unit: string, trial: number) =>
+      `Homezy プレミアム（${plan}）：${price}/${unit}。${trial ? `最初の${trial}日間は無料です。お試し期間が終了する前に解約しない場合、${price}/${unit}が請求されます。` : ''}お支払いは購入確定時にApple IDまたはGoogle Playのアカウントに請求されます。サブスクリプションは、現在の期間が終了する24時間前までに解約しない限り、毎${unit}自動的に更新されます。購入後は、Apple IDまたはGoogle Playのアカウント設定から管理・解約できます。`,
+    planY: '年額', planM: '月額',
   },
 } as const;

@@ -48,3 +48,9 @@ const REPLY_DE =
   'Du bist nicht allein, und dieses Gefühl kann vorübergehen. Ich bin hier, wenn du bereit bist.';
 
 export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'de' ? REPLY_DE : REPLY_TR);
+const REPLY_JA =
+  '話してくれてありがとう。そばにいるよ 💛 わたしはAIだけど、あなたを支えてくれる本当の人たちがいます。' +
+  '自分を傷つけてしまいそうなときは、今すぐ119番か、よりそいホットライン（0120-279-338、24時間・無料）に電話して、信頼できる人や専門家に話してください。' +
+  'あなたはひとりじゃないし、この気持ちは過ぎ去っていきます。準備ができたら、いつでもここにいるよ。';
+
+export const crisisReply = (lang: unknown) => (lang === 'en' ? REPLY_EN : lang === 'ja' ? REPLY_JA : REPLY_TR);

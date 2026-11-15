@@ -33,6 +33,8 @@ const ES_RULE = EN_RULE.replace(/English/g, 'Spanish').replace('(e.g. "Milk", "h
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'es' ? prompt + ES_RULE : prompt);
 const DE_RULE = EN_RULE.replace(/in English/, 'in German').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural German (e.g. "Milch", "eine halbe Flasche", "Marineblaues Leinenhemd")');
 const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'de' ? prompt + DE_RULE : prompt);
+const JA_RULE = EN_RULE.replace(/in English/, 'in Japanese').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural Japanese (e.g. "牛乳", "半分", "ネイビーのリネンシャツ")');
+const withLang = (prompt: string, lang: unknown) => (lang === 'en' ? prompt + EN_RULE : lang === 'ja' ? prompt + JA_RULE : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 

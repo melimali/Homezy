@@ -4,6 +4,7 @@ import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text, View,
 import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { isDe, isEn } from '@/i18n/runtime';
+import { isEn, isJa } from '@/i18n/runtime';
 import { brand, fonts } from '@/theme';
 
 /**
@@ -77,6 +78,7 @@ export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?
     <Animated.View style={[StyleSheet.absoluteFill, st.root, { backgroundColor: CREAM, opacity: lerp(v.out, 1, 0) }]}>
       <StatusBar style="dark" />
       <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel={isDe() ? 'Intro überspringen' : isEn() ? 'Skip intro' : 'Açılışı geç'}>
+      <Pressable style={st.fill} onPress={skip} accessibilityRole="button" accessibilityLabel={isJa() ? 'イントロをスキップ' : isEn() ? 'Skip intro' : 'Açılışı geç'}>
         <View style={st.center} pointerEvents="none">
           {/* Sıcak ışık */}
           <Animated.View
@@ -137,11 +139,13 @@ export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?
 
             <Animated.Text style={[st.sub, { opacity: v.sub, transform: [{ translateY: lerp(v.sub, 6, 0) }] }]}>
               {isDe() ? 'ZUHAUSE · ROUTINE · DU' : isEn() ? 'HOME · ROUTINE · YOU' : 'EV · RUTİN · SEN'}
+              {isJa() ? 'おうち · ルーティン · あなた' : isEn() ? 'HOME · ROUTINE · YOU' : 'EV · RUTİN · SEN'}
             </Animated.Text>
           </Animated.View>
         </View>
 
         <Text style={[st.skip, { color: brand.cocoa }]}>{isDe() ? 'Weiter' : isEn() ? 'Skip' : 'Geç'}</Text>
+        <Text style={[st.skip, { color: brand.cocoa }]}>{isJa() ? 'スキップ' : isEn() ? 'Skip' : 'Geç'}</Text>
       </Pressable>
     </Animated.View>
   );

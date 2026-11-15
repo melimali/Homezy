@@ -7,6 +7,7 @@ import type { ChatCtx } from './chat';
 type Kind = 'greet' | 'thanks' | 'bye';
 type Lang = 'tr' | 'en' | 'fr';
 type Lang = 'tr' | 'en' | 'de';
+type Lang = 'tr' | 'en' | 'ja';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
@@ -27,6 +28,10 @@ const WORDS: Record<Lang, Record<Kind, string[]>> = {
     greet: ['hi', 'hallo', 'hey', 'hey moka', 'hi moka', 'hallo moka', 'moin', 'servus', 'na', 'wie gehts', 'guten morgen', 'guten abend', 'guten tag'],
     thanks: ['danke', 'danke dir', 'danke schon', 'vielen dank', 'dankeschon', 'danke moka', 'thx', 'dankee'],
     bye: ['tschuss', 'tschau', 'ciao', 'bis spater', 'bis bald', 'bis morgen', 'gute nacht', 'gn', 'auf wiedersehen'],
+  ja: {
+    greet: ['hi', 'hello', 'hey', 'hey moka', 'hi moka', 'こんにちは', 'こんにちわ', 'こんばんは', 'おはよう', 'おはようございます', 'やあ', 'もしもし', 'モカ', 'こんにちは モカ', 'おはよう モカ'],
+    thanks: ['ありがとう', 'ありがとうございます', 'ありがとう モカ', 'どうも', 'サンキュー', 'thx', 'thanks', 'ありがと', '感謝'],
+    bye: ['バイバイ', 'じゃあね', 'またね', 'さようなら', 'おやすみ', 'おやすみなさい', 'また明日', 'bye', 'ばいばい'],
   },
 };
 
@@ -55,6 +60,10 @@ function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
     if (ctx.late > 0) return `Hi! ☕ ${ctx.late} ${ctx.late > 1 ? 'Aufgaben sind' : 'Aufgabe ist'} überfällig. Sollen wir uns eine aussuchen und sie zusammen angehen? 💛`;
     if (ctx.due > 0) return `Hi! ☕ Du hast heute ${ctx.due} ${ctx.due > 1 ? 'Aufgaben' : 'Aufgabe'}. Ich bin bereit, wenn du es bist 💛`;
     return ['Hi! ☕ Heute wartet nichts auf dich, gut gemacht!', 'Hallo! ☕ Zu Hause ist alles ruhig. Brauchst du etwas?'][n % 2];
+  if (lang === 'ja') {
+    if (ctx.late > 0) return `こんにちは！☕ 期限切れのタスクが${ctx.late}件あります。ひとつ選んで、いっしょに片付けましょう 💛`;
+    if (ctx.due > 0) return `こんにちは！☕ 今日のタスクは${ctx.due}件です。準備ができたら始めましょう 💛`;
+    return ['こんにちは！☕ 今日待っているタスクはありません。すごい！', 'やあ！☕ おうちは穏やかですね。何か手伝いましょうか？'][n % 2];
   }
   if (ctx.late > 0) return `Selam! ☕ ${ctx.late} işin gecikmiş durumda. Birini seçip birlikte halledelim mi? 💛`;
   if (ctx.due > 0) return `Selam! ☕ Bugün ${ctx.due} işin var. Hazırsan başlayalım 💛`;
@@ -76,6 +85,9 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   de: {
     thanks: ['Gern geschehen! ☕', 'Jederzeit 💛', 'Gern! Vergiss die Kaffeepause nicht ☕'],
     bye: ['Bis bald! ☕', 'Ruh dich gut aus, ich bin morgen wieder da 💛', 'Tschüss! ☕'],
+  ja: {
+    thanks: ['どういたしまして！☕', 'いつでもどうぞ 💛', 'お役に立てて嬉しいです！コーヒーブレイクも忘れずに ☕'],
+    bye: ['またね！☕', 'ゆっくり休んでね、明日もここにいるよ 💛', 'いったんバイバイ！☕'],
   },
 };
 

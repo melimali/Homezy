@@ -7,7 +7,7 @@ export const LANGUAGES: { code: Lang; label: string; flag: string; soon?: string
   { code: 'de', label: 'Deutsch', flag: '🇩🇪', soon: 'Demnächst' },
   { code: 'es', label: 'Español', flag: '🇪🇸', soon: 'Próximamente' },
   { code: 'fr', label: 'Français', flag: '🇫🇷', soon: 'Bientôt' },
-  { code: 'pt', label: 'Português', flag: '🇧🇷', soon: 'Em breve' },
+  { code: 'pt', label: 'Português', flag: '🇧🇷' },
   { code: 'ja', label: '日本語', flag: '🇯🇵', soon: '近日公開' },
   { code: 'ko', label: '한국어', flag: '🇰🇷', soon: '곧 출시' },
   { code: 'ar', label: 'العربية', flag: '🇸🇦', soon: 'قريبًا' },

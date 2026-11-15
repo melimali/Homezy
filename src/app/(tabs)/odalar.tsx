@@ -7,6 +7,7 @@ import { ROOM_EMOJI } from '@/domain/constants';
 import { homeScore } from '@/domain/logic';
 import { useNow } from '@/hooks/useNow';
 import { useTranslation } from '@/i18n/i18n';
+import { getUiLang } from '@/i18n/runtime';
 import { possessive, useName } from '@/profile/useName';
 import { useStore } from '@/store/AppStore';
 import { useColors } from '@/theme';
@@ -27,7 +28,7 @@ export default function Odalar() {
   return (
     <Screen header={false} tab tone="sage">
       <BackLink label="Ev" />
-      <TitleBar title={name ? (lang === 'en' ? `${name}'s Rooms` : `${possessive(name)} Odaları`) : 'Odalar'} sub={`Ev puanı %${score}`} right={<IconBtn icon={<GridIcon color={c.ink} />} label="Ev planını düzenle" onPress={() => router.push('/plan')} />} />
+      <TitleBar title={name ? (getUiLang() === 'pt' ? `Cômodos de ${name}` : lang === 'en' ? `${name}'s Rooms` : `${possessive(name)} Odaları`) : 'Odalar'} sub={`Ev puanı %${score}`} right={<IconBtn icon={<GridIcon color={c.ink} />} label="Ev planını düzenle" onPress={() => router.push('/plan')} />} />
       <Card>
         <SecHead title="Sadece kendi odam" />
         <T v="small">Evin diğer odalarını görmek istemezsen bir oda seç: işler, hatırlatmalar ve puan sadece o odaya göre olur. Kiralık, yurt ya da ailenle yaşıyorsan işine yarar.</T>

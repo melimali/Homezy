@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } fr
 
 import { Btn, Field, T } from '@/components/ui';
 import { useTranslation } from '@/i18n/i18n';
+import { getUiLang } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
@@ -10,7 +11,8 @@ import { radius, useColors } from '@/theme';
 export function RenameRoom({ id, onClose }: { id: string | null; onClose: () => void }) {
   const c = useColors();
   const { lang } = useTranslation();
-  const en = lang === 'en';
+  // Portekizcede Türkçe metin sözlükten (tx) çevrilir; elle İngilizce yazılan dallar kullanılmaz.
+  const en = lang === 'en' && getUiLang() !== 'pt';
   const { state: S, update } = useStore();
   const [v, setV] = useState('');
   useEffect(() => { if (id) setV(S.rooms[id]?.name ?? ''); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps

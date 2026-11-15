@@ -5,34 +5,46 @@
  * Sözlükte olmayan metin olduğu gibi (Türkçe) görünür.
  */
 import { EN } from './en';
+import { PT } from './pt';
 
 export type AppLang = 'tr' | 'en';
-let LANG: AppLang = deviceLang();
+/** Sözlükle çevrilen gerçek arayüz dili. */
+export type UiLang = 'tr' | 'en' | 'pt';
+let UI: UiLang = deviceUiLang();
+let LANG: AppLang = UI === 'tr' ? 'tr' : 'en';
 const listeners = new Set<() => void>();
 
-/** Cihaz dili Türkçe değilse İngilizce. */
-export function deviceLang(): AppLang {
+/** Cihaz dili: Türkçe ve Portekizce desteklenir, geri kalan her şey İngilizce. */
+export function deviceUiLang(): UiLang {
   try {
-    const loc = Intl.DateTimeFormat().resolvedOptions().locale || 'tr';
-    return loc.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    const loc = (Intl.DateTimeFormat().resolvedOptions().locale || 'tr').toLowerCase();
+    if (loc.startsWith('tr')) return 'tr';
+    if (loc.startsWith('pt')) return 'pt';
+    return 'en';
   } catch {
     return 'tr';
   }
 }
+export function deviceLang(): UiLang {
+  return deviceUiLang();
+}
 
 /** Ayardaki dil kodunu (tr, en ya da başka) çalışan dile çevirir: Türkçe dışı her şey İngilizce. */
 export function setLang(code: string | undefined) {
-  const next: AppLang = !code || code === 'tr' ? 'tr' : 'en';
-  if (next === LANG) return;
-  LANG = next;
+  const nextUi: UiLang = !code || code === 'tr' ? 'tr' : code === 'pt' ? 'pt' : 'en';
+  if (nextUi === UI) return;
+  UI = nextUi;
+  LANG = nextUi === 'tr' ? 'tr' : 'en';
   cache.clear();
   listeners.forEach(l => l());
 }
 export const getLang = () => LANG;
+/** Gerçek arayüz dili ('pt' dahil); sunucuya gönderilen dil budur. */
+export const getUiLang = () => UI;
 export const isEn = () => LANG === 'en';
 /** Yemek fiyatları TL tahminidir; İngilizcede yaklaşık dolar (40 TL = 1 $) gösterilir. */
 export const tlText = (n: number) => (LANG === 'en' ? `$${Math.max(1, Math.round(n / 40))}` : `${n} TL`);
-export const dateLocale = () => (LANG === 'en' ? 'en-US' : 'tr-TR');
+export const dateLocale = () => (UI === 'pt' ? 'pt-BR' : LANG === 'en' ? 'en-US' : 'tr-TR');
 export const onLangChange = (fn: () => void) => {
   listeners.add(fn);
   return () => void listeners.delete(fn);
@@ -51,10 +63,12 @@ const split = (s: string) => {
   const trail = TRAIL.exec(rest)?.[0] ?? '';
   return { lead, core: rest.slice(0, rest.length - trail.length), trail };
 };
+type Table = { exact: Map<string, string>; canon: Map<string, string>; patterns: { re: RegExp; out: string; lit: number }[] };
+function build(dict: Record<string, string>): Table {
 const exact = new Map<string, string>();
 const canon = new Map<string, string>();
 const patterns: { re: RegExp; out: string; lit: number }[] = [];
-for (const [k0, v0] of Object.entries(EN)) {
+for (const [k0, v0] of Object.entries(dict)) {
   // Baştaki/sondaki boşluk eşleşmeyi bozmasın: çeviri çekirdek metin üzerinden aranır.
   const k = k0.trim() || k0;
   const v = k === k0 ? v0 : v0.trim();
@@ -79,11 +93,19 @@ for (const [k0, v0] of Object.entries(EN)) {
 }
 // Sabit metni daha uzun (daha belirgin) kalıplar önce denensin; yakalama grupları sayılmaz.
 patterns.sort((a, b) => b.lit - a.lit);
+return { exact, canon, patterns };
+}
+const TABLES: Partial<Record<'en' | 'pt', Table>> = {};
+/** Geçerli arayüz diline ait sözlük tablosu; ilk kullanımda kurulur. */
+const T = (): Table => {
+  const k = UI === 'pt' ? 'pt' : 'en';
+  return (TABLES[k] ??= build(k === 'pt' ? PT : EN));
+};
 
 const cache = new Map<string, string>();
 
 function matchPattern(s: string, depth: number): string | undefined {
-  for (const p of patterns) {
+  for (const p of T().patterns) {
     const m = p.re.exec(s);
     if (m) {
       let i = 1;
@@ -100,14 +122,14 @@ const isUpper = (s: string) => s === s.toLocaleUpperCase('tr-TR') && s !== s.toL
 
 function direct(s: string, depth: number): string | undefined {
   const n = norm(s);
-  const hit = exact.get(n);
+  const hit = T().exact.get(n);
   if (hit !== undefined) return hit;
   const pat = matchPattern(n, depth);
   if (pat !== undefined) return pat;
   const { lead, core, trail } = split(s);
   if (!core) return undefined;
-  const c = canon.get(lower(core));
-  if (c !== undefined) return lead + (isUpper(core) ? c.toLocaleUpperCase('en-US') : c) + trail;
+  const c = T().canon.get(lower(core));
+  if (c !== undefined) return lead + (isUpper(core) ? c.toLocaleUpperCase(UI === 'pt' ? 'pt-BR' : 'en-US') : c) + trail;
   if (lead || trail) {
     const p2 = matchPattern(norm(core), depth);
     if (p2 !== undefined) return lead + p2 + trail;

@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
 import { prefs } from '@/lib/supabase';
+import { getUiLang } from '@/i18n/runtime';
 import { usePersona } from '@/profile/usePersona';
 
 /** Takma ad: "Seni tanıyalım"da sorulur, yalnız telefonda tutulur (şema değişmez). Misafir de adıyla çağrılır. */
@@ -50,6 +51,10 @@ export function possessive(name: string | null): string | null {
 
 /** "Ayşe'nin Evi" / yurt-öğrenci için "Ayşe'nin Odası". Ad yoksa genel başlık. */
 export function ownTitle(name: string | null, what: 'Ev' | 'Oda' | 'Plan', generic: string, lang: 'tr' | 'en' = 'tr'): string {
+  if (getUiLang() === 'pt') {
+    const n = name?.trim();
+    return n ? `${what === 'Ev' ? 'Casa' : what === 'Oda' ? 'Quarto' : 'Plano'} de ${n}` : generic;
+  }
   if (lang === 'en') {
     const n = name?.trim();
     return n ? `${n}'s ${what === 'Ev' ? 'Home' : what === 'Oda' ? 'Room' : 'Plan'}` : generic;

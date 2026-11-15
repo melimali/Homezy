@@ -2013,16 +2013,17 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   // Moka'nın ara sıra söyledikleri: günün saatine ve bekleyen işlere göre, uygulamanın dilinde.
   const waiting = Object.keys(roomLate).length;
   const en = (S.settings?.language ?? 'tr') !== 'tr';
+  const pt = S.settings?.language === 'pt';
   const mokaSays = (() => {
     const hi = {
-      sabah: en ? ['Good morning ☀️', 'Coffee first? ☕'] : ['Günaydın ☀️', 'Önce kahve mi? ☕'],
-      ogle: en ? ['Hi there 👋', 'Home looks lovely ✨'] : ['Selam 👋', 'Ev bugün çok güzel ✨'],
-      aksam: en ? ['Good evening 🌇', 'Nice work today'] : ['İyi akşamlar 🌇', 'Bugün iyi iş çıkardın'],
-      gece: en ? ['Good night 🌙', 'Time to rest 😴'] : ['İyi geceler 🌙', 'Dinlenme vakti 😴'],
+      sabah: pt ? ['Bom dia ☀️', 'Primeiro um café? ☕'] : en ? ['Good morning ☀️', 'Coffee first? ☕'] : ['Günaydın ☀️', 'Önce kahve mi? ☕'],
+      ogle: pt ? ['Oi 👋', 'A casa está linda hoje ✨'] : en ? ['Hi there 👋', 'Home looks lovely ✨'] : ['Selam 👋', 'Ev bugün çok güzel ✨'],
+      aksam: pt ? ['Boa noite 🌇', 'Você foi muito bem hoje'] : en ? ['Good evening 🌇', 'Nice work today'] : ['İyi akşamlar 🌇', 'Bugün iyi iş çıkardın'],
+      gece: pt ? ['Boa noite 🌙', 'Hora de descansar 😴'] : en ? ['Good night 🌙', 'Time to rest 😴'] : ['İyi geceler 🌙', 'Dinlenme vakti 😴'],
     }[phase];
     const task = waiting > 0
-      ? (en ? [`${waiting} ${waiting === 1 ? 'room needs' : 'rooms need'} you 💪`, 'One small task? 🧹'] : [`${waiting} oda seni bekliyor 💪`, 'Küçük bir iş yapalım mı? 🧹'])
-      : (en ? ['All done, enjoy 🎉'] : ['Her şey tamam, keyfine bak 🎉']);
+      ? (pt ? [`${waiting} ${waiting === 1 ? 'cômodo precisa' : 'cômodos precisam'} de você 💪`, 'Uma tarefinha? 🧹'] : en ? [`${waiting} ${waiting === 1 ? 'room needs' : 'rooms need'} you 💪`, 'One small task? 🧹'] : [`${waiting} oda seni bekliyor 💪`, 'Küçük bir iş yapalım mı? 🧹'])
+      : (pt ? ['Tudo pronto, aproveite 🎉'] : en ? ['All done, enjoy 🎉'] : ['Her şey tamam, keyfine bak 🎉']);
     return [...hi, ...task];
   })();
   const sc = boxW > 0 ? boxW / vbW : 0;

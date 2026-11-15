@@ -412,14 +412,14 @@ export default function Hesap() {
               {!premium.active && Math.max(trialDays.annual, trialDays.monthly) > 0 ? (
                 <View style={{ alignSelf: 'flex-start', backgroundColor: brand.clay, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
                   <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>
-                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
+                    {(state.settings.language ?? 'tr') === 'tr' ? `🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!` : state.settings.language === 'de' ? `🎁 Die ersten ${Math.max(trialDays.annual, trialDays.monthly)} Tage kostenlos!` : `🎁 First ${Math.max(trialDays.annual, trialDays.monthly)} days free!`}
                   </Text>
                 </View>
               ) : null}
               <T v="small">
                 {premium.active
-                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : 'You are Premium ✓ Everything is unlocked')
-                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
+                  ? ((state.settings.language ?? 'tr') === 'tr' ? 'Premium üyesin ✓ Tüm özellikler açık' : state.settings.language === 'de' ? 'Du bist Premium ✓ Alles ist freigeschaltet' : 'You are Premium ✓ Everything is unlocked')
+                  : ((state.settings.language ?? 'tr') === 'tr' ? 'Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.' : state.settings.language === 'de' ? 'Chat mit Moka, 1,5-fache Punkte, werbefrei und mehr. Jederzeit kündbar.' : 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.')}
               </T>
             </View>
           </View>

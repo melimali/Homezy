@@ -1,4 +1,4 @@
-import { isEn } from '../i18n/runtime';
+import { isDe, isEn } from '../i18n/runtime';
 import type { AppState, ShopCat, ShopItem } from './types';
 
 /** Kayıt en fazla bu kadar tutulur. */
@@ -80,5 +80,5 @@ export function lastMonths(S: AppState, n = 6, now = Date.now()) {
 
 export const money = (n: number) => {
   const v = Math.round(n * 100) % 100 === 0 ? Math.round(n) : n.toFixed(2);
-  return isEn() ? `$${v}` : `${v} ₺`;
+  return isDe() ? `${v} €` : isEn() ? `$${v}` : `${v} ₺`;
 };

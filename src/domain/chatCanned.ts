@@ -5,7 +5,7 @@ import type { ChatCtx } from './chat';
  * verilir, sunucu çağrılmaz, günlük hak düşmez. Türkçe ve İngilizce ayrı listelerdir; uygulama diline göre biri seçilir.
  */
 type Kind = 'greet' | 'thanks' | 'bye';
-type Lang = 'tr' | 'en';
+type Lang = 'tr' | 'en' | 'de';
 
 const WORDS: Record<Lang, Record<Kind, string[]>> = {
   tr: {
@@ -17,6 +17,11 @@ const WORDS: Record<Lang, Record<Kind, string[]>> = {
     greet: ['hi', 'hello', 'hey', 'hey moka', 'hi moka', 'hello moka', 'yo', 'sup', 'whats up', 'how are you', 'good morning', 'good evening'],
     thanks: ['thanks', 'thank you', 'thx', 'ty', 'thanks moka', 'thank you moka', 'many thanks'],
     bye: ['bye', 'goodbye', 'see you', 'see ya', 'good night', 'gn', 'later'],
+  },
+  de: {
+    greet: ['hi', 'hallo', 'hey', 'hey moka', 'hi moka', 'hallo moka', 'moin', 'servus', 'na', 'wie gehts', 'guten morgen', 'guten abend', 'guten tag'],
+    thanks: ['danke', 'danke dir', 'danke schon', 'vielen dank', 'dankeschon', 'danke moka', 'thx', 'dankee'],
+    bye: ['tschuss', 'tschau', 'ciao', 'bis spater', 'bis bald', 'bis morgen', 'gute nacht', 'gn', 'auf wiedersehen'],
   },
 };
 
@@ -35,6 +40,11 @@ function greetLine(lang: Lang, ctx: ChatCtx, n: number): string {
     if (ctx.due > 0) return `Hi! ☕ You have ${ctx.due} task${ctx.due > 1 ? 's' : ''} today. Ready when you are 💛`;
     return ['Hi! ☕ Nothing is waiting today, nicely done!', 'Hey there! ☕ All calm at home. Need anything?'][n % 2];
   }
+  if (lang === 'de') {
+    if (ctx.late > 0) return `Hi! ☕ ${ctx.late} ${ctx.late > 1 ? 'Aufgaben sind' : 'Aufgabe ist'} überfällig. Sollen wir uns eine aussuchen und sie zusammen angehen? 💛`;
+    if (ctx.due > 0) return `Hi! ☕ Du hast heute ${ctx.due} ${ctx.due > 1 ? 'Aufgaben' : 'Aufgabe'}. Ich bin bereit, wenn du es bist 💛`;
+    return ['Hi! ☕ Heute wartet nichts auf dich, gut gemacht!', 'Hallo! ☕ Zu Hause ist alles ruhig. Brauchst du etwas?'][n % 2];
+  }
   if (ctx.late > 0) return `Selam! ☕ ${ctx.late} işin gecikmiş durumda. Birini seçip birlikte halledelim mi? 💛`;
   if (ctx.due > 0) return `Selam! ☕ Bugün ${ctx.due} işin var. Hazırsan başlayalım 💛`;
   return ['Selam! ☕ Bugün bekleyen iş yok, harikasın!', 'Merhaba! ☕ Ev sakin görünüyor. Bir şey lazım mı?'][n % 2];
@@ -48,6 +58,10 @@ const LINES: Record<Lang, Record<Exclude<Kind, 'greet'>, string[]>> = {
   en: {
     thanks: ["You're welcome! ☕", 'Anytime 💛', "Happy to help! Don't forget a coffee break ☕"],
     bye: ['See you! ☕', "Rest well, I'll be here tomorrow 💛", 'Bye for now! ☕'],
+  },
+  de: {
+    thanks: ['Gern geschehen! ☕', 'Jederzeit 💛', 'Gern! Vergiss die Kaffeepause nicht ☕'],
+    bye: ['Bis bald! ☕', 'Ruh dich gut aus, ich bin morgen wieder da 💛', 'Tschüss! ☕'],
   },
 };
 

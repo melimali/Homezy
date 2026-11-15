@@ -85,6 +85,10 @@ function withLang(sys: string, lang: unknown) {
     const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in English. ALWAYS reply in English, in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
     return `${rule}\n\n${sys}\n\n${rule}`;
   }
+  if (lang === 'de') {
+    const rule = 'LANGUAGE RULE (highest priority, overrides every Turkish instruction below, including "Türkçe yaz"): the user uses the app in German. ALWAYS reply in natural, warm German, informal "du" form, in every message, even if the earlier messages, room names or task names are Turkish. Only switch language if the user explicitly asks for another one.';
+    return `${rule}\n\n${sys}\n\n${rule}`;
+  }
   const rule = 'DİL KURALI: Varsayılan dil Türkçe. Kullanıcı açıkça başka bir dilde yazıyorsa ya da o dili isterse o dilde cevap ver.';
   return `${sys}\n\n${rule}`;
 }

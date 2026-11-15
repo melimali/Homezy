@@ -33,7 +33,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
-  const lang = S.settings.language === 'tr' ? 'tr' : 'en';
+  const lang = S.settings.language === 'tr' ? 'tr' : S.settings.language === 'de' ? 'de' : 'en';
   const L = PAYWALL_COPY[lang];
   const unit = plan === 'annual' ? L.unitY : L.unitM;
   const trial = trialDays[plan];
@@ -110,9 +110,9 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
       <T v="h2">{L.plansTitle}</T>
       <View style={styles.plans}>
         <View style={[styles.plan, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <Text style={[styles.planName, { color: c.ink }]}>{lang === 'tr' ? 'Ücretsiz' : 'Free'}</Text>
-          <Text style={[styles.price, { color: c.ink }]}>{S.settings.language === 'tr' ? '0 TL' : '$0'}</Text>
-          <T v="small">{lang === 'tr' ? 'her zaman' : 'always'}</T>
+          <Text style={[styles.planName, { color: c.ink }]}>{lang === 'tr' ? 'Ücretsiz' : lang === 'de' ? 'Kostenlos' : 'Free'}</Text>
+          <Text style={[styles.price, { color: c.ink }]}>{lang === 'tr' ? '0 TL' : lang === 'de' ? '0 €' : '$0'}</Text>
+          <T v="small">{lang === 'tr' ? 'her zaman' : lang === 'de' ? 'immer' : 'always'}</T>
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
@@ -120,7 +120,7 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
           </View>
           <Text style={[styles.price, { color: brand.mint }]}>{prices[plan]}</Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
-            {plan === 'annual' ? (lang === 'tr' ? 'yıllık abonelik (her yıl yenilenir)' : 'yearly (renews every year)') : (lang === 'tr' ? 'aylık abonelik (her ay yenilenir)' : 'monthly (renews every month)')}
+            {plan === 'annual' ? (lang === 'tr' ? 'yıllık abonelik (her yıl yenilenir)' : lang === 'de' ? 'Jahresabo (verlängert sich jedes Jahr)' : 'yearly (renews every year)') : (lang === 'tr' ? 'aylık abonelik (her ay yenilenir)' : lang === 'de' ? 'Monatsabo (verlängert sich jeden Monat)' : 'monthly (renews every month)')}
           </Text>
           {trial ? <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{L.trialLine(trial)}</Text> : null}
         </View>

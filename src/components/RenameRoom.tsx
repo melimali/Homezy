@@ -10,7 +10,8 @@ import { radius, useColors } from '@/theme';
 export function RenameRoom({ id, onClose }: { id: string | null; onClose: () => void }) {
   const c = useColors();
   const { lang } = useTranslation();
-  const en = lang === 'en';
+  const en = lang !== 'tr';
+  const de = lang === 'de';
   const { state: S, update } = useStore();
   const [v, setV] = useState('');
   useEffect(() => { if (id) setV(S.rooms[id]?.name ?? ''); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -22,14 +23,14 @@ export function RenameRoom({ id, onClose }: { id: string | null; onClose: () => 
   return (
     <Modal visible={!!id} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.wrap}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={en ? 'Cancel' : 'Vazgeç'} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={de ? 'Abbrechen' : en ? 'Cancel' : 'Vazgeç'} />
         <View style={[styles.box, { backgroundColor: c.surface }]}>
-          <T v="h3">{en ? 'Rename room' : 'Oda adını değiştir'}</T>
+          <T v="h3">{de ? 'Raum umbenennen' : en ? 'Rename room' : 'Oda adını değiştir'}</T>
           <Field value={v} onChangeText={setV} maxLength={24} autoFocus selectTextOnFocus onSubmitEditing={save} returnKeyType="done"
-            placeholder={en ? 'Room name' : 'Oda adı'} />
+            placeholder={de ? 'Raumname' : en ? 'Room name' : 'Oda adı'} />
           <View style={styles.btns}>
-            <Btn label={en ? 'Cancel' : 'Vazgeç'} onPress={onClose} style={{ flex: 1 }} />
-            <Btn label={en ? 'Save' : 'Kaydet'} kind="primary" onPress={save} disabled={!v.trim()} style={{ flex: 1 }} />
+            <Btn label={de ? 'Abbrechen' : en ? 'Cancel' : 'Vazgeç'} onPress={onClose} style={{ flex: 1 }} />
+            <Btn label={de ? 'Speichern' : en ? 'Save' : 'Kaydet'} kind="primary" onPress={save} disabled={!v.trim()} style={{ flex: 1 }} />
           </View>
         </View>
       </KeyboardAvoidingView>

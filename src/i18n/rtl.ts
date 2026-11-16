@@ -6,8 +6,8 @@ import { DevSettings, I18nManager } from 'react-native';
  * yerler bozulmasın; metin ve satır yönü (`row`) yine tersine döner.
  * Yön değişince React Native'in yeniden başlaması gerekir.
  */
-I18nManager.allowRTL(true);
-I18nManager.swapLeftAndRightInRTL(false);
+I18nManager.allowRTL?.(true); // web önizlemesinde yok
+I18nManager.swapLeftAndRightInRTL?.(false);
 
 let reloading = false;
 

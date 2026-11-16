@@ -1,5 +1,5 @@
 import { useRouter } from '@/lib/nav';
-import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,7 +7,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { MokaFace } from '@/components/MokaFace';
 import { odaMap, RoomBackdrop, type RoomTouch } from '@/components/RoomBackdrop';
 import { AddSheet } from '@/components/TabBar';
-import { Appear, Squish, useReduceMotion } from '@/components/motion';
+import { Appear, Burst, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
 import type { Href } from 'expo-router';
@@ -21,7 +21,8 @@ import { cannedReply } from '@/domain/chatCanned';
 import { askMoka } from '@/lib/mokaChat';
 import { getUiLang, tx } from '@/i18n/runtime';
 import { haptic, sfx } from '@/lib/sfx';
-import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
+import { allTasks } from '@/domain/logic';
+import { line, openingLine, windowLine } from '@/domain/mokaLines';
 import { nightMix, roomState } from '@/lib/roomState';
 import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -43,6 +44,9 @@ type Item = ChatMsg & {
   confirmed?: 'yes' | 'no';
 };
 
+/** Moka'nın oturduğu yer: yastığın üst yüzeyinin ortası (852×1846 oda resmi). */
+const SEAT = { x: 400, y: 1330 };
+
 /** Cevap yazılma süresi (ms): kısa cevap hızlı, uzun cevap en çok 3,5 sn. Moka'nın ağzı bu sürece göre oynar. */
 const typeMs = (len: number) => Math.min(3500, 500 + len * 22);
 /** Bu oturumda yeni gelen, henüz harf harf yazılmamış cevaplar. */
@@ -51,8 +55,17 @@ const fresh = new Set<number>();
 const HELLO: Item = {
   id: 0,
   role: 'assistant',
-  content: 'Merhaba, ben Moka ☕ Bana iş ekletebilir, alışveriş listene ürün yazdırabilir, yaptıklarını (su, spor, ilaç, hayvan bakımı) işaretletebilir, günlük ve takvim notu yazdırabilir ya da sadece sohbet edebilirsin!',
+  content: 'Merhaba, ben Moka ☕ Bana iş ekletebilir, not aldırabilir ya da sadece sohbet edebilirsin.',
 };
+/** Yazma çubuğuna dokununca çıkan 3 fikir: duruma göre (geciken iş, sabah, alışveriş listesi). */
+function pickIdeas(late: number, shopEmpty: boolean, hour: number): string[] {
+  const out: string[] = [];
+  if (late > 0) out.push('Geciken işlere bir bakalım');
+  out.push(hour < 14 ? 'Bugün ne yapmalıyım?' : 'Evi toparlamak için küçük bir adım öner');
+  if (shopEmpty) out.push('Alışveriş listesine süt ve ekmek ekle');
+  for (const x of IDEAS) if (out.length < 3 && !out.includes(x)) out.push(x);
+  return out.slice(0, 3);
+}
 const IDEAS = ['Alışveriş listesine süt ve ekmek ekle', 'Bugün 2 bardak su içtim', 'Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım', 'Bugün günlük yazmak istiyorum', 'Biraz hareket edelim mi?', 'Dışarı çıkmaya ne dersin?', 'Evi toparlamak için küçük bir adım öner'];
 
 /** Oturum boyunca konuşma kalır; kapatınca silinir (mesajlar telefonda saklanmaz). */
@@ -61,6 +74,11 @@ let nextId = 1;
 /** Premium olmayan kullanıcı bu oturumda kaç mesaj yazdı (ilk mesaja uzun tanıtım, sonrakilere kısa yönlendirme). */
 let freeAsked = 0;
 let cannedN = 0;
+/** Bugün "hepsi bitti" kutlaması gösterildi mi (oturumda bir kez). */
+let celebrated = '';
+const dayStamp = () => new Date().toDateString();
+/** 0..n-1 arası rastgele sayı (çizim dışında, olay ve zamanlayıcılarda kullanılır). */
+const rnd = (n: number) => Math.floor(Math.random() * n);
 
 /** Moka ile sohbet: tatlı bir muhabbet ve uygulamayı kontrol eden bir yapay zekâ (Haiku). Sunucuda çalışır, alan dışına çıkmaz. */
 export default function MokaChat() {
@@ -89,6 +107,8 @@ export default function MokaChat() {
     return () => { sh.remove(); hd.remove(); };
   }, []);
   const [addOpen, setAddOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [echo, setEcho] = useState('');
   const { height: winH } = useWindowDimensions();
   // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
@@ -245,51 +265,51 @@ export default function MokaChat() {
 
   // Oda: Moka yastığın üstünde. Klavye açılınca küçülüp yukarı çıkar.
   const map = odaMap(winW, winH);
-  const mokaSize = Math.round(Math.min(winW * 0.78, 360) * (kb ? 0.62 : 1));
-  const mokaBottom = kb ? winH * 0.5 : map.oy + 1500 * map.s;
+  // Yastığın ortası (oda resmi koordinatı): Moka'nın ayakları yastığın üst yüzeyine basar.
+  const mokaSize = Math.round(Math.min(winW * 0.6, 300) * (kb ? 0.75 : 1));
+  const mokaBottom = kb ? winH * 0.5 : map.oy + SEAT.y * map.s;
+  const mokaLeft = kb ? (winW - mokaSize) / 2 : map.ox + SEAT.x * map.s - mokaSize / 2;
+  // Giriş: Moka alttaki tuştan yastığa uçar (oda yığının yumuşak geçişiyle açılır), balon biraz sonra belirir.
   const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
   useEffect(() => {
     if (reduce) return;
-    const a = Animated.timing(enter, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    const a = Animated.spring(enter, { toValue: 1, friction: 7, tension: 55, useNativeDriver: true });
     a.start();
     return () => a.stop();
   }, [reduce, enter]);
   // Oda gününü yansıtır, Moka boşta kendi hâlinde takılır.
   const room = roomState(S.play);
+  const day = useMemo(() => {
+    const x = chatCtx(S);
+    const refs = allTasks(S);
+    const plantDue = refs.find(r => r.list === 'plants' && r.s.k !== 'ok')?.t.name ?? null;
+    return { late: x.late, due: x.due, total: refs.length, shopEmpty: x.shop.length === 0, plantDue };
+  }, [S]);
+  const chatCtxLite = day;
   const sky = useSky(true);
-  const mix = nightMix();
+  const [mix, setMix] = useState(() => nightMix());
+  useEffect(() => {
+    const id = setInterval(() => setMix(nightMix()), 60000);
+    return () => clearInterval(id);
+  }, []);
+  // İlk cümle girişte bir kez seçilir (gün içinde değişse de ekran açıkken sabit kalır).
+  const [opening] = useState(() => openingLine({ hour: new Date().getHours(), done: room.done, due: day.due, late: day.late, total: day.total, away: room.away }, Math.floor(Math.random() * 97)));
+  const [woke, setWoke] = useState(!opening.sleeping);
+  const [lampOff, setLampOff] = useState(false);
   const [quip, setQuip] = useState('');
   const [bump, setBump] = useState(0); // etkileşim sayacı: boşta sayacı sıfırlar
-  const [idlePose, setIdlePose] = useState<MokaPose | null>(null);
-  const [moodOv, setMoodOv] = useState<'cheer' | 'wow' | 'happy' | null>(null);
-  const [idleFade] = useState(() => new Animated.Value(0));
+  const [moodOv, setMoodOv] = useState<'cheer' | 'wow' | 'happy' | 'sleepy' | null>(null);
   const [hop] = useState(() => new Animated.Value(0));
+  const [burst, setBurst] = useState(0);
+  const tapN = useRef(0);
   const interact = () => setBump(b => b + 1);
-  const idleOff = busy || !!text.trim() || notes || reduce;
-  // Boşta davranışlar: gündüz kitap, kahve, müzik; gece çoğunlukla şekerleme.
-  useEffect(() => {
-    if (busy || text.trim() || notes || reduce) return;
-    const day: MokaPose[] = ['reading', 'sipping', 'music', 'laptop'];
-    const nite: MokaPose[] = ['nap', 'nap', 'reading', 'blanket'];
-    let t2: ReturnType<typeof setTimeout> | undefined;
-    const t1 = setTimeout(() => {
-      const list = (mix > 0.5 ? nite : day).filter(p => MOKA_ASSETS[p]);
-      setIdlePose(list[Math.floor(Math.random() * list.length)] ?? null);
-      t2 = setTimeout(() => setIdlePose(null), 9000 + Math.random() * 5000);
-    }, 12000 + Math.random() * 6000);
-    return () => { clearTimeout(t1); if (t2) clearTimeout(t2); setIdlePose(null); };
-  }, [bump, busy, text, notes, reduce, mix, lastId]);
-  useEffect(() => {
-    const a = Animated.timing(idleFade, { toValue: idlePose ? 1 : 0, duration: 450, useNativeDriver: true });
-    a.start();
-    return () => a.stop();
-  }, [idlePose, idleFade]);
-  const mokaTap = () => {
-    interact();
-    sfx('tap');
-    haptic('light');
-    setMoodOv('cheer');
-    later(() => setMoodOv(null), 1600);
+  /** Kısa süreli Moka repliği (balonda), sonra açılış cümlesine ya da son cevaba döner. */
+  const say = (s: string, mood: typeof moodOv = 'happy', ms = 3800) => {
+    setQuip(s);
+    setMoodOv(mood);
+    later(() => { setQuip(q => (q === s ? '' : q)); setMoodOv(null); }, ms);
+  };
+  const jump = () => {
     if (reduce) return;
     hop.setValue(0);
     Animated.sequence([
@@ -297,70 +317,105 @@ export default function MokaChat() {
       Animated.spring(hop, { toValue: 0, friction: 3, tension: 160, useNativeDriver: true }),
     ]).start();
   };
-  const QUIPS: Record<RoomTouch, string> = {
-    lamba: 'Işık ne güzel, değil mi? ✨',
-    kupa: 'Bir yudum kahve iyi gider ☕',
-    bitki: 'Bitkilerim seni çok seviyor 🌿',
-    pencere: mix > 0.5 ? 'Yıldızlar çıkmış 🌙' : 'Bugün dışarısı çok güzel!',
+  // Bugünün bütün işleri bitti: oturumda bir kez yıldız saçılması.
+  useEffect(() => {
+    if (opening.key !== 'allDone' || celebrated === dayStamp()) return;
+    celebrated = dayStamp();
+    const t = setTimeout(() => { setBurst(1); sfx('done'); }, 700);
+    return () => clearTimeout(t);
+  }, [opening.key]);
+  // Boşta: 15-25 sn dokunulmazsa Moka kendi kendine bir şey söyler (gece uykulu).
+  const idleOff = busy || !!text.trim() || notes || reduce || !woke || !!quip;
+  useEffect(() => {
+    if (idleOff) return;
+    const t = setTimeout(() => {
+      const night = mix > 0.5;
+      say(line(night ? 'idleNight' : 'idleDay', rnd(9)), night ? 'sleepy' : 'happy', 4200);
+    }, 15000 + rnd(10000));
+    return () => clearTimeout(t);
+  }, [bump, idleOff, mix, lastId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mokaTap = () => {
+    interact();
+    sfx('tap');
+    haptic('light');
+    jump();
+    if (!woke) {
+      // Uzun aradan sonra: Moka uyanır, toz kalkar.
+      setWoke(true);
+      say(line('back', rnd(5)), 'cheer', 4500);
+      return;
+    }
+    say(line('tap', tapN.current++), tapN.current % 4 === 1 ? 'wow' : 'cheer', 2400);
   };
   const touchObj = (k: RoomTouch) => {
     interact();
     sfx('tap');
     haptic('light');
-    setQuip(QUIPS[k]);
-    setMoodOv(k === 'pencere' ? 'wow' : 'happy');
-    if (k === 'kupa') setIdlePose('sipping');
-    later(() => { setQuip(''); setMoodOv(null); if (k === 'kupa') setIdlePose(null); }, 3800);
+    if (!woke) setWoke(true);
+    if (k === 'lamba') {
+      const off = !lampOff;
+      setLampOff(off);
+      say(line(off ? 'lampOff' : 'lampOn'), off ? 'sleepy' : 'happy');
+    } else if (k === 'kupa') say(line('mug'), 'happy');
+    else if (k === 'bitki') say(day.plantDue ? line('plantDue', 0, day.plantDue) : line('plant'), 'happy');
+    else say(windowLine(sky.kind, mix > 0.5), 'wow');
   };
-  const baseMood = last && last.id !== 0 ? mood : room.away >= 3 ? 'sleepy' : room.done >= 3 ? 'cheer' : 'happy';
+  const fresh0 = !last || last.id === 0;
+  const baseMood = !fresh0 ? mood : !woke ? 'sleepy' : opening.mood;
   const hint = busy ? tx('Moka düşünüyor…') : text.trim() ? tx('Moka seni dinliyor…') : '';
   const shownIt = last ?? HELLO;
+  // Misafir ve ücretsiz üyede yazı çubuğu yerine kilit hapı: önce yazdırıp sonra reddetmek yok. Premium'da hak bitince yarına kadar kapalı.
+  const lock: 'login' | 'premium' | 'tomorrow' | null = status !== 'account' ? 'login' : !premium.active ? 'premium' : left && left.day <= 0 ? 'tomorrow' : null;
+  const lockLabel = lock === 'login' ? tx('Moka ile konuşmak için hesap aç') : lock === 'premium' ? tx('Moka ile sohbet Premium\'da ⭐') : lock === 'tomorrow' ? tx('Bugünlük çok konuştuk, yarın devam ☕') : '';
+  const ideas = useMemo(() => pickIdeas(chatCtxLite.late, chatCtxLite.shopEmpty, new Date().getHours()), [chatCtxLite.late, chatCtxLite.shopEmpty]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1C2230' }}>
-      <Animated.View
-        style={{
-          flex: 1,
-          opacity: enter.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
-          transform: [
-            { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [winH * 0.42, 0] }) },
-            { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.18, 1] }) },
-          ],
-        }}
-      >
-        <RoomBackdrop mix={mix} sky={sky.kind} warm={room.warm} dust={room.dust} onTouch={touchObj} style={StyleSheet.absoluteFill} />
-        <Pressable onPress={mokaTap} accessibilityLabel="Moka" style={{ position: 'absolute', left: (winW - mokaSize) / 2, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
-          <Animated.View style={{ width: mokaSize, height: mokaSize, transform: [{ translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -mokaSize * 0.1] }) }, { scale: hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }}>
-            <Animated.View style={{ width: mokaSize, height: mokaSize, opacity: idleOff ? 1 : idleFade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+      <View style={{ flex: 1 }}>
+        <RoomBackdrop mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff} onTouch={touchObj} style={StyleSheet.absoluteFill} />
+        {!kb && <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize * 0.14, top: mokaBottom - mokaSize * 0.07, width: mokaSize * 0.72, height: mokaSize * 0.12, borderRadius: mokaSize, backgroundColor: '#3A2614', opacity: 0.22 }} />}
+        <Pressable onPress={mokaTap} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
+          <Animated.View
+            style={{
+              width: mokaSize,
+              height: mokaSize,
+              transform: [
+                { translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [winW / 2 - (mokaLeft + mokaSize / 2), 0] }) },
+                { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [winH - 40 - (mokaBottom - mokaSize / 2), 0] }), hop.interpolate({ inputRange: [0, 1], outputRange: [0, -mokaSize * 0.1] })) },
+                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] })) },
+              ],
+            }}
+          >
+            <Animated.View style={{ width: mokaSize, height: mokaSize }}>
               <MokaFace size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
             </Animated.View>
-            {idlePose && !idleOff && (
-              <Animated.Image source={MOKA_ASSETS[idlePose]} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: mokaSize, height: mokaSize, opacity: idleFade }} accessibilityIgnoresInvertColors />
-            )}
           </Animated.View>
         </Pressable>
+        <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize / 2, top: mokaBottom - mokaSize * 0.55 }}>
+          <Burst fire={burst} />
+        </View>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
           <View style={[st.head, { paddingTop: insets.top + 8, paddingHorizontal: 16 }]}>
+            <View style={{ flex: 1 }}>
             <BackLink
               label=""
               right={
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ flex: 1 }} />
-                  <Squish onPress={() => setNotes(n => !n)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : alpha(c.surface, 0.9) }]}>
-                    <Text style={{ fontSize: 16 }}>📝</Text>
-                  </Squish>
-                  <Squish onPress={report} accessibilityLabel={tx('Moka\'nın son cevabını bildir')} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
-                    <Text style={{ fontSize: 15 }}>🚩</Text>
-                  </Squish>
-                  <Squish onPress={clear} accessibilityLabel={tx('Sohbeti temizle')} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
-                    <Text style={{ fontSize: 15 }}>🧹</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {notes ? (
+                    <Squish onPress={() => setNotes(false)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: true }} style={[st.icon, { backgroundColor: c.accent }]}>
+                      <Text style={{ fontSize: 16 }}>📝</Text>
+                    </Squish>
+                  ) : null}
+                  <Squish onPress={() => setMenu(m => !m)} accessibilityLabel={tx('Diğer')} accessibilityState={{ expanded: menu }} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
+                    <Text style={{ fontSize: 18, lineHeight: 22, color: c.ink, fontFamily: fonts.bodyBlack }}>⋯</Text>
                   </Squish>
                 </View>
               }
             />
+            </View>
           </View>
 
-          <View style={[st.card, { backgroundColor: alpha(c.surface, 0.93), maxHeight: winH * (kb ? 0.24 : 0.32) }]}>
+          <Animated.View style={[st.card, { backgroundColor: alpha(c.surface, 0.96), maxHeight: winH * (kb ? 0.24 : 0.32), opacity: enter.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0, 0, 1], extrapolate: 'clamp' }) }]}>
             <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {notes ? (
                 <NotesList />
@@ -372,36 +427,40 @@ export default function MokaChat() {
                 <Appear key={quip}>
                   <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(quip)}</Text>
                 </Appear>
+              ) : fresh0 ? (
+                <Appear key={woke ? 'awake' : 'asleep'}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(woke && opening.sleeping ? line('back') : opening.text)}</Text>
+                </Appear>
               ) : (
                 <Appear key={shownIt.id}>
                   <Bubble item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
                 </Appear>
               )}
-              {!notes && (
+              {!notes && !quip && !busy && fresh0 && !lock && (
                 <T v="tiny" style={{ opacity: 0.65 }}>
                   Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
                 </T>
               )}
             </ScrollView>
-            <View style={[st.tail, { backgroundColor: alpha(c.surface, 0.93) }]} />
-          </View>
+            <View style={[st.tail, { backgroundColor: alpha(c.surface, 0.96) }]} />
+          </Animated.View>
           {!!echo && (
             <View style={[st.echo, { backgroundColor: c.accent }]}>
               <Text numberOfLines={2} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.onAccent }}>{echo}</Text>
             </View>
           )}
           {!!hint && !echo && <Text style={[st.status, { color: '#fff' }]}>{hint}</Text>}
-          {left && !kb ? (
+          {left && !kb && left.day <= 5 ? (
             <Text style={[st.status, { color: '#fff', opacity: 0.85 }]}>
-              {tx('Bugün kalan: {n}').replace('{n}', String(left.day))} · {tx('Bu ay kalan: {n}').replace('{n}', String(left.month))}
+              ☕ {tx('Bugün kalan: {n}').replace('{n}', String(left.day))}
             </Text>
           ) : null}
 
           <View style={{ flex: 1 }} pointerEvents="none" />
 
-          {!kb && (
+          {focused && !text.trim() && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={st.chips} style={{ flexGrow: 0 }}>
-              {IDEAS.map(x => (
+              {ideas.map(x => (
                 <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: alpha(c.surface, 0.93), borderColor: c.line }]}>
                   <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.ink }}>{x}</Text>
                 </Squish>
@@ -412,33 +471,66 @@ export default function MokaChat() {
             <View style={st.actions}>
               <Squish onPress={() => router.push('/temizlik' as Href)} accessibilityLabel="Temizlik başlat" style={[st.act, { backgroundColor: c.accent }]}>
                 <Text style={{ fontSize: 18 }}>🧹</Text>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.onAccent }}>Temizlik başlat</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ flexShrink: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: c.onAccent }}>Temizlik başlat</Text>
               </Squish>
               <Squish onPress={() => setAddOpen(true)} accessibilityLabel="İş ekle" style={[st.act, { backgroundColor: alpha(c.surface, 0.95) }]}>
                 <Text style={{ fontSize: 18 }}>➕</Text>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>İş ekle</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ flexShrink: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>İş ekle</Text>
               </Squish>
             </View>
           )}
           <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-            <Field
-              value={text}
-              onChangeText={setText}
-              placeholder="Moka'ya yaz…"
-              maxLength={400}
-              returnKeyType="send"
-              onSubmitEditing={() => send()}
-              editable={!busy}
-              style={{ flex: 1 }}
-            />
-            <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
-              <Svg width={20} height={20} viewBox="0 0 24 24">
-                <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
-              </Svg>
-            </Squish>
+            {lock ? (
+              <Squish onPress={() => router.push(lock === 'login' ? '/giris' : '/premium')} accessibilityLabel={lockLabel} style={[st.lock, { backgroundColor: alpha(c.surface, 0.95), borderColor: c.line }]}>
+                <Text style={{ fontSize: 16 }}>{lock === 'login' ? '🔑' : lock === 'premium' ? '⭐' : '🌙'}</Text>
+                <Text numberOfLines={2} style={{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.ink }}>{lockLabel}</Text>
+              </Squish>
+            ) : (
+              <>
+                <Field
+                  value={text}
+                  onChangeText={t => { setText(t); interact(); }}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                  placeholder="Moka'ya yaz…"
+                  maxLength={400}
+                  returnKeyType="send"
+                  onSubmitEditing={() => send()}
+                  editable={!busy}
+                  style={{ flex: 1 }}
+                />
+                <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
+                  <Svg width={20} height={20} viewBox="0 0 24 24">
+                    <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
+                  </Svg>
+                </Squish>
+              </>
+            )}
           </View>
+          {menu && <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={tx('Kapat')} />}
+          {menu && (
+            <View style={[st.menu, { top: insets.top + 56 }]}>
+            <Appear>
+              <View style={[st.menuCard, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
+                {([
+                  ['📝', 'Notlarım', () => setNotes(n => !n)],
+                  ['🚩', 'Moka\'nın son cevabını bildir', report],
+                  ['🧹', 'Sohbeti temizle', clear],
+                ] as const).map(([e, label, fn]) => (
+                  <Pressable key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityRole="button" accessibilityLabel={label} style={st.menuRow}>
+                    <Text style={{ fontSize: 16 }}>{e}</Text>
+                    <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.ink }}>{label}</Text>
+                  </Pressable>
+                ))}
+                <T v="tiny" style={{ opacity: 0.7, paddingHorizontal: 4, paddingTop: 4 }}>
+                  Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+                </T>
+              </View>
+            </Appear>
+            </View>
+          )}
         </KeyboardAvoidingView>
-      </Animated.View>
+      </View>
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
     </View>
   );
@@ -474,22 +566,24 @@ function TypingDots({ color }: { color: string }) {
 
 /** Yeni cevap harf harf belirir (kısa sürede biter); bitince tam metin kalır. */
 function useTyped(text: string, on: boolean, done: () => void) {
-  const [n, setN] = useState(on ? 0 : text.length);
+  // Karakter dizisi: emoji ve vekil çiftleri ortadan bölünmesin.
+  const chars = useMemo(() => Array.from(text), [text]);
+  const [n, setN] = useState(on ? 0 : chars.length);
   useEffect(() => {
     if (!on) return;
-    const total = typeMs(text.length);
+    const total = typeMs(chars.length);
     const t0 = Date.now();
     const iv = setInterval(() => {
-      const k = Math.min(text.length, Math.ceil(((Date.now() - t0) / total) * text.length));
+      const k = Math.min(chars.length, Math.ceil(((Date.now() - t0) / total) * chars.length));
       setN(k);
-      if (k >= text.length) {
+      if (k >= chars.length) {
         clearInterval(iv);
         done();
       }
     }, 40);
     return () => clearInterval(iv);
   }, [text, on]); // eslint-disable-line react-hooks/exhaustive-deps
-  return text.slice(0, n);
+  return n >= chars.length ? text : chars.slice(0, n).join('');
 }
 
 function Bubble({ item, typed, room, onUndo, onConfirm }: { item: Item; typed: boolean; room?: boolean; onUndo: (id: number) => void; onConfirm: (id: number, yes: boolean) => void }) {
@@ -563,11 +657,15 @@ const st = StyleSheet.create({
   status: { textAlign: 'center', marginTop: 14, fontFamily: fonts.bodyBold, fontSize: 12.5, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
   chips: { gap: 8, paddingHorizontal: 16, paddingBottom: 10 },
   actions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 10 },
-  act: { flex: 1, minHeight: 50, borderRadius: radius.pill, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  act: { flex: 1, minHeight: 50, borderRadius: radius.pill, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   top: { paddingHorizontal: 16, paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
   avatarImg: { width: 40, height: 40 },
+  menu: { position: 'absolute', right: 16, zIndex: 10, width: 260 },
+  menuCard: { borderRadius: 20, padding: 8, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 8, borderRadius: 14 },
+  lock: { flex: 1, minHeight: 50, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18 },
   icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   hero: { alignItems: 'center', justifyContent: 'flex-start', paddingBottom: 8 },
   chip: { marginTop: 6, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 },

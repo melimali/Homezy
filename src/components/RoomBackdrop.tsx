@@ -43,16 +43,25 @@ function loop(v: Animated.Value, ms: number, delay = 0) {
 function rise(v: Animated.Value, ms: number, delay = 0) {
   return Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(v, { toValue: 1, duration: ms, easing: Easing.linear, useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true })]));
 }
-/** Lamba titremesi: düzensiz süre ve parlaklık. */
-function flicker(v: Animated.Value) {
-  const steps: [number, number][] = [[0.86, 260], [0.62, 140], [0.95, 320], [0.7, 120], [0.8, 380], [0.55, 160], [0.9, 240], [0.72, 200], [1, 420]];
-  return Animated.loop(Animated.sequence(steps.map(([to, d]) => Animated.timing(v, { toValue: to, duration: d, easing: Easing.linear, useNativeDriver: true }))));
+/** Lamba: yavaşça "nefes alır" (6 sn); 40-90 sn'de bir minicik tek titreşim. Sürekli titreme bozuk ampul gibi durur. */
+function breathe(v: Animated.Value) {
+  const flick = Animated.sequence([
+    Animated.timing(v, { toValue: 0.78, duration: 90, easing: Easing.linear, useNativeDriver: true }),
+    Animated.timing(v, { toValue: 0.97, duration: 140, easing: Easing.linear, useNativeDriver: true }),
+  ]);
+  const cycle = (n: number) => Array.from({ length: n }, () => [
+    Animated.timing(v, { toValue: 1, duration: 3000, easing: sine, useNativeDriver: true }),
+    Animated.timing(v, { toValue: 0.88, duration: 3000, easing: sine, useNativeDriver: true }),
+  ]).flat();
+  return Animated.loop(Animated.sequence([...cycle(7), flick, ...cycle(5 + Math.floor(Math.random() * 4)), flick]));
 }
 
 type Vals = {
   cam: Animated.Value; a: Animated.Value; b: Animated.Value; c: Animated.Value; lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value;
   stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[]; rain: Animated.Value[]; boost: Animated.Value; nudgeC: Animated.Value; nudgeA: Animated.Value;
 };
+/** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
+const VIGNETTE = [{ x: 0, y: 0, r: 700 }, { x: 852, y: 0, r: 700 }, { x: 0, y: 1846, r: 760 }, { x: 852, y: 1846, r: 760 }, { x: 0, y: 920, r: 420 }, { x: 852, y: 920, r: 420 }];
 const MOTES = [
   { x: 690, y: 800, r: 3 }, { x: 740, y: 760, r: 2 }, { x: 800, y: 840, r: 3 }, { x: 640, y: 880, r: 2 }, { x: 560, y: 650, r: 2 }, { x: 330, y: 900, r: 3 },
   { x: 380, y: 1010, r: 2 }, { x: 300, y: 760, r: 2 }, { x: 460, y: 840, r: 3 }, { x: 700, y: 950, r: 2 }, { x: 250, y: 1100, r: 2 }, { x: 600, y: 1100, r: 3 },
@@ -91,7 +100,7 @@ function Layers({ v, s, vals, opacity }: { v: OdaVariant; s: number; vals: Vals;
  * - Dokunulabilir nesneler (lamba, kupa, bitki, pencere) `onTouch` ile haber verir.
  * Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur. Resim `cover` ile ekranı doldurur.
  */
-export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, onTouch, style, children }: { mix?: number; sky?: SkyKind; warm?: number; dust?: number; onTouch?: (t: RoomTouch) => void; style?: StyleProp<ViewStyle>; children?: ReactNode }) {
+export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff = false, onTouch, style, children }: { mix?: number; sky?: SkyKind; warm?: number; dust?: number; /** Lamba söndürüldü: hale yok, oda biraz loş. */ lampOff?: boolean; onTouch?: (t: RoomTouch) => void; style?: StyleProp<ViewStyle>; children?: ReactNode }) {
   const night = mix ?? (odaOfHour() === 'gece' ? 1 : 0);
   const reduceM = useReduceMotion();
   const active = useActive();
@@ -99,7 +108,7 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, onTouch, 
   const [size, setSize] = useState({ w: 0, h: 0 });
   const vals = useMemo<Vals>(() => ({
     cam: new Animated.Value(0.5), a: new Animated.Value(0.5), b: new Animated.Value(0.5), c: new Animated.Value(0.5),
-    lamp: new Animated.Value(0.8), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0),
+    lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0),
     nudgeC: new Animated.Value(0), nudgeA: new Animated.Value(0),
     stars: STARS.map(() => new Animated.Value(0.3)), dust: MOTES.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)), rain: Array.from({ length: 14 }, () => new Animated.Value(0)),
   }), []);
@@ -109,7 +118,7 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, onTouch, 
     if (!run) return;
     const anims = [
       loop(vals.cam, 22000), loop(vals.a, PIVOT.a.ms), loop(vals.b, PIVOT.b.ms, 900), loop(vals.c, PIVOT.c.ms, 400),
-      flicker(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000),
+      breathe(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000),
       ...vals.stars.map((x, i) => loop(x, 1400 + i * 370, i * 300)),
       ...vals.dust.map((x, i) => loop(x, 5200 + (i % 5) * 1300, i * 520)),
       ...vals.steam.map((x, i) => rise(x, 3200, i * 1050)),
@@ -134,18 +143,19 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, onTouch, 
   const ox = (size.w - W) / 2;
   const oy = (size.h - H) / 2;
   const box = (b: Box) => ({ position: 'absolute' as const, left: b.x * s, top: b.y * s, width: b.w * s, height: b.h * s });
-  const glow = (x: number, y: number, r: number, color: string, opacity: Animated.AnimatedInterpolation<number> | Animated.Value | number) => (
-    <Animated.Image source={ISIK} pointerEvents="none" style={{ position: 'absolute', left: (x - r) * s, top: (y - r) * s, width: 2 * r * s, height: 2 * r * s, tintColor: color, opacity }} />
+  const glow = (x: number, y: number, r: number, color: string, opacity: Animated.AnimatedInterpolation<number> | Animated.Value | number, key?: string | number) => (
+    <Animated.Image key={key} source={ISIK} pointerEvents="none" style={{ position: 'absolute', left: (x - r) * s, top: (y - r) * s, width: 2 * r * s, height: 2 * r * s, tintColor: color, opacity }} />
   );
   const lampOp = Animated.add(vals.lamp.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.4] }), vals.boost.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }));
   const nightOp = night; // gece katmanı bunun kadar görünür
-  const dim = Math.min(0.4, dust * 0.4);
+  const dim = Math.max(Math.min(0.4, dust * 0.4), lampOff ? 0.14 + 0.16 * night : 0);
+  const lampOn = lampOff ? 0 : 1;
 
   return (
     <View onLayout={onLayout} style={[{ overflow: 'hidden' }, style]} pointerEvents="box-none">
       {s > 0 && (
         <View style={{ position: 'absolute', left: ox, top: oy, width: W, height: H }} pointerEvents="box-none">
-          <Layers v="gunduz" s={s} vals={vals} opacity={1} />
+          {nightOp < 0.99 && <Layers v="gunduz" s={s} vals={vals} opacity={1} />}
           {nightOp > 0.01 && <Layers v="gece" s={s} vals={vals} opacity={nightOp} />}
 
           {nightOp > 0.01 && glow(MOON.x, MOON.y, 70, '#FFF3C4', Animated.multiply(vals.moon.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.6] }), nightOp))}
@@ -201,16 +211,16 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, onTouch, 
             />
           ))}
 
-          {glow(LAMP.x, LAMP.y, 260, '#FFB44D', Animated.multiply(lampOp, 0.7 + 0.3 * night + warm * 0.4))}
-          <Animated.Image
+          {lampOn > 0 && glow(LAMP.x, LAMP.y, 260, '#FFB44D', Animated.multiply(lampOp, 0.7 + 0.3 * night + warm * 0.4))}
+          {lampOn > 0 && <Animated.Image
             source={ISIK}
             pointerEvents="none"
             style={{ position: 'absolute', left: (LAMP.x - 120) * s, top: (LAMP.y - 90) * s, width: 240 * s, height: 180 * s, tintColor: '#FFE9A8', opacity: Animated.add(vals.lamp.interpolate({ inputRange: [0.5, 1], outputRange: [0.15, 0.55], extrapolate: 'clamp' }), vals.boost.interpolate({ inputRange: [0, 1], outputRange: [0, 0.3] })) }}
-          />
-          {/* Bugünkü işlere göre sıcak ışık, uzun uğramamada loşluk */}
-          {warm > 0 && <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: '#FF9E3D', opacity: warm * 0.13 }} />}
-          {dim > 0 && <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: '#141B2E', opacity: dim }} />}
-
+          />}
+          {/* Bugünkü işler lamba halesini büyütüp ısıtır (tam ekran perde yok). */}
+          {warm > 0 && lampOn > 0 && glow(LAMP.x, LAMP.y + 120, 300 + warm * 160, '#FFC27A', Animated.multiply(vals.lamp, 0.12 + warm * 0.18))}
+          {/* Günlerce uğranmadı: kenarlardan içe loşluk (vinyet). */}
+          {dim > 0 && VIGNETTE.map((p, i) => glow(p.x, p.y, p.r, '#141B2E', Math.min(0.9, dim * 1.6), i))}
           {onTouch && (Object.keys(HIT) as RoomTouch[]).map(k => (
             <Pressable key={k} onPress={() => react(k)} accessibilityLabel={k} style={box(HIT[k])} />
           ))}

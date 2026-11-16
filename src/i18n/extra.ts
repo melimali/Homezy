@@ -2,11 +2,19 @@
  * Birkaç ekranda dile göre elle yazılmış cümlelerin sözlük karşılıkları (hepsi tek tabloda, `tx()` ile).
  * Türkçe metin anahtardır; runtime.ts bunları ilgili dilin sözlüğünün üstüne bindirir.
  */
+import { MOKA_ODA_ROWS } from './mokaOda';
 import { ROZET_ROWS } from './rozet';
 
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
+  ['Moka\'nın odası: sohbet, iş ekle, temizlik', 'Moka\'s room: chat, add chore, cleaning', 'Mokas Zimmer: Chat, Aufgabe hinzufügen, Putzen', 'La habitación de Moka: chat, añadir tarea, limpieza', 'La chambre de Moka : discussion, ajouter une tâche, ménage', 'O quarto da Moka: conversa, adicionar tarefa, limpeza', 'Mokaの部屋：チャット、家事を追加、そうじ', 'Moka의 방: 채팅, 할 일 추가, 청소', 'غرفة موكا: دردشة، إضافة مهمة، تنظيف'],
+  ['Merhaba, ben Moka ☕ Bana iş ekletebilir, not aldırabilir ya da sadece sohbet edebilirsin.', 'Hi, I\'m Moka ☕ You can have me add chores, take notes or just chat.', 'Hallo, ich bin Moka ☕ Ich kann Aufgaben hinzufügen, Notizen machen oder einfach mit dir plaudern.', 'Hola, soy Moka ☕ Puedo añadir tareas, tomar notas o simplemente charlar contigo.', 'Salut, je suis Moka ☕ Je peux ajouter des tâches, prendre des notes ou juste discuter.', 'Oi, eu sou a Moka ☕ Posso adicionar tarefas, anotar coisas ou só bater papo.', 'こんにちは、Mokaです ☕ 家事の追加やメモ、ただのおしゃべりもできますよ。', '안녕하세요, 저는 Moka예요 ☕ 집안일 추가, 메모, 그냥 수다도 다 돼요.', 'مرحبًا، أنا موكا ☕ يمكنني إضافة المهام وتدوين الملاحظات أو مجرد الدردشة معك.'],
+  ['Geciken işlere bir bakalım', 'Let\'s look at the overdue chores', 'Schauen wir uns die überfälligen Aufgaben an', 'Veamos las tareas atrasadas', 'Regardons les tâches en retard', 'Vamos ver as tarefas atrasadas', '遅れている家事を見てみよう', '밀린 집안일을 살펴봐요', 'لنلقِ نظرة على المهام المتأخرة'],
+  ['Diğer', 'More', 'Mehr', 'Más', 'Plus', 'Mais', 'その他', '더보기', 'المزيد'],
+  ['Moka ile konuşmak için hesap aç', 'Create an account to talk with Moka', 'Erstelle ein Konto, um mit Moka zu reden', 'Crea una cuenta para hablar con Moka', 'Crée un compte pour parler avec Moka', 'Crie uma conta para conversar com a Moka', 'Mokaと話すにはアカウントを作成してください', 'Moka와 이야기하려면 계정을 만드세요', 'أنشئ حسابًا للتحدث مع موكا'],
+  ['Moka ile sohbet Premium\'da ⭐', 'Chatting with Moka is in Premium ⭐', 'Chatten mit Moka gibt es mit Premium ⭐', 'Chatear con Moka es parte de Premium ⭐', 'Discuter avec Moka, c’est dans Premium ⭐', 'Conversar com a Moka faz parte do Premium ⭐', 'Mokaとのチャットはプレミアムで使えます ⭐', 'Moka와의 채팅은 프리미엄에서 할 수 있어요 ⭐', 'الدردشة مع موكا متاحة في بريميوم ⭐'],
+  ['Bugünlük çok konuştuk, yarın devam ☕', 'We talked a lot today, let\'s continue tomorrow ☕', 'Wir haben heute viel geredet, morgen geht es weiter ☕', 'Hoy hablamos mucho, seguimos mañana ☕', 'On a beaucoup parlé aujourd’hui, on continue demain ☕', 'Conversamos bastante hoje, amanhã continuamos ☕', '今日はたくさん話したね。続きはまた明日 ☕', '오늘은 많이 얘기했어요, 내일 또 해요 ☕', 'تحدثنا كثيرًا اليوم، نكمل غدًا ☕'],
   ['Premium üyesin ✓ Tüm özellikler açık', 'You are Premium ✓ Everything is unlocked', 'Du bist Premium ✓ Alles ist freigeschaltet', 'Eres Premium ✓ Todo está desbloqueado', 'Tu es Premium ✓ Tout est débloqué', 'Você é Premium ✓ Tudo está liberado', 'Premium会員です ✓ すべての機能が使えます', '프리미엄 회원이에요 ✓ 모든 기능이 열려 있어요', 'أنت مشترك في بريميوم ✓ كل شيء مفتوح'],
   ['Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.', 'Chat with Moka, 1.5x points, no ads and more. Cancel anytime.', 'Chatte mit Moka, 1,5-fache Punkte, keine Werbung und mehr. Jederzeit kündbar.', 'Chatea con Moka, puntos ×1,5, sin anuncios y más. Cancela cuando quieras.', 'Discute avec Moka, points ×1,5, sans pub et plus encore. Résilie quand tu veux.', 'Converse com a Moka, pontos ×1,5, sem anúncios e mais. Cancele quando quiser.', 'Mokaとチャット、ポイント1.5倍、広告なしなど。いつでも解約できます。', 'Moka와 채팅, 포인트 1.5배, 광고 없음 등. 언제든 해지할 수 있어요.', 'تحدّث مع موكا، نقاط ×1.5، بلا إعلانات وأكثر. ألغِ في أي وقت.'],
   ['🎁 İlk {} gün ücretsiz!', '🎁 First {} days free!', '🎁 Die ersten {} Tage gratis!', '🎁 ¡Los primeros {} días gratis!', '🎁 {} premiers jours gratuits !', '🎁 Primeiros {} dias grátis!', '🎁 最初の{}日間は無料！', '🎁 처음 {}일 무료!', '🎁 أول {} أيام مجانًا!'],
@@ -66,4 +74,4 @@ export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';
 const ORDER: ExtraLang[] = ['en', 'de', 'es', 'fr', 'pt', 'ja', 'ko', 'ar'];
 
 export const EXTRA: Record<ExtraLang, Record<string, string>> = { en: {}, de: {}, es: {}, fr: {}, pt: {}, ja: {}, ko: {}, ar: {} };
-for (const row of [...ROWS, ...ROZET_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });
+for (const row of [...ROWS, ...ROZET_ROWS, ...MOKA_ODA_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });

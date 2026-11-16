@@ -204,7 +204,7 @@ export type Play = {
   turned?: Record<string, boolean>;
   /** Evin görünümü: zemin, duvar, pencere, dış cephe (src/domain/look.ts). */
   look?: HouseLook;
-  /** Moka'nın takılı aksesuarı (src/constants/moka-acc.ts kimliği). Yoksa çıplak. */
+  /** Eski: Moka aksesuarı (kaldırıldı, okunmaz). */
   mokaAcc?: string | null;
   /** Moka'nın kürk rengi (src/constants/moka-look.ts). Yoksa orman yeşili. */
   mokaFur?: string | null;

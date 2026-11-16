@@ -78,7 +78,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
           <Animated.View style={{ transform }}>
             <MokaLive size={px} handleRef={live} weather={size !== 'sm'}>
-              <MokaAvatar pose={timePose(shown)} size={px} base={MOKA_ASSETS[timePose(shown)]} fur={state.play.mokaFur} acc={state.play.mokaAcc} />
+              <MokaAvatar pose={timePose(shown)} size={px} base={MOKA_ASSETS[timePose(shown)]} fur={state.play.mokaFur} />
             </MokaLive>
           </Animated.View>
         </Float>

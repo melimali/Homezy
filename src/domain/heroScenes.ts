@@ -36,7 +36,7 @@ export const HERO_SCENES: readonly HeroScene[] = [
   { id: 'calisma-gece', background: require('../../assets/arkaplan/calisma_gece.jpg'), sticker: pose('laptop'), x: 0.44, bottom: 0.78, size: 0.4, motion: 'bob', fx: 'none' },
   { id: 'yagmurlu-pencere', background: require('../../assets/arkaplan/yagmurlu_pencere.jpg'), sticker: pose('plaid_coffee'), x: 0.52, bottom: 0.74, size: 0.4, motion: 'breath', fx: 'steam' },
   { id: 'bitki-kosesi', background: require('../../assets/arkaplan/bitki_kosesi_zemin.jpg'), sticker: pose('watering'), x: 0.5, bottom: 0.8, size: 0.52, motion: 'breath', fx: 'leaves' },
-  { id: 'battaniye-cadiri', background: require('../../assets/arkaplan/battaniye_cadiri.jpg'), sticker: pose('blanket'), x: 0.51, bottom: 0.76, size: 0.39, motion: 'breath', fx: 'zzz' },
+  { id: 'battaniye-cadiri', background: require('../../assets/arkaplan/battaniye_cadiri.jpg'), sticker: pose('blanket'), x: 0.51, bottom: 0.86, size: 0.39, motion: 'breath', fx: 'zzz' },
 ];
 
 let session: HeroScene | null = null;

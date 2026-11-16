@@ -360,10 +360,12 @@ export default function MokaChat() {
   };
   const jump = () => {
     if (reduce) return;
+    // Ezilme (hazırlık) → uzayarak zıplama → yaylanarak iniş.
     hop.setValue(0);
     Animated.sequence([
-      Animated.timing(hop, { toValue: 1, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(hop, { toValue: 0, friction: 3, tension: 160, useNativeDriver: true }),
+      Animated.timing(hop, { toValue: -0.35, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(hop, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.spring(hop, { toValue: 0, friction: 4, tension: 150, useNativeDriver: true }),
     ]).start();
   };
   /** Sürahinin durumuna göre "taze" cümlesi. */
@@ -553,8 +555,10 @@ export default function MokaChat() {
               height: mokaSize,
               transform: [
                 { translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [winW / 2 - mokaCx, 0] }) },
-                { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [winH - 40 - (mokaBottom - mokaSize / 2), 0] }), hop.interpolate({ inputRange: [0, 1], outputRange: [0, -mokaSize * 0.1] })) },
-                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] })) },
+                { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [winH - 40 - (mokaBottom - mokaSize / 2), 0] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [mokaSize * 0.03, 0, -mokaSize * 0.1] })) },
+                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [1, 1, 1.02] })) },
+                { scaleX: hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [1.06, 1, 0.97] }) },
+                { scaleY: hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [0.92, 1, 1.06] }) },
               ],
             }}
           >

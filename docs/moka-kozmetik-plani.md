@@ -229,3 +229,80 @@ python scripts/slice-moka-parts.py <moka_oda_sakin/govde/bas klasörü> <çıkt�
 ```
 Çıktılar: `govde`, `bas_kel`, `goz_sol/sag`, `kanat_sol/sag`, `onizleme_birlesik` (parçalar geri birleşir), `onizleme_kayik_goz` (6 px kaydırma testi).
 Gerçek PNG'ler (1254 px, saydam) Melih'in PC'sinde `moka-oda/v3/`; depodaki örnekler 627 px önizleme.
+
+## 13. "Moka'nı tasarla" ekranı: baştan (Moka Dolabı)
+
+Mevcut ekranın sorunları (ekran görüntüsü, 2026-11-16): koyu, "ayarlar" gibi; Moka küçük ve sticker, yalnız renk seçiliyor; fiyat etiketleri ve tek büyük "63 puan daha" butonu soğuk; zemin odanın krem dilinden kopuk; deneme yok (satın almadan görme yok); kilit nedeni anlatılmıyor.
+
+### 13.1 Karar
+Ekranın adı **Moka Dolabı** (başlık: "Moka'nın dolabı 🧣"). Odadaki "Moka'nı tasarla" düğmesi buraya açılır. Canlı katmanlı Moka (sec. 4) önizlemedir; her seçim anında üstüne biner. Tema: oda ile aynı krem `room` token'ları, koyu zemin yok (koyu tema açıksa oda gecesi gibi sıcak lacivert-kahve).
+
+### 13.2 Düzen (dikey telefon, yukarıdan aşağı)
+```
+┌───────────────────────────────┐
+│ ‹ Geri        Moka'nın dolabı  ⭐ 63 │  üst çubuk: puan hapı (dokun = nasıl kazanılır)
+├───────────────────────────────┤
+│  ┌─────────────────────────┐  │
+│  │   sahne: oda zemini +   │  │  üst %42: canlı Moka, büyük, nefes alır,
+│  │   küçük halı, ışık      │  │  kırpar, 6 sn'de bir bakınır
+│  │        (MOKA)           │  │  Moka'ya dokun = hoplar, mimik
+│  │  [↺ Çıkar]   [🔍 Yakınlaş]│  │  köşede: Tümünü çıkar, yakınlaştır (yüz/boy)
+│  └─────────────────────────┘  │
+│  "Bere çok yakışmış!"          │  Moka'nın tek satırlık yorumu (yerel cümle bankası)
+├───────────────────────────────┤
+│ Kürk  Baş  Yüz  Boyun  Gövde  El │  kaydırılabilir sekme hapları, seçili = dolu kil
+├───────────────────────────────┤
+│ ┌────┐┌────┐┌────┐             │  eşya ızgarası, 3 sütun, yuvarlak köşeli kartlar,
+│ │ 🧢 ││ 🎓 ││ 👑 │             │  her kartta: eşyalı Moka küçük resmi (kendi önizlemesi)
+│ │ ✓  ││60⭐││🔒  │             │  durumlar: giyili ✓ / sahip / satın al / kilitli
+│ └────┘└────┘└────┘             │
+├───────────────────────────────┤
+│ [ Dene ]  → [ Giy ]  /  [ 60⭐ ile al ] │  alt sabit çubuk, seçime göre tek eylem
+└───────────────────────────────┘
+```
+
+### 13.3 Kart durumları
+| Durum | Görünüm | Dokununca |
+|---|---|---|
+| Giyili | Kil çerçeve + ✓ rozeti | Seçim; alt çubuk "Çıkar" |
+| Sahip | Normal kart | **Önizlemede giydir**, alt çubuk "Giy" |
+| Satın alınabilir | Altta ⭐ fiyat hapı | **Önce dene** (önizlemede giydir, "deneme" etiketi), alt çubuk "60⭐ ile al" |
+| Puan yetmiyor | Fiyat hapı soluk, alt çubukta "Kalan: 17⭐ · Nasıl kazanılır?" | Yine denenir (satın alma yok) |
+| Kilitli (rozet/seri) | 🔒 + küçük ipucu ("Seri 7 günde açılır", ilerleme çubuğu 4/7) | Önizlemede göster (denenebilir), alt çubuk "Seri 7'de açılır" |
+| Premium | 👑 köşe rozeti | Denenir; satın alma Premium değilse ödeme ekranı (reklam yok) |
+
+Kural: **her eşya denenebilir**, satın alma sadece onaydır. Deneme geçici: ekrandan çıkınca kaydedilmemiş seçim silinir, "Kaydedilmedi" uyarısı yok (deneme zaten belli).
+
+### 13.4 Akış
+1. Odadan aç → Moka şu an giydikleriyle gelir, "Kürk" veya son kullanılan sekme açık.
+2. Eşyaya dokun → anında önizleme (180 ms çapraz geçiş, Moka küçük bir "hoplama" yapar, yorum satırı değişir).
+3. Alt çubuk: sahipse **Giy**, değilse **Al** (puan düşer, konfeti + "Moka çok sevindi" mimik, giydirilir).
+4. Aynı slotta yeni eşya eskisini değiştirir (slot başına tek). Giyiliyse tekrar dokun = çıkar.
+5. Geri: kaydet otomatik (giy = kaydet). Odaya dönünce Moka giyinmiş.
+6. Kürk sekmesi eski mantıkla çalışır (8 renk), aynı kart biçimi; seçili kürk tüm katmanlara (kanat, baş, gövde) boyanır.
+
+### 13.5 Ayrıntılar
+- **Sıralama:** her sekmede: giyili → sahip → satın alınabilir (ucuzdan pahalıya) → kilitli.
+- **Boş durum:** sekmede eşya yoksa Moka "Yakında yeni şeyler gelecek" der, geri sayım yok.
+- **Moka yorumları:** yerel cümle bankası (`mokaLines.ts`), eşya ve slota göre 3-4 cümle, 9 dil, yapay zekâ yok.
+- **Puan hapı:** üstte ⭐ bakiye; satın alınca sayı akarak düşer. Dokununca "Puan nasıl kazanılır" kısa sayfası (iş bitir, seri, rozet).
+- **Erişilebilirlik:** her kartın adı sesli okunur ("Bere, 60 puan, denenebilir"), renk tek başına durum bildirmez (✓ ve 🔒 simgesi var), dokunma alanı ≥ 48 px, hareketi azalt'ta hoplama kapalı.
+- **Performans:** önizleme tek `MokaRig`, kartlardaki küçük resimler önceden üretilmiş WebP (eşya başına bir; kod her açılışta çizmez).
+- **Hata:** satın alma sunucuya/yedeğe yazamazsa yerel kayıt kalır, tekrar dener; çift satın alma `owned` içinde kontrol.
+- **Ücretsiz/misafir:** hepsi görünür ve denenebilir; satın alma puanla, premium eşya için ödeme ekranı. Misafirde puan zaten yerel.
+
+### 13.6 Görsel dil
+Krem kart (`room.paper`), 22 px köşe, hafif kabarık gölge, kil seçili çerçeve, kahve yazı (Baloo 2 başlık, Nunito metin), sekmeler hap. Koyu lacivert zemin ve sönük gri buton **kullanılmaz**. Sahne: odanın zemin ve duvar parçası (arka plan resminden kesit), Moka yerde, sağ üstte küçük lamba ışığı. Dişli ikonu (şimdiki sağ üst) kalkar: ayarlar bu ekranın işi değil.
+
+### 13.7 Eklenen faz
+| Faz | İş | Süre |
+|---|---|---|
+| K4a | Moka Dolabı ekranı: sahne, sekmeler, kartlar, deneme/giy/al, yorum bankası | 1,5 gün |
+K4 (sec. 10) bununla birleşir: K4 = K4a + satın alma/rozet ödülü bağları + 9 dil (toplam ~2 gün). Yeni toplam ~5,5 gün.
+Bağımlılık: K1 (`MokaRig`) ve en az 4 eşya (K3) hazır olmalı; kürk sekmesi hemen yapılabilir.
+
+### 13.8 Açık sorular (ek)
+1. Ad "Moka Dolabı" olur mu, yoksa "Moka'nı giydir"?
+2. Deneme sırasında kilitli (rozet/seri) eşya denensin mi? Önerim evet, motivasyon.
+3. Moka sahnesi sade krem mi, odanın kesiti mi? Önerim oda kesiti (bağlam hissi).
+4. "Tümünü çıkar" ve "Rastgele giydir 🎲" düğmesi gerekir mi? Önerim ikisi de, küçük.

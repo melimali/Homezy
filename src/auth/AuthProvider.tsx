@@ -1,4 +1,4 @@
-import type { Session, User } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { offlineMsg, online, withTimeout } from '@/lib/net';
@@ -65,9 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Misafir olup anonim oturumu henüz açılamamışsa (ör. ilk açılışta internet yoktu) tekrar dene.
   useEffect(() => {
     if (supabase && ready && guest && !session) {
-      requestCaptcha({ silent: true })
-        .then(captchaToken => supabase!.auth.signInAnonymously({ options: { captchaToken } }))
-        .catch(() => {});
+      supabase.auth.signInAnonymously().catch(() => {});
     }
   }, [ready, guest, session]);
 
@@ -94,13 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
+    // Kayıt Cloudflare doğrulamasıyla sunucu fonksiyonundan geçer (giriş ve misafir captcha istemez).
     const captchaToken = await requestCaptcha();
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { data: { name: name.trim() }, emailRedirectTo: EMAIL_CONFIRMED_URL, captchaToken },
+    const { data, error: fnErr } = await supabase.functions.invoke('signup', {
+      body: { email: email.trim(), password, name: name.trim(), captchaToken, redirectTo: EMAIL_CONFIRMED_URL },
     });
-    if (error) return { ok: false, error: authErrorText(error) };
+    if (fnErr || !data?.ok) {
+      let code: string | undefined = data?.error;
+      try {
+        const body = await (fnErr as { context?: Response } | null)?.context?.json();
+        code = body?.error ?? code;
+      } catch {
+        // Gövde okunamazsa genel hata gösterilir.
+      }
+      return { ok: false, error: authErrorText({ code, name: fnErr ? (fnErr as Error).name : '', message: fnErr ? (fnErr as Error).message : '' } as AuthError) };
+    }
+    if (data.session) {
+      const { error } = await supabase.auth.setSession(data.session);
+      if (error) return { ok: false, error: authErrorText(error) };
+    }
     // E-posta onayı açıksa oturum onaydan sonra, giriş yapınca açılır.
     if (!data.session) return { ok: true, needsConfirm: true };
     setGuestFlag(false);
@@ -111,8 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
-    const captchaToken = await requestCaptcha();
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password, options: { captchaToken } });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) return { ok: false, error: authErrorText(error) };
     setGuestFlag(false);
     return { ok: true };
@@ -122,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return offline;
     const off = await noNet();
     if (off) return off;
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: EMAIL_CONFIRMED_URL, captchaToken: await requestCaptcha() });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: EMAIL_CONFIRMED_URL });
     if (error) return { ok: false, error: authErrorText(error) };
     return { ok: true };
   }, []);
@@ -145,10 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const continueAsGuest = useCallback(async () => {
     if (supabase) {
-      const captchaToken = await requestCaptcha();
-      // Doğrulama kutusu yüklenemese de misafir girişi kilitlenmez; token yoksa sunucu reddederse oturum sonra arka planda yeniden denenir.
       setGuestFlag(true);
-      await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
+      await withTimeout(supabase.auth.signInAnonymously(), 5000, null);
     } else {
       setGuestFlag(true);
     }

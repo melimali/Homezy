@@ -33,6 +33,7 @@ import { checkinOf, dayPlan } from '@/domain/mood';
 import { HouseGarden } from '@/components/HouseGarden';
 import { Appear, Squish } from '@/components/motion';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T, Chevron } from '@/components/ui';
+import { tx } from '@/i18n/runtime';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { dailyCap } from '@/domain/ramp';
 import { taskMin } from '@/domain/home';
@@ -276,7 +277,7 @@ export default function Home() {
       {!!S.settings.solo && S.rooms[S.settings.solo] && (
         <Squish onPress={() => router.navigate('/odalar')} accessibilityRole="button" style={[styles.week, { backgroundColor: c.accentSoft }]}>
           <Text style={{ lineHeight: 29, fontSize: 22 }}>🚪</Text>
-          <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>Tek oda modu: {S.rooms[S.settings.solo].name}</Text>
+          <Text style={[styles.weekT, { color: c.ink, flex: 1 }]}>{tx(`Tek oda modu: ${S.rooms[S.settings.solo].name}`)}</Text>
           <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
         </Squish>
       )}

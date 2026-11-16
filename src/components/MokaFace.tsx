@@ -3,7 +3,7 @@ import { Animated, Easing, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
 import { useActive } from '@/hooks/useActive';
-import { MIMIK, type Mimik } from '@/constants/mimik';
+import { mimikFor, type Mimik } from '@/constants/mimik';
 
 export type FaceMood = Exclude<Mimik, 'wink' | 'talk'>;
 const MOODS: FaceMood[] = ['neutral', 'happy', 'cheer', 'wow', 'sad', 'sleepy'];
@@ -17,7 +17,8 @@ const MOODS: FaceMood[] = ['neutral', 'happy', 'cheer', 'wow', 'sad', 'sleepy'];
  * - `pop` değeri artınca (yeni cevap) tepki zıplaması yapar; üzgünse zıplamaz, hafifçe çöker.
  * "Hareketi azalt" açıksa döngüler durur, sadece mimik geçişi kalır.
  */
-export function MokaFace({ size, mood = 'happy', talking = false, thinking = false, pop = 0 }: { size: number; mood?: FaceMood; talking?: boolean; thinking?: boolean; pop?: number }) {
+export function MokaFace({ size, mood = 'happy', talking = false, thinking = false, pop = 0, fur: furColor }: { size: number; mood?: FaceMood; talking?: boolean; thinking?: boolean; pop?: number; /** Kürk rengi (src/constants/moka-look.ts); yoksa orman yeşili. */ fur?: string | null }) {
+  const M = mimikFor(furColor);
   const reduceM = useReduceMotion();
   const active = useActive();
   // Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur.
@@ -191,10 +192,10 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
     <View style={{ width: size, height: size }} accessibilityIgnoresInvertColors>
       <Animated.View style={[{ width: size, height: size }, { transform }]}>
         {MOODS.map(m => (
-          <Animated.Image key={m} source={MIMIK[m]} style={[img, { opacity: fades[m] }]} resizeMode="contain" />
+          <Animated.Image key={m} source={M[m]} style={[img, { opacity: fades[m] }]} resizeMode="contain" />
         ))}
-        <Animated.Image source={MIMIK.wink} style={[img, { opacity: wink }]} resizeMode="contain" />
-        <Animated.Image source={MIMIK.talk} style={[img, { opacity: talk }]} resizeMode="contain" />
+        <Animated.Image source={M.wink} style={[img, { opacity: wink }]} resizeMode="contain" />
+        <Animated.Image source={M.talk} style={[img, { opacity: talk }]} resizeMode="contain" />
       </Animated.View>
     </View>
   );

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { MOKA_ASSETS } from '@/constants/moka';
+import { furSource } from '@/components/MokaAcc';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { useStore } from '@/store/AppStore';
 import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
@@ -34,6 +35,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
   const dark = useIsDark();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const mokaFur = useStore().state.play.mokaFur;
   const tabs = state.routes.flatMap((r, i) => {
     if (!ICONS[r.name]) return [];
     const o = descriptors[r.key].options;
@@ -54,7 +56,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
         {tabs.slice(0, half)}
         <Squish onPress={() => { haptic('light'); router.push('/moka' as Href); }} accessibilityLabel="Moka'nın odası: sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
-            <Image source={MOKA_ASSETS.happy} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
+            <Image source={furSource(mokaFur, 'happy', MOKA_ASSETS.happy)} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
           <View style={[st.plusBadge, { backgroundColor: c.accent, borderColor: c.surface }]}>
             <Svg width={12} height={12} viewBox="0 0 24 24">

@@ -33,6 +33,11 @@ export const LINES = {
   window_storm: ['Fırtına var, iyi ki evdeyiz ⛈️'],
   window_snow: ['Kar yağıyor! Sıcak bir kahve şart ❄️'],
   window_fog: ['Dışarısı sisli, evde kalalım 🌫️'],
+  introTap: ['Moka\'ya dokun 👆'],
+  introHello: ['Burası benim odam! Hoş geldin ☕'],
+  introObjects: ['Lambaya, kupaya ya da pencereye dokunabilirsin ✨'],
+  introColor: ['Bana bir renk seçer misin? 🎨'],
+  introNice: ['Çok yakıştı! 💛'],
 } as const;
 
 export type LineKey = keyof typeof LINES;

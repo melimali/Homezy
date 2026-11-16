@@ -22,6 +22,7 @@ import { askMoka } from '@/lib/mokaChat';
 import { getUiLang, tx } from '@/i18n/runtime';
 import { haptic, sfx } from '@/lib/sfx';
 import { allTasks } from '@/domain/logic';
+import { FURS, type FurId } from '@/constants/moka-look';
 import { line, openingLine, windowLine } from '@/domain/mokaLines';
 import { nightMix, roomState } from '@/lib/roomState';
 import { useSky } from '@/lib/weather';
@@ -76,6 +77,7 @@ let freeAsked = 0;
 let cannedN = 0;
 /** Bugün "hepsi bitti" kutlaması gösterildi mi (oturumda bir kez). */
 let celebrated = '';
+const INTRO_LINE = { tap: 'introTap', hello: 'introHello', objects: 'introObjects', color: 'introColor' } as const;
 const dayStamp = () => new Date().toDateString();
 /** 0..n-1 arası rastgele sayı (çizim dışında, olay ve zamanlayıcılarda kullanılır). */
 const rnd = (n: number) => Math.floor(Math.random() * n);
@@ -294,7 +296,22 @@ export default function MokaChat() {
   }, []);
   // İlk cümle girişte bir kez seçilir (gün içinde değişse de ekran açıkken sabit kalır).
   const [opening] = useState(() => openingLine({ hour: new Date().getHours(), done: room.done, due: day.due, late: day.late, total: day.total, away: room.away }, Math.floor(Math.random() * 97)));
-  const [woke, setWoke] = useState(!opening.sleeping);
+  // İlk ziyaret: Moka uyur, dokununca uyanır, odayı tanıtır ve kürk rengi ister (bir kez).
+  const [intro, setIntro] = useState<'tap' | 'hello' | 'objects' | 'color' | null>(() => (S.play.roomIntro ? null : 'tap'));
+  const [woke, setWoke] = useState(() => !opening.sleeping && !!S.play.roomIntro);
+  const fur = S.play.mokaFur ?? null;
+  const finishIntro = () => {
+    setIntro(null);
+    update(D => void (D.play.roomIntro = true));
+  };
+  const pickFur = (id: FurId) => {
+    sfx('tap');
+    haptic('light');
+    update(D => void (D.play.mokaFur = id === 'orman' ? null : id));
+    jump();
+    say(line('introNice'), 'cheer', 3000);
+    finishIntro();
+  };
   const [lampOff, setLampOff] = useState(false);
   const [quip, setQuip] = useState('');
   const [bump, setBump] = useState(0); // etkileşim sayacı: boşta sayacı sıfırlar
@@ -325,7 +342,7 @@ export default function MokaChat() {
     return () => clearTimeout(t);
   }, [opening.key]);
   // Boşta: 15-25 sn dokunulmazsa Moka kendi kendine bir şey söyler (gece uykulu).
-  const idleOff = busy || !!text.trim() || notes || reduce || !woke || !!quip;
+  const idleOff = busy || !!text.trim() || notes || reduce || !woke || !!quip || !!intro;
   useEffect(() => {
     if (idleOff) return;
     const t = setTimeout(() => {
@@ -339,6 +356,13 @@ export default function MokaChat() {
     sfx('tap');
     haptic('light');
     jump();
+    if (!woke && intro === 'tap') {
+      setWoke(true);
+      setIntro('hello');
+      later(() => setIntro(i => (i === 'hello' ? 'objects' : i)), 3800);
+      later(() => setIntro(i => (i === 'objects' ? 'color' : i)), 8000);
+      return;
+    }
     if (!woke) {
       // Uzun aradan sonra: Moka uyanır, toz kalkar.
       setWoke(true);
@@ -374,7 +398,7 @@ export default function MokaChat() {
       <View style={{ flex: 1 }}>
         <RoomBackdrop mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff} onTouch={touchObj} style={StyleSheet.absoluteFill} />
         {!kb && <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize * 0.14, top: mokaBottom - mokaSize * 0.07, width: mokaSize * 0.72, height: mokaSize * 0.12, borderRadius: mokaSize, backgroundColor: '#3A2614', opacity: 0.22 }} />}
-        <Pressable onPress={mokaTap} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
+        <Pressable onPress={mokaTap} onLongPress={() => { haptic('light'); router.push('/moka-tasarim' as Href); }} delayLongPress={450} accessibilityHint={tx('Moka\'nı tasarla için basılı tut')} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
           <Animated.View
             style={{
               width: mokaSize,
@@ -387,7 +411,7 @@ export default function MokaChat() {
             }}
           >
             <Animated.View style={{ width: mokaSize, height: mokaSize }}>
-              <MokaFace size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
+              <MokaFace fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
             </Animated.View>
           </Animated.View>
         </Pressable>
@@ -426,6 +450,10 @@ export default function MokaChat() {
               ) : quip ? (
                 <Appear key={quip}>
                   <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(quip)}</Text>
+                </Appear>
+              ) : intro ? (
+                <Appear key={intro}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(line(INTRO_LINE[intro]))}</Text>
                 </Appear>
               ) : fresh0 ? (
                 <Appear key={woke ? 'awake' : 'asleep'}>
@@ -466,6 +494,21 @@ export default function MokaChat() {
                 </Squish>
               ))}
             </ScrollView>
+          )}
+          {intro === 'color' && !kb && (
+            <Appear>
+              <View style={[st.furs, { backgroundColor: alpha(c.surface, 0.96) }]}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                  {FURS.map(f => (
+                    <Pressable key={f.id} onPress={() => pickFur(f.id)} accessibilityRole="button" accessibilityLabel={f.label} accessibilityState={{ selected: (fur ?? 'orman') === f.id }}
+                      style={[st.furDot, { backgroundColor: f.swatch, borderColor: (fur ?? 'orman') === f.id ? c.ink : 'transparent' }]} />
+                  ))}
+                </View>
+                <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6 }}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.muted }}>Şimdilik geç</Text>
+                </Pressable>
+              </View>
+            </Appear>
           )}
           {!kb && (
             <View style={st.actions}>
@@ -664,6 +707,8 @@ const st = StyleSheet.create({
   avatarImg: { width: 40, height: 40 },
   menu: { position: 'absolute', right: 16, zIndex: 10, width: 260 },
   menuCard: { borderRadius: 20, padding: 8, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  furs: { marginHorizontal: 16, marginBottom: 10, borderRadius: 24, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 2, gap: 2 },
+  furDot: { width: 34, height: 34, borderRadius: 17, borderWidth: 3 },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 8, borderRadius: 14 },
   lock: { flex: 1, minHeight: 50, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18 },
   icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },

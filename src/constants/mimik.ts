@@ -1,5 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
+import { MIMIK_FUR } from './moka-fur-assets';
+
 /**
  * Moka'nın 8 mimiği (`assets/moka/mimik/`, `scripts/slice-mimik.py` ile ChatGPT sayfasından kesildi).
  * Hepsi aynı ölçekte, alta hizalı kareler: biri öbürünün üstüne konunca Moka yerinde kalır.
@@ -16,6 +18,12 @@ export const MIMIK: Record<Mimik, ImageSourcePropType> = {
   wink: require('../../assets/moka/mimik/7.webp'),
   talk: require('../../assets/moka/mimik/8.webp'),
 };
+
+/** Kürk rengine göre mimikler (scripts/make-moka-fur.py); bilinmeyen renk ya da varsayılan için özgün mimikler. */
+export function mimikFor(fur?: string | null): Record<Mimik, ImageSourcePropType> {
+  const f = fur ? MIMIK_FUR[fur] : undefined;
+  return f ?? MIMIK;
+}
 
 /** Sohbet cevabının tonundan mimik (kelime ve emojilere bakar; internet gerekmez). */
 export function mimikOf(text: string): Exclude<Mimik, 'wink' | 'talk'> {

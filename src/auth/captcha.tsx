@@ -41,6 +41,20 @@ function webview() {
 
 export const captchaEnabled = () => !!SITE_KEY && Platform.OS !== 'web' && !!webview();
 
+/** Captcha neden kapalı? (Supabase'de captcha açıkken token gitmez ve giriş "captcha_failed" ile düşer; sebebi göstermek için.) */
+export function captchaOffReason(): 'nokey' | 'nowebview' | null {
+  if (Platform.OS === 'web') return null;
+  if (!SITE_KEY) return 'nokey';
+  if (!webview()) return 'nowebview';
+  return null;
+}
+
+if (__DEV__ && Platform.OS !== 'web') {
+  const why = captchaOffReason();
+  // eslint-disable-next-line no-console
+  if (why) console.warn(`[captcha] KAPALI: ${why === 'nokey' ? 'EXPO_PUBLIC_TURNSTILE_SITE_KEY yok (.env.local, Expo\'yu -c ile yeniden başlat)' : 'react-native-webview bu derlemede yok (yeni derleme gerekir)'}`);
+}
+
 function ask(silent: boolean): Promise<string | undefined> {
   return new Promise(resolve => listener!({ resolve, silent }));
 }

@@ -1,12 +1,22 @@
-import type { Session, User } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { removeAllPhotos } from '@/sync/photos';
 
-import { requestCaptcha } from './captcha';
-import { authErrorText } from './errors';
+import { captchaOffReason, requestCaptcha } from './captcha';
+import { authErrorText as baseErrorText } from './errors';
+
+/** captcha_failed ve uygulamada captcha kapalıysa gerçek sebep (anahtar / WebView eksik) gösterilir. */
+function authErrorText(e: AuthError): string {
+  if (e.code === 'captcha_failed') {
+    const why = captchaOffReason();
+    if (why === 'nokey') return 'Bu derlemede robot doğrulaması ayarlı değil (EXPO_PUBLIC_TURNSTILE_SITE_KEY eksik). Anahtarı .env.local\'e ekleyip Expo\'yu -c ile yeniden başlat.';
+    if (why === 'nowebview') return 'Bu derlemede robot doğrulama bileşeni (WebView) yok. Yeni bir derleme gerekir.';
+  }
+  return baseErrorText(e);
+}
 
 /**
  * - `signedOut`: tanıtımdan sonra giriş ekranı açılır.

@@ -174,7 +174,7 @@ function RootStack() {
         <Stack.Screen name="bahce" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="dekor" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="odak" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="moka" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="moka" options={{ animation: 'fade' }} />
         <Stack.Screen name="spor" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="rozetler" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="moka-tasarim" options={{ animation: 'slide_from_right' }} />

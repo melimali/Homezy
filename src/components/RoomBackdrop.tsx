@@ -8,6 +8,12 @@ import { useActive } from '@/hooks/useActive';
 /** Saate göre oda: 19:00-06:59 gece, diğer saatler gündüz. */
 export const odaOfHour = (h = new Date().getHours()): OdaVariant => (h >= 19 || h < 7 ? 'gece' : 'gunduz');
 
+/** Oda resminin `cover` yerleşimi: ekran boyutundan ölçek ve kaydırma. Resim koordinatını ekrana çevirmek için. */
+export const odaMap = (w: number, h: number) => {
+  const s = Math.max(w / ODA_W, h / ODA_H);
+  return { s, ox: (w - ODA_W * s) / 2, oy: (h - ODA_H * s) / 2 };
+};
+
 const sine = Easing.inOut(Easing.sin);
 
 /** Değeri 0→1→0 yavaşça gidip getiren döngü. */

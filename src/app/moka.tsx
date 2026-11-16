@@ -4,16 +4,17 @@ import { Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
-import { MokaFace, type FaceMood } from '@/components/MokaFace';
-import { useActive } from '@/hooks/useActive';
-import { Appear, Squish, useReduceMotion } from '@/components/motion';
+import { MokaFace } from '@/components/MokaFace';
+import { odaMap, RoomBackdrop } from '@/components/RoomBackdrop';
+import { AddSheet } from '@/components/TabBar';
+import { Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
+import type { Href } from 'expo-router';
 import { mimikOf } from '@/constants/mimik';
 import { CHAT_ACCOUNT_NEEDED, CHAT_PREMIUM_INTRO, CHAT_PREMIUM_NUDGE } from '@/domain/chatGate';
 import { applyChatAction, chatCtx, describeAction, needsConfirm, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
 import type { AppState } from '@/domain/types';
-import { mokaLevel, mokaTitle } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL, openLink } from '@/lib/links';
 import { cannedReply } from '@/domain/chatCanned';
@@ -64,7 +65,7 @@ export default function MokaChat() {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { state: S, update, get } = useStore();
+  const { update, get } = useStore();
   const { premium } = usePurchases();
   const { status } = useAuth();
   const [items, setItems] = useState<Item[]>(memory);
@@ -84,9 +85,9 @@ export default function MokaChat() {
     const hd = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKb(false));
     return () => { sh.remove(); hd.remove(); };
   }, []);
-  // Moka sabit: %20 küçük (en çok 160); klavye açıkken biraz daha küçülür.
-  const heroSize = Math.round(Math.min(160, Math.max(96, winW * 0.4)) * (kb ? 0.7 : 1));
-  const lv = mokaLevel(S.play.moka);
+  const [addOpen, setAddOpen] = useState(false);
+  const [echo, setEcho] = useState('');
+  const { height: winH } = useWindowDimensions();
   // Son cevabın tonu mimiği belirler; cevap gelince ve yazılırken ağzı oynar.
   const last = [...items].reverse().find(i => i.role === 'assistant' && !i.error);
   const reduce = useReduceMotion();
@@ -118,6 +119,8 @@ export default function MokaChat() {
     const msg = (raw ?? text).trim().slice(0, 600);
     if (!msg || busy) return;
     setText('');
+    setEcho(msg);
+    later(() => setEcho(''), 3000);
     const mine: Item = { id: nextId++, role: 'user', content: msg };
     const history = [...items.filter(i => !i.error), mine].slice(-6).map(({ role, content, done }) => ({
       role,
@@ -236,88 +239,132 @@ export default function MokaChat() {
     toast('Sohbet temizlendi 🧹');
   };
 
+  // Oda: Moka yastığın üstünde. Klavye açılınca küçülüp yukarı çıkar.
+  const map = odaMap(winW, winH);
+  const mokaSize = Math.round(Math.min(winW * 0.78, 360) * (kb ? 0.62 : 1));
+  const mokaBottom = kb ? winH * 0.5 : map.oy + 1500 * map.s;
+  const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  useEffect(() => {
+    if (reduce) return;
+    const a = Animated.timing(enter, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [reduce, enter]);
+  const hint = busy ? tx('Moka düşünüyor…') : text.trim() ? tx('Moka seni dinliyor…') : '';
+  const shownIt = last ?? HELLO;
+
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View style={[st.top, { paddingTop: insets.top + 8, borderBottomColor: c.line, backgroundColor: c.bg }]}>
-        <View style={st.head}>
-          <BackLink
-            label=""
-            right={
-              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ flex: 1 }} />
-                <Squish onPress={() => setNotes(n => !n)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : c.surface }]}>
-                  <Text style={{ fontSize: 16 }}>📝</Text>
-                </Squish>
-                <Squish onPress={report} accessibilityLabel={tx('Moka\'nın son cevabını bildir')} style={[st.icon, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 15 }}>🚩</Text>
-                </Squish>
-                <Squish onPress={clear} accessibilityLabel={tx('Sohbeti temizle')} style={[st.icon, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 15 }}>🧹</Text>
-                </Squish>
-              </View>
-            }
-          />
+    <View style={{ flex: 1, backgroundColor: '#1C2230' }}>
+      <Animated.View
+        style={{
+          flex: 1,
+          opacity: enter.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
+          transform: [
+            { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [winH * 0.42, 0] }) },
+            { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.18, 1] }) },
+          ],
+        }}
+      >
+        <RoomBackdrop style={StyleSheet.absoluteFill} />
+        <View pointerEvents="none" style={{ position: 'absolute', left: (winW - mokaSize) / 2, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
+          <MokaFace size={mokaSize} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
         </View>
-      </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
+          <View style={[st.head, { paddingTop: insets.top + 8, paddingHorizontal: 16 }]}>
+            <BackLink
+              label=""
+              right={
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flex: 1 }} />
+                  <Squish onPress={() => setNotes(n => !n)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: notes }} style={[st.icon, { backgroundColor: notes ? c.accent : alpha(c.surface, 0.9) }]}>
+                    <Text style={{ fontSize: 16 }}>📝</Text>
+                  </Squish>
+                  <Squish onPress={report} accessibilityLabel={tx('Moka\'nın son cevabını bildir')} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
+                    <Text style={{ fontSize: 15 }}>🚩</Text>
+                  </Squish>
+                  <Squish onPress={clear} accessibilityLabel={tx('Sohbeti temizle')} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
+                    <Text style={{ fontSize: 15 }}>🧹</Text>
+                  </Squish>
+                </View>
+              }
+            />
+          </View>
 
-      <MokaHero mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} level={lv.level} title={mokaTitle(lv.level)} busy={busy} typing={!!text.trim()} size={heroSize} compact={kb} />
-
-      {notes ? (
-        <ScrollView contentContainerStyle={st.list}>
-          <NotesList />
-        </ScrollView>
-      ) : (
-        <ScrollView ref={scroll} contentContainerStyle={st.list} keyboardShouldPersistTaps="handled" onContentSizeChange={() => { if (items.length > 1 || busy) scroll.current?.scrollToEnd({ animated: true }); }}>
-          {items.map(i => (
-            <Appear key={i.id}>
-              <Bubble item={i} typed={!reduce && fresh.has(i.id)} onUndo={undoItem} onConfirm={confirmItem} />
-            </Appear>
-          ))}
-          {busy && (
-            <Appear>
-              <View style={[st.bubble, st.moka, { backgroundColor: c.surface, flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 14 }]} accessibilityLabel="Moka yazıyor">
-                <TypingDots color={c.muted} />
-              </View>
-            </Appear>
-          )}
-          {items.length <= 1 && !busy && (
-            <View style={st.ideas}>
-              {IDEAS.map(x => (
-                <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: c.surface, borderColor: c.line }]}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }}>{x}</Text>
-                </Squish>
-              ))}
+          <View style={[st.card, { backgroundColor: alpha(c.surface, 0.93), maxHeight: winH * (kb ? 0.24 : 0.32) }]}>
+            <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {notes ? (
+                <NotesList />
+              ) : busy ? (
+                <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 10 }} accessibilityLabel="Moka yazıyor">
+                  <TypingDots color={c.muted} />
+                </View>
+              ) : (
+                <Bubble key={shownIt.id} item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
+              )}
+              {!notes && (
+                <T v="tiny" style={{ opacity: 0.65 }}>
+                  Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+                </T>
+              )}
+            </ScrollView>
+            <View style={[st.tail, { backgroundColor: alpha(c.surface, 0.93) }]} />
+          </View>
+          {!!echo && (
+            <View style={[st.echo, { backgroundColor: c.accent }]}>
+              <Text numberOfLines={2} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.onAccent }}>{echo}</Text>
             </View>
           )}
-          <T v="tiny" style={{ textAlign: 'center', opacity: 0.7, marginTop: 6 }}>
-            Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
-          </T>
-        </ScrollView>
-      )}
+          {!!hint && !echo && <Text style={[st.status, { color: '#fff' }]}>{hint}</Text>}
+          {left && !kb ? (
+            <Text style={[st.status, { color: '#fff', opacity: 0.85 }]}>
+              {tx('Bugün kalan: {n}').replace('{n}', String(left.day))} · {tx('Bu ay kalan: {n}').replace('{n}', String(left.month))}
+            </Text>
+          ) : null}
 
-      {left ? (
-        <Text style={{ textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted, paddingTop: 4, backgroundColor: c.bg }}>
-          {tx('Bugün kalan: {n}').replace('{n}', String(left.day))} · {tx('Bu ay kalan: {n}').replace('{n}', String(left.month))}
-        </Text>
-      ) : null}
-      <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 12), backgroundColor: c.bg }]}>
-        <Field
-          value={text}
-          onChangeText={setText}
-          placeholder="Moka'ya yaz…"
-          maxLength={400}
-          returnKeyType="send"
-          onSubmitEditing={() => send()}
-          editable={!busy}
-          style={{ flex: 1 }}
-        />
-        <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
-          <Svg width={20} height={20} viewBox="0 0 24 24">
-            <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
-          </Svg>
-        </Squish>
-      </View>
-    </KeyboardAvoidingView>
+          <View style={{ flex: 1 }} pointerEvents="none" />
+
+          {!kb && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={st.chips} style={{ flexGrow: 0 }}>
+              {IDEAS.map(x => (
+                <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: alpha(c.surface, 0.93), borderColor: c.line }]}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.ink }}>{x}</Text>
+                </Squish>
+              ))}
+            </ScrollView>
+          )}
+          {!kb && (
+            <View style={st.actions}>
+              <Squish onPress={() => router.push('/temizlik' as Href)} accessibilityLabel="Temizlik başlat" style={[st.act, { backgroundColor: c.accent }]}>
+                <Text style={{ fontSize: 18 }}>🧹</Text>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.onAccent }}>Temizlik başlat</Text>
+              </Squish>
+              <Squish onPress={() => setAddOpen(true)} accessibilityLabel="İş ekle" style={[st.act, { backgroundColor: alpha(c.surface, 0.95) }]}>
+                <Text style={{ fontSize: 18 }}>➕</Text>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>İş ekle</Text>
+              </Squish>
+            </View>
+          )}
+          <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+            <Field
+              value={text}
+              onChangeText={setText}
+              placeholder="Moka'ya yaz…"
+              maxLength={400}
+              returnKeyType="send"
+              onSubmitEditing={() => send()}
+              editable={!busy}
+              style={{ flex: 1 }}
+            />
+            <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
+              <Svg width={20} height={20} viewBox="0 0 24 24">
+                <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
+              </Svg>
+            </Squish>
+          </View>
+        </KeyboardAvoidingView>
+      </Animated.View>
+      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
+    </View>
   );
 }
 
@@ -369,7 +416,7 @@ function useTyped(text: string, on: boolean, done: () => void) {
   return text.slice(0, n);
 }
 
-function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean; onUndo: (id: number) => void; onConfirm: (id: number, yes: boolean) => void }) {
+function Bubble({ item, typed, room, onUndo, onConfirm }: { item: Item; typed: boolean; room?: boolean; onUndo: (id: number) => void; onConfirm: (id: number, yes: boolean) => void }) {
   const c = useColors();
   const { state: S } = useStore();
   const router = useRouter();
@@ -377,8 +424,8 @@ function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean
   const shown = useTyped(item.content, typed, () => fresh.delete(item.id));
   return (
     <View style={{ gap: 6, alignItems: me ? 'flex-end' : 'flex-start' }}>
-      <View style={[st.bubble, me ? st.me : st.moka, { backgroundColor: me ? c.accent : item.error ? c.surface2 : c.surface }]}>
-        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: me ? c.onAccent : c.ink }}>{shown}</Text>
+      <View style={[st.bubble, me ? st.me : st.moka, room ? st.roomBubble : { backgroundColor: me ? c.accent : item.error ? c.surface2 : c.surface }]}>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: room ? 16 : 15, lineHeight: room ? 24 : 22, color: me ? c.onAccent : c.ink }}>{shown}</Text>
       </View>
       {item.cta && (
         <Btn small kind="primary" label={item.cta === 'login' ? 'Giriş yap / üye ol' : "Premium'a bak ⭐"} onPress={() => router.push(item.cta === 'login' ? '/giris' : '/premium')} />
@@ -408,55 +455,6 @@ function Bubble({ item, typed, onUndo, onConfirm }: { item: Item; typed: boolean
   );
 }
 
-/** Sohbetin üstündeki büyük Moka: sahne, giriş animasyonu, duruma göre durum etiketi. */
-function MokaHero({ mood, talking, thinking, pop, level, title, busy, typing, size, compact }: { mood: FaceMood; talking: boolean; thinking: boolean; pop: number; level: number; title: string; busy: boolean; typing: boolean; size: number; compact?: boolean }) {
-  const c = useColors();
-  const reduce = useReduceMotion();
-  const active = useActive();
-  const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
-  const [glow] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (reduce) return;
-    const a = Animated.spring(enter, { toValue: 1, friction: 5, tension: 70, useNativeDriver: true });
-    a.start();
-    return () => a.stop();
-  }, [reduce, enter]);
-  // Arka plandaki hale: düşünürken/yazarken hızlı, boştayken yavaş atar.
-  useEffect(() => {
-    if (reduce || !active) return;
-    const d = busy || talking ? 600 : typing ? 900 : 1800;
-    const a = Animated.loop(Animated.sequence([
-      Animated.timing(glow, { toValue: 1, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      Animated.timing(glow, { toValue: 0, duration: d, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-    ]));
-    a.start();
-    return () => a.stop();
-  }, [reduce, active, busy, talking, typing, glow]);
-  const status = busy ? tx('Moka düşünüyor…') : talking ? tx('Moka anlatıyor…') : typing ? tx('Moka seni dinliyor…') : tx('Moka seni bekliyor ☕');
-  const halo = size * 1.15;
-  return (
-    <View style={st.hero} accessibilityRole="header">
-      <Animated.View
-        style={{
-          width: halo, height: halo, borderRadius: halo / 2, backgroundColor: c.peachSoft, position: 'absolute', top: 0,
-          opacity: glow.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0.95] }),
-          transform: [{ scale: glow.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1.04] }) }],
-        }}
-      />
-      <Animated.View style={{ opacity: enter, transform: [{ scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }, { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
-        <MokaFace size={size} mood={mood} talking={talking} thinking={thinking} pop={pop} />
-      </Animated.View>
-      <Animated.View style={{ opacity: enter, alignItems: 'center', marginTop: 4 }}>
-        <T v="h3">{tx('Moka · seviye {}').replace('{}', String(level))}</T>
-        {!compact && <T v="tiny" style={{ opacity: 0.8 }}>{tx(title)}</T>}
-        {!compact && <View style={[st.chip, { backgroundColor: c.surface }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{status}</Text>
-        </View>}
-      </Animated.View>
-    </View>
-  );
-}
-
 function NotesList() {
   const c = useColors();
   const { state: S, update } = useStore();
@@ -479,7 +477,17 @@ function NotesList() {
   );
 }
 
+const alpha = (hex: string, a: number) => (/^#[0-9a-f]{6}$/i.test(hex) ? hex + Math.round(a * 255).toString(16).padStart(2, '0') : hex);
+
 const st = StyleSheet.create({
+  card: { marginHorizontal: 16, marginTop: 6, borderRadius: 24, padding: 14 },
+  tail: { position: 'absolute', bottom: -7, left: '50%', marginLeft: -8, width: 16, height: 16, transform: [{ rotate: '45deg' }], borderRadius: 3 },
+  roomBubble: { maxWidth: '100%', backgroundColor: 'transparent', paddingHorizontal: 0, paddingVertical: 0, alignSelf: 'stretch' },
+  echo: { alignSelf: 'flex-end', maxWidth: '75%', marginRight: 20, marginTop: 14, borderRadius: 18, borderBottomRightRadius: 6, paddingHorizontal: 12, paddingVertical: 7 },
+  status: { textAlign: 'center', marginTop: 14, fontFamily: fonts.bodyBold, fontSize: 12.5, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
+  chips: { gap: 8, paddingHorizontal: 16, paddingBottom: 10 },
+  actions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 10 },
+  act: { flex: 1, minHeight: 50, borderRadius: radius.pill, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   top: { paddingHorizontal: 16, paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },

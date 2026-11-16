@@ -33,8 +33,6 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
   const c = useColors();
   const dark = useIsDark();
   const insets = useSafeAreaInsets();
-  const [menu, setMenu] = useState(false);
-  const [add, setAdd] = useState(false);
   const router = useRouter();
   const tabs = state.routes.flatMap((r, i) => {
     if (!ICONS[r.name]) return [];
@@ -54,7 +52,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
       <AdBanner dock />
       <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.06)' : c.line, shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
-        <Squish onPress={() => setMenu(true)} accessibilityLabel="Ekle: Moka sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
+        <Squish onPress={() => { haptic('light'); router.push('/moka' as Href); }} accessibilityLabel="Moka'nın odası: sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
             <Image source={MOKA_ASSETS.happy} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
@@ -66,45 +64,6 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
         </Squish>
         {tabs.slice(half)}
       </View>
-      <Sheet open={menu} onClose={() => setMenu(false)} pose="todo">
-        <T v="h2">Ne yapalım?</T>
-        <View style={{ gap: 10 }}>
-          <Squish
-            onPress={() => { setMenu(false); router.push('/moka' as Href); }}
-            accessibilityLabel="Moka ile sohbet"
-            style={[st.opt, { backgroundColor: c.peachSoft }]}
-          >
-            <Text style={{ lineHeight: 36, fontSize: 28 }}>💬</Text>
-            <View style={{ flex: 1 }}>
-              <T v="bold">Moka ile sohbet</T>
-              <T v="small">İş ekle, not aldır, sohbet et</T>
-            </View>
-          </Squish>
-          <Squish
-            onPress={() => { setMenu(false); setAdd(true); }}
-            accessibilityLabel="İş ekle"
-            style={[st.opt, { backgroundColor: c.surface2 }]}
-          >
-            <Text style={{ lineHeight: 36, fontSize: 28 }}>📝</Text>
-            <View style={{ flex: 1 }}>
-              <T v="bold">İş ekle</T>
-              <T v="small">Odaya yeni bir iş yaz</T>
-            </View>
-          </Squish>
-          <Squish
-            onPress={() => { setMenu(false); router.push('/temizlik' as Href); }}
-            accessibilityLabel="Temizlik başlat"
-            style={[st.opt, { backgroundColor: c.accent }]}
-          >
-            <Text style={{ lineHeight: 36, fontSize: 28 }}>🧹</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.onAccent }}>Temizlik başlat</Text>
-              <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.onAccent, opacity: 0.85 }}>Moka sırayı seçsin, sen yap</Text>
-            </View>
-          </Squish>
-        </View>
-      </Sheet>
-      <AddSheet open={add} onClose={() => setAdd(false)} />
     </View>
   );
 }
@@ -170,7 +129,7 @@ function Glyph({ name, color, filled, cut }: { name: IconName; color: ColorValue
 }
 
 /** "+" düğmesi: odayı seç, işin adını ve sıklığını yaz. */
-function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AddSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state: S } = useStore();
   const ids = S.order.filter(id => S.rooms[id]);
   const [rid, setRid] = useState<string | null>(null);

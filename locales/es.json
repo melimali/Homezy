@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Homezy necesita la cámara para que puedas fotografiar tu nevera y tu día.",
+  "NSPhotoLibraryUsageDescription": "Homezy necesita acceder a tus fotos para que elijas imágenes de la nevera y del diario desde la galería.",
+  "NSLocationWhenInUseUsageDescription": "Tu ubicación solo se usa para mostrar el cielo y el tiempo sobre tu casa. No se guarda."
+}

@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "Homezy needs the camera so you can photograph your fridge and your day.",
+  "NSPhotoLibraryUsageDescription": "Homezy needs your photos so you can pick fridge and journal pictures from the gallery.",
+  "NSLocationWhenInUseUsageDescription": "Your location is only used to show the sky and weather over your home. It is not stored."
+}

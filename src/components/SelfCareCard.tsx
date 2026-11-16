@@ -24,7 +24,7 @@ export function SelfCareCard() {
   return (
     <Squish onPress={finish} accessibilityRole="button" accessibilityLabel={`Sana bir şey: ${item.text}`} style={[styles.card, { backgroundColor: done ? c.sageSoft : c.roseSoft }]}>
       <View style={[styles.icon, { backgroundColor: c.surface }]}>
-        <Text style={{ fontSize: 24 }}>{done ? '🌸' : item.emoji}</Text>
+        <Text style={{ lineHeight: 31, fontSize: 24 }}>{done ? '🌸' : item.emoji}</Text>
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <T v="tiny" style={{ color: c.fashionAccent, fontFamily: fonts.bodyBlack, letterSpacing: 1 }}>SANA BİR ŞEY</T>

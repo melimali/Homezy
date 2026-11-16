@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { Cabinet, type CabinetItem } from '@/components/AnimatedDoors';
 import { Outfits, type PhotoLook } from '@/components/Outfits';
 import { OutfitPlan, Recipes } from '@/components/PremiumExtras';
 import { Fridge, Plants, Stock, Wardrobe } from '@/components/RoomModules';
 import { AddTaskForm, TaskGrid } from '@/components/TaskRow';
 import { Btn, Card, EmptyMsg, SecHead, T, Tabs } from '@/components/ui';
 import { TYPES } from '@/domain/constants';
+import { clothEmoji, itemEmoji } from '@/domain/icons';
 import { doneToday, sortByDue, statusIn } from '@/domain/logic';
 import type { Task } from '@/domain/types';
 import { useNow } from '@/hooks/useNow';
@@ -64,6 +66,7 @@ export function RoomBody({ rid, initial = 'isler' }: { rid: string; initial?: Ta
       )}
       {cur === 'dolap' && (
         <View key="dolap" style={{ gap: 14 }}>
+          <Cabinet kind="wardrobe" hint="Gardırop boş. Aşağıdan kıyafet ekle." items={(S.mod[r.id]?.wardrobe ?? []).filter(x => x.state === 'temiz').slice(0, 9).map<CabinetItem>(x => ({ key: x.id, emoji: clothEmoji(x.cat, x.name) }))} />
           {anchor.length > 0 && <Btn kind="primary" label="✨ Seçtiğin parçayla kombinlere bak" onPress={() => setTab('kombin')} block />}
           <Wardrobe rid={r.id} anchor={anchor} onAnchor={ids => toKombin(ids)} onLook={l => toKombin(l.ids, l)} />
         </View>
@@ -74,7 +77,12 @@ export function RoomBody({ rid, initial = 'isler' }: { rid: string; initial?: Ta
           <OutfitPlan rid={r.id} />
         </View>
       )}
-      {cur === 'buzdolabi' && <Fridge key="buzdolabi" rid={r.id} />}
+      {cur === 'buzdolabi' && (
+        <View key="buzdolabi" style={{ gap: 14 }}>
+          <Cabinet kind="fridge" hint="Buzdolabı boş. Fotoğraf çek ya da ürün ekle." items={(S.mod[r.id]?.stock ?? []).filter(x => x.lvl !== 'yok').slice(0, 12).map<CabinetItem>(x => ({ key: x.id, emoji: itemEmoji(x.name) }))} />
+          <Fridge rid={r.id} />
+        </View>
+      )}
       {cur === 'eksik' && <Stock key="eksik" rid={r.id} title="🛒 Ne var, ne eksik?" placeholder="Ürün ekle, ör. Zeytin" />}
       {cur === 'tarif' && <Recipes key="tarif" rid={r.id} />}
       {cur === 'malzeme' && (

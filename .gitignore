@@ -44,3 +44,8 @@ yarn-error.*
 # Python
 __pycache__/
 *.pyc
+
+# Sentry / wizard
+sentry.properties
+expo.log
+expo.err

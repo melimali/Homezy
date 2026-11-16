@@ -1,3 +1,5 @@
+import { tx } from '@/i18n/runtime';
+
 /** Yerel saate göre karşılama. Ana ekranın üstünde ve sabah özetinin başlığında kullanılır. */
 export function greeting(now = new Date()) {
   const h = now.getHours();
@@ -11,5 +13,6 @@ export function greeting(now = new Date()) {
 export function greet(now = new Date(), name?: string | null) {
   const g = greeting(now);
   const who = name?.trim() && name !== 'Misafir' ? ` ${name.trim().split(/\s+/)[0]}` : '';
-  return `${g.hello}${who}! ${g.emoji}`;
+  // Ad varken tam cümle sözlükte yok; selamlama sözcüğünü ayrı çevir (İngilizcede "Good morning Melih!").
+  return `${tx(g.hello)}${who}! ${g.emoji}`;
 }

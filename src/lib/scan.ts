@@ -1,4 +1,4 @@
-import { tx } from '@/i18n/runtime';
+import { getUiLang, tx } from '@/i18n/runtime';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
@@ -12,12 +12,15 @@ import type { StockLevel, WashType } from '@/domain/types';
 /**
  * Yapay zekâ ile fotoğraf taraması. Fotoğraf `scan` sunucu fonksiyonuna gider (supabase/functions/scan);
  * fonksiyon hakkı kontrol eder, Claude'a sorar ve listeyi döner. Fotoğraf sunucuda saklanmaz.
- * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 50 (bkz. docs/premium.md).
+ * Sınır sunucuda tutulur: ücretsizde haftada 2, Premium'da günde 10 (bkz. docs/premium.md).
  */
+export type Conf = 'kesin' | 'tahmin' | 'belirsiz';
+
 export type ScanKind = 'fridge' | 'look';
 
 export type FridgeScan = {
-  items: { name: string; qty: string; lvl: StockLevel; match: string | null }[];
+  /** `conf`: kesin / tahmin (ünlem, kullanıcıya sorulur) / belirsiz; tahmin ve belirsiz onay ekranında işaretsiz gelir. `exp`: ambalajda okunan tarih (YYYY-AA-GG). */
+  items: { name: string; qty: string; lvl: StockLevel; match: string | null; conf?: Conf; exp?: string | null }[];
   missing: string[];
   note: string;
 };
@@ -25,7 +28,7 @@ export type FridgeScan = {
 export type LookScan = {
   /** Tür, renk, kumaş ve desen sunucunun yeni sürümünde var; eski sürümde yoksa addan tahmin edilir. */
   pieces: {
-    name: string; cat: string; wash: WashType | null; match: string | null;
+    name: string; cat: string; wash: WashType | null; match: string | null; conf?: Conf;
     kind?: string | null; color?: string | null; hex?: string | null; fabric?: string | null; pattern?: 'düz' | 'desenli';
   }[];
   worn: boolean;
@@ -47,7 +50,7 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
   const image = await prepare(uri);
   if (!image) return { ok: false, message: tx('Fotoğraf okunamadı. Başka bir fotoğraf dene.') };
   const { data, error } = await supabase.functions.invoke('scan', {
-    body: { kind, image, mediaType: 'image/jpeg', known },
+    body: { kind, image, mediaType: 'image/jpeg', known, lang: getUiLang() },
     timeout: TIMEOUT,
   });
   if (!error) return { ok: true, ...data };
@@ -56,6 +59,8 @@ export async function scanPhoto(kind: ScanKind, uri: string, known: string[]): P
   const status = error.context.status as number;
   const body = await error.context.json().catch(() => ({}));
   if (status === 403 && body.error === 'account_required') return { ok: false, account: true, message: tx(SCAN_ACCOUNT_NEEDED) };
+  if (status === 429 && body.error === 'rate') return { ok: false, retry: true, message: tx('Çok hızlı denedin. Bir dakika bekleyip tekrar dene; hakkından düşmedi.') };
+  if (status === 429 && body.error === 'capacity') return { ok: false, message: tx('Yapay zekâ bugün çok yoğun. Yarın tekrar dene; hakkından düşmedi.') };
   if (status === 429) {
     return {
       ok: false,
@@ -110,3 +115,23 @@ async function prepare(uri: string): Promise<string | null> {
 
 /** Türkçe büyük-küçük harf duyarsız karşılaştırma için. */
 export const trLow = (s: string | null | undefined) => String(s ?? '').toLocaleLowerCase('tr-TR').trim();
+
+/**
+ * Sayaç fotoğrafı gerçekten bir sayaç mı? Tarama hakkından düşmez. Sadece yapay zekâ açıkça "değil" derse
+ * false döner; internet yok, hesap yok, rıza yok ya da sunucu hatasında fotoğraf kabul edilir (kullanıcıyı engelleme).
+ */
+export async function checkMeterPhoto(uri: string): Promise<{ ok: boolean; reason?: string }> {
+  try {
+    if (!supabase || !(await online())) return { ok: true };
+    const { data: auth } = await supabase.auth.getSession();
+    if (!auth.session) return { ok: true };
+    if (!(await ensureAiConsent('scan'))) return { ok: true };
+    const image = await prepare(uri);
+    if (!image) return { ok: true };
+    const { data, error } = await supabase.functions.invoke('scan', { body: { kind: 'meter', image, mediaType: 'image/jpeg' }, timeout: 30_000 });
+    if (error || typeof data?.ok !== 'boolean') return { ok: true };
+    return { ok: data.ok, reason: typeof data.reason === 'string' ? data.reason : undefined };
+  } catch {
+    return { ok: true };
+  }
+}

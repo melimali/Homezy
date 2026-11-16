@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { Squish } from '@/components/motion';
@@ -75,7 +75,7 @@ const st = StyleSheet.create({
   moka: { width: 64, height: 64 },
   cells: { flexDirection: 'row', gap: 8 },
   cell: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.card, gap: 2 },
-  emoji: { fontSize: 22 },
+  emoji: { lineHeight: 29, fontSize: 22 },
   center: { textAlign: 'center' },
   week: { flexDirection: 'row', justifyContent: 'space-between', gap: 4 },
   day: { flex: 1, alignItems: 'center', gap: 4 },

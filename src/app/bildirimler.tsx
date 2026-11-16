@@ -1,8 +1,9 @@
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useFocusEffect, type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useCallback, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { BackLink, Btn, Card, EmptyMsg, Screen, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
 import type { Settings } from '@/domain/types';
 import { PremiumLock } from '@/components/PremiumLock';
@@ -11,6 +12,7 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, useColors } from '@/theme';
+import { tx } from '@/i18n/runtime';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -59,7 +61,7 @@ export default function Bildirimler() {
       <View>
         <T v="h1">Bildirimler</T>
         <T v="lead">
-          {S.settings.language === 'en' ? 'Every morning at ' : 'Homezy her sabah '}<Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>{S.settings.language === 'en' ? ' Homezy sends these to your phone as a notification.' : "'da bunları telefonuna bildirim olarak gönderir."}
+          {tx("Homezy her sabah {}'da bunları telefonuna bildirim olarak gönderir.").split('{}').flatMap((part, i) => i === 0 ? [part] : [<Text key={i} style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{s.time}</Text>, part])}
         </T>
       </View>
 
@@ -86,7 +88,7 @@ export default function Bildirimler() {
             <View style={[styles.dot, { backgroundColor: color[n.k] }]} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <T v="bold" style={{ fontSize: 14 }}>{n.title}</T>
-              <T v="small" style={{ fontSize: 13 }}>{n.text}</T>
+              <T v="small" style={{ fontSize: 13.5 }}>{n.text}</T>
             </View>
           </Pressable>
         ))}
@@ -98,7 +100,7 @@ export default function Bildirimler() {
       </View>
 
       <Card>
-        <T v="h2">Bildirim ayarları</T>
+        <SecHead title="Sabah özeti" />
         <View style={[styles.setRow, { borderTopWidth: 0 }]}>
           <View style={{ flex: 1 }}>
             <T v="bold" style={{ fontSize: 14 }}>Günlük özet saati</T>
@@ -114,17 +116,38 @@ export default function Bildirimler() {
         {s.routine && (
           <Toggle
             label="Bildirimden cevapla ✅"
-            sub="Günün en acil 3 işi ayrı bildirimle gelir; uygulamayı açmadan “Yaptım” de, puanın ve serin işlensin. “Yapmadım” işi yarına erteler."
+            sub="Günün en acil 3 işi ayrı bildirimle gelir; uygulamayı açmadan “Yaptım” de, puanın ve serin işlensin. “1 saat sonra” ya da “Yarın” ile ertele."
             value={s.actions}
             onChange={v => set('actions', v)}
           />
         )}
-        <Toggle label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
+        <Toggle label="Haftalık özet 📅" sub="Pazar akşamı 19:00'da haftanın özeti" value={s.weekly} onChange={v => set('weekly', v)} />
+      </Card>
+
+      {Platform.OS === 'android' && (
+        <Card>
+          <SecHead title="Bildirimler gelmiyor mu? 🔋" />
+          <T v="small">
+            Xiaomi, Redmi, POCO, Oppo, Huawei ve Samsung telefonlar kapalı uygulamaların bildirimini pil tasarrufu için engelleyebilir. Uygulama bilgisinde “Pil” → “Kısıtlama yok” seç, Xiaomi’de ayrıca “Otomatik başlat”ı aç ve uygulamayı son kullanılanlarda kilitle (karta uzun bas → kilit).
+          </T>
+          <Btn label="Uygulama ayarlarını aç" small onPress={() => Linking.openSettings().catch(() => {})} />
+        </Card>
+      )}
+
+      <Card>
+        <SecHead title="Ev hatırlatmaları" />
+        <Toggle first label="Eksik ürünler" sub="Biten ürünler ve eski buzdolabı fotoğrafı" value={s.stock} onChange={v => set('stock', v)} />
+        <Toggle label="Alışveriş günü 🛒" sub="Cumartesi 10:00, listede alınmamış ürün varsa" value={s.shop} onChange={v => set('shop', v)} />
         <Toggle label="Çamaşır ve dolap" sub="Aynı yıkama türünden 3 kirli parça, mevsim değişimi, bağış önerisi" value={s.laundry} onChange={v => set('laundry', v)} />
         <Toggle label="Faturalar ve bakım 🧾" sub="Son ödeme gününe 2 gün kala, garanti bitişine 30 gün kala, kombi ve klima bakımı, mevsimlik işler" value={s.bills} onChange={v => set('bills', v)} />
         <Toggle label="Son kullanma tarihleri ⏳" sub="Buzdolabındaki ürünlere 2 gün kala" value={s.expiry} onChange={v => set('expiry', v)} />
-        <Toggle label="Haftalık özet 📅" sub="Pazar akşamı 19:00'da haftanın özeti" value={s.weekly} onChange={v => set('weekly', v)} />
+        <Toggle label="Evcil hayvan bakımı 🐾" sub="Eklediğin mama, yıkama, aşı gibi işlerin vaktinde (“Yaptım” düğmesiyle)" value={s.pets} onChange={v => set('pets', v)} />
+      </Card>
+
+      <Card>
+        <SecHead title="Alışkanlık ve sağlık" />
         <Toggle
+          first
           label="Seri hatırlatması 🔥"
           sub={`Akşam ${smart && learned.streak ? fmtMinute(learned.streak) : '20:30'}'da, o gün hiçbir şey yapmadıysan`}
           value={s.streak}
@@ -164,10 +187,19 @@ export default function Bildirimler() {
         <PremiumLock emoji="🧠" title="Akıllı bildirimler" text="Hatırlatmalar sabit saatte değil, işlerini genelde yaptığın saate göre gelsin; boş yere rahatsız etmesin." />
       )}
       <Card>
-        <T v="h2">Düzen ve motivasyon</T>
-        <Toggle label="Esnek zamanlama" sub="Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık iş 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
+        <SecHead title="Görünüm" />
+        <T v="small">Tema</T>
+        <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Tema">
+          {([['system', '📱 Telefonu izle'], ['light', '☀️ Açık'], ['dark', '🌙 Koyu']] as const).map(([k, label]) => (
+            <Chip key={k} on={(s.appearance ?? 'system') === k} label={label} onPress={() => set('appearance', k)} />
+          ))}
+        </View>
         <Toggle label="Ses ve titreşim 🔔" sub="Dokunuşta, iş bitince ve kutlamada yumuşak bir ses" value={s.sound} onChange={v => set('sound', v)} />
         <Toggle label="Tertemiz oda kutlaması 🎉" sub="Bir odanın bütün işleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
+      </Card>
+      <Card>
+        <SecHead title="Düzen" />
+        <Toggle first label="Esnek zamanlama" sub="Zamanı geçen iş hemen gecikmiş sayılmaz; sıklığının yarısı kadar gün tolerans (haftalık iş 3 gün)" value={s.flex} onChange={v => set('flex', v)} />
       </Card>
       {!notificationsAvailable() && (
         <T v="small" style={{ textAlign: 'center' }}>Burada bildirim gönderilemiyor (web önizlemesi ya da Expo Go). Telefona kurulan sürümde aynı kurallar bildirim merkezine düşer.</T>
@@ -181,7 +213,7 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }
@@ -212,6 +244,7 @@ const styles = StyleSheet.create({
   notif: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 5 },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 0 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   time: { fontFamily: fonts.bodyBlack, fontSize: 16, fontVariant: ['tabular-nums'], minWidth: 48, textAlign: 'center' },
   step: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },

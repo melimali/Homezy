@@ -9,9 +9,12 @@
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 import { aiDisabled, corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
+import { guard } from '../_shared/guard.ts';
 import { admin } from '../_shared/subscription.ts';
+import { KINDS, COLORS, FABRICS, SCHEMA, clean, parseJson, str } from './clean.ts';
 
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
+// Zaman aşımı 60 sn, otomatik yeniden deneme yok (her deneme ayrıca ücretlendirilir).
+const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY'), timeout: 60_000, maxRetries: 0 });
 const MODEL = Deno.env.get('SCAN_MODEL') ?? 'claude-haiku-5-5';
 // Güvenlik sınıflandırıcısı reddederse istek aynı çağrıda başka bir modelle tekrarlanır. Haiku bunu desteklemiyor.
 const FALLBACK = MODEL.startsWith('claude-haiku')
@@ -21,173 +24,80 @@ const FALLBACK = MODEL.startsWith('claude-haiku')
 const MAX_IMAGE = 6_000_000;
 const MEDIA = ['image/jpeg', 'image/png', 'image/webp'] as const;
 type Media = (typeof MEDIA)[number];
-type Kind = 'fridge' | 'look';
 
-/** Uygulamadaki gardırop kategorileri (src/domain/constants.ts, CATS) ve yıkama türleri (WASH). */
-const CATS = ['Üst', 'Alt', 'Elbise / Takım', 'Dış giyim', 'Ev / Pijama', 'İç giyim', 'Ayakkabı', 'Aksesuar'];
-const WASH = ['beyaz', 'renkli', 'koyu', 'hassas'];
-/** Kombin kurallarının bildiği türler (kategorisiyle), renkler ve kumaşlar: src/domain/style.ts (KINDS, COLORS, FABRICS) ile aynı olmalı. */
-const KINDS: Record<string, string> = {
-  'Tişört': 'Üst', 'Polo': 'Üst', 'Gömlek': 'Üst', 'Bluz': 'Üst', 'Kazak': 'Üst', 'Sweatshirt': 'Üst',
-  'Kot pantolon': 'Alt', 'Kumaş pantolon': 'Alt', 'Chino': 'Alt', 'Eşofman altı': 'Alt', 'Şort': 'Alt', 'Etek': 'Alt',
-  'Elbise': 'Elbise / Takım', 'Takım elbise': 'Elbise / Takım',
-  'Ceket': 'Dış giyim', 'Deri ceket': 'Dış giyim', 'Kot ceket': 'Dış giyim', 'Mont': 'Dış giyim', 'Kaban': 'Dış giyim', 'Trençkot': 'Dış giyim',
-  'Spor ayakkabı': 'Ayakkabı', 'Loafer': 'Ayakkabı', 'Klasik ayakkabı': 'Ayakkabı', 'Bot': 'Ayakkabı', 'Sandalet': 'Ayakkabı', 'Topuklu ayakkabı': 'Ayakkabı',
-  'Pijama': 'Ev / Pijama', 'İç giyim': 'İç giyim', 'Aksesuar': 'Aksesuar',
-};
-const COLORS = ['siyah', 'antrasit', 'gri', 'beyaz', 'krem', 'bej', 'camel', 'taba', 'kahverengi', 'lacivert', 'kot mavisi', 'mavi', 'açık mavi',
-  'turkuaz', 'yeşil', 'mint', 'haki', 'zeytin yeşili', 'sarı', 'hardal', 'turuncu', 'kırmızı', 'bordo', 'pembe', 'pudra', 'lila', 'mor'];
-const FABRICS = ['Pamuk', 'Keten', 'Viskon', 'İpek / Saten', 'Kot', 'Yün', 'Triko', 'Kaşmir', 'Kadife', 'Polar', 'Polyester', 'Teknik / Spor', 'Deri', 'Süet', 'Kanvas'];
+/** İngilizce modda: kullanıcıya görünen metinler İngilizce olsun; `match`/`missing` listedeki yazımla kalır, enum alanlar (kind, color, fabric, pattern, wash, lvl) aynen kalır. */
+const EN_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in English. Write name, qty and note in natural English (e.g. "Milk", "half a bottle", "Navy linen shirt"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
+const FR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in French. Write name, qty and note in natural French (informal "tu" where addressing the user). \`match\`/\`missing\` entries keep the exact spelling from the known list; enum fields (kind, color, fabric, pattern, wash, lvl) stay unchanged.`;
+const ES_RULE = EN_RULE.replace(/English/g, 'Spanish').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leche", "media botella", "Camisa de lino azul marino")');
+const DE_RULE = EN_RULE.replace(/in English/, 'in German').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural German (e.g. "Milch", "eine halbe Flasche", "Marineblaues Leinenhemd")');
+const JA_RULE = EN_RULE.replace(/in English/, 'in Japanese').replace('natural English (e.g. "Milk", "half a bottle", "Navy linen shirt")', 'natural Japanese (e.g. "牛乳", "半分", "ネイビーのリネンシャツ")');
+const KO_RULE = EN_RULE.replace(/English/g, 'Korean').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "우유", "반 병", "네이비 린넨 셔츠")');
+const AR_RULE = `\n\nLANGUAGE RULE (overrides the Turkish instructions above): the user uses the app in Arabic. Write name, qty and note in natural Modern Standard Arabic (e.g. "حليب", "نصف زجاجة", "قميص كتان كحلي"). Keep match and missing exactly as spelled in the lists above, and keep the enum fields (kind, color, fabric, pattern, wash, lvl, conf) exactly as specified, in Turkish.`;
+const PT_RULE = EN_RULE.replace(/English/g, 'Brazilian Portuguese').replace('(e.g. "Milk", "half a bottle", "Navy linen shirt")', '(e.g. "Leite", "meia garrafa", "Camisa de linho azul-marinho")');
 
-/**
- * Cevabın JSON şeması (structured outputs). Model sadece bu biçimde yazabilir: tür, renk, kumaş ve seviye
- * listelerin dışına çıkamaz, cevap yarım ya da açıklamalı gelmez.
- */
-const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
-const SCHEMA = {
-  fridge: {
-    type: 'object',
-    properties: {
-      items: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            name: { type: 'string' },
-            qty: { type: 'string' },
-            lvl: { type: 'string', enum: ['var', 'az', 'yok'] },
-            match: nullable({ type: 'string' }),
-          },
-          required: ['name', 'qty', 'lvl', 'match'],
-          additionalProperties: false,
-        },
-      },
-      missing: { type: 'array', items: { type: 'string' } },
-      note: { type: 'string' },
-    },
-    required: ['items', 'missing', 'note'],
-    additionalProperties: false,
-  },
-  look: {
-    type: 'object',
-    properties: {
-      pieces: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            name: { type: 'string' },
-            kind: { type: 'string', enum: Object.keys(KINDS) },
-            color: { type: 'string', enum: COLORS },
-            hex: { type: 'string' },
-            fabric: { type: 'string', enum: FABRICS },
-            pattern: { type: 'string', enum: ['düz', 'desenli'] },
-            wash: { type: 'string', enum: WASH },
-            match: nullable({ type: 'string' }),
-          },
-          required: ['name', 'kind', 'color', 'hex', 'fabric', 'pattern', 'wash', 'match'],
-          additionalProperties: false,
-        },
-      },
-      worn: { type: 'boolean' },
-      note: { type: 'string' },
-    },
-    required: ['pieces', 'worn', 'note'],
-    additionalProperties: false,
-  },
-} as const;
+const RULES: Record<string, string> = { en: EN_RULE, fr: FR_RULE, es: ES_RULE, de: DE_RULE, ja: JA_RULE, ko: KO_RULE, ar: AR_RULE, pt: PT_RULE };
+const withLang = (prompt: string, lang: unknown) => (typeof lang === 'string' && RULES[lang] ? prompt + RULES[lang] : prompt);
 
 const list = (known: string[]) => (known.length ? known.map(n => `- ${n}`).join('\n') : '(boş)');
 
 function fridgePrompt(known: string[]) {
-  return `Bu fotoğraf bir buzdolabının içi. Görünen yiyecek ve içecekleri çıkar, her birinin yaklaşık ne kadar kaldığını tahmin et.
+  return `Bu fotoğraf bir buzdolabının içi. Dikkatli bir envanter çıkar: görünen yiyecek ve içecekleri bul, her birinin yaklaşık ne kadar kaldığını tahmin et.
 
 Evdeki mevcut takip listesi:
 ${list(known)}
 
-Kurallar:
-- Rafları, kapak raflarını ve sebzeliği tek tek tara. Sadece fotoğrafta gerçekten görünenleri yaz.
-- Etiketinden, renginden ya da şeklinden anlaşılan kapalı ambalajları da yaz (ör. süt kutusu, yoğurt kabı, yumurta kolisi). İçi hiç anlaşılmayan poşet ve kutuları atla.
+Nasıl bak:
+- Önce rafları yukarıdan aşağıya, sonra kapak raflarını ve sebzelik çekmecelerini tek tek tara. Arkada kalan ve üst üste duran ürünlere de bak.
+- Birbirine benzeyen ürünleri ayır: süt / ayran / kefir, yoğurt / labne / krema, sirke / zeytinyağı, reçel / bal / tahin, beyaz peynir / kaşar. Ambalaj etiketi okunuyorsa etikete güven, rengi ve şekli tek başına yeterli sayma.
+- Sadece fotoğrafta gerçekten görünenleri yaz. Uydurma, "muhtemelen vardır" diye ekleme.
+- İçi anlaşılmayan kapaklı kap, kavanoz, folyo ve opak poşetleri atlama: şekline, rengine, boyutuna ve yanındakilere bakarak EN OLASI içeriği tahmin et, ama conf="tahmin" yaz (ör. "Yoğurt" ya da hiçbir ipucu yoksa "Kapaklı kap"). Kullanıcıya "Bu ne? Doğru mu?" diye sorulacak, bu yüzden tahmin etmekten çekinme.
+
+Alanlar:
 - name: kısa, genel Türkçe ad, marka yazma (ör. "Süt", "Beyaz peynir", "Domates"). Aynı üründen birden fazla varsa tek satırda topla.
-- qty: kısa Türkçe miktar tahmini, ör. "6 adet", "yarım şişe", "1 paket", "dibinde biraz".
-- lvl: "var" yeterince var, "az" bitmek üzere ya da üçte birden az kalmış, "yok" ambalaj boş görünüyor.
-- match: ürün takip listesindeki bir ürünle aynıysa (farklı yazılmış olsa da, ör. "Kaşar" ile "Kaşar peyniri") listedeki adı aynen yaz, değilse null.
-- missing: takip listesinde olup fotoğrafta hiç göremediğin ürünlerin adları, listedeki yazımla.
-- note: Türkçe, en fazla iki kısa cümle. Neyin azaldığını ve markette nelere bakmak gerektiğini söyle.
-- Fotoğraf buzdolabı değilse items ve missing boş olsun, note bunu söylesin.
+- qty: HER üründe doldur. Sayabiliyorsan say ("6 adet", "2 şişe"); içi görünen ambalajda doluluğa bak ("yarım şişe", "dibinde biraz", "dolu paket"). Miktardan emin değilsen tahmin et ve başına "~" koy ("~2 adet", "~yarım paket"). Boş bırakma.
+- lvl: "var" yeterince var, "az" bitmek üzere ya da üçte birden az kalmış (taze ürünlerde 1-2 adet kalmışsa da az), "yok" ambalaj boş görünüyor.
+- conf: "kesin" ürünü net gördüysen; "tahmin" ürünün adını şekil/renk/bağlamdan çıkardıysan (içi görünmeyen kap, etiketi okunmayan ambalaj); "belirsiz" tahmin bile edemiyorsan ya da çok az görünüyorsa. Kullanıcı "tahmin" ve "belirsiz" satırlara ayrıca onay verir; emin olmadığın şeyi "kesin" yazma.
+- exp: ambalajda açıkça okunan son kullanma tarihi, "YYYY-AA-GG" biçiminde; okunmuyorsa null. Tarihi tahmin etme.
+- match: ürün takip listesindeki bir ürünle aynıysa (farklı yazılmış olsa da, ör. "Kaşar" ile "Kaşar peyniri") listedeki adı aynen yaz, değilse null. Emin değilsen null.
+- missing: takip listesinde olup fotoğrafta hiç göremediğin ürünlerin adları, listedeki yazımla. Fotoğraf buzdolabının sadece bir kısmını gösteriyorsa missing boş olsun.
+- note: Türkçe, en fazla iki kısa cümle. Neyin azaldığını, bozulabilecek (solmuş, sarkmış) bir şey varsa onu ve markette nelere bakılacağını söyle. Fotoğraf bulanık ya da karanlıksa bunu da söyle.
+- Fotoğraf buzdolabı ya da yiyecek dolabı değilse items ve missing boş olsun, note bunu söylesin.
 
 Sadece şu biçimde JSON döndür, başka metin yazma:
-{"items":[{"name":"Süt","qty":"yarım şişe","lvl":"az","match":"Süt"}],"missing":["Tereyağı"],"note":"Süt azalmış, domates hiç yok."}`;
+{"items":[{"name":"Süt","qty":"yarım şişe","lvl":"az","match":"Süt","conf":"kesin","exp":null}],"missing":["Tereyağı"],"note":"Süt azalmış, domates hiç yok."}`;
 }
 
+const METER_PROMPT = `Bu fotoğraf elektrik, su ya da doğalgaz sayacı mı? Sayaç göstergesi (rakamlı ekran ya da çarklar) görünüyorsa ok=true. Başka bir şeyin fotoğrafıysa (kişi, oda, yiyecek, manzara, boş ya da karanlık kare) ok=false.
+Sadece JSON döndür: {"ok":true,"reason":"kısa Türkçe açıklama"}`;
+const METER_SCHEMA = { type: 'object', properties: { ok: { type: 'boolean' }, reason: { type: 'string' } }, required: ['ok', 'reason'], additionalProperties: false };
+
 function lookPrompt(known: string[]) {
-  return `Bu fotoğrafta kıyafetler var: ya bir kişinin üzerinde giyilmiş bir kombin ya da yan yana serilmiş parçalar. Görünen her kıyafet parçasını ve ayakkabıyı ayrı ayrı çıkar.
+  return `Bu fotoğrafta kıyafetler var: ya bir kişinin üzerinde giyilmiş bir kombin ya da yan yana serilmiş, askıda ya da dolapta duran parçalar. Görünen her kıyafet parçasını ve ayakkabıyı ayrı ayrı, dikkatle çıkar.
 
 Dolaptaki mevcut parçalar:
 ${list(known)}
 
-Kurallar:
+Nasıl bak:
+- Parçaları tek tek ele al. Üst üste duran ya da kısmen görünen parçaları da say; ama görünmeyen bir şeyi (kapalı ceketin altındaki gömlek gibi) uydurma.
+- Aynı parça iki kez yazılmasın. Birbirine benzeyen ama farklı iki parça varsa (iki farklı mavi gömlek) ikisini ayrı yaz.
+- Rengi ışığa ve gölgeye göre değil kumaşın asıl rengine göre seç. Kumaşı doku, parlaklık, dikiş ve kalıba bakarak çıkar; emin değilsen conf="tahmin" yaz.
+
+Alanlar:
 - kind: şu listeden biri: ${Object.keys(KINDS).join(', ')}. Listede tam karşılığı yoksa en yakınını seç (hırka ve süveter: Kazak, yelek: Ceket, çanta, şapka, kemer, atkı: Aksesuar).
 - color: parçanın baskın rengi, şu listeden en yakını: ${COLORS.join(', ')}.
-- hex: baskın rengin "#RRGGBB" kodu; seçtiğin color ile uyumlu olsun. Işık ve gölgeye değil kumaşın asıl rengine bak.
+- hex: baskın rengin "#RRGGBB" kodu; seçtiğin color ile uyumlu olsun.
 - fabric: en olası kumaş, şu listeden biri: ${FABRICS.join(', ')}.
 - pattern: "düz" ya da "desenli" (çizgili, kareli, çiçekli, baskılı vb.).
 - name: kısa Türkçe ad, renk + tür, ör. "Lacivert keten gömlek". Marka yazma.
 - wash: yıkama grubu, şu listeden biri: beyaz (beyaz ve krem), renkli, koyu (siyah, lacivert, koyu kot), hassas (yün, ipek, saten, kaşmir).
-- match: parça dolaptaki bir parçayla büyük olasılıkla aynıysa dolaptaki adı aynen yaz, değilse null.
+- conf: "kesin" tür, renk ve kumaşı net gördüysen; "tahmin" parça kısmen görünüyor ya da tür/kumaşı doku ve kalıptan çıkardıysan; "belirsiz" bulanık ya da çok az görünüyorsa. Kullanıcı "tahmin" ve "belirsiz" parçalara ayrıca onay verir.
+- match: parça dolaptaki bir parçayla büyük olasılıkla aynıysa dolaptaki adı aynen yaz, değilse null. Emin değilsen null.
 - worn: kıyafetler bir kişinin üzerinde giyiliyse true, serilmiş ya da askıdaysa false.
-- note: Türkçe, en fazla iki kısa cümle. Fotoğraftaki parçaların renk ve kumaş uyumu hakkında yorum yap.
+- note: Türkçe, en fazla iki kısa cümle. Parçaların renk, kumaş ve stil uyumu hakkında yorum yap; bir şey uymuyorsa nedenini söyle.
 - Kişinin yüzü, bedeni ya da ortam hakkında yorum yapma. Fotoğrafta kıyafet yoksa pieces boş olsun, note bunu söylesin.
 
 Sadece şu biçimde JSON döndür, başka metin yazma:
-{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","wash":"beyaz","match":"Beyaz gömlek"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
-}
-
-/** Cevaptaki ilk JSON nesnesini okur (kod bloğu ya da açıklama eklenmişse de). */
-function parseJson(text: string): Record<string, unknown> | null {
-  const a = text.indexOf('{'), b = text.lastIndexOf('}');
-  if (a < 0 || b <= a) return null;
-  try {
-    return JSON.parse(text.slice(a, b + 1));
-  } catch {
-    return null;
-  }
-}
-
-const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
-const nameOrNull = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 60) : null);
-
-/** Modelin cevabını uygulamanın beklediği biçime indirir; tanınmayan alanları atar. */
-function clean(kind: Kind, r: Record<string, unknown>) {
-  const note = str(r.note, 240);
-  if (kind === 'fridge') {
-    const items = (Array.isArray(r.items) ? r.items : []).slice(0, 40).flatMap(x => {
-      const name = str(x?.name, 40);
-      if (!name) return [];
-      const lvl = ['var', 'az', 'yok'].includes(x?.lvl) ? x.lvl : 'var';
-      return [{ name, qty: str(x?.qty, 30), lvl, match: nameOrNull(x?.match) }];
-    });
-    const missing = (Array.isArray(r.missing) ? r.missing : []).map(x => str(x, 60)).filter(Boolean).slice(0, 40);
-    return { items, missing, note };
-  }
-  const pieces = (Array.isArray(r.pieces) ? r.pieces : []).slice(0, 20).flatMap(x => {
-    const name = str(x?.name, 40);
-    if (!name) return [];
-    const kind = typeof x?.kind === 'string' && KINDS[x.kind] ? x.kind : null;
-    const color = str(x?.color, 20).toLocaleLowerCase('tr-TR');
-    return [{
-      name,
-      kind,
-      cat: kind ? KINDS[kind] : CATS.includes(x?.cat) ? x.cat : 'Aksesuar',
-      color: COLORS.includes(color) ? color : null,
-      hex: typeof x?.hex === 'string' && /^#[0-9a-f]{6}$/i.test(x.hex) ? x.hex : null,
-      fabric: FABRICS.includes(x?.fabric) ? x.fabric : null,
-      pattern: x?.pattern === 'desenli' ? 'desenli' : 'düz',
-      wash: WASH.includes(x?.wash) ? x.wash : null,
-      match: nameOrNull(x?.match),
-    }];
-  });
-  return { pieces, worn: r.worn === true, note };
+{"pieces":[{"name":"Beyaz pamuk gömlek","kind":"Gömlek","color":"beyaz","hex":"#F4F4F0","fabric":"Pamuk","pattern":"düz","wash":"beyaz","match":"Beyaz gömlek","conf":"kesin"}],"worn":true,"note":"Beyaz gömlek ve koyu kot net bir kontrast kuruyor."}`;
 }
 
 /** Base64 başlığından gerçek görsel türünü bulur (istemcinin söylediği tür güvenilmez). */
@@ -214,34 +124,63 @@ Deno.serve(async req => {
   const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const { data: auth, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !auth.user) return json({ error: 'unauthorized' }, 401);
-  // Hesapsız (anonim) kullanıcı taramaya ulaşamaz: üyelik (e-posta ile giriş) gerekir.
-  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
   const userId = auth.user.id;
 
   // Gövde boyutu, kimlik doğrulamadan sonra ve JSON ayrıştırılmadan önce sınırlanır.
   const parsed0 = await readJson(req, MAX_IMAGE + 20_000);
   if ('error' in parsed0) return json({ error: parsed0.error }, parsed0.error === 'too_large' ? 413 : 400);
-  const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown };
+  const body = parsed0.body as { kind?: string; image?: string; mediaType?: string; known?: unknown; lang?: unknown };
+  const isMeter = body.kind === 'meter';
   const kind = body.kind === 'fridge' || body.kind === 'look' ? body.kind : null;
   const image = typeof body.image === 'string' ? body.image : '';
-  if (!kind || !image) return json({ error: 'bad_request' }, 400);
+  if ((!kind && !isMeter) || !image) return json({ error: 'bad_request' }, 400);
   if (image.length > MAX_IMAGE) return json({ error: 'too_large' }, 413);
   // Sadece gerçek JPEG / PNG / WebP kabul edilir; hak ayrılmadan önce kontrol edilir.
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image.slice(0, 4096))) return json({ error: 'bad_image' }, 400);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(image) || image.length % 4 === 1) return json({ error: 'bad_image' }, 400);
   const mediaType = sniff(image);
   if (!mediaType) return json({ error: 'bad_image' }, 415);
   const known = (Array.isArray(body.known) ? body.known : []).map(x => str(x, 60)).filter(Boolean).slice(0, 80);
 
+  // Sayaç kontrolü: ucuz tek soru (evet/hayır). Tarama hakkından düşmez; sadece guard (dakika/IP/genel tavan) uygulanır. Misafir de kullanabilir.
+  if (isMeter) {
+    const gm = await guard(req, userId, 'scan');
+    if (!gm.ok) return json({ error: gm.error }, gm.status);
+    try {
+      const res = await anthropic.beta.messages.create({
+        model: MODEL,
+        max_tokens: 300,
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: METER_SCHEMA } },
+        ...FALLBACK,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+          { type: 'text', text: METER_PROMPT },
+        ] }],
+      });
+      const r = parseJson(res.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join(''));
+      if (!r || typeof r.ok !== 'boolean') { await gm.release(); return json({ error: 'unreadable' }, 422); }
+      return json({ ok: r.ok, reason: str(r.reason, 120) });
+    } catch (e) {
+      await gm.release();
+      console.error('meter failed', e);
+      return json({ error: 'ai' }, 502);
+    }
+  }
+  if (auth.user.is_anonymous) return json({ error: 'account_required' }, 403);
+  if (!kind) return json({ error: 'bad_request' }, 400);
+
+  // Maliyet koruması: dakika sınırı, IP ve genel günlük tavan (kullanıcı hakkından önce, ucuz kontrol).
+  const g = await guard(req, userId, 'scan');
+  if (!g.ok) return json({ error: g.error }, g.status);
   const { data: slot, error: slotErr } = await admin.rpc('scan_reserve', { p_user: userId, p_kind: kind });
-  if (slotErr) return json({ error: 'server' }, 500);
-  if (!slot.ok) return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429);
-  const release = () => admin.rpc('scan_release', { p_user: userId, p_period: slot.period, p_kind: kind });
+  if (slotErr) { await g.release(); return json({ error: 'server' }, 500); }
+  if (!slot.ok) { await g.release(); return json({ error: 'limit', premium: slot.premium, limit: slot.limit }, 429); }
+  const release = async () => { await g.release(); await admin.rpc('scan_release', { p_user: userId, p_period: slot.period, p_kind: kind }); };
 
   try {
     const res = await anthropic.beta.messages.create({
       model: MODEL,
-      // Düşünme payı dahil; JSON yarıda kesilmesin.
-      max_tokens: 16000,
+      // Düşünme payı dahil; JSON yarıda kesilmesin ama maliyet de sınırlı kalsın.
+      max_tokens: 6000,
       // 'low' ürünleri ve kumaşları sık atlıyordu; tarama başına birkaç saniye daha uzun ama daha isabetli.
       output_config: { effort: 'medium', format: { type: 'json_schema', schema: SCHEMA[kind] } },
       ...FALLBACK,
@@ -249,7 +188,7 @@ Deno.serve(async req => {
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-          { type: 'text', text: kind === 'fridge' ? fridgePrompt(known) : lookPrompt(known) },
+          { type: 'text', text: withLang(kind === 'fridge' ? fridgePrompt(known) : lookPrompt(known), body.lang) },
         ],
       }],
     });

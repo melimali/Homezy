@@ -3,17 +3,79 @@
     "name": "Homezy",
     "slug": "homezy",
     "scheme": "homezy",
-    "version": "1.0.0",
+    "version": "1.0.4",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.meikai.homezy"
+      "bundleIdentifier": "com.meikai.homezy",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.meikai.homezy"
+        ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleLocalizations": [
+          "tr",
+          "en",
+          "de",
+          "es",
+          "fr",
+          "pt",
+          "ja",
+          "ko",
+          "ar"
+        ]
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1",
+              "1C8F.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1",
+              "3B52.1",
+              "0A2A.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "E174.1",
+              "85F4.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.meikai.homezy",
       "versionCode": 1,
+      "allowBackup": false,
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -36,36 +98,39 @@
     },
     "plugins": [
       "expo-router",
+      "@bacons/apple-targets",
       "expo-status-bar",
       "expo-sqlite",
-      ["expo-location", { "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz." }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Evinin gökyüzü bulunduğun yerin hava durumuna göre görünsün diye konumuna bakıyoruz. Konum sadece hava durumu için kullanılır, saklanmaz."
+        }
+      ],
       "expo-font",
       [
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**"
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class androidx.work.** { *; }\n-keep class androidx.room.** { *; }\n-keep class * extends androidx.room.RoomDatabase { *; }\n-dontwarn androidx.work.**\n-keep class com.facebook.react.** { *; }\n-keep class com.facebook.hermes.** { *; }\n-keep class com.swmansion.reanimated.** { *; }\n-keep class expo.modules.** { *; }\n-keep class com.revenuecat.purchases.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.ump.** { *; }\n-keep class com.reactnativeandroidwidget.** { *; }\n-keep class com.meikai.homezy.** { *; }\n-dontwarn com.revenuecat.**\n-dontwarn com.google.android.gms.**"
           }
         }
       ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo-kare.png",
-          "imageWidth": 180,
+          "image": "./assets/splash-moka.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#EBF5EE",
-          "dark": {
-            "image": "./assets/logo-kare.png",
-            "backgroundColor": "#283044"
-          }
+          "backgroundColor": "#F7F2EA"
         }
       ],
       [
         "expo-notifications",
         {
+          "icon": "./assets/notification-icon.png",
           "color": "#283044",
           "defaultChannel": "sabah-ozeti"
         }
@@ -83,7 +148,50 @@
         {
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511",
-          "delayAppMeasurementInit": true
+          "delayAppMeasurementInit": true,
+          "skAdNetworkItems": [
+            "cstr6suwn9.skadnetwork",
+            "4fzdc2evr5.skadnetwork",
+            "2fnua5tdw4.skadnetwork",
+            "ydx93a7ass.skadnetwork",
+            "p78axxw29g.skadnetwork",
+            "v72qych5uu.skadnetwork",
+            "ludvb6z3bs.skadnetwork",
+            "cp8zw746q7.skadnetwork",
+            "3sh42y64q3.skadnetwork",
+            "c6k4g5qg8m.skadnetwork",
+            "s39g8k73mm.skadnetwork",
+            "3qy4746246.skadnetwork",
+            "hs6bdukanm.skadnetwork",
+            "mlmmfzh3r3.skadnetwork",
+            "v4nxqhlyqp.skadnetwork",
+            "wzmmz9fp6w.skadnetwork",
+            "su67r6k2v3.skadnetwork",
+            "yclnxrl5pm.skadnetwork",
+            "7ug5zh24hu.skadnetwork",
+            "gta9lk7p23.skadnetwork",
+            "vutu7akeur.skadnetwork",
+            "y5ghdn5j9k.skadnetwork",
+            "n6fk4nfna4.skadnetwork",
+            "v9wttpbfk9.skadnetwork",
+            "n38lu8286q.skadnetwork",
+            "47vhws6wlr.skadnetwork",
+            "kbd757ywx3.skadnetwork",
+            "9t245vhmpl.skadnetwork",
+            "a2p9lx4jpn.skadnetwork",
+            "22mmun2rn5.skadnetwork",
+            "4468km3ulz.skadnetwork",
+            "2u9pt9hc89.skadnetwork",
+            "8s468mfl3y.skadnetwork",
+            "klf5c3l5u5.skadnetwork",
+            "ppxm28t8ap.skadnetwork",
+            "424m5254lk.skadnetwork",
+            "uw77j35x4d.skadnetwork",
+            "e5fvkxwrpn.skadnetwork",
+            "zq492l623r.skadnetwork",
+            "3rd42ekr43.skadnetwork",
+            "3qcr597p9d.skadnetwork"
+          ]
         }
       ],
       [
@@ -95,6 +203,13 @@
         }
       ],
       "expo-sharing",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "meikai-digital",
+          "project": "homezy"
+        }
+      ],
       [
         "react-native-android-widget",
         {
@@ -118,6 +233,20 @@
               "resizeMode": "horizontal|vertical",
               "previewImage": "./assets/widget-preview.png",
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "Mini",
+              "label": "Homezy · Mini",
+              "description": "Su, ilaç, market ve aktif görev tek küçük widget'ta. Dokunarak bardak ekle, ilacı ve işi tamamla.",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "maxResizeWidth": "520dp",
+              "maxResizeHeight": "340dp",
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview-mini.png",
+              "updatePeriodMillis": 1800000
             }
           ]
         }
@@ -135,6 +264,16 @@
       "eas": {
         "projectId": "b96d1fb9-c720-4170-aaf3-c9e4d7d00bd3"
       }
+    },
+    "locales": {
+      "en": "./locales/en.json",
+      "de": "./locales/de.json",
+      "es": "./locales/es.json",
+      "fr": "./locales/fr.json",
+      "pt": "./locales/pt.json",
+      "ja": "./locales/ja.json",
+      "ko": "./locales/ko.json",
+      "ar": "./locales/ar.json"
     }
   }
 }

@@ -20,3 +20,14 @@ export function legalUrl(kind: 'privacy' | 'terms', lang?: string) {
   const tr = !lang || lang === 'tr';
   return kind === 'privacy' ? (tr ? LEGAL.privacy : LEGAL.privacyEn) : tr ? LEGAL.terms : LEGAL.termsEn;
 }
+
+/** Bağlantıyı güvenle açar; açılamazsa hata fırlatmaz, false döner (Sentry HOMEZY-1). */
+export async function openLink(url: string): Promise<boolean> {
+  try {
+    const { Linking } = require('react-native') as typeof import('react-native');
+    await Linking.openURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}

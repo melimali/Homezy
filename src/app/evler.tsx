@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -155,9 +155,9 @@ export default function Evler() {
                 accessibilityLabel={`${t.name} teması${locked ? ', Premium' : ''}`}
                 style={[styles.theme, { backgroundColor: on ? c.accentSoft : c.surface2, borderColor: on ? c.hi : 'transparent' }]}
               >
-                <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
+                <Text style={{ lineHeight: 36, fontSize: 28 }}>{t.emoji}</Text>
                 <Text style={[styles.themeName, { color: c.ink }]}>{t.name}</Text>
-                {locked && <Text style={{ fontSize: 11 }}>👑</Text>}
+                {locked && <Text style={{ fontSize: 12 }}>👑</Text>}
               </Pressable>
             );
           })}
@@ -167,7 +167,7 @@ export default function Evler() {
       <Modal transparent visible={!!peekTheme} animationType="fade" onRequestClose={() => setPeek(null)}>
         <View style={[styles.bg, { backgroundColor: c.shadow }]}>
           <View style={[styles.sheet, { backgroundColor: c.surface }]}>
-            <Text style={{ fontSize: 64 }}>{peekTheme?.emoji}</Text>
+            <Text style={{ lineHeight: 83, fontSize: 64 }}>{peekTheme?.emoji}</Text>
             <T v="h1" style={{ textAlign: 'center' }}>{peekTheme?.name} teması</T>
             <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>Evin bu temayla başka görünür. İlerlemen ve eşyaların aynen kalır, istediğin zaman Gündüz&apos;e dönebilirsin.</T>
             <Btn kind="primary" label="Premium'a bak ⭐" block onPress={() => { setPeek(null); router.push(premiumHref('theme')); }} />
@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
   sheet: { borderRadius: 40, padding: 28, gap: 14, alignItems: 'center', maxWidth: 400, width: '100%' },
   home: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  on: { fontFamily: fonts.bodyBlack, fontSize: 13 },
+  on: { fontFamily: fonts.bodyBlack, fontSize: 13.5 },
   themes: { flexDirection: 'row', gap: 8 },
   theme: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.card - 6, borderWidth: 2, gap: 2 },
-  themeName: { fontFamily: fonts.bodyBlack, fontSize: 12.5 },
+  themeName: { fontFamily: fonts.bodyBlack, fontSize: 12 },
 });

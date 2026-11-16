@@ -1,26 +1,39 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { type BadgeArt } from '@/constants/badges';
-import { useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
+import { useCallback, useRef, useState, type ComponentRef } from 'react';
+import { MokaReact } from '@/components/MokaReact';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { displayName, useAuth } from '@/auth/AuthProvider';
-import { Appear, Squish } from '@/components/motion';
-import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar } from '@/components/ui';
-import { MOKA_ASSETS } from '@/constants/moka';
+import { BenTour, type TourStep } from '@/components/BenTour';
+import { Appear, Float, Squish } from '@/components/motion';
+import { Bar, Btn, IconBtn, Screen, Sheet, T, TitleBar, Chevron } from '@/components/ui';
+import { useStep } from '@/lib/firstRun';
 import { useToast } from '@/components/Toast';
+import { tx } from '@/i18n/runtime';
 import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
+import { saveNickname, useName } from '@/profile/useName';
+import { usePersona } from '@/profile/usePersona';
+import { TYPES } from '@/domain/kisilik';
 import { homeScore, emptyState } from '@/domain/logic';
 import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
-import { legalUrl } from '@/lib/links';
+import { legalUrl, openLink } from '@/lib/links';
 import { purchasesEnabled, usePurchases } from '@/purchases/PurchasesProvider';
+import Constants from 'expo-constants';
+import { sendTestError } from '@/lib/crash';
 import { isOwner } from '@/auth/owner';
 import { useStore } from '@/store/AppStore';
 import { flush } from '@/sync/cloud';
-import { pinTodayWidget, widgetAvailable } from '@/widget/widget';
-import { fonts, radius, useColors } from '@/theme';
+import { prefs } from '@/lib/supabase';
+import { pinMiniWidget, pinTodayWidget, widgetAvailable } from '@/widget/widget';
+import { brand, fonts, radius, useColors, elevation } from '@/theme';
+import { MOKA_ASSETS } from '@/constants/moka';
+import { appAlert } from '@/components/AppAlert';
 
 /** Onay penceresi; web önizlemesinde Alert düğmeleri çalışmadığı için tarayıcı penceresi. */
 function confirm(title: string, text: string, ok: string, onOk: () => void) {
@@ -28,11 +41,24 @@ function confirm(title: string, text: string, ok: string, onOk: () => void) {
     if (globalThis.confirm?.(`${title}\n\n${text}`)) onOk();
     return;
   }
-  Alert.alert(title, text, [
+  appAlert(title, text, [
     { text: 'Vazgeç', style: 'cancel' },
     { text: ok, style: 'destructive', onPress: onOk },
   ]);
 }
+
+type Tgt = ComponentRef<typeof View>;
+const TOUR_KEY = 'tour.ben';
+const TOUR: TourStep[] = [
+  { key: 'profil', pose: 'happy', text: 'Selam, ben Moka! Burası senin sayfan: seviyen, serin ve rozetlerin burada.' },
+  { key: 'ilac', pose: 'happy', text: 'İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.' },
+  { key: 'gunluk', pose: 'reading', text: 'Günlük: bugün nasıldı? Birkaç satır yaz, ruh halini seç.' },
+  { key: 'buyume', pose: 'laptop', text: 'Kendini geliştir: sana göre kitap, film ve öğrenme önerileri.' },
+  { key: 'saglik', pose: 'love', text: 'Sağlık: ilaç, alışkanlık, ruh hali ve spor hep burada.' },
+  { key: 'plan', pose: 'cheers', text: 'Gelişim planın ve ev planın: evini çiz, odaları, dolabı ve bakımı yönet. Ev kartında.' },
+  { key: 'hesap', pose: 'sipping', text: 'Hesap: yedekleme, Premium ve giriş işlemleri burada.' },
+  { key: 'ayar', pose: 'wink', text: 'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!' },
+];
 
 /** Hesap ve üyelik: profil, bulut yedeği, Premium durumu, satın alımları geri yükleme, çıkış, hesap silme. */
 export default function Hesap() {
@@ -40,14 +66,38 @@ export default function Hesap() {
   const router = useRouter();
   const toast = useToast();
   const { t } = useTranslation();
-  const { status, user, signOut, deleteAccount } = useAuth();
-  const { premium, restore, manage } = usePurchases();
+  const { status, user, signOut, deleteAccount, updateAccount } = useAuth();
+  const { premium, restore, manage, trialDays } = usePurchases();
   const { state, replace, update } = useStore();
-  const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | null>(null);
+  const [busy, setBusy] = useState<'restore' | 'out' | 'delete' | 'lang' | null>(null);
+  useBusy(!!busy);
   const [langOpen, setLangOpen] = useState(false);
   const [cat, setCat] = useState<string | null>(null);
+  const [tour, setTour] = useState(false);
+  const scrollY = useRef(0);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [tg] = useState<{ current: Record<string, Tgt | null> }>(() => ({ current: {} }));
+  const mark = (k: string) => ({ ref: (v: Tgt | null) => { tg.current[k] = v; }, collapsable: false as const });
+  // Tur, Ben sekmesi ilk kez açıldığında ve sırası gelince başlar; "Turu tekrar göster" doğrudan açar.
+  const [tourWanted, setTourWanted] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (prefs.get(TOUR_KEY) === '1') return;
+      const id = setTimeout(() => setTourWanted(true), 900);
+      return () => {
+        clearTimeout(id);
+        setTourWanted(false);
+      };
+    }, []),
+  );
+  const tourTurn = useStep('tour', tourWanted);
+  const endTour = () => { prefs.set(TOUR_KEY, '1'); setTour(false); setTourWanted(false); };
   const account = status === 'account';
-  const name = account ? displayName(user) : t('guest');
+  const nick = useName();
+  const { disc } = usePersona();
+  const typeImg = disc && TYPES[disc.type] ? TYPES[disc.type].img : null;
+  const name = nick ?? (account ? displayName(user) : t('guest'));
+  const [editNick, setEditNick] = useState<string | null>(null);
   const now = useNow();
   const extras = extrasUnlocked(state.play.days.length, now);
   const hp = progressOf(state.play, now);
@@ -69,16 +119,46 @@ export default function Hesap() {
     { label: 'Yıldız Ev', art: 'yildiz', on: allDone >= 100, hint: '100 iş tamamla' },
   ];
 
+  // Sonuç mesajları Sheet'in içinde gösterilir: iOS'ta Modal üstünde toast/uyarı görünmüyordu.
+  const [msg, setMsg] = useState<{ key: 'restore' | 'acct'; ok: boolean; text: string } | null>(null);
+  const [edit, setEdit] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [savingAcct, setSavingAcct] = useState(false);
   const doRestore = async () => {
     setBusy('restore');
+    setMsg(null);
     const r = await restore();
     setBusy(null);
-    if (!r.ok) toast(r.error);
-    else toast(r.active ? 'Premium üyeliğin geri yüklendi.' : 'Bu mağaza hesabında etkin bir üyelik bulunamadı.');
+    if (!r.ok) setMsg({ key: 'restore', ok: false, text: r.error });
+    else setMsg({ key: 'restore', ok: r.active, text: r.active ? 'Premium üyeliğin geri yüklendi.' : 'Bu mağaza hesabında etkin bir üyelik bulunamadı.' });
+  };
+  const saveAcct = async () => {
+    setMsg(null);
+    const name = newName.trim();
+    if (!name && !newPw) return setMsg({ key: 'acct', ok: false, text: 'Değiştirmek için yeni ad ya da yeni şifre yaz.' });
+    if (newPw && newPw.length < 8) return setMsg({ key: 'acct', ok: false, text: 'Şifre en az 8 karakter olmalı.' });
+    setSavingAcct(true);
+    const r = await updateAccount({ name: name || undefined, password: newPw || undefined });
+    setSavingAcct(false);
+    if (!r.ok) return setMsg({ key: 'acct', ok: false, text: r.error });
+    if (name) saveNickname(name);
+    setNewPw('');
+    setNewName('');
+    setEdit(false);
+    setMsg({ key: 'acct', ok: true, text: newPw ? 'Şifren güncellendi.' : 'Bilgilerin güncellendi.' });
+  };
+
+  // iOS'ta açık bir Modal (Sheet) varken ikinci Modal (onay penceresi) açılmaz; önce sayfayı kapat.
+  const afterSheet = (fn: () => void) => {
+    if (Platform.OS === 'ios' && open) {
+      setCat(null);
+      setTimeout(fn, 500);
+    } else fn();
   };
 
   const doSignOut = () =>
-    confirm(
+    afterSheet(() => confirm(
       t('signOut'),
       account
         ? 'Evin hesabında kayıtlı kalır. Bu telefondaki veriler silinir; tekrar giriş yapınca geri gelir.'
@@ -86,31 +166,39 @@ export default function Hesap() {
       t('close'),
       async () => {
         setBusy('out');
-        if (account) {
-          await flush(user?.id, state);
-          await signOut();
-        } else {
-          // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
-          await deleteAccount();
+        try {
+          if (account) {
+            await Promise.race([flush(user?.id, state), new Promise(r => setTimeout(r, 4000))]);
+            await signOut();
+          } else {
+            // Misafirin sunucudaki anonim kaydı bir daha açılamaz; çıkarken onu da sil.
+            // Silinemezse (internet yok) yine de yerelden çık.
+            const r = await deleteAccount().catch(() => ({ ok: false as const }));
+            if (!r.ok) await signOut();
+          }
+        } catch {
+          await signOut().catch(() => {});
+        } finally {
+          setBusy(null);
         }
         replace(emptyState());
       },
-    );
+    ));
 
   const doDelete = () =>
-    confirm(
+    afterSheet(() => confirm(
       t('deleteAccount'),
       'Hesabın, evin ve üyelik kaydın kalıcı olarak silinir, uygulama baştan başlar. Bu geri alınamaz.\n\nPremium aboneliğin varsa ücret alınmaya devam etmemesi için onu App Store ya da Google Play abonelik ayarlarından ayrıca iptal et.',
       t('deleteAccount'),
       async () => {
         setBusy('delete');
-        const r = await deleteAccount();
+        const r = await deleteAccount().catch(() => ({ ok: false as const, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' }));
         setBusy(null);
         if (!r.ok) return toast(r.error);
         replace(emptyState());
         toast('Hesabın silindi.');
       },
-    );
+    ));
 
   const accountPanel = (
     <View style={{ gap: 12 }}>
@@ -121,7 +209,7 @@ export default function Hesap() {
               <T v="h3">Homezy Premium</T>
               <T v="small">{premium.active ? 'Sınırsız ev, özel temalar ve fazlası açık' : 'Tüm özellikleri aç'}</T>
             </View>
-            <Text style={{ fontSize: 32 }}>👑</Text>
+            <Text style={{ lineHeight: 42, fontSize: 32 }}>👑</Text>
           </View>
           {premium.active ? (
             <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
@@ -133,6 +221,7 @@ export default function Hesap() {
               <T v="small" style={{ textDecorationLine: 'underline' }}>{busy === 'restore' ? 'Kontrol ediliyor…' : t('restorePurchases')}</T>
             </Squish>
           )}
+          {msg?.key === 'restore' && <T v="small" style={{ textAlign: 'center', color: msg.ok ? c.ok : c.late }}>{msg.text}</T>}
         </View>
       )}
 
@@ -144,10 +233,20 @@ export default function Hesap() {
             : 'Şu an misafir olarak kullanıyorsun. Hesaba geç, evin ve serin kaybolmasın.'}
         </T>
         {account ? (
-          <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => { setCat(null); router.push('/giris'); }} block />
+          edit ? (
+            <View style={{ gap: 10 }}>
+              <TextInput value={newName} onChangeText={setNewName} placeholder="Yeni ad (isteğe bağlı)" placeholderTextColor={c.muted} autoCapitalize="words" style={[st.fld, { color: c.ink, backgroundColor: c.bg }]} />
+              <TextInput value={newPw} onChangeText={setNewPw} placeholder="Yeni şifre (en az 8 karakter)" placeholderTextColor={c.muted} secureTextEntry autoCapitalize="none" autoCorrect={false} textContentType="newPassword" style={[st.fld, { color: c.ink, backgroundColor: c.bg }]} />
+              <Btn label={savingAcct ? 'Kaydediliyor…' : 'Kaydet'} kind="primary" onPress={saveAcct} disabled={savingAcct} block />
+              <Btn label="Vazgeç" kind="soft" onPress={() => { setEdit(false); setMsg(null); }} block />
+            </View>
+          ) : (
+            <Btn label="Şifre / Bilgi değiştir" kind="soft" onPress={() => { setMsg(null); setEdit(true); }} block />
+          )
         ) : (
           <Btn label="Hesap aç veya giriş yap" kind="primary" onPress={() => { setCat(null); router.push('/giris'); }} block />
         )}
+        {msg?.key === 'acct' && <T v="small" style={{ textAlign: 'center', color: msg.ok ? c.ok : c.late }}>{msg.text}</T>}
       </View>
 
       {isOwner(user) && (
@@ -165,26 +264,31 @@ export default function Hesap() {
       <View style={[st.card, { backgroundColor: c.surface2 }]}>
         <T v="h3">{t('about')}</T>
         <View style={st.legal}>
-          <Squish onPress={() => Linking.openURL(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
+          <Squish onPress={() => openLink(legalUrl('terms', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('terms')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('terms')}</T>
           </Squish>
           <Text style={{ color: c.muted }}>•</Text>
-          <Squish onPress={() => Linking.openURL(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
+          <Squish onPress={() => openLink(legalUrl('privacy', state.settings.language))} accessibilityRole="link" accessibilityLabel={t('privacy')}>
             <T v="small" style={{ textDecorationLine: 'underline' }}>{t('privacy')}</T>
           </Squish>
         </View>
         <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>
           Müzik ve ortam sesleri: Pixabay (Pixabay İçerik Lisansı). Hava durumu: Open-Meteo.com. Konum yalnızca gökyüzü için kullanılır, saklanmaz. Tüm lisanslar: Gizlilik ve yasal.
         </T>
-        <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v1.0.0</T>
+        <Pressable
+          delayLongPress={1500}
+          onLongPress={async () => appAlert('Sentry testi', (await sendTestError()) ? 'Test hatası gönderildi. Sentry panelinde birkaç dakikada görünür.' : 'Gönderilemedi: Sentry kapalı (geliştirme sürümü, DSN yok ya da yerel modül yok).')}
+        >
+          <T v="tiny" style={{ textAlign: 'center', opacity: 0.6 }}>Homezy · v{Constants.expoConfig?.version ?? ''}</T>
+        </Pressable>
       </View>
 
       <View style={{ gap: 8 }}>
-        <Pressable onPress={doSignOut} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
+        <Pressable onPress={doSignOut} disabled={busy === 'out' || busy === 'delete'} accessibilityRole="button" accessibilityLabel={t('signOut')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'out' ? 'Çıkılıyor…' : t('signOut')}</Text>
         </Pressable>
-        <Pressable onPress={doDelete} disabled={busy != null} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
+        <Pressable onPress={doDelete} disabled={busy === 'out' || busy === 'delete'} accessibilityRole="button" accessibilityLabel={t('deleteAccount')} style={({ pressed }) => [st.dangerBtn, { backgroundColor: c.surface2 }, pressed && { opacity: 0.7 }]}>
+          <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.late }}>{busy === 'delete' ? 'Siliniyor…' : t('deleteAccount')}</Text>
         </Pressable>
       </View>
     </View>
@@ -206,21 +310,26 @@ export default function Hesap() {
       { emoji: '📚', label: 'Kendini geliştir', sub: 'Kitap, film, öğrenme önerileri', tint: c.lavenderSoft, href: '/buyume' as Href },
       { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
       { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${badges.length} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
+      { emoji: '🎮', label: 'Biraz eğlenelim', sub: 'Moka Uçuş', tint: c.lavenderSoft, href: '/eglence' as Href },
       ...(extras ? [
         { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },
         { emoji: '🎬', label: 'Evimin hikâyesi', sub: 'Baştan bugüne', tint: c.lavenderSoft, href: '/hikaye' as Href },
       ] : []),
     ] },
-    { key: 'ev', emoji: '🏠', title: 'Ev', tint: c.peachSoft, sub: 'Plan, dolap, bakım', items: [
+    { key: 'ev', emoji: '🏠', title: 'Evim', tint: c.peachSoft, sub: 'Plan, dolap, bakım, buzdolabı', items: [
       { emoji: '🗺️', label: 'Ev planı', sub: 'Odaları çiz, düzenle', tint: c.sageSoft, href: '/plan' },
       { emoji: '🎨', label: 'Evini kendine benzet', sub: 'Zemin, duvar, pencere, eşya', tint: c.peachSoft, href: '/dekor' },
       { emoji: '👕', label: 'Gardırop', sub: 'Kıyafetler, çamaşır, kombin', tint: c.roseSoft, href: '/dolap' as Href },
       { emoji: '🧊', label: 'Buzdolabı', sub: 'Ürünler, eksikler, tarifler', tint: c.sageSoft, href: '/buzdolabi' as Href },
       { emoji: '🔧', label: 'Ev bakımı', sub: 'Faturalar, garantiler, mevsimlik işler', tint: c.peachSoft, href: '/bakim' },
       { emoji: '🏡', label: 'Evimin özellikleri', sub: 'Evcil hayvan, halı, kombi…', tint: c.lavenderSoft, href: '/evim' },
+      { emoji: '📤', label: 'Evimi paylaş', sub: 'Ev kartını arkadaşlarına gönder', tint: c.roseSoft, href: '/paylas' as Href },
       { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
       { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
-      ...(widgetAvailable() ? [{ emoji: '📌', label: "Ana ekran widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy.')); } }] : []),
+      ...(widgetAvailable() ? [
+        { emoji: '📌', label: 'Mini widget', sub: 'Su, ilaç, market ve görev tek küçük kutuda', tint: c.sageSoft, onPress: () => { pinMiniWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Mini.')); } },
+        { emoji: '📋', label: "Bugün widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Bugün.')); } },
+      ] : []),
     ] },
     { key: 'moka', emoji: '🐦', title: 'Moka', tint: c.roseSoft, sub: 'Sohbet, bahçe, mağaza', items: [
       { emoji: '💬', label: 'Moka ile sohbet', sub: 'İş ekle, not al, sohbet et', tint: c.peachSoft, href: '/moka' },
@@ -231,6 +340,7 @@ export default function Hesap() {
     { key: 'hesap', emoji: '👤', title: 'Hesap', tint: c.lavenderSoft, sub: premium.active ? 'Premium ✓' : account ? 'Yedek açık' : 'Misafir', items: [] },
     { key: 'ayar', emoji: '⚙️', title: 'Ayarlar', tint: c.sageSoft, sub: 'Bildirim, dil, gizlilik', items: [
       { emoji: '🔔', label: 'Bildirimler ve ayarlar', sub: 'Sabah özeti, ses, tema', tint: c.lavenderSoft, href: '/bildirimler' },
+      { emoji: '🧭', label: 'Turu tekrar göster', sub: 'Ben sayfasının tanıtımı', tint: c.peachSoft, onPress: () => setTimeout(() => setTour(true), 300) },
       { emoji: '🌍', label: t('language'), sub: LANGUAGES.find(l => l.code === (state.settings.language ?? 'tr'))?.label ?? '', tint: c.sageSoft, onPress: () => setLangOpen(true) },
       { emoji: '🔒', label: 'Gizlilik ve yasal', sub: 'İzinler, veri dışa aktarma, lisanslar', tint: c.roseSoft, href: '/yasal' },
     ] },
@@ -244,46 +354,136 @@ export default function Hesap() {
   ];
 
   return (
-    <Screen header={false} tab tone="lavender">
+    <Screen header={false} tab tone="lavender" scrollRef={scroller} onScrollY={y => { scrollY.current = y; }}>
       <TitleBar title={t('profile')} right={<IconBtn icon="⚙️" label={t('settings')} onPress={() => setCat('ayar')} />} />
 
-      <Appear index={1} style={[st.profile, { backgroundColor: c.surface }]}>
-        <View style={[st.avatar, { backgroundColor: c.surface2 }]}>
-          <Image source={MOKA_ASSETS[account ? 'sipping' : 'begging']} style={st.avatarImg} resizeMode="contain" accessibilityIgnoresInvertColors />
-        </View>
+      <View {...mark('profil')}>
+      <Appear index={1} style={[st.hero, { backgroundColor: c.accentSoft }]}>
+        <Float amp={3} dur={2800}>
+          <View style={[st.avatar, { backgroundColor: c.surface }]}>
+            {typeImg ? (
+              <Image source={typeImg} style={{ width: 64, height: 64 }} resizeMode="contain" accessibilityIgnoresInvertColors />
+            ) : (
+              <MokaReact anim={hp.streak > 0 ? 'happy' : 'yawn'} size={64} />
+            )}
+          </View>
+        </Float>
         <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
           <View>
-            <T v="h2" numberOfLines={1}>{name}</T>
+            {editNick === null ? (
+              <Pressable onPress={() => setEditNick(nick ?? '')} accessibilityRole="button" accessibilityLabel={`Adını değiştir: ${name}`} hitSlop={6}>
+                <T v="h2" numberOfLines={1}>{name} ✏️</T>
+              </Pressable>
+            ) : (
+              <TextInput
+                value={editNick}
+                onChangeText={setEditNick}
+                onSubmitEditing={() => { saveNickname(editNick); setEditNick(null); }}
+                onBlur={() => { saveNickname(editNick); setEditNick(null); }}
+                placeholder="Adın"
+                placeholderTextColor={c.muted}
+                maxLength={20}
+                autoFocus
+                returnKeyType="done"
+                accessibilityLabel="Adın"
+                style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: c.ink, padding: 0 }}
+              />
+            )}
             <T v="tiny" numberOfLines={1}>{account ? user?.email : `${state.homeName} · ${t('noAccount')}`}</T>
           </View>
           <View style={st.levelRow}>
             <View style={[st.level, { backgroundColor: c.hi }]}>
               <Text style={[st.levelT, { color: c.onBadge }]}>{t('level')} {hp.level}</Text>
             </View>
-            <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} style={{ flex: 1 }} />
+            <Bar value={next ? (hp.level - (prev?.level ?? 0)) / (next.level - (prev?.level ?? 0)) : 1} color={c.hi} height={10} style={{ flex: 1 }} />
           </View>
-          <T v="tiny">{`🔥 ${hp.streak} ${t('gün seri')} · 🏆 ${earned}/${badges.length}`}</T>
+          <T v="tiny" numberOfLines={1}>{next ? `Sonraki: ${next.emoji} ${next.name}` : 'En üst seviyedesin 🎉'}</T>
+        </View>
+      </Appear>
+      </View>
+
+      {purchasesEnabled && (
+        <Appear index={2} style={[st.hero, { backgroundColor: c.surface2, flexDirection: 'column', alignItems: 'stretch', gap: 10 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Float amp={4} dur={2200}>
+              <Image source={MOKA_ASSETS.love} style={{ width: 84, height: 84 }} resizeMode="contain" />
+            </Float>
+            <View style={{ flex: 1, gap: 4 }}>
+              <T v="h3">👑 Homezy Premium</T>
+              {!premium.active && Math.max(trialDays.annual, trialDays.monthly) > 0 ? (
+                <View style={{ alignSelf: 'flex-start', backgroundColor: brand.clay, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 }}>
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12.5, color: brand.navy }}>
+                    {tx(`🎁 İlk ${Math.max(trialDays.annual, trialDays.monthly)} gün ücretsiz!`)}
+                  </Text>
+                </View>
+              ) : null}
+              <T v="small">
+                {premium.active
+                  ? tx('Premium üyesin ✓ Tüm özellikler açık')
+                  : tx('Moka ile sohbet, 1,5 kat puan, reklamsız ve fazlası. İstediğin zaman iptal et.')}
+              </T>
+            </View>
+          </View>
+          {premium.active ? (
+            <Btn label={t('manageSub')} kind="soft" onPress={() => manage()} block />
+          ) : (
+            <Btn label={t('goPremium')} kind="primary" onPress={() => router.push('/premium')} block />
+          )}
+        </Appear>
+      )}
+
+      <Appear index={2} style={st.stats}>
+        {([
+          { e: '🔥', n: hp.streak, l: 'gün seri', tint: c.peachSoft },
+          { e: '⭐', n: state.play.points, l: 'puan', tint: c.lavenderSoft },
+          { e: '✅', n: weekDone, l: 'bu hafta', tint: c.sageSoft },
+          { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },
+        ]).map(x => (
+          <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
+            <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.e}</Text>
+            <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{x.n}</Text>
+            <T v="tiny" numberOfLines={1}>{x.l}</T>
+          </View>
+        ))}
+      </Appear>
+
+      <Appear index={3} style={{ gap: 8 }}>
+        <T v="h3" style={st.sec}>⚡ Hızlı erişim</T>
+        <View style={[st.pinsCard, { backgroundColor: c.surface }]}>
+          {pins.map(x => (
+            <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
+              <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
+                <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 34, fontSize: 26 }}>{x.emoji}</Text></View>
+                <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
+              </Squish>
+            </View>
+          ))}
         </View>
       </Appear>
 
-      <Appear index={2} style={st.pins}>
-        {pins.map(x => (
-          <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pin}>
-            <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 24 }}>{x.emoji}</Text></View>
-            <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
-          </Squish>
-        ))}
-      </Appear>
+      {SECTIONS.map((sec, si) => (
+        <Appear key={sec.title} index={4 + si} style={{ gap: 8 }}>
+          <T v="h3" style={st.sec}>{sec.title}</T>
+          <View style={[st.group, { backgroundColor: c.surface }]}>
+            {sec.keys.map(k => cats.find(x => x.key === k)!).map((x, i) => (
+              <View key={x.key} {...mark(TILE_KEY[x.key] ?? x.key)}>
+                <Squish onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
+                  <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 31, fontSize: 24 }}>{x.emoji}</Text></View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <T v="h3" numberOfLines={1}>{x.title}</T>
+                    <T v="tiny" numberOfLines={1}>{x.sub}</T>
+                  </View>
+                  <Chevron color={c.muted} size={16} dir="right" />
+                </Squish>
+              </View>
+            ))}
+          </View>
+        </Appear>
+      ))}
 
-      <Appear index={3} style={st.grid}>
-        {cats.map(x => (
-          <Squish key={x.key} onPress={() => setCat(x.key)} accessibilityRole="button" accessibilityLabel={x.title} style={[st.tile, { backgroundColor: c.surface }]}>
-            <View style={[st.tileIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 28 }}>{x.emoji}</Text></View>
-            <T v="h3" numberOfLines={1}>{x.title}</T>
-            <T v="tiny" numberOfLines={1}>{x.sub}</T>
-          </Squish>
-        ))}
-      </Appear>
+      {(tour || tourTurn) && (
+        <BenTour steps={TOUR} targets={tg} onDone={endTour} getY={() => scrollY.current} scrollTo={y => scroller.current?.scrollTo({ y: Math.max(0, y), animated: true })} />
+      )}
 
       <Sheet open={!!open} onClose={() => setCat(null)} scroll>
         {open && (
@@ -293,12 +493,12 @@ export default function Hesap() {
               <View style={[st.group, { backgroundColor: c.surface2 }]}>
                 {open.items.map((x, i) => (
                   <Squish key={x.label} onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={[st.row, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}>
-                    <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ fontSize: 20 }}>{x.emoji}</Text></View>
+                    <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 26, fontSize: 20 }}>{x.emoji}</Text></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
                       {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
                     </View>
-                    <Text style={[st.chev, { color: c.muted }]}>›</Text>
+                    <Chevron color={c.muted} size={16} dir="right" />
                   </Squish>
                 ))}
               </View>
@@ -312,6 +512,10 @@ export default function Hesap() {
       <Sheet open={langOpen} onClose={() => setLangOpen(false)}>
         <View style={{ gap: 12, paddingVertical: 10 }}>
           <T v="h2">{t('selectLanguage')}</T>
+          <Pressable onPress={() => void Linking.openURL('mailto:info@themeikai.com')} accessibilityRole="link" accessibilityLabel="info@themeikai.com" style={{ gap: 2 }}>
+            <T v="small">{tx('Çeviri hatası mı gördün? Bize yaz, birlikte düzeltelim 💛')}</T>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi, textDecorationLine: 'underline' }}>info@themeikai.com</Text>
+          </Pressable>
           <View style={{ gap: 8 }}>
             {LANGUAGES.map(l => {
               const selected = (state.settings.language ?? 'tr') === l.code;
@@ -321,9 +525,13 @@ export default function Hesap() {
                   disabled={!!l.soon}
                   onPress={() => {
                     if (l.soon) return;
-                    update(D => void (D.settings.language = l.code));
                     setLangOpen(false);
-                    toast(`${l.flag} ${l.label} seçildi.`);
+                    setBusy('lang');
+                    setTimeout(() => {
+                      update(D => void (D.settings.language = l.code));
+                      toast(`${l.flag} ${l.label} seçildi.`);
+                      setTimeout(() => setBusy(b => (b === 'lang' ? null : b)), 500);
+                    }, 450);
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={l.label}
@@ -332,7 +540,7 @@ export default function Hesap() {
                     { backgroundColor: selected ? c.accentSoft : c.surface2, borderColor: selected ? c.hi : c.line, opacity: l.soon ? 0.55 : 1 },
                   ]}
                 >
-                  <Text style={{ fontSize: 22 }}>{l.flag}</Text>
+                  <Text style={{ lineHeight: 29, fontSize: 22 }}>{l.flag}</Text>
                   <Text style={[st.langText, { color: c.ink }]}>{l.label}</Text>
                   {l.soon && <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{l.soon}</Text>}
                   {selected && <Text style={{ fontFamily: fonts.bodyBlack, color: c.ok }}>✓</Text>}
@@ -349,28 +557,44 @@ export default function Hesap() {
 
 type Item = { emoji: string; label: string; sub: string; tint: string; href?: Href; onPress?: () => void };
 
+const SECTIONS = [
+  { title: '🌿 Kendim', keys: ['saglik', 'gelisim'] },
+  { title: '🏡 Evim ve Moka', keys: ['ev', 'moka'] },
+  { title: '🔑 Hesabım', keys: ['hesap', 'ayar'] },
+];
+const PIN_KEY: Record<string, string> = { 'İlaçlarım': 'ilac', 'Günlük': 'gunluk', 'Kendini geliştir': 'buyume' };
+const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 'hesap', ayar: 'ayar' };
+
 const st = StyleSheet.create({
+  fld: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, fontFamily: fonts.body },
+  stats: { flexDirection: 'row', gap: 8 },
+  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2, ...elevation.md },
+  hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, ...elevation.md },
+  pinsCard: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 8, flexDirection: 'row', gap: 4 },
+  sec: { paddingHorizontal: 4, paddingLeft: 6 },
+  pinIn: { alignItems: 'center', gap: 6 },
+  tileWrap: { width: '48.5%' },
   pins: { flexDirection: 'row', gap: 8 },
   pin: { flex: 1, alignItems: 'center', gap: 6 },
-  pinIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  pinIcon: { width: 56, height: 56, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { width: '48.5%', borderRadius: radius.card, padding: 14, gap: 4 },
-  tileIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  avatar: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarImg: { width: 60, height: 60, marginTop: 6 },
+  tile: { borderRadius: radius.card, padding: 14, gap: 4, ...elevation.md },
+  tileIcon: { width: 52, height: 52, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  profile: { borderRadius: radius.card, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, ...elevation.md },
+  avatar: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: 80, height: 80, marginTop: 6 },
   levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   level: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 },
-  levelT: { fontFamily: fonts.bodyBlack, fontSize: 11.5, textTransform: 'uppercase' },
+  levelT: { fontFamily: fonts.bodyBlack, fontSize: 12, textTransform: 'uppercase' },
   group: { borderRadius: radius.card, paddingHorizontal: 6, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 10 },
-  rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 42, height: 42, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
   chev: { fontFamily: fonts.bodyBlack, fontSize: 22 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  badge: { width: '48.5%', borderRadius: radius.tile, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10, ...elevation.md },
   badgeIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
   badgeImg: { width: 46, height: 46 },
-  card: { borderRadius: radius.card, padding: 16, gap: 12 },
+  card: { borderRadius: radius.card, padding: 16, gap: 12, ...elevation.md },
   legal: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
   danger: { gap: 8, marginBottom: 20 },
   dangerBtn: { borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center' },

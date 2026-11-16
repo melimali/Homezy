@@ -4,13 +4,13 @@ Amaç: kullanıcı her gün dönsün, Premium'u "zorunlu" olduğu için değil "
 
 ## 1. Mevcut durum (integration/tum-pr)
 
-Zaten var: RevenueCat paywall (`PremiumChoice`, yıllık/aylık, ilk ay teklifi, TR fiyatı), tek kaynak `src/domain/premium.ts` (`LIMITS`, `THEMES`, `FEATURES`), `PremiumLock` kilit kartı, seri + seri dondurma (ücretsiz 1 / Premium 3), puan çarpanı, 5 ev, ev temaları (Gündüz + Cottagecore ücretsiz; Gece/Kış/Sonbahar/Minimal/Lavanta Premium), Moka gardırobu (`MokaWardrobe`, `MokaWearLayer`), bahçe, haftalık kart (`WeekCard`, `hafta.tsx`), ruh hali (`MoodCheckin`), öz bakım kartı, yerel bildirimler.
+Zaten var: RevenueCat paywall (`PremiumChoice`, yıllık/aylık, 3 gün deneme, TR fiyatı), tek kaynak `src/domain/premium.ts` (`LIMITS`, `THEMES`, `FEATURES`), `PremiumLock` kilit kartı, seri + seri dondurma (ücretsiz 1 / Premium 3), puan çarpanı, 5 ev, ev temaları (Gündüz + Cottagecore ücretsiz; Gece/Kış/Sonbahar/Minimal/Lavanta Premium), Moka gardırobu (`MokaWardrobe`, `MokaWearLayer`), bahçe, haftalık kart (`WeekCard`, `hafta.tsx`), ruh hali (`MoodCheckin`), öz bakım kartı, yerel bildirimler.
 
 Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an" yok); deneme süresi vurgusu yok; yıllık plan varsayılan seçili değil (aylık seçili); Premium bitince "ne kaybediyorsun" görünmüyor; ayrıntılı rapor yok; mevsim paketi / etkinlik yok.
 
 ## 2. Ücretsiz / Premium bölünmesi
 
-**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 1 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
+**Ücretsiz kalır (kilitlenmez):** rutinler, odalar, hatırlatmalar, evin ve bahçenin günlere yayılan büyümesi, seri takibi ve basit özet, puan (1×), 1 ev, Gündüz + Cottagecore teması, temel mobilya, ayda 2 dondurma, haftada 2 tarama, veriyi dışa aktarma ve hesabı silme, bulut yedeği (ev verisi).
 
 **Premium (seçenek + içgörü + içerik):**
 
@@ -24,7 +24,7 @@ Boşluklar: paywall yalnızca açılışta ve elle çıkıyor (zamanlanmış "an
 | Ek alanlar | 1 ev | 5 ev, ek oda, alternatif tasarım | Kısmen var |
 | Hedef planı | 1 plan | Birden fazla plan, esnek rutin, hedef önerisi | Yeni |
 | Bildirim | Sabit saat | Akıllı saat, gelişmiş hatırlatıcı | Var |
-| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 50 / 1,5× | Var |
+| Dondurma / tarama / puan | 1 / haftada 2 / 1× | 3 / günde 5 / 1,5× | Var |
 
 Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme" sayılır mı?** Öneri: kalsın (ilerlemeyi kilitlemiyor, sadece hızlandırıyor/koruyor), ama seri **asla** paywall arkasında silinmesin: dondurma yoksa seri kırılır, bu doğal kuraldır; Premium bittiğinde eldeki seri ve ev korunur.
 
@@ -39,7 +39,7 @@ Değişmesi gereken tek karar: **seri dondurma ve puan çarpanı "temel ilerleme
 
 ## 4. Deneme ve paywall
 
-- **7 gün deneme** (mağaza tarafında): Google Play'de `ilk-ay` teklifi yanına 7 günlük ücretsiz deneme teklifi; App Store'da giriş teklifi. Ürün kimlikleri `docs/odeme-kurulumu.md` içine eklenir.
+- **Deneme** (mağaza tarafında, şu an 3 gün): Google Play'de 7 günlük ücretsiz deneme teklifi; App Store'da giriş teklifi. Ürün kimlikleri `docs/odeme-kurulumu.md` içine eklenir.
 - **Deneme bitince "ne kaybediyorsun" kartı:** yalnız görünüm kaybolur (Premium tema Gündüz'e döner, `themeFor` zaten böyle; seçim silinmez), **ilerleme kilitlenmez**. Kart: "Geri dönersen şunlar seni bekliyor: Gece teması, 6 Moka kıyafeti…".
 - **Paywall'u gösterme anları** (hepsi kapatılabilir):
   1. Onboarding sonu (zaten var: `LaunchChoice`).

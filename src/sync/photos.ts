@@ -43,8 +43,13 @@ export async function photoUrl(key: string): Promise<string | null> {
 export async function removeAllPhotos(userId: string) {
   if (!supabase) return;
   try {
-    const { data } = await supabase.storage.from(BUCKET).list(`${userId}/gunluk`, { limit: 1000 });
-    if (data?.length) await supabase.storage.from(BUCKET).remove(data.map(f => `${userId}/gunluk/${f.name}`));
+    // Sayfa sayfa sil: 1000'den fazla fotoğraf sahipsiz kalmasın (en fazla 20 tur).
+    for (let i = 0; i < 20; i++) {
+      const { data } = await supabase.storage.from(BUCKET).list(`${userId}/gunluk`, { limit: 1000 });
+      if (!data?.length) break;
+      const { error } = await supabase.storage.from(BUCKET).remove(data.map(f => `${userId}/gunluk/${f.name}`));
+      if (error) break;
+    }
   } catch {
     // Silinemeyenler kullanıcı silinince sahipsiz kalır; Supabase panelinden temizlenebilir.
   }

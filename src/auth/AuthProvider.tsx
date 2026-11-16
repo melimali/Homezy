@@ -27,7 +27,8 @@ type Auth = {
   signUp: (name: string, email: string, password: string) => Promise<Result>;
   signIn: (email: string, password: string) => Promise<Result>;
   resetPassword: (email: string) => Promise<Result>;
-  continueAsGuest: () => Promise<void>;
+  updateAccount: (changes: { name?: string; password?: string }) => Promise<Result>;
+  continueAsGuest: () => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<Result>;
 };
@@ -126,20 +127,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
-  const continueAsGuest = useCallback(async () => {
-    setGuestFlag(true);
-    if (supabase) {
-      const captchaToken = await requestCaptcha();
-      await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
+  const updateAccount = useCallback(async (changes: { name?: string; password?: string }): Promise<Result> => {
+    if (!supabase) return offline;
+    const off = await noNet();
+    if (off) return off;
+    try {
+      const { error } = await supabase.auth.updateUser({
+        ...(changes.password ? { password: changes.password } : {}),
+        ...(changes.name ? { data: { name: changes.name.trim() } } : {}),
+      });
+      if (error) return { ok: false, error: error.code === 'same_password' ? 'Yeni şifre eskisiyle aynı olamaz.' : authErrorText(error) };
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Bir sorun oldu. Biraz sonra tekrar dene.' };
     }
   }, []);
 
-  // Çıkış ve silme, uygulamayı ilk açılıştaki hâline döndürür: tanıtım yeniden görünür.
+  const continueAsGuest = useCallback(async () => {
+    if (supabase) {
+      const captchaToken = await requestCaptcha();
+      // Doğrulama kutusu yüklenemese de misafir girişi kilitlenmez; token yoksa sunucu reddederse oturum sonra arka planda yeniden denenir.
+      setGuestFlag(true);
+      await withTimeout(supabase.auth.signInAnonymously({ options: { captchaToken } }), 5000, null);
+    } else {
+      setGuestFlag(true);
+    }
+    return { ok: true };
+  }, []);
+
+  // Çıkış ve silme oturumu kapatır ve giriş ekranına döner.
   const signOut = useCallback(async () => {
+    // Tanıtım tekrar gösterilmez: çıkınca doğrudan giriş ekranı açılır (kurulum sorusu çıkmaz).
     setGuestFlag(false);
-    prefs.set('intro', null);
-    setIntroSeen(false);
-    if (supabase) await withTimeout(supabase.auth.signOut(), 4000, null);
+    // Önce yerel oturum düşer (giriş ekranı hemen açılır); sunucu yanıtı beklenip takılmaz.
+    setSession(null);
+    if (supabase) await withTimeout(supabase.auth.signOut({ scope: 'local' }).catch(() => null), 4000, null);
     setSession(null);
   }, []);
 
@@ -150,17 +172,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (off) return off;
       // Kullanıcıyı, profilini, ev yedeğini ve abonelik kaydını siler (supabase/migrations: delete_me).
       // Mağaza aboneliğini kullanıcı App Store / Google Play'den kendisi iptal eder; ekranda bunu söylüyoruz.
-      await removeAllPhotos(session.user.id);
-      const { error } = await supabase.rpc('delete_me');
-      if (error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
+      await withTimeout(removeAllPhotos(session.user.id), 8000, undefined);
+      const res = await withTimeout(Promise.resolve(supabase.rpc('delete_me')), 20000, null);
+      if (!res || res.error) return { ok: false, error: 'Hesap silinemedi. İnternet bağlantını kontrol edip tekrar dene.' };
     }
     await signOut();
     return { ok: true };
   }, [session, signOut]);
 
   const value = useMemo<Auth>(
-    () => ({ status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, continueAsGuest, signOut, deleteAccount }),
-    [status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, continueAsGuest, signOut, deleteAccount],
+    () => ({ status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, updateAccount, continueAsGuest, signOut, deleteAccount }),
+    [status, user, session, introSeen, finishIntro, signUp, signIn, resetPassword, updateAccount, continueAsGuest, signOut, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

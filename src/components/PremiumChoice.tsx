@@ -1,13 +1,18 @@
+import { useBusy } from './BusyOverlay';
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useToast } from '@/components/Toast';
 import { Btn, T } from '@/components/ui';
 import { MOMENT_COPY, type PaywallMoment } from '@/domain/paywall';
-import { FEATURES } from '@/domain/premium';
+import { PAYWALL_COPY, type PaywallLang } from '@/domain/paywallCopy';
+import { FEATURES, FREE_CORE } from '@/domain/premium';
+import { MOKA_ASSETS } from '@/constants/moka';
+import { Appear, Float } from '@/components/motion';
 import { track } from '@/lib/events';
-import { legalUrl } from '@/lib/links';
+import { legalUrl, openLink } from '@/lib/links';
+import { currencySym, tx } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { type Plan, usePurchases } from '@/purchases/PurchasesProvider';
 import { brand, fonts, radius, useColors } from '@/theme';
@@ -25,11 +30,14 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   const c = useColors();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { premium, prices, annualPerMonth, annualSave, introPrice, buy, restore } = usePurchases();
+  const { premium, prices, annualPerMonth, annualSave, trialDays, buy, restore } = usePurchases();
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+  useBusy(!!busy);
   const [plan, setPlan] = useState<Plan>('annual');
-  const unit = plan === 'annual' ? 'yıl' : 'ay';
-  const intro = plan === 'monthly' ? introPrice : null;
+  const lang: PaywallLang = (S.settings.language ?? 'tr') in PAYWALL_COPY ? ((S.settings.language ?? 'tr') as PaywallLang) : 'en';
+  const L = PAYWALL_COPY[lang];
+  const unit = plan === 'annual' ? L.unitY : L.unitM;
+  const trial = trialDays[plan];
   useEffect(() => {
     track('paywall_view', moment ?? 'manual');
   }, [moment]);
@@ -41,8 +49,10 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
     setBusy(null);
     if (r.ok) {
       track('paywall_buy', moment ?? 'manual');
-      if (r.active) toast('Premium açıldı. Hoş geldin! 🎉');
-      onDone();
+      if (r.active) {
+        toast('Premium açıldı. Hoş geldin! 🎉');
+        onDone();
+      } else toast('Ödeme alındı, Premium birazdan açılır. Açılmazsa "Satın alımları geri yükle"ye dokun.');
     } else if (!r.cancelled) toast(r.error);
   };
 
@@ -58,53 +68,67 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 }]}
+      style={{ flex: 1 }}
+      contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 20, paddingBottom: 24 }]}
     >
-      <View style={{ alignItems: 'center', gap: 6 }}>
-        <Text style={{ fontSize: 48 }}>🏡</Text>
-        <T v="h1" style={{ textAlign: 'center' }}>{copy?.title ?? 'Nasıl başlamak istersin?'}</T>
-        <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>{copy?.text ?? "Evin işleri her iki planda da ücretsiz. Premium Moka'ya ve evine hediye: seri korumayı, yeni temaları, aile paylaşımını ve reklamsız bir deneyimi açar."}</T>
+      <View style={[styles.hero, { backgroundColor: brand.navy }]}>
+        <Float amp={5} dur={2200}>
+          <Image source={MOKA_ASSETS.love} style={styles.mokaImg} resizeMode="contain" />
+        </Float>
+        <Text style={[styles.eyebrow, { color: brand.clay }]}>{L.eyebrow}</Text>
+        <Text style={[styles.heroTitle, { color: brand.mint }]}>{L.title}</Text>
+        {copy ? <Text style={[styles.heroMoment, { color: brand.clay }]}>{copy.title}: {copy.text}</Text> : null}
+        <Text style={[styles.heroSub, { color: 'rgba(235,245,238,0.85)' }]}>{L.sub}</Text>
       </View>
 
+      <View style={[styles.chatCard, { backgroundColor: c.surface, borderColor: c.line }]}>
+        <T v="h2">💬 {L.chatTitle}</T>
+        <T v="small">{L.chatSub}</T>
+        {L.chat.map((m, i) => (
+          <Appear key={i} index={i}>
+            <View style={[styles.bubble, m.who === 'me' ? { alignSelf: 'flex-end', backgroundColor: brand.blue } : { alignSelf: 'flex-start', backgroundColor: c.bg, borderColor: c.line, borderWidth: 1.5 }]}>
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, lineHeight: 20, color: m.who === 'me' ? brand.navy : c.ink }}>{m.text}</Text>
+            </View>
+          </Appear>
+        ))}
+      </View>
+
+      <View style={{ gap: 8 }}>
+        <T v="h2">🔒 {L.lockedTitle}</T>
+        {L.locked.map(f => (
+          <View key={f.title} style={[styles.lockRow, { backgroundColor: c.surface }]}>
+            <Text style={{ fontSize: 26, lineHeight: 32 }}>{f.emoji}</Text>
+            <View style={{ flex: 1 }}>
+              <T v="bold">{f.title}</T>
+              <T v="small">{f.text}</T>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <T v="h2">{L.plansTitle}</T>
       <View style={styles.plans}>
         <View style={[styles.plan, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <Text style={[styles.planName, { color: c.ink }]}>Ücretsiz</Text>
-          <Text style={[styles.price, { color: c.ink }]}>$0</Text>
-          <T v="small">her zaman</T>
+          <Text style={[styles.planName, { color: c.ink }]}>{tx('Ücretsiz')}</Text>
+          <Text style={[styles.price, { color: c.ink }]}>{lang === 'tr' ? '0 TL' : `${currencySym()}0`}</Text>
+          <T v="small">{tx('her zaman')}</T>
         </View>
         <View style={[styles.plan, { backgroundColor: brand.navy, borderColor: brand.navy }]}>
           <View style={[styles.tag, { backgroundColor: brand.clay }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>⭐ PREMIUM</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: brand.navy }}>⭐ PREMIUM</Text>
           </View>
-          <Text style={[styles.price, { color: brand.mint }]}>{intro ?? prices[plan]}</Text>
-          <Text style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(235,245,238,0.75)' }}>
-            {intro ? 'ilk ay' : plan === 'annual' ? 'yıllık' : 'aylık'}
+          <Text style={[styles.price, { color: brand.mint }]}>{prices[plan]}</Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 13.5, color: 'rgba(235,245,238,0.75)' }}>
+            {plan === 'annual' ? tx('yıllık abonelik (her yıl yenilenir)') : tx('aylık abonelik (her ay yenilenir)')}
           </Text>
+          {trial ? <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13, color: brand.clay }}>{L.trialLine(trial)}</Text> : null}
         </View>
       </View>
 
-      {!premium.active && (
-        <View style={{ gap: 10 }}>
-          <PlanRow
-            selected={plan === 'annual'}
-            onPress={() => setPlan('annual')}
-            title="Yıllık"
-            price={`${prices.annual}/yıl`}
-            note={annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
-            badge={annualSave > 0 ? `%${annualSave} indirim` : undefined}
-          />
-          <PlanRow
-            selected={plan === 'monthly'}
-            onPress={() => setPlan('monthly')}
-            title="Aylık"
-            price={`${prices.monthly}/ay`}
-            note={introPrice ? `İlk ay ${introPrice}, sonra ${prices.monthly}/ay` : undefined}
-            badge={introPrice ? 'İlk aya özel' : undefined}
-          />
-        </View>
-      )}
+      <T v="h2">{L.compare}</T>
+      <T v="small" style={{ textAlign: 'center' }}>{FREE_CORE}</T>
 
       <View style={[styles.table, { backgroundColor: c.surface }]}>
         <View style={styles.row}>
@@ -114,35 +138,61 @@ export function PremiumChoice({ onDone, onClose, moment }: { onDone: () => void;
         </View>
         {ROWS.map(r => (
           <View key={r.label} style={[styles.row, { borderTopWidth: 1.5, borderTopColor: c.line }]}>
-            <Text style={{ fontSize: 20 }}>{r.emoji}</Text>
-            <T v="bold" style={{ flex: 1, fontSize: 13.5 }}>{r.label}</T>
+            <Text style={{ lineHeight: 26, fontSize: 20 }}>{r.emoji}</Text>
+            <T v="bold" style={{ flex: 1, flexShrink: 1, fontSize: 13.5 }}>{r.label}</T>
             <Text style={[styles.cell, { color: r.free === '—' ? c.muted : c.ink }, short(r.free) && styles.check]}>{r.free}</Text>
             <Text style={[styles.cell, { color: c.ok }, short(r.premium) && styles.check]}>{r.premium}</Text>
           </View>
         ))}
       </View>
 
-      <View style={{ gap: 10 }}>
-        {premium.active ? (
-          <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
-        ) : (
-          <Btn kind="primary" label={busy === 'buy' ? 'Açılıyor…' : intro ? `Premium ile başla · ilk ay ${intro}` : `Premium ile başla · ${prices[plan]}/${unit}`} onPress={doBuy} disabled={!!busy} />
-        )}
-        <Btn kind="ghost" label={onClose ? 'Kapat' : 'Ücretsiz devam et'} onPress={onClose ?? onDone} disabled={!!busy} />
-      </View>
-
       <T v="small" style={{ textAlign: 'center' }}>
-        {intro ? `İlk ay ${intro}, sonra her ay ${prices.monthly}. ` : ''}Premium her {unit} kendiliğinden yenilenir. İstediğin zaman App Store ya da Google Play abonelik ayarlarından iptal edebilirsin.
-        Ödemeyi mağaza alır, kart bilgilerin bize gelmez. Satın alarak Kullanım Koşulları’nı kabul edersin.
+        {L.legal(plan === 'annual' ? L.planY : L.planM, prices[plan], unit, trial)}
       </T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16 }}>
-        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>
-        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(legalUrl('privacy', S.settings.language))} accessibilityRole="link">Gizlilik Politikası</T>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('terms', S.settings.language))} accessibilityRole="link">Kullanım Koşulları</T>
+        <T v="small" style={{ textDecorationLine: 'underline' }} onPress={() => openLink(legalUrl('privacy', S.settings.language))} accessibilityRole="link">Gizlilik Politikası</T>
       </View>
       {!premium.active && (
         <Btn kind="ghost" small label={busy === 'restore' ? 'Geri yükleniyor…' : 'Satın alımları geri yükle'} onPress={doRestore} disabled={!!busy} style={{ alignSelf: 'center' }} />
       )}
     </ScrollView>
+    <View style={[styles.footer, { backgroundColor: c.bg, borderTopColor: c.line, paddingBottom: Math.max(insets.bottom, 12) }]}>
+      {!premium.active && (
+        <View style={{ gap: 10 }}>
+          <PlanRow
+            selected={plan === 'annual'}
+            onPress={() => setPlan('annual')}
+            title="Yıllık"
+            price={`${prices.annual}/yıl`}
+            note={trialDays.annual ? `${trialDays.annual} gün ücretsiz, sonra ${prices.annual}/yıl` : annualPerMonth ? `Ayda ${annualPerMonth}` : undefined}
+            badge={trialDays.annual ? `${trialDays.annual} gün ücretsiz` : annualSave > 0 ? `%${annualSave} indirim` : undefined}
+          />
+          <PlanRow
+            selected={plan === 'monthly'}
+            onPress={() => setPlan('monthly')}
+            title="Aylık"
+            price={`${prices.monthly}/ay`}
+            note={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz, sonra ${prices.monthly}/ay` : undefined}
+            badge={trialDays.monthly ? `${trialDays.monthly} gün ücretsiz` : undefined}
+          />
+        </View>
+      )}
+
+      <View style={{ gap: 8 }}>
+        {premium.active ? (
+          <Btn kind="primary" label="Premium üyeliğin etkin 🎉" onPress={onDone} />
+        ) : (
+          <>
+          <Btn kind="primary" label={busy === 'buy' ? '…' : trial ? L.ctaTrial(trial) : L.ctaBuy(prices[plan], unit)} onPress={doBuy} disabled={!!busy} />
+          {trial ? <T v="small" style={{ textAlign: 'center' }}>{L.ctaNote}</T> : null}
+          </>
+        )}
+        <Btn kind="ghost" label={L.skip} onPress={onClose ?? onDone} disabled={!!busy} />
+      </View>
+
+    </View>
+    </View>
   );
 }
 
@@ -171,7 +221,7 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
       </View>
       {badge && (
         <View style={[styles.tag, { backgroundColor: brand.clay }]}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: brand.navy }}>{badge}</Text>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: brand.navy }}>{badge}</Text>
         </View>
       )}
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>{price}</Text>
@@ -180,18 +230,28 @@ function PlanRow({ selected, onPress, title, price, note, badge }: {
 }
 
 const styles = StyleSheet.create({
+  hero: { borderRadius: 28, paddingHorizontal: 20, paddingVertical: 22, alignItems: 'center', gap: 8 },
+  mokaImg: { width: 150, height: 150 },
+  eyebrow: { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.2 },
+  heroTitle: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, textAlign: 'center' },
+  heroMoment: { fontFamily: fonts.bodyBold, fontSize: 13, textAlign: 'center' },
+  heroSub: { fontFamily: fonts.body, fontSize: 14.5, lineHeight: 21, textAlign: 'center' },
+  chatCard: { borderRadius: 22, borderWidth: 1.5, padding: 14, gap: 10 },
+  bubble: { maxWidth: '88%', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 9 },
+  lockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18 },
   planRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.card, borderWidth: 0 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 },
+  footer: { paddingHorizontal: 18, paddingTop: 12, gap: 10, borderTopWidth: 1.5, width: '100%', maxWidth: 520, alignSelf: 'center' },
   wrap: { paddingHorizontal: 18, gap: 18, width: '100%', maxWidth: 520, alignSelf: 'center' },
   plans: { flexDirection: 'row', gap: 12 },
   plan: { flex: 1, alignItems: 'center', paddingVertical: 16, borderRadius: radius.card, borderWidth: 0, gap: 2 },
-  planName: { fontFamily: fonts.bodyBlack, fontSize: 13, paddingVertical: 3 },
+  planName: { fontFamily: fonts.bodyBlack, fontSize: 13.5, paddingVertical: 3 },
   tag: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   price: { fontFamily: fonts.displayBold, fontSize: 34, lineHeight: 40 },
   table: { borderRadius: radius.card, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   colHead: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
-  cell: { width: 72, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12.5 },
-  check: { fontSize: 20 },
+  cell: { width: 62, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 12 },
+  check: { lineHeight: 26, fontSize: 20 },
 });

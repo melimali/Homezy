@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { sfx, type Sfx } from '@/lib/sfx';
+import { tx } from '@/i18n/runtime';
 
 /**
  * Cozy temanın hareketleri: yumuşak beliriş, basınca esneyen kartlar, hafifçe süzülen emojiler
@@ -95,6 +96,7 @@ export function Squish({
     <Pressable
       accessibilityRole="button"
       {...rest}
+      accessibilityLabel={tx(rest.accessibilityLabel)}
       onPressIn={e => {
         if (!quiet) sfx(sound);
         to(scaleTo, false);

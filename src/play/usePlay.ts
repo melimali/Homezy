@@ -10,7 +10,8 @@ import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
 import { sfx } from '@/lib/sfx';
-import { track } from '@/lib/events';
+import { reportError } from '@/lib/crash';
+import { track, trackActiveDay } from '@/lib/events';
 import { offlineMsg, online } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -26,7 +27,9 @@ type Summary = { points: number; days: DayKey[]; owned: string[]; frozen?: DayKe
 type Update = (fn: (draft: AppState) => void) => AppState;
 
 /** Sunucu bu isteği kesin olarak reddetti (ör. çok eski gün); tekrar denemenin anlamı yok. */
-const rejected = (e: { code?: string }) => e.code === 'P0001' || e.code?.startsWith('22') || e.code?.startsWith('23');
+const rejected = (e: { code?: string; message?: string }) =>
+  // 'not signed in' (oturum süresi dolmuş) da P0001 gelir; o durumda olayı silme, giriş gelince gönderilir.
+  (e.code === 'P0001' && !/not signed in/i.test(e.message ?? '')) || e.code?.startsWith('22') || e.code?.startsWith('23');
 
 function apply(update: Update, s: Summary) {
   update(D => {
@@ -79,7 +82,7 @@ async function send(get: () => AppState, update: Update) {
 }
 
 /**
- * Kaçırılan günleri ayın seri dondurma hakkıyla korur (ücretsiz ayda 1, Premium ayda 3).
+ * Kaçırılan günleri ayın seri dondurma hakkıyla korur (ücretsiz ayda 2, Premium ayda 3).
  * Sunucu da hakkı sayar; reddederse dondurma geri alınır.
  */
 function freezeMissed(get: () => AppState, update: Update, premium: boolean): string[] {
@@ -158,6 +161,7 @@ export function usePlay() {
         prefs.set('firstTask', '1');
         track('first_task_done');
       }
+      if (r.awarded && !r.before.today) trackActiveDay(r.before.resting);
       if (r.awarded) sfx(r.after.level > r.before.level ? 'party' : 'done');
       toast(out.up ? `🎉 Moka ${out.up}. seviye oldu! ${awardToast(r, what)}` : awardToast(r, what));
       return out.r!;
@@ -181,11 +185,15 @@ export function usePlay() {
         const { data, error } = await supabase.rpc('play_buy', { p_item: id });
         if (error) {
           const m = error.message || '';
+          reportError(new Error(`play_buy ${id}: ${error.code ?? ''} ${m}`));
+          const net = !error.code && /network|fetch|timeout|abort/i.test(m);
           return {
             ok: false,
-            error: m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
+            error: net ? offlineMsg()
+              : m.includes('unknown item') || error.code === 'PGRST202' ? 'Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
+              : m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
               : m.includes('premium') ? `${item.name} Premium üyelere özel ⭐`
-              : 'Satın alınamadı. İnternet bağlantını kontrol edip tekrar dene.',
+              : 'Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.',
           };
         }
         apply(update, data as Summary);

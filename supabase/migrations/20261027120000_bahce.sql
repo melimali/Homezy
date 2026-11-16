@@ -14,7 +14,7 @@ on conflict (id) do update set price = excluded.price, premium = excluded.premiu
 /* ---------- tekrar alınanlar: tohumlar ve gübre ---------- */
 
 -- `daily_max`: bir günde en fazla kaç kez alınır (null: sınırsız).
-create table public.play_garden_items (
+create table if not exists public.play_garden_items (
   id text primary key,
   price integer not null check (price > 0),
   premium boolean not null default false,
@@ -28,10 +28,11 @@ insert into public.play_garden_items (id, price, premium, daily_max) values
   ('yasemin', 130, false, null), ('krizantem', 140, false, null), ('kasimpati', 150, false, null),
   ('begonvil', 170, false, null), ('orkide', 200, true, null), ('nilufer', 250, true, null),
   ('ataturk', 300, true, null),
-  ('gubre_avuc', 15, false, 2), ('gubre_torba', 40, false, 1);
+  ('gubre_avuc', 15, false, 2), ('gubre_torba', 40, false, 1)
+on conflict (id) do update set price = excluded.price, premium = excluded.premium, daily_max = excluded.daily_max;
 
 -- Her harcama bir satır. Gün, telefonun yerel günü (günlük sınır için).
-create table public.play_spend (
+create table if not exists public.play_spend (
   id bigint generated always as identity primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
   item_id text not null references public.play_garden_items (id),
@@ -39,12 +40,14 @@ create table public.play_spend (
   day date not null,
   created_at timestamptz not null default now()
 );
-create index play_spend_user_day on public.play_spend (user_id, day);
+create index if not exists play_spend_user_day on public.play_spend (user_id, day);
 
 alter table public.play_garden_items enable row level security;
 alter table public.play_spend enable row level security;
+drop policy if exists "bahçe: herkes okur" on public.play_garden_items;
 create policy "bahçe: herkes okur" on public.play_garden_items
   for select to authenticated using (true);
+drop policy if exists "bahçe: kendi harcamalarını okur" on public.play_spend;
 create policy "bahçe: kendi harcamalarını okur" on public.play_spend
   for select to authenticated using ((select auth.uid()) = user_id);
 
@@ -73,7 +76,7 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 -- Tohum ya da gübre alma: puan yeterliyse, Premium'a özelse Premium etkinse, günlük sınır dolmadıysa.
-create function public.play_spend(p_item text, p_day date) returns jsonb
+create or replace function public.play_spend(p_item text, p_day date) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := auth.uid();

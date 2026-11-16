@@ -168,4 +168,5 @@ export const EN_C: Record<string, string> = {
   'Karides, mantar ve sebzeleri sotele, güveçlere paylaştır, üstüne kaşar serp, fırında üstü kızarana kadar tut.': 'Sauté shrimp, mushrooms and vegetables, divide into dishes, top with cheese and bake until golden.',
   'İncikleri sebzelerle folyoya sar, 170 derece fırında 2 saat pişir, son 15 dakika folyoyu aç.': 'Wrap the shanks with vegetables in foil, roast at 170°C for 2 hours, open the foil for the last 15 minutes.',
   'Eti mühürle, sebzeleri ekle, güvece al, kısık ateşte ya da fırında yumuşayana kadar pişir.': 'Sear the meat, add the vegetables, transfer to a casserole and cook low or in the oven until tender.',
+  'Plan çizilemedi, tekrar dene.': 'Could not draw the plan, try again.',
 };

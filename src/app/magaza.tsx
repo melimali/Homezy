@@ -1,10 +1,12 @@
+import { useBusy } from '@/components/BusyOverlay';
 import { dateLocale } from '@/i18n/runtime';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Card, Chip, Screen, SecHead, T } from '@/components/ui';
+import { BackLink, Btn, Card, Chip, Screen, SecHead, T, Chevron } from '@/components/ui';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { ITEMS, type Item, type ItemCategory } from '@/domain/items';
 import { POINTS } from '@/domain/play';
@@ -19,8 +21,13 @@ import { sfx } from '@/lib/sfx';
 const CATEGORIES: [ItemCategory, string][] = [
   ['tum', '✨ Tümü'],
   ['mobilya', '🪑 Mobilya'],
-  ['dekor', '💡 Dekor'],
+  ['aydinlatma', '🕯️ Işık'],
+  ['duvar', '🖼️ Duvar'],
+  ['dekor', '🏺 Dekor'],
   ['bitki', '🪴 Bitki'],
+  ['hobi', '🎨 Hobi'],
+  ['mevsim', '🎄 Mevsim'],
+  ['dis', '🏡 Dış mekan'],
   ['elektronik', '🎸 Elektronik'],
   ['evcil', '🐱 Evcil'],
   ['ozel', '👑 Özel'],
@@ -52,7 +59,7 @@ export default function Magaza() {
       <View>
         <T v="eyebrow">Mağaza</T>
         <T v="h1">Evine eşya al 🛍️</T>
-        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: bir iş +{POINTS.gorev}, spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
+        <T v="lead">Puanlarını her gün iş yaparak kazanırsın: günün ilk 5 işi +{POINTS.gorev} (sonrakiler daha az), spor +{POINTS.spor}, günlük +{POINTS.gunluk}, üst üste günlerde seri bonusu.</T>
         <T v="small" style={{ marginTop: 4 }}>
           {premium.active
             ? `👑 Premium: puanların ${LIMITS.premium.mult.toLocaleString(dateLocale())} kat geliyor, 👑 eşyalar senin için açık.`
@@ -62,7 +69,7 @@ export default function Magaza() {
 
       <Appear index={1}>
         <View style={[styles.wallet, { backgroundColor: c.todaySoft }]}>
-          <Float amp={3} dur={1800}><Text style={{ fontSize: 28 }}>⭐</Text></Float>
+          <Float amp={3} dur={1800}><Text style={{ lineHeight: 36, fontSize: 28 }}>⭐</Text></Float>
           <Pulse on={P.points}><Text style={[styles.walletN, { color: c.today }]}>{P.points}</Text></Pulse>
           <Text style={[styles.walletL, { color: c.today }]}>puanın var</Text>
           <Text style={[styles.walletL, { color: c.muted, marginLeft: 'auto' }]}>{`🎁 ${ownedN}/${ITEMS.length}`}</Text>
@@ -71,12 +78,12 @@ export default function Magaza() {
 
       <Appear index={2}>
       <Squish onPress={() => router.push('/bahce' as Href)} accessibilityRole="button" style={[styles.garden, { backgroundColor: c.room.balkon }]}>
-        <Text style={{ fontSize: 30 }}>🌷</Text>
+        <Text style={{ lineHeight: 39, fontSize: 30 }}>🌷</Text>
         <View style={{ flex: 1 }}>
           <Text style={[styles.gardenT, { color: c.ink }]}>Moka&apos;nın bahçesi</Text>
           <Text style={[styles.tag, { color: c.muted, textAlign: 'left' }]}>Tohum ek, çiçek büyüt, evinin kişiliğini seç</Text>
         </View>
-        <Text style={[styles.gardenT, { color: c.muted }]}>›</Text>
+        <Chevron color={c.muted} size={16} dir="right" />
       </Squish>
       </Appear>
 
@@ -113,6 +120,7 @@ function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected:
   const { buy } = usePlay();
   const { premium } = usePurchases();
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const owned = S.play.owned.includes(item.id);
   const room = S.play.placed[item.id];
   const locked = item.premium && !premium.active;
@@ -134,7 +142,7 @@ function ItemCard({ item, selected, onPress, onBought }: { item: Item; selected:
     <Card style={[styles.item, { width: '100%' }, owned && { opacity: selected ? 1 : 0.85 }]}>
       <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${item.name}, ${item.price} puan`} style={{ alignItems: 'center', gap: 4 }}>
         <View style={[styles.bubble, { backgroundColor: locked ? c.surface2 : c.peachSoft }]}>
-          <Text style={{ fontSize: 38 }}>{item.emoji}</Text>
+          <Text style={{ lineHeight: 49, fontSize: 38 }}>{item.emoji}</Text>
           {item.premium && <Text style={styles.crown}>👑</Text>}
         </View>
         <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{item.name}</T>
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
   crown: { position: 'absolute', top: -4, right: -4, fontSize: 16 },
   meter: { width: 64, height: 6, borderRadius: 3, overflow: 'hidden' },
   meterFill: { height: 6, borderRadius: 3 },
-  tag: { fontFamily: fonts.bodyBlack, fontSize: 13, textAlign: 'center' },
+  tag: { fontFamily: fonts.bodyBlack, fontSize: 13.5, textAlign: 'center' },
   garden: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 18 },
   gardenT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
   rooms: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

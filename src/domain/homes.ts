@@ -10,6 +10,25 @@ import type { AppState, HomeData, SavedHome } from './types';
  */
 const HOME_KEYS = ['cols', 'rows', 'cells', 'cells2', 'rooms', 'order', 'tasks', 'mod', 'home', 'mode', 'care', 'bills', 'warranties', 'seasonal'] as const;
 
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * Sunucudan gelen paylaşılan evin biçimi sağlam mı? Aile üyeleri ortak evi yazabildiği için kötü niyetli ya da bozuk
+ * bir üye, diğerlerinin uygulamasını çökerten bir veri (dizi yerine metin vb.) gönderemesin diye uygulamadan önce bakılır.
+ */
+export function validSharedHome(v: unknown): v is HomeData {
+  if (!isObj(v)) return false;
+  const { cols, rows, cells, rooms, order, tasks, mod } = v as Record<string, unknown>;
+  const dim = (n: unknown) => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 40;
+  if (!dim(cols) || !dim(rows)) return false;
+  if (!Array.isArray(cells) || cells.length > 1600) return false;
+  if (!isObj(rooms) || !Array.isArray(order) || !isObj(tasks) || !isObj(mod)) return false;
+  if (v.care != null && !Array.isArray(v.care)) return false;
+  if (Object.values(tasks).some(t => !Array.isArray(t))) return false;
+  if (Object.values(mod).some(m => !isObj(m))) return false;
+  return true;
+}
+
 /** Evin kendine ait kısmının kopyası. Ev profili, bakım, faturalar gibi sonradan eklenen alanlar eski kayıtlarda yoksa doldurulur. */
 export function homeData(S: AppState | SavedHome): HomeData {
   const d = JSON.parse(JSON.stringify(Object.fromEntries(HOME_KEYS.map(k => [k, S[k]])))) as HomeData;

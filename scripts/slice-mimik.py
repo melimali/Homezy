@@ -1,6 +1,6 @@
-"""Moka mimik sayfasını (4 sütun x 2 satır, 8 mimik) dilimler: assets/moka/mimik/1..8.png.
+"""Moka mimik sayfasını (4 sütun x 2 satır, 8 mimik) dilimler: assets-src/moka/mimik/1..8.png.
 
-  python3 scripts/slice-mimik.py [sayfa.png]      (varsayılan assets/moka/mimik-sayfa.png)
+  python3 scripts/slice-mimik.py [sayfa.png]      (varsayılan assets-src/moka/mimik-sayfa.png)
 
 Sıra: 1 nötr, 2 mutlu, 3 çok neşeli, 4 şaşkın, 5 üzgün, 6 uykulu, 7 göz kırpan, 8 konuşan.
 Sayfa saydamsa olduğu gibi, zemin beyazsa beyaz saydamlığa çevrilir (kenar yumuşatmalı).
@@ -14,8 +14,8 @@ from PIL import Image
 from scipy import ndimage as nd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'assets/moka/mimik-sayfa.png')
-OUT = os.path.join(ROOT, 'assets/moka/mimik')
+SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'assets-src/moka/mimik-sayfa.png')
+OUT = os.path.join(ROOT, 'assets-src/moka/mimik')
 N = 512
 
 im = Image.open(SRC).convert('RGBA')

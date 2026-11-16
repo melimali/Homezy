@@ -2,8 +2,9 @@ import * as SQLite from 'expo-sqlite';
 
 import { CARE, TYPES } from '@/domain/constants';
 import { emptyPlay, normalize } from '@/domain/play';
+import { runMigrations, storedVersion, type Migration } from './migrate';
 import type {
-  AppState, Bill, Med, MedLog, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
+  AppState, Bill, Budget, Med, MedLog, Pet, ShopItem, ShopUsual, Cloth, ClothState, HomeProfile, Mode, Play, RoomType, SavedHome, Settings, StockLevel, Task, TaskList, Warranty, WardrobeFilter, WashType,
 } from '@/domain/types';
 
 /**
@@ -20,6 +21,16 @@ const ADDED_COLUMNS: [string, string, string][] = [
   // Sürüm 3: kombin önerisi için kıyafetin türü, rengi ve kumaşı (fotoğraf taramasından ya da addan).
   ['clothes', 'kind', 'TEXT'], ['clothes', 'color', 'TEXT'], ['clothes', 'hex', 'TEXT'], ['clothes', 'fabric', 'TEXT'], ['clothes', 'pattern', 'TEXT'],
 ];
+
+/**
+ * Sürümler arası geçiş adımları (`steps[v]`: v-1 → v). Sürüm 2 ve 3 sadece sütun eklemekti (aşağıda `ADDED_COLUMNS`,
+ * tekrar çalışmaya dayanıklı); ileride silme/yeniden adlandırma gerekirse buraya yeni adım yazılır, `SCHEMA_VERSION` artırılır.
+ * Adımlar veri silmez.
+ */
+const MIGRATIONS: Record<number, Migration<SQLite.SQLiteDatabase>> = {};
+
+/** Geçiş başarısızsa saveState sürümü yükseltmesin (eski veri bir sonraki açılışta yeniden denenir). */
+let schemaToWrite = SCHEMA_VERSION;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -52,10 +63,34 @@ function getDb() {
         const cols = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
         if (!cols.some(c => c.name === col)) await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
       }
+      await migrate(db);
       return db;
     })();
   }
   return dbPromise;
+}
+
+async function migrate(db: SQLite.SQLiteDatabase) {
+  try {
+    const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'schema'");
+    const from = storedVersion(row?.value);
+    if (!row || from >= SCHEMA_VERSION) return;
+    // Yedek: geçişten önceki meta satırları (tablolar adımlarca silinmez).
+    const all = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM meta WHERE key NOT LIKE 'backup_%'");
+    await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', `backup_meta_v${from}`, JSON.stringify(all));
+    const res = await runMigrations(from, SCHEMA_VERSION, MIGRATIONS, db, async v => {
+      await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'schema', String(v));
+    });
+    if (!res.ok) {
+      schemaToWrite = res.to;
+      await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', 'migrate_error', `${from}->${res.to}: ${res.error}`);
+      console.warn('Homezy: şema geçişi yarım kaldı, veri korundu', res.error);
+    }
+  } catch (e) {
+    // Geçiş kontrolü uygulamayı açılmaktan alıkoymasın; sürüm yükseltilmez.
+    schemaToWrite = 0;
+    console.warn('Homezy: şema geçişi denenemedi', e);
+  }
 }
 
 type RoomRow = {
@@ -73,7 +108,15 @@ type ClothRow = {
 };
 type StockRow = { id: string; room_id: string; name: string; lvl: StockLevel; exp: number | null };
 
-const json = <T,>(v: string | undefined, fallback: T): T => (v ? (JSON.parse(v) as T) : fallback);
+/** Bozuk bir meta satırı bütün veriyi okunamaz yapmasın: o alan varsayılana döner. */
+const json = <T,>(v: string | undefined, fallback: T): T => {
+  if (!v) return fallback;
+  try {
+    return JSON.parse(v) as T;
+  } catch {
+    return fallback;
+  }
+};
 
 export async function loadState(): Promise<AppState | null> {
   const db = await getDb();
@@ -94,10 +137,10 @@ export async function loadState(): Promise<AppState | null> {
     tasks: {},
     mod: {},
     settings: json<Settings>(m.settings, {} as Settings),
-    play: m.play ? (JSON.parse(m.play) as Play) : emptyPlay(),
+    play: json<Play>(m.play, emptyPlay()),
     homeId: m.homeId || 'ev1',
     homeName: m.homeName || 'Evim',
-    others: m.others ? (JSON.parse(m.others) as SavedHome[]) : [],
+    others: json<SavedHome[]>(m.others, []),
     // Eksikse `normalize` doldurur.
     home: json<HomeProfile>(m.home, undefined as unknown as HomeProfile),
     mode: json<Mode | null>(m.mode, null),
@@ -107,11 +150,18 @@ export async function loadState(): Promise<AppState | null> {
     seasonal: json<Record<string, number>>(m.seasonal, {}),
     meds: json<Med[]>(m.meds, []),
     medLog: json<MedLog>(m.medLog, {}),
+    pets: json<Pet[]>(m.pets, []),
+    shop: json<ShopItem[]>(m.shop, []),
+    shopUsual: json<ShopUsual[]>(m.shopUsual, []),
+    shopHide: json<string>(m.shopHide, ''),
+    budget: json<Budget>(m.budget, { limit: 0, log: [] }),
     // 2. kat küçük olduğu için tek JSON olarak (meta tablosunda).
     cells2: json<(string | null)[] | null>(m.cells2, null),
   };
 
   for (const r of await db.getAllAsync<RoomRow>('SELECT * FROM rooms ORDER BY ord')) {
+    // Bilinmeyen oda türü (eski/bozuk kayıt) uygulamayı çökertmesin.
+    if (!TYPES[r.type]) continue;
     S.rooms[r.id] = { id: r.id, type: r.type, name: r.name };
     S.order.push(r.id);
     S.tasks[r.id] = [];
@@ -151,12 +201,20 @@ export async function loadState(): Promise<AppState | null> {
   return normalize(S);
 }
 
+/** Son yazılan meta değerleri ve tablo imzası; değişmeyen kısım tekrar yazılmaz (her dokunuşta tüm tabloyu baştan yazmak takılma yaratıyordu). */
+let lastMeta: Record<string, string> | null = null;
+let lastTables = '';
+
 export async function saveState(S: AppState): Promise<void> {
   const db = await getDb();
+  const tables = JSON.stringify([S.order, S.rooms, S.mod, S.tasks, S.care, S.cells]);
+  const tablesChanged = tables !== lastTables;
+  const prevMeta = lastMeta;
+  const nextMeta: Record<string, string> = {};
   await db.withExclusiveTransactionAsync(async tx => {
-    await tx.execAsync('DELETE FROM meta; DELETE FROM rooms; DELETE FROM cells; DELETE FROM tasks; DELETE FROM clothes; DELETE FROM stock;');
+    if (tablesChanged) await tx.execAsync('DELETE FROM rooms; DELETE FROM cells; DELETE FROM tasks; DELETE FROM clothes; DELETE FROM stock;');
     const meta: [string, string][] = [
-      ['schema', String(SCHEMA_VERSION)],
+      ...(schemaToWrite > 0 ? [['schema', String(schemaToWrite)] as [string, string]] : []),
       ['setup', S.setup ? '1' : '0'],
       ['cols', String(S.cols)],
       ['rows', String(S.rows)],
@@ -173,11 +231,21 @@ export async function saveState(S: AppState): Promise<void> {
       ['seasonal', JSON.stringify(S.seasonal)],
       ['meds', JSON.stringify(S.meds ?? [])],
       ['medLog', JSON.stringify(S.medLog ?? {})],
+      ['pets', JSON.stringify(S.pets ?? [])],
+      ['shop', JSON.stringify(S.shop ?? [])],
+      ['shopUsual', JSON.stringify(S.shopUsual ?? [])],
+      ['shopHide', JSON.stringify(S.shopHide ?? '')],
+      ['budget', JSON.stringify(S.budget ?? { limit: 0, log: [] })],
       ['cells2', JSON.stringify(S.cells2 ?? null)],
       // Ev bakımı listesi bir kere oluşturuldu; kullanıcı hepsini silse de yeniden eklenmesin.
       ['care_init', '1'],
     ];
-    for (const [k, v] of meta) await tx.runAsync('INSERT INTO meta (key, value) VALUES (?, ?)', k, v);
+    for (const [k, v] of meta) {
+      nextMeta[k] = v;
+      if (prevMeta && prevMeta[k] === v) continue;
+      await tx.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', k, v);
+    }
+    if (!tablesChanged) return;
 
     for (const [ord, id] of S.order.entries()) {
       const r = S.rooms[id];
@@ -201,6 +269,8 @@ export async function saveState(S: AppState): Promise<void> {
     for (const [idx, rid] of S.cells.entries())
       if (rid) await tx.runAsync('INSERT INTO cells (idx, room_id) VALUES (?, ?)', idx, rid);
   });
+  lastMeta = nextMeta;
+  lastTables = tables;
 }
 
 function insertTask(tx: SQLite.SQLiteDatabase, t: Task, roomId: string, list: TaskList, ord: number) {

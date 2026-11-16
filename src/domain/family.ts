@@ -16,6 +16,9 @@ export type FamilyInfo = {
   members: FamilyMember[];
 };
 
+/** Ailenin son 7 günü: kişi başı tamamlanan iş (sunucu: `family_week()`). */
+export type FamilyWeekRow = { userId: string; done: number; today: number };
+
 export type SharedHome = { state: HomeData; updatedAt: string };
 
 /** Bir ailede en fazla kaç kişi (ev sahibi dahil). Sunucu da aynı sınırı uygular. */

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 
 import { roomBounds, roomCounts } from '@/domain/logic';
@@ -20,7 +20,9 @@ type Props = {
   onPaintingChange?: (painting: boolean) => void;
 };
 
-export function Plan({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd, onPaintingChange }: Props) {
+export const Plan = memo(PlanImpl);
+
+function PlanImpl({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd, onPaintingChange }: Props) {
   const c = useColors();
   const [width, setWidth] = useState(0);
   const size = width / S.cols;
@@ -106,7 +108,7 @@ export function Plan({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd
             const n = rc.late + rc.today;
             if (n)
               badge = (
-                <View style={[styles.badge, { backgroundColor: rc.late ? c.late : c.warm }]}>
+                <View style={[styles.badge, { backgroundColor: c.warm }]}>
                   <Text style={[styles.badgeText, { color: c.onBadge }]}>{n}</Text>
                 </View>
               );
@@ -145,14 +147,27 @@ export function Plan({ state: S, edit, activeId, onOpenRoom, onPaint, onPaintEnd
     <View style={[styles.wrap, { backgroundColor: c.surface }]}>
       <View
         onLayout={e => setWidth(e.nativeEvent.layout.width)}
-        style={{ width: '100%', aspectRatio: cols / rows }}
-        {...(edit ? responder.panHandlers : null)}
+        style={{ width: '100%', aspectRatio: cols / rows, direction: 'ltr' }}
+        // Çizim sadece araç (oda/silgi) seçiliyken; yoksa sayfa normal kayar.
+        {...(edit && activeId ? responder.panHandlers : null)}
       >
         <View pointerEvents={edit ? 'none' : 'box-none'} style={StyleSheet.absoluteFill}>
           {tiles}
           {labels}
           {hitAreas}
         </View>
+        {edit && !activeId && (
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            accessibilityLabel="Oda seç"
+            onPress={e => {
+              if (size <= 0) return;
+              const col = Math.floor(e.nativeEvent.locationX / size), row = Math.floor(e.nativeEvent.locationY / size);
+              if (col < 0 || row < 0 || col >= cols || row >= rows) return;
+              onPaint?.(row * cols + col, true);
+            }}
+          />
+        )}
       </View>
     </View>
   );
@@ -265,5 +280,5 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   rname: { fontFamily: fonts.display, fontSize: 12, lineHeight: 14, textAlign: 'center' },
   badge: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, alignItems: 'center' },
-  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 11 },
+  badgeText: { fontFamily: fonts.bodyBlack, fontSize: 12 },
 });

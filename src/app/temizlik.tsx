@@ -1,24 +1,31 @@
-import { useRouter } from 'expo-router';
+import { useBusy } from '@/components/BusyOverlay';
+import { useRouter } from '@/lib/nav';
+import { useLocalSearchParams } from 'expo-router';
+import { usePlay } from '@/play/usePlay';
+import { reactMoka } from '@/lib/mokaReact';
+import { dayKey } from '@/domain/play';
 import { useEffect, useRef, useState } from 'react';
+import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Float, Squish } from '@/components/motion';
 import { SceneImage } from '@/components/SceneImage';
 import { useTask } from '@/components/TaskRow';
-import { Bar, IconBtn, Pill, T } from '@/components/ui';
+import { Bar, IconBtn, Pill, T, Chevron } from '@/components/ui';
 import { MOKA_ASSETS, ROOM_POSE, type MokaPose } from '@/constants/moka';
 import { roomMokaScene, HOME_MOKA_SCENE } from '@/constants/curated-scenes';
 import { ROOM_SCENES } from '@/constants/scenes';
 import { cleanQueue } from '@/domain/clean';
 import { ROOM_EMOJI } from '@/domain/constants';
 import { taskArt } from '@/domain/icons';
-import { allTasks } from '@/domain/logic';
+import { allTasks, quickPick } from '@/domain/logic';
 import { sfx } from '@/lib/sfx';
 import type { TaskRef } from '@/domain/types';
 import { useStore } from '@/store/AppStore';
 import { fonts, radius, space, useColors } from '@/theme';
 
+const QUICK = [5, 10, 15];
 type Phase = 'room' | 'count' | 'run' | 'end';
 const key = (x: TaskRef) => `${x.list}:${x.t.id}`;
 
@@ -35,14 +42,25 @@ export default function Clean() {
   const [finished, setFinished] = useState<string[]>([]);
   const [points, setPoints] = useState(0);
   const [empty, setEmpty] = useState(false);
+  const [pikap, setPikap] = useState(false);
+  const [quick, setQuick] = useState<number | null>(null);
+  const [bonus, setBonus] = useState<number | null>(null);
+  const [t0, setT0] = useState(0);
+  const [mins, setMins] = useState(1);
+  const [nowTs] = useState(() => Date.now());
+  const { award } = usePlay();
+  const params = useLocalSearchParams<{ min?: string }>();
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const rooms = S.order.filter(id => S.rooms[id]);
-  const room = rid ? S.rooms[rid] : null;
+  const room = rid ? S.rooms[rid] : quick ? { name: 'Tüm ev', type: 'salon' as const } : null;
 
   const pick = (id: string) => {
     sfx('tap');
     const q = cleanQueue(S, id);
     setRid(id);
+    setQuick(null);
+    setBonus(null);
+    setT0(Date.now()); // eslint-disable-line react-hooks/purity
     setQueue(q);
     setSkipped([]);
     setFinished([]);
@@ -51,6 +69,28 @@ export default function Clean() {
     if (q.length) setPhase('count');
   };
 
+  const pickQuick = (min: number) => {
+    sfx('tap');
+    const q = quickPick(S, min).map(({ min: _m, ...x }) => x as TaskRef);
+    setRid(null);
+    setQuick(min);
+    setQueue(q);
+    setSkipped([]);
+    setFinished([]);
+    setPoints(0);
+    setBonus(null);
+    setT0(Date.now());
+    setEmpty(q.length === 0);
+    if (q.length) setPhase('count');
+  };
+  const auto = useRef(Number(params.min) > 0);
+  useEffect(() => {
+    if (!auto.current) return;
+    auto.current = false;
+    const m = Number(params.min);
+    pickQuick(m >= 5 && m <= 30 ? m : 15);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sıra: henüz bitmeyenler, atlananlar en sona.
   const left = queue.filter(x => !finished.includes(key(x)));
   const ordered = [...left.filter(x => !skipped.includes(key(x))), ...left.filter(x => skipped.includes(key(x)))];
@@ -58,13 +98,27 @@ export default function Clean() {
   const live = cur ? allTasks(S).find(x => key(x) === key(cur)) : undefined;
 
   const shown: Phase = phase === 'run' && !cur ? 'end' : phase;
+  const doneSession = () => {
+    reactMoka('confetti');
+    const r = award('gorev', 'temizlik-seansi', '🧹 Temizlik seansı', 'Temizlik seansı');
+    setBonus(r.awarded ? r.points : 0);
+    setMins(Math.max(1, Math.round((Date.now() - t0) / 60000)));
+  };
+  const weekN = (() => {
+    let n = 0;
+    for (let i = 0; i < 7; i++) if ((S.play.log[dayKey(nowTs - i * 864e5)] ?? []).includes('🧹 Temizlik seansı')) n++;
+    return n;
+  })();
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {shown === 'room' && (
         <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32, paddingHorizontal: space.screen, gap: 14 }}>
           <View style={st.top}>
-            <IconBtn icon={<Text style={[st.x, { color: c.ink }]}>‹</Text>} label="Geri" onPress={back} />
+            <IconBtn icon={<Chevron color={c.ink} />} label="Geri" onPress={back} />
+            <Squish onPress={() => setPikap(true)} accessibilityLabel="Pikap: müzik aç" style={[st.pikap, { backgroundColor: c.surface }]}>
+              <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>🎧 Pikap</Text>
+            </Squish>
           </View>
           <Appear style={{ alignItems: 'center', gap: 6 }}>
             <Float amp={4}>
@@ -73,9 +127,20 @@ export default function Clean() {
             <T v="h1" style={{ textAlign: 'center' }}>Hangi odayı temizliyorsun?</T>
             <T v="small" style={{ textAlign: 'center' }}>Sırayı Moka çıkarır, sen sadece yap.</T>
           </Appear>
+          <Appear index={1} style={[st.quick, { backgroundColor: c.accentSoft }]}>
+            <T v="bold">⚡ Hızlı temizlik · tüm ev</T>
+            <T v="small">Sadece birkaç dakikan mı var? Moka en acil işleri sığdırır.</T>
+            <View style={st.qrow}>
+              {QUICK.map(m => (
+                <Squish key={m} onPress={() => pickQuick(m)} accessibilityLabel={`${m} dakika temizlik`} style={[st.qbtn, { backgroundColor: c.accent }]}>
+                  <Text style={[st.ctaT, { color: c.onAccent }]}>{m} dk</Text>
+                </Squish>
+              ))}
+            </View>
+          </Appear>
           {empty && room && (
             <View style={[st.note, { backgroundColor: c.okSoft }]}>
-              <T v="bold" style={{ color: c.ok }}>{room.name} şu an tertemiz ✨ Başka bir oda seç.</T>
+              <T v="bold" style={{ color: c.ok }}>{quick ? 'Şu an sığacak iş yok, ev tertemiz ✨' : `${room.name} şu an tertemiz ✨ Başka bir oda seç.`}</T>
             </View>
           )}
           {rooms.map((id, i) => {
@@ -84,7 +149,7 @@ export default function Clean() {
             return (
               <Appear key={id} index={i + 1}>
                 <Squish onPress={() => pick(id)} accessibilityLabel={`${r.name}, ${n} iş`} style={[st.room, { backgroundColor: c.surface }]}>
-                  <Text style={{ fontSize: 30 }}>{ROOM_EMOJI[r.type]}</Text>
+                  <Text style={{ lineHeight: 39, fontSize: 30 }}>{ROOM_EMOJI[r.type]}</Text>
                   <T v="bold" style={{ flex: 1 }}>{r.name}</T>
                   <Pill k={n ? 'today' : 'ok'} label={n ? `${n} iş` : 'Temiz'} />
                 </Squish>
@@ -100,15 +165,17 @@ export default function Clean() {
         <Run
           key={key(live)}
           ref_={live}
-          roomType={room.type}
-          roomName={room.name}
+          roomType={S.rooms[live.rid]?.type ?? room.type}
+          roomName={S.rooms[live.rid]?.name ?? room.name}
           step={finished.length + 1}
           total={queue.length}
           canSkip={ordered.length > 1}
           onClose={back}
+          onPikap={() => setPikap(true)}
           onFinish={p => {
             setPoints(x => x + p);
             setFinished(f => [...f, key(live)]);
+            if (ordered.length <= 1) doneSession();
           }}
           onSkip={() => setSkipped(s => [...s.filter(x => x !== key(live)), key(live)])}
         />
@@ -120,8 +187,10 @@ export default function Clean() {
             <Float amp={5} dur={2200}>
               <Image source={MOKA_ASSETS.sparkling_complete} style={st.big} resizeMode="contain" accessibilityIgnoresInvertColors />
             </Float>
-            <T v="h1" style={{ textAlign: 'center' }}>{room.name} pırıl pırıl!</T>
+            <T v="h1" style={{ textAlign: 'center' }}>{quick ? 'Ev pırıl pırıl!' : `${room.name} pırıl pırıl!`}</T>
             <T v="lead" style={{ textAlign: 'center' }}>{finished.length} iş bitti{points ? ` · +${points} ⭐` : ''}. Moka seninle gurur duyuyor.</T>
+            <T v="small" style={{ textAlign: 'center' }}>{`⏱ ${mins} dk sürdü`}{bonus ? ` · ⭐ +${bonus} seans bonusu` : ''}</T>
+            {weekN > 0 && <T v="small" style={{ textAlign: 'center' }}>{`🧹 Bu hafta ${weekN} gün temizlik yaptın`}</T>}
           </Appear>
           <View style={{ width: '100%', gap: 10 }}>
             <Squish onPress={() => { setPhase('room'); setEmpty(false); }} style={[st.cta, { backgroundColor: c.surface2 }]}>
@@ -133,6 +202,7 @@ export default function Clean() {
           </View>
         </View>
       )}
+      <LofiPlayerModal open={pikap} onClose={() => setPikap(false)} />
     </View>
   );
 }
@@ -163,9 +233,9 @@ function Countdown({ room, pose, total, onDone, onCancel }: { room: string; pose
   );
 }
 
-function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish, onSkip }: {
+function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onPikap, onFinish, onSkip }: {
   ref_: TaskRef; roomType: keyof typeof ROOM_POSE; roomName: string; step: number; total: number; canSkip: boolean;
-  onClose: () => void; onFinish: (points: number) => void; onSkip: () => void;
+  onClose: () => void; onPikap: () => void; onFinish: (points: number) => void; onSkip: () => void;
 }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -175,6 +245,7 @@ function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish
   const art = taskArt(k.pose);
   const scene = roomMokaScene(roomType, ROOM_SCENES[roomType]) ?? HOME_MOKA_SCENE;
   const [busy, setBusy] = useState(false);
+  useBusy(!!busy);
   const pts = useRef(0);
   const finish = () => {
     if (busy || k.doneToday) return;
@@ -199,6 +270,7 @@ function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish
             <View style={[st.stepPill, { backgroundColor: c.surface }]}>
               <Text style={{ fontFamily: fonts.bodyBlack, color: c.ink }}>{roomName} · {Math.min(step, total)}/{total}</Text>
             </View>
+            <IconBtn icon={<Text style={{ fontSize: 18, lineHeight: 24 }}>🎧</Text>} label="Pikap" onPress={onPikap} />
           </View>
           <Float amp={4} style={st.runMoka}>
             <Image source={MOKA_ASSETS[pose]} style={{ width: 150, height: 150 }} resizeMode="contain" accessibilityIgnoresInvertColors />
@@ -233,14 +305,18 @@ function Run({ ref_, roomType, roomName, step, total, canSkip, onClose, onFinish
 }
 
 const st = StyleSheet.create({
-  top: { flexDirection: 'row' },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pikap: { borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 16 },
   x: { fontFamily: fonts.bodyBlack, fontSize: 24, lineHeight: 26 },
   moka: { width: 140, height: 140 },
   big: { width: 220, height: 220 },
+  quick: { borderRadius: radius.tile, padding: 16, gap: 8 },
+  qrow: { flexDirection: 'row', gap: 10 },
+  qbtn: { flex: 1, alignItems: 'center', borderRadius: radius.pill, paddingVertical: 12 },
   note: { borderRadius: radius.tile, padding: 14 },
   room: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.tile, paddingVertical: 16, paddingHorizontal: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.screen, gap: 16 },
-  count: { fontFamily: fonts.displayBold, fontSize: 120, lineHeight: 130 },
+  count: { fontFamily: fonts.displayBold, fontSize: 110, lineHeight: 170, paddingTop: 24, paddingBottom: 8, minWidth: 160, textAlign: 'center', includeFontPadding: true },
   cancel: { paddingVertical: 12, paddingHorizontal: 20 },
   runTop: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   stepPill: { borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 },
@@ -250,5 +326,5 @@ const st = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 18, paddingTop: 10, gap: 10, alignItems: 'center' },
   cta: { alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, paddingVertical: 17, alignSelf: 'stretch', maxWidth: 484, width: '100%' },
-  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 17 },
+  ctaT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
 });

@@ -34,10 +34,26 @@ export async function readJson(req: Request, maxBytes: number): Promise<{ body: 
   const len = Number(req.headers.get('Content-Length') ?? 0);
   if (len > maxBytes) return { error: 'too_large' };
   try {
-    const text = await req.text();
-    if (text.length > maxBytes) return { error: 'too_large' };
-    const body = JSON.parse(text);
-    if (body === null || typeof body !== 'object') return { error: 'bad_request' };
+    // Content-Length yalan söyleyebilir ya da hiç olmayabilir (chunked): gövde akıştan okunur, sınırda kesilir.
+    const reader = req.body?.getReader();
+    if (!reader) return { error: 'bad_request' };
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return { error: 'too_large' };
+      }
+      chunks.push(value);
+    }
+    const buf = new Uint8Array(total);
+    let off = 0;
+    for (const c of chunks) { buf.set(c, off); off += c.byteLength; }
+    const body = JSON.parse(new TextDecoder().decode(buf));
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) return { error: 'bad_request' };
     return { body };
   } catch {
     return { error: 'bad_request' };

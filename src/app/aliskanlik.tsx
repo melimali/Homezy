@@ -59,7 +59,7 @@ function PacksTab() {
         return (
           <Card key={p.id}>
             <View style={st.row}>
-              <T style={{ fontSize: 34 }}>{p.emoji}</T>
+              <T style={{ lineHeight: 44, fontSize: 34 }}>{p.emoji}</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="h3">{p.name}</T>
                 <T v="tiny">{p.sub} · {where}</T>
@@ -118,7 +118,7 @@ function WaterTab() {
         </View>
         <View style={st.cups}>
           {Array.from({ length: Math.max(H.waterGoal, n) }, (_, i) => (
-            <T key={i} style={{ fontSize: 26, opacity: i < n ? 1 : 0.25 }}>💧</T>
+            <T key={i} style={{ lineHeight: 34, fontSize: 26, opacity: i < n ? 1 : 0.25 }}>💧</T>
           ))}
         </View>
         <View style={st.row}>

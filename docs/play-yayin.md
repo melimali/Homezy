@@ -52,7 +52,7 @@ Kod tarafı hazır. Aşağıdakiler Melih'in elle yapacakları, sırasıyla. Kim
 
 ## 6. Abonelik ve RevenueCat
 
-- [ ] Play Console → Abonelikler: `homezy_premium`, temel planlar `aylik` / `yillik`, `aylik`'a `ilk-ay` teklifi, Türkiye fiyatları elle ([odeme-kurulumu.md](odeme-kurulumu.md) adım 3).
+- [ ] Play Console → Abonelikler: `homezy_premium`, temel planlar `aylik` / `yillik`, her plana 3 gün deneme teklifi, Türkiye fiyatları elle ([odeme-kurulumu.md](odeme-kurulumu.md) adım 3).
 - [ ] RevenueCat: Google Play uygulaması paket `com.meikai.homezy`, servis hesabı JSON'u, gerçek zamanlı bildirimler (Pub/Sub), ürünleri içe aktar, `premium` yetkisi, `default` offering.
 - [ ] RevenueCat'te daha önce `layfapp_premium` ürünleri açıldıysa onları sil ya da arşivle; uygulama sadece paket türüne (Monthly / Annual) bakıyor, ürün kimliği kodda yok.
 - [ ] RevenueCat Android public anahtarı (`goog_…`) `.env`'de ve EAS ortamında.

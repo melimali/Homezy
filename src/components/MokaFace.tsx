@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
+import { useActive } from '@/hooks/useActive';
 import { MIMIK, type Mimik } from '@/constants/mimik';
 
 export type FaceMood = Exclude<Mimik, 'wink' | 'talk'>;
@@ -17,7 +18,10 @@ const MOODS: FaceMood[] = ['neutral', 'happy', 'cheer', 'wow', 'sad', 'sleepy'];
  * "Hareketi azalt" açıksa döngüler durur, sadece mimik geçişi kalır.
  */
 export function MokaFace({ size, mood = 'happy', talking = false, thinking = false, pop = 0 }: { size: number; mood?: FaceMood; talking?: boolean; thinking?: boolean; pop?: number }) {
-  const reduce = useReduceMotion();
+  const reduceM = useReduceMotion();
+  const active = useActive();
+  // Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur.
+  const reduce = reduceM || !active;
   const [breath] = useState(() => new Animated.Value(0));
   const [fur] = useState(() => new Animated.Value(0));
   const [wink] = useState(() => new Animated.Value(0));
@@ -60,6 +64,7 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
   useEffect(() => {
     if (reduce || talking || shown === 'sleepy' || shown === 'cheer') return;
     let t: ReturnType<typeof setTimeout>;
+    let dead = false;
     const blink = () =>
       Animated.sequence([
         Animated.timing(wink, { toValue: 1, duration: 70, useNativeDriver: true }),
@@ -67,6 +72,7 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
         Animated.timing(wink, { toValue: 0, duration: 90, useNativeDriver: true }),
       ]);
     const next = () => {
+      if (dead) return;
       t = setTimeout(() => {
         const dbl = Math.random() < 0.2;
         (dbl ? Animated.sequence([blink(), Animated.delay(120), blink()]) : blink()).start(next);
@@ -74,6 +80,7 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
     };
     next();
     return () => {
+      dead = true;
       clearTimeout(t);
       wink.setValue(0);
     };
@@ -128,7 +135,9 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
   useEffect(() => {
     if (reduce || !idle) return;
     let t: ReturnType<typeof setTimeout>;
+    let dead = false;
     const next = () => {
+      if (dead) return;
       t = setTimeout(() => {
         if (Math.random() < 0.6) {
           const to = Math.random() < 0.5 ? 0.8 : -0.8;
@@ -146,7 +155,10 @@ export function MokaFace({ size, mood = 'happy', talking = false, thinking = fal
       }, 6000 + Math.random() * 6000);
     };
     next();
-    return () => clearTimeout(t);
+    return () => {
+      dead = true;
+      clearTimeout(t);
+    };
   }, [idle, reduce, tilt, hop]);
 
   // Yeni cevap: tepki. Üzgünse çökme, diğerlerinde zıplama.

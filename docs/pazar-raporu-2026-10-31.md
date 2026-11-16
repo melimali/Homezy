@@ -109,9 +109,9 @@ Sıra önerisi (yurt dışı lansman planıyla uyumlu, `docs/yurtdisi-lansman.md
 
 | | Homezy (güncel) | Finch | Sweepy | Sağlık-fitness medyanı |
 |---|---|---|---|---|
-| Aylık | 6,99 $ (giriş 4,99 $) | 9,99 $ | 3,99 $ | 9,70 $ |
+| Aylık | 6,99 $ (3 gün deneme) | 9,99 $ | 3,99 $ | 9,70 $ |
 | Yıllık | 59,99 $ | 69,99 $ | 19,99 $ | 39,99 $ |
-| Deneme | Yok, ilk ay indirimi | Var `[DOĞRULANMADI]` | 3 gün | — |
+| Deneme | 3 gün ücretsiz deneme | Var `[DOĞRULANMADI]` | 3 gün | — |
 
 Kaynaklar: Finch (yardım sayfası via Recurdash), Sweepy (App Store), kategori medyanı (RevenueCat 2025 via Airbridge). Fiyat endeksi: ABD dışı fiyat ayarı için Adapty.
 

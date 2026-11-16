@@ -9,7 +9,7 @@ export const HOME_MOKA_STUDY_SCENE: ImageSourcePropType = require('../../assets/
 export const HOME_SOFA_BACKGROUND: ImageSourcePropType = require('../../assets/arkaplan/salon_kanepe2.jpg');
 export const HOME_MOKA_KITCHEN_BACKGROUND: ImageSourcePropType = require('../../assets/arkaplan/mutfak_ocak.jpg');
 export const HOME_MOKA_STUDY_BACKGROUND: ImageSourcePropType = require('../../assets/arkaplan/calisma_masasi.jpg');
-export const HOME_MOKA_SEATED: ImageSourcePropType = require('../../assets/moka/moka_home_seated.png');
+export const HOME_MOKA_SEATED: ImageSourcePropType = require('../../assets/moka/moka_home_seated.webp');
 
 const ROOM_MOKA_SCENES: Partial<Record<RoomType, ImageSourcePropType>> = {
   salon: HOME_MOKA_SCENE,

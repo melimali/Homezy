@@ -44,4 +44,9 @@ export const EN_G: Record<string, string> = {
  "İlaç hatırlatmaları 💊": "Medicine reminders 💊",
  "İlaç vaktinde ve 45 dakika sonra bir nazik ikinci hatırlatma (işaretlediysen gelmez)": "At medicine time and one gentle second reminder 45 minutes later (not sent if you ticked it off)",
  "İlaç hatırlatmaları": "Medicine reminders",
+ "Mini widget": "Mini widget",
+ "Su, ilaç, market ve görev tek küçük kutuda": "Water, medicine, shopping and tasks in one small box",
+ "Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Mini.": "Couldn't add it. Long-press the home screen > Widgets > Homezy · Mini.",
+ "Bugün widget'ı": "Today widget",
+ "Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Bugün.": "Couldn't add it. Long-press the home screen > Widgets > Homezy · Today.",
 };

@@ -1,16 +1,20 @@
-import { useRouter, type Href } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { type Href } from 'expo-router';
+import { useRouter } from '@/lib/nav';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import { StepModal } from '@/components/StepModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { Btn, T } from '@/components/ui';
 import {
-  emptyPaywallMemory, isStreakMark, markFirstSeen, markPaywallShown, shouldShowPaywall,
+  emptyPaywallMemory, isStreakMark, markFirstSeen, markPaywallShown, shouldShowPaywall, upsellInput,
   type PaywallMemory, type PaywallMoment,
 } from '@/domain/paywall';
 import { progressOf } from '@/domain/play';
 import { THEMES } from '@/domain/premium';
-import { track } from '@/lib/events';
+import { useStep } from '@/lib/firstRun';
+import { eventCounts, track } from '@/lib/events';
+import { maybeAskReview } from '@/lib/review';
 import { haptic, sfx } from '@/lib/sfx';
 import { prefs } from '@/lib/supabase';
 import { usePurchases } from '@/purchases/PurchasesProvider';
@@ -47,10 +51,12 @@ export function StreakMoment() {
   const mark = hp.today && isStreakMark(hp.streak) ? hp.streak : 0;
   const [closed, setClosed] = useState(false);
   const seen = Number(prefs.get(STREAK_KEY) ?? 0);
-  const show = !closed && mark > 0 && mark > seen;
+  const wants = !closed && mark > 0 && mark > seen;
+  const show = useStep('streak', wants);
+  const go = useRef(false);
   const offer = useMemo(
-    () => show && shouldShowPaywall('streak', readMem(), premium.active),
-    [show, premium.active],
+    () => wants && shouldShowPaywall('streak', readMem(), premium.active, undefined, upsellInput(S.play.days.length, hp.streak, eventCounts())),
+    [wants, premium.active, S.play.days.length, hp.streak],
   );
 
   useEffect(() => {
@@ -70,21 +76,22 @@ export function StreakMoment() {
     if (offer) writeMem(markPaywallShown(readMem()));
     setClosed(true);
     if (toPremium) router.push(premiumHref('streak'));
+    else if (mark >= 7) setTimeout(() => void maybeAskReview(), 800);
   };
   return (
-    <Modal transparent animationType="fade" onRequestClose={() => close(false)}>
-      <View style={[styles.bg, { backgroundColor: c.shadow }]}>
+    <StepModal onClose={() => close(go.current)}>
+      {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <MokaMascot pose="party" size="lg" showBubble={false} style={styles.moka} />
           <T v="h1" style={{ textAlign: 'center' }}>🔥 {mark} günlük seri!</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {mark} gün üst üste evine vakit ayırdın. Evin ve bahçen sana teşekkür ediyor 🌷
           </T>
-          {offer && <Btn label="Premium'a bak ⭐" onPress={() => close(true)} block />}
-          <Btn kind="primary" label="Yaşasın!" onPress={() => close(false)} block />
+          {offer && <Btn label="Premium'a bak ⭐" onPress={() => { go.current = true; dismiss(); }} block />}
+          <Btn kind="primary" label="Yaşasın!" onPress={dismiss} block />
         </View>
-      </View>
-    </Modal>
+      )}
+    </StepModal>
   );
 }
 

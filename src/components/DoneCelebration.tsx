@@ -44,7 +44,7 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
           </Float>
           {[[0.18, 0.2, 0], [0.72, 0.12, 300], [0.86, 0.38, 600], [0.1, 0.5, 900]].map(([x, y, d], i) => (
             <Float key={i} amp={5} dur={1800 + i * 300} delay={d} style={[st.star, { left: `${x * 100}%`, top: `${y * 100}%` }]}>
-              <Text style={{ fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 + (i % 2) * 8 }}>⭐</Text>
             </Float>
           ))}
         </View>
@@ -55,7 +55,7 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
           </Appear>
           {points > 0 && (
             <Appear index={1} style={[st.points, { backgroundColor: c.cream }]}>
-              <Text style={{ fontSize: 24 }}>⭐</Text>
+              <Text style={{ lineHeight: 31, fontSize: 24 }}>⭐</Text>
               <Text style={[st.pointsT, { color: c.night }]}>+{points} puan</Text>
             </Appear>
           )}
@@ -86,12 +86,12 @@ const st = StyleSheet.create({
   star: { position: 'absolute' },
   body: { flex: 1, paddingHorizontal: 24, gap: 26, alignItems: 'center', marginTop: -8, paddingTop: 8 },
   h1: { fontFamily: fonts.displayBold, fontSize: 40, lineHeight: 46, letterSpacing: -0.6, textAlign: 'center' },
-  sub: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 24, textAlign: 'center', opacity: 0.9 },
+  sub: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, textAlign: 'center', opacity: 0.9 },
   points: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.pill, paddingVertical: 14, paddingHorizontal: 40 },
   pointsT: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28 },
   quote: { alignSelf: 'stretch', flexDirection: 'row', gap: 14, borderRadius: radius.tile, paddingVertical: 20, paddingHorizontal: 20 },
   mark: { fontFamily: fonts.displayBold, fontSize: 46, lineHeight: 46, opacity: 0.35 },
   quoteT: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24 },
   btn: { alignSelf: 'stretch', alignItems: 'center', borderRadius: radius.pill, paddingVertical: 18, marginTop: 'auto' },
-  btnT: { fontFamily: fonts.bodyBlack, fontSize: 17 },
+  btnT: { fontFamily: fonts.bodyBlack, fontSize: 16 },
 });

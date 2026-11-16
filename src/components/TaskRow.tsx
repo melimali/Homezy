@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
-import { Alert, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DAY } from '@/domain/constants';
 import { isPhotoTask, taskMin } from '@/domain/home';
@@ -12,10 +12,11 @@ import type { AppState, Task, TaskList } from '@/domain/types';
 import { useFamily } from '@/family/FamilyProvider';
 import { useNow } from '@/hooks/useNow';
 import { persistPhoto } from '@/lib/photos';
+import { checkMeterPhoto } from '@/lib/scan';
 import { sfx } from '@/lib/sfx';
 import { usePlay } from '@/play/usePlay';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, elevation } from '@/theme';
 
 import { Appear, Burst, Float, Squish } from './motion';
 import { useToast } from './Toast';
@@ -23,6 +24,7 @@ import { useTranslation } from '@/i18n/i18n';
 import { noteDone } from '@/play/rushGuard';
 import { awardKey, dayKey } from '@/domain/play';
 import { Btn, Field, Pill, Sheet, T } from './ui';
+import { appAlert } from '@/components/AppAlert';
 
 export function findList(S: AppState, rid: string, list: TaskList): Task[] {
   if (list === 'care') return (S.care ||= []);
@@ -119,7 +121,7 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       if (ask)
         setTimeout(
           () =>
-            Alert.alert(tr('Moka: Bir dakika ✋'), tr('Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?'), [
+            appAlert(tr('Moka: Bir dakika ✋'), tr('Amaç disiplin kazanmak. Bunların hepsini gerçekten yaptın mı?'), [
               { text: tr('Geri al'), style: 'destructive', onPress: () => { ask(); toast(tr('Son işler geri alındı, puanları da çektim.')); } },
               { text: tr('Evet, yaptım'), style: 'default' },
             ]),
@@ -142,12 +144,22 @@ export function useTask(t: Task, rid: string, list: TaskList) {
   };
 
   const remove = () => {
+    const snap = { ...t };
+    let at = -1;
     update(S => {
       const arr = findList(S, rid, list);
       const i = arr.findIndex(y => y.id === t.id);
+      at = i;
       if (i > -1) arr.splice(i, 1);
     });
-    toast(`${t.name} silindi.`);
+    toast(`${t.name} silindi.`, {
+      label: tr('Geri al'),
+      onPress: () =>
+        update(S => {
+          const arr = findList(S, rid, list);
+          if (!arr.some(y => y.id === snap.id)) arr.splice(Math.max(0, Math.min(at, arr.length)), 0, snap);
+        }),
+    });
   };
 
   const shoot = async () => {
@@ -157,6 +169,8 @@ export function useTask(t: Task, rid: string, list: TaskList) {
       const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.6 };
       const res = Platform.OS === 'web' ? await ImagePicker.launchImageLibraryAsync(opts) : await ImagePicker.launchCameraAsync(opts);
       if (res.canceled || !res.assets?.[0]) return;
+      const chk = await checkMeterPhoto(res.assets[0].uri);
+      if (!chk.ok) return toast(tr('Bu fotoğrafta sayaç görünmüyor. Sayacın rakamlı ekranını yakından çekip tekrar dene 📸'));
       done(persistPhoto(res.assets[0].uri, 'sayac', t.photo));
     } catch (e) {
       console.warn(e);
@@ -199,12 +213,12 @@ export function TaskRow({
   const router = useRouter();
   const k = useTask(t, rid, list);
   const [open, setOpen] = useState(false);
-  const tone = k.doneToday ? c.ok : k.s.k === 'late' ? c.late : k.s.k === 'today' ? c.today : c.muted;
+  const tone = k.doneToday ? c.ok : k.s.k !== 'ok' ? c.today : c.muted; // gecikmiş de sakin sıcak ton (kırmızı suçluluk yaratır)
   const sub = [showRoom ? `${k.plant ? '🪴' : k.place.emoji} ${k.place.name}` : null, k.doneToday ? 'Bugün yapıldı' : k.s.label, `${k.min} dk`].filter(Boolean).join(' · ');
   const detail = () => router.push({ pathname: '/is' as any, params: { rid, list, id: t.id } });
 
   return (
-    <View style={[styles.rowWrap, { backgroundColor: k.doneToday ? c.okSoft : k.s.k === 'late' ? c.lateSoft : k.s.k === 'today' ? c.todaySoft : c.surface, shadowColor: c.shadow, borderLeftColor: tone }, !first && { marginTop: 10 }]}>
+    <View style={[styles.rowWrap, { backgroundColor: k.doneToday ? c.okSoft : k.s.k !== 'ok' ? c.todaySoft : c.surface, shadowColor: c.shadow, borderLeftColor: tone }, !first && { marginTop: 10 }]}>
       {k.doneToday && (
         <Appear style={[styles.stamp, { borderColor: c.ok }]}>
           <Text style={{ fontFamily: fonts.displayBold, fontSize: 12, letterSpacing: 1.5, color: c.ok }}>YAPILDI</Text>
@@ -243,14 +257,14 @@ export function TaskRow({
         >
           <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
             <T v="bold" numberOfLines={2} style={k.doneToday && { color: c.muted, textDecorationLine: 'line-through' }}>{t.name}</T>
-            <T v="small" numberOfLines={2} style={{ fontSize: 12.5, color: k.urgent ? tone : c.muted }}>{sub}</T>
+            <T v="small" numberOfLines={2} style={{ fontSize: 12, color: k.urgent ? tone : c.muted }}>{sub}</T>
             <Who k={k} t={t} />
           </View>
           {k.pose ? (
             <Image source={MOKA_ASSETS[k.pose]} style={[styles.sticker, k.doneToday && { opacity: 0.5 }]} resizeMode="contain" accessibilityIgnoresInvertColors />
           ) : (
             <View style={[styles.bubble, { backgroundColor: c.surface2 }]}>
-              <Text style={{ fontSize: 24 }}>{k.emoji}</Text>
+              <Text style={{ lineHeight: 31, fontSize: 24 }}>{k.emoji}</Text>
             </View>
           )}
         </Pressable>
@@ -270,7 +284,7 @@ function Who({ k, t }: { k: TaskApi; t: Task }) {
   return (
     <Pressable onPress={k.nextWho} accessibilityRole="button" accessibilityLabel={`${t.name}: kim yapacak? ${t.who ?? 'herkes'}`} hitSlop={6}
       style={[styles.who, { backgroundColor: t.who ? c.accentSoft : c.surface2 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>👤 {t.who ?? 'Herkes'}</Text>
     </Pressable>
   );
 }
@@ -319,9 +333,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
   const [open, setOpen] = useState(false);
   const tone = k.doneToday
     ? { bg: c.okSoft, fg: c.ok }
-    : k.s.k === 'late'
-    ? { bg: c.lateSoft, fg: c.late }
-    : k.s.k === 'today'
+    : k.s.k !== 'ok'
     ? { bg: c.todaySoft, fg: c.today }
     : { bg: c.surface, fg: c.muted };
   const label = k.doneToday ? 'Yapıldı ✓' : k.s.label;
@@ -345,7 +357,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
           </Float>
           <Text numberOfLines={2} style={[styles.tileName, { color: k.doneToday ? c.muted : c.ink }]}>{t.name}</Text>
           <View style={[styles.tileTag, { backgroundColor: k.doneToday || k.s.k !== 'ok' ? c.surface : c.surface2 }]}>
-            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11.5, color: tone.fg }}>{label}</Text>
+            <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: tone.fg }}>{label}</Text>
           </View>
           {k.doneToday && <Text style={styles.tileCheck}>✅</Text>}
         </Squish>
@@ -357,7 +369,7 @@ export function TaskTile({ t, rid, list, index = 0 }: { t: Task; rid: string; li
       </Animated.View>
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={styles.sheetHead}>
-          <Text style={{ fontSize: 40 }}>{k.emoji}</Text>
+          <Text style={{ lineHeight: 52, fontSize: 40 }}>{k.emoji}</Text>
           <View style={{ flex: 1, minWidth: 0 }}>
             <T v="h2">{t.name}</T>
             <View style={styles.meta}>
@@ -390,7 +402,7 @@ function Stepper({ label, a11y = label, value, text, steps, onChange }: { label:
   const next = steps.find(x => x > value);
   return (
     <View style={styles.stepRow}>
-      <T v="bold" style={{ fontSize: 18, width: 30 }} accessibilityLabel={a11y}>{label}</T>
+      <T v="bold" style={{ lineHeight: 23, fontSize: 18, width: 30 }} accessibilityLabel={a11y}>{label}</T>
       <StepBtn label="−" a11y={`${a11y} azalt`} disabled={prev == null} onPress={() => prev != null && onChange(prev)} />
       <Text style={{ flex: 1, textAlign: 'center', fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{text}</Text>
       <StepBtn label="+" a11y={`${a11y} artır`} disabled={next == null} onPress={() => next != null && onChange(next)} />
@@ -403,7 +415,7 @@ export function StepBtn({ label, a11y, onPress, disabled }: { label: string; a11
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={4}
       style={({ pressed }) => [styles.step, { backgroundColor: c.accentSoft }, (pressed || disabled) && { opacity: 0.5 }]}>
-      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 17, color: c.ink }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 16, color: c.ink }}>{label}</Text>
     </Pressable>
   );
 }
@@ -464,9 +476,9 @@ const styles = StyleSheet.create({
   sticker: { width: 66, height: 66, marginVertical: -8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
   tileWrap: { width: '48%' },
-  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0 },
+  tile: { minHeight: 140, borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, paddingHorizontal: 10, borderWidth: 0, ...elevation.md },
   tileEmoji: { fontSize: 40, lineHeight: 48 },
-  tileName: { fontFamily: fonts.bodyBlack, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  tileName: { fontFamily: fonts.bodyBlack, fontSize: 15, lineHeight: 19, textAlign: 'center' },
   tileTag: { borderRadius: radius.pill, paddingVertical: 3, paddingHorizontal: 10, marginTop: 2 },
   tileCheck: { position: 'absolute', top: 8, left: 10, fontSize: 16 },
   tileMore: { position: 'absolute', top: 4, right: 8, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },

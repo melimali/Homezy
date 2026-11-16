@@ -59,10 +59,12 @@ nav a { margin-right: 14px; font-weight: 700; }
 <tr><td>Bot-check signals (IP address, browser/device info)</td><td>Preventing fake accounts and spam sign-ups</td><td>Cloudflare Turnstile; runs only at sign-in, sign-up and guest session start, not stored by us</td><td>Legitimate interest (security)</td></tr>
 <tr><td>Advertising ID, IP address, device info (free plan only)</td><td>Showing non-personalised ads</td><td>Google AdMob</td><td>Consent (Google consent form in the EEA / UK), legitimate interest elsewhere</td></tr>
 <tr><td>Notifications</td><td>Reminders</td><td>Scheduled on your phone only; never sent to a server</td><td>Your consent (notification permission)</td></tr>
+<tr><td>Global house leaderboard (optional): nickname, house score, level, streak, cleanliness percentage</td><td>Public leaderboard</td><td>Supabase. Only if you join; real name, email, location and floor plan are never shown. Deleted when you leave the leaderboard</td><td>Your consent (joining)</td></tr>
 <tr><td>Family sharing (Premium): home data you share with an invite code, shared goals, display name</td><td>Sharing a home</td><td>Supabase</td><td>Contract</td></tr>
 </table>
 <p>Camera and photo access is used only when you take or pick a photo. We do not ask for microphone, contacts or background location. We do not request tracking permission (iOS ATT) because ads are not personalised. The app has no analytics or crash-reporting SDK.</p>
 
+<p><strong>Your medication information stays on your phone only.</strong> We keep medication names, doses, times and "taken" logs (health data) only in the database on your device. This information is never sent to our servers, to the cloud backup (even if you create an account), to Moka chat or to the AI service, and is not shared with any third party. Medication reminders are scheduled locally on your phone. If you delete the app or reset your data, these records are deleted too; they are not restored from a backup when you move to a new phone.</p>
 <h2>3. AI features</h2>
 <ul>
   <li><strong>Photo scan</strong> and <strong>Moka chat</strong> are powered by Anthropic's Claude models. Your content is passed to Anthropic only while your request is processed. We do not store photos or chat text on our servers; we only count how many scans and messages you made.</li>

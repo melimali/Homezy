@@ -1,3 +1,4 @@
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Component, type ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -6,7 +7,7 @@ import { radius, useColors, useIsDark } from '@/theme';
 // expo-blur yerel modül: Expo Go / eski derlemede yoksa require ya da çizim patlar; o zaman düz yarı saydam yüzey.
 let BlurView: React.ComponentType<any> | null = null;
 // Yerel modül gömülü değilse (eski dev derlemesi) native tarafta çöker; JS try/catch yetmez, önce modülün varlığına bak.
-const hasBlur = Platform.OS !== 'web' && !!(globalThis as { expo?: { modules?: Record<string, unknown> } }).expo?.modules?.ExpoBlur;
+const hasBlur = Platform.OS !== 'web' && !!requireOptionalNativeModule('ExpoBlur');
 if (hasBlur) {
   try {
     BlurView = require('expo-blur').BlurView; // eslint-disable-line @typescript-eslint/no-require-imports
@@ -29,14 +30,17 @@ type Props = {
   children?: React.ReactNode;
   intensity?: number;
   style?: StyleProp<ViewStyle>;
+  /** Okunurluk için koyu, daha opak zemin (açık ya da koyu temada sabit). */
+  scrim?: boolean;
 };
 
 /** Buzlu cam kart: arkadaki renkleri bulanıklaştırır, ince açık kenar ve yumuşak gölge. Web'de düz yarı saydam yüzey. */
-export function Glass({ children, intensity = 40, style }: Props) {
+export function Glass({ children, intensity = 40, style, scrim }: Props) {
   const c = useColors();
   const dark = useIsDark();
-  const tint = dark ? 'rgba(51,58,79,0.45)' : 'rgba(255,254,250,0.55)';
-  const edge = dark ? 'rgba(235,245,238,0.18)' : 'rgba(255,255,255,0.75)';
+  const tint = dark ? 'rgba(51,58,79,0.45)' : 'rgba(255,255,255,0.62)';
+  const bg = scrim ? 'rgba(40,48,68,0.82)' : tint;
+  const edge = dark ? 'rgba(235,245,238,0.18)' : 'rgba(255,255,255,0.5)';
   return (
     <View style={[styles.wrap, { borderColor: edge, shadowColor: c.shadow }, style]}>
       {BlurView && (
@@ -50,7 +54,7 @@ export function Glass({ children, intensity = 40, style }: Props) {
           />
         </Safe>
       )}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tint }]} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: bg }]} />
       {children}
     </View>
   );
@@ -61,10 +65,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     borderWidth: 1,
     overflow: 'hidden',
-    padding: 18,
-    shadowOffset: { width: 0, height: 8 },
+    padding: 20,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 18,
+    shadowRadius: 12,
     elevation: 2,
   },
 });

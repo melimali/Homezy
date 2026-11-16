@@ -1,5 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState as RNAppState } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import { applyDirection } from '@/i18n/rtl';
 import { setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
 import { emptyState } from '@/domain/logic';
@@ -19,28 +21,57 @@ const StoreContext = createContext<Store | null>(null);
 
 const clone = (S: AppState): AppState => JSON.parse(JSON.stringify(S));
 
-/** Kayıtları sıraya koyar; arka arkaya gelen değişikliklerde yalnızca en sonuncusu yazılır. */
-function createSaver() {
+/**
+ * Kayıtları sıraya koyar. Arka arkaya gelen değişiklikler (parmakla boyama, hızlı dokunuşlar)
+ * kısa bir süre toplanır ve yalnızca en sonuncusu yazılır; uygulama arka plana giderken `flush` ile hemen yazılır.
+ */
+function createSaver(delay = 500) {
   let pending: AppState | null = null;
-  let running = false;
-  return async function save(S: AppState) {
-    pending = S;
-    if (running) return;
-    running = true;
-    try {
-      while (pending) {
-        const next = pending;
-        pending = null;
-        try {
-          await saveState(next);
-        } catch (e) {
-          console.warn('Homezy: kayıt başarısız', e);
-        }
+  let current: Promise<void> | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let blocked = false;
+  async function drain() {
+    while (pending) {
+      const next = pending;
+      pending = null;
+      try {
+        await saveState(next);
+      } catch (e) {
+        console.warn('Homezy: kayıt başarısız', e);
       }
-    } finally {
-      running = false;
     }
+  }
+  /** Devam eden bir kayıt varsa onu döndürür (flush bekleyebilsin), yoksa yenisini başlatır. */
+  function run(): Promise<void> {
+    timer = null;
+    if (current) return current.then(() => (pending ? run() : undefined));
+    const p: Promise<void> = drain().finally(() => {
+      if (current === p) current = null;
+    });
+    current = p;
+    return p;
+  }
+  const save = (S: AppState) => {
+    // Okuma başarısız olduysa boş durumla diskteki gerçek veriyi ezme.
+    if (blocked) return;
+    pending = S;
+    if (timer) return;
+    // Animasyon/kaydırma bitince yaz: JS thread'i meşgulken kayıt takılma yaratmasın.
+    timer = setTimeout(() => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => void run());
+      else void run();
+    }, delay);
   };
+  save.block = () => {
+    blocked = true;
+    pending = null;
+  };
+  save.flush = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    return run();
+  };
+  return save;
 }
 
 export function AppStoreProvider({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
@@ -51,7 +82,10 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
 
   const langCode = state?.settings?.language;
   useEffect(() => {
-    if (langCode) setLang(langCode);
+    if (langCode) {
+      setLang(langCode);
+      applyDirection(langCode === 'ar');
+    }
   }, [langCode]);
 
   useEffect(() => {
@@ -73,7 +107,8 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
       }
       if (!S) {
         S = emptyState();
-        if (!failed) saver(S);
+        if (failed) saver.block();
+        else saver(S);
       }
       if (alive) {
         current.current = S;
@@ -83,6 +118,14 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
     return () => {
       alive = false;
     };
+  }, [saver]);
+
+  // Arka plana geçerken bekleyen kaydı hemen yaz (uygulama sistem tarafından kapatılabilir).
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', st => {
+      if (st !== 'active') void saver.flush();
+    });
+    return () => sub.remove();
   }, [saver]);
 
   const update = useCallback(
@@ -111,8 +154,9 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
 
   const get = useCallback(() => current.current!, []);
 
-  if (!state) return <>{fallback ?? null}</>;
-  return <StoreContext.Provider value={{ state, update, replace, get }}>{children}</StoreContext.Provider>;
+  const value = useMemo(() => (state ? { state, update, replace, get } : null), [state, update, replace, get]);
+  if (!value) return <>{fallback ?? null}</>;
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
 export function useStore() {

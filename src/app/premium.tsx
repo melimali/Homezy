@@ -1,4 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 
 import { PremiumChoice } from '@/components/PremiumChoice';
 import type { PaywallMoment } from '@/domain/paywall';

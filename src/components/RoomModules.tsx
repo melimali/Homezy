@@ -98,9 +98,9 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
                   accessibilityLabel={`${x.name}: ${CSTATE[x.state]}. Durumu değiştirmek için dokun, ayarlar için basılı tut`}
                   style={[styles.cloth, { backgroundColor: bg, borderColor: picked ? c.accent : c.fashionLine }]}
                 >
-                  <Text style={{ fontSize: 30 }}>{clothEmoji(x.cat, x.name)}</Text>
+                  <Text style={{ lineHeight: 39, fontSize: 30 }}>{clothEmoji(x.cat, x.name)}</Text>
                   <Text numberOfLines={2} style={[styles.clothName, { color: c.ink }]}>{x.name}</Text>
-                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: fg }}>{CSTATE_EMOJI[x.state]} {CSTATE[x.state]}</Text>
+                  <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: fg }}>{CSTATE_EMOJI[x.state]} {CSTATE[x.state]}</Text>
                 </Squish>
                 <Squish onPress={() => setSheet(x.id)} accessibilityRole="button" accessibilityLabel={`${x.name} ayarları`} hitSlop={8} style={styles.more}>
                   <Text style={{ color: c.muted, fontFamily: fonts.bodyBlack, fontSize: 15 }}>⋯</Text>
@@ -147,7 +147,7 @@ export function Wardrobe({ rid, anchor, onAnchor, onLook }: { rid: string; ancho
           {sel && (
             <>
               <View style={styles.sheetHead}>
-                <Text style={{ fontSize: 40 }}>{clothEmoji(sel.cat, sel.name)}</Text>
+                <Text style={{ lineHeight: 52, fontSize: 40 }}>{clothEmoji(sel.cat, sel.name)}</Text>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <T v="h2">{sel.name}</T>
                   <T v="small">{sel.cat} · {CSTATE_EMOJI[sel.state]} {CSTATE[sel.state]}</T>
@@ -311,14 +311,14 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
                 accessibilityLabel={`${x.name}: ${LV.find(l => l[0] === x.lvl)?.[1]}. Değiştirmek için dokun, ayarlar için basılı tut`}
                 style={[styles.cloth, { backgroundColor: lvSoft[x.lvl], borderColor: lvSoft[x.lvl] }]}
               >
-                <Text style={[{ fontSize: 30 }, x.lvl === 'yok' && { opacity: 0.45 }]}>{itemEmoji(x.name)}</Text>
+                <Text style={[{ lineHeight: 39, fontSize: 30 }, x.lvl === 'yok' && { opacity: 0.45 }]}>{itemEmoji(x.name)}</Text>
                 <Text numberOfLines={2} style={[styles.clothName, { color: x.lvl === 'yok' ? c.muted : c.ink }]}>{x.name}</Text>
                 <View style={styles.bars} accessibilityElementsHidden>
                   {[0, 1, 2].map(n => (
                     <View key={n} style={[styles.barSeg, { backgroundColor: n < lvBars[x.lvl] ? lvColor[x.lvl] : c.surface }]} />
                   ))}
                 </View>
-                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 11, color: exp ? { late: c.late, today: c.today, ok: c.muted }[exp.k] : lvColor[x.lvl] }}>
+                <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: exp ? { late: c.late, today: c.today, ok: c.muted }[exp.k] : lvColor[x.lvl] }}>
                   {exp ? `⏳ ${exp.label}` : LV.find(l => l[0] === x.lvl)?.[1]}
                 </Text>
               </Squish>
@@ -350,7 +350,7 @@ export function Stock({ rid, title, placeholder }: { rid: string; title: string;
         {sel && (
           <>
             <View style={styles.sheetHead}>
-              <Text style={{ fontSize: 40 }}>{itemEmoji(sel.name)}</Text>
+              <Text style={{ lineHeight: 52, fontSize: 40 }}>{itemEmoji(sel.name)}</Text>
               <T v="h2" style={{ flex: 1 }}>{sel.name}</T>
             </View>
             <View style={[styles.seg, { backgroundColor: c.surface2 }]} accessibilityRole="radiogroup" accessibilityLabel={`${sel.name} durumu`}>
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cell: { width: '31.6%' },
   cloth: { minHeight: 112, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 12, paddingHorizontal: 7 },
-  clothName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, lineHeight: 16, textAlign: 'center' },
+  clothName: { fontFamily: fonts.bodyBlack, fontSize: 12, lineHeight: 16, textAlign: 'center' },
   more: { position: 'absolute', top: 2, right: 4, width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
   bars: { flexDirection: 'row', gap: 3 },
   barSeg: { width: 12, height: 6, borderRadius: 3 },

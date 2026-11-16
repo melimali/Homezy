@@ -4,6 +4,7 @@
 //
 // Gizli değişken: REVENUECAT_API_KEY (RevenueCat gizli API anahtarı, sk_...). SUPABASE_URL ve
 // SUPABASE_SERVICE_ROLE_KEY Supabase tarafından otomatik verilir.
+// İsteğe bağlı: ALLOW_SANDBOX=false -> sandbox (test) abonelikleri Premium sayılmaz (varsayılan: sayılır).
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -14,11 +15,20 @@ export const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('S
 
 /** Kullanıcının durumunu RevenueCat'ten okuyup yazar. Hata olursa açıklamasını döner. */
 export async function syncSubscriber(userId: string, lastEvent: string | null): Promise<{ active: boolean } | { error: string }> {
-  const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
-    headers: { Authorization: `Bearer ${Deno.env.get('REVENUECAT_API_KEY')}` },
-  });
-  if (!res.ok) return { error: `revenuecat ${res.status}` };
-  const { subscriber } = await res.json();
+  const key = Deno.env.get('REVENUECAT_API_KEY');
+  if (!key) return { error: 'revenuecat key missing' };
+  let subscriber: any;
+  try {
+    // Zaman aşımı: RevenueCat yanıt vermezse fonksiyon asılı kalmaz.
+    const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return { error: `revenuecat ${res.status}` };
+    ({ subscriber } = await res.json());
+  } catch (e) {
+    return { error: `revenuecat fetch: ${e instanceof Error ? e.name : 'error'}` };
+  }
   const ent = subscriber?.entitlements?.[ENTITLEMENT];
   const productId: string | undefined = ent?.product_identifier;
   const sub = productId ? subscriber?.subscriptions?.[productId] : undefined;
@@ -26,7 +36,10 @@ export async function syncSubscriber(userId: string, lastEvent: string | null): 
   // Google Play ödeme sorununda birkaç gün ek süre verir; RevenueCat bu sürede de entitlement'ı açık tutar.
   const grace = ent?.grace_period_expires_date ? new Date(ent.grace_period_expires_date) : null;
   const until = grace && expires && grace > expires ? grace : expires;
-  const active = !!ent && (until === null || until.getTime() > Date.now());
+  let active = !!ent && (until === null || until.getTime() > Date.now());
+  // Sandbox (TestFlight / Play iç test) alımları varsayılan olarak Premium sayılır. Mağaza yayınında kapatmak için
+  // gizli değişken ALLOW_SANDBOX=false yazılır; o zaman is_sandbox=true abonelik Premium yapmaz.
+  if (active && sub?.is_sandbox === true && Deno.env.get('ALLOW_SANDBOX')?.trim().toLowerCase() === 'false') active = false;
 
   const { error } = await admin.from('subscriptions').upsert({
     user_id: userId,

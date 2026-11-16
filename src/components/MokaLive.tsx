@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MutableRefObject, type ReactNode } fr
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
+import { mokaOutfit } from '@/domain/mokaOutfit';
 import { progressOf } from '@/domain/play';
 import { useSky } from '@/lib/weather';
 import { onMokaReact, reactMoka } from '@/lib/mokaReact';
@@ -19,7 +20,6 @@ const HEARTS = ['💗', '💛', '💗', '🤎'];
 export function MokaLive({ children, size, handleRef, weather }: { children: ReactNode; size: number; handleRef?: MutableRefObject<MokaLiveHandle | null>; weather?: boolean }) {
   const reduce = useReduceMotion();
   const sky = useSky(!!weather);
-  const gear = !weather ? null : sky.kind === 'rain' || sky.kind === 'storm' ? '☂️' : sky.kind === 'snow' ? '🧣' : null;
   const breath = useState(() => new Animated.Value(0))[0];
   const sway = useState(() => new Animated.Value(0))[0];
   const wiggle = useState(() => new Animated.Value(0))[0];
@@ -28,7 +28,9 @@ export function MokaLive({ children, size, handleRef, weather }: { children: Rea
   const [heartKey, setHeartKey] = useState(0);
   const [stars, setStars] = useState(0);
   const { state } = useStore();
-  const level = progressOf(state.play).level;
+  const prog = progressOf(state.play);
+  const level = prog.level;
+  const { gear, crown } = !weather ? { gear: null, crown: null } : mokaOutfit(sky.kind, new Date().getMonth(), prog.streak, new Date().getHours());
   const lastLevel = useRef(level);
   useEffect(() => {
     if (level > lastLevel.current) reactMoka('confetti');
@@ -107,6 +109,11 @@ export function MokaLive({ children, size, handleRef, weather }: { children: Rea
       {!!gear && (
         <Text pointerEvents="none" style={[styles.heart, { right: size * 0.04, left: undefined, top: size * 0.02, fontSize: size * 0.24 }]}>
           {gear}
+        </Text>
+      )}
+      {!!crown && (
+        <Text pointerEvents="none" style={[styles.heart, { left: size * 0.06, top: size * 0.02, fontSize: size * 0.2 }]}>
+          {crown}
         </Text>
       )}
       {stars > 0 && (

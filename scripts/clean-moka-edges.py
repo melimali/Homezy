@@ -1,12 +1,12 @@
 """Moka PNG'lerindeki beyaz/gri kenar halesini temizler (yerinde).
-Kullanım: python3 scripts/clean-moka-edges.py [assets/moka]  (sonra: python3 scripts/make-scenes.py build)
+Kullanım: python3 scripts/clean-moka-edges.py [assets-src/moka]  (sonra: python3 scripts/make-scenes.py build)
 Dış kenardaki açık, doygunluğu düşük pikselleri en fazla 6 tur soyar; koyu kontura gelince durur."""
 import sys, glob, os
 import numpy as np
 from PIL import Image
 from scipy import ndimage as nd
 
-d = sys.argv[1] if len(sys.argv) > 1 else 'assets/moka'
+d = sys.argv[1] if len(sys.argv) > 1 else 'assets-src/moka'
 for p in sorted(glob.glob(os.path.join(d, '*.png'))):
     a = np.array(Image.open(p).convert('RGBA')).astype(np.int16)
     al = a[..., 3] > 40

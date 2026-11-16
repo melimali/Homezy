@@ -33,8 +33,64 @@ export const BUSY: { id: DayBusy; emoji: string; label: string; sub: string }[] 
 const JOURNAL_EMOJI: Record<Feel, string> = { enerjik: '😄', iyi: '🙂', yorgun: '😴', bunalmis: '😐', keyifsiz: '😔' };
 
 export const checkinOf = (P: Play, now = Date.now()): CheckIn | null => P.checkins?.[dayKey(now)] ?? null;
-/** Bugün sorulmalı mı: henüz cevap da yok, atlama da. */
-export const needsCheckin = (P: Play, now = Date.now()) => !checkinOf(P, now);
+
+/**
+ * Günlük iki soru (Melih, 2026-11-06): her günün ilk açılışında "Bugün nasılsın?", aynı günün ikinci
+ * açılışında "Bugün evde misin?". Kurulum gününde (ilk indirme) ikisi de sorulmaz; ertesi günden başlar.
+ * `first`: ilk açılış günü (kurulumdan önce yazılır; eski kullanıcılarda boş = kısıt yok).
+ */
+export type DailyAsk = { first?: DayKey; day?: DayKey; opens?: number; feel?: Feel; feelDone?: boolean; busyDone?: boolean };
+export type Stage = 'feel' | 'busy';
+
+/** Uygulama oturumu başına bir kere çağrılır: bugünün açılış sayacını artırır, yeni günde soruları sıfırlar. */
+export function countOpen(P: Play, now = Date.now()) {
+  const day = dayKey(now);
+  const a: DailyAsk = P.ask ?? {};
+  P.ask = a.day === day ? { ...a, opens: (a.opens ?? 0) + 1 } : { first: a.first, day, opens: 1 };
+}
+/** Kurulumdan önce ilk gün işaretlenir. */
+export function markFirstDay(P: Play, now = Date.now()) {
+  if (!P.ask?.first) P.ask = { ...(P.ask ?? {}), first: dayKey(now) };
+}
+/** Şu an hangi soru sorulmalı? (Sayaç henüz sayılmadıysa açılış 1 sayılır.) */
+export function stageOf(P: Play, now = Date.now()): Stage | null {
+  const day = dayKey(now);
+  const a = P.ask;
+  if (a?.first === day) return null;
+  const same = a?.day === day;
+  const opens = same ? a?.opens ?? 1 : 1;
+  if (!same || !a?.feelDone) return 'feel';
+  return opens >= 2 && !a.busyDone ? 'busy' : null;
+}
+/** Bugün sorulmalı mı. */
+export const needsCheckin = (P: Play, now = Date.now()) => stageOf(P, now) != null;
+
+const today = (P: Play, now: number) => {
+  const day = dayKey(now);
+  if (P.ask?.day !== day) P.ask = { first: P.ask?.first, day, opens: 1 };
+  return P.ask!;
+};
+/** 1. soru: "nasılsın". Cevap hemen planı besler (yoğunluk 'biraz' varsayılır, 2. soru günceller). */
+export function answerFeel(P: Play, feel: Feel, now = Date.now()) {
+  const a = today(P, now);
+  P.ask = { ...a, feel, feelDone: true };
+  const prev = P.checkins?.[dayKey(now)] ?? null;
+  saveCheckin(P, { feel, busy: answered(prev) ? prev.busy : 'biraz', at: now, note: answered(prev) ? prev.note : undefined }, now);
+}
+export function skipFeel(P: Play, now = Date.now()) {
+  P.ask = { ...today(P, now), feelDone: true };
+}
+/** 2. soru: "evde misin". */
+export function answerBusy(P: Play, busy: DayBusy, now = Date.now()) {
+  const a = today(P, now);
+  P.ask = { ...a, busyDone: true };
+  const prev = P.checkins?.[dayKey(now)] ?? null;
+  const feel: Feel = a.feel ?? (answered(prev) ? prev.feel : 'iyi');
+  saveCheckin(P, { feel, busy, at: now, note: answered(prev) ? prev.note : undefined }, now);
+}
+export function skipBusy(P: Play, now = Date.now()) {
+  P.ask = { ...today(P, now), busyDone: true };
+}
 export const answered = (c: CheckIn | null): c is { feel: Feel; busy: DayBusy; at: number; note?: string } => !!c && !('skip' in c);
 export const journalMood = (c: CheckIn | null) => (answered(c) ? JOURNAL_EMOJI[c.feel] : null);
 export const feelOf = (id: Feel) => FEELS.find(f => f.id === id)!;

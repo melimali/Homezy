@@ -1,3 +1,4 @@
+import { TMZ_EN } from '../tmz';
 import { EN_A } from './a';
 import { EN_B } from './b';
 import { EN_C } from './c';
@@ -6,6 +7,29 @@ import { EN_E } from './e';
 import { EN_F } from './f';
 import { EN_G } from './g';
 import { EN_H } from './h';
+import { EN_I } from './i';
+import { EN_J } from './j';
+import { EN_K } from './k';
+import { EN_L } from './l';
+import { EN_M } from './m';
+import { EN_N } from './n';
+import { EN_O } from './o';
+import { EN_P } from './p';
+import { EN_Q } from './q';
+import { EN_NOTIF } from './notif';
+import { EN_PET } from './pets';
+import { EN_SHOP } from './shopping';
+import { EN_TIPS } from './tips';
+import { EN_FUN } from './fun';
+import { EN_R } from './r';
+import { EN_S } from './s';
+import { EN_VIS } from './vis';
+import { EN_T } from './t';
+import { EN_KISISEL } from './kisisel';
+import { EN_U } from './u';
+import { EN_TABEDIT } from './tabedit';
+import { EN_DEKOR } from './dekor';
+import { EN_REVIEW } from './review';
 
 /** Türkçe metin → İngilizce. `{}` değişken yeridir (sırayla). a.ts önce gelir, b.ts yalnızca eksikleri tamamlar. */
-export const EN: Record<string, string> = { ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_A };
+export const EN: Record<string, string> = { ...EN_DEKOR, ...EN_REVIEW, ...EN_TABEDIT, ...EN_U, ...EN_KISISEL, ...EN_SHOP, ...EN_PET, ...EN_M, ...EN_K, ...EN_J, ...EN_B, ...EN_C, ...EN_D, ...EN_E, ...EN_F, ...EN_G, ...EN_H, ...EN_I, ...EN_A, ...EN_L, ...EN_N, ...EN_O, ...EN_P, ...EN_Q, ...EN_NOTIF, ...EN_TIPS, ...EN_FUN, ...EN_R, ...EN_S, ...EN_VIS, ...EN_T, ...TMZ_EN };

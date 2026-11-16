@@ -4,8 +4,8 @@ import { DICTIONARY, type Lang } from './translations';
 export function useTranslation() {
   const { state } = useStore();
   const code = state?.settings?.language ?? 'tr';
-  // Desteklenen diller Türkçe ve İngilizce; diğer her şey İngilizce görünür.
-  const lang: Lang = code === 'tr' ? 'tr' : 'en';
+  // Desteklenen her dil kendi sözlüğünü kullanır; bilinmeyen kod İngilizce görünür.
+  const lang: Lang = code in DICTIONARY ? (code as Lang) : 'en';
 
   const t = (key: string): string => DICTIONARY[lang]?.[key] ?? DICTIONARY['tr']?.[key] ?? key;
 

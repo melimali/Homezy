@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
 import { useAuth } from '@/auth/AuthProvider';
+import { getLang, onLangChange } from '@/i18n/runtime';
 import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { supabase } from '@/lib/supabase';
 
@@ -29,8 +30,10 @@ export type Plan = 'monthly' | 'annual';
 
 /** Mağaza fiyatı henüz okunamadıysa gösterilen fiyatlar. Gerçek fiyat mağaza panelinde girilir. */
 export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
-/** İlk aya özel fiyat. Gerçek teklif Google Play'de aylık plana "giriş teklifi" olarak tanımlanır. */
-export const INTRO_PRICE = '$4.99';
+
+/** Dil Türkçeyken mağaza TL fiyatı vermiyorsa (bölge farklı ya da okunamadı) gösterilen sabit TL fiyatlar. */
+const TL = { monthly: 149.99, annual: 1564.99 };
+const tl = (n: number) => `${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
 
 export type Premium = {
   active: boolean;
@@ -56,11 +59,8 @@ type PurchasesCtx = {
   annualPerMonth: string | null;
   /** Yıllık planın 12 aylık fiyata göre indirim oranı (yüzde, ör. 28). */
   annualSave: number;
-  /**
-   * Aylık planın ilk ay fiyatı (ör. "$4.99"). Mağaza teklifi sadece hak kazanan (daha önce abone
-   * olmamış) kullanıcıya gösterir; mağaza okunduysa ve teklif yoksa null.
-   */
-  introPrice: string | null;
+  /** Mağaza ücretsiz deneme tanımlıysa ve kullanıcı hak kazanıyorsa gün sayısı (ör. 3); yoksa 0. Plan başına. */
+  trialDays: Record<Plan, number>;
   buy: (plan: Plan) => Promise<BuyResult>;
   restore: () => Promise<RestoreResult>;
   /** Mağazanın abonelik yönetim sayfasını açar (iptal etme, plan değiştirme). */
@@ -110,6 +110,8 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
   );
   const [pkgs, setPkgs] = useState<Packages>({ monthly: null, annual: null });
   const [serverPremium, setServerPremium] = useState<Premium>(none);
+  // iOS: Apple, deneme/giriş teklifini daha önce kullanmış hesaba da introPrice gösterir; uygunluk ayrıca sorulur (Apple 3.1.2).
+  const [eligible, setEligible] = useState<Record<string, boolean>>({});
   const managementURL = useRef<string | null>(null);
   const configured = useRef(false);
 
@@ -139,6 +141,52 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     // Kullanıcı değişimi aşağıdaki effect'te; burada sadece ilk kurulum.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apply]);
+
+  // Uzun oturumda abonelik bitmiş/yenilenmiş olabilir: uygulama öne her gelişinde müşteri bilgisi ve sunucu satırı tazelenir.
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!apiKey && !supabase) return;
+    const sub = AppState.addEventListener('change', st => {
+      if (st !== 'active') return;
+      if (apiKey && configured.current) withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).catch(() => {});
+      setTick(t => t + 1);
+    });
+    return () => sub.remove();
+  }, [apply]);
+
+  // Fiyatlar ilk denemede okunamadıysa (ağ yok) birkaç kez daha dene.
+  useEffect(() => {
+    if (!apiKey || !configured.current || pkgs.monthly || pkgs.annual) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      if (++tries > 4) return clearInterval(t);
+      loadPackages().then(p => {
+        if (p.monthly || p.annual) {
+          setPkgs(p);
+          clearInterval(t);
+        }
+      }).catch(() => {});
+    }, 15000);
+    return () => clearInterval(t);
+  }, [pkgs.monthly, pkgs.annual, ready]);
+
+  useEffect(() => {
+    if (!apiKey || Platform.OS !== 'ios') return;
+    const ids = [pkgs.monthly, pkgs.annual].filter((x): x is PurchasesPackage => !!x?.product.introPrice).map(x => x.product.identifier);
+    if (!ids.length) return;
+    let off = false;
+    Purchases.checkTrialOrIntroductoryPriceEligibility(ids).then(r => {
+      if (off) return;
+      const next: Record<string, boolean> = {};
+      for (const id of ids) next[id] = r[id]?.status !== 1; // 1 = uygun değil; bilinmiyorsa (0) gösterme riskini mağaza ekranı karşılar
+      setEligible(next);
+    }).catch(() => {
+      if (!off) setEligible(Object.fromEntries(ids.map(id => [id, false])));
+    });
+    return () => {
+      off = true;
+    };
+  }, [pkgs.monthly, pkgs.annual, user?.id]);
 
   // Giriş / çıkış yapılınca RevenueCat'teki kullanıcıyı değiştir.
   const lastId = useRef<string | null | undefined>(undefined);
@@ -182,7 +230,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     return () => {
       off = true;
     };
-  }, [user]);
+  }, [user, tick]);
 
   const buy = useCallback(async (plan: Plan): Promise<BuyResult> => {
     if (!apiKey) return { ok: false, error: 'Satın alma henüz açık değil. Mağaza hesapları bağlanınca açılacak.' };
@@ -200,7 +248,19 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
       syncServer();
       return { ok: true, active: !!customerInfo.entitlements.active[ENTITLEMENT] };
     } catch (e) {
-      if ((e as { userCancelled?: boolean }).userCancelled) return { ok: false, cancelled: true, error: '' };
+      const err = e as { userCancelled?: boolean; code?: string | number };
+      if (err.userCancelled) return { ok: false, cancelled: true, error: '' };
+      if (String(err.code) === '8') return { ok: false, error: 'Ödeme onay bekliyor. Onaylanınca Premium otomatik açılır.' };
+      if (String(err.code) === '6') {
+        try {
+          const info = await Purchases.restorePurchases();
+          apply(info);
+          syncServer();
+          if (info.entitlements.active[ENTITLEMENT]) return { ok: true, active: true };
+        } catch {
+          // Aşağıdaki genel hata dönsün.
+        }
+      }
       return { ok: false, error: 'Satın alma tamamlanamadı. İnternet bağlantını ve mağaza hesabını kontrol et.' };
     }
   }, [pkgs, apply]);
@@ -225,16 +285,28 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     await Linking.openURL(managementURL.current ?? fallback).catch(() => {});
   }, []);
 
-  const monthly = pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly;
-  const annual = pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual;
-  const annualPerMonth = pkgs.annual?.product.pricePerMonthString ?? null;
-  const m = pkgs.monthly?.product.price ?? 6.99;
-  const y = pkgs.annual?.product.price ?? 59.99;
+  const [lang, setLangState] = useState(getLang());
+  useEffect(() => onLangChange(() => setLangState(getLang())), []);
+  // Türkçe seçiliyken mağaza fiyatı TL değilse sabit TL fiyatları göster; mağaza TL veriyorsa onu koru.
+  // Mağaza ürünü okunduysa her zaman mağazanın (tahsil edilecek) fiyatı gösterilir (Apple 3.1.2); yedek: TR → TL, diğer diller → USD.
+  const trFixed = lang === 'tr' && !pkgs.monthly && !pkgs.annual;
+  const monthly = trFixed ? tl(TL.monthly) : (pkgs.monthly?.product.priceString ?? PREMIUM_PRICE.monthly);
+  const annual = trFixed ? tl(TL.annual) : (pkgs.annual?.product.priceString ?? PREMIUM_PRICE.annual);
+  const annualPerMonth = trFixed ? tl(TL.annual / 12) : (pkgs.annual?.product.pricePerMonthString ?? null);
+  const m = trFixed ? TL.monthly : (pkgs.monthly?.product.price ?? 6.99);
+  const y = trFixed ? TL.annual : (pkgs.annual?.product.price ?? 59.99);
   const annualSave = Math.max(0, Math.round((1 - y / (m * 12)) * 100));
-  const introPrice = pkgs.monthly ? (pkgs.monthly.product.introPrice?.priceString ?? null) : INTRO_PRICE;
+  const trialOf = (pkg: typeof pkgs.monthly | typeof pkgs.annual): number => {
+    const ip = pkg?.product.introPrice;
+    if (!ip || ip.price !== 0) return 0;
+    if (Platform.OS === 'ios' && eligible[pkg.product.identifier] !== true) return 0;
+    const n = ip.periodNumberOfUnits * (ip.cycles || 1);
+    return ip.periodUnit === 'DAY' ? n : ip.periodUnit === 'WEEK' ? n * 7 : 0;
+  };
+  const trialDays: Record<Plan, number> = { monthly: trialOf(pkgs.monthly), annual: trialOf(pkgs.annual) };
   const value = useMemo(
-    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, introPrice, buy, restore, manage }),
-    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, introPrice, buy, restore, manage],
+    () => ({ ready: ready || !apiKey, premium: devPremium ? DEV_PREMIUM : premium.active ? premium : serverPremium, setFamilyPremium, prices: { monthly, annual }, annualPerMonth, annualSave, trialDays, buy, restore, manage }),
+    [ready, premium, serverPremium, setFamilyPremium, monthly, annual, annualPerMonth, annualSave, trialDays, buy, restore, manage],
   );
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
 }

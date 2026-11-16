@@ -3,7 +3,7 @@
  * Fiyatlar sunucudaki `play_items` tablosuyla aynı olmalı (supabase/migrations/…_puan.sql).
  * Çizimleri `House3D.tsx` içinde (`itemShape`).
  */
-export type ItemCategory = 'tum' | 'mobilya' | 'dekor' | 'bitki' | 'elektronik' | 'evcil' | 'ozel';
+export type ItemCategory = 'tum' | 'mobilya' | 'aydinlatma' | 'duvar' | 'dekor' | 'bitki' | 'elektronik' | 'evcil' | 'mevsim' | 'hobi' | 'dis' | 'ozel';
 
 export type ItemId =
   | 'saksi' | 'hali' | 'puf' | 'abajur' | 'kitaplik' | 'kedi' | 'kopek' | 'gitar'
@@ -12,6 +12,10 @@ export type ItemId =
   | 'calisma_masasi' | 'berjer' | 'duvar_saati' | 'tablo' | 'ayna' | 'kulaklik'
   | 'muzik_kutusu' | 'hoparlor' | 'retro_radyo' | 'papagan' | 'akilli_mama'
   | 'kristal_kure' | 'gramofon' | 'sallanan_sandalye' | 'bonsai' | 'vazo'
+  | 'koltuk_takimi' | 'yemek_masasi' | 'gardirop' | 'sehpa' | 'yatak_ranza' | 'kitap_koltugu' | 'sarkit_isik' | 'lava_lambasi' | 'zemin_lambasi' | 'mum' | 'fener'
+  | 'duvar_halisi' | 'poster' | 'boy_ayna' | 'duvar_cicegi' | 'neon_yazi' | 'yucca' | 'sarmasik' | 'lavanta' | 'aloe' | 'limon_agaci' | 'palmiye'
+  | 'kedi_yatagi' | 'kopek_yatagi' | 'tavsan' | 'hamster' | 'kus_yemligi' | 'yilbasi_agaci' | 'kar_adami' | 'balkabagi' | 'ramazan_feneri' | 'plaj_semsiyesi' | 'cicek_celengi'
+  | 'bilgisayar_masasi' | 'spor_kosesi' | 'yoga_mati' | 'resim_sehpasi' | 'dikis_makinesi' | 'posta_kutusu' | 'cit' | 'bahce_lambasi' | 'kus_evi' | 'paspas' | 'salincak'
   | 'oyun_konsolu' | 'fotograf_makinesi' | 'bambu' | 'duvar_rafi' | 'masa_lambasi';
 
 export type Item = {
@@ -69,6 +73,50 @@ export const ITEMS: Item[] = [
   { id: 'bambu', name: 'Bambu ağacı', emoji: '🎋', price: 90, category: 'bitki' },
   { id: 'duvar_rafi', name: 'Ahşap duvar rafı', emoji: '🪵', price: 40, category: 'dekor' },
   { id: 'masa_lambasi', name: 'Masa lambası', emoji: '🏮', price: 50, category: 'dekor' },
+  { id: 'koltuk_takimi', name: 'Koltuk takımı', emoji: '🛋️', price: 140, category: 'mobilya' },
+  { id: 'yemek_masasi', name: 'Yemek masası', emoji: '🍽️', price: 120, category: 'mobilya' },
+  { id: 'gardirop', name: 'Gardırop', emoji: '🚪', price: 100, category: 'mobilya' },
+  { id: 'sehpa', name: 'Orta sehpa', emoji: '☕', price: 55, category: 'mobilya' },
+  { id: 'yatak_ranza', name: 'Konforlu yatak', emoji: '🛏️', price: 90, category: 'mobilya' },
+  { id: 'kitap_koltugu', name: 'Kitap okuma koltuğu', emoji: '📖', price: 75, category: 'mobilya' },
+  { id: 'sarkit_isik', name: 'Işık zinciri', emoji: '🎄', price: 45, category: 'aydinlatma' },
+  { id: 'lava_lambasi', name: 'Lav lambası', emoji: '🫧', price: 65, category: 'aydinlatma' },
+  { id: 'zemin_lambasi', name: 'Zemin lambası', emoji: '🛋️', price: 80, category: 'aydinlatma' },
+  { id: 'mum', name: 'Mum', emoji: '🕯️', price: 25, category: 'aydinlatma' },
+  { id: 'fener', name: 'Fener', emoji: '🏮', price: 40, category: 'aydinlatma' },
+  { id: 'duvar_halisi', name: 'Duvar halısı', emoji: '🧵', price: 60, category: 'duvar' },
+  { id: 'poster', name: 'Poster', emoji: '🖼️', price: 35, category: 'duvar' },
+  { id: 'boy_ayna', name: 'Boy aynası', emoji: '🪞', price: 70, category: 'duvar' },
+  { id: 'duvar_cicegi', name: 'Duvar çiçeği', emoji: '💐', price: 55, category: 'duvar' },
+  { id: 'neon_yazi', name: 'Neon yazı', emoji: '💖', price: 120, premium: true, category: 'duvar' },
+  { id: 'yucca', name: 'Yukka', emoji: '🌴', price: 50, category: 'bitki' },
+  { id: 'sarmasik', name: 'Sarmaşık', emoji: '🌱', price: 40, category: 'bitki' },
+  { id: 'lavanta', name: 'Lavanta', emoji: '💜', price: 35, category: 'bitki' },
+  { id: 'aloe', name: 'Aloe vera', emoji: '🪴', price: 30, category: 'bitki' },
+  { id: 'limon_agaci', name: 'Limon ağacı', emoji: '🍋', price: 130, premium: true, category: 'bitki' },
+  { id: 'palmiye', name: 'Palmiye', emoji: '🌴', price: 85, category: 'bitki' },
+  { id: 'kedi_yatagi', name: 'Kedi yatağı', emoji: '🐾', price: 45, category: 'evcil' },
+  { id: 'kopek_yatagi', name: 'Köpek yatağı', emoji: '🦴', price: 45, category: 'evcil' },
+  { id: 'tavsan', name: 'Tavşan', emoji: '🐰', price: 110, category: 'evcil' },
+  { id: 'hamster', name: 'Hamster', emoji: '🐹', price: 90, category: 'evcil' },
+  { id: 'kus_yemligi', name: 'Kuş yemliği', emoji: '🐦', price: 60, category: 'evcil' },
+  { id: 'yilbasi_agaci', name: 'Yılbaşı ağacı', emoji: '🎄', price: 140, category: 'mevsim' },
+  { id: 'kar_adami', name: 'Kardan adam', emoji: '⛄', price: 90, category: 'mevsim' },
+  { id: 'balkabagi', name: 'Balkabağı', emoji: '🎃', price: 40, category: 'mevsim' },
+  { id: 'ramazan_feneri', name: 'Ramazan feneri', emoji: '🌙', price: 50, category: 'mevsim' },
+  { id: 'plaj_semsiyesi', name: 'Plaj şemsiyesi', emoji: '⛱️', price: 70, category: 'mevsim' },
+  { id: 'cicek_celengi', name: 'Çiçek celengi', emoji: '🐷', price: 60, category: 'mevsim' },
+  { id: 'bilgisayar_masasi', name: 'Bilgisayar masası', emoji: '💻', price: 160, category: 'hobi' },
+  { id: 'spor_kosesi', name: 'Spor köşesi', emoji: '🏋️', price: 120, category: 'hobi' },
+  { id: 'yoga_mati', name: 'Yoga matı', emoji: '🧘', price: 45, category: 'hobi' },
+  { id: 'resim_sehpasi', name: 'Resim sehpası', emoji: '🎨', price: 90, category: 'hobi' },
+  { id: 'dikis_makinesi', name: 'Dikiş makinesi', emoji: '🧵', price: 100, category: 'hobi' },
+  { id: 'posta_kutusu', name: 'Posta kutusu', emoji: '📮', price: 40, category: 'dis' },
+  { id: 'cit', name: 'Beyaz çit', emoji: '🏡', price: 60, category: 'dis' },
+  { id: 'bahce_lambasi', name: 'Bahçe lambası', emoji: '💡', price: 55, category: 'dis' },
+  { id: 'kus_evi', name: 'Kuş evi', emoji: '🏠', price: 70, category: 'dis' },
+  { id: 'paspas', name: 'Kapı paspası', emoji: '🟫', price: 25, category: 'dis' },
+  { id: 'salincak', name: 'Bahçe salıncağı', emoji: '🎠', price: 110, premium: true, category: 'dis' },
 ];
 
 export const ITEM: Record<string, Item | undefined> = Object.fromEntries(ITEMS.map(i => [i.id, i]));

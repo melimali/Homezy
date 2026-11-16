@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 
 import { MOKA_ASSETS } from '@/constants/moka';
@@ -18,9 +18,9 @@ export function NextUp({ t, rid, list, left }: { t: Task; rid: string; list: Tas
   const router = useRouter();
   const k = useTask(t, rid, list);
   const late = k.s.k === 'late';
-  const bg = late ? c.lateSoft : c.todaySoft;
-  const tone = late ? c.late : c.today;
-  const intro = late ? 'Önce bunu halledelim, sonra rahatlarsın.' : left > 1 ? 'Küçük bir adımla başlayalım.' : 'Son iş! Bitirince gün tamam.';
+  const bg = c.todaySoft;
+  const tone = c.today;
+  const intro = late ? 'Sadece bu, bugün için yeter.' : left > 1 ? 'Sadece bu bir iş bugün sayılır.' : 'Son iş! Bitirince gün tamam.';
   return (
     <Appear index={1} style={[styles.card, { backgroundColor: bg, shadowColor: c.shadow }]}>
       <View style={styles.top}>
@@ -37,7 +37,7 @@ export function NextUp({ t, rid, list, left }: { t: Task; rid: string; list: Tas
         accessibilityLabel={`${t.name}, ayrıntı`}
         style={[styles.name, { backgroundColor: c.surface }]}
       >
-        <Text style={{ fontSize: 28 }}>{k.emoji}</Text>
+        <Text style={{ lineHeight: 36, fontSize: 28 }}>{k.emoji}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
           <T v="h3" numberOfLines={2}>{t.name}</T>
           <T v="small" numberOfLines={1} style={{ color: tone }}>{k.place.name} · {k.s.label} · {k.min} dk</T>

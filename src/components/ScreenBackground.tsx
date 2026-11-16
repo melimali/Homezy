@@ -1,3 +1,4 @@
+import { useActive } from '@/hooks/useActive';
 import { memo, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -9,12 +10,33 @@ import { useReduceMotion } from './motion';
 /** Sekme başına renk tonu: üst köşe, orta ve alt renkleri. */
 export type Tone = 'peach' | 'sage' | 'lavender' | 'rose' | 'sky';
 
+/** Sekme vurgusu (alt menüde seçili simge/yazı/hap) ve sayfanın en üstündeki doygun renk. */
+export const TAB_TONE: Record<Tone, { ink: { light: string; dark: string }; pill: { light: string; dark: string }; top: { light: string; dark: string } }> = {
+  peach: { ink: { light: '#A8512B', dark: '#F2B697' }, pill: { light: '#FADCC8', dark: '#5A4238' }, top: { light: '#F7C9A8', dark: '#4A3A3A' } },
+  rose: { ink: { light: '#A63F58', dark: '#F0A3B5' }, pill: { light: '#F8D3DB', dark: '#573844' }, top: { light: '#F4BCC8', dark: '#4A3445' } },
+  sky: { ink: { light: '#336C92', dark: '#95C2DE' }, pill: { light: '#D0E3EF', dark: '#2F4A60' }, top: { light: '#B3D3E6', dark: '#26435C' } },
+  lavender: { ink: { light: '#6A4CA0', dark: '#BFAEE6' }, pill: { light: '#E2D8F2', dark: '#463E66' }, top: { light: '#D3C3EC', dark: '#3C3560' } },
+  sage: { ink: { light: '#3F7050', dark: '#A9D3B4' }, pill: { light: '#D5E7D8', dark: '#35503F' }, top: { light: '#BCD9C3', dark: '#2C4A3A' } },
+};
+
 const TONES: Record<Tone, { light: [string, string, string]; dark: [string, string, string]; dot: string }> = {
-  peach: { light: ['#FDEBDD', '#FBF4EA', '#F8E3E0'], dark: ['#3A2F3B', '#2B2A35', '#2F2A3A'], dot: '#F7C9B0' },
-  sage: { light: ['#E6F0E8', '#FBF4EA', '#F4ECDD'], dark: ['#2C3A36', '#2B2A35', '#2E3034'], dot: '#BFD8C4' },
-  lavender: { light: ['#EEE8F6', '#FBF4EA', '#F8E4E8'], dark: ['#363250', '#2B2A35', '#332C3C'], dot: '#D9CDEB' },
-  rose: { light: ['#FAE4E8', '#FBF4EA', '#FCE8DC'], dark: ['#3D2E3A', '#2B2A35', '#35292F'], dot: '#F2C6CF' },
-  sky: { light: ['#E4EEF5', '#FBF4EA', '#EEE8F6'], dark: ['#2B3445', '#2B2A35', '#322F45'], dot: '#B9D2E3' },
+  peach: { light: ['#F8EFE4', '#F7F2EA', '#F4ECE1'], dark: ['#222A3B', '#1C2230', '#1A202D'], dot: '#F7C9B0' },
+  sage: { light: ['#EEF1E6', '#F7F2EA', '#F4ECE1'], dark: ['#202B33', '#1C2230', '#1A202D'], dot: '#BFD8C4' },
+  lavender: { light: ['#F1ECE9', '#F7F2EA', '#F4ECE1'], dark: ['#242A3E', '#1C2230', '#1A202D'], dot: '#D9CDEB' },
+  rose: { light: ['#F8ECE6', '#F7F2EA', '#F4ECE1'], dark: ['#262A3A', '#1C2230', '#1A202D'], dot: '#F2C6CF' },
+  sky: { light: ['#ECEFEC', '#F7F2EA', '#F4ECE1'], dark: ['#202B3C', '#1C2230', '#1A202D'], dot: '#B9D2E3' },
+};
+
+/**
+ * Aşağı kaydırdıkça zeminin döndüğü daha koyu, doygun ton (Screen kaydırmayla bu renge geçer).
+ * Kart içi yazılar kartın kendi zemininde durduğu için kontrast bozulmaz; sayfa yazısı (ink / muted) bu tonlarda da AA.
+ */
+export const DEEP: Record<Tone, { light: string; dark: string }> = {
+  peach: { light: '#F0DCC9', dark: '#2A2431' },
+  sage: { light: '#DCE6D5', dark: '#1D2A2B' },
+  lavender: { light: '#E3DBEC', dark: '#242238' },
+  rose: { light: '#F0D8D5', dark: '#2C2231' },
+  sky: { light: '#D8E3EA', dark: '#192637' },
 };
 
 // Sabit parçacık düzeni: [x%, boyut, süre ms, gecikme ms, yol]
@@ -25,7 +47,9 @@ const DOTS: [number, number, number, number, number][] = [
 
 function Dot({ x, size, dur, delay, travel, color }: { x: number; size: number; dur: number; delay: number; travel: number; color: string }) {
   const [v] = useState(() => new Animated.Value(0));
+  const active = useActive();
   useEffect(() => {
+    if (!active) return;
     const a = Animated.loop(
       Animated.sequence([
         Animated.delay(delay),
@@ -35,7 +59,7 @@ function Dot({ x, size, dur, delay, travel, color }: { x: number; size: number; 
     );
     a.start();
     return () => a.stop();
-  }, [v, dur, delay]);
+  }, [v, dur, delay, active]);
   return (
     <Animated.View
       pointerEvents="none"
@@ -59,20 +83,21 @@ export const ScreenBackground = memo(function ScreenBackground({ tone = 'peach' 
   const dark = useIsDark();
   const reduce = useReduceMotion();
   const t = TONES[tone];
-  const [a, b, c] = dark ? t.dark : t.light;
+  const [, b, c] = dark ? t.dark : t.light;
+  const a = TAB_TONE[tone].top[dark ? 'dark' : 'light'];
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" preserveAspectRatio="none">
         <Defs>
-          <LinearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+          <LinearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={a} />
-            <Stop offset="0.5" stopColor={b} />
+            <Stop offset="0.45" stopColor={b} />
             <Stop offset="1" stopColor={c} />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#g)" />
       </Svg>
-      {!reduce && DOTS.map(([x, s, d, dl, tr], i) => (
+      {false && !reduce && DOTS.map(([x, s, d, dl, tr], i) => (
         <Dot key={i} x={x} size={s} dur={d} delay={dl} travel={tr} color={dark ? 'rgba(255,255,255,0.35)' : t.dot} />
       ))}
     </View>

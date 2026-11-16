@@ -1,4 +1,5 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
+import { useRouter } from '@/lib/nav';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,7 +24,7 @@ const LISTS: TaskList[] = ['tasks', 'plants', 'care'];
 
 function findTask(S: AppState, rid: string, list: TaskList, id: string): Task | undefined {
   const arr = list === 'care' ? S.care : list === 'plants' ? S.mod[rid]?.plants : S.tasks[rid];
-  return arr?.find(t => t.id === id);
+  return Array.isArray(arr) ? arr.find(t => t.id === id) : undefined;
 }
 
 /** İş ekranı: üstte işin sahnesi, adımlar ve "Başla". Bitince koyu kutlama ekranı açılır. */
@@ -77,15 +78,15 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
           <Appear style={[st.card, { backgroundColor: c.surface }]}>
             <View style={st.head}>
               <View style={[st.icon, { backgroundColor: c.surface2 }]}>
-                {pose ? <Image source={MOKA_ASSETS[pose]} style={st.iconImg} resizeMode="contain" /> : <Text style={{ fontSize: 30 }}>{k.emoji}</Text>}
+                {pose ? <Image source={MOKA_ASSETS[pose]} style={st.iconImg} resizeMode="contain" /> : <Text style={{ lineHeight: 39, fontSize: 30 }}>{k.emoji}</Text>}
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="h2" numberOfLines={2}>{t.name}</T>
-                <T v="small" style={{ fontSize: 14.5 }}>{art.line}</T>
+                <T v="small" style={{ fontSize: 15 }}>{art.line}</T>
               </View>
             </View>
             <View style={st.pointsRow}>
-              <Text style={{ fontSize: 20 }}>⭐</Text>
+              <Text style={{ lineHeight: 26, fontSize: 20 }}>⭐</Text>
               <Text style={[st.points, { color: c.warm }]}>+{POINTS.gorev} puan</Text>
               <Bar value={k.doneToday ? 1 : n / art.steps.length} color={c.accent} style={{ flex: 1, marginLeft: 8 }} />
             </View>
@@ -113,7 +114,7 @@ function TaskView({ t, rid, list }: { t: Task; rid: string; list: TaskList }) {
                   style={[st.step, i > 0 && { borderTopWidth: 1, borderTopColor: c.line }]}
                 >
                   <View style={[st.check, { borderColor: on ? c.ok : c.line, backgroundColor: on ? c.ok : 'transparent' }]}>
-                    {on && <Text style={{ color: c.surface, fontFamily: fonts.bodyBlack, fontSize: 13 }}>✓</Text>}
+                    {on && <Text style={{ color: c.surface, fontFamily: fonts.bodyBlack, fontSize: 13.5 }}>✓</Text>}
                   </View>
                   <T style={[{ flex: 1, fontSize: 15.5 }, on && { color: c.muted, textDecorationLine: 'line-through' }]}>{s}</T>
                 </Pressable>

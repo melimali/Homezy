@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
+import { Animated, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
+
+import { fonts } from '@/theme';
 
 /**
  * Evin içinde dolaşan minik Moka (kakapo). Saf SVG; yeni native modül yok.
@@ -64,11 +66,13 @@ function route(from: number, to: number, set: Set<number>, cols: number): number
   return null;
 }
 
+// Moka'nın sığdığı kutu (ev koordinatı): ayak noktasından sola/yukarı.
+const BX = 22, BY = 38, BW = 44, BH = 46;
 const MARGIN = 0.28;
 const inCell = (i: number, cols: number): [number, number] => [Math.floor(i / cols) + rnd(MARGIN, 1 - MARGIN), (i % cols) + rnd(MARGIN, 1 - MARGIN)];
 
 export function MokaPet({
-  vb, roomCells, blocked, cols, project, reduce, celebrate, night,
+  vb, roomCells, blocked, cols, project, reduce, celebrate, night, say,
 }: {
   vb: string;
   roomCells: number[];
@@ -79,6 +83,8 @@ export function MokaPet({
   /** Her artışta Moka kutlama yapar (görev bitti). */
   celebrate: number;
   night: boolean;
+  /** Moka'nın ara sıra balonla söyleyeceği kısa cümleler. Boşsa konuşmaz. */
+  say?: string[];
 }) {
   const walk = useRef(walkable(roomCells, blocked));
   const key = roomCells.join(',') + '|' + blocked + '|' + cols;
@@ -88,6 +94,20 @@ export function MokaPet({
   const nightRef = useRef(night);
   nightRef.current = night;
   const [frame, setFrame] = useState<Frame | null>(null);
+  // Küçük Svg kutusu native transform ile gezer; her karede sadece küçük kutu çizilir (tam ev katmanı değil).
+  const [lay, setLay] = useState({ w: 0, h: 0 });
+  const layRef = useRef(lay);
+  layRef.current = lay;
+  const pos = useRef(new Animated.ValueXY()).current;
+  const [vx, vy, vw, vh] = vb.split(' ').map(Number);
+  const lastXY = useRef<[number, number]>([0, 0]);
+  const place = (x: number, y: number) => {
+    lastXY.current = [x, y];
+    const { w, h } = layRef.current;
+    if (!w) return;
+    pos.setValue({ x: ((x - BX - vx) / vw) * w, y: ((y - BY - vy) / vh) * h });
+  };
+  useEffect(() => { if (lay.w) place(lastXY.current[0], lastXY.current[1]); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [lay.w, lay.h, vb]);
 
   useEffect(() => {
     walk.current = walkable(roomCells, blocked);
@@ -97,6 +117,32 @@ export function MokaPet({
     sim.current = { r, c, f: 1, mode: 'stand', t: 0, dur: 1.2, path: [], step: 0, look: 0, lookNow: 0, blinkIn: rnd(1.5, 4), blink: -1, zzz: 0 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
+
+  // Sohbet balonu: açılıştan birkaç saniye sonra selam, sonra arada bir kısa cümle. Uyurken konuşmaz.
+  const [bubble, setBubble] = useState<string | null>(null);
+  const sayRef = useRef(say);
+  sayRef.current = say;
+  const talks = !!say?.length;
+  useEffect(() => {
+    if (!talks) return;
+    let n = 0;
+    let hide: ReturnType<typeof setTimeout> | undefined;
+    let next: ReturnType<typeof setTimeout>;
+    const speak = () => {
+      const lines = sayRef.current ?? [];
+      const s = sim.current;
+      if (lines.length && s && s.mode !== 'sleep') {
+        // İlk söz selam, sonrakiler sırayla.
+        setBubble(lines[n % lines.length]);
+        n++;
+        if (s.mode !== 'cheer') { s.mode = 'hop'; s.t = 0; s.dur = 1.3; s.path = []; }
+        hide = setTimeout(() => setBubble(null), 4600);
+      }
+      next = setTimeout(speak, 26000 + Math.random() * 20000);
+    };
+    next = setTimeout(speak, 3200);
+    return () => { clearTimeout(next); if (hide) clearTimeout(hide); };
+  }, [talks, key]);
 
   const lastCel = useRef(celebrate);
   useEffect(() => {
@@ -139,10 +185,12 @@ export function MokaPet({
       raf = requestAnimationFrame(tick);
       const s = sim.current;
       if (!s) return;
-      const dt = Math.min(0.1, last ? (ts - last) / 1000 : 0.016);
+      const dt = Math.min(0.25, last ? (ts - last) / 1000 : 0.016);
       last = ts;
       acc += dt;
-      if (acc < 1 / 30) return;
+      // Yürürken/oynarken ~24 kare, dururken ~8 kare: JS iş parçacığı + SVG yeniden çizimi ucuz kalsın.
+      const busy = s.mode === 'walk' || s.mode === 'hop' || s.mode === 'cheer' || s.mode === 'fluff';
+      if (acc < (busy ? 1 / 14 : 1 / 4)) return;
       const d = acc; acc = 0;
       s.t += d;
       // göz kırpma
@@ -182,11 +230,12 @@ export function MokaPet({
       if (s.mode === 'cheer') { lift = Math.abs(Math.sin(s.t * 6.5)) * 7; wing = 40 + Math.sin(s.t * 26) * 12; happy = true; cheer = true; squash = 1 + Math.sin(s.t * 13) * 0.05; rot = Math.sin(s.t * 6.5) * 6; head = Math.sin(s.t * 6.5) * 8; bob = 0; }
       const eye = s.mode === 'sleep' ? 0 : s.blink >= 0 ? Math.abs(1 - s.blink * 2) : 1;
       const [x, y] = proj.current(s.r, s.c, 0);
-      setFrame({ x, y, f: s.f, bob, lift, squash, rot, head, headX, wing, fluff, eye, happy, sit, sleep, step: ph, zzz: s.zzz, cheer, t: s.t });
+      place(x, y);
+      setFrame({ x: 0, y: 0, f: s.f, bob, lift, squash, rot, head, headX, wing, fluff, eye, happy, sit, sleep, step: ph, zzz: s.zzz, cheer, t: s.t });
     };
     if (reduce) {
       const s = sim.current;
-      if (s) { const [x, y] = proj.current(s.r, s.c, 0); setFrame({ x, y, f: 1, bob: 0, lift: 0, squash: 1, rot: 0, head: 0, headX: 0, wing: 0, fluff: 0, eye: 1, happy: false, sit: 0, sleep: false, step: 0, zzz: 0, cheer: false, t: 0 }); }
+      if (s) { const [x, y] = proj.current(s.r, s.c, 0); place(x, y); setFrame({ x: 0, y: 0, f: 1, bob: 0, lift: 0, squash: 1, rot: 0, head: 0, headX: 0, wing: 0, fluff: 0, eye: 1, happy: false, sit: 0, sleep: false, step: 0, zzz: 0, cheer: false, t: 0 }); }
       return;
     }
     raf = requestAnimationFrame(tick);
@@ -195,11 +244,50 @@ export function MokaPet({
 
   if (!frame) return null;
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Svg width="100%" height="100%" viewBox={vb}>
-        <MokaBody fr={frame} />
-      </Svg>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={(e: LayoutChangeEvent) => setLay({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {lay.w > 0 && (
+        <Animated.View
+          pointerEvents="none"
+          style={{ position: 'absolute', left: 0, top: 0, width: (BW / vw) * lay.w, height: (BH / vh) * lay.h, transform: pos.getTranslateTransform() }}
+        >
+          <Svg width="100%" height="100%" viewBox={`${-BX} ${-BY} ${BW} ${BH}`}>
+            <MokaBody fr={frame} />
+          </Svg>
+        </Animated.View>
+      )}
+      {bubble && (
+        <Svg width="100%" height="100%" viewBox={vb} style={StyleSheet.absoluteFill}>
+          <Bubble text={bubble} x={lastXY.current[0]} y={lastXY.current[1] - frame.lift} vb={vb} />
+        </Svg>
+      )}
     </View>
+  );
+}
+
+/** Konuşma balonu: Moka'nın üstünde, kadrajdan taşmaz. Uzun cümle iki satıra bölünür. */
+function Bubble({ text, x, y, vb }: { text: string; x: number; y: number; vb: string }) {
+  const [vx, , vw] = vb.split(' ').map(Number);
+  const words = text.split(' ');
+  const lines: string[] = [];
+  for (const w of words) {
+    const last = lines[lines.length - 1];
+    if (last != null && (last + ' ' + w).length <= 20) lines[lines.length - 1] = last + ' ' + w;
+    else lines.push(w);
+  }
+  const FS = 12, LH = 15;
+  const w = Math.max(...lines.map(l => l.length)) * FS * 0.56 + 18;
+  const h = lines.length * LH + 10;
+  const cx = Math.min(vx + vw - w / 2 - 4, Math.max(vx + w / 2 + 4, x + 6));
+  const top = y - 34 - h;
+  return (
+    <G>
+      <Rect x={cx - w / 2} y={top} width={w} height={h} rx={10} fill="#FFFDF9" stroke="#E8DFD2" strokeWidth={1} />
+      <Path d={`M${x + 2} ${top + h - 0.5}L${x + 4} ${top + h + 7}L${x + 11} ${top + h - 0.5}Z`} fill="#FFFDF9" stroke="#E8DFD2" strokeWidth={1} strokeLinejoin="round" />
+      <Rect x={x + 2.5} y={top + h - 2} width={8} height={2.4} fill="#FFFDF9" />
+      {lines.map((l, i) => (
+        <SvgText key={i} x={cx} y={top + 5 + LH * (i + 1) - 4} fontSize={FS} fontFamily={fonts.bodyBold} fill={INK} textAnchor="middle">{l}</SvgText>
+      ))}
+    </G>
   );
 }
 

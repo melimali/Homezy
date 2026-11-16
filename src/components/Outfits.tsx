@@ -103,7 +103,7 @@ function LookCard({ o, an, tag }: { o: Look; an: Set<string>; tag: string }) {
         <View key={p.id} style={styles.piece}>
           {p.hex ? <Swatch color={p.hex} /> : <View style={[styles.noColor, { borderColor: c.line }]} />}
           <View style={{ flex: 1, minWidth: 0 }}>
-            <T v="bold" style={{ fontSize: 14.5 }}>{p.name}</T>
+            <T v="bold" style={{ fontSize: 15 }}>{p.name}</T>
             <T v="small">{attLine(p)}</T>
           </View>
           {an.size > 0 && <T v="tiny">{an.has(p.id) ? tag : 'dolabından'}</T>}

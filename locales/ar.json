@@ -1,0 +1,5 @@
+{
+  "NSCameraUsageDescription": "يحتاج Homezy إلى الكاميرا لتتمكن من تصوير ثلاجتك ويومك.",
+  "NSPhotoLibraryUsageDescription": "يحتاج Homezy إلى صورك لتتمكن من اختيار صور الثلاجة واليوميات من المعرض.",
+  "NSLocationWhenInUseUsageDescription": "يُستخدم موقعك فقط لعرض السماء والطقس فوق منزلك، ولا يتم حفظه."
+}

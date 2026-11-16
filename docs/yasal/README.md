@@ -56,7 +56,7 @@ Yüklenen kopya: `docs/yasal/site/` (her klasörde `index.html`, adres `.html` o
 - **Yapay zekâ bildirimi** Moka ekranında sürekli görünür; **🚩 bildir** düğmesi (Google yapay zekâ içeriği kuralı); sistem isteminde **kriz kuralı** (112, tavsiye vermez). Fonksiyonu yeniden dağıt: `supabase functions deploy moka-chat`.
 - **Hesap silme** eksiksiz: yeni migration'ı Supabase SQL Editor'de çalıştır.
 - **Veri dışa aktarma** (JSON) Gizlilik ve yasal'da.
-- **Paywall:** fiyat, dönem, ilk ay teklifi, otomatik yenileme, iptal yolu, geri yükleme, Koşullar/Gizlilik bağlantıları.
+- **Paywall:** fiyat, dönem, ücretsiz deneme, otomatik yenileme, iptal yolu, geri yükleme, Koşullar/Gizlilik bağlantıları.
 - **Kayıt** ekranında Koşullar/Gizlilik + 13 yaş onayı.
 - **Lisanslar ve teşekkürler** bölümü (Pixabay, yazı tipleri, kütüphaneler, Open-Meteo). Yeni paket eklenince `src/app/yasal.tsx` içindeki `CREDITS` listesini güncelle.
 - Reklam: UMP onayı (AB/UK), kişiselleştirilmemiş, PG sınırı (zaten vardı).

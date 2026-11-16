@@ -63,16 +63,28 @@ export function useSky(enabled = true): Sky {
   const [sky, setSky] = useState<Sky>(() => (cache && Date.now() - cache.at < TTL ? cache.sky : byClock()));
   useEffect(() => {
     if (!enabled) return;
-    if (cache && Date.now() - cache.at < TTL) return;
     let on = true;
-    inflight ||= fetchSky().finally(() => { inflight = null; });
-    inflight
-      .then(s => {
-        if (s) cache = { at: Date.now(), sky: s };
-        if (on && s) setSky(s);
-      })
-      .catch(() => {});
-    return () => { on = false; };
+    const refresh = () => {
+      if (cache && Date.now() - cache.at < TTL) {
+        setSky(cache.sky);
+        return;
+      }
+      // Canlı veri yokken (ya da eskimişken) saate göre; gün doğumu / batımı uygulama açıkken de yakalansın.
+      setSky(prev => {
+        const k = byClock();
+        return prev.live || prev.day !== k.day ? (prev.live ? { ...prev, day: k.day, live: false } : k) : prev;
+      });
+      inflight ||= fetchSky().finally(() => { inflight = null; });
+      inflight
+        .then(s => {
+          if (s) cache = { at: Date.now(), sky: s };
+          if (on && s) setSky(s);
+        })
+        .catch(() => {});
+    };
+    refresh();
+    const id = setInterval(refresh, 5 * 60 * 1000);
+    return () => { on = false; clearInterval(id); };
   }, [enabled]);
   return sky;
 }

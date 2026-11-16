@@ -7,14 +7,14 @@ import type { ImageSourcePropType } from 'react-native';
 export type Mimik = 'neutral' | 'happy' | 'cheer' | 'wow' | 'sad' | 'sleepy' | 'wink' | 'talk';
 
 export const MIMIK: Record<Mimik, ImageSourcePropType> = {
-  neutral: require('../../assets/moka/mimik/1.png'),
-  happy: require('../../assets/moka/mimik/2.png'),
-  cheer: require('../../assets/moka/mimik/3.png'),
-  wow: require('../../assets/moka/mimik/4.png'),
-  sad: require('../../assets/moka/mimik/5.png'),
-  sleepy: require('../../assets/moka/mimik/6.png'),
-  wink: require('../../assets/moka/mimik/7.png'),
-  talk: require('../../assets/moka/mimik/8.png'),
+  neutral: require('../../assets/moka/mimik/1.webp'),
+  happy: require('../../assets/moka/mimik/2.webp'),
+  cheer: require('../../assets/moka/mimik/3.webp'),
+  wow: require('../../assets/moka/mimik/4.webp'),
+  sad: require('../../assets/moka/mimik/5.webp'),
+  sleepy: require('../../assets/moka/mimik/6.webp'),
+  wink: require('../../assets/moka/mimik/7.webp'),
+  talk: require('../../assets/moka/mimik/8.webp'),
 };
 
 /** Sohbet cevabının tonundan mimik (kelime ve emojilere bakar; internet gerekmez). */

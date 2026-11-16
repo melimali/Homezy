@@ -143,8 +143,8 @@ export type Mood = 'isil' | 'keyifli' | 'sakin' | 'uykulu' | 'sessiz' | 'uyaniyo
 
 export function houseMood(p: HouseProgress, P: Play, mode: Mode | null, now = Date.now()): Mood {
   if (mode?.k === 'tatil') return 'tatil';
-  if (p.idle >= 2) return 'sessiz';
-  if (p.idle === 1) return 'uykulu';
+  if (p.resting >= 2) return 'sessiz';
+  if (p.resting === 1) return 'uykulu';
   const today = dayKey(now);
   // Ara verdikten sonra bugünün ilk işi: ışıklar tek tek yanar.
   if (p.today && p.streak === 1 && P.days.some(d => d < today)) return 'uyaniyor';
@@ -204,3 +204,24 @@ export function personaOf(P: Play): PersonaId {
   const want = P.persona ?? 'sicak';
   return want === 'sicak' || P.owned.includes(`kisilik_${want}`) ? want : 'sicak';
 }
+
+/* ---------- ev bahçesi: tek kaynak ---------- */
+
+export type GardenPlant = { key: string; flower: Flower; stage: number };
+
+/** Evin yanındaki bahçe ve Moka bahçesi aynı listeyi gösterir: önce saksılar, sonra albümdeki çiçekler. */
+export function gardenPlants(P: Play, now = Date.now(), max = 12): GardenPlant[] {
+  const out: GardenPlant[] = [];
+  for (const p of P.garden.plots) {
+    const f = FLOWER[p.flower];
+    if (f) out.push({ key: p.id, flower: f, stage: p.bloomed ? 5 : stageOf(growth(P, p, now), f.grow) });
+  }
+  for (const [id, n] of Object.entries(P.garden.album)) {
+    const f = FLOWER[id];
+    for (let i = 0; f && i < Math.min(n, 3); i++) out.push({ key: `a${id}${i}`, flower: f, stage: 5 });
+  }
+  return out.slice(0, max);
+}
+
+/** Seri kopunca (ev dinleniyor) çiçekler solar; bir iş yapılınca hemen canlanır. Sadece görüntü, ceza yok. */
+export const plantsWilted = (p: HouseProgress) => p.resting >= 1;

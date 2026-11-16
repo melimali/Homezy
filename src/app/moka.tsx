@@ -5,9 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
 import { MokaFace } from '@/components/MokaFace';
-import { odaMap, RoomBackdrop } from '@/components/RoomBackdrop';
+import { odaMap, RoomBackdrop, type RoomTouch } from '@/components/RoomBackdrop';
 import { AddSheet } from '@/components/TabBar';
-import { Squish, useReduceMotion } from '@/components/motion';
+import { Appear, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Btn, Field, T } from '@/components/ui';
 import type { Href } from 'expo-router';
@@ -20,7 +20,10 @@ import { SUPPORT_EMAIL, openLink } from '@/lib/links';
 import { cannedReply } from '@/domain/chatCanned';
 import { askMoka } from '@/lib/mokaChat';
 import { getUiLang, tx } from '@/i18n/runtime';
-import { sfx } from '@/lib/sfx';
+import { haptic, sfx } from '@/lib/sfx';
+import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
+import { nightMix, roomState } from '@/lib/roomState';
+import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import Svg, { Path } from 'react-native-svg';
@@ -65,7 +68,7 @@ export default function MokaChat() {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { update, get } = useStore();
+  const { state: S, update, get } = useStore();
   const { premium } = usePurchases();
   const { status } = useAuth();
   const [items, setItems] = useState<Item[]>(memory);
@@ -120,6 +123,7 @@ export default function MokaChat() {
     if (!msg || busy) return;
     setText('');
     setEcho(msg);
+    setBump(b => b + 1);
     later(() => setEcho(''), 3000);
     const mine: Item = { id: nextId++, role: 'user', content: msg };
     const history = [...items.filter(i => !i.error), mine].slice(-6).map(({ role, content, done }) => ({
@@ -250,6 +254,65 @@ export default function MokaChat() {
     a.start();
     return () => a.stop();
   }, [reduce, enter]);
+  // Oda gününü yansıtır, Moka boşta kendi hâlinde takılır.
+  const room = roomState(S.play);
+  const sky = useSky(true);
+  const mix = nightMix();
+  const [quip, setQuip] = useState('');
+  const [bump, setBump] = useState(0); // etkileşim sayacı: boşta sayacı sıfırlar
+  const [idlePose, setIdlePose] = useState<MokaPose | null>(null);
+  const [moodOv, setMoodOv] = useState<'cheer' | 'wow' | 'happy' | null>(null);
+  const [idleFade] = useState(() => new Animated.Value(0));
+  const [hop] = useState(() => new Animated.Value(0));
+  const interact = () => setBump(b => b + 1);
+  const idleOff = busy || !!text.trim() || notes || reduce;
+  // Boşta davranışlar: gündüz kitap, kahve, müzik; gece çoğunlukla şekerleme.
+  useEffect(() => {
+    if (busy || text.trim() || notes || reduce) return;
+    const day: MokaPose[] = ['reading', 'sipping', 'music', 'laptop'];
+    const nite: MokaPose[] = ['nap', 'nap', 'reading', 'blanket'];
+    let t2: ReturnType<typeof setTimeout> | undefined;
+    const t1 = setTimeout(() => {
+      const list = (mix > 0.5 ? nite : day).filter(p => MOKA_ASSETS[p]);
+      setIdlePose(list[Math.floor(Math.random() * list.length)] ?? null);
+      t2 = setTimeout(() => setIdlePose(null), 9000 + Math.random() * 5000);
+    }, 12000 + Math.random() * 6000);
+    return () => { clearTimeout(t1); if (t2) clearTimeout(t2); setIdlePose(null); };
+  }, [bump, busy, text, notes, reduce, mix, lastId]);
+  useEffect(() => {
+    const a = Animated.timing(idleFade, { toValue: idlePose ? 1 : 0, duration: 450, useNativeDriver: true });
+    a.start();
+    return () => a.stop();
+  }, [idlePose, idleFade]);
+  const mokaTap = () => {
+    interact();
+    sfx('tap');
+    haptic('light');
+    setMoodOv('cheer');
+    later(() => setMoodOv(null), 1600);
+    if (reduce) return;
+    hop.setValue(0);
+    Animated.sequence([
+      Animated.timing(hop, { toValue: 1, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(hop, { toValue: 0, friction: 3, tension: 160, useNativeDriver: true }),
+    ]).start();
+  };
+  const QUIPS: Record<RoomTouch, string> = {
+    lamba: 'Işık ne güzel, değil mi? ✨',
+    kupa: 'Bir yudum kahve iyi gider ☕',
+    bitki: 'Bitkilerim seni çok seviyor 🌿',
+    pencere: mix > 0.5 ? 'Yıldızlar çıkmış 🌙' : 'Bugün dışarısı çok güzel!',
+  };
+  const touchObj = (k: RoomTouch) => {
+    interact();
+    sfx('tap');
+    haptic('light');
+    setQuip(QUIPS[k]);
+    setMoodOv(k === 'pencere' ? 'wow' : 'happy');
+    if (k === 'kupa') setIdlePose('sipping');
+    later(() => { setQuip(''); setMoodOv(null); if (k === 'kupa') setIdlePose(null); }, 3800);
+  };
+  const baseMood = last && last.id !== 0 ? mood : room.away >= 3 ? 'sleepy' : room.done >= 3 ? 'cheer' : 'happy';
   const hint = busy ? tx('Moka düşünüyor…') : text.trim() ? tx('Moka seni dinliyor…') : '';
   const shownIt = last ?? HELLO;
 
@@ -265,10 +328,17 @@ export default function MokaChat() {
           ],
         }}
       >
-        <RoomBackdrop style={StyleSheet.absoluteFill} />
-        <View pointerEvents="none" style={{ position: 'absolute', left: (winW - mokaSize) / 2, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
-          <MokaFace size={mokaSize} mood={mood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
-        </View>
+        <RoomBackdrop mix={mix} sky={sky.kind} warm={room.warm} dust={room.dust} onTouch={touchObj} style={StyleSheet.absoluteFill} />
+        <Pressable onPress={mokaTap} accessibilityLabel="Moka" style={{ position: 'absolute', left: (winW - mokaSize) / 2, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
+          <Animated.View style={{ width: mokaSize, height: mokaSize, transform: [{ translateY: hop.interpolate({ inputRange: [0, 1], outputRange: [0, -mokaSize * 0.1] }) }, { scale: hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }}>
+            <Animated.View style={{ width: mokaSize, height: mokaSize, opacity: idleOff ? 1 : idleFade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+              <MokaFace size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
+            </Animated.View>
+            {idlePose && !idleOff && (
+              <Animated.Image source={MOKA_ASSETS[idlePose]} resizeMode="contain" style={{ position: 'absolute', left: 0, top: 0, width: mokaSize, height: mokaSize, opacity: idleFade }} accessibilityIgnoresInvertColors />
+            )}
+          </Animated.View>
+        </Pressable>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
           <View style={[st.head, { paddingTop: insets.top + 8, paddingHorizontal: 16 }]}>
             <BackLink
@@ -298,8 +368,14 @@ export default function MokaChat() {
                 <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 10 }} accessibilityLabel="Moka yazıyor">
                   <TypingDots color={c.muted} />
                 </View>
+              ) : quip ? (
+                <Appear key={quip}>
+                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(quip)}</Text>
+                </Appear>
               ) : (
-                <Bubble key={shownIt.id} item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
+                <Appear key={shownIt.id}>
+                  <Bubble item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
+                </Appear>
               )}
               {!notes && (
                 <T v="tiny" style={{ opacity: 0.65 }}>

@@ -116,3 +116,24 @@ Karar (Melih, 2026-11-16): alt menünün ortasındaki Moka tuşuna basınca doğ
 **Klavye.** Yazı çubuğuna dokununca klavye açılır: Moka küçülüp yukarı kayar (şimdiki "klavyede kompakt" davranışı, `moka.tsx` satır ~83'teki `keyboardDidShow/WillShow` dinleyicisi), iki büyük düğme gizlenir, balon yukarıda kalır. `KeyboardAvoidingView` iOS'ta `padding`, Android'de `height`. Temizlik ve diğer ekranlardaki "klavye altında kalan sayfa" düzeltmesi (commit 8dddf6f) aynen uygulanır: giriş çubuğu klavyenin üstünde, güvenli alan alt boşluğu klavye açıkken sıfırlanır. **İş ekle** odanın içinde alttan açılan sayfa (`Sheet` + `AddTaskForm`) olur; klavye açılınca sayfa klavyenin üstüne oturur, oda arkada kalır. Emülatörde iOS ve Android klavyesiyle ayrı ayrı test edilmeli (özellikle Android `adjustResize`).
 
 **Aşamaya etkisi.** Aşama 1'e (ortam + sohbet) eklenir: `moka-oda` ekranı, TabBar değişikliği, geçiş animasyonu, düğmelerin bağlanması. Ek süre yaklaşık yarım-bir gün. Eski sohbetteki iş ekleme, not ve işaretleme eylemleri aynen taşınır.
+
+## 9. Oda deneyimi: derinlik listesi (2026-11-16)
+
+Hedef: oda "canlı" hissettirsin. Hepsi JS, native derleme yok, pil dostu (ekran odakta değilken ve "hareketi azalt" açıkken döngüler durur). Emek: S=yarım gün altı, M=yarım-bir gün, L=1-2 gün.
+
+| # | Özellik | Etki | Emek | Durum |
+|---|---|---|---|---|
+| 1 | Gündüz ↔ gece yumuşak geçiş (06:00-08:00, 17:30-19:30), iki resim karışır | Yüksek | S | Yapıldı |
+| 2 | Pencerede hava: yağmur, fırtına, kar, sis, bulut (cam bölmelerinde, `useSky`; konum yoksa saatle) | Yüksek | M | Yapıldı |
+| 3 | Işıkta toz zerreleri (12 tane), kupadan buhar | Yüksek | S | Yapıldı |
+| 4 | Dokunulabilir nesneler: lamba (parlar), kupa (Moka kahve içer), bitki (sallanır), pencere; titreşim + ses + Moka'nın repliği | Yüksek | M | Yapıldı |
+| 5 | Moka boşta: kitap, kahve, müzik, dizüstü; gece şekerleme/battaniye (12-18 sn sonra, 9-14 sn sürer) | Yüksek | M | Yapıldı (mevcut çıkartma pozlarıyla, çapraz geçiş) |
+| 6 | Moka'ya dokununca zıplar, sevinir, titreşim | Orta | S | Yapıldı |
+| 7 | Oda kullanıcının gününü yansıtır: bugün yapılan işler = daha sıcak ışık; 3+ gün uğramadı = loş, daha çok toz; Moka'nın varsayılan yüzü buna göre (uykulu/neşeli) | Yüksek | M | Yapıldı (`roomState`) |
+| 8 | Konuşma balonu cilası: yaylanarak beliriş, harf harf yazma | Orta | S | Yapıldı |
+| 9 | Esneme, gerinme, kuş sesi/yağmur sesi (ses dosyası gerekir), lofi radyo odada | Orta | M | Sırada (ses dosyası yok) |
+| 10 | Odaya biriken eşyalar: yapılan işlerle yeni nesneler (çiçek, resim, halı), seri kopunca toz örtüsü | Yüksek | L | Sırada (yeni görsel gerekir) |
+| 11 | Moka yastıkta oturan görseller + göz kırpma/ağız yamaları | Çok yüksek | L | Melih'in görselleri bekleniyor |
+| 12 | Mevsim süsleri (Noel, bahar) ve bayram odası | Orta | M | Sırada (görsel gerekir) |
+
+Dokunulabilir nesneler (oda resmi koordinatı): lamba (650,760,202×170), kupa (440,470,215×260), bitki (530,890,175×170), pencere (0,380,190×600). Hava camları: üç bölme (`PANES` içinde). Kod: `src/components/RoomBackdrop.tsx`, `src/lib/roomState.ts`, ekran `src/app/moka.tsx`.

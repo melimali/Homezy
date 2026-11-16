@@ -55,6 +55,11 @@ const ROWS: Row[] = [
   ['Kalpli gözlük', 'Heart glasses', 'Herzbrille', 'Gafas de corazón', 'Lunettes cœur', 'Óculos de coração', 'ハートメガネ', '하트 안경', 'نظارة قلب'],
   ['Noel şapkası', 'Santa hat', 'Weihnachtsmütze', 'Gorro de Papá Noel', 'Bonnet de Noël', 'Gorro de Natal', 'サンタ帽', '산타 모자', 'قبعة بابا نويل'],
   ['Zilli yaka', 'Bell collar', 'Glöckchen-Halsband', 'Collar con cascabel', 'Collier à clochette', 'Coleira com sininho', '鈴つきチョーカー', '방울 목걸이', 'طوق بجرس'],
+  ['Işık ne güzel, değil mi? ✨', 'Isn\'t the light lovely? ✨', 'Schön, dieses Licht, oder? ✨', '¿Qué bonita es la luz, verdad? ✨', 'Elle est belle, cette lumière, non ? ✨', 'Que luz linda, né? ✨', 'いい光でしょう？ ✨', '빛이 참 예쁘죠? ✨', 'ما أجمل هذا الضوء، أليس كذلك؟ ✨'],
+  ['Bir yudum kahve iyi gider ☕', 'A sip of coffee would be nice ☕', 'Ein Schluck Kaffee wäre jetzt schön ☕', 'Un sorbito de café sienta bien ☕', 'Une gorgée de café, ça fait du bien ☕', 'Um golinho de café cai bem ☕', 'コーヒーを一口どう？ ☕', '커피 한 모금 좋겠다 ☕', 'رشفة قهوة ستكون جميلة ☕'],
+  ['Bitkilerim seni çok seviyor 🌿', 'My plants love you 🌿', 'Meine Pflanzen mögen dich 🌿', 'Mis plantas te quieren 🌿', 'Mes plantes t’adorent 🌿', 'Minhas plantas gostam de você 🌿', '植物たちもあなたが大好きです 🌿', '내 식물들이 너를 좋아해 🌿', 'نباتاتي تحبك 🌿'],
+  ['Yıldızlar çıkmış 🌙', 'The stars are out 🌙', 'Die Sterne sind draußen 🌙', 'Ya salieron las estrellas 🌙', 'Les étoiles sont sorties 🌙', 'As estrelas apareceram 🌙', '星が出てるよ 🌙', '별이 떴어 🌙', 'ظهرت النجوم 🌙'],
+  ['Bugün dışarısı çok güzel!', 'It\'s lovely outside today!', 'Heute ist es draußen richtig schön!', '¡Hoy se ve precioso afuera!', 'Il fait beau dehors aujourd’hui !', 'Hoje está lindo lá fora!', '今日は外がとてもきれい！', '오늘은 밖이 정말 예뻐요!', 'الجو جميل في الخارج اليوم!'],
 ];
 
 export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';

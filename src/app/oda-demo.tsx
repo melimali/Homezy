@@ -11,7 +11,7 @@ export default function OdaDemo() {
   const [v, setV] = useState<OdaVariant>(odaOfHour());
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <RoomBackdrop variant={v} style={StyleSheet.absoluteFill} />
+      <RoomBackdrop mix={v === 'gece' ? 1 : 0} style={StyleSheet.absoluteFill} />
       <Pressable style={StyleSheet.absoluteFill} onPress={() => setV(x => (x === 'gece' ? 'gunduz' : 'gece'))} accessibilityLabel="Gündüz / gece değiştir" />
       <Pressable onPress={() => router.back()} style={st.back} accessibilityLabel="Geri"><Text style={st.t}>‹</Text></Pressable>
     </View>

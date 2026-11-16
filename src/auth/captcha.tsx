@@ -244,5 +244,6 @@ const st = StyleSheet.create({
   spin: { position: 'absolute', alignSelf: 'center' },
   btn: { paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999 },
   // Görünmezken de tam boyutta durur (1x1'e küçülen WebView sınav kutusunu çizemiyor); sadece saydamdır.
-  ghost: { position: 'absolute', left: 0, top: 0, width: 300, height: 75, opacity: 0.01 },
+  // Ekranın dışında durur: Cloudflare sınav kutusu açarsa bile sol üstte küçük bir kutu olarak görünmez.
+  ghost: { position: 'absolute', left: -1000, top: 0, width: 300, height: 75, opacity: 0.01 },
 });

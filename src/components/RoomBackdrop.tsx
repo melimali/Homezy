@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, Pressable, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
@@ -79,6 +79,7 @@ function breathe(v: Animated.Value) {
 
 type Vals = {
   cam: Animated.Value; a: Animated.Value; b: Animated.Value; c: Animated.Value; lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value;
+  beam: Animated.Value; cloud: Animated.Value; halo: Animated.Value; twinkle: Animated.Value[]; cup: Animated.Value[]; fest: Animated.Value;
   stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[]; rain: Animated.Value[]; boost: Animated.Value; nudgeC: Animated.Value; nudgeA: Animated.Value; pot: Animated.Value;
 };
 /** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
@@ -124,7 +125,8 @@ function Layers({ v, s, vals, opacity, tilt }: { v: OdaVariant; s: number; vals:
  * - `tilt` verilirse katmanlar farklı miktarda kayar (hafif 3B); taban sabit.
  * Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur. Resim `cover` ile ekranı doldurur.
  */
-export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff = false, steam = 1, potGlow = false, brew = 0, chain = -1, tilt, onTouch, style, children }: {
+export function RoomBackdrop({ cheer = 0, mix, sky = 'clear', warm = 0, dust = 0, lampOff = false, steam = 1, potGlow = false, brew = 0, chain = -1, tilt, onTouch, style, children }: {
+  /** Her artışta kutlama: lamba parlar, sürahi parıldar, ışık huzmesi canlanır. */ cheer?: number;
   mix?: number; sky?: SkyKind; warm?: number; dust?: number;
   /** Lamba söndürüldü: hale yok, oda biraz loş. */ lampOff?: boolean;
   /** Sürahiden çıkan buhar çizgisi (0-3): seri durumuna göre. */ steam?: number;
@@ -143,6 +145,8 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
     cam: new Animated.Value(0.5), a: new Animated.Value(0.5), b: new Animated.Value(0.5), c: new Animated.Value(0.5),
     lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0),
     nudgeC: new Animated.Value(0), nudgeA: new Animated.Value(0), pot: new Animated.Value(0),
+    beam: new Animated.Value(0), cloud: new Animated.Value(0), halo: new Animated.Value(0), fest: new Animated.Value(0),
+    twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)),
     stars: STARS.map(() => new Animated.Value(0.3)), dust: MOTES.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)), rain: Array.from({ length: 14 }, () => new Animated.Value(0)),
   }), []);
   const wet = sky === 'rain' || sky === 'storm' || sky === 'snow';
@@ -152,6 +156,11 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
     const anims = [
       loop(vals.cam, 22000), sway(vals.a, PIVOT.a.ms, 0), sway(vals.b, PIVOT.b.ms, 900, 0.35), sway(vals.c, PIVOT.c.ms, 400, 0.3),
       breathe(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000),
+      loop(vals.beam, 13000), loop(vals.halo, 4800, 600),
+      // Bulut gölgesi: ışık huzmesi 30 sn'de bir kararıp geri gelir.
+      Animated.loop(Animated.sequence([Animated.delay(14000), Animated.timing(vals.cloud, { toValue: 1, duration: 4200, easing: sine, useNativeDriver: true }), Animated.delay(1800), Animated.timing(vals.cloud, { toValue: 0, duration: 5200, easing: sine, useNativeDriver: true }), Animated.delay(5000)])),
+      ...vals.twinkle.map((x, i) => Animated.loop(Animated.sequence([Animated.delay(i * 1300 + 600), Animated.timing(x, { toValue: 1, duration: 520, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(x, { toValue: 0, duration: 700, easing: Easing.in(Easing.quad), useNativeDriver: true }), Animated.delay(3600 + i * 700)]))),
+      ...vals.cup.map((x, i) => rise(x, 2800 + i * 500, i * 1300, Easing.out(Easing.quad))),
       ...vals.stars.map((x, i) => sway(x, 900 + ((i * 677) % 1900), i * 430, 0.7)),
       ...vals.dust.map((x, i) => rise(x, 5200 + ((i * 937) % 3600), (i * 1130) % 6000, Easing.inOut(Easing.sin))),
       ...vals.steam.slice(0, steam).map((x, i) => rise(x, 3000 + i * 420, i * 1050 + i * i * 160, Easing.out(Easing.quad))),
@@ -173,6 +182,20 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
     a.start();
     return () => a.stop();
   }, [brew, vals]);
+
+  // Kutlama: lamba bir an parlar, sürahi parıldar, ışıklar yanıp söner.
+  const lastCheer = useRef(cheer);
+  useEffect(() => {
+    if (cheer === lastCheer.current) return;
+    lastCheer.current = cheer;
+    if (!cheer || !run) return;
+    vals.fest.setValue(0);
+    Animated.parallel([
+      Animated.sequence([Animated.timing(vals.boost, { toValue: 1, duration: 200, useNativeDriver: true }), Animated.delay(1400), Animated.timing(vals.boost, { toValue: 0, duration: 1100, useNativeDriver: true })]),
+      Animated.sequence([Animated.timing(vals.pot, { toValue: 0.8, duration: 260, useNativeDriver: true }), Animated.delay(900), Animated.timing(vals.pot, { toValue: 0, duration: 1400, useNativeDriver: true })]),
+      Animated.timing(vals.fest, { toValue: 1, duration: 2600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, [cheer, run, vals]);
 
   /** Dokununca kısa tepki: lamba parlar, bitki sallanır. */
   const react = (t: RoomTouch) => {
@@ -211,6 +234,19 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
           ))}
           {nightOp < 0.99 && glow(300, 1000, 230, '#FFD68A', vals.sun.interpolate({ inputRange: [0, 1], outputRange: [0.02, 0.2 * (1 - nightOp)] }))}
 
+          {/* Pencere ışığı: gündüz sıcak, gece soğuk bir huzme yerde yavaşça kayar; bulut geçince söner. */}
+          {[0, 1].map(k => (
+            <Animated.Image
+              key={`beam${k}`}
+              source={ISIK}
+              pointerEvents="none"
+              style={{
+                position: 'absolute', left: (150 + k * 40) * s, top: (640 + k * 150) * s, width: 760 * s, height: 150 * s, tintColor: night > 0.5 ? '#B7CBFF' : '#FFE7B0',
+                opacity: Animated.multiply(Animated.multiply(vals.beam.interpolate({ inputRange: [0, 1], outputRange: k ? [0.1, 0.2] : [0.22, 0.12] }), vals.cloud.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] })), night > 0.5 ? 0.6 : 1),
+                transform: [{ translateX: vals.beam.interpolate({ inputRange: [0, 1], outputRange: [-18 * s * (k ? -1 : 1), 24 * s * (k ? -1 : 1)] }) }, { rotate: `${16 + k * 7}deg` }],
+              }}
+            />
+          ))}
           {/* Hava: camlarda yağmur, kar, sis, bulut */}
           {PANES.map((p, pi) => (
             <View key={pi} pointerEvents="none" style={[box(p), { overflow: 'hidden' }]}>
@@ -242,6 +278,7 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
                 position: 'absolute', left: m.x * s, top: m.y * s, width: m.r * 2 * s, height: m.r * 2 * s, borderRadius: m.r * s, backgroundColor: '#FFE9B8',
                 opacity: vals.dust[i]!.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, i % 3 === 0 || dust > 0.3 ? 0.75 : 0.45, 0] }),
                 transform: [
+                  ...(tilt ? [{ translateX: tilt.x.interpolate({ inputRange: [-1, 1], outputRange: [(8 + (i % 3) * 5) * s, -(8 + (i % 3) * 5) * s] }) }] : []),
                   { translateY: vals.dust[i]!.interpolate({ inputRange: [0, 1], outputRange: [0, -(26 + (i % 4) * 8) * s] }) },
                   { translateX: vals.dust[i]!.interpolate({ inputRange: [0, 0.35, 0.7, 1], outputRange: [0, (i % 2 ? 9 : -9) * s, (i % 2 ? -4 : 5) * s, (i % 2 ? 10 : -11) * s] }) },
                   { scale: vals.dust[i]!.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.7, 1.1, 0.8] }) },
@@ -269,6 +306,36 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
               }}
             />
           ))}
+          {/* Sürahi ve raf: parıltılar (4 ışıltı sırayla yanıp söner) ve kupadan ince buhar. */}
+          {[{ x: POT.x - 26, y: POT.y + 50 }, { x: POT.x + 30, y: POT.y + 90 }, { x: 570, y: 500 }, { x: 560, y: 560 }].map((p, i) => (
+            <Animated.View
+              key={`tw${i}`}
+              pointerEvents="none"
+              style={{
+                position: 'absolute', left: (p.x - 9) * s, top: (p.y - 9) * s, width: 18 * s, height: 18 * s,
+                opacity: Animated.add(vals.twinkle[i]!, vals.fest.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.8, 0] })),
+                transform: [{ scale: vals.twinkle[i]!.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }, { rotate: vals.twinkle[i]!.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '70deg'] }) }],
+              }}
+            >
+              <View style={{ position: 'absolute', left: 8 * s, top: 0, width: Math.max(2, 2.2 * s), height: 18 * s, borderRadius: 2 * s, backgroundColor: '#FFF3C4' }} />
+              <View style={{ position: 'absolute', left: 0, top: 8 * s, width: 18 * s, height: Math.max(2, 2.2 * s), borderRadius: 2 * s, backgroundColor: '#FFF3C4' }} />
+            </Animated.View>
+          ))}
+          {vals.cup.map((st, i) => (
+            <Animated.View
+              key={`cup${i}`}
+              pointerEvents="none"
+              style={{
+                position: 'absolute', left: (562 + i * 14) * s, top: 470 * s, width: 9 * s, height: 16 * s, borderRadius: 8 * s, backgroundColor: '#fff',
+                opacity: st.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 0.32, 0] }),
+                transform: [
+                  { translateY: st.interpolate({ inputRange: [0, 1], outputRange: [0, -46 * s] }) },
+                  { translateX: st.interpolate({ inputRange: [0, 0.3, 0.7, 1], outputRange: [0, 4 * s, -3 * s, 4 * s] }) },
+                  { scale: st.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.5] }) },
+                ],
+              }}
+            />
+          ))}
           {/* Işık zinciri: seride her gün bir ampul yanar (7'de hepsi). */}
           {chain >= 0 && (
             <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }}>
@@ -289,7 +356,13 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
             </View>
           )}
 
-          {lampOn > 0 && glow(LAMP.x, LAMP.y, 260, '#FFB44D', Animated.multiply(lampOp, 0.7 + 0.3 * night + warm * 0.4))}
+          {lampOn > 0 && (
+            <Animated.Image
+              source={ISIK}
+              pointerEvents="none"
+              style={{ position: 'absolute', left: (LAMP.x - 260) * s, top: (LAMP.y - 260) * s, width: 520 * s, height: 520 * s, tintColor: '#FFB44D', opacity: Animated.multiply(lampOp, 0.7 + 0.3 * night + warm * 0.4), transform: [{ scale: Animated.add(vals.halo.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.05] }), vals.boost.interpolate({ inputRange: [0, 1], outputRange: [0, 0.08] })) }] }}
+            />
+          )}
           {lampOn > 0 && <Animated.Image
             source={ISIK}
             pointerEvents="none"

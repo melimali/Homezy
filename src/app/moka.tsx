@@ -536,7 +536,7 @@ export default function MokaChat() {
     <View style={{ flex: 1, backgroundColor: '#1C1712' }}>
       {/* Oda: taban sabit, katmanlar eğimle farklı miktarda kayar (hafif 3B). */}
       <RoomBackdrop
-        mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff}
+        cheer={burst} mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff}
         steam={potSteam(pot)} potGlow={pot === 'fresh'} brew={brew} chain={Math.min(7, shownStreak)} tilt={tilt}
         onTouch={touchObj} style={StyleSheet.absoluteFill}
       />
@@ -562,7 +562,7 @@ export default function MokaChat() {
               ],
             }}
           >
-            <RoomMoka fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} />
+            <RoomMoka fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} celebrate={burst} />
           </Animated.View>
         </Pressable>
         <View pointerEvents="none" style={{ position: 'absolute', left: mokaCx, top: mokaTop + mokaSize * 0.4 }}>

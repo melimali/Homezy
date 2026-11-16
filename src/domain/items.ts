@@ -137,7 +137,16 @@ export const PERSONAS: (Extra & { persona: PersonaId })[] = [
   { id: 'kisilik_neseli', persona: 'neseli', name: 'Neşeli', emoji: '💛', price: 150, about: 'Renkli ışıklar ve bayrak süsleri. Her işe sevinir.' },
 ];
 
-/** Satın alınabilen her tek seferlik şey: odaya konan eşyalar, bahçe süsleri, kişilikler. */
+/**
+ * Moka'nın kürk renkleri puanla alınır (docs/moka-oda-usta-plan.md §3.6). Orman her zaman bedava.
+ * Sunucu fiyatı `play_items` tablosundan okur: supabase/migrations/20261116120000_kurk.sql.
+ */
+export const FUR_PRICE: Record<string, number> = { kahve: 80, gri: 80, mavi: 120, turuncu: 120, pembe: 120, mor: 160, kirmizi: 160 };
+export const FUR_ITEMS: Extra[] = Object.entries(FUR_PRICE).map(([id, price]) => ({ id: `kurk_${id}`, name: 'Kürk rengi', emoji: '🎨', price, about: '' }));
+/** Bu kürk rengi kullanıcının mı: orman, satın alınmış ya da puanla almadan önce seçilmiş (eski seçim korunur). */
+export const furOwned = (P: { owned: string[]; furGift?: string | null }, id: string) => id === 'orman' || P.owned.includes(`kurk_${id}`) || P.furGift === id;
+
+/** Satın alınabilen her tek seferlik şey: odaya konan eşyalar, bahçe süsleri, kişilikler, kürk renkleri. */
 export const BUYABLE: Record<string, Item | Extra | undefined> = Object.fromEntries(
-  [...ITEMS, ...DECOR, ...PERSONAS.filter(p => p.price > 0)].map(i => [i.id, i]),
+  [...ITEMS, ...DECOR, ...PERSONAS.filter(p => p.price > 0), ...FUR_ITEMS].map(i => [i.id, i]),
 );

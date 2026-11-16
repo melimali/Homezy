@@ -208,6 +208,8 @@ export type Play = {
   mokaAcc?: string | null;
   /** Moka'nın kürk rengi (src/constants/moka-look.ts). Yoksa orman yeşili. */
   mokaFur?: string | null;
+  /** Kürk puanla alınmadan önce seçilmiş renk: bedava kalır (bir kez yazılır; null = yoktu). */
+  furGift?: string | null;
   /** Moka'nın odasındaki ilk ziyaret tanıtımı görüldü. */
   roomIntro?: boolean;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */

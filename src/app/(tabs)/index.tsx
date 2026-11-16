@@ -280,6 +280,14 @@ export default function Home() {
           <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
         </Squish>
       )}
+      <Squish onPress={() => router.push('/temizlik?min=15' as Href)} accessibilityRole="button" accessibilityLabel="15 dakika temizlik başlat" style={[styles.week, { backgroundColor: c.accent }]}>
+        <Text style={{ lineHeight: 34, fontSize: 26 }}>🧹</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.weekT, { color: c.onAccent }]}>15 dk temizlik</Text>
+          <Text style={[styles.statL, { color: c.onAccent, opacity: 0.8 }]}>Tek dokunuş, Moka işleri sıralar</Text>
+        </View>
+        <Chevron color={c.onAccent} size={14} dir="right" />
+      </Squish>
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
           <Text style={{ lineHeight: 34, fontSize: 26 }}>🗓️</Text>

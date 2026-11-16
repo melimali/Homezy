@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
-import { MokaMascot } from '@/components/MokaMascot';
+import { Float } from '@/components/motion';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { GrowthLog } from '@/components/GrowthLog';
 import { BackLink, Btn, Card, Chip, Screen, SecHead, Sheet, T } from '@/components/ui';
 import { useToast } from '@/components/Toast';
@@ -12,7 +13,7 @@ import { startFocusMusic, stopAll } from '@/lib/ambient';
 import { sfx } from '@/lib/sfx';
 import { answered, checkinOf } from '@/domain/mood';
 import { useStore } from '@/store/AppStore';
-import { radius, useColors } from '@/theme';
+import { fonts, radius, useColors } from '@/theme';
 
 const MINUTES = [15, 25, 45, 60];
 const TOPICS = ['📚 Ders', '📖 Okuma', '🎬 İzleme', '💻 İş', '✏️ Proje', '🧘 Diğer'];
@@ -108,7 +109,9 @@ export default function Odak() {
       <T v="h1">Odak 🍅</T>
       <Card>
         <View style={st.center}>
-          <MokaMascot pose={run ? (run.topic.includes('Okuma') ? 'reading' : 'laptop') : 'sipping'} size="lg" showBubble={false} />
+          <Float amp={4} dur={2200}>
+            <Image source={MOKA_ASSETS[run ? (run.topic.includes('Okuma') ? 'reading' : 'laptop') : 'sipping']} style={st.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Float>
           <T style={[st.clock, { color: c.ink }]}>{pad(Math.floor(left / 60000))}:{pad(Math.floor((left % 60000) / 1000))}</T>
           <View style={[st.track, { backgroundColor: c.surface2 }]}>
             <View style={[st.fill, { width: `${pct}%`, backgroundColor: c.accent }]} />
@@ -143,7 +146,8 @@ const min_ = (r: Run) => r.min * 60000;
 
 const st = StyleSheet.create({
   center: { alignItems: 'center', gap: 10 },
-  clock: { fontSize: 56, lineHeight: 64, fontVariant: ['tabular-nums'] },
+  moka: { width: 176, height: 176 },
+  clock: { fontSize: 52, lineHeight: 84, paddingVertical: 6, fontFamily: fonts.bodyBlack, textAlign: 'center', alignSelf: 'stretch', fontVariant: ['tabular-nums'], includeFontPadding: true },
   track: { alignSelf: 'stretch', height: 10, borderRadius: radius.pill ?? 99, overflow: 'hidden' },
   fill: { height: 10, borderRadius: 99 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

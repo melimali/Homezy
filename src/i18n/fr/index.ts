@@ -1,3 +1,4 @@
+import { TMZ_FR } from '../tmz';
 import { FR_A1 } from './a1';
 import { FR_A2 } from './a2';
 import { FR_A3 } from './a3';
@@ -34,4 +35,4 @@ import { FR_DEKOR } from './dekor';
 import { FR_REVIEW } from './review';
 
 /** Türkçe metin → Fransızca. `{}` değişken yeridir (sırayla). */
-export const FR: Record<string, string> = { ...FR_A1, ...FR_A2, ...FR_A3, ...FR_A4, ...FR_B, ...FR_C, ...FR_D, ...FR_E, ...FR_F, ...FR_G, ...FR_H, ...FR_I, ...FR_J, ...FR_K, ...FR_L, ...FR_M, ...FR_N, ...FR_O, ...FR_P, ...FR_Q, ...FR_R, ...FR_S, ...FR_T, ...FR_U, ...FR_NOTIF, ...FR_PET, ...FR_SHOP, ...FR_TIPS, ...FR_FUN, ...FR_VIS, ...FR_KISISEL, ...FR_TABEDIT, ...FR_DEKOR, ...FR_REVIEW };
+export const FR: Record<string, string> = { ...FR_A1, ...FR_A2, ...FR_A3, ...FR_A4, ...FR_B, ...FR_C, ...FR_D, ...FR_E, ...FR_F, ...FR_G, ...FR_H, ...FR_I, ...FR_J, ...FR_K, ...FR_L, ...FR_M, ...FR_N, ...FR_O, ...FR_P, ...FR_Q, ...FR_R, ...FR_S, ...FR_T, ...FR_U, ...FR_NOTIF, ...FR_PET, ...FR_SHOP, ...FR_TIPS, ...FR_FUN, ...FR_VIS, ...FR_KISISEL, ...FR_TABEDIT, ...FR_DEKOR, ...FR_REVIEW, ...TMZ_FR };

@@ -3,9 +3,12 @@ import { useCallback, useEffect, useState, type ComponentProps, type ComponentRe
 import { useAdDockInset } from '@/ads/AdBanner';
 import {
   Animated,
+  Dimensions,
   Easing,
   Image,
+  Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -111,13 +114,15 @@ export function Screen({
   const stripOp = y.interpolate({ inputRange: [0, 16], outputRange: [0, 1], extrapolate: 'clamp' });
   // Sekme ekranlarında alt menü yüzer; içerik altına girmesin diye ekstra boşluk.
   const adInset = useAdDockInset();
+  // Android'de (kenardan kenara) klavye pencereyi küçültmez: görünümü elle kısalt ki odaktaki alan kayıp görünsün.
+  const kb = useKeyboardHeight();
   const bottom = tab ? 148 + insets.bottom + adInset : (header ? 42 : insets.bottom + 42);
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {image ? <Image source={image} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors /> : <ScreenBackground tone={tone} />}
       {!image && <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: deep, opacity: shift }]} />}
       {pullMoka && !reduce && <PullMoka y={y} hop={hop} />}
-      <Animated.View style={{ flex: 1, opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
+      <Animated.View style={{ flex: 1, paddingBottom: Platform.OS === 'android' ? kb : 0, opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }}>
       <Animated.ScrollView
         ref={scrollRef as never}
         onScroll={onScroll}
@@ -126,6 +131,7 @@ export function Screen({
         style={{ flex: 1 }}
         scrollEnabled={scrollEnabled}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={[styles.screen, { paddingTop: insets.top + 10, paddingBottom: bottom }]}
       >
         {header && <AppHeader />}
@@ -598,17 +604,35 @@ export function Callout({ children }: { children: ReactNode }) {
 }
 
 /** Alttan kayarak açılan yumuşak sayfa. */
+/** Klavye yüksekliği (ekran altından). Modal içinde adjustResize çalışmadığı için elle izlenir. */
+export function useKeyboardHeight() {
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const ios = Platform.OS === 'ios';
+    const show = Keyboard.addListener(ios ? 'keyboardWillChangeFrame' : 'keyboardDidShow', e => setH(Math.max(0, ios ? Dimensions.get('window').height - e.endCoordinates.screenY : e.endCoordinates.height)));
+    const hide = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', () => setH(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return h;
+}
+
 export function Sheet({ open, onClose, children, pose = 'happy', scroll = false }: { open: boolean; onClose: () => void; children: ReactNode; pose?: MokaPose; scroll?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  const kb = useKeyboardHeight();
+  // Klavye açıkken sayfa klavyenin üstüne çıkar, içerik sığmazsa kayar.
+  const room = height - insets.top - 90 - kb;
   return (
     <Modal visible={open} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
-      <View style={[styles.sheet, { backgroundColor: c.surface, paddingBottom: insets.bottom + 20 }, scroll && { maxHeight: height - insets.top - 90 }]}>
+      <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={kb ? Keyboard.dismiss : onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
+      <View style={[styles.sheet, { backgroundColor: c.surface, bottom: kb, paddingBottom: kb ? 16 : insets.bottom + 20, maxHeight: Math.max(200, scroll || kb ? room : height - insets.top - 20) }]}>
         <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
         <View style={[styles.grab, { backgroundColor: c.line }]} />
-        {scroll ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>{children}</ScrollView> : children}
+        <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>{children}</ScrollView>
       </View>
     </Modal>
   );

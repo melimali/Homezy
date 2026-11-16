@@ -42,7 +42,7 @@ function Particles({ fx, reduce }: { fx: HeroFx; reduce: boolean }) {
         <Animated.Text
           key={i}
           style={{
-            position: 'absolute', left: left[i], top: '58%', fontSize: 16 + i * 2,
+            position: 'absolute', left: left[i], top: '66%', fontSize: 16 + i * 2,
             opacity: v.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 0.55, 0.3, 0] }),
             transform: [
               { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, fx === 'snow' || fx === 'rain' ? 36 : -70] }) },
@@ -109,7 +109,7 @@ export function HeroMoka({ sceneKey, background, sticker, ratio, marginTop, onTa
 
   const mStyle = useMemo(() => motionStyle(m, def.motion), [m, def.motion]);
   const size = Math.round(w * 0.68);
-  const mk = { position: 'absolute' as const, left: Math.round((w - size) / 2), bottom: Math.round(h * 0.2), width: size, height: size };
+  const mk = { position: 'absolute' as const, left: Math.round((w - size) / 2), bottom: Math.round(h * 0.105), width: size, height: size };
 
   return (
     <View onLayout={e => setW(Math.round(e.nativeEvent.layout.width))} style={{ alignSelf: 'stretch', height: h || undefined, aspectRatio: h ? undefined : ratio, overflow: 'hidden', marginTop }}>

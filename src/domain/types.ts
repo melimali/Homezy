@@ -177,6 +177,8 @@ export type Play = {
   spots?: Record<string, number>;
   /** Evin görünümü: zemin, duvar, pencere, dış cephe (src/domain/look.ts). */
   look?: HouseLook;
+  /** Moka'nın takılı aksesuarı (src/constants/moka-acc.ts kimliği). Yoksa çıplak. */
+  mokaAcc?: string | null;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */
   awarded: Record<string, DayKey>;
   /** Gün → o gün tamamlananların kısa adları (günlükte "bugün neler yaptım"). */

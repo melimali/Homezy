@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
@@ -23,6 +23,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking }: { size: number;
   const [breath] = useState(() => new Animated.Value(0));
   const [talk] = useState(() => new Animated.Value(0));
   const [tilt] = useState(() => new Animated.Value(0));
+  const [look] = useState(() => new Animated.Value(0));
   const [dim] = useState(() => new Animated.Value(0));
   const [zs] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)));
   const [mouth] = useState(() => new Animated.Value(0));
@@ -38,61 +39,109 @@ export function RoomMoka({ size, fur, mood, talking, thinking }: { size: number;
     return () => a.stop();
   }, [shown, fades, reduceM]);
 
-  // Göz kırpma: 3-6 sn arayla, bazen çift. Konuşurken, uykuda ve sevinçte kırpmaz.
+  // Göz kırpma: düzensiz aralık; hızlı, yavaş ya da çift. Konuşurken, uykuda ve sevinçte kırpmaz.
   useEffect(() => {
     if (!run || talking || shown === 'sleepy' || shown === 'cheer') return;
     let t: ReturnType<typeof setTimeout>;
     let dead = false;
-    const blink = () => Animated.sequence([
-      Animated.timing(wink, { toValue: 1, duration: 70, useNativeDriver: true }),
-      Animated.delay(110),
-      Animated.timing(wink, { toValue: 0, duration: 90, useNativeDriver: true }),
+    const blink = (slow: boolean) => Animated.sequence([
+      Animated.timing(wink, { toValue: 1, duration: slow ? 130 : 65, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.delay(slow ? 220 : 90),
+      Animated.timing(wink, { toValue: 0, duration: slow ? 170 : 95, easing: Easing.out(Easing.quad), useNativeDriver: true }),
     ]);
     const next = () => {
       if (dead) return;
-      t = setTimeout(() => (Math.random() < 0.2 ? Animated.sequence([blink(), Animated.delay(120), blink()]) : blink()).start(next), 3000 + Math.random() * 3000);
+      const r = Math.random();
+      t = setTimeout(() => (r < 0.18 ? Animated.sequence([blink(false), Animated.delay(110), blink(false)]) : blink(r > 0.85)).start(next), 2400 + Math.random() * 4600);
     };
     next();
     return () => {
       dead = true;
       clearTimeout(t);
+      wink.stopAnimation();
       wink.setValue(0);
     };
   }, [run, talking, shown, wink]);
 
-  // Konuşurken ağız: her hece biraz farklı uzunlukta açılır.
+  // Konuşurken ağız: heceler farklı açıklıkta (ince "i" ile geniş "a" arası), kelime aralarında kısa duraklama.
   useEffect(() => {
     if (!talking) {
+      mouth.stopAnimation();
       mouth.setValue(0);
       return;
     }
     let stop = false;
+    let t: ReturnType<typeof setTimeout>;
+    let n = 0;
     const step = () => {
       if (stop) return;
-      const open = 100 + Math.random() * 90;
+      n += 1;
+      const open = 0.55 + Math.random() * 0.45;
+      const ms = 85 + Math.random() * 80;
       Animated.sequence([
-        Animated.timing(mouth, { toValue: 1, duration: open, useNativeDriver: true }),
-        Animated.delay(30 + Math.random() * 60),
-        Animated.timing(mouth, { toValue: 0, duration: open, useNativeDriver: true }),
-      ]).start(() => setTimeout(step, 30 + Math.random() * 200));
+        Animated.timing(mouth, { toValue: open, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.delay(20 + Math.random() * 50),
+        Animated.timing(mouth, { toValue: 0, duration: ms * 0.9, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]).start(() => {
+        if (stop) return;
+        // 2-4 hecede bir kelime sonu: biraz daha uzun kapalı kalır.
+        t = setTimeout(step, n % (2 + Math.floor(Math.random() * 3)) === 0 ? 140 + Math.random() * 120 : 25 + Math.random() * 90);
+      });
     };
     step();
     return () => {
       stop = true;
+      clearTimeout(t);
+      mouth.stopAnimation();
     };
   }, [talking, mouth]);
 
-  // Nefes: uykuda daha yavaş ve derin.
+  // Nefes: her nefes biraz farklı uzunlukta; arada derin iç çekiş. Uykuda daha yavaş ve derin.
+  const sleepRef = useRef(sleeping);
+  sleepRef.current = sleeping;
   useEffect(() => {
     if (!run) return;
-    const ms = sleeping ? 2600 : 1900;
-    const a = Animated.loop(Animated.sequence([
-      Animated.timing(breath, { toValue: 1, duration: ms, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      Animated.timing(breath, { toValue: 0, duration: ms, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-    ]));
-    a.start();
-    return () => a.stop();
-  }, [run, sleeping, breath]);
+    let dead = false;
+    const cycle = () => {
+      if (dead) return;
+      const base = sleepRef.current ? 2600 : 1900;
+      const sigh = !sleepRef.current && Math.random() < 0.12;
+      const inMs = base * (0.85 + Math.random() * 0.3) * (sigh ? 1.4 : 1);
+      Animated.sequence([
+        Animated.timing(breath, { toValue: sigh ? 1.35 : 1, duration: inMs, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(breath, { toValue: 0, duration: inMs * (sigh ? 1.3 : 1.05), easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]).start(cycle);
+    };
+    cycle();
+    return () => {
+      dead = true;
+      breath.stopAnimation();
+    };
+  }, [run, breath]);
+
+  // Boşta küçük baş çevirmeleri: 4-9 sn'de bir birkaç derece eğilir, yaylanarak geri gelir. Uykuda ve konuşurken durur.
+  useEffect(() => {
+    if (!run || talking || thinking || sleeping) return;
+    let dead = false;
+    let t: ReturnType<typeof setTimeout>;
+    const next = () => {
+      if (dead) return;
+      t = setTimeout(() => {
+        const to = (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.5);
+        Animated.sequence([
+          Animated.spring(look, { toValue: to, friction: 7, tension: 40, useNativeDriver: true }),
+          Animated.delay(900 + Math.random() * 1600),
+          Animated.spring(look, { toValue: 0, friction: 6, tension: 35, useNativeDriver: true }),
+        ]).start(next);
+      }, 4000 + Math.random() * 5000);
+    };
+    next();
+    return () => {
+      dead = true;
+      clearTimeout(t);
+      Animated.spring(look, { toValue: 0, friction: 7, tension: 40, useNativeDriver: true }).start();
+    };
+  }, [run, talking, thinking, sleeping, look]);
 
   // Konuşma: hafif ritmik sekme.
   useEffect(() => {
@@ -144,10 +193,11 @@ export function RoomMoka({ size, fur, mood, talking, thinking }: { size: number;
     talk.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.022] }),
   );
   const img = { position: 'absolute' as const, width: size, height: size };
-  const rot = tilt.interpolate({ inputRange: [-1, 1], outputRange: ['-4deg', '4deg'] });
+  const rot = Animated.add(tilt, Animated.multiply(look, 0.3)).interpolate({ inputRange: [-1.3, 1.3], outputRange: ['-5.2deg', '5.2deg'] });
+  const lx = look.interpolate({ inputRange: [-1, 1], outputRange: [-size * 0.006, size * 0.006] });
   return (
     <View style={{ width: size, height: size }} pointerEvents="none">
-      <Animated.View style={{ width: size, height: size, transform: [{ translateY: size * 0.4 }, { rotate: rot }, { translateY: -size * 0.4 }, { translateY: ty }, { scaleX: sx }, { scaleY: sy }] }}>
+      <Animated.View style={{ width: size, height: size, transform: [{ translateY: size * 0.4 }, { rotate: rot }, { translateY: -size * 0.4 }, { translateX: lx }, { translateY: ty }, { scaleX: sx }, { scaleY: sy }] }}>
         {MOODS.map(m => (
           <Animated.Image key={m} source={F[m]} style={[img, { opacity: fades[m] }]} resizeMode="contain" accessibilityIgnoresInvertColors />
         ))}

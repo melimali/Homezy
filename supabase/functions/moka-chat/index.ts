@@ -181,7 +181,10 @@ Deno.serve(async req => {
   if (!g.ok) { await releaseSlot(); return json({ error: g.error }, g.status); }
   const release = async () => { await g.release(); await releaseSlot(); };
 
-  const useTools = wantsTools(messages[messages.length - 1].content);
+  // Kaba süzgeç (ACTION_RE) sadece Türkçe ve İngilizce anahtar kelime bilir; diğer dillerde araçlar hep açık,
+  // yoksa "Milch auf die Einkaufsliste" gibi istekler araçsız kalır.
+  const otherLang = typeof body.lang === 'string' && body.lang !== 'tr' && body.lang !== 'en';
+  const useTools = otherLang || wantsTools(messages[messages.length - 1].content);
   try {
     const res = await anthropic.messages.create({
       model: MODEL,

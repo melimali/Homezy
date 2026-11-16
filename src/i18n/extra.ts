@@ -9,6 +9,7 @@ import { ROZET_ROWS } from './rozet';
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
+  ["Sadece bu oturumda kalır, telefona kaydedilmez", "Only kept for this session, not saved on your phone", "Bleibt nur in dieser Sitzung, wird nicht auf dem Handy gespeichert", "Solo se guarda en esta sesión, no en tu teléfono", "Gardé seulement pour cette session, pas sur ton téléphone", "Fica só nesta sessão, não é salvo no celular", "このセッションの間だけ残り、端末には保存されません", "이번 세션에만 남고 휴대폰에 저장되지 않아요", "يبقى خلال هذه الجلسة فقط، ولا يُحفظ على هاتفك"],
   ["Sohbet geçmişi", "Chat history", "Chatverlauf", "Historial del chat", "Historique du chat", "Histórico do chat", "チャット履歴", "대화 기록", "سجل المحادثة"],
   ["Sohbeti temizle", "Clear chat", "Chat löschen", "Borrar chat", "Effacer le chat", "Limpar chat", "チャットを消去", "대화 지우기", "مسح المحادثة"],
   ["Henüz mesaj yok. Moka seni bekliyor ☕", "No messages yet. Moka is waiting for you ☕", "Noch keine Nachrichten. Moka wartet auf dich ☕", "Aún no hay mensajes. Moka te espera ☕", "Pas encore de messages. Moka t'attend ☕", "Ainda não há mensagens. A Moka está esperando você ☕", "まだメッセージはありません。Mokaが待っています ☕", "아직 메시지가 없어요. Moka가 기다리고 있어요 ☕", "لا رسائل بعد. موكا في انتظارك ☕"],

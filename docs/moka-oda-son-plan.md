@@ -305,3 +305,52 @@ P0-P2 görsel beklemeden hemen yapılabilir. P3 görseller gelince başlar; o za
 1. Ücretsiz üyede yazı çubuğu tamamen kilitli hap mı olsun (önerim), yoksa bir tanıtım mesajına izin mi verilsin?
 2. Lambaya dokununca sönüp yanması olsun mu (önerim evet)?
 3. Eşya listesi ve açılma kuralları (bölüm 8) uygun mu?
+
+---
+
+## 20. Kahve: odaya kahveyle ilgili ne eklenir? (öneri, onay bekliyor)
+
+İstek (Melih, 2026-11-16): odaya kahveyle ilgili bir şey; oyun şart değil. Ölçüt ürünün özü: **disiplin ve her gün geri gelmek**. Kahve bunun "ödülü ve ritüeli" olmalı, işten kaçış olmamalı.
+
+### Önerim 1 (en iyisi): Günün kahvesi ve Kahve defteri
+
+**Fikir:** Her gün Moka'nın "günün kahvesi" var. Kullanıcı bugünkü işlerini yaptıkça odadaki fincan dolar; dolunca kahve hazır olur, Moka yudumlar ve o kahve **Kahve defterine** damgalanır. Gün gün biriken fincanlar odada görünür. Yani seri, odada bir fincan dizisi olur.
+
+- **Doldurma:** bugünkü işlerin yüzdesi (en az 3 iş ya da hepsi; azsa hepsi). Her iş fincanı bir kademe doldurur, buhar artar. İş bitince oda zaten ısınıyor (bölüm 7), fincan bunun somut hâli.
+- **Kahve hazır anı:** Moka "Latte'n hazır ☕" der, fincanı alır (kahve pozu), damga sesi, kısa parıltı. Günde bir kez.
+- **Odada görünür seri:** lambanın yanındaki sehpaya bir tepsi; üstünde haftanın 7 fincanı. Dolu günler dolu fincan, kaçan gün boş fincan (suçlama yok, sadece boş). Pazartesi tepsi yenilenir; hafta tam dolarsa tepside küçük bir kurabiye belirir.
+- **Hangi kahve:** bugünün kahvesi tarihe göre açılmış kahvelerden seçilir (herkes aynı gün farklı ama tutarlı). Yeni kahveler seriyle açılır: 1. gün Filtre, 3 Türk kahvesi, 7 Latte, 14 Cold brew, 21 Mocha, 30 Affogato... (liste `kahve-oyunu/kahve-menu.md`'den, alkolsüz). Mevsim kahveleri kendiliğinden: sonbahar balkabağı latte, kış salep/zencefilli, yaz buzlu, Ramazan ve bayram için Türk kahvesi + lokum.
+- **Kahve defteri:** 24 kahvelik koleksiyon sayfası (Ben sekmesinden ve odadaki tepsiye dokununca). Her kartta kahvenin çizimi, bir cümlelik ilginç bilgi ve **evde yapma tarifi** (3-4 adım). Gerçek hayata faydası olan küçük bir ödül.
+- **Neden işe yarar:** her gün geri gelmek için somut, görsel ve sevimli bir sebep; seri sayıdan çıkıp odada nesne olur; kayıp duygusu yumuşak (boş fincan). Oyun gibi zaman almaz, işi yapmaya iter.
+
+### Önerim 2: Kahve molası (odak sayacı)
+
+Odada "Kahve molası" seçeneği: mevcut odak ekranı (`/odak`) 25 dk çalışır, bu sırada odadaki fincan yavaşça demlenir; bitince 5 dk mola, Moka kahvesini yudumlar. Ders, iş ya da temizlik için. Mevcut parçalarla yarım gün. Önerim 1'den sonra.
+
+### Kart oyunu (isteğe bağlı not)
+
+Önermiyorum: odada oyun, işten kaçışa döner. Olursa sadece **ödül** olarak: bugünün işleri bitince açılan 1-2 dakikalık "kahve kartı eşleştirme" (kahve defterindeki çizimlerle hafıza oyunu), günde bir kez. Ayrı karar.
+
+### Veri ve kurallar
+- `Play.coffee?: { days: Record<DayKey, CoffeeId> }` (play JSON'da, yedekle gider, sunucu tablosu yok). Açılan kahveler seri ve tarihten hesaplanır.
+- Puan/ödül vermez (kötüye kullanım yok); sadece görsel ve koleksiyon. Bu yüzden SQL gerekmez.
+- Ücretsiz: günün kahvesi, haftalık tepsi, 12 temel kahve. **Premium:** 12 nadir ve mevsim kahvesi, defterde tüm tarifler, fincan desenleri.
+- 9 dil: 24 kahve adı + 24 bilgi + 24 kısa tarif + ~10 arayüz metni, `src/i18n/` tablo + test (bölüm 14 gibi).
+
+### Melih'in üretmesi gereken görseller
+İlk mesaj (Moka ve oda görseli ekli):
+```
+Ekteki Moka ve oda görselinin çizim stilini birebir kullan (tombul, yumuşak lacivert kontur, düz renk + tek kademe yumuşak gölge, sıcak pastel). Bundan sonra istediğim her içeceği TEK BAŞINA, aynı açıdan (hafif yukarıdan, üçte dört), aynı boyutta fincan/bardak içinde, saydam arka planlı, 1024x1024 tuvalin ortasında çiz. Yazı, zemin yok. Anladıysan "hazır" yaz.
+```
+Sonra tek tek 24 içecek: Filtre kahve, Espresso, Americano, Türk kahvesi (fincan + lokum), Macchiato, Cortado, Cappuccino (köpükte kalp), Latte, Flat white, Mocha, Sıcak çikolata, Iced latte, Iced americano, Cold brew, Frappe, Affogato, Matcha latte, Chai latte, Balkabağı latte (sonbahar), Salep (kış, tarçınlı), Zencefilli latte (kış), Şeftalili buzlu çay (yaz), Vanilyalı latte, Karamel macchiato.
+Ayrıca: `ahşap küçük tepsi, üstünde 7 fincan yeri, yukarıdan hafif açı` (tepsi), `boş krem fincan` (dolma animasyonu için; doluluk kodla çizilir).
+Adlar: `kahve_<ad>.png`, `tepsi.png`, `fincan_bos.png`.
+
+### Emek ve sıra
+| Adım | İçerik | Süre |
+|---|---|---|
+| K1 | Günün kahvesi + dolan fincan + hazır anı + haftalık tepsi (çizimler gelene kadar emoji yedek) | 1 gün |
+| K2 | Kahve defteri ekranı, 24 kahve verisi, 9 dil | 1 gün |
+| K3 | Kahve molası (odak bağlantısı) | 0,5 gün |
+
+Önerim: K1 + K2 (birlikte "Günün kahvesi"), sonra K3. Kart oyunu şimdilik yok.

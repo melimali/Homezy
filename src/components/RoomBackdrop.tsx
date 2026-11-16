@@ -45,9 +45,24 @@ function loop(v: Animated.Value, ms: number, delay = 0) {
     Animated.timing(v, { toValue: 0, duration: ms, easing: sine, useNativeDriver: true }),
   ]));
 }
+/** Gidiş ve dönüş süresi farklı, her turda biraz değişen döngü: bitki, perde gibi doğal salınımlar için (mekanik durmaz). Son tur tamamlanınca durdurulabilir. */
+function sway(v: Animated.Value, ms: number, delay = 0, jitter = 0.25) {
+  let dead = false;
+  const go = () => {
+    if (dead) return;
+    const a = ms * (1 - jitter / 2 + Math.random() * jitter);
+    const b = ms * (1.1 - jitter / 2 + Math.random() * jitter);
+    Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: a, easing: sine, useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0, duration: b, easing: sine, useNativeDriver: true }),
+    ]).start(go);
+  };
+  const t = setTimeout(go, delay);
+  return { start: () => undefined, stop: () => { dead = true; clearTimeout(t); v.stopAnimation(); } };
+}
 /** Değeri 0'dan 1'e doğrusal akıtıp başa saran döngü (düşen ya da yükselen parçacık). */
-function rise(v: Animated.Value, ms: number, delay = 0) {
-  return Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(v, { toValue: 1, duration: ms, easing: Easing.linear, useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true })]));
+function rise(v: Animated.Value, ms: number, delay = 0, easing: (t: number) => number = Easing.linear) {
+  return Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(v, { toValue: 1, duration: ms, easing, useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true })]));
 }
 /** Lamba: yavaşça "nefes alır" (6 sn); 40-90 sn'de bir minicik tek titreşim. Sürekli titreme bozuk ampul gibi durur. */
 function breathe(v: Animated.Value) {
@@ -135,11 +150,11 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
   useEffect(() => {
     if (!run) return;
     const anims = [
-      loop(vals.cam, 22000), loop(vals.a, PIVOT.a.ms), loop(vals.b, PIVOT.b.ms, 900), loop(vals.c, PIVOT.c.ms, 400),
+      loop(vals.cam, 22000), sway(vals.a, PIVOT.a.ms, 0), sway(vals.b, PIVOT.b.ms, 900, 0.35), sway(vals.c, PIVOT.c.ms, 400, 0.3),
       breathe(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000),
-      ...vals.stars.map((x, i) => loop(x, 1400 + i * 370, i * 300)),
-      ...vals.dust.map((x, i) => loop(x, 5200 + (i % 5) * 1300, i * 520)),
-      ...vals.steam.slice(0, steam).map((x, i) => rise(x, 3200, i * 1050)),
+      ...vals.stars.map((x, i) => sway(x, 900 + ((i * 677) % 1900), i * 430, 0.7)),
+      ...vals.dust.map((x, i) => rise(x, 5200 + ((i * 937) % 3600), (i * 1130) % 6000, Easing.inOut(Easing.sin))),
+      ...vals.steam.slice(0, steam).map((x, i) => rise(x, 3000 + i * 420, i * 1050 + i * i * 160, Easing.out(Easing.quad))),
       ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 3600 + (i % 4) * 600 : 650 + (i % 3) * 150, i * 90)) : []),
     ];
     anims.forEach(a => a.start());
@@ -226,7 +241,11 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
               style={{
                 position: 'absolute', left: m.x * s, top: m.y * s, width: m.r * 2 * s, height: m.r * 2 * s, borderRadius: m.r * s, backgroundColor: '#FFE9B8',
                 opacity: vals.dust[i]!.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, i % 3 === 0 || dust > 0.3 ? 0.75 : 0.45, 0] }),
-                transform: [{ translateY: vals.dust[i]!.interpolate({ inputRange: [0, 1], outputRange: [0, -34 * s] }) }, { translateX: vals.dust[i]!.interpolate({ inputRange: [0, 1], outputRange: [0, (i % 2 ? 12 : -12) * s] }) }],
+                transform: [
+                  { translateY: vals.dust[i]!.interpolate({ inputRange: [0, 1], outputRange: [0, -(26 + (i % 4) * 8) * s] }) },
+                  { translateX: vals.dust[i]!.interpolate({ inputRange: [0, 0.35, 0.7, 1], outputRange: [0, (i % 2 ? 9 : -9) * s, (i % 2 ? -4 : 5) * s, (i % 2 ? 10 : -11) * s] }) },
+                  { scale: vals.dust[i]!.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.7, 1.1, 0.8] }) },
+                ],
               }}
             />
           ))}
@@ -240,7 +259,13 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
               style={{
                 position: 'absolute', left: (POT.x - 7 + (i - 1) * 11) * s, top: POT.y * s, width: 14 * s, height: 22 * s, borderRadius: 10 * s, backgroundColor: '#fff',
                 opacity: Animated.multiply(st.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, steam > 1 ? 0.55 : 0.35, 0] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.6] })),
-                transform: [{ translateY: st.interpolate({ inputRange: [0, 1], outputRange: [0, -64 * s] }) }, { translateX: st.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 7 * s, -4 * s] }) }, { scale: Animated.multiply(st.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.5] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] })) }],
+                transform: [
+                  { translateY: st.interpolate({ inputRange: [0, 1], outputRange: [0, -70 * s] }) },
+                  { translateX: st.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: [0, 6 * s, -2 * s, -8 * s, -3 * s] }) },
+                  { rotate: st.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-8deg', '10deg', '-14deg'] }) },
+                  { scaleX: Animated.multiply(st.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.6] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] })) },
+                  { scaleY: Animated.multiply(st.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.3] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.4] })) },
+                ],
               }}
             />
           ))}

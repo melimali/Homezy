@@ -72,7 +72,7 @@ function Arrow({ ch, label, off, onPress }: { ch: string; label: string; off: bo
 }
 
 const st = StyleSheet.create({
-  btn: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'center', maxWidth: 82 },
+  btn: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'center', maxWidth: 100 },
   btnT: { fontFamily: fonts.bodyBlack, fontSize: 11, lineHeight: 13, textAlign: 'center' },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { maxHeight: '82%', borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card, padding: 20, gap: 6 },

@@ -261,7 +261,7 @@ export default function Home() {
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <T v="bold" numberOfLines={1}>{moka.title}</T>
-                <T v="small" numberOfLines={3} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
+                <T v="small" numberOfLines={5} style={{ color: c.ink, opacity: 0.8 }}>{moka.message}</T>
               </View>
             </Squish>
             <IconBtn icon={<Chevron color={c.ink} size={16} dir="right" />} label="Bugünün işleri" size={36} onPress={toToday} style={{ backgroundColor: c.surface2 }} />
@@ -440,7 +440,7 @@ function Stat({ emoji, value, label, tint, onPress }: { emoji: string; value: st
     <Squish onPress={onPress} accessibilityRole="button" accessibilityLabel={`${value} ${label}`} style={[styles.stat, { backgroundColor: tint }]}>
       <Text style={{ lineHeight: 29, fontSize: 22 }}>{emoji}</Text>
       <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{value}</Text>
-      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{label}</Text>
+      <Text numberOfLines={2} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{label}</Text>
     </Squish>
   );
 }
@@ -453,7 +453,7 @@ function Quick({ emoji, label, sub, tint, onPress }: { emoji: string; label: str
         <Text style={{ lineHeight: 29, fontSize: 22 }}>{emoji}</Text>
       </View>
       <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.ink }}>{label}</Text>
-      <Text numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{sub}</Text>
+      <Text numberOfLines={2} style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: c.muted }}>{sub}</Text>
     </Squish>
   );
 }

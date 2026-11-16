@@ -132,7 +132,7 @@ function Tab({ name, label, focused, onPress }: { name: IconName; label: string;
       <Animated.View style={[st.tab, { backgroundColor: pillBg }]}>
         <Animated.View style={[st.tabInner, { transform: [{ scale: v }] }]}>
           <Glyph name={name} color={color} filled={focused} cut={c[BUBBLE[name]]} />
-          <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} maxFontSizeMultiplier={1.15} style={[st.label, { color, fontFamily: focused ? fonts.bodyBlack : fonts.bodyBold }]}>{label}</Text>
         </Animated.View>
       </Animated.View>
     </Squish>

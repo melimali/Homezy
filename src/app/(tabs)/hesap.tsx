@@ -442,7 +442,7 @@ export default function Hesap() {
           <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
             <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.e}</Text>
             <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{x.n}</Text>
-            <T v="tiny" numberOfLines={1}>{x.l}</T>
+            <T v="tiny" numberOfLines={2}>{x.l}</T>
           </View>
         ))}
       </Appear>
@@ -454,7 +454,7 @@ export default function Hesap() {
             <View key={x.label} {...mark(PIN_KEY[x.label] ?? x.label)} style={st.pin}>
               <Squish onPress={() => go(x)} accessibilityRole="button" accessibilityLabel={x.label} style={st.pinIn}>
                 <View style={[st.pinIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 34, fontSize: 26 }}>{x.emoji}</Text></View>
-                <T v="tiny" numberOfLines={1} style={{ textAlign: 'center' }}>{x.label}</T>
+                <T v="tiny" numberOfLines={2} style={{ textAlign: 'center' }}>{x.label}</T>
               </Squish>
             </View>
           ))}
@@ -471,7 +471,7 @@ export default function Hesap() {
                   <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 31, fontSize: 24 }}>{x.emoji}</Text></View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <T v="h3" numberOfLines={1}>{x.title}</T>
-                    <T v="tiny" numberOfLines={1}>{x.sub}</T>
+                    <T v="tiny" numberOfLines={2}>{x.sub}</T>
                   </View>
                   <Chevron color={c.muted} size={16} dir="right" />
                 </Squish>
@@ -496,7 +496,7 @@ export default function Hesap() {
                     <View style={[st.rowIcon, { backgroundColor: x.tint }]}><Text style={{ lineHeight: 26, fontSize: 20 }}>{x.emoji}</Text></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <T v="bold" numberOfLines={1} style={{ fontSize: 15 }}>{x.label}</T>
-                      {!!x.sub && <T v="tiny" numberOfLines={1}>{x.sub}</T>}
+                      {!!x.sub && <T v="tiny" numberOfLines={2}>{x.sub}</T>}
                     </View>
                     <Chevron color={c.muted} size={16} dir="right" />
                   </Squish>

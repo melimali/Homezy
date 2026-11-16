@@ -279,6 +279,8 @@ Her aşama ayrı commit, sonunda `npm run typecheck`, `npm run lint`, testler; d
 | P4 | Eşya yerleri, açılma kuralları, yerleşim sayfası, bahçe vazosu, yeni eşya anı, Premium mevsim süsü | C | 1-1,5 gün |
 | P5 | Yüksek çözünürlüklü oda, sunucu istemine `room` bağlamı (edge function yeniden yükleme), mağaza görselleri | D | 0,5 gün |
 
+**Durum (2026-11-16):** P0, P1, P2 yapıldı (dal `claude/project-thread-jb6lt2`). P0'dan kalan: sohbet sayacı ve haplar yapıldı; 1170 px oda P5'te. P3 ve P4 Melih'in görsellerini bekliyor.
+
 P0-P2 görsel beklemeden hemen yapılabilir. P3 görseller gelince başlar; o zamana kadar mevcut mimikli Moka yastığın üstüne daha iyi oturtulur (ölçek ve gölge).
 
 **Yerel derleme:** gerekmez. `expo-asset` Expo'nun parçası; titreşim zaten korumalı.

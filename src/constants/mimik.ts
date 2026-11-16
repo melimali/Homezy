@@ -1,6 +1,6 @@
 import type { ImageSourcePropType } from 'react-native';
 
-import { MIMIK_FUR } from './moka-fur-assets';
+import { MIMIK_FUR, SEATED_FUR } from './moka-fur-assets';
 
 /**
  * Moka'nın 8 mimiği (`assets/moka/mimik/`, `scripts/slice-mimik.py` ile ChatGPT sayfasından kesildi).
@@ -23,6 +23,23 @@ export const MIMIK: Record<Mimik, ImageSourcePropType> = {
 export function mimikFor(fur?: string | null): Record<Mimik, ImageSourcePropType> {
   const f = fur ? MIMIK_FUR[fur] : undefined;
   return f ?? MIMIK;
+}
+
+/** Yastıkta oturan tam boy Moka, aynı 8 mimikle (yüzler `scripts/make-moka-seated-face.py` ile oturan gövdeye giydirildi). */
+export const SEATED: Record<Mimik, ImageSourcePropType> = {
+  neutral: require('../../assets/moka/seated/1.webp'),
+  happy: require('../../assets/moka/seated/2.webp'),
+  cheer: require('../../assets/moka/seated/3.webp'),
+  wow: require('../../assets/moka/seated/4.webp'),
+  sad: require('../../assets/moka/seated/5.webp'),
+  sleepy: require('../../assets/moka/seated/6.webp'),
+  wink: require('../../assets/moka/seated/7.webp'),
+  talk: require('../../assets/moka/seated/8.webp'),
+};
+
+export function seatedFor(fur?: string | null): Record<Mimik, ImageSourcePropType> {
+  const f = fur ? SEATED_FUR[fur] : undefined;
+  return f ?? SEATED;
 }
 
 /** Sohbet cevabının tonundan mimik (kelime ve emojilere bakar; internet gerekmez). */

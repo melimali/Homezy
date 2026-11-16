@@ -34,7 +34,11 @@ def hsv2rgb(h, s, v):
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys
 ONLY_MIMIK = '--mimik' in sys.argv
-JOBS = ([] if ONLY_MIMIK else [(f'{root}/assets/moka/moka_{p}.webp', f'moka_{p}', 90) for p in POSES]) + [(f'{root}/assets/moka/mimik/{n}.webp', f'mimik_{n}', 82) for n in range(1, 9)]
+# --seated: sadece oturan yüzlü Moka (scripts/make-moka-seated-face.py çıktısı) → fur/<ton>/seated_<n>.webp
+ONLY_SEATED = '--seated' in sys.argv
+SEATED = [(f'{root}/assets/moka/seated/{n}.webp', f'seated_{n}', 84) for n in range(1, 9)]
+MIMIKS = [(f'{root}/assets/moka/mimik/{n}.webp', f'mimik_{n}', 82) for n in range(1, 9)]
+JOBS = SEATED if ONLY_SEATED else MIMIKS if ONLY_MIMIK else [(f'{root}/assets/moka/moka_{p}.webp', f'moka_{p}', 90) for p in POSES] + MIMIKS + SEATED
 for tone, (dh, sm, vm) in TONES.items():
     os.makedirs(f'{root}/assets/moka/fur/{tone}', exist_ok=True)
     for src, name, q in JOBS:

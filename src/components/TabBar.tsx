@@ -58,11 +58,6 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
           <View style={st.plusClip}>
             <Image source={furSource(mokaFur, 'happy', MOKA_ASSETS.happy)} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
-          <View style={[st.plusBadge, { backgroundColor: c.accent, borderColor: c.surface }]}>
-            <Svg width={12} height={12} viewBox="0 0 24 24">
-              <Path d="M12 5v14M5 12h14" stroke={c.onAccent} strokeWidth={4} strokeLinecap="round" />
-            </Svg>
-          </View>
         </Squish>
         {tabs.slice(half)}
       </View>
@@ -167,5 +162,4 @@ const st = StyleSheet.create({
   },
   plusClip: { width: 46, height: 46, borderRadius: radius.card, overflow: 'hidden', alignItems: 'center' },
   plusMoka: { width: 52, height: 52, marginTop: 4 },
-  plusBadge: { position: 'absolute', right: -3, bottom: -2, width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });

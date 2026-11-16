@@ -2,7 +2,7 @@ import { AppState as RNAppState } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { applyDirection } from '@/i18n/rtl';
-import { setLang } from '@/i18n/runtime';
+import { applyLangQuiet, setLang } from '@/i18n/runtime';
 import { loadState, saveState } from '@/data/db';
 import { emptyState } from '@/domain/logic';
 import { normalize } from '@/domain/play';
@@ -81,6 +81,9 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
   const current = useRef<AppState | null>(null);
 
   const langCode = state?.settings?.language;
+  // Dil render sırasında hemen uygulanır: efekt render'dan sonra çalıştığı için açık kalan sekmeler (ana ekran)
+  // eski dilde çizilip öyle kalıyordu (ko seçilince ana ekran hâlâ Japonca).
+  if (langCode) applyLangQuiet(langCode);
   useEffect(() => {
     if (langCode) {
       setLang(langCode);

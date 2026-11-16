@@ -49,7 +49,6 @@ export function Glass({ children, intensity = 40, style, scrim }: Props) {
             pointerEvents="none"
             intensity={intensity}
             tint={dark ? 'dark' : 'light'}
-            experimentalBlurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFill}
           />
         </Safe>

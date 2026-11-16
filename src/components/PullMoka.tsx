@@ -41,8 +41,8 @@ export function PullMoka({ y, hop }: { y: Animated.Value; hop: Animated.Value })
     op([-270, -240, -130, -110], [0, 1, 1, 0]),
     op([-270, -240], [1, 0]),
   ];
-  const blush = op([-20, -200], [0, 0.6]);
-  const anger = op([-110, -160], [0, 1]);
+  const blush = op([-200, -20], [0.6, 0]);
+  const anger = op([-160, -110], [1, 0]);
   const angerScale = y.interpolate({ inputRange: pts, outputRange: pulse, extrapolate: 'clamp' });
   return (
     <View pointerEvents="none" style={styles.wrap}>

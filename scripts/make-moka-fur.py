@@ -5,7 +5,7 @@ import os, colorsys
 import numpy as np
 from PIL import Image
 
-POSES = ['happy', 'wink', 'sipping', 'thumbs_up', 'love']
+POSES = ['happy', 'wink', 'sipping', 'thumbs_up', 'love', 'home_seated']
 # ton: (renk kaydırma derece, doygunluk çarpanı, parlaklık çarpanı)
 # Hedef ton (derece) mutlak: her kaynak resmin yeşili biraz farklı, renk adı her yerde aynı görünsün.
 TARGET = {'kahve': 30, 'gri': None, 'mavi': 190, 'mor': 262, 'pembe': 325, 'turuncu': 24, 'kirmizi': 4}

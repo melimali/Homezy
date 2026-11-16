@@ -1,15 +1,20 @@
 import { useRouter } from '@/lib/nav';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
-import { MokaFace } from '@/components/MokaFace';
+import { Glass } from '@/components/Glass';
+import { RoomMoka } from '@/components/RoomMoka';
+import { Fade } from '@/components/SceneImage';
+import { ISIK } from '@/constants/oda';
+import { mokaLevel } from '@/domain/mokaLevel';
+import { useTilt } from '@/hooks/useTilt';
 import { odaMap, RoomBackdrop, type RoomTouch } from '@/components/RoomBackdrop';
 import { AddSheet } from '@/components/TabBar';
 import { Appear, Burst, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
-import { BackLink, Btn, Field, T } from '@/components/ui';
+import { Btn, Chevron, Field, T } from '@/components/ui';
 import type { Href } from 'expo-router';
 import { mimikOf } from '@/constants/mimik';
 import { CHAT_ACCOUNT_NEEDED, CHAT_PREMIUM_INTRO, CHAT_PREMIUM_NUDGE } from '@/domain/chatGate';
@@ -28,7 +33,7 @@ import { nightMix, roomState } from '@/lib/roomState';
 import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
@@ -268,8 +273,9 @@ export default function MokaChat() {
   // Oda: Moka yastığın üstünde. Klavye açılınca küçülüp yukarı çıkar.
   const map = odaMap(winW, winH);
   // Yastığın ortası (oda resmi koordinatı): Moka'nın ayakları yastığın üst yüzeyine basar.
-  const mokaSize = Math.round(Math.min(winW * 0.6, 300) * (kb ? 0.75 : 1));
-  const mokaBottom = kb ? winH * 0.5 : map.oy + SEAT.y * map.s;
+  const mokaSize = Math.round(Math.min(winW * 0.66, 320) * (kb ? 0.7 : 1));
+  // Resmin altında %4 boşluk var: ayaklar yastığa bassın diye o kadar aşağı.
+  const mokaBottom = (kb ? winH * 0.52 : map.oy + SEAT.y * map.s) + mokaSize * 0.04;
   const mokaLeft = kb ? (winW - mokaSize) / 2 : map.ox + SEAT.x * map.s - mokaSize / 2;
   // Giriş: Moka alttaki tuştan yastığa uçar (oda yığının yumuşak geçişiyle açılır), balon biraz sonra belirir.
   const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
@@ -281,6 +287,7 @@ export default function MokaChat() {
   }, [reduce, enter]);
   // Oda gününü yansıtır, Moka boşta kendi hâlinde takılır.
   const room = roomState(S.play);
+  const tilt = useTilt();
   const day = useMemo(() => {
     const x = chatCtx(S);
     const refs = allTasks(S);
@@ -393,12 +400,52 @@ export default function MokaChat() {
   const lockLabel = lock === 'login' ? tx('Moka ile konuşmak için hesap aç') : lock === 'premium' ? tx('Moka ile sohbet Premium\'da ⭐') : lock === 'tomorrow' ? tx('Bugünlük çok konuştuk, yarın devam ☕') : '';
   const ideas = useMemo(() => pickIdeas(chatCtxLite.late, chatCtxLite.shopEmpty, new Date().getHours()), [chatCtxLite.late, chatCtxLite.shopEmpty]);
 
+  const lv = mokaLevel(S.play.moka).level;
+  const sub = hint || (left && left.day <= 5 ? tx('Bugün kalan: {n}').replace('{n}', String(left.day)) : tx('Seviye {}').replace('{}', String(lv)));
+  const mokaTop = mokaBottom - mokaSize;
+  const bubbleW = Math.min(winW - 40, 380);
+  // Balon Moka'nın başının üstünde durur, kuyruğu Moka'ya bakar. Klavye açıkken başlığın altına çıkar.
+  const bubbleBottom = winH - (mokaTop + mokaSize * 0.1);
+  const bubbleMax = Math.max(120, (kb ? winH * 0.26 : mokaTop + mokaSize * 0.1 - (insets.top + 72)));
+  const tailX = Math.min(bubbleW - 36, Math.max(36, mokaLeft + mokaSize / 2 - (winW - bubbleW) / 2));
+  const deg = (v: Animated.Value, k: number) => v.interpolate({ inputRange: [-1, 1], outputRange: [`${-k}deg`, `${k}deg`] });
+  const px = (v: Animated.Value, k: number) => v.interpolate({ inputRange: [-1, 1], outputRange: [-k, k] });
+  const bubbleBody = notes ? (
+    <NotesList />
+  ) : busy ? (
+    <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 8 }} accessibilityLabel="Moka yazıyor">
+      <TypingDots color={c.muted} />
+    </View>
+  ) : quip ? (
+    <Appear key={quip}><Text style={[st.say, { color: c.ink }]}>{tx(quip)}</Text></Appear>
+  ) : intro ? (
+    <Appear key={intro}><Text style={[st.say, { color: c.ink }]}>{tx(line(INTRO_LINE[intro]))}</Text></Appear>
+  ) : fresh0 ? (
+    <Appear key={woke ? 'awake' : 'asleep'}><Text style={[st.say, { color: c.ink }]}>{tx(woke && opening.sleeping ? line('back') : opening.text)}</Text></Appear>
+  ) : (
+    <Appear key={shownIt.id}>
+      <Bubble item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
+    </Appear>
+  );
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#1C2230' }}>
-      <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#1C1712' }}>
+      {/* Sahne: oda + Moka birlikte çok hafif eğilir (3B derinlik). Kenar boşluğu görünmesin diye biraz büyük çizilir. */}
+      <Animated.View
+        style={[StyleSheet.absoluteFill, {
+          transform: [
+            { perspective: 1100 },
+            { translateX: px(tilt.x, -7) },
+            { translateY: px(tilt.y, -5) },
+            { rotateY: deg(tilt.x, 2.4) },
+            { rotateX: deg(tilt.y, -1.8) },
+            { scale: 1.06 },
+          ],
+        }]}
+      >
         <RoomBackdrop mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff} onTouch={touchObj} style={StyleSheet.absoluteFill} />
-        {!kb && <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize * 0.14, top: mokaBottom - mokaSize * 0.07, width: mokaSize * 0.72, height: mokaSize * 0.12, borderRadius: mokaSize, backgroundColor: '#3A2614', opacity: 0.22 }} />}
-        <Pressable onPress={mokaTap} onLongPress={() => { haptic('light'); router.push('/moka-tasarim' as Href); }} delayLongPress={450} accessibilityHint={tx('Moka\'nı tasarla için basılı tut')} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaBottom - mokaSize, width: mokaSize, height: mokaSize }}>
+        {!kb && <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize * 0.18, top: mokaBottom - mokaSize * 0.06, width: mokaSize * 0.64, height: mokaSize * 0.1, borderRadius: mokaSize, backgroundColor: '#3A2614', opacity: 0.28 }} />}
+        <Pressable onPress={mokaTap} onLongPress={() => { haptic('light'); router.push('/moka-tasarim' as Href); }} delayLongPress={450} accessibilityHint={tx('Moka\'nı tasarla için basılı tut')} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaTop, width: mokaSize, height: mokaSize }}>
           <Animated.View
             style={{
               width: mokaSize,
@@ -406,175 +453,224 @@ export default function MokaChat() {
               transform: [
                 { translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [winW / 2 - (mokaLeft + mokaSize / 2), 0] }) },
                 { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [winH - 40 - (mokaBottom - mokaSize / 2), 0] }), hop.interpolate({ inputRange: [0, 1], outputRange: [0, -mokaSize * 0.1] })) },
-                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] })) },
+                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] })) },
               ],
             }}
           >
-            <Animated.View style={{ width: mokaSize, height: mokaSize }}>
-              <MokaFace fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} pop={lastId ?? 0} />
-            </Animated.View>
+            <RoomMoka fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} />
           </Animated.View>
         </Pressable>
-        <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize / 2, top: mokaBottom - mokaSize * 0.55 }}>
+        <View pointerEvents="none" style={{ position: 'absolute', left: mokaLeft + mokaSize / 2, top: mokaTop + mokaSize * 0.4 }}>
           <Burst fire={burst} />
         </View>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
-          <View style={[st.head, { paddingTop: insets.top + 8, paddingHorizontal: 16 }]}>
-            <View style={{ flex: 1 }}>
-            <BackLink
-              label=""
-              right={
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  {notes ? (
-                    <Squish onPress={() => setNotes(false)} accessibilityLabel={tx('Notlarım')} accessibilityState={{ selected: true }} style={[st.icon, { backgroundColor: c.accent }]}>
-                      <Text style={{ fontSize: 16 }}>📝</Text>
-                    </Squish>
-                  ) : null}
-                  <Squish onPress={() => setMenu(m => !m)} accessibilityLabel={tx('Diğer')} accessibilityState={{ expanded: menu }} style={[st.icon, { backgroundColor: alpha(c.surface, 0.9) }]}>
-                    <Text style={{ fontSize: 18, lineHeight: 22, color: c.ink, fontFamily: fonts.bodyBlack }}>⋯</Text>
-                  </Squish>
-                </View>
-              }
-            />
+      </Animated.View>
+
+      {/* Ön katman: kameraya yakın, bulanık ışık zerreleri sahneden fazla kayar; kenarlarda yumuşak çerçeve gölgesi. */}
+      <FrontLayer tilt={tilt} w={winW} h={winH} night={mix} />
+      <Fade edge="top" color="#1A130D" size={insets.top + 110} from={0} to={0.42} />
+      <Fade edge="bottom" color="#1A130D" size={kb ? 120 : 300} from={0} to={0.5} />
+
+      {/* Konuşma balonu: Moka'nın üstünde, kuyruğu ona bakar. */}
+      <Animated.View
+        style={[st.bubble2, {
+          width: bubbleW, left: (winW - bubbleW) / 2,
+          ...(kb ? { top: insets.top + 66 } : { bottom: bubbleBottom }),
+          backgroundColor: c.surface, shadowColor: '#1A130D',
+          opacity: enter.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0, 0, 1], extrapolate: 'clamp' }),
+          transform: [{ translateX: px(tilt.x, 3) }, { scale: enter.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.92, 0.92, 1], extrapolate: 'clamp' }) }],
+        }]}
+        accessibilityLiveRegion="polite"
+      >
+        <View style={st.bubbleHead}>
+          <Text style={[st.bubbleName, { color: c.warm }]}>{notes ? tx('Notlarım') : 'Moka'}</Text>
+          {notes && (
+            <Pressable onPress={() => setNotes(false)} hitSlop={10} accessibilityRole="button" accessibilityLabel={tx('Kapat')}>
+              <Icon name="close" color={c.muted} size={18} />
+            </Pressable>
+          )}
+        </View>
+        <ScrollView ref={scroll} style={{ maxHeight: bubbleMax - 44 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {bubbleBody}
+        </ScrollView>
+        {!kb && <View style={[st.tail2, { left: tailX - 9, backgroundColor: c.surface }]} />}
+      </Animated.View>
+
+      <KeyboardAvoidingView style={StyleSheet.absoluteFill} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
+        <Animated.View style={{ flex: 1, transform: [{ translateX: px(tilt.x, 2) }] }} pointerEvents="box-none">
+          {/* Başlık: geri, Moka'nın adı ve durumu, menü. */}
+          <View style={[st.head2, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+            <RoundBtn onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} label={tx('Geri')}>
+              <Chevron color="#FFF8EE" size={20} />
+            </RoundBtn>
+            <View style={{ flex: 1, alignItems: 'center' }} pointerEvents="none">
+              <Text style={st.title}>Moka</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={[st.dot, { backgroundColor: !woke ? '#B9A7D8' : busy ? '#F2C46D' : '#9FD3A8' }]} />
+                <Text style={st.subtitle} numberOfLines={1}>{sub}</Text>
+              </View>
             </View>
+            <RoundBtn onPress={() => setMenu(m => !m)} label={tx('Diğer')} active={menu}>
+              <Icon name="more" color="#FFF8EE" size={20} />
+            </RoundBtn>
           </View>
 
-          <Animated.View style={[st.card, { backgroundColor: alpha(c.surface, 0.96), maxHeight: winH * (kb ? 0.24 : 0.32), opacity: enter.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0, 0, 1], extrapolate: 'clamp' }) }]}>
-            <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {notes ? (
-                <NotesList />
-              ) : busy ? (
-                <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', paddingVertical: 10 }} accessibilityLabel="Moka yazıyor">
-                  <TypingDots color={c.muted} />
-                </View>
-              ) : quip ? (
-                <Appear key={quip}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(quip)}</Text>
-                </Appear>
-              ) : intro ? (
-                <Appear key={intro}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(line(INTRO_LINE[intro]))}</Text>
-                </Appear>
-              ) : fresh0 ? (
-                <Appear key={woke ? 'awake' : 'asleep'}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24, color: c.ink }}>{tx(woke && opening.sleeping ? line('back') : opening.text)}</Text>
-                </Appear>
-              ) : (
-                <Appear key={shownIt.id}>
-                  <Bubble item={shownIt} room typed={!reduce && fresh.has(shownIt.id)} onUndo={undoItem} onConfirm={confirmItem} />
-                </Appear>
-              )}
-              {!notes && !quip && !busy && fresh0 && !lock && (
-                <T v="tiny" style={{ opacity: 0.65 }}>
-                  Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
-                </T>
-              )}
-            </ScrollView>
-            <View style={[st.tail, { backgroundColor: alpha(c.surface, 0.96) }]} />
-          </Animated.View>
+          <View style={{ flex: 1 }} pointerEvents="none" />
+
           {!!echo && (
             <View style={[st.echo, { backgroundColor: c.accent }]}>
               <Text numberOfLines={2} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.onAccent }}>{echo}</Text>
             </View>
           )}
-          {!!hint && !echo && <Text style={[st.status, { color: '#fff' }]}>{hint}</Text>}
-          {left && !kb && left.day <= 5 ? (
-            <Text style={[st.status, { color: '#fff', opacity: 0.85 }]}>
-              ☕ {tx('Bugün kalan: {n}').replace('{n}', String(left.day))}
-            </Text>
-          ) : null}
 
-          <View style={{ flex: 1 }} pointerEvents="none" />
-
-          {focused && !text.trim() && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={st.chips} style={{ flexGrow: 0 }}>
-              {ideas.map(x => (
-                <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: alpha(c.surface, 0.93), borderColor: c.line }]}>
-                  <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.ink }}>{x}</Text>
-                </Squish>
-              ))}
-            </ScrollView>
-          )}
-          {intro === 'color' && !kb && (
-            <Appear>
-              <View style={[st.furs, { backgroundColor: alpha(c.surface, 0.96) }]}>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-                  {FURS.map(f => (
-                    <Pressable key={f.id} onPress={() => pickFur(f.id)} accessibilityRole="button" accessibilityLabel={f.label} accessibilityState={{ selected: (fur ?? 'orman') === f.id }}
-                      style={[st.furDot, { backgroundColor: f.swatch, borderColor: (fur ?? 'orman') === f.id ? c.ink : 'transparent' }]} />
-                  ))}
+          {/* Alt panel: eylemler + yazı çubuğu, tek buzlu yüzey. */}
+          <Glass intensity={50} style={[st.dock, { marginBottom: Math.max(insets.bottom, 10) }]}>
+            {focused && !text.trim() && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8 }} style={{ flexGrow: 0, marginBottom: 10 }}>
+                {ideas.map(x => (
+                  <Squish key={x} onPress={() => send(x)} accessibilityLabel={x} style={[st.idea, { backgroundColor: c.surface, borderColor: c.line }]}>
+                    <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: c.ink }}>{x}</Text>
+                  </Squish>
+                ))}
+              </ScrollView>
+            )}
+            {intro === 'color' && !kb ? (
+              <Appear>
+                <Text style={[st.dockLabel, { color: c.ink }]}>Kürk rengi</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                  {FURS.map(f => {
+                    const on = (fur ?? 'orman') === f.id;
+                    return (
+                      <Pressable key={f.id} onPress={() => pickFur(f.id)} accessibilityRole="button" accessibilityLabel={f.label} accessibilityState={{ selected: on }} hitSlop={4}
+                        style={[st.furDot, { backgroundColor: f.swatch, borderColor: on ? c.surface : 'transparent', shadowColor: f.swatch }]}>
+                        {on && <Icon name="check" color="#FFFFFF" size={16} />}
+                      </Pressable>
+                    );
+                  })}
                 </View>
                 <Pressable onPress={finishIntro} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6 }}>
                   <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: c.muted }}>Şimdilik geç</Text>
                 </Pressable>
-              </View>
-            </Appear>
-          )}
-          {!kb && (
-            <View style={st.actions}>
-              <Squish onPress={() => router.push('/temizlik' as Href)} accessibilityLabel="Temizlik başlat" style={[st.act, { backgroundColor: c.accent }]}>
-                <Text style={{ fontSize: 18 }}>🧹</Text>
-                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ flexShrink: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: c.onAccent }}>Temizlik başlat</Text>
-              </Squish>
-              <Squish onPress={() => setAddOpen(true)} accessibilityLabel="İş ekle" style={[st.act, { backgroundColor: alpha(c.surface, 0.95) }]}>
-                <Text style={{ fontSize: 18 }}>➕</Text>
-                <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ flexShrink: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: c.ink }}>İş ekle</Text>
-              </Squish>
-            </View>
-          )}
-          <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-            {lock ? (
-              <Squish onPress={() => router.push(lock === 'login' ? '/giris' : '/premium')} accessibilityLabel={lockLabel} style={[st.lock, { backgroundColor: alpha(c.surface, 0.95), borderColor: c.line }]}>
-                <Text style={{ fontSize: 16 }}>{lock === 'login' ? '🔑' : lock === 'premium' ? '⭐' : '🌙'}</Text>
-                <Text numberOfLines={2} style={{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14.5, color: c.ink }}>{lockLabel}</Text>
-              </Squish>
-            ) : (
-              <>
-                <Field
-                  value={text}
-                  onChangeText={t => { setText(t); interact(); }}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  placeholder="Moka'ya yaz…"
-                  maxLength={400}
-                  returnKeyType="send"
-                  onSubmitEditing={() => send()}
-                  editable={!busy}
-                  style={{ flex: 1 }}
-                />
-                <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.5 : 1 }]}>
-                  <Svg width={20} height={20} viewBox="0 0 24 24">
-                    <Path d="M4 12l15-7-5 15-3-6z" fill={c.onAccent} stroke={c.onAccent} strokeWidth={1.5} strokeLinejoin="round" />
-                  </Svg>
+              </Appear>
+            ) : !kb ? (
+              <View style={st.actions2}>
+                <Squish onPress={() => router.push('/temizlik' as Href)} accessibilityLabel="Temizlik başlat" style={[st.act2, { backgroundColor: c.accent }]}>
+                  <Icon name="broom" color={c.onAccent} size={20} />
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[st.actText, { color: c.onAccent }]}>Temizlik başlat</Text>
                 </Squish>
-              </>
-            )}
-          </View>
-          {menu && <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={tx('Kapat')} />}
-          {menu && (
-            <View style={[st.menu, { top: insets.top + 56 }]}>
-            <Appear>
-              <View style={[st.menuCard, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
-                {([
-                  ['📝', 'Notlarım', () => setNotes(n => !n)],
-                  ['🚩', 'Moka\'nın son cevabını bildir', report],
-                  ['🧹', 'Sohbeti temizle', clear],
-                ] as const).map(([e, label, fn]) => (
-                  <Pressable key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityRole="button" accessibilityLabel={label} style={st.menuRow}>
-                    <Text style={{ fontSize: 16 }}>{e}</Text>
-                    <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.ink }}>{label}</Text>
-                  </Pressable>
-                ))}
-                <T v="tiny" style={{ opacity: 0.7, paddingHorizontal: 4, paddingTop: 4 }}>
-                  Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
-                </T>
+                <Squish onPress={() => setAddOpen(true)} accessibilityLabel="İş ekle" style={[st.act2, { backgroundColor: c.surface, borderColor: c.line, borderWidth: 1 }]}>
+                  <Icon name="plus" color={c.ink} size={20} />
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[st.actText, { color: c.ink }]}>İş ekle</Text>
+                </Squish>
               </View>
-            </Appear>
+            ) : null}
+            <View style={st.bar2}>
+              {lock ? (
+                <Squish onPress={() => router.push(lock === 'login' ? '/giris' : '/premium')} accessibilityLabel={lockLabel} style={[st.lock2, { backgroundColor: c.surface2 }]}>
+                  <View style={[st.lockIcon, { backgroundColor: lock === 'premium' ? c.peachSoft : c.surface }]}>
+                    <Icon name={lock === 'login' ? 'lock' : lock === 'premium' ? 'star' : 'moon'} color={c.ink} size={16} />
+                  </View>
+                  <Text numberOfLines={2} style={{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: c.ink }}>{lockLabel}</Text>
+                  {lock !== 'tomorrow' && <Chevron color={c.muted} size={16} dir="right" />}
+                </Squish>
+              ) : (
+                <>
+                  <Field
+                    value={text}
+                    onChangeText={t => { setText(t); interact(); }}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    placeholder="Moka'ya yaz…"
+                    maxLength={400}
+                    returnKeyType="send"
+                    onSubmitEditing={() => send()}
+                    editable={!busy}
+                    style={{ flex: 1, minHeight: 48, borderRadius: radius.pill, paddingHorizontal: 18 }}
+                  />
+                  <Squish onPress={() => send()} disabled={busy || !text.trim()} accessibilityLabel="Gönder" style={[st.send, { backgroundColor: c.accent, opacity: busy || !text.trim() ? 0.45 : 1 }]}>
+                    <Icon name="send" color={c.onAccent} size={20} />
+                  </Squish>
+                </>
+              )}
             </View>
-          )}
-        </KeyboardAvoidingView>
-      </View>
+          </Glass>
+        </Animated.View>
+      </KeyboardAvoidingView>
+
+      {menu && <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} accessibilityLabel={tx('Kapat')} />}
+      {menu && (
+        <View style={[st.menu, { top: insets.top + 60 }]}>
+          <Appear>
+            <View style={[st.menuCard, { backgroundColor: c.surface, shadowColor: '#1A130D' }]}>
+              {([
+                ['note', 'Notlarım', () => setNotes(n => !n)],
+                ['flag', 'Moka\'nın son cevabını bildir', report],
+                ['trash', 'Sohbeti temizle', clear],
+              ] as const).map(([ic, label, fn], i) => (
+                <Pressable key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => [st.menuRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.line }, pressed && { backgroundColor: c.surface2 }]}>
+                  <Icon name={ic} color={c.ink} size={18} />
+                  <Text style={{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: c.ink }}>{label}</Text>
+                </Pressable>
+              ))}
+              <Text style={{ fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: c.muted, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 }}>
+                Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.
+              </Text>
+            </View>
+          </Appear>
+        </View>
+      )}
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
+    </View>
+  );
+}
+
+/** Oda düğmelerindeki çizim ikonlar (emoji yerine; her yerde aynı kalınlık). */
+type IconName = 'broom' | 'plus' | 'send' | 'lock' | 'star' | 'moon' | 'more' | 'note' | 'flag' | 'trash' | 'close' | 'check';
+function Icon({ name, color, size = 20 }: { name: IconName; color: string; size?: number }) {
+  const p = { stroke: color, strokeWidth: 2.2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      {name === 'broom' && (<><Path d="M19.5 3.5L12 11" {...p} /><Path d="M9.2 10.2l4.6 4.6c-.6 2.6-2.4 5-5.6 6.2-1.6.6-3.6.4-5.2-.4.9-1.1 1.6-2.4 1.9-3.6l-1.4.2c.9-2.9 3-6 5.7-7z" {...p} /><Path d="M7 18.5l2.2-2.2" {...p} /></>)}
+      {name === 'plus' && <Path d="M12 5v14M5 12h14" {...p} strokeWidth={2.6} />}
+      {name === 'send' && <Path d="M5 12l14-7-4.5 14-3-5.5z" fill={color} stroke={color} strokeWidth={1.6} strokeLinejoin="round" />}
+      {name === 'lock' && (<><Rect x={5} y={11} width={14} height={9} rx={2.5} {...p} /><Path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" {...p} /></>)}
+      {name === 'star' && <Path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-3.9 5.6-.8z" {...p} />}
+      {name === 'moon' && <Path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z" {...p} />}
+      {name === 'more' && (<><Circle cx={5.5} cy={12} r={1.9} fill={color} /><Circle cx={12} cy={12} r={1.9} fill={color} /><Circle cx={18.5} cy={12} r={1.9} fill={color} /></>)}
+      {name === 'note' && (<><Path d="M6 3.5h8.5l3.5 3.5v13.5H6z" {...p} /><Path d="M9 11h6M9 15h6" {...p} /></>)}
+      {name === 'flag' && (<><Path d="M5.5 21V4" {...p} /><Path d="M5.5 4.5h11l-2.2 4 2.2 4h-11" {...p} /></>)}
+      {name === 'trash' && (<><Path d="M4.5 7h15" {...p} /><Path d="M9.5 7V4.5h5V7" {...p} /><Path d="M6.5 7l1 13h9l1-13" {...p} /></>)}
+      {name === 'close' && <Path d="M6 6l12 12M18 6L6 18" {...p} />}
+      {name === 'check' && <Path d="M5 12.5l4.5 4.5L19 7.5" {...p} strokeWidth={3} />}
+    </Svg>
+  );
+}
+
+/** Başlıktaki yuvarlak, yarı saydam koyu düğme. */
+function RoundBtn({ children, onPress, label, active }: { children: ReactNode; onPress: () => void; label: string; active?: boolean }) {
+  return (
+    <Squish onPress={onPress} accessibilityLabel={label} accessibilityState={active != null ? { expanded: active } : undefined} hitSlop={6} style={[st.round, { backgroundColor: active ? 'rgba(26,19,13,0.62)' : 'rgba(26,19,13,0.38)' }]}>
+      {children}
+    </Squish>
+  );
+}
+
+/** Kameraya yakın katman: büyük, bulanık ışık lekeleri (bokeh) ve köşe gölgeleri. Eğimle sahneden daha çok kayar, derinlik verir. */
+const BOKEH = [
+  { x: 0.08, y: 0.2, r: 0.16, o: 0.16 }, { x: 0.94, y: 0.36, r: 0.12, o: 0.2 }, { x: 0.86, y: 0.08, r: 0.09, o: 0.14 },
+  { x: 0.04, y: 0.66, r: 0.1, o: 0.12 }, { x: 0.97, y: 0.74, r: 0.15, o: 0.12 },
+];
+function FrontLayer({ tilt, w, h, night }: { tilt: Animated.ValueXY; w: number; h: number; night: number }) {
+  const tone = night > 0.5 ? '#FFC98A' : '#FFF1D2';
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateX: tilt.x.interpolate({ inputRange: [-1, 1], outputRange: [16, -16] }) }, { translateY: tilt.y.interpolate({ inputRange: [-1, 1], outputRange: [12, -12] }) }] }]}>
+        {BOKEH.map((b, i) => (
+          <Image key={i} source={ISIK} style={{ position: 'absolute', left: b.x * w - b.r * w, top: b.y * h - b.r * w, width: b.r * w * 2, height: b.r * w * 2, tintColor: tone, opacity: b.o }} />
+        ))}
+      </Animated.View>
+      {[[0, 0], [w, 0], [0, h], [w, h]].map(([x, y], i) => (
+        <Image key={i} source={ISIK} style={{ position: 'absolute', left: x - w * 0.55, top: y - w * 0.55, width: w * 1.1, height: w * 1.1, tintColor: '#140E09', opacity: 0.38 }} />
+      ))}
     </View>
   );
 }
@@ -690,7 +786,6 @@ function NotesList() {
   );
 }
 
-const alpha = (hex: string, a: number) => (/^#[0-9a-f]{6}$/i.test(hex) ? hex + Math.round(a * 255).toString(16).padStart(2, '0') : hex);
 
 const st = StyleSheet.create({
   card: { marginHorizontal: 16, marginTop: 6, borderRadius: 24, padding: 14 },
@@ -706,10 +801,28 @@ const st = StyleSheet.create({
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
   avatarImg: { width: 40, height: 40 },
   menu: { position: 'absolute', right: 16, zIndex: 10, width: 260 },
-  menuCard: { borderRadius: 20, padding: 8, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  menuCard: { borderRadius: 22, paddingVertical: 6, overflow: 'hidden', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   furs: { marginHorizontal: 16, marginBottom: 10, borderRadius: 24, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 2, gap: 2 },
-  furDot: { width: 34, height: 34, borderRadius: 17, borderWidth: 3 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 8, borderRadius: 14 },
+  furDot: { width: 32, height: 32, borderRadius: 16, borderWidth: 3, alignItems: 'center', justifyContent: 'center', shadowOpacity: 0.5, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  say: { fontFamily: fonts.bodyBold, fontSize: 16.5, lineHeight: 24 },
+  bubble2: { position: 'absolute', borderRadius: 24, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 14, shadowOpacity: 0.28, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  bubbleHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  bubbleName: { fontFamily: fonts.displayBold, fontSize: 13, letterSpacing: 0.6, textTransform: 'uppercase' },
+  tail2: { position: 'absolute', bottom: -8, width: 18, height: 18, borderRadius: 4, transform: [{ rotate: '45deg' }] },
+  head2: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+  title: { fontFamily: fonts.displayBold, fontSize: 21, lineHeight: 26, color: '#FFF8EE', textShadowColor: 'rgba(20,14,9,0.55)', textShadowRadius: 8 },
+  subtitle: { fontFamily: fonts.bodyBold, fontSize: 12.5, color: 'rgba(255,248,238,0.86)', textShadowColor: 'rgba(20,14,9,0.6)', textShadowRadius: 6 },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  round: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,248,238,0.22)' },
+  dock: { marginHorizontal: 12, borderRadius: 30, padding: 12, gap: 10 },
+  dockLabel: { fontFamily: fonts.displayBold, fontSize: 14, textAlign: 'center', marginBottom: 10 },
+  actions2: { flexDirection: 'row', gap: 10 },
+  act2: { flex: 1, minHeight: 52, borderRadius: radius.pill, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  actText: { flexShrink: 1, fontFamily: fonts.bodyBlack, fontSize: 15.5 },
+  bar2: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  lock2: { flex: 1, minHeight: 52, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 12, paddingLeft: 8, paddingRight: 16 },
+  lockIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 12 },
   lock: { flex: 1, minHeight: 50, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18 },
   icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   hero: { alignItems: 'center', justifyContent: 'flex-start', paddingBottom: 8 },

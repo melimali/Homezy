@@ -38,4 +38,5 @@ export const MOKA_ODA_ROWS: [string, string, string, string, string, string, str
   ['Çok yakıştı! 💛', 'It suits me so well! 💛', 'Steht mir richtig gut! 💛', '¡Me queda genial! 💛', 'Ça me va trop bien ! 💛', 'Ficou ótimo em mim! 💛', 'すごく似合う！ 💛', '정말 잘 어울려요! 💛', 'يليق بي كثيرًا! 💛'],
   ['Şimdilik geç', 'Skip for now', 'Jetzt überspringen', 'Omitir por ahora', 'Passer pour l’instant', 'Pular por enquanto', '今はスキップ', '지금은 건너뛰기', 'تخطَّ الآن'],
   ['Moka\'nı tasarla için basılı tut', 'Press and hold to design your Moka', 'Gedrückt halten, um deine Moka zu gestalten', 'Mantén pulsado para diseñar a tu Moka', 'Appuie longuement pour personnaliser ta Moka', 'Toque e segure para personalizar sua Moka', '長押しでMokaをデザイン', '길게 눌러 Moka 꾸미기', 'اضغط مطولًا لتصميم موكا'],
+  ['Seviye {}', 'Level {}', 'Level {}', 'Nivel {}', 'Niveau {}', 'Nível {}', 'レベル{}', '레벨 {}', 'المستوى {}'],
 ];

@@ -8,6 +8,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/kahve/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/kahve/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/kahve/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/kahve/moka_home_seated.webp'),
   },
   gri: {
     happy: require('../../assets/moka/fur/gri/moka_happy.webp'),
@@ -15,6 +16,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/gri/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/gri/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/gri/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/gri/moka_home_seated.webp'),
   },
   mavi: {
     happy: require('../../assets/moka/fur/mavi/moka_happy.webp'),
@@ -22,6 +24,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/mavi/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/mavi/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/mavi/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/mavi/moka_home_seated.webp'),
   },
   mor: {
     happy: require('../../assets/moka/fur/mor/moka_happy.webp'),
@@ -29,6 +32,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/mor/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/mor/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/mor/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/mor/moka_home_seated.webp'),
   },
   pembe: {
     happy: require('../../assets/moka/fur/pembe/moka_happy.webp'),
@@ -36,6 +40,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/pembe/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/pembe/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/pembe/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/pembe/moka_home_seated.webp'),
   },
   turuncu: {
     happy: require('../../assets/moka/fur/turuncu/moka_happy.webp'),
@@ -43,6 +48,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/turuncu/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/turuncu/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/turuncu/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/turuncu/moka_home_seated.webp'),
   },
   kirmizi: {
     happy: require('../../assets/moka/fur/kirmizi/moka_happy.webp'),
@@ -50,6 +56,7 @@ export const FUR_ASSETS: Record<string, Record<string, ImageSourcePropType>> = {
     sipping: require('../../assets/moka/fur/kirmizi/moka_sipping.webp'),
     thumbs_up: require('../../assets/moka/fur/kirmizi/moka_thumbs_up.webp'),
     love: require('../../assets/moka/fur/kirmizi/moka_love.webp'),
+    home_seated: require('../../assets/moka/fur/kirmizi/moka_home_seated.webp'),
   },
 };
 

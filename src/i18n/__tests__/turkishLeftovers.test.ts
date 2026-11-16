@@ -69,7 +69,7 @@ it('koddaki Türkçe metinlerin İngilizce karşılığı var', () => {
 // Veri havuzları (src/domain, src/constants): eşya, görev, ürün, adım, öneri metinleri koddan değil
 // dışa aktarılan nesnelerden okunur; böylece yeni eklenen her havuz maddesi de İngilizce istenir.
 const POOL_SKIP_FILES = /^(growth|havuz|plan-templates|paywallCopy)\.ts$/; // dil öğrenme kartları, iç kimlikler, ızgara kodları
-const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Modern', 'Pastel', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…', 'Zzz… 💤']);
+const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Modern', 'Pastel', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…', 'Zzz… 💤', 'Barista']);
 it('veri havuzlarındaki her metnin İngilizce karşılığı var', () => {
   setLang('en');
   const out = new Map<string, string>();

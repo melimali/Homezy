@@ -27,6 +27,8 @@ const light = {
   /** Pastel vurgu seti. */
   peach: '#F7C9B0', peachSoft: '#FCE8DC', sage: '#BFD8C4', sageSoft: '#E6F0E8',
   lavender: '#D9CDEB', lavenderSoft: '#EEE8F6', rose: '#F2C6CF', roseSoft: '#FAE4E8',
+  /** Moka'nın odası (sahne gece/gündüz değiştiği için temadan bağımsız; docs/moka-oda-usta-plan.md §2.2). */
+  den: { paper: '#FFF6E8', paperNight: '#F3E3CC', ink: '#3B2A20', soft: '#8A6F5C', line: '#E9D8C0', glow: '#FFC98A', shade: '#2A1C12', cream: '#FFF8EE' },
   room: {
     yatak: '#D9CDEB', mutfak: '#F7C9B0', banyo: '#C9E2E4', salon: '#F2D9C4', calisma: '#C7D6E8',
     cocuk: '#F2C6CF', balkon: '#BFD8C4', antre: '#EADFD0', camasir: '#D4D9EE',
@@ -46,6 +48,8 @@ const dark: Colors = {
   night: '#161B27', nightCard: '#262E41', onNight: '#FBF4EA', cream: '#F3EAE0',
   peach: '#B98672', peachSoft: '#4F3E3E', sage: '#6E8F78', sageSoft: '#34463D',
   lavender: '#8F82B5', lavenderSoft: '#403B58', rose: '#B5798A', roseSoft: '#4E3A46',
+  /** Moka'nın odası (sahne gece/gündüz değiştiği için temadan bağımsız; docs/moka-oda-usta-plan.md §2.2). */
+  den: { paper: '#FFF6E8', paperNight: '#F3E3CC', ink: '#3B2A20', soft: '#8A6F5C', line: '#E9D8C0', glow: '#FFC98A', shade: '#2A1C12', cream: '#FFF8EE' },
   room: {
     yatak: '#5A5078', mutfak: '#7A5A4E', banyo: '#3E5C60', salon: '#6B5646', calisma: '#40536E',
     cocuk: '#7A4F5E', balkon: '#46624C', antre: '#4E4A5C', camasir: '#464E72',

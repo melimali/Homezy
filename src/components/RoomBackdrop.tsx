@@ -15,19 +15,25 @@ export const odaMap = (w: number, h: number) => {
   return { s, ox: (w - ODA_W * s) / 2, oy: (h - ODA_H * s) / 2 };
 };
 
-export type RoomTouch = 'lamba' | 'kupa' | 'bitki' | 'pencere';
+export type RoomTouch = 'lamba' | 'kupa' | 'surahi' | 'bitki' | 'pencere';
 type Box = { x: number; y: number; w: number; h: number };
 /** Dokunulabilir nesneler (oda resmi koordinatı). */
 const HIT: Record<RoomTouch, Box> = {
   lamba: { x: 650, y: 760, w: 202, h: 170 },
-  kupa: { x: 440, y: 470, w: 215, h: 260 },
+  kupa: { x: 505, y: 468, w: 125, h: 262 },
+  surahi: { x: 388, y: 402, w: 117, h: 160 },
   bitki: { x: 530, y: 890, w: 175, h: 170 },
   pencere: { x: 0, y: 380, w: 190, h: 600 },
 };
 /** Pencerenin üç camı (yağmur ve kar bunlarla sınırlı). */
 const PANES: Box[] = [{ x: 58, y: 406, w: 105, h: 188 }, { x: 59, y: 604, w: 118, h: 164 }, { x: 59, y: 793, w: 116, h: 181 }];
-/** Buhar çıkan kupa (üst raftaki beyaz kupa). */
-const MUG = { x: 560, y: 478 };
+/** Kahve sürahisinin ağzı (üst raf, kupanın solu): seri buharı buradan çıkar. */
+const POT = { x: 452, y: 424 };
+/** Rafın üstündeki ışık zinciri: 7 ampul (uzun seri ödülü, resimsiz). */
+const CHAIN = Array.from({ length: 7 }, (_, i) => {
+  const t = i / 6;
+  return { x: 318 + t * 330, y: 372 + Math.sin(t * Math.PI) * 26 };
+});
 
 const sine = Easing.inOut(Easing.sin);
 
@@ -58,7 +64,7 @@ function breathe(v: Animated.Value) {
 
 type Vals = {
   cam: Animated.Value; a: Animated.Value; b: Animated.Value; c: Animated.Value; lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value;
-  stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[]; rain: Animated.Value[]; boost: Animated.Value; nudgeC: Animated.Value; nudgeA: Animated.Value;
+  stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[]; rain: Animated.Value[]; boost: Animated.Value; nudgeC: Animated.Value; nudgeA: Animated.Value; pot: Animated.Value;
 };
 /** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
 const VIGNETTE = [{ x: 0, y: 0, r: 700 }, { x: 852, y: 0, r: 700 }, { x: 0, y: 1846, r: 760 }, { x: 852, y: 1846, r: 760 }, { x: 0, y: 920, r: 420 }, { x: 852, y: 920, r: 420 }];
@@ -68,20 +74,22 @@ const MOTES = [
 ];
 
 /** Tek varyantın (gündüz ya da gece) taban, cam ve bitki katmanları. */
-function Layers({ v, s, vals, opacity }: { v: OdaVariant; s: number; vals: Vals; opacity: number }) {
+function Layers({ v, s, vals, opacity, tilt }: { v: OdaVariant; s: number; vals: Vals; opacity: number; tilt?: Animated.ValueXY }) {
   const L = ODA[v];
   const box = (b: Box) => ({ position: 'absolute' as const, left: b.x * s, top: b.y * s, width: b.w * s, height: b.h * s });
+  // Hafif 3B: katmanlar farklı miktarda kayar (dp). Taban sabit; cam dışı az, asma bitkiler daha çok.
+  const shift = (x: number, y: number) => (tilt ? [{ translateX: tilt.x.interpolate({ inputRange: [-1, 1], outputRange: [x, -x] }) }, { translateY: tilt.y.interpolate({ inputRange: [-1, 1], outputRange: [y, -y] }) }] : []);
   return (
     <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity }}>
       <Image source={L.taban} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
-      <Animated.Image source={L.cam} style={[box(L.camBox), { transform: [{ translateX: vals.cam.interpolate({ inputRange: [0, 1], outputRange: [-6 * s, 6 * s] }) }] }]} accessibilityIgnoresInvertColors />
+      <Animated.Image source={L.cam} style={[box(L.camBox), { transform: [{ translateX: vals.cam.interpolate({ inputRange: [0, 1], outputRange: [-6 * s, 6 * s] }) }, ...shift(2, 1)] }]} accessibilityIgnoresInvertColors />
       {(['a', 'b', 'c'] as const).map(k => {
         const p = PIVOT[k];
         const b = L.bitki[k];
         const nudge = k === 'c' ? vals.nudgeC : k === 'a' ? vals.nudgeA : null;
         const rot = vals[k].interpolate({ inputRange: [0, 1], outputRange: [`${-p.deg}deg`, `${p.deg}deg`] });
         return (
-          <Animated.View key={k} style={{ position: 'absolute', left: p.x * s, top: p.y * s, width: 0, height: 0, transform: [{ rotate: rot }] }}>
+          <Animated.View key={k} style={{ position: 'absolute', left: p.x * s, top: p.y * s, width: 0, height: 0, transform: [...(k === 'c' ? [] : shift(5, 3)), { rotate: rot }] }}>
             <Animated.View style={{ transform: [{ rotate: nudge ? nudge.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] }) : '0deg' }] }}>
               <Image source={b.src} style={{ position: 'absolute', left: (b.box.x - p.x) * s, top: (b.box.y - p.y) * s, width: b.box.w * s, height: b.box.h * s }} accessibilityIgnoresInvertColors />
             </Animated.View>
@@ -95,12 +103,22 @@ function Layers({ v, s, vals, opacity }: { v: OdaVariant; s: number; vals: Vals;
 /**
  * Moka'nın canlı odası: tek resimden katmanlara ayrılmış (scripts/make-oda-layers.py).
  * - Gündüz ve gece resmi saate göre yumuşakça karışır (`mix`: 0 gündüz, 1 gece).
- * - Cam dışı kayar, bitkiler sallanır, lamba titrer, ay parlar, yıldızlar göz kırpar, tozlar uçuşur, kupadan buhar çıkar.
+ * - Cam dışı kayar, bitkiler sallanır, lamba titrer, ay parlar, yıldızlar göz kırpar, tozlar uçuşur, kahve sürahisinden buhar çıkar (seri).
  * - Hava: yağmur/fırtına/kar/sis camda görünür. `warm` bugünkü işlerle ışığı ısıtır, `dust` uzun uğramamada toz ve loşluk ekler.
- * - Dokunulabilir nesneler (lamba, kupa, bitki, pencere) `onTouch` ile haber verir.
+ * - Dokunulabilir nesneler (lamba, kupa, sürahi, bitki, pencere) `onTouch` ile haber verir.
+ * - `tilt` verilirse katmanlar farklı miktarda kayar (hafif 3B); taban sabit.
  * Ekran odakta değilse ya da uygulama arka plandaysa döngüler durur. Resim `cover` ile ekranı doldurur.
  */
-export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff = false, onTouch, style, children }: { mix?: number; sky?: SkyKind; warm?: number; dust?: number; /** Lamba söndürüldü: hale yok, oda biraz loş. */ lampOff?: boolean; onTouch?: (t: RoomTouch) => void; style?: StyleProp<ViewStyle>; children?: ReactNode }) {
+export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff = false, steam = 1, potGlow = false, brew = 0, chain = -1, tilt, onTouch, style, children }: {
+  mix?: number; sky?: SkyKind; warm?: number; dust?: number;
+  /** Lamba söndürüldü: hale yok, oda biraz loş. */ lampOff?: boolean;
+  /** Sürahiden çıkan buhar çizgisi (0-3): seri durumuna göre. */ steam?: number;
+  /** Sürahinin etrafında sıcak hale (kahve taze). */ potGlow?: boolean;
+  /** Artınca sürahi bir kez "fokurdar" (buhar patlaması + parıltı). */ brew?: number;
+  /** Işık zincirinde yanan ampul (0-7); -1 zincir yok. */ chain?: number;
+  /** Katman kayması için eğim (useTilt). */ tilt?: Animated.ValueXY;
+  onTouch?: (t: RoomTouch) => void; style?: StyleProp<ViewStyle>; children?: ReactNode;
+}) {
   const night = mix ?? (odaOfHour() === 'gece' ? 1 : 0);
   const reduceM = useReduceMotion();
   const active = useActive();
@@ -109,7 +127,7 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
   const vals = useMemo<Vals>(() => ({
     cam: new Animated.Value(0.5), a: new Animated.Value(0.5), b: new Animated.Value(0.5), c: new Animated.Value(0.5),
     lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0),
-    nudgeC: new Animated.Value(0), nudgeA: new Animated.Value(0),
+    nudgeC: new Animated.Value(0), nudgeA: new Animated.Value(0), pot: new Animated.Value(0),
     stars: STARS.map(() => new Animated.Value(0.3)), dust: MOTES.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)), rain: Array.from({ length: 14 }, () => new Animated.Value(0)),
   }), []);
   const wet = sky === 'rain' || sky === 'storm' || sky === 'snow';
@@ -121,16 +139,30 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
       breathe(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000),
       ...vals.stars.map((x, i) => loop(x, 1400 + i * 370, i * 300)),
       ...vals.dust.map((x, i) => loop(x, 5200 + (i % 5) * 1300, i * 520)),
-      ...vals.steam.map((x, i) => rise(x, 3200, i * 1050)),
+      ...vals.steam.slice(0, steam).map((x, i) => rise(x, 3200, i * 1050)),
       ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 3600 + (i % 4) * 600 : 650 + (i % 3) * 150, i * 90)) : []),
     ];
     anims.forEach(a => a.start());
     return () => anims.forEach(a => a.stop());
-  }, [run, vals, wet, sky]);
+  }, [run, vals, wet, sky, steam]);
+
+  // Fokurdama: sürahi parlar, buhar bir an büyür (günde bir, ilk işten sonra).
+  useEffect(() => {
+    if (!brew) return;
+    vals.pot.setValue(0);
+    const a = Animated.sequence([
+      Animated.timing(vals.pot, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.delay(900),
+      Animated.timing(vals.pot, { toValue: 0, duration: 1400, easing: sine, useNativeDriver: true }),
+    ]);
+    a.start();
+    return () => a.stop();
+  }, [brew, vals]);
 
   /** Dokununca kısa tepki: lamba parlar, bitki sallanır. */
   const react = (t: RoomTouch) => {
     if (t === 'lamba') Animated.sequence([Animated.timing(vals.boost, { toValue: 1, duration: 160, useNativeDriver: true }), Animated.delay(1600), Animated.timing(vals.boost, { toValue: 0, duration: 900, useNativeDriver: true })]).start();
+    if (t === 'surahi') Animated.sequence([Animated.timing(vals.pot, { toValue: 0.7, duration: 180, useNativeDriver: true }), Animated.timing(vals.pot, { toValue: 0, duration: 1100, useNativeDriver: true })]).start();
     const n = t === 'bitki' ? vals.nudgeC : t === 'pencere' ? vals.nudgeA : null;
     if (n) Animated.sequence([Animated.timing(n, { toValue: 1, duration: 140, useNativeDriver: true }), Animated.spring(n, { toValue: 0, friction: 2, tension: 90, useNativeDriver: true })]).start();
     onTouch?.(t);
@@ -155,8 +187,8 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
     <View onLayout={onLayout} style={[{ overflow: 'hidden' }, style]} pointerEvents="box-none">
       {s > 0 && (
         <View style={{ position: 'absolute', left: ox, top: oy, width: W, height: H }} pointerEvents="box-none">
-          {nightOp < 0.99 && <Layers v="gunduz" s={s} vals={vals} opacity={1} />}
-          {nightOp > 0.01 && <Layers v="gece" s={s} vals={vals} opacity={nightOp} />}
+          {nightOp < 0.99 && <Layers v="gunduz" s={s} vals={vals} opacity={1} tilt={tilt} />}
+          {nightOp > 0.01 && <Layers v="gece" s={s} vals={vals} opacity={nightOp} tilt={tilt} />}
 
           {nightOp > 0.01 && glow(MOON.x, MOON.y, 70, '#FFF3C4', Animated.multiply(vals.moon.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.6] }), nightOp))}
           {nightOp > 0.01 && STARS.map((p, i) => (
@@ -198,18 +230,39 @@ export function RoomBackdrop({ mix, sky = 'clear', warm = 0, dust = 0, lampOff =
               }}
             />
           ))}
-          {/* Kupa buharı */}
-          {vals.steam.map((st, i) => (
+          {/* Kahve sürahisi: taze iken sıcak hale, ağzından buhar (seri). Sürahi resimde hep dolu. */}
+          {potGlow && glow(POT.x, POT.y + 60, 120, '#FFC98A', 0.22 + night * 0.12, 'potGlow')}
+          {glow(POT.x, POT.y + 60, 150, '#FFD9A0', vals.pot.interpolate({ inputRange: [0, 1], outputRange: [0, 0.55] }), 'potBrew')}
+          {vals.steam.slice(0, steam).map((st, i) => (
             <Animated.View
               key={i}
               pointerEvents="none"
               style={{
-                position: 'absolute', left: (MUG.x + (i - 1) * 12) * s, top: MUG.y * s, width: 14 * s, height: 22 * s, borderRadius: 10 * s, backgroundColor: '#fff',
-                opacity: st.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.5, 0] }),
-                transform: [{ translateY: st.interpolate({ inputRange: [0, 1], outputRange: [0, -60 * s] }) }, { translateX: st.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 7 * s, -4 * s] }) }, { scale: st.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.5] }) }],
+                position: 'absolute', left: (POT.x - 7 + (i - 1) * 11) * s, top: POT.y * s, width: 14 * s, height: 22 * s, borderRadius: 10 * s, backgroundColor: '#fff',
+                opacity: Animated.multiply(st.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, steam > 1 ? 0.55 : 0.35, 0] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.6] })),
+                transform: [{ translateY: st.interpolate({ inputRange: [0, 1], outputRange: [0, -64 * s] }) }, { translateX: st.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 7 * s, -4 * s] }) }, { scale: Animated.multiply(st.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.5] }), vals.pot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] })) }],
               }}
             />
           ))}
+          {/* Işık zinciri: seride her gün bir ampul yanar (7'de hepsi). */}
+          {chain >= 0 && (
+            <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }}>
+              {CHAIN.slice(1).map((p, i) => {
+                const q = CHAIN[i]!;
+                const len = Math.hypot(p.x - q.x, p.y - q.y);
+                return <View key={`w${i}`} style={{ position: 'absolute', left: ((p.x + q.x) / 2 - len / 2) * s, top: ((p.y + q.y) / 2) * s, width: len * s, height: Math.max(1, 1.6 * s), backgroundColor: '#3B2A20', opacity: 0.55, transform: [{ rotate: `${Math.atan2(p.y - q.y, p.x - q.x)}rad` }] }} />;
+              })}
+              {CHAIN.map((p, i) => {
+                const on = i < chain;
+                return (
+                  <View key={i}>
+                    {on && glow(p.x, p.y + 4, 26, '#FFC27A', 0.55 + night * 0.3, `cg${i}`)}
+                    <View style={{ position: 'absolute', left: (p.x - 5) * s, top: (p.y - 1) * s, width: 10 * s, height: 13 * s, borderRadius: 5 * s, backgroundColor: on ? '#FFE3A3' : '#7A6656', borderWidth: Math.max(1, 1.2 * s), borderColor: '#3B2A20' }} />
+                  </View>
+                );
+              })}
+            </View>
+          )}
 
           {lampOn > 0 && glow(LAMP.x, LAMP.y, 260, '#FFB44D', Animated.multiply(lampOp, 0.7 + 0.3 * night + warm * 0.4))}
           {lampOn > 0 && <Animated.Image

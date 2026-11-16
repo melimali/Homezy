@@ -38,6 +38,18 @@ export const LINES = {
   introObjects: ['Lambaya, kupaya ya da pencereye dokunabilirsin ✨'],
   introColor: ['Bana bir renk seçer misin? 🎨'],
   introNice: ['Çok yakıştı! 💛'],
+  introPot: ['Bu kahve hep taze kalsın diye her gün küçük bir iş yeter ☕'],
+  // Kahve sürahisi (seri): docs/moka-oda-usta-plan.md §4.1
+  potFresh: ['Kahvemiz hâlâ taze ☕'],
+  potFreshN: ['{} gündür taze ☕'],
+  potWait: ['Bugün bir iş, kahve tazelenir ☕'],
+  potWarm: ['Kahveyi senin için ılık tuttum ❄️'],
+  potCold: ['Kahve soğumuş, yeniden demleyelim ☕'],
+  potFirst: ['İlk kahveyi birlikte demleyelim ☕'],
+  potBrewed: ['Kahve tazelendi, {} gün ☕'],
+  // Kilitli sohbet düğmesi (§3.3)
+  lockLogin: ['Konuşmak için beni tanıman lazım ☕'],
+  lockPremium: ["Sohbetimiz Premium'da. İşlerde hep yanındayım 💛"],
 } as const;
 
 export type LineKey = keyof typeof LINES;

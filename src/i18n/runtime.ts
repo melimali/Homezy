@@ -42,9 +42,20 @@ let LANG: AppLang = UI === 'tr' ? 'tr' : 'en';
 const listeners = new Set<() => void>();
 
 /** Ayardaki dil kodunu çalışan dile çevirir; desteklenmeyen her şey İngilizce. */
-export function setLang(code: string | undefined) {
+let pending = false;
+/** Render sırasında çağrılır: dili hemen uygular ama dinleyicilere haber vermez (render içinde setState olmaz). Haber efektteki setLang ile gider. */
+export function applyLangQuiet(code: string | undefined) {
   const next = !code ? 'tr' : toUi(code);
   if (next === UI) return;
+  UI = next;
+  LANG = next === 'tr' ? 'tr' : 'en';
+  cache.clear();
+  pending = true;
+}
+export function setLang(code: string | undefined) {
+  const next = !code ? 'tr' : toUi(code);
+  if (next === UI && !pending) return;
+  pending = false;
   UI = next;
   LANG = next === 'tr' ? 'tr' : 'en';
   cache.clear();

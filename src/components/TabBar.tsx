@@ -15,6 +15,7 @@ import { fonts, warmShadow, radius, useColors, useIsDark } from '@/theme';
 import { AdBanner } from '@/ads/AdBanner';
 import { haptic } from '@/lib/sfx';
 
+import { MokaNudge } from './MokaNudge';
 import { Squish } from './motion';
 import { AddTaskForm } from './TaskRow';
 import { TAB_TONE, type Tone } from './ScreenBackground';
@@ -54,11 +55,14 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
       <AdBanner dock />
       <View style={[st.bar, { backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.06)' : c.line, shadowColor: c.shadow }]}>
         {tabs.slice(0, half)}
+        <View style={{ alignItems: 'center', zIndex: 10 }}>
         <Squish onPress={() => { haptic('light'); router.push('/moka' as Href); }} accessibilityLabel="Moka'nın odası: sohbet, iş ekle, temizlik" style={[st.plus, { backgroundColor: c.peach, borderColor: c.surface }]}>
           <View style={st.plusClip}>
             <Image source={furSource(mokaFur, 'happy', MOKA_ASSETS.happy)} style={st.plusMoka} resizeMode="contain" accessibilityIgnoresInvertColors />
           </View>
         </Squish>
+          <MokaNudge buttonSize={58} />
+        </View>
         {tabs.slice(half)}
       </View>
     </View>
@@ -157,9 +161,9 @@ const st = StyleSheet.create({
   tabInner: { alignItems: 'center', justifyContent: 'center', gap: 2 },
   label: { fontSize: 12 },
   plus: {
-    width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -16, borderWidth: 3,
+    width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4, marginTop: -22, borderWidth: 3,
     shadowColor: warmShadow, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5,
   },
-  plusClip: { width: 46, height: 46, borderRadius: radius.card, overflow: 'hidden', alignItems: 'center' },
-  plusMoka: { width: 52, height: 52, marginTop: 4 },
+  plusClip: { width: 56, height: 56, borderRadius: radius.card, overflow: 'hidden', alignItems: 'center' },
+  plusMoka: { width: 62, height: 62, marginTop: 4 },
 });

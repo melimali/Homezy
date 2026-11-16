@@ -3,7 +3,7 @@ import { Animated, Easing, Image, Pressable, StyleSheet, Text, View, type StyleP
 
 import { Float, useReduceMotion } from '@/components/motion';
 import { MokaLive, timePose, type MokaLiveHandle } from '@/components/MokaLive';
-import { MokaAccLayer } from '@/components/MokaAcc';
+import { MokaAvatar } from '@/components/MokaAcc';
 import { SceneImage } from '@/components/SceneImage';
 import { MOKA_ASSETS, type MokaPose } from '@/constants/moka';
 import { POSE_SCENES } from '@/constants/scenes';
@@ -78,8 +78,7 @@ export function MokaMascot({ pose, title, message, tip, size = 'md', showBubble 
         <Float amp={size === 'sm' ? 2 : 4} dur={2200}>
           <Animated.View style={{ transform }}>
             <MokaLive size={px} handleRef={live} weather={size !== 'sm'}>
-              <Image source={MOKA_ASSETS[timePose(shown)]} style={{ width: px, height: px }} resizeMode="contain" accessibilityIgnoresInvertColors />
-              <MokaAccLayer pose={timePose(shown)} size={px} id={state.play.mokaAcc} />
+              <MokaAvatar pose={timePose(shown)} size={px} base={MOKA_ASSETS[timePose(shown)]} fur={state.play.mokaFur} acc={state.play.mokaAcc} />
             </MokaLive>
           </Animated.View>
         </Float>

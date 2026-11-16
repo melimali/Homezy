@@ -206,6 +206,8 @@ export type Play = {
   look?: HouseLook;
   /** Moka'nın takılı aksesuarı (src/constants/moka-acc.ts kimliği). Yoksa çıplak. */
   mokaAcc?: string | null;
+  /** Moka'nın kürk rengi (src/constants/moka-look.ts). Yoksa orman yeşili. */
+  mokaFur?: string | null;
   /** O gün puan alınmış işler: `gorev:<id>`, `spor`, `gunluk` → gün. Günde bir kuralı için. */
   awarded: Record<string, DayKey>;
   /** Gün → o gün tamamlananların kısa adları (günlükte "bugün neler yaptım"). */

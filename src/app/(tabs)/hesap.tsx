@@ -309,6 +309,7 @@ export default function Hesap() {
     { key: 'gelisim', emoji: '🌱', title: 'Gelişim', tint: c.lavenderSoft, sub: `${earned} / ${badges.length} rozet`, items: [
       { emoji: '📚', label: 'Kendini geliştir', sub: 'Kitap, film, öğrenme önerileri', tint: c.lavenderSoft, href: '/buyume' as Href },
       { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
+      { emoji: '🎨', label: "Moka'nı tasarla", sub: 'Kürk rengi ve aksesuar', tint: c.lavenderSoft, href: '/moka-tasarim' as Href },
       { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${badges.length} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
       { emoji: '🎮', label: 'Biraz eğlenelim', sub: 'Moka Uçuş', tint: c.lavenderSoft, href: '/eglence' as Href },
       ...(extras ? [

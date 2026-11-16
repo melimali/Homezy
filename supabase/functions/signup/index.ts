@@ -7,7 +7,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { corsHeaders, jsonResponse, readJson } from '../_shared/http.ts';
-import { admin } from '../_shared/subscription.ts';
+
+const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 const num = (n: string, d: number) => {
   const v = Number(Deno.env.get(n));

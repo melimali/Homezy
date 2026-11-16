@@ -134,7 +134,7 @@ Remember this canvas: 1254x1254 transparent PNG. The attached moka_oda_sakin.png
 **B. Kel baş + yüz parçaları** (sec. 3'ün kaynağı)
 ```
 Using moka_bas.png on the same 1254x1254 canvas, same pixel positions, output these as separate transparent PNGs, nothing else changes:
-1) bas_kel.png: the head with the eyes, eyebrows, cheek blush and beak REMOVED; keep the cream face area smooth and clean (the beak stays only as a faint cream bump? NO — remove the beak too), keep all feather outline.
+1) bas_kel.png: the head with the eyes, eyebrows, cheek blush and beak REMOVED; keep the cream face area smooth and clean (remove the beak too), keep all feather outline.
 2) goz_sol.png and goz_sag.png: each eye alone (dark brown iris, white highlight, thin outline), on its exact position.
 3) goz_kapak_sol.png and goz_kapak_sag.png: a soft closed eyelid (curved navy line with a little cream puffy lid) exactly covering each eye's position.
 4) gaga_ust.png and gaga_alt.png: the beak split in an upper and a lower part, so the lower part can open downward; same position.

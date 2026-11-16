@@ -83,7 +83,7 @@ Süreler Claude'un çalışma tahminidir (Melih'in görsel üretme süresi hari�
 | Aşama | İçerik | Süre |
 |---|---|---|
 | 0. Deneme | 1 oda + 3 poz × 2 kıyafet; tutarlılık ve yüz yaması testi | yarım gün (Melih: ~1 saat görsel) |
-| 1. Ortam + sohbet | Oda resmi, yeni sohbet ekranı (balon, yazma, haplar, geçmiş), çıplak Moka 6 poz, göz kırpma ve ağız yamaları | 2-3 gün |
+| 1. Ortam + sohbet + oda | Oda resmi, yeni sohbet ekranı (balon, yazma, haplar, geçmiş), orta tuş geçişi ve merkez ekran (bölüm 8), çıplak Moka 6 poz, göz kırpma ve ağız yamaları | 3-4 gün |
 | 2. Kıyafetler | 6 set × 6 poz görüntü, Moka'nı tasarla ekranı, ana ekran ve Ben entegrasyonu, Supabase `mokaLook` | 2-3 gün |
 | 3. Açılış | Rozet/seri/mevsim kilitleri, Premium setler, kurulumda seçim | 1-2 gün |
 | 4. Parlatma | Gece/gündüz, hava, çeviri kontrolü, mağaza görselleri | 1 gün |
@@ -97,3 +97,22 @@ Melih'in ChatGPT/Gemini'de üreteceği tam liste (hepsi 1024×1024 saydam PNG, r
 5. İstersen: Ben sekmesi için "model" pozu (kollar yanda, 6 poz yerine bir poz daha).
 
 Başlama sırası önerisi: Aşama 0 ile başla. Tutarlılık çıkmazsa kıyafet sayısını azaltıp sadece kürk rengi + yüz mimiği + ortam (aksesuarsız) ile devam etmek de çalışan bir yedek yoldur.
+
+## 8. Ortadaki tuş = Moka'nın odası (merkez ekran)
+
+Karar (Melih, 2026-11-16): alt menünün ortasındaki Moka tuşuna basınca doğrudan bir geçişle Moka'nın odasına geçilir. Oda bir merkez ekrandır: aynı ekranda Moka (ortada), **Temizlik başlat**, **Moka ile sohbet** (balonlu, zaten ekranda) ve **İş ekle**.
+
+**Menü değişikliği (`TabBar.tsx`).** Şu an ortadaki tuş "Ne yapalım?" alt sayfasını açıyor (3 seçenek: sohbet, iş ekle, temizlik). Yeni halde alt sayfa kalkar, tuş `/moka-oda` ekranını açar. Sekmeler aynı kalır (Ev, Bugün, Gelişim, Ben). Eski seçeneklerin yeri: sohbet odada ana içerik, iş ekleme odada alt düğme (aynı `AddTaskForm`), temizlik odada ikinci düğme (`/temizlik`). Ev sekmesindeki Moka kartı ve `/moka` rotası: `/moka` odaya yönlendirir, eski sohbet ekranı kaldırılır (derin bağlantılar ve bildirimler kırılmasın diye rota adı kalır). Oda bir sekme değil, tam ekran yığın ekranıdır, alt menü odada gizlenir.
+
+**Geçiş animasyonu.** Tuşa basınca Moka tuşundan büyüyen bir daire (yaklaşık 380 ms) tüm ekranı kaplar, oda resmi yumuşakça açılır, Moka alttan zıplayarak girer ve el sallar (320 ms). Geri dönüşte aynı daire küçülür. Yalnızca `Animated` + native driver, ek paket yok. "Hareketi azalt" açıksa düz çapraz geçiş. Oda resmi önceden yüklenir (uygulama açılışında `Image.prefetch`), geçişte boş kare görünmesin.
+
+**Oda düzeni (dikey).**
+- Üst: geri düğmesi, sağda Premium sohbet sayacı (18/25), "Geçmiş" düğmesi.
+- Üst üçte bir: Moka'nın konuşma balonu (tek mesaj, harf harf).
+- Orta: Moka, kıyafetiyle ve yüz animasyonuyla. Dokunursa tepki verir.
+- Moka'nın iki yanında zeminde iki büyük hap düğme: sol **Temizlik başlat** (süre seçtirir: 5/10/15 dk ya da "Ne kadar vaktin var?"), sağ **İş ekle**. Her ikisi de Moka'ya yakın, başparmakla ulaşılır.
+- Alt: hızlı cevap hapları ve yazı çubuğu ("Moka'ya yaz…").
+
+**Klavye.** Yazı çubuğuna dokununca klavye açılır: Moka küçülüp yukarı kayar (şimdiki "klavyede kompakt" davranışı, `moka.tsx` satır ~83'teki `keyboardDidShow/WillShow` dinleyicisi), iki büyük düğme gizlenir, balon yukarıda kalır. `KeyboardAvoidingView` iOS'ta `padding`, Android'de `height`. Temizlik ve diğer ekranlardaki "klavye altında kalan sayfa" düzeltmesi (commit 8dddf6f) aynen uygulanır: giriş çubuğu klavyenin üstünde, güvenli alan alt boşluğu klavye açıkken sıfırlanır. **İş ekle** odanın içinde alttan açılan sayfa (`Sheet` + `AddTaskForm`) olur; klavye açılınca sayfa klavyenin üstüne oturur, oda arkada kalır. Emülatörde iOS ve Android klavyesiyle ayrı ayrı test edilmeli (özellikle Android `adjustResize`).
+
+**Aşamaya etkisi.** Aşama 1'e (ortam + sohbet) eklenir: `moka-oda` ekranı, TabBar değişikliği, geçiş animasyonu, düğmelerin bağlanması. Ek süre yaklaşık yarım-bir gün. Eski sohbetteki iş ekleme, not ve işaretleme eylemleri aynen taşınır.

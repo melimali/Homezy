@@ -32,6 +32,7 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { HouseGarden } from '@/components/HouseGarden';
 import { Appear, Squish } from '@/components/motion';
+import { QuickActions } from '@/components/QuickActions';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T, Chevron } from '@/components/ui';
 import { tx } from '@/i18n/runtime';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
@@ -289,6 +290,7 @@ export default function Home() {
         </View>
         <Chevron color={c.onAccent} size={14} dir="right" />
       </Squish>
+      <QuickActions />
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
           <Text style={{ lineHeight: 34, fontSize: 26 }}>🗓️</Text>

@@ -110,7 +110,7 @@ export default function Home() {
   const blk: Record<string, ReactNode> = {
     stats: (
       <View {...mark('stats')}><Appear index={2} style={styles.stats}>
-        <Stat emoji="🔥" value={String(hp.streak)} label="gün seri" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
+        <Stat emoji="☕" value={String(hp.streak)} label="gün taze" tint={c.peachSoft} onPress={() => router.push('/hikaye')} />
         <Stat emoji="⭐" value={String(S.play.points)} label="puan" tint={c.surface} onPress={() => router.push('/magaza' as Href)} />
         <Stat emoji="🏡" value={String(hp.level)} label="ev seviyesi" tint={c.surface} onPress={() => router.push('/hikaye')} />
       </Appear></View>
@@ -198,7 +198,7 @@ export default function Home() {
               <T v="small">{houseLine(hp)}</T>
             ) : (
               <>
-                <T v="tiny">Sıradaki · 🔥 {hp.streak} gün seri</T>
+                <T v="tiny">{`Sıradaki · ☕ ${hp.streak} gündür taze`}</T>
                 <T v="bold" numberOfLines={1}>{next.name}</T>
               </>
             )}

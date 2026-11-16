@@ -83,7 +83,7 @@ export function StreakMoment() {
       {dismiss => (
         <View style={[styles.box, { backgroundColor: c.surface }]}>
           <MokaMascot pose="party" size="lg" showBubble={false} style={styles.moka} />
-          <T v="h1" style={{ textAlign: 'center' }}>🔥 {mark} günlük seri!</T>
+          <T v="h1" style={{ textAlign: 'center' }}>{`☕ ${mark} gündür kahvemiz taze!`}</T>
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {mark} gün üst üste evine vakit ayırdın. Evin ve bahçen sana teşekkür ediyor 🌷
           </T>

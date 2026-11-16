@@ -137,7 +137,7 @@ export function MiniWidget({ data, height, note, c }: Props) {
         <FlexWidget style={{ width: 'match_parent', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingBottom: 6 }}>
           <TextWidget text={`${data.mood.emoji} ${note ?? tx(data.mood.line)}`} style={{ fontFamily: fonts.displayBold, fontSize: 14, color: note ? c.ok : c.ink }} maxLines={1} truncate="END" />
           <FlexWidget style={{ flex: 1 }} />
-          {data.streak ? <TextWidget text={`🔥 ${data.streak}`} style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.today }} /> : null}
+          {data.streak ? <TextWidget text={`☕ ${data.streak}`} style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.today }} /> : null}
         </FlexWidget>
       ) : null}
       <FlexWidget style={{ width: 'match_parent', flex: 1, flexDirection: 'row' }}>

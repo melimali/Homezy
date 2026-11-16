@@ -53,7 +53,7 @@ export function WelcomeBack() {
           <T v="lead" style={{ textAlign: 'center', marginTop: 0 }}>
             {hp.today
               ? 'Dönmek en güzel adım 💛 Evin her gün bir parça daha büyüyecek. Yarın da minik bir işle devam edelim.'
-              : `${away} gündür yoktun, ev seni bekledi 💛 Yeni seri bugün başlıyor, ${S.play.days.length} günün hâlâ duruyor. Kaldığın yerden devam ediyoruz.`}
+              : `${away} gündür yoktun, ev seni bekledi 💛 Yeni kahve bugün demleniyor, ${S.play.days.length} günün hâlâ duruyor. Kaldığın yerden devam ediyoruz.`}
           </T>
           {!hp.today && S.settings.why && WHY_LINE[S.settings.why] && (
             <T v="small" style={{ textAlign: 'center' }}>{`${tx('Hatırla')}: ${tx(WHY_LINE[S.settings.why])}`}</T>

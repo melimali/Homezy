@@ -46,7 +46,7 @@ export function TodayWidget({ data, height, note, c }: Props) {
           <TextWidget text={title} style={{ fontFamily: fonts.displayBold, fontSize: 20, color: c.ink }} maxLines={1} truncate="END" />
           <TextWidget text={sub} style={{ fontFamily: fonts.body, fontSize: 12, color: note ? c.ok : c.muted }} maxLines={1} truncate="END" />
         </FlexWidget>
-        {data.streak ? <TextWidget text={`🔥 ${data.streak}`} style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.today }} /> : null}
+        {data.streak ? <TextWidget text={`☕ ${data.streak}`} style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.today }} /> : null}
       </FlexWidget>
 
       <FlexWidget style={{ width: 'match_parent', flex: 1, flexDirection: 'column', justifyContent: 'center', marginTop: 6 }}>

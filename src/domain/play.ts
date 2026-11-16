@@ -370,7 +370,7 @@ export function awardToast(r: AwardResult, what: string) {
   const up = r.after.level > r.before.level ? stageFor(r.after.level) : null;
   const repaired = r.before.idle > 0 ? ' Ev toparlanıyor 🔨' : '';
   if (up && up.level === r.after.level) return `+${r.points} puan ⭐ ${up.emoji} ${tx(up.name)}!${repaired}`;
-  if (!r.before.today && r.after.streak > 1) return `+${r.points} puan ⭐ 🔥 ${r.after.streak} günlük seri!${repaired}`;
+  if (!r.before.today && r.after.streak > 1) return `+${r.points} puan ⭐ ☕ ${r.after.streak} gündür taze!${repaired}`;
   return `+${r.points} puan ⭐ ${what} tamam.${repaired}`;
 }
 

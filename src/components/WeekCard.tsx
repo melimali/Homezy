@@ -49,7 +49,7 @@ export function WeekCard({ state: S, now, theme, ref }: { state: AppState; now: 
 
       <View style={styles.stats}>
         <Stat c={c} n={`${sum.days}/7`} l="gün" />
-        <Stat c={c} n={`🔥 ${hp.streak}`} l="günlük seri" />
+        <Stat c={c} n={`☕ ${hp.streak}`} l="gün taze" />
         <Stat c={c} n={hp.level >= BUILT ? `Sv. ${hp.level}` : `${hp.level}/${BUILT}`} l={hp.level >= BUILT ? 'ev' : 'inşaat'} />
       </View>
       {(stage || sum.best) && (

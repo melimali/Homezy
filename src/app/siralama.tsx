@@ -107,7 +107,7 @@ export default function Siralama() {
               <T v="bold" style={{ width: 36 }}>{r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : `#${r.rank}`}</T>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <T v="bold" numberOfLines={1}>{r.nick}</T>
-                <T v="tiny" numberOfLines={1}>{`${t('Sv.')} ${r.level} · 🔥 ${r.streak} · ${brk(r, board)}`}</T>
+                <T v="tiny" numberOfLines={1}>{`${t('Sv.')} ${r.level} · ☕ ${r.streak} · ${brk(r, board)}`}</T>
               </View>
               <T v="bold">{board === 'moka' ? `${t('Moka sv.')} ${r.score}` : r.score}</T>
             </Appear>

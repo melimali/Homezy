@@ -125,7 +125,7 @@ export const MOKA_QUOTES: Record<MokaPose, MokaQuote[]> = {
     { title: '😏 Sana güveniyorum', message: 'Erteleme ustası değil, ev kahramanısın. Hadi!' },
   ],
   party: [
-    { title: '🎉 Seri {n} gün!', message: 'Kutlama kahvesi benden! Böyle devam et.' },
+    { title: '🎉 Kahvemiz {n} gündür taze!', message: 'Kutlama kahvesi benden! Böyle devam et.' },
     { title: '🥳 Harikasın!', message: 'Bugün her şeyi bitirdin. Moka gururlu!' },
   ],
   cozy_plant: [

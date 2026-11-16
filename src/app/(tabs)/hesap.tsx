@@ -110,8 +110,8 @@ export default function Hesap() {
   const plants = Object.values(state.play.log).flat().filter(x => x.startsWith('🪴')).length;
   const badges: { label: string; art: BadgeArt; on: boolean; hint: string }[] = [
     { label: 'İlk Adım', art: 'ilk', on: allDone >= 1, hint: 'İlk işini tamamla' },
-    { label: 'Kahve Sever', art: 'kus', on: hp.streak >= 3, hint: '3 gün seri yap' },
-    { label: 'Seri Ateşi', art: 'seri', on: hp.streak >= 7, hint: '7 gün seri yap' },
+    { label: 'İlk Demleme', art: 'kus', on: hp.streak >= 3, hint: '3 gün kahveyi taze tut' },
+    { label: 'Her Gün Taze Filtre', art: 'seri', on: hp.streak >= 7, hint: '7 gün kahveyi taze tut' },
     { label: 'Haftanın Yıldızı', art: 'takvim', on: weekDone >= 10, hint: 'Bu hafta 10 iş yap' },
     { label: 'Temizlik Ustası', art: 'el', on: allDone >= 20, hint: '20 iş tamamla' },
     { label: 'Düzen Canavarı', art: 'ev', on: homeScore(state, now) >= 80, hint: 'Ev puanını %80 yap' },
@@ -435,7 +435,7 @@ export default function Hesap() {
 
       <Appear index={2} style={st.stats}>
         {([
-          { e: '🔥', n: hp.streak, l: 'gün seri', tint: c.peachSoft },
+          { e: '☕', n: hp.streak, l: 'gün taze', tint: c.peachSoft },
           { e: '⭐', n: state.play.points, l: 'puan', tint: c.lavenderSoft },
           { e: '✅', n: weekDone, l: 'bu hafta', tint: c.sageSoft },
           { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },

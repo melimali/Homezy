@@ -23,7 +23,7 @@ export function DayCard({ state: S, now, name, ref }: { state: AppState; now: nu
       <Text style={[styles.title, { color: c.ink }]}>{name ? `${name} ve Moka'nın günü` : 'Moka ile günüm'}</Text>
       <Image source={MOKA_ASSETS[pose]} style={styles.moka} resizeMode="contain" accessibilityIgnoresInvertColors />
       <Text style={[styles.big, { color: c.ink }]}>{done ? `Bugün ${done} iş yaptım ✨` : 'Bugün dinlenme günü 🌙'}</Text>
-      {streak > 1 && <Text style={[styles.sub, { color: c.warm }]}>🔥 {streak} günlük seri</Text>}
+      {streak > 1 && <Text style={[styles.sub, { color: c.warm }]}>{`☕ ${streak} gündür taze`}</Text>}
       <Text style={[styles.sub, { color: c.muted }]}>{m.message}</Text>
       <Text style={[styles.slogan, { color: c.muted }]}>Küçük işler, büyük huzur 🏡 homezy</Text>
     </View>

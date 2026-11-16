@@ -69,7 +69,7 @@ export function mokaWeek(S: AppState, now = Date.now()): MokaWeek {
 /** Bildirim metni: kısa, tek satır. */
 export function mokaWeekBody(w: MokaWeek): string {
   const bits = [`${w.chores} iş`, `${w.activeDays} gün`];
-  if (w.streak) bits.push(`🔥 ${w.streak}`);
+  if (w.streak) bits.push(`☕ ${w.streak}`);
   if (w.mood) bits.push(w.mood.emoji);
   if (w.readMin) bits.push(`📖 ${w.readMin} dk`);
   return `${bits.join(' · ')}. ${w.line}`;

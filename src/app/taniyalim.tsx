@@ -39,7 +39,7 @@ const REACT: Record<string, string> = {
   'quit:unutur': 'Unutmak çok normal, hatırlatmalar benden.',
   'quit:yorulur': 'Yorgun günler için hafif bir plan hazırlarım.',
   'quit:sikilir': 'Sıkılmaman için işleri küçük oyunlara çeviririm.',
-  'quit:hepsi': 'Bir gün aksamak her şeyi bozmaz, seri dondurma var.',
+  'quit:hepsi': 'Bir gün aksamak her şeyi bozmaz, kahveyi ılık tutarım.',
   'quit:dikkat': 'Kısa ve tek odaklı işlerle seni toplarım.',
   'drive:puan': 'Puan ve seri mi? Yıldızları hazırladım!',
   'drive:soz': 'Sözüne sadık birisin. Ben de sana söz veriyorum.',

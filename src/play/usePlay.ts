@@ -114,7 +114,7 @@ export function usePlaySync() {
     const run = () => {
       const out = freezeMissed(get, update, active);
       if (out.length)
-        toast(out.length === 1 ? '❄️ Kaçırdığın gün için seri dondurma kullandım. Evin güvende!' : `❄️ Kaçırdığın ${out.length} gün için seri dondurma kullandım.`);
+        toast(out.length === 1 ? '❄️ Kaçırdığın gün için kahveyi ılık tuttum. Evin güvende!' : `❄️ Kaçırdığın ${out.length} gün için kahveyi ılık tuttum.`);
     };
     run();
     const sub = RNAppState.addEventListener('change', s => s === 'active' && run());

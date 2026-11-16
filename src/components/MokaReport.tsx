@@ -20,7 +20,7 @@ export function MokaWeekCard({ index }: { index?: number }) {
   const quiet = !w.chores && !w.readMin;
   const cells: { e: string; n: string; l: string }[] = [
     { e: '🧹', n: String(w.chores), l: 'iş' },
-    { e: '🔥', n: String(w.streak), l: 'seri' },
+    { e: '☕', n: String(w.streak), l: 'gün taze' },
     { e: w.mood?.emoji ?? '💭', n: w.mood?.label ?? '-', l: 'ruh hali' },
     { e: '📖', n: String(w.readMin), l: 'dk okuma' },
   ];

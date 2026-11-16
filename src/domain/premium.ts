@@ -39,7 +39,7 @@ export const FEATURES: { emoji: string; label: string; free: string; premium: st
   { emoji: '👨‍👩‍👧', label: 'Aile paylaşımı', free: '—', premium: '✓' },
   { emoji: '🍳', label: 'Tarif ve haftalık kombin planı', free: '—', premium: '✓' },
   { emoji: '📊', label: 'Ayrıntılı raporlar', free: 'Özet', premium: '✓' },
-  { emoji: '⭐', label: 'Puan ve seri dondurma', free: 'Temel', premium: `${LIMITS.premium.mult.toString().replace('.', ',')} kat` },
+  { emoji: '⭐', label: 'Puan ve kahveyi ılık tutma', free: 'Temel', premium: `${LIMITS.premium.mult.toString().replace('.', ',')} kat` },
   { emoji: '🚫', label: 'Reklam', free: 'Az', premium: 'Yok' },
 ];
 

@@ -81,7 +81,7 @@ export const TYPES: Record<TypeId, { emoji: string; name: string; says: string; 
   sakin: { emoji: '🧊', name: 'Sakin Moka', says: 'Geç başlarsın ama bırakmazsın. Küçük adımlar sana yeter.', bg: '#BBD3E6', img: require('../../assets/moka/tip/moka_sakin.webp') },
   odakli: { emoji: '🎯', name: 'Odaklı Moka', says: 'Odaklanınca dağları aşarsın. Sana derin çalışma blokları kuruyorum.', bg: '#A9B5D0', img: require('../../assets/moka/tip/moka_odakli.webp') },
   dalgin: { emoji: '🎨', name: 'Dalgın Moka', says: 'Aklın çok yerde, bu güzel bir şey. Seni kısa turlarla toplayacağım.', bg: '#F2C6D3', img: require('../../assets/moka/tip/moka_dalgin.webp') },
-  hirsli: { emoji: '🔥', name: 'Hırslı Moka', says: 'Ya hep ya hiç. Bir gün aksarsa dert değil, seri dondurma var.', bg: '#F0A98E', img: require('../../assets/moka/tip/moka_hirsli.webp') },
+  hirsli: { emoji: '🔥', name: 'Hırslı Moka', says: 'Ya hep ya hiç. Bir gün aksarsa dert değil, kahveyi ılık tutarım.', bg: '#F0A98E', img: require('../../assets/moka/tip/moka_hirsli.webp') },
   tembel: { emoji: '🥛', name: 'Tembel Moka', says: 'Sana kimse baskı yapmasın. Esnek, kendi hızında bir plan yaptım.', bg: '#F1E4CE', img: require('../../assets/moka/tip/moka_tembel.webp') },
   dengeli: { emoji: '☕', name: 'Dengeli Moka', says: 'Her şeyden biraz. Birlikte neyin sana uyduğunu bulacağız.', bg: '#CFE5D4', img: require('../../assets/moka/tip/moka_dengeli.webp') },
 };

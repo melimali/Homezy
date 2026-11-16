@@ -47,6 +47,7 @@ export const LINES = {
   potCold: ['Kahve soğumuş, yeniden demleyelim ☕'],
   potFirst: ['İlk kahveyi birlikte demleyelim ☕'],
   potBrewed: ['Kahve tazelendi, {} gün ☕'],
+  potExplain: ['Serin artık benim kahvem ☕ {} gündür taze'],
   // Kilitli sohbet düğmesi (§3.3)
   lockLogin: ['Konuşmak için beni tanıman lazım ☕'],
   lockPremium: ["Sohbetimiz Premium'da. İşlerde hep yanındayım 💛"],

@@ -47,8 +47,8 @@ export function HeatmapCard({ state: S, now }: Props) {
   const badges: Badge[] = [
     {
       id: 'streak',
-      emoji: '🔥',
-      title: 'Kırılmayan Seri',
+      emoji: '☕',
+      title: 'Hep Taze Kahve',
       desc: '7 gün üst üste',
       unlocked: hp.streak >= 7,
     },

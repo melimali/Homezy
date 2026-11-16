@@ -139,15 +139,15 @@ export function streakLine(streak: number, built: boolean, key: string, now: num
   if (streak > 0)
     return pick(
       [
-        `🔥 ${streak} günlük serin var. İstersen minik bir iş yeter 🤍`,
-        `Bugün tek bir küçük iş yeter 🏡 ${streak} günlük seriyi sürdürelim mi?`,
+        `☕ ${streak} gündür kahvemiz taze. İstersen minik bir iş yeter 🤍`,
+        `Bugün tek bir küçük iş yeter 🏡 Kahvemiz ${streak} gündür taze, soğumasın mı?`,
         `Bugün sakin geçti 🌿 Tek bir küçük iş yeter, istersen.`,
       ],
       key,
       now,
     );
   if (built)
-    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, Moka çok sevinir ☕', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir seri başlatırız 🔥'], key, now);
+    return pick(['Evin seni özledi 🏡 Minik bir iş yeter, Moka çok sevinir ☕', 'Dinlenmek de bakımın parçası 🌿 Hazır olunca yeni bir kahve demleriz ☕'], key, now);
   return pick(
     ['Bugün bir iş tamamla, evinin inşaatı başlasın 🏗️', 'Minik bir adım, büyük bir ev 🪵✨ Bugün bir iş yapalım mı?'],
     key,
@@ -231,11 +231,11 @@ export function eveningNudge(o: { streak: number; idle: number; away: number | n
         now,
       ),
     };
-  return { title: streak ? `🔥 ${streak} günlük seri` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
+  return { title: streak ? `☕ ${streak} gündür taze` : '🏡 Evin seni bekliyor', body: streakLine(streak, built, key, now) };
 }
 
 /** Haftalık özet kartı paylaşılırken (ya da görsel paylaşılamazsa) giden metin. */
 export function weekShareText(o: { done: number; days: number; streak: number }) {
-  const streak = o.streak > 1 ? ` 🔥 ${o.streak} günlük serim var.` : '';
+  const streak = o.streak > 1 ? ` ☕ ${o.streak} gündür kahvem taze.` : '';
   return `Bu hafta Homezy ile ${o.done} ev işi yaptım, ${o.days} gün evime vakit ayırdım 💪${streak} Evini topla, evin büyüsün 🏡`;
 }

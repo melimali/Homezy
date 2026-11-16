@@ -21,7 +21,7 @@ export type Ach = {
 
 export const ACH_GROUPS: { id: AchGroup; title: string; emoji: string }[] = [
   { id: 'is', title: 'İşler', emoji: '🧹' },
-  { id: 'seri', title: 'Seri', emoji: '🔥' },
+  { id: 'seri', title: 'Kahve', emoji: '☕' },
   { id: 'seviye', title: 'Ev seviyesi', emoji: '🏡' },
   { id: 'okuma', title: 'Okuma ve öğrenme', emoji: '📚' },
   { id: 'aliskanlik', title: 'Alışkanlıklar', emoji: '🌱' },
@@ -80,11 +80,14 @@ export function achievements(S: AppState, now: number): Ach[] {
     { id: 'yildiz', tier: 'orta', group: 'is', name: 'Yıldız Ev', hint: '100 iş tamamla', art: 'yildiz', on: all >= 100, prog: [all, 100] },
     { id: 'is-250', tier: 'zor', group: 'is', name: 'Ev Kahramanı', hint: '250 iş tamamla', emoji: '🦸', on: all >= 250, prog: [all, 250] },
     { id: 'is-500', tier: 'zor', group: 'is', name: 'Efsane Ev', hint: '500 iş tamamla', emoji: '👑', on: all >= 500, prog: [all, 500] },
-    { id: 'seri-3', tier: 'kolay', group: 'seri', name: 'Kahve Sever', hint: '3 gün seri yap', art: 'kus', on: best >= 3, prog: [best, 3] },
-    { id: 'seri-7', tier: 'orta', group: 'seri', name: 'Seri Ateşi', hint: '7 gün seri yap', art: 'seri', on: best >= 7, prog: [best, 7] },
-    { id: 'seri-14', tier: 'orta', group: 'seri', name: 'İki Hafta', hint: '14 gün seri yap', emoji: '🔥', on: best >= 14, prog: [best, 14] },
-    { id: 'seri-30', tier: 'zor', group: 'seri', name: 'Bir Ay Dolu', hint: '30 gün seri yap', emoji: '🌕', on: best >= 30, prog: [best, 30] },
-    { id: 'seri-100', tier: 'zor', group: 'seri', name: 'Yüzler Kulübü', hint: '100 gün seri yap', emoji: '💯', on: best >= 100, prog: [best, 100] },
+    // Kahve rozetleri (seri): adlar src/domain/coffee.ts COFFEE_STEPS ile aynı; kimlik ve koşullar değişmedi.
+    { id: 'seri-3', tier: 'kolay', group: 'seri', name: 'İlk Demleme', hint: '3 gün kahveyi taze tut', emoji: '☕', on: best >= 3, prog: [best, 3] },
+    { id: 'seri-7', tier: 'orta', group: 'seri', name: 'Her Gün Taze Filtre', hint: '7 gün kahveyi taze tut', emoji: '🫖', on: best >= 7, prog: [best, 7] },
+    { id: 'seri-14', tier: 'orta', group: 'seri', name: 'French Press Ustası', hint: '14 gün kahveyi taze tut', emoji: '🧉', on: best >= 14, prog: [best, 14] },
+    { id: 'seri-30', tier: 'zor', group: 'seri', name: 'Barista', hint: '30 gün kahveyi taze tut', emoji: '🥐', on: best >= 30, prog: [best, 30] },
+    { id: 'seri-60', tier: 'zor', group: 'seri', name: 'Cold Brew Sabrı', hint: '60 gün kahveyi taze tut', emoji: '🧊', on: best >= 60, prog: [best, 60] },
+    { id: 'seri-100', tier: 'zor', group: 'seri', name: 'Altın Çekirdek', hint: '100 gün kahveyi taze tut', emoji: '🌟', on: best >= 100, prog: [best, 100] },
+    { id: 'seri-365', tier: 'zor', group: 'seri', name: 'Kahve Efsanesi', hint: '365 gün kahveyi taze tut', emoji: '👑', on: best >= 365, prog: [best, 365] },
   ];
   const tail = (id: string, tier: AchTier, name: string, hint: string, emoji: string, n: number, goalN: number) =>
     out.push({ id, group: 'aliskanlik', tier, name, hint, emoji, on: n >= goalN, prog: [n, goalN] });

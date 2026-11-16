@@ -2,6 +2,7 @@
  * Birkaç ekranda dile göre elle yazılmış cümlelerin sözlük karşılıkları (hepsi tek tabloda, `tx()` ile).
  * Türkçe metin anahtardır; runtime.ts bunları ilgili dilin sözlüğünün üstüne bindirir.
  */
+import { KAHVE_ROWS } from './kahve';
 import { MOKA_ODA_ROWS } from './mokaOda';
 import { ROZET_ROWS } from './rozet';
 
@@ -74,4 +75,4 @@ export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';
 const ORDER: ExtraLang[] = ['en', 'de', 'es', 'fr', 'pt', 'ja', 'ko', 'ar'];
 
 export const EXTRA: Record<ExtraLang, Record<string, string>> = { en: {}, de: {}, es: {}, fr: {}, pt: {}, ja: {}, ko: {}, ar: {} };
-for (const row of [...ROWS, ...ROZET_ROWS, ...MOKA_ODA_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });
+for (const row of [...ROWS, ...ROZET_ROWS, ...MOKA_ODA_ROWS, ...KAHVE_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });

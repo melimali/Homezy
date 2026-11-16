@@ -151,7 +151,7 @@ export function StreakDots({ dots }: { dots: { key: string; mark: DotMark }[] })
         <View key={w} style={st.dotRow}>
           {dots.slice(w * 7, w * 7 + 7).map((d, k) => (
             <Pop key={d.key} i={w * 7 + k} style={[st.dot, { backgroundColor: fill[d.mark], borderColor: d.mark === 'today' ? c.peach : 'transparent' }]}>
-              {d.mark === 'done' ? <Text style={st.dotE}>🔥</Text> : d.mark === 'ice' ? <Text style={st.dotE}>❄️</Text> : null}
+              {d.mark === 'done' ? <Text style={st.dotE}>☕</Text> : d.mark === 'ice' ? <Text style={st.dotE}>❄️</Text> : null}
             </Pop>
           ))}
         </View>

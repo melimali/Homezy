@@ -37,7 +37,7 @@ const NAVY = '#283044';
 const TOUR = [
   { key: 'hero', pose: 'happy', text: 'Selam, ben Moka! Burası Gelişim: küçük adımların burada büyür.' },
   { key: 'moka', pose: 'cheers', text: 'Moka seviyen ve becerilerin. İş yaptıkça deneyim kazanırsın.' },
-  { key: 'hafta', pose: 'cozy_plant', text: 'Haftalık işlerin ve seri takvimin. Seriyi bozma, ev büyüsün.' },
+  { key: 'hafta', pose: 'cozy_plant', text: 'Haftalık işlerin ve kahve takvimin. Kahve soğumasın, ev büyüsün.' },
   { key: 'ruh', pose: 'love', text: 'Ruh halin ve oda puanların da burada. Hadi başlayalım!' },
 ] as const;
 
@@ -165,7 +165,7 @@ export default function Gelisim() {
 </>,
     seri: <>
       <Appear key={`p${rk}`} index={3} style={st.pills}>
-        <StatPill emoji="🔥" n={hp.streak} label="gün seri" tint={c.peachSoft} />
+        <StatPill emoji="☕" n={hp.streak} label="gün taze" tint={c.peachSoft} />
         <StatPill emoji="📅" n={S.play.days.length} label="toplam gün" tint={c.lavenderSoft} />
         <StatPill emoji="🏅" n={Math.max(best, hp.streak)} label="en iyi seri" tint={c.sageSoft} />
       </Appear>
@@ -178,10 +178,10 @@ export default function Gelisim() {
 </>,
     takvim: <>
       <Card index={5}>
-        <SecHead title="Seri takvimi" h="h3" right={`❄️ ${freezeLeft}/${lim.freezes}`} />
+        <SecHead title="Kahve takvimi" h="h3" right={`❄️ ${freezeLeft}/${lim.freezes}`} />
         <T v="small">{`Bu hafta hedefin ${wk.goal} gün: ${Math.min(wk.done, wk.goal)}/${wk.goal} ✓ Toplam ${S.play.days.length} günün hiç silinmez.`}</T>
         <StreakDots key={`s${rk}`} dots={monthDots(S.play, now)} />
-        <T v="tiny" style={{ textAlign: 'center' }}>🔥 iş yapılan gün · ❄️ dondurma ile korunan gün</T>
+        <T v="tiny" style={{ textAlign: 'center' }}>☕ iş yapılan gün · ❄️ ılık tutulan gün</T>
       </Card>
 </>,
     isi: <>

@@ -148,7 +148,7 @@ export default function Bildirimler() {
         <SecHead title="Alışkanlık ve sağlık" />
         <Toggle
           first
-          label="Seri hatırlatması 🔥"
+          label="Kahve hatırlatması ☕"
           sub={`Akşam ${smart && learned.streak ? fmtMinute(learned.streak) : '20:30'}'da, o gün hiçbir şey yapmadıysan`}
           value={s.streak}
           onChange={v => set('streak', v)}

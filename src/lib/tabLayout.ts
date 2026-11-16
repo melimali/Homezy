@@ -11,7 +11,7 @@ export type BlockDef = { id: string; title: string; emoji: string; fixed?: boole
 
 export const BLOCKS: Record<TabId, BlockDef[]> = {
   ev: [
-    { id: 'stats', title: 'Seri, puan, seviye', emoji: '🔥' },
+    { id: 'stats', title: 'Seri, puan, seviye', emoji: '☕' },
     { id: 'isler', title: 'Bugünün işleri', emoji: '✅', fixed: true },
     { id: 'evim', title: '3B evim', emoji: '🏡', fixed: true },
     { id: 'odalar', title: 'Odalarım', emoji: '🚪', fixed: true },
@@ -36,12 +36,12 @@ export const BLOCKS: Record<TabId, BlockDef[]> = {
   gelisim: [
     { id: 'hero', title: 'Bu hafta özeti', emoji: '🌱', fixed: true },
     { id: 'halkalar', title: 'Bugün ve ev puanı', emoji: '⭕', fixed: true },
-    { id: 'seri', title: 'Seri sayıları', emoji: '🔥', fixed: true },
+    { id: 'seri', title: 'Seri sayıları', emoji: '☕', fixed: true },
     { id: 'tip', title: 'Senin tipin', emoji: '🧩', off: true },
     { id: 'buyume', title: 'Kendini geliştir', emoji: '📚', off: true },
     { id: 'moka', title: 'Moka seviyesi', emoji: '☕' },
     { id: 'bars', title: 'Haftalık grafik', emoji: '📊' },
-    { id: 'takvim', title: 'Seri takvimi', emoji: '📅' },
+    { id: 'takvim', title: 'Kahve takvimi', emoji: '📅' },
     { id: 'isi', title: 'Isı haritası', emoji: '🟩', off: true },
     { id: 'mokahafta', title: 'Moka haftalık raporu', emoji: '📝', off: true },
     { id: 'ruh', title: 'Ruh hali', emoji: '😊', off: true },

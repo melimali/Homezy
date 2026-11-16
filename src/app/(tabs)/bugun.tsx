@@ -463,7 +463,7 @@ function DailyGoals({ now }: { now: number }) {
   ];
   return (
     <Card>
-      <SecHead title="Bugünün hedefleri" right={hp.streak ? `🔥 ${hp.streak} gün` : undefined} />
+      <SecHead title="Bugünün hedefleri" right={hp.streak ? `☕ ${hp.streak} gün` : undefined} />
       <View style={{ gap: 8 }}>
         {goals.map(g => (
           <Squish

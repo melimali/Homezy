@@ -35,7 +35,7 @@ export function HouseShareCard({ state: S, now, ref }: { state: AppState; now: n
         ))}
       </View>
       <View style={st.row}>
-        <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>🔥 {hp.streak} gün seri</Text>
+        <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>{`☕ ${hp.streak} gündür taze`}</Text>
         <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>🏆 {got} rozet</Text>
       </View>
       <Text style={[st.slogan, { color: c.muted }]}>Küçük işler, büyük huzur 🏡 homezy</Text>

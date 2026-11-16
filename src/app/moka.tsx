@@ -89,6 +89,8 @@ let celebrated = '';
 const INTRO_LINE = { tap: 'introTap', hello: 'introHello', pot: 'introPot' } as const;
 /** Sürahinin bugün fokurdadığı gün (günde bir kez). */
 const BREW_KEY = 'mokaPotBrew';
+/** "Serin artık benim kahvem" bir kez söylendi mi. */
+const EXPLAIN_KEY = 'mokaPotExplained';
 const dayStamp = () => new Date().toDateString();
 /** 0..n-1 arası rastgele sayı (çizim dışında, olay ve zamanlayıcılarda kullanılır). */
 const rnd = (n: number) => Math.floor(Math.random() * n);
@@ -386,7 +388,11 @@ export default function MokaChat() {
         jump();
         sfx('done');
         say(line('potBrewed', 0, hp.streak), 'cheer', 4200);
-      } else say(potLine(), pot === 'cold' ? 'happy' : 'happy', 4200);
+      } else if (hp.streak > 0 && !prefs.get(EXPLAIN_KEY)) {
+        // Eski kullanıcıya bir kez: seri artık kahve.
+        prefs.set(EXPLAIN_KEY, '1');
+        say(line('potExplain', 0, hp.streak), 'cheer', 5200);
+      } else say(potLine(), 'happy', 4200);
     }, 9000);
     const iv = setInterval(() => { if (!quietRef.current) say(potLine(), 'happy', 4200); }, 4 * 60_000 + rnd(60_000));
     return () => { clearTimeout(t); clearInterval(iv); };

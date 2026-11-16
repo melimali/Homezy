@@ -5,7 +5,7 @@ import { offlineMsg, online, withTimeout } from '@/lib/net';
 import { prefs, supabase } from '@/lib/supabase';
 import { removeAllPhotos } from '@/sync/photos';
 
-import { requestCaptcha } from './captcha';
+import { captchaEnabled, requestCaptcha } from './captcha';
 import { authErrorText } from './errors';
 
 /**
@@ -94,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (off) return off;
     // Kayıt Cloudflare doğrulamasıyla sunucu fonksiyonundan geçer (giriş ve misafir captcha istemez).
     const captchaToken = await requestCaptcha();
+    if (!captchaToken && captchaEnabled()) {
+      return { ok: false, error: 'Robot doğrulaması tamamlanamadı. İnternetini kontrol et (VPN ya da DNS/DPI aracı Cloudflare\'i engelliyor olabilir), sonra tekrar dene.' };
+    }
     const { data, error: fnErr } = await supabase.functions.invoke('signup', {
       body: { email: email.trim(), password, name: name.trim(), captchaToken, redirectTo: EMAIL_CONFIRMED_URL },
     });

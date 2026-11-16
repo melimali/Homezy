@@ -19,7 +19,7 @@ export function authErrorText(e: AuthError): string {
     case 'over_request_rate_limit':
       return 'Çok fazla deneme oldu. Birkaç dakika sonra tekrar dene.';
     case 'captcha_failed':
-      return 'Robot doğrulaması geçilemedi. İnternetini kontrol edip tekrar dene.';
+      return 'Robot doğrulaması geçilemedi. İnternetini kontrol et (VPN ya da DPI aracı Cloudflare’i engelliyor olabilir) ve tekrar dene.';
     case 'signup_disabled':
       return 'Yeni hesap açma şu an kapalı.';
   }

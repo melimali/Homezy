@@ -8,7 +8,7 @@ Sadece plan. Kod yok. Bu belge çakıştığı yerde önceki iki planın yerine 
 1. **Oda bir ekran değil, bir yer.** Arayüz küçülür, resim konuşur. Ekranda aynı anda en çok 3 arayüz parçası: üst şerit, balon, alt sıra.
 2. **Alt panel tek sıraya iner.** Şimdi 3 kat (buzlu panel + iki düğme + kilit satırı) ekranın %22'sini ve yastığı kapatıyor. Yeni: `[ Temizlik başlat ]  (＋)  (💬)`. Yazı çubuğu sadece 💬'ye basınca açılır. Kalıcı "hesap aç" reklam satırı kalkar.
 3. **Kahve potu için yeni resim gerekmez.** Odanın rafında zaten dolu bir kahve sürahisi var. Seri = o sürahi. Buhar ondan çıkar, sayı üst şeritte `☕ 7` hapı. "Pot hep dolu" kuralı resimde zaten doğru.
-4. **Canlı yüz: yama değil, tam kare.** 1 oturan ana poz + 6 yüz düzenlemesi + 1 uyuyan poz = 8 resim (önceki plan 18 istiyordu). Kareler arası 150 ms çapraz geçiş. OpenCV yaması yok.
+4. **Canlı yüz çözüldü, yeni resim şart değil.** `4af040e` (12:51) mevcut 8 mimiği oturan gövdeye yapıştırıp çapraz geçişle canlandırdı; iyi duruyor. Melih'ten istenen 8 resim artık **isteğe bağlı kalite yükseltmesi** (fincansız sakin poz + gerçek uyuyan poz). Ayrıntı §5.
 5. **Kürk puanla alınır.** İlk ziyaretteki bedava renk seçimi kalkar. Deneme serbest, sahiplenme puanla.
 6. **Hafif 3B = katman kayması.** Bütün sahneyi poster gibi döndürmek kalkar; katmanlar farklı miktarda kayar.
 7. **Kesilenler:** odada hafta tepsisi, dolan fincan, 24 kahvelik defter + tarifler, 8 oda eşyası, eşya yerleşim sayfası, kahve molası, kart oyunu, yüksek çözünürlüklü oda yeniden üretimi. Sebep §6.
@@ -264,6 +264,9 @@ Kahve planı §6 tablosu aynen: İlk Demleme (3), Her Gün Taze Filtre (7), Fren
 
 ## 5. Canlı yüz, oturan Moka'da
 
+**Güncelleme (aynı gün):** bu belge yazılırken yapım thread'i `4af040e` ile canlı yüzü mevcut resimlerden çözdü (`scripts/make-moka-seated-face.py`: mimik yüz diski oturan gövdeye yapıştırılır, fincan önde kalır; 8 kare × 8 kürk, `seated_1-8.webp`; önizleme `moka-oda/oda-oturan-yuz.png`). Sonuç yeterince iyi: **F6 ve A1 yayın için şart değil.**
+Kalan iki kusur, sadece bunlar için A1 istenir: (1) Moka her duyguda fincan tutuyor, uyurken de; (2) yüz diski ile gövde arasında ton farkı yakından belli olabilir (emülatörde bakılacak). Aşağıdaki yöntem A1 resimleri gelirse geçerlidir; gelmezse mevcut 8 kare aynı duygu eşlemesiyle kullanılır.
+
 **Yöntem:** aynı pozun 7 tam karesi üst üste durur, saydamlıkla geçilir. Gövde aynı olduğu için sadece yüz değişmiş görünür. Küçük kaymalar hareket gibi okunur (mevcut `MokaFace` 8 ayrı çizimle bunu zaten yapıyor ve iyi duruyor).
 
 | Kare | Ne zaman |
@@ -312,8 +315,8 @@ Her aşama ayrı commit; sonunda `npm run typecheck`, `npm run lint`, testler. D
 | F3 | **Kahve odada:** sürahi dokunma kutusu, buhar durumları, hale, "taze" cümleleri (9 dil), fokurdama, üst şerit hapı, kahve sayfası, ışık zinciri, ilk ziyaret 3 adım | thread | yok | 1 gün |
 | F4 | **Kahve her yerde:** 🔥 → ☕ (Ev, Bugün, Profil, takvim, kartlar, bildirim, ayar, widget metni), rozet adları ve grup adı, "Kahveyi ılık tut", 9 dil | thread | yok (ikonlar kodla) | 0,75 gün |
 | F5 | **Kürk puanla:** fiyatlar, `owned`, deneme, eski seçimlerin korunması, menüde "Moka'nı tasarla" | thread | yok | 0,5 gün |
-| A1 | Oturan ana poz + 6 yüz + uyuyan poz (§8, 8 resim) | **Melih** | 8 | 1-2 saat |
-| F6 | **Canlı yüz:** hizalama scripti, 9 kare bileşeni, kürk üretimi, duygu eşlemesi | thread | A1 | 1 gün |
+| A1 | Oturan ana poz + 6 yüz + uyuyan poz (§8, 8 resim). **İsteğe bağlı**; en değerlisi tek resim: uyuyan poz | **Melih** | 1-8 | 0,5-2 saat |
+| F6 | Canlı yüz zaten var (`4af040e`). A1 gelirse: kareleri değiştir, hizalama, kürk üretimi | thread | A1 | 0,5 gün |
 | A2 | 7 rozet ikonu + fincan kaldıran Moka (§8) | **Melih**, isteğe bağlı | 8 | 1 saat |
 | F7 | Rozet resimleri, kutlama, mağaza ekran görüntüsü; isteğe bağlı oda 2 kat büyütme | thread | A2 | 0,5 gün |
 
@@ -330,7 +333,7 @@ Sahiplik: kod "Perfect Moka's room plan and build" thread'inde (dal `claude/proj
 
 Hepsi için: aynı sohbet, saydam PNG, 1024×1024. Düzenlemelerde önce Gemini'yi dene (gövdeyi daha az kaydırıyor); olmazsa ChatGPT. Teslim: proje dosyaları `moka-oda/`.
 
-### A1. Oturan Moka (öncelik 1, 8 resim)
+### A1. Oturan Moka (isteğe bağlı kalite yükseltmesi; önce sadece 8. resim, uyuyan poz, yeter)
 
 **1) Ana poz** — ekle: `moka_happy.png`, `moka_home_seated.png` (boyut ve oturuş için), oda resmi (ışık için).
 ```

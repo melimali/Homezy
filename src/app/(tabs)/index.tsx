@@ -32,7 +32,7 @@ import { MoodCheckin } from '@/components/MoodCheckin';
 import { checkinOf, dayPlan } from '@/domain/mood';
 import { HouseGarden } from '@/components/HouseGarden';
 import { Appear, Squish } from '@/components/motion';
-import { QuickActions } from '@/components/QuickActions';
+import { AddTaskButton, CleanLink } from '@/components/QuickActions';
 import { Bar, Btn, Card, EmptyMsg, IconBtn, SecHead, Screen, T, Chevron } from '@/components/ui';
 import { tx } from '@/i18n/runtime';
 import { CATS, catOf, type Cat } from '@/domain/discipline';
@@ -119,9 +119,12 @@ export default function Home() {
     ),
     isler: (
       <View {...mark('isler')}><Card bare index={2}>
-        <SecHead title="Bugünün işleri" h="h3" right={due.length > shown.length ? (
-          <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>
-        ) : undefined} />
+        <SecHead title="Bugünün işleri" h="h3" right={(
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {due.length > shown.length && <Squish onPress={toToday} accessibilityRole="link" hitSlop={8}><T v="small">+{due.length - shown.length} ›</T></Squish>}
+            <AddTaskButton />
+          </View>
+        )} />
         <View>
           {(() => { let left = openAll ? Infinity : 3; return (['sabah', 'oda', 'ev'] as Cat[]).map(cat => {
             const rows = shown.filter(x => catOf(x) === cat).slice(0, left);
@@ -282,15 +285,7 @@ export default function Home() {
           <Text style={[styles.weekT, { color: c.muted }]}>Değiştir ›</Text>
         </Squish>
       )}
-      <Squish onPress={() => router.push('/temizlik?min=15' as Href)} accessibilityRole="button" accessibilityLabel="15 dakika temizlik başlat" style={[styles.week, { backgroundColor: c.accent }]}>
-        <Text style={{ lineHeight: 34, fontSize: 26 }}>🧹</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.weekT, { color: c.onAccent }]}>15 dk temizlik</Text>
-          <Text style={[styles.statL, { color: c.onAccent, opacity: 0.8 }]}>Tek dokunuş, Moka işleri sıralar</Text>
-        </View>
-        <Chevron color={c.onAccent} size={14} dir="right" />
-      </Squish>
-      <QuickActions />
+      <CleanLink />
       {weekReady && (
         <Squish onPress={() => router.push('/hafta')} style={[styles.week, { backgroundColor: c.accentSoft }]}>
           <Text style={{ lineHeight: 34, fontSize: 26 }}>🗓️</Text>

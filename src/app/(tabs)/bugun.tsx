@@ -28,7 +28,7 @@ import { CATS, catOf, type Cat } from '@/domain/discipline';
 import { orderByFit } from '@/domain/formulas';
 import { dailyCap } from '@/domain/ramp';
 import { EditTabBtn } from '@/components/TabEditor';
-import { QuickActions } from '@/components/QuickActions';
+import { AddTaskButton, CleanLink } from '@/components/QuickActions';
 import { useTabLayout } from '@/lib/tabLayout';
 import { RampCard } from '@/components/RampCard';
 import { allTasks, doneToday as isDoneToday, isGuestRoom, placeOf, quickPick, shopItems } from '@/domain/logic';
@@ -102,7 +102,7 @@ export default function Bugun() {
     hero: <>
       <View {...tour.mark('hero')}><Hero total={total} done={doneN} left={total - doneN} tatil={S.mode?.k === 'tatil'} /></View>
       <RampCard />
-      <QuickActions />
+      <CleanLink />
       {next && <View {...tour.mark('next')}><NextUp t={next.t} rid={next.rid} list={next.list} left={total - doneN} /></View>}
       <OdakCard next={next} total={total} doneN={doneN} />
 </>,
@@ -211,7 +211,8 @@ export default function Bugun() {
   return (
     <Screen header={false} tab tone="rose" {...tour.screen}>
       <TitleBar title="Bugün" after={<EditTabBtn tab="bugun" />} right={(
-        <View style={{ flexDirection: 'row', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <AddTaskButton size={36} />
           <IconBtn size={36} icon="🔎" label="Ara" onPress={() => router.push('/ara' as never)} />
           <IconBtn size={36} icon="📅" label="Takvim" onPress={() => router.push('/takvim' as never)} />
           <IconBtn size={36} icon="🗓️" label="Haftam" onPress={() => router.push('/hafta')} />

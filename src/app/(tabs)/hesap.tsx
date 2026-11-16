@@ -1,5 +1,4 @@
 import { useBusy } from '@/components/BusyOverlay';
-import { type BadgeArt } from '@/constants/badges';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
 import { useCallback, useRef, useState, type ComponentRef } from 'react';
@@ -17,8 +16,9 @@ import { LANGUAGES } from '@/i18n/translations';
 import { useTranslation } from '@/i18n/i18n';
 import { saveNickname, useName } from '@/profile/useName';
 import { usePersona } from '@/profile/usePersona';
+import { achievements } from '@/domain/achievements';
 import { TYPES } from '@/domain/kisilik';
-import { homeScore, emptyState } from '@/domain/logic';
+import { emptyState } from '@/domain/logic';
 import { addDays, dayKey, MAX_LEVEL, nextStage, progressOf, STAGES } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { extrasUnlocked } from '@/lib/events';
@@ -106,18 +106,6 @@ export default function Hesap() {
   // Bu hafta tamamlananlar (son 7 gün) ve başarımlar: sadece gösterim, mevcut kayıtlardan hesaplanır.
   const today = dayKey(now);
   const weekDone = [0, 1, 2, 3, 4, 5, 6].reduce((n, i) => n + (state.play.log[addDays(today, -i)]?.length ?? 0), 0);
-  const allDone = Object.values(state.play.log).reduce((n, a) => n + a.length, 0);
-  const plants = Object.values(state.play.log).flat().filter(x => x.startsWith('🪴')).length;
-  const badges: { label: string; art: BadgeArt; on: boolean; hint: string }[] = [
-    { label: 'İlk Adım', art: 'ilk', on: allDone >= 1, hint: 'İlk işini tamamla' },
-    { label: 'İlk Demleme', art: 'kus', on: hp.streak >= 3, hint: '3 gün kahveyi taze tut' },
-    { label: 'Her Gün Taze Filtre', art: 'seri', on: hp.streak >= 7, hint: '7 gün kahveyi taze tut' },
-    { label: 'Haftanın Yıldızı', art: 'takvim', on: weekDone >= 10, hint: 'Bu hafta 10 iş yap' },
-    { label: 'Temizlik Ustası', art: 'el', on: allDone >= 20, hint: '20 iş tamamla' },
-    { label: 'Düzen Canavarı', art: 'ev', on: homeScore(state, now) >= 80, hint: 'Ev puanını %80 yap' },
-    { label: 'Bitki Dostu', art: 'filiz', on: plants >= 3, hint: '3 kez bitki sula' },
-    { label: 'Yıldız Ev', art: 'yildiz', on: allDone >= 100, hint: '100 iş tamamla' },
-  ];
 
   // Sonuç mesajları Sheet'in içinde gösterilir: iOS'ta Modal üstünde toast/uyarı görünmüyordu.
   const [msg, setMsg] = useState<{ key: 'restore' | 'acct'; ok: boolean; text: string } | null>(null);
@@ -296,7 +284,10 @@ export default function Hesap() {
 
 
   const go = (x: Item) => { setCat(null); if (x.onPress) x.onPress(); else if (x.href) router.push(x.href); };
-  const earned = badges.filter(b => b.on).length;
+  // Rozet sayısı Rozetler ekranıyla aynı listeden gelir (elle yazılmış sayı eskiyip "3 / 8" kalıyordu).
+  const allAch = achievements(state, now);
+  const earned = allAch.filter(b => b.on).length;
+  const totalAch = allAch.length;
   const lockedItem: Item = { emoji: '🔒', label: 'Odak, Spor, Hikâye', sub: '3. günden sonra açılır', tint: c.lavenderSoft, onPress: () => toast('Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱') };
 
   const cats: { key: string; emoji: string; title: string; tint: string; sub: string; items: Item[] }[] = [
@@ -306,11 +297,11 @@ export default function Hesap() {
       { emoji: '😊', label: 'Ruh hali', sub: 'Bugün nasılsın?', tint: c.roseSoft, href: '/ruhhali' as Href },
       ...(extras ? [{ emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' as Href }] : [lockedItem]),
     ] },
-    { key: 'gelisim', emoji: '🌱', title: 'Gelişim', tint: c.lavenderSoft, sub: `${earned} / ${badges.length} rozet`, items: [
+    { key: 'gelisim', emoji: '🌱', title: 'Gelişim', tint: c.lavenderSoft, sub: `${earned} / ${totalAch} rozet`, items: [
       { emoji: '📚', label: 'Kendini geliştir', sub: 'Kitap, film, öğrenme önerileri', tint: c.lavenderSoft, href: '/buyume' as Href },
       { emoji: '📔', label: 'Günlük', sub: 'Bugün nasıldı?', tint: c.roseSoft, href: '/gunluk' },
       { emoji: '🎨', label: "Moka'nı tasarla", sub: 'Kürk rengi ve aksesuar', tint: c.lavenderSoft, href: '/moka-tasarim' as Href },
-      { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${badges.length} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
+      { emoji: '🏆', label: 'Rozetler', sub: `${earned} / ${totalAch} kazanıldı`, tint: c.peachSoft, href: '/rozetler' as Href },
       { emoji: '🎮', label: 'Biraz eğlenelim', sub: 'Moka Uçuş', tint: c.lavenderSoft, href: '/eglence' as Href },
       ...(extras ? [
         { emoji: '🍅', label: 'Odak', sub: 'Pomodoro, ders çalışma', tint: c.lavenderSoft, href: '/odak' as Href },

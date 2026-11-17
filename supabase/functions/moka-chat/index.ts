@@ -189,6 +189,10 @@ Deno.serve(async req => {
     const res = await anthropic.messages.create({
       model: MODEL,
       max_tokens: useTools ? 400 : 240,
+      // Maliyet: Haiku 5.5'te düşünme varsayılan olarak açık ve çıktı token'ı olarak ücretlenir; kısa sohbet cevabında
+      // gereksiz. Kapalıyken max_tokens'ın tamamı cevaba kalır (düşünme yüzünden boş/yarım cevap ve 422 olmaz).
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low' },
       // Statik kısım (kişilik + kurallar + dil) önbelleğe alınır; ev verisi her istekte değişir, sona konur.
       system: [
         { type: 'text', text: withLang(STATIC_SYSTEM, body.lang), cache_control: { type: 'ephemeral' } },

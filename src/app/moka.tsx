@@ -26,8 +26,8 @@ import type { AppState } from '@/domain/types';
 import { limits } from '@/domain/premium';
 import { SUPPORT_EMAIL, openLink } from '@/lib/links';
 import { cannedReply } from '@/domain/chatCanned';
-import { askMoka } from '@/lib/mokaChat';
-import { getUiLang, tx } from '@/i18n/runtime';
+import { askMoka, chatResetAt } from '@/lib/mokaChat';
+import { dateLocale, getUiLang, tx } from '@/i18n/runtime';
 import { haptic, sfx } from '@/lib/sfx';
 import { allTasks } from '@/domain/logic';
 import { line, openingLine, windowLine } from '@/domain/mokaLines';
@@ -52,6 +52,8 @@ type Item = ChatMsg & {
   confirmed?: 'yes' | 'no';
   /** Hata cevabında: "Tekrar dene" ile yeniden gönderilecek mesaj. */
   retry?: string;
+  /** Günlük hak bitince Moka'nın vedası (modele gönderilmez). */
+  bye?: boolean;
 };
 
 /** Kullanıcı ve model metni çeviri yamasından geçmesin (i18n/patch.tsx): yazılan söz olduğu gibi kalır. */
@@ -88,6 +90,21 @@ let memory: Item[] = [HELLO];
 let nextId = 1;
 const resetMemory = () => (memory = [HELLO]);
 /** Premium olmayan kullanıcı bu oturumda kaç mesaj yazdı (ilk mesaja uzun tanıtım, sonrakilere kısa yönlendirme). */
+/** Kalan sohbet hakkı: oda kapanıp açılsa da gün boyu hatırlanır (yenilenme anına kadar). */
+let leftMem: { day: number; month: number; until: number } | null = null;
+/** Günlük hak dolunca Moka'nın vedası; {} yerine "yarın 00:00" gibi yenilenme zamanı gelir. */
+const BYE = [
+  'Bugünlük çok konuştuk, ben de biraz yoruldum 😴 {} yine buradayım, konuşuruz 💛',
+  'Kahvem bitti, gözlerim kapanıyor ☕😴 Bugünlük bu kadar; {} seni bekliyorum 💛',
+  'Bugün ne güzel sohbet ettik 💛 Şimdi biraz kestireyim; {} yine konuşuruz ☕',
+];
+/** Yenilenme anı, telefonun saatiyle: "yarın 00:00" (Türkiye), başka saat diliminde "bugün 22:00" gibi. */
+function resetLabel() {
+  const r = chatResetAt();
+  const t = r.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+  return tx(r.toDateString() === new Date().toDateString() ? 'bugün {}' : 'yarın {}').replace('{}', t);
+}
+const byeLine = () => tx(BYE[Math.floor(Math.random() * BYE.length)]).replace('{}', resetLabel());
 let freeAsked = 0;
 let cannedN = 0;
 /** Bugün "hepsi bitti" kutlaması gösterildi mi (oturumda bir kez). */
@@ -113,7 +130,11 @@ export default function MokaChat() {
   const [items, setItems] = useState<Item[]>(memory);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const [left, setLeft] = useState<{ day: number; month: number } | null>(null);
+  const [left, setLeft0] = useState<{ day: number; month: number } | null>(() => (leftMem && Date.now() < leftMem.until ? leftMem : null));
+  const setLeft = (v: { day: number; month: number }) => {
+    leftMem = { ...v, until: chatResetAt().getTime() };
+    setLeft0(v);
+  };
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -168,6 +189,12 @@ export default function MokaChat() {
   const send = async (raw?: string, force = false) => {
     const msg = (raw ?? text).trim().slice(0, 600);
     if (!msg || busy) return;
+    // Günlük hak bitti: mesaj gitmez, Moka yarını hatırlatır.
+    if (left && left.day <= 0 && status === 'account' && premium.active) {
+      setComposing(false);
+      Keyboard.dismiss();
+      return chatPress();
+    }
     setText('');
     setQuip('');
     setLockMsg(null);
@@ -175,7 +202,7 @@ export default function MokaChat() {
     const mine: Item = { id: nextId++, role: 'user', content: msg };
     setSent({ id: mine.id, text: msg });
     // Hata alan mesajlar (ve cevapsız kalan soruları) modele gitmez.
-    const history = [...items.filter((i, k) => !i.error && !(i.role === 'user' && items[k + 1]?.error)), mine].slice(-6).map(({ role, content, done }) => ({
+    const history = [...items.filter((i, k) => !i.error && !i.bye && !(i.role === 'user' && items[k + 1]?.error)), mine].slice(-6).map(({ role, content, done }) => ({
       role,
       content: done?.length ? `${content}\n[Uygulama bu işlemleri zaten yaptı: ${done.join(' | ')}]` : content,
     }));
@@ -224,6 +251,12 @@ export default function MokaChat() {
     }
     setBusy(false);
     settle(mine.id);
+    if (!r.ok && r.daily) {
+      // Günlük hak doldu: hata değil, Moka tatlı bir vedayla uykuya geçer.
+      setLeft({ day: 0, month: left?.month ?? 0 });
+      sayBye(0);
+      return;
+    }
     if (!r.ok) {
       const cta = r.account ? 'login' as const : r.premium ? 'premium' as const : undefined;
       const eid = nextId++;
@@ -258,12 +291,29 @@ export default function MokaChat() {
     const rid = nextId++;
     fresh.add(rid);
     push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done, ...(undo.length ? { undo } : {}), ...(confirm.length ? { confirm } : {}) }]);
+    // Bu, günün son mesajıydı: cevabı yazıldıktan sonra Moka vedalaşır.
+    if (r.limit != null && r.limit - r.used <= 0) sayBye(typeMs(r.reply.length) + 1800);
     const go = got.go;
     if (go) later(() => router.push(go as never), 700);
     const f = got.focus;
     if (f) {
       later(() => router.push({ pathname: '/odak', params: { min: String(f.minutes), topic: f.topic, auto: '1' } }), 900);
     }
+  };
+
+  /** Günün son mesajından sonra: veda balonu, uykulu Moka, klavye kapanır. */
+  const sayBye = (ms: number) => {
+    later(() => {
+      const bid = nextId++;
+      fresh.add(bid);
+      push(p => [...p, { id: bid, role: 'assistant', content: byeLine(), bye: true }]);
+      setQuip('');
+      setMoodOv(null);
+      setText('');
+      setComposing(false);
+      Keyboard.dismiss();
+      haptic('light');
+    }, ms);
   };
 
   const undoItem = (id: number) => {
@@ -390,8 +440,10 @@ export default function MokaChat() {
   const [composing, setComposing] = useState(false);
   // Zamanlayıcılar için: Moka şu an konuşmamalı mı (cevap bekleniyor ya da kullanıcı yazıyor).
   const quietRef = useRef(false);
+  // Hak bitip Moka dinlenirken kendi kendine konuşmaz (sürahi ve boşta repliği susar).
+  const restingRef = useRef(false);
   useEffect(() => {
-    quietRef.current = busy || composing;
+    quietRef.current = busy || composing || restingRef.current;
   }, [busy, composing]);
   const [lockMsg, setLockMsg] = useState<'login' | 'premium' | 'tomorrow' | null>(null);
   // Balon ömrü: süresi dolan içerik buraya yazılır ve bir daha kendiliğinden çıkmaz.
@@ -433,6 +485,7 @@ export default function MokaChat() {
   useEffect(() => {
     if (!woke || intro) return;
     const t = setTimeout(() => {
+      if (restingRef.current) return;
       if (brewing && !prefs.get(BREW_KEY)?.startsWith(dayKey(now))) {
         prefs.set(BREW_KEY, dayKey(now));
         setBrew(b => b + 1);
@@ -453,7 +506,7 @@ export default function MokaChat() {
   const idleOff = busy || composing || notes || reduce || !woke || !!intro;
   useEffect(() => {
     if (idleOff) return;
-    const t = setTimeout(() => say(line(night ? 'idleNight' : 'idleDay', rnd(9)), night ? 'sleepy' : 'happy', 4200), 20000 + rnd(10000));
+    const t = setTimeout(() => { if (!restingRef.current) say(line(night ? 'idleNight' : 'idleDay', rnd(9)), night ? 'sleepy' : 'happy', 4200); }, 20000 + rnd(10000));
     return () => clearTimeout(t);
   }, [bump, idleOff, night, lastId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -510,7 +563,16 @@ export default function MokaChat() {
     else if (k === 'bitki') say(day.plantDue ? line('plantDue', 0, day.plantDue) : line('plant'), 'happy');
     else say(windowLine(sky.kind, night), 'wow');
   };
-  const baseMood = !fresh0 ? mood : !woke ? 'sleepy' : opening.mood;
+  // Hak bitince Moka gün boyu uykulu (dokununca kısa tepkiler yine olur).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const lockBye = useMemo(() => byeLine(), [lockMsg]);
+  // Veda balonu çıkana kadar (ya da odaya hak bitmiş hâlde girilince) uyanık kalmaz.
+  const resting = status === 'account' && premium.active && !!left && left.day <= 0 && (items.some(i => i.bye) || !items.some(i => i.role === 'user'));
+  useEffect(() => {
+    restingRef.current = resting;
+    quietRef.current = busy || composing || resting;
+  }, [resting, busy, composing]);
+  const baseMood = resting ? 'sleepy' : !fresh0 ? mood : !woke ? 'sleepy' : opening.mood;
   // Misafir ve ücretsiz üyede sohbet düğmesi kilitli: basınca Moka tek cümleyle anlatır. Premium'da hak bitince yarına kadar.
   const lock: 'login' | 'premium' | 'tomorrow' | null = status !== 'account' ? 'login' : !premium.active ? 'premium' : left && left.day <= 0 ? 'tomorrow' : null;
   const chatPress = () => {
@@ -560,7 +622,7 @@ export default function MokaChat() {
     </View>
   ) : lockMsg ? (
     <Appear key={lockMsg}>
-      {say0(lockMsg === 'login' ? line('lockLogin') : lockMsg === 'premium' ? line('lockPremium') : 'Bugünlük çok konuştuk, yarın devam ☕')}
+      {say0(lockMsg === 'login' ? line('lockLogin') : lockMsg === 'premium' ? line('lockPremium') : lockBye)}
       {lockMsg !== 'tomorrow' && (
         <Squish onPress={() => router.push(lockMsg === 'login' ? '/giris' : '/premium')} accessibilityLabel={tx(lockMsg === 'login' ? 'Hesap aç' : "Premium'a bak")} style={[st.cta, { backgroundColor: c.accent }]}>
           <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBlack, fontSize: 14, color: c.onAccent }}>{tx(lockMsg === 'login' ? 'Hesap aç' : "Premium'a bak")}</Text>
@@ -804,7 +866,14 @@ export default function MokaChat() {
           <View style={[st.row, { paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
             <Squish onPress={chatPress} accessibilityLabel={tx("Moka'ya yaz")} scaleTo={0.97} style={[st.pillWrite, { backgroundColor: paper, shadowColor: D.shade, borderColor: D.cream }]}>
               <View style={[st.writeIc, { backgroundColor: D.cream }]}><Icon name="chat" color={D.ink} size={20} /></View>
-              <Text numberOfLines={1} maxFontSizeMultiplier={1.3} style={[st.pillWriteT, { color: D.soft }]}>{tx("Moka'ya yaz…")}</Text>
+              {lock === 'tomorrow' ? (
+                <View style={{ flex: 1 }}>
+                  <Text numberOfLines={1} maxFontSizeMultiplier={1.2} style={[st.pillWriteT, { color: D.ink, fontSize: 15, lineHeight: 19 }]}>{tx('Moka dinleniyor 😴')}</Text>
+                  <Text numberOfLines={1} maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, lineHeight: 16, color: D.soft }}>{resetLabel()}</Text>
+                </View>
+              ) : (
+                <Text numberOfLines={1} maxFontSizeMultiplier={1.3} style={[st.pillWriteT, { color: D.soft }]}>{tx("Moka'ya yaz…")}</Text>
+              )}
               {lock && (
                 <View style={[st.lockTag, { backgroundColor: lock === 'premium' ? D.glow : D.cream }]}>
                   <Icon name={lock === 'login' ? 'lock' : lock === 'premium' ? 'star' : 'moon'} color={D.ink} size={13} />

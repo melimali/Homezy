@@ -3,7 +3,8 @@ import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 
-import { useReduceMotion } from '@/components/motion';
+import { Squish, useReduceMotion } from '@/components/motion';
+import { canGiveCoffee, toNextGift } from '@/domain/bond';
 import { nextCoffee, potSteam, type PotState } from '@/domain/coffee';
 import { lastWeek, type DayMark } from '@/domain/play';
 import type { Play } from '@/domain/types';
@@ -81,12 +82,15 @@ function DayCup({ d, ink, soft }: { d: DayMark; ink: string; soft: string }) {
  * Kahve sayfası (docs/moka-oda-usta-plan.md §3.4): tüten sürahi, gün sayısı, bu haftanın fincanları,
  * sıradaki kahve rozeti ve "kahveyi ılık tut" hakkı. Tek ekran, kaydırma yok.
  */
-export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLeft }: { open: boolean; onClose: () => void; P: Play; now: number; streak: number; best: number; pot: PotState; freezeLeft: number }) {
+export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLeft, onGive }: { open: boolean; onClose: () => void; P: Play; now: number; streak: number; best: number; pot: PotState; freezeLeft: number; /** Kahveyi Moka'ya verir (sevinç + nadiren hediye). */ onGive?: () => void }) {
   const c = useColors();
   const D = c.den;
   const insets = useSafeAreaInsets();
   const week = lastWeek(P, now);
   const next = nextCoffee(best);
+  const canGive = canGiveCoffee(P, now);
+  const left = toNextGift(P);
+  const cold = pot === 'cold' || pot === 'first';
   const fmt = new Intl.DateTimeFormat(getUiLang(), { weekday: 'narrow' });
   const label = pot === 'fresh' || pot === 'wait' || pot === 'warm' ? tx('gündür taze') : tx(pot === 'cold' ? 'Kahve soğumuş, yeniden demleyelim ☕' : 'İlk kahveyi birlikte demleyelim ☕');
   return (
@@ -105,6 +109,21 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
             <Text maxFontSizeMultiplier={1.3} style={[st.label, { color: D.ink }]}>{label}</Text>
           </View>
         </View>
+        {!!onGive && (
+          <View style={{ alignItems: 'center', gap: 6, paddingBottom: 6 }}>
+            <Squish
+              onPress={canGive ? onGive : undefined}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canGive }}
+              style={[st.give, { backgroundColor: canGive ? c.accent : D.line }]}
+            >
+              <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: canGive ? c.onAccent : D.soft }}>
+                {tx(cold ? 'Kahve soğumuşken veremem 🥲' : canGive ? "Kahveyi Moka'ya ver ☕" : 'Bugünkü kahveyi verdin 💛')}
+              </Text>
+            </Squish>
+            {!cold && <Text maxFontSizeMultiplier={1.3} style={[st.small, { color: D.soft }]}>{tx('Hediyeye {} kahve kaldı').replace('{}', String(left))}</Text>}
+          </View>
+        )}
         <View style={st.week}>
           {week.map(d => (
             <View key={d.key} style={{ alignItems: 'center', gap: 4, flex: 1 }}>
@@ -137,6 +156,7 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
 
 const st = StyleSheet.create({
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 10, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
+  give: { paddingHorizontal: 26, paddingVertical: 14, borderRadius: 26, shadowColor: '#2A1C12', shadowOpacity: 0.16, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   grab: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, marginBottom: 12 },
   title: { fontFamily: fonts.bodyBold, fontSize: 13, textAlign: 'center' },
   hero: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 18, paddingVertical: 8 },

@@ -1,3 +1,4 @@
+import { COSMETICS, cosmeticKey } from './kozmetik';
 /**
  * Puanla alınan eşyalar. Sadece görev yaparak kazanılan puanla alınır; puan parayla satılmaz.
  * Fiyatlar sunucudaki `play_items` tablosuyla aynı olmalı (supabase/migrations/…_puan.sql).
@@ -144,9 +145,11 @@ export const PERSONAS: (Extra & { persona: PersonaId })[] = [
 export const FUR_PRICE: Record<string, number> = { kahve: 80, gri: 80, mavi: 120, turuncu: 120, pembe: 120, mor: 160, kirmizi: 160 };
 export const FUR_ITEMS: Extra[] = Object.entries(FUR_PRICE).map(([id, price]) => ({ id: `kurk_${id}`, name: 'Kürk rengi', emoji: '🎨', price, about: '' }));
 /** Bu kürk rengi kullanıcının mı: orman, satın alınmış ya da puanla almadan önce seçilmiş (eski seçim korunur). */
+/** Moka kozmetikleri (src/domain/kozmetik.ts): `esya_<slot>_<ad>`. Ücretsizler tabloda yok. */
+const COSMETIC_EXTRAS: Extra[] = COSMETICS.filter(c => c.price > 0).map(c => ({ id: cosmeticKey(c.id), name: c.name, emoji: c.emoji, price: c.price, premium: c.premium, about: '' }));
 export const furOwned = (P: { owned: string[]; furGift?: string | null }, id: string) => id === 'orman' || P.owned.includes(`kurk_${id}`) || P.furGift === id;
 
 /** Satın alınabilen her tek seferlik şey: odaya konan eşyalar, bahçe süsleri, kişilikler, kürk renkleri. */
 export const BUYABLE: Record<string, Item | Extra | undefined> = Object.fromEntries(
-  [...ITEMS, ...DECOR, ...PERSONAS.filter(p => p.price > 0), ...FUR_ITEMS].map(i => [i.id, i]),
+  [...ITEMS, ...DECOR, ...PERSONAS.filter(p => p.price > 0), ...FUR_ITEMS, ...COSMETIC_EXTRAS].map(i => [i.id, i]),
 );

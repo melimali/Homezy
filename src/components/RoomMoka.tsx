@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
-import { seatedFor } from '@/constants/mimik';
+import { RigBody } from '@/components/MokaRig';
+import { useStore } from '@/store/AppStore';
 import { useActive } from '@/hooks/useActive';
 
 const sine = Easing.inOut(Easing.sin);
 
 export type RoomMood = 'happy' | 'cheer' | 'wow' | 'sleepy' | 'neutral' | 'sad';
-const MOODS: RoomMood[] = ['neutral', 'happy', 'cheer', 'wow', 'sad', 'sleepy'];
 
 /**
  * Odada yastıkta oturan tam boy Moka (ayakları dahil), sohbetteki animasyonlu yüzle:
@@ -43,15 +43,33 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   const base: RoomMood = thinking && mood !== 'sad' && mood !== 'sleepy' ? 'neutral' : mood;
   const faceOv = act === 'yawn' ? 'wow' : act === 'sip' ? 'happy' : act === 'stretch' ? 'cheer' : null;
   const shown: RoomMood = faceOv && base === 'neutral' ? faceOv : base;
-  const [fades] = useState(() => Object.fromEntries(MOODS.map(m => [m, new Animated.Value(m === shown ? 1 : 0)])) as Record<RoomMood, Animated.Value>);
-  const F = seatedFor(fur);
+  const { state } = useStore();
+  const worn = state.play.mokaWorn;
+  const [eyeBase] = useState(() => new Animated.Value(1));
+  const [lag] = useState(() => new Animated.Value(0));
+  const [wingV] = useState(() => new Animated.Value(0));
+  const [tailV] = useState(() => new Animated.Value(0));
 
-  // Yüz geçişi: hedef mimik açılır, diğerleri kapanır.
+  // Gözler ruh haline göre: uykuda yarı kapalı, sevinçte kısık, şaşkınlıkta açık.
   useEffect(() => {
-    const a = Animated.parallel(MOODS.map(m => Animated.timing(fades[m], { toValue: m === shown ? 1 : 0, duration: reduceM ? 0 : 320, easing: Easing.inOut(Easing.quad), useNativeDriver: true })));
+    const to = shown === 'sleepy' ? 0.22 : shown === 'happy' || shown === 'cheer' ? 0.92 : shown === 'wow' ? 1.06 : shown === 'sad' ? 0.78 : 1;
+    const a = Animated.timing(eyeBase, { toValue: to, duration: reduceM ? 0 : 300, easing: sine, useNativeDriver: true });
     a.start();
     return () => a.stop();
-  }, [shown, fades, reduceM]);
+  }, [shown, eyeBase, reduceM]);
+
+  // Şapka başı biraz geriden izler; kanat ve kuyruk yavaş salınır.
+  useEffect(() => {
+    if (!run) return;
+    const lp = (v: Animated.Value, ms: number) => Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: ms, easing: sine, useNativeDriver: true }),
+      Animated.timing(v, { toValue: -1, duration: ms, easing: sine, useNativeDriver: true }),
+    ]));
+    const an = [lp(wingV, 2600), lp(tailV, 1500)];
+    an.forEach(x => x.start());
+    const tm = setTimeout(() => { const l = lp(lag, 3100); l.start(); an.push(l); }, 170);
+    return () => { clearTimeout(tm); an.forEach(x => x.stop()); };
+  }, [run, lag, wingV, tailV]);
 
   // Göz kırpma: düzensiz aralık; hızlı, yavaş ya da çift. Konuşurken, uykuda ve sevinçte kırpmaz.
   useEffect(() => {
@@ -202,7 +220,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
 
   // Nefes: her nefes biraz farklı uzunlukta; arada derin iç çekiş. Uykuda daha yavaş ve derin.
   const sleepRef = useRef(sleeping);
-  sleepRef.current = sleeping;
+  useEffect(() => { sleepRef.current = sleeping; }, [sleeping]);
   useEffect(() => {
     if (!run) return;
     let dead = false;
@@ -309,7 +327,6 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     jump.interpolate({ inputRange: [-0.4, 0, 1], outputRange: [size * 0.012, 0, -size * 0.085] }),
     pop.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.025] }),
   )));
-  const img = { position: 'absolute' as const, width: size, height: size };
   // Dönüş birimi: 1 birim = 4°. Baş eğme + bakış + uyuklama + ağırlık kayması + yudumlama.
   const units = Animated.add(Animated.add(tilt, Animated.multiply(look, 0.3)), Animated.add(
     Animated.add(nod.interpolate({ inputRange: [0, 1], outputRange: [0, 0.55] }), drift.interpolate({ inputRange: [0, 1], outputRange: [-0.12, 0.12] })),
@@ -324,12 +341,13 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   return (
     <View style={{ width: size, height: size }} pointerEvents="none">
       <Animated.View style={{ width: size, height: size, transform: [{ translateY: size * 0.4 }, { rotate: rot }, { translateY: -size * 0.4 }, { translateX: lx }, { translateY: ty }, { scaleX: sx }, { scaleY: sy }] }}>
-        {MOODS.map(m => (
-          <Animated.Image key={m} source={F[m]} style={[img, { opacity: fades[m] }]} resizeMode="contain" accessibilityIgnoresInvertColors />
-        ))}
-        <Animated.Image source={F.wink} style={[img, { opacity: wink }]} resizeMode="contain" />
-        <Animated.Image source={F.talk} style={[img, { opacity: mouth }]} resizeMode="contain" />
-        <Animated.Image source={F[shown]} style={[img, { tintColor: '#2A2440', opacity: Animated.multiply(dim, 0.16) }]} resizeMode="contain" />
+        <RigBody
+          size={size} fur={fur} worn={worn}
+          sway={Animated.multiply(units.interpolate({ inputRange: [-3, 3], outputRange: [-1, 1] }), 0.4)} lag={lag}
+          wing={wingV} tail={tailV}
+          blink={Animated.multiply(eyeBase, wink.interpolate({ inputRange: [0, 1], outputRange: [1, 0.07] }))}
+          look={look} mouth={mouth} breath={breath}
+        />
       </Animated.View>
       {hearts.map((h, i) => (
         <Animated.Text

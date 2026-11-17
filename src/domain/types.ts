@@ -208,6 +208,8 @@ export type Play = {
   mokaAcc?: string | null;
   /** Moka'nın kürk rengi (src/constants/moka-look.ts). Yoksa orman yeşili. */
   mokaFur?: string | null;
+  /** Moka'nın giydikleri: slot → eşya kimliği (src/domain/kozmetik.ts). Yoksa çıplak. */
+  mokaWorn?: Partial<Record<'bas' | 'govde' | 'el', string>>;
   /** Kürk puanla alınmadan önce seçilmiş renk: bedava kalır (bir kez yazılır; null = yoktu). */
   furGift?: string | null;
   /** Moka'nın odasındaki ilk ziyaret tanıtımı görüldü. */
@@ -238,6 +240,8 @@ export type Play = {
   checkins: Record<DayKey, CheckIn>;
   /** Günlük iki soru: 1. açılış "nasılsın", 2. açılış "evde misin" (src/domain/mood.ts `stageOf`). */
   ask?: DailyAsk;
+  /** Moka'ya verilen kahveler (gün) ve ondan gelen hediye eşyaları (src/domain/bond.ts). */
+  bond?: { given: DayKey[]; gifts: { id: string; day: DayKey }[] };
   /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
   moka: MokaGrowth;
   /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */

@@ -11,7 +11,7 @@ import { setLang, tx } from '../runtime';
 
 const TR_CHARS = /[çğıöşüÇĞİÖŞÜ]/;
 // Sözlük değerinde kasıtlı Türkçe kalabilir (yemek adları, dizi/kitap adları, özel adlar).
-const EN_VALUE_OK = /Ethos|Türkiye|Karnıyarık|İmam bayıldı|Türkçe|Turkish|Çağan|Oğuz|Ahmet/;
+const EN_VALUE_OK = /Ethos|Türkiye|Karnıyarık|İmam bayıldı|Türkçe|Turkish|Çağan|Oğuz|Ahmet|^Kimono$|^Ukulele$/;
 // Türkçe sözcük eşleşmesi: İngilizce'de de geçen ortak yazımlar ("var", "ev"...) bilerek yok.
 const TR_WORD = /(?<![’'])\b(ve|için|değil|çok|daha|bugün|yarın|dün|kadar|gibi|şimdi|tamam|evet|hayır|temiz|kirli|sağlıklı|tümü|bekliyor|seni|senin|benim|hiç|nasıl|neden|hangi|ürün|alışveriş|yaptım|bitti|gecikti)\b/i;
 
@@ -69,7 +69,7 @@ it('koddaki Türkçe metinlerin İngilizce karşılığı var', () => {
 // Veri havuzları (src/domain, src/constants): eşya, görev, ürün, adım, öneri metinleri koddan değil
 // dışa aktarılan nesnelerden okunur; böylece yeni eklenen her havuz maddesi de İngilizce istenir.
 const POOL_SKIP_FILES = /^(growth|havuz|plan-templates|paywallCopy)\.ts$/; // dil öğrenme kartları, iç kimlikler, ızgara kodları
-const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Modern', 'Pastel', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…', 'Zzz… 💤', 'Barista']);
+const POOL_OK = new Set(['Cottagecore', 'Minimal', 'Modern', 'Pastel', 'Poster', 'Aloe vera', 'Polyester', 'Mint', 'Normal', 'Hamster', 'Ethos', 'Soul', 'Amélie', 'Ratatouille', 'diş', '🤨 Hmm…', 'Zzz… 💤', 'Barista', 'Kimono', 'Ukulele']);
 it('veri havuzlarındaki her metnin İngilizce karşılığı var', () => {
   setLang('en');
   const out = new Map<string, string>();

@@ -54,7 +54,7 @@ const FUR_RIG: Record<string, ReturnType<typeof furSet>> = Object.fromEntries(Ob
 const sine = Easing.inOut(Easing.sin);
 
 /** Katmanı (w×w) bir noktası etrafında döndürür / ölçekler: RN merkezden döndürür, bu yüzden kaydır-döndür-geri kaydır. */
-function Pivot({ s, p, rotate, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string>; scaleY?: Animated.AnimatedInterpolation<number> | Animated.Value; scaleX?: Animated.Value; tx?: Animated.AnimatedInterpolation<number> | Animated.Value; ty?: Animated.AnimatedInterpolation<number> | Animated.Value; children: ReactNode }) {
+function Pivot({ s, p, rotate, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string>; rotate2?: Animated.AnimatedInterpolation<string>; scaleY?: Val; scaleX?: Val; tx?: Val; ty?: Val; children: ReactNode }) {
   const px = ((p.x - W / 2) / W) * s;
   const py = ((p.y - W / 2) / W) * s;
   const tr: object[] = [];
@@ -69,15 +69,59 @@ function Pivot({ s, p, rotate, scaleY, scaleX, tx, ty, children }: { s: number; 
 }
 
 const Layer = ({ src, s }: { src: ImageSourcePropType; s: number }) => <Image source={src} style={{ position: 'absolute', width: s, height: s }} resizeMode="contain" fadeDuration={0} />;
-const deg = (v: Animated.Value, a: number) => v.interpolate({ inputRange: [-1, 1], outputRange: [`${-a}deg`, `${a}deg`] });
+type Val = Animated.Value | Animated.AnimatedInterpolation<number>;
+/** Hem Animated.Value hem interpolation/çarpım ile çalışır (hepsinde `interpolate` var). */
+const ip = <T extends number | string>(v: Val, inputRange: number[], outputRange: T[]) => (v as Animated.Value).interpolate({ inputRange, outputRange: outputRange as never }) as Animated.AnimatedInterpolation<T>;
+const deg = (v: Val, a: number) => ip(v, [-1, 1], [`${-a}deg`, `${a}deg`]);
+
+const HAT = { x: 627, y: 300 }; // şapkanın oturduğu yer (baş üstü): ikincil hareket pivotu
+
+/**
+ * Katmanlar + hareket girdileri (zamanlayıcı yok). Sürücüler: `MokaRig` (kendi kendine) ve `RoomMoka` (odadaki Moka).
+ * Girdiler -1..1 (sway, wing, tail, look), blink = göz ölçeği y (1 açık), mouth 0..1, lag = şapkanın geç kalan eğilmesi.
+ */
+export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, mouth, breath }: {
+  size: number; fur?: string | null; worn?: Partial<Record<SlotId, string | undefined>>;
+  sway: Val; lag: Val; wing: Val; tail: Val; blink: Val; look: Val; mouth: Val; breath: Val;
+}) {
+  const L = useMemo(() => rig(fur), [fur]);
+  const k = size / W;
+  const headLate = ip(breath, [0, 1], [0, -size * 0.004]);
+  const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
+  const eyeX = ip(look, [-1, 1], [-14 * k, 14 * k]);
+  const beakY = ip(mouth, [0, 1], [0, 16 * k]);
+  const item = (slot: SlotId) => {
+    const id = worn?.[slot];
+    return id && COSMETIC[id] && COSMETIC_IMG[id] ? <Layer src={COSMETIC_IMG[id]} s={size} /> : null;
+  };
+  const hat = worn?.bas && COSMETIC[worn.bas] && COSMETIC_IMG[worn.bas] ? <Layer src={COSMETIC_IMG[worn.bas]} s={size} /> : null;
+  return (
+    <>
+      <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
+      <Layer src={L.govde} s={size} />
+      {item('govde')}
+      <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
+        <Layer src={L.bas} s={size} />
+        <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}><Layer src={L.gozler} s={size} /></Pivot>
+        <Pivot s={size} p={EYES} ty={beakY}><Layer src={L.gaga} s={size} /></Pivot>
+        {hat && <Pivot s={size} p={HAT} rotate={deg(lag, 1.1)}>{hat}</Pivot>}
+      </Pivot>
+      <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
+      <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}>
+        <Layer src={L.kanat_a} s={size} />
+        {item('el')}
+      </Pivot>
+    </>
+  );
+}
 
 export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop = 0 }: { size: number; fur?: string | null; worn?: Partial<Record<SlotId, string | undefined>>; mood?: RigMood; talking?: boolean; /** Artınca küçük bir sevinç zıplaması (eşya giydirince). */ pop?: number }) {
   const reduce = useReduceMotion();
   const active = useActive();
   const run = !reduce && active;
-  const L = useMemo(() => rig(fur), [fur]);
   const [breath] = useState(() => new Animated.Value(0));
   const [sway] = useState(() => new Animated.Value(0)); // baş eğme -1..1
+  const [lag] = useState(() => new Animated.Value(0)); // şapka: baştan biraz geç
   const [wing] = useState(() => new Animated.Value(0)); // kanat sallanma -1..1
   const [tail] = useState(() => new Animated.Value(0));
   const [blink] = useState(() => new Animated.Value(1)); // göz ölçeği y
@@ -90,13 +134,14 @@ export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop 
     Animated.timing(v, { toValue: from, duration: ms, easing: sine, useNativeDriver: true }),
   ]));
 
-  // Nefes, baş eğme, kanat ve kuyruk: farklı hızlarda, birbirini tutmaz.
+  // Nefes, baş eğme, kanat ve kuyruk: farklı hızlarda, birbirini tutmaz. Şapka başı 170 ms geriden izler.
   useEffect(() => {
     if (!run) return;
     const a = [loop(breath, 1900), loop(sway, 3100, -1, 1), loop(wing, 2600, -1, 1), loop(tail, 1500, -1, 1)];
     a.forEach(x => x.start());
-    return () => a.forEach(x => x.stop());
-  }, [run, breath, sway, wing, tail]);
+    const t = setTimeout(() => { const l = loop(lag, 3100, -1, 1); l.start(); a.push(l); }, 170);
+    return () => { clearTimeout(t); a.forEach(x => x.stop()); };
+  }, [run, breath, sway, lag, wing, tail]);
 
   // Göz kırpma: düzensiz aralık; uykuda yarı kapalı, sevinçte kısık.
   const baseEye = mood === 'sleepy' ? 0.22 : mood === 'happy' ? 0.92 : mood === 'wow' ? 1.06 : 1;
@@ -167,35 +212,14 @@ export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop 
     ]).start();
   }, [pop, reduce, hop]);
 
-  const k = size / W;
   const sBreath = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
   const lift = breath.interpolate({ inputRange: [0, 1], outputRange: [0, -(0.018 * size) / 2] }); // alt sabit kalsın
   const hopY = hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [size * 0.012, 0, -size * 0.07] });
-  const headLate = breath.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.004] });
-  const eyeX = look.interpolate({ inputRange: [-1, 1], outputRange: [-14 * k, 14 * k] });
-  const beakY = mouth.interpolate({ inputRange: [0, 1], outputRange: [0, 16 * k] });
-  const worn_ = (slot: SlotId) => {
-    const id = worn?.[slot];
-    return id && COSMETIC[id] && COSMETIC_IMG[id] ? <Layer src={COSMETIC_IMG[id]} s={size} /> : null;
-  };
-
+  const hopS = hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [0.94, 1, 1.03] });
   return (
     <View style={{ width: size, height: size }}>
-      <Animated.View style={{ width: size, height: size, transform: [{ translateY: hopY }, { translateY: lift }, { scaleY: sBreath }] }}>
-        <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
-        <Layer src={L.govde} s={size} />
-        {worn_('govde')}
-        <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
-          <Layer src={L.bas} s={size} />
-          <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}><Layer src={L.gozler} s={size} /></Pivot>
-          <Pivot s={size} p={EYES} ty={beakY}><Layer src={L.gaga} s={size} /></Pivot>
-          {worn_('bas')}
-        </Pivot>
-        <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)}><Layer src={L.kanat_b} s={size} /></Pivot>
-        <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)}>
-          <Layer src={L.kanat_a} s={size} />
-          {worn_('el')}
-        </Pivot>
+      <Animated.View style={{ width: size, height: size, transform: [{ translateY: hopY }, { translateY: lift }, { scaleY: Animated.multiply(sBreath, hopS) }] }}>
+        <RigBody size={size} fur={fur} worn={worn} sway={sway} lag={lag} wing={wing} tail={tail} blink={blink} look={look} mouth={mouth} breath={breath} />
       </Animated.View>
     </View>
   );

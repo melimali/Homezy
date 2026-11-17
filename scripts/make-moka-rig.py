@@ -34,6 +34,15 @@ def esya():
                 canvas = Image.new('RGBA', (W, W), (0, 0, 0, 0))
                 canvas.alpha_composite(big, (int(cx - cx * k), int(by - by * k)))
                 im = canvas
+        # El eşyaları: tutulduğu yerde biraz daha okunur olsun (kutu merkezi sabit, 1,2 kat).
+        if name.startswith('el_'):
+            bb = im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
+            if bb:
+                k = 1.2; cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
+                big = im.resize((int(W * k), int(W * k)), Image.LANCZOS)
+                canvas = Image.new('RGBA', (W, W), (0, 0, 0, 0))
+                canvas.alpha_composite(big, (int(cx - cx * k), int(cy - cy * k)))
+                im = canvas
         save(im, f'{root}/assets/moka/esya/{name}.webp', 85); n += 1
     print('eşya', n)
 if '--esya' in sys.argv:

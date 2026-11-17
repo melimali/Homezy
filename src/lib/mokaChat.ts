@@ -12,9 +12,17 @@ import { supabase } from '@/lib/supabase';
  * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 25, ayda 750 mesaj, dakikada 6).
  */
 type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
-type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean };
+type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean; /** Günlük hak doldu: Moka vedalaşır, giriş yarına kadar kilitlenir. */ daily?: boolean };
 
 const TIMEOUT = 45_000;
+
+/** Günlük sohbet hakkı sunucuda Türkiye saatiyle gece yarısı yenilenir (chat_reserve: Europe/Istanbul) = 21:00 UTC. */
+export function chatResetAt(now = new Date()): Date {
+  const r = new Date(now);
+  r.setUTCHours(21, 0, 0, 0);
+  if (r.getTime() <= now.getTime()) r.setUTCDate(r.getUTCDate() + 1);
+  return r;
+}
 
 export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | Fail> {
   if (!supabase) return { ok: false, message: tx('Sohbet bu sürümde kullanılamıyor.') };
@@ -41,6 +49,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
     return {
       ok: false,
       limit: true,
+      daily: !!body.premium,
       message: body.premium
         ? tx('Moka yoruldu 😴 Yarın tekrar gel, seni bekliyor olacağım ☕💛')
         : tx('Bugünkü mesaj hakkın doldu. Yarın yine buradayım ☕'),

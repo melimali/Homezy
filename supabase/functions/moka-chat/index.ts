@@ -181,11 +181,18 @@ Deno.serve(async req => {
   if (!g.ok) { await releaseSlot(); return json({ error: g.error }, g.status); }
   const release = async () => { await g.release(); await releaseSlot(); };
 
-  const useTools = wantsTools(messages[messages.length - 1].content);
+  // Kaba süzgeç (ACTION_RE) sadece Türkçe ve İngilizce anahtar kelime bilir; diğer dillerde araçlar hep açık,
+  // yoksa "Milch auf die Einkaufsliste" gibi istekler araçsız kalır.
+  const otherLang = typeof body.lang === 'string' && body.lang !== 'tr' && body.lang !== 'en';
+  const useTools = otherLang || wantsTools(messages[messages.length - 1].content);
   try {
     const res = await anthropic.messages.create({
       model: MODEL,
       max_tokens: useTools ? 400 : 240,
+      // Maliyet: Haiku 5.5'te düşünme varsayılan olarak açık ve çıktı token'ı olarak ücretlenir; kısa sohbet cevabında
+      // gereksiz. Kapalıyken max_tokens'ın tamamı cevaba kalır (düşünme yüzünden boş/yarım cevap ve 422 olmaz).
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low' },
       // Statik kısım (kişilik + kurallar + dil) önbelleğe alınır; ev verisi her istekte değişir, sona konur.
       system: [
         { type: 'text', text: withLang(STATIC_SYSTEM, body.lang), cache_control: { type: 'ephemeral' } },

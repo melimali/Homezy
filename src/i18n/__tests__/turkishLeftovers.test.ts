@@ -11,7 +11,7 @@ import { setLang, tx } from '../runtime';
 
 const TR_CHARS = /[çğıöşüÇĞİÖŞÜ]/;
 // Sözlük değerinde kasıtlı Türkçe kalabilir (yemek adları, dizi/kitap adları, özel adlar).
-const EN_VALUE_OK = /Ethos|Türkiye|Karnıyarık|İmam bayıldı|Türkçe|Turkish|Çağan|Oğuz|Ahmet/;
+const EN_VALUE_OK = /Ethos|Türkiye|Karnıyarık|İmam bayıldı|Türkçe|Turkish|Çağan|Oğuz|Ahmet|^Kimono$|^Ukulele$/;
 // Türkçe sözcük eşleşmesi: İngilizce'de de geçen ortak yazımlar ("var", "ev"...) bilerek yok.
 const TR_WORD = /(?<![’'])\b(ve|için|değil|çok|daha|bugün|yarın|dün|kadar|gibi|şimdi|tamam|evet|hayır|temiz|kirli|sağlıklı|tümü|bekliyor|seni|senin|benim|hiç|nasıl|neden|hangi|ürün|alışveriş|yaptım|bitti|gecikti)\b/i;
 

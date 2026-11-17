@@ -76,6 +76,10 @@ type Val = Animated.Value | Animated.AnimatedInterpolation<number>;
 const ip = <T extends number | string>(v: Val, inputRange: number[], outputRange: T[]) => (v as Animated.Value).interpolate({ inputRange, outputRange: outputRange as never }) as Animated.AnimatedInterpolation<T>;
 const deg = (v: Val, a: number) => ip(v, [-1, 1], [`${-a}deg`, `${a}deg`]);
 
+// Göz ve ağız konumları (1254 tuvalinde): göz merkezleri, gaga ucunun altı.
+const LID_A = { x: 504, y: 364 };
+const LID_B = { x: 796, y: 322 };
+const MOUTH = { x: 664, y: 484 };
 const HAT = { x: 627, y: 300 }; // şapkanın oturduğu yer (baş üstü): ikincil hareket pivotu
 
 /**
@@ -91,7 +95,10 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const headLate = ip(breath, [0, 1], [0, -size * 0.004]);
   const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
   const eyeX = ip(look, [-1, 1], [-14 * k, 14 * k]);
-  const beakY = ip(mouth, [0, 1], [0, 16 * k]);
+  const beakY = ip(mouth, [0, 1], [0, 5 * k]);
+  const clampIp = (v: Val, a: number[], b: number[]) => (v as Animated.Value).interpolate({ inputRange: a, outputRange: b, extrapolate: 'clamp' });
+  const eyeOpen = clampIp(blink, [0.1, 0.3], [0, 1]);
+  const lidOpen = clampIp(blink, [0.1, 0.3], [1, 0]);
   const item = (slot: SlotId) => {
     const id = worn?.[slot];
     return id && COSMETIC[id] && COSMETIC_IMG[id] ? <Layer src={COSMETIC_IMG[id]} s={size} /> : null;
@@ -105,8 +112,20 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
       <Layer src={AYAK} s={size} />
       <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
         <Layer src={L.bas} s={size} />
-        <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}><Layer src={L.gozler} s={size} /></Pivot>
+        <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}>
+          <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: eyeOpen }}><Layer src={L.gozler} s={size} /></Animated.View>
+        </Pivot>
+        {/* Kapalı gözler (uyku): yassılmış göz yerine iki yumuşak ark. */}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: lidOpen, transform: [{ translateX: eyeX }] }}>
+          {[LID_A, LID_B].map((p, i) => <View key={i} style={{ position: 'absolute', left: (p.x - 62) * k, top: (p.y - 34) * k, width: 124 * k, height: 62 * k, borderBottomLeftRadius: 62 * k, borderBottomRightRadius: 62 * k, borderBottomWidth: Math.max(2.5, 11 * k), borderColor: '#3B2A20' }} />)}
+        </Animated.View>
         <Pivot s={size} p={EYES} ty={beakY}><Layer src={L.gaga} s={size} /></Pivot>
+        {/* Ağız içi: gaga aşağı inince görünür. */}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: (MOUTH.x - 34) * k, top: (MOUTH.y - 12) * k, width: 68 * k, height: 48 * k, opacity: clampIp(mouth, [0, 0.06], [0, 1]), transform: [{ translateY: ip(mouth, [0, 1], [-4 * k, 6 * k]) }, { scaleY: clampIp(mouth, [0, 1], [0.2, 1]) }] }}>
+          <View style={{ flex: 1, backgroundColor: '#8E3B3B', borderRadius: 24 * k, borderWidth: Math.max(2, 6 * k), borderColor: '#3B2A20', overflow: 'hidden', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <View style={{ width: 36 * k, height: 16 * k, borderTopLeftRadius: 18 * k, borderTopRightRadius: 18 * k, backgroundColor: '#E58C8C' }} />
+          </View>
+        </Animated.View>
         {hat && <Pivot s={size} p={HAT} rotate={deg(lag, 1.1)}>{hat}</Pivot>}
       </Pivot>
       <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>

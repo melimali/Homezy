@@ -16,7 +16,7 @@ import { dayKey, freezesUsed, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { prefs } from '@/lib/supabase';
 import { useTilt } from '@/hooks/useTilt';
-import { odaMap, RoomBackdrop, type RoomTouch } from '@/components/RoomBackdrop';
+import { odaMap, odaPhaseOf, RoomBackdrop, seatOf, type RoomTouch } from '@/components/RoomBackdrop';
 import { Appear, Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { Btn, Chevron, T } from '@/components/ui';
@@ -64,7 +64,6 @@ const NOTX = { noTx: true } as object;
 const RTL = I18nManager.isRTL;
 
 /** Moka'nın oturduğu yer: yastığın üst yüzeyinin ortası (852×1846 oda resmi). */
-const SEAT = { x: 400, y: 1330 };
 
 /** Cevap yazılma süresi (ms): kısa cevap hızlı, uzun cevap en çok 3,5 sn. Moka'nın ağzı bu sürece göre oynar. */
 const typeMs = (len: number) => Math.min(3500, 500 + len * 22);
@@ -373,6 +372,9 @@ export default function MokaChat() {
 
   // Oda: Moka yastığın üstünde. Yazarken küçülüp yukarı çıkar.
   const D = c.den;
+  // Odanın saati (sabah/akşam/gece resmi); Moka o resimdeki yastığın ortasına oturur.
+  const [phase, setPhase] = useState(() => odaPhaseOf());
+  const SEAT = seatOf(phase);
   const map = odaMap(winW, winH);
   const mokaSize = Math.round(Math.min(winW * 0.62, 300));
   // Resmin altında %4 boşluk var: ayaklar yastığa bassın diye o kadar aşağı.
@@ -410,7 +412,7 @@ export default function MokaChat() {
   const sky = useSky(true);
   const [mix, setMix] = useState(() => nightMix());
   useEffect(() => {
-    const id = setInterval(() => setMix(nightMix()), 60000);
+    const id = setInterval(() => { setMix(nightMix()); setPhase(odaPhaseOf()); }, 60000);
     return () => clearInterval(id);
   }, []);
   const night = mix > 0.5;
@@ -742,7 +744,7 @@ export default function MokaChat() {
       {/* Oda: taban sabit, katmanlar eğimle farklı miktarda kayar (hafif 3B). */}
       <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { transform: [{ translateY: lift }] }]}>
       <RoomBackdrop
-        cheer={burst} mix={mix} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff}
+        cheer={burst} phase={phase} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff}
         steam={potSteam(pot)} potGlow={pot === 'fresh'} brew={brew} chain={Math.min(7, shownStreak)} tilt={tilt}
         onTouch={touchObj} style={StyleSheet.absoluteFill}
       />

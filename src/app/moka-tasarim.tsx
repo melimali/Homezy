@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { MokaRig } from '@/components/MokaRig';
-import { Appear, Float, Squish } from '@/components/motion';
+import { Appear, Squish } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { BackLink, Screen, T } from '@/components/ui';
 import { FURS } from '@/constants/moka-look';
@@ -111,18 +111,15 @@ export default function MokaDolabi() {
       <View style={[st.stage, { backgroundColor: D.paper, shadowColor: D.shade }]}>
         <View pointerEvents="none" style={[st.glow, { backgroundColor: D.glow }]} />
         <View pointerEvents="none" style={[st.floor, { backgroundColor: D.shade }]} />
-        <Float amp={4} dur={2400} style={st.sp1}><Text style={st.spark}>✨</Text></Float>
-        <Float amp={5} dur={2900} delay={600} style={st.sp2}><Text style={st.spark}>🤍</Text></Float>
-        <Float amp={3} dur={2100} delay={300} style={st.sp3}><Text style={st.spark}>✦</Text></Float>
         <MokaRig size={270} fur={fur === 'orman' ? null : fur} worn={worn} mood={ownNow ? 'happy' : 'wow'} pop={pop} />
         {!!anyWorn && (
-          <Pressable onPress={clearAll} accessibilityRole="button" accessibilityLabel={tx('Hepsini çıkar')} style={[st.reset, { backgroundColor: c.surface }]} hitSlop={6}>
+          <Pressable onPress={clearAll} accessibilityRole="button" accessibilityLabel={tx('Hepsini çıkar')} style={[st.reset, { backgroundColor: D.cream, borderColor: D.line, borderWidth: 1.5 }]} hitSlop={6}>
             <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.bodyBold, fontSize: 12.5, color: D.soft }}>↺ {tx('Hepsini çıkar')}</Text>
           </Pressable>
         )}
         {!!say && (
           <Appear key={say}>
-            <View style={[st.say, { backgroundColor: c.surface }]}>
+            <View style={[st.say, { backgroundColor: D.cream, borderColor: D.line, borderWidth: 1.5 }]}>
               <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 14.5, color: D.ink }}>{say}</Text>
             </View>
           </Appear>
@@ -149,7 +146,7 @@ export default function MokaDolabi() {
             return (
               <Pressable key={f.id} onPress={() => pickFur(f.id)} accessibilityRole="button" accessibilityLabel={`${tx(f.label)}${mine ? '' : `, ${FUR_PRICE[f.id]} ⭐`}`} accessibilityState={{ selected: on }} style={st.cell} hitSlop={2}>
                 <View style={[st.dotRing, { borderColor: on ? D.ink : 'transparent' }]}><View style={[st.dot, { backgroundColor: f.swatch, shadowColor: D.shade }]}>{mine && savedFur === f.id && <Check />}</View></View>
-                <Text maxFontSizeMultiplier={1.2} style={[st.price, { color: mine ? c.accent : D.soft }]}>{mine ? '✓' : `${FUR_PRICE[f.id]}⭐`}</Text>
+                <Text maxFontSizeMultiplier={1.2} style={[st.price, { color: D.soft }]}>{mine ? '✓' : `${FUR_PRICE[f.id]}⭐`}</Text>
               </Pressable>
             );
           })}
@@ -164,10 +161,10 @@ export default function MokaDolabi() {
               <Squish key={it.id} onPress={() => pickItem(it)} accessibilityRole="button" accessibilityState={{ selected: on }}
                 accessibilityLabel={`${tx(it.name)}, ${mine ? tx('senin') : `${it.price} ⭐`}${lock ? ', Premium' : ''}`}
                 style={[st.card, { backgroundColor: on ? D.paperNight : D.paper, borderColor: on ? D.ink : D.line, shadowColor: D.shade, shadowOpacity: on ? 0.2 : 0.08, opacity: lock ? 0.9 : 1 }]}>
-                <View style={[st.emojiBg, { backgroundColor: on ? D.paper : c.surface }]}><Text style={st.emoji}>{it.emoji}</Text></View>
+                <View style={[st.emojiBg, { backgroundColor: on ? D.paper : D.cream }]}><Text style={st.emoji}>{it.emoji}</Text></View>
                 <Text numberOfLines={2} maxFontSizeMultiplier={1.15} style={[st.name, { color: D.ink }]}>{tx(it.name)}</Text>
-                <View style={[st.tag, { backgroundColor: mine ? c.accentSoft : c.surface }]}>
-                  <Text maxFontSizeMultiplier={1.15} style={{ fontFamily: fonts.bodyBold, fontSize: 11.5, color: mine ? c.accent : D.soft }}>
+                <View style={[st.tag, { backgroundColor: mine ? D.line : D.cream }]}>
+                  <Text maxFontSizeMultiplier={1.15} style={{ fontFamily: fonts.bodyBold, fontSize: 11.5, color: D.soft }}>
                     {mine ? (on ? '✓' : tx('Senin')) : `${it.price}⭐`}{lock ? ' 👑' : ''}
                   </Text>
                 </View>
@@ -209,10 +206,6 @@ const st = StyleSheet.create({
   pointsN: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20 },
   glow: { position: 'absolute', top: 40, width: 250, height: 250, borderRadius: 125, opacity: 0.28 },
   floor: { position: 'absolute', bottom: 22, width: 170, height: 22, borderRadius: 11, opacity: 0.1 },
-  spark: { fontSize: 18, color: '#E9B872' },
-  sp1: { position: 'absolute', top: 30, right: 36 },
-  sp2: { position: 'absolute', top: 96, left: 28 },
-  sp3: { position: 'absolute', top: 160, right: 22 },
   emojiBg: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
   dotRing: { width: 54, height: 54, borderRadius: 27, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
   stage: { alignItems: 'center', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3, borderRadius: 32, paddingTop: 18, paddingBottom: 14, marginVertical: 8, gap: 8, minHeight: 330 },

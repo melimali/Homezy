@@ -36,7 +36,7 @@ import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { fonts, radius, useColors } from '@/theme';
+import { ForceScheme, fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 
 type Item = ChatMsg & {
@@ -778,7 +778,8 @@ export default function MokaChat() {
                 <Text maxFontSizeMultiplier={1.2} style={[st.who, { color: c.clay }]}>MOKA</Text>
               )}
               <ScrollView ref={scroll} style={{ flexGrow: 0, maxHeight: bubbleMax }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                {bubbleBody}
+                {/* Balon her zaman krem kâğıt: koyu temada bile içindeki yazı ve düğmeler açık tema renginde (koyu mürekkep) kalır. */}
+                <ForceScheme scheme="light">{bubbleBody}</ForceScheme>
               </ScrollView>
               {!kb && !logOpen && (
                 <Svg width={26} height={13} style={[st.tail2, { left: tailX - 13 }]} pointerEvents="none">

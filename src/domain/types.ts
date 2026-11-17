@@ -208,6 +208,8 @@ export type Play = {
   mokaAcc?: string | null;
   /** Moka'nın kürk rengi (src/constants/moka-look.ts). Yoksa orman yeşili. */
   mokaFur?: string | null;
+  /** Moka'nın giydikleri: slot → eşya kimliği (src/domain/kozmetik.ts). Yoksa çıplak. */
+  mokaWorn?: Partial<Record<'bas' | 'govde' | 'el', string>>;
   /** Kürk puanla alınmadan önce seçilmiş renk: bedava kalır (bir kez yazılır; null = yoktu). */
   furGift?: string | null;
   /** Moka'nın odasındaki ilk ziyaret tanıtımı görüldü. */

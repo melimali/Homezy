@@ -306,3 +306,10 @@ Bağımlılık: K1 (`MokaRig`) ve en az 4 eşya (K3) hazır olmalı; kürk sekme
 2. Deneme sırasında kilitli (rozet/seri) eşya denensin mi? Önerim evet, motivasyon.
 3. Moka sahnesi sade krem mi, odanın kesiti mi? Önerim oda kesiti (bağlam hissi).
 4. "Tümünü çıkar" ve "Rastgele giydir 🎲" düğmesi gerekir mi? Önerim ikisi de, küçük.
+
+## 14. Durum (2026-11-17): ilk sürüm kodlandı
+- `scripts/make-moka-rig.py`: ChatGPT parçalarından `assets/moka/rig/*.webp` (7 katman + 7 kürk tonu) ve `assets/moka/esya/*.webp` (60 eşya). ChatGPT `hasir_sapka` ile `yilbasi` adlarını ters vermişti, betikte düzeltildi. Küçük baş eşyaları (< 300 px) 1,4 kat büyütülür. Gaga kodla kesildi, kapak ve yanak yok (sec. 3 v2).
+- `src/components/MokaRig.tsx`: katmanlı Moka (nefes, baş eğme, kırpma, bakış, konuşurken gaga, kanat ve kuyruk, zıplama). Baş eşyası başın, el eşyası ekranın sağındaki kanadın çocuğu.
+- `src/domain/kozmetik.ts`: 60 eşya (baş 20, gövde 20, el 20), 3'ü ücretsiz, 57'si puanlı, 10'u Premium. Sunucu fiyatları `supabase/migrations/20261117100000_kozmetik.sql` (**henüz uygulanmadı**, uygulanmazsa satın alma "sunucuda hazır değil" der).
+- `src/app/moka-tasarim.tsx`: Moka Dolabı (sec. 13): canlı Moka, Kürk / Baş / Gövde / El sekmeleri, deneme, al, çıkar, hepsini çıkar.
+- Yapılmadı: odadaki ve sohbetteki Moka hâlâ eski resim (`RoomMoka`); yüz kapak/yanak/kaş; yüz ve boyun eşyaları; 9 dil çevirisi (yeni cümleler Türkçe kalır); eşya küçük resimli kartlar (şimdilik emoji).

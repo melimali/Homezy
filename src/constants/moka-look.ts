@@ -6,11 +6,11 @@ export type FurId = 'orman' | 'kahve' | 'gri' | 'mavi' | 'mor' | 'pembe' | 'turu
 
 export const FURS: { id: FurId; label: string; swatch: string }[] = [
   { id: 'orman', label: 'Orman', swatch: '#8A9A4B' },
-  { id: 'kahve', label: 'Kahve', swatch: '#9A7A4B' },
-  { id: 'gri', label: 'Gri', swatch: '#8E8E8A' },
-  { id: 'mavi', label: 'Mavi', swatch: '#4B8A9A' },
-  { id: 'mor', label: 'Mor', swatch: '#7A4B9A' },
-  { id: 'pembe', label: 'Pembe', swatch: '#C97A9A' },
-  { id: 'turuncu', label: 'Turuncu', swatch: '#C9783A' },
-  { id: 'kirmizi', label: 'Kırmızı', swatch: '#A8544A' },
+  { id: 'kahve', label: 'Kahve', swatch: '#8A6340' },
+  { id: 'gri', label: 'Gri', swatch: '#A5A8A8' },
+  { id: 'mavi', label: 'Mavi', swatch: '#6F9FC4' },
+  { id: 'mor', label: 'Mor', swatch: '#9A86C4' },
+  { id: 'pembe', label: 'Pembe', swatch: '#D79BB8' },
+  { id: 'turuncu', label: 'Turuncu', swatch: '#C8763A' },
+  { id: 'kirmizi', label: 'Kırmızı', swatch: '#A8526A' },
 ];

@@ -3,7 +3,7 @@ import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 
-import { useReduceMotion } from '@/components/motion';
+import { Squish, useReduceMotion } from '@/components/motion';
 import { canGiveCoffee, toNextGift } from '@/domain/bond';
 import { nextCoffee, potSteam, type PotState } from '@/domain/coffee';
 import { lastWeek, type DayMark } from '@/domain/play';
@@ -111,7 +111,7 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
         </View>
         {!!onGive && (
           <View style={{ alignItems: 'center', gap: 6, paddingBottom: 6 }}>
-            <Pressable
+            <Squish
               onPress={canGive ? onGive : undefined}
               accessibilityRole="button"
               accessibilityState={{ disabled: !canGive }}
@@ -120,7 +120,7 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
               <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: canGive ? c.onAccent : D.soft }}>
                 {tx(cold ? 'Kahve soğumuşken veremem 🥲' : canGive ? "Kahveyi Moka'ya ver ☕" : 'Bugünkü kahveyi verdin 💛')}
               </Text>
-            </Pressable>
+            </Squish>
             {!cold && <Text maxFontSizeMultiplier={1.3} style={[st.small, { color: D.soft }]}>{tx('Hediyeye {} kahve kaldı').replace('{}', String(left))}</Text>}
           </View>
         )}
@@ -156,7 +156,7 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
 
 const st = StyleSheet.create({
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 10, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 12 },
-  give: { paddingHorizontal: 22, paddingVertical: 12, borderRadius: 22 },
+  give: { paddingHorizontal: 26, paddingVertical: 14, borderRadius: 26, shadowColor: '#2A1C12', shadowOpacity: 0.16, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   grab: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, marginBottom: 12 },
   title: { fontFamily: fonts.bodyBold, fontSize: 13, textAlign: 'center' },
   hero: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 18, paddingVertical: 8 },

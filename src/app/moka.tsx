@@ -18,7 +18,7 @@ import { prefs } from '@/lib/supabase';
 import { useTilt } from '@/hooks/useTilt';
 import { odaMap, RoomBackdrop, type RoomTouch } from '@/components/RoomBackdrop';
 import { AddSheet } from '@/components/TabBar';
-import { Appear, Burst, Squish, useReduceMotion } from '@/components/motion';
+import { Appear, Burst, Float, Squish, useReduceMotion } from '@/components/motion';
 import { useToast } from '@/components/Toast';
 import { Btn, Chevron, T } from '@/components/ui';
 import type { Href } from 'expo-router';
@@ -943,7 +943,12 @@ function GiftModal({ gift, onClose, onHome }: { gift: { id: string; room: string
           <Appear>
             <View style={{ backgroundColor: D.paper, borderRadius: 28, padding: 24, alignItems: 'center', gap: 8, width: 290, shadowColor: D.shade, shadowOpacity: 0.25, shadowRadius: 18, elevation: 10 }}>
               <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: D.soft }}>{tx('Moka\'dan hediye 🎁')}</Text>
-              <Text style={{ fontSize: 64, lineHeight: 78 }}>{item.emoji}</Text>
+              <View style={{ width: 120, height: 120, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: D.glow, opacity: 0.35 }} />
+                <Float amp={4} dur={1900}><Text style={{ fontSize: 64, lineHeight: 78 }}>{item.emoji}</Text></Float>
+                <Float amp={5} dur={2300} delay={400} style={{ position: 'absolute', top: 2, right: 6 }}><Text style={{ fontSize: 20 }}>✨</Text></Float>
+                <Float amp={4} dur={2000} delay={900} style={{ position: 'absolute', bottom: 6, left: 4 }}><Text style={{ fontSize: 16 }}>💛</Text></Float>
+              </View>
               <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.displayBold, fontSize: 22, color: D.ink, textAlign: 'center' }}>{tx(item.name)}</Text>
               <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: D.soft, textAlign: 'center' }}>
                 {tx(gift.room ? '{} evine yerleşti' : '{} depoda seni bekliyor').replace('{}', tx(item.name))}

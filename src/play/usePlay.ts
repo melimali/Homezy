@@ -37,7 +37,8 @@ function apply(update: Update, s: Summary) {
     P.points = s.points;
     // Henüz gönderilmemiş günler sunucuda yok; onları kaybetme.
     P.days = [...new Set([...s.days, ...P.pending.filter(e => e.kind !== 'dondur').map(e => e.day)])].sort();
-    P.owned = s.owned;
+    // Moka'nın hediye ettiği eşyalar sunucuda yok; kaybolmasın.
+    P.owned = [...new Set([...s.owned, ...(P.bond?.gifts ?? []).map(g => g.id)])];
     if (s.frozen) P.frozen = [...new Set([...s.frozen, ...P.pending.filter(e => e.kind === 'dondur').map(e => e.day)])].sort();
   });
 }

@@ -240,6 +240,8 @@ export type Play = {
   checkins: Record<DayKey, CheckIn>;
   /** Günlük iki soru: 1. açılış "nasılsın", 2. açılış "evde misin" (src/domain/mood.ts `stageOf`). */
   ask?: DailyAsk;
+  /** Moka'ya verilen kahveler (gün) ve ondan gelen hediye eşyaları (src/domain/bond.ts). */
+  bond?: { given: DayKey[]; gifts: { id: string; day: DayKey }[] };
   /** Moka'nın seviyesi ve statları (src/domain/mokaLevel.ts). */
   moka: MokaGrowth;
   /** Moka sohbetinde "yarın için not al" ile alınan notlar (src/domain/chat.ts). */

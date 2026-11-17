@@ -313,3 +313,9 @@ Bağımlılık: K1 (`MokaRig`) ve en az 4 eşya (K3) hazır olmalı; kürk sekme
 - `src/domain/kozmetik.ts`: 60 eşya (baş 20, gövde 20, el 20), 3'ü ücretsiz, 57'si puanlı, 10'u Premium. Sunucu fiyatları `supabase/migrations/20261117100000_kozmetik.sql` (**henüz uygulanmadı**, uygulanmazsa satın alma "sunucuda hazır değil" der).
 - `src/app/moka-tasarim.tsx`: Moka Dolabı (sec. 13): canlı Moka, Kürk / Baş / Gövde / El sekmeleri, deneme, al, çıkar, hepsini çıkar.
 - Yapılmadı: odadaki ve sohbetteki Moka hâlâ eski resim (`RoomMoka`); yüz kapak/yanak/kaş; yüz ve boyun eşyaları; 9 dil çevirisi (yeni cümleler Türkçe kalır); eşya küçük resimli kartlar (şimdilik emoji).
+
+## 15. Kahveyi Moka'ya verme ve hediye (2026-11-17)
+- Kahve sayfasında "Kahveyi Moka'ya ver ☕": günde bir kez, sürahi soğuk değilse. Moka sevinir (zıplama, kalpler, yıldız, cümle).
+- `src/domain/bond.ts`: `Play.bond {given, gifts}`. İlk hediye 7. kahvede, sonrakiler 3 kahve daha seyrek (7, 10, 13, …). Havuz: ücretsiz, ≤80 puanlık eşyalar. Eşya `owned` listesine eklenir, evde ilk boş bloğa konur; sunucu özeti `owned`'ı ezmesin diye `usePlay.apply` hediyeleri korur. Sunucu tarafı yok, migration yok.
+- Hediye penceresi `GiftModal` (moka.tsx), metinler `src/i18n/bond.ts` (9 dil). Test: `src/domain/__tests__/bond.test.ts`.
+- Kürk tonları: `scripts/make-moka-fur-rig.py` (yumuşak maske); ayak katmanı `assets/moka/rig/ayak.webp`.

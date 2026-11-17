@@ -1,6 +1,6 @@
 import { useRouter } from '@/lib/nav';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthProvider';
@@ -9,6 +9,8 @@ import { RoomMoka } from '@/components/RoomMoka';
 import { Fade } from '@/components/SceneImage';
 import { ISIK } from '@/constants/oda';
 import { longestStreak } from '@/domain/achievements';
+import { giveCoffee } from '@/domain/bond';
+import { ITEM } from '@/domain/items';
 import { potState, potSteam } from '@/domain/coffee';
 import { dayKey, freezesUsed, progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
@@ -324,6 +326,21 @@ export default function MokaChat() {
   // Hap, fokurdama anına kadar dünkü sayıyı gösterir; sonra yukarı kayarak bir artar.
   const shownStreak = brewing && !brewed ? Math.max(0, hp.streak - 1) : hp.streak;
   const [coffeeOpen, setCoffeeOpen] = useState(false);
+  const [gift, setGift] = useState<{ id: string; room: string | null } | null>(null);
+  /** Kahveyi Moka'ya ver: sevinç (zıplama, kalpler, yıldız, cümle); hak dolduysa hediye penceresi. */
+  const giveToMoka = () => {
+    let res: ReturnType<typeof giveCoffee> = { ok: false };
+    update(D => void (res = giveCoffee(D, Date.now())));
+    if (!res.ok) return;
+    setCoffeeOpen(false);
+    interact(); sfx('tap'); haptic('success');
+    later(() => {
+      jump(); setBurst(b => b + 1);
+      const joy = ['Kahve! Çok mutlu oldum, teşekkürler! ☕💛', 'Mmm, tam kıvamında! Sen harikasın 🥹', 'Her sabahın kahvesi sensin ✨'];
+      say(res.gift ? tx('Sana bir hediyem var! 🎁') : tx(joy[rnd(joy.length)]!), 'cheer', 4200);
+      if (res.gift) later(() => setGift(res.gift!), 1800);
+    }, 350);
+  };
 
   // İlk cümle girişte bir kez seçilir (gün içinde değişse de ekran açıkken sabit kalır).
   const [opening] = useState(() => openingLine({ hour: new Date().getHours(), done: room.done, due: day.due, late: day.late, total: day.total, away: room.away }, Math.floor(Math.random() * 97)));
@@ -707,7 +724,8 @@ export default function MokaChat() {
         </View>
       )}
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
-      <CoffeeSheet open={coffeeOpen} onClose={() => setCoffeeOpen(false)} P={S.play} now={now} streak={hp.streak} best={best} pot={pot} freezeLeft={freezeLeft} />
+      <CoffeeSheet open={coffeeOpen} onClose={() => setCoffeeOpen(false)} P={S.play} now={now} streak={hp.streak} best={best} pot={pot} freezeLeft={freezeLeft} onGive={giveToMoka} />
+      <GiftModal gift={gift} onClose={() => setGift(null)} onHome={() => { setGift(null); router.push('/dekor' as Href); }} />
     </View>
   );
 }
@@ -911,3 +929,33 @@ const st = StyleSheet.create({
   done: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, padding: 14 },
 });
+
+/** Moka'nın hediyesi: eşya, evine yerleştiğini ya da depoda beklediğini söyler. */
+function GiftModal({ gift, onClose, onHome }: { gift: { id: string; room: string | null } | null; onClose: () => void; onHome: () => void }) {
+  const c = useColors();
+  const D = c.den;
+  const item = gift ? ITEM[gift.id] : null;
+  return (
+    <Modal visible={!!item} transparent statusBarTranslucent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(42,28,18,0.45)' }]} onPress={onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
+      <View pointerEvents="box-none" style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+        {item && gift && (
+          <Appear>
+            <View style={{ backgroundColor: D.paper, borderRadius: 28, padding: 24, alignItems: 'center', gap: 8, width: 290, shadowColor: D.shade, shadowOpacity: 0.25, shadowRadius: 18, elevation: 10 }}>
+              <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: D.soft }}>{tx('Moka\'dan hediye 🎁')}</Text>
+              <Text style={{ fontSize: 64, lineHeight: 78 }}>{item.emoji}</Text>
+              <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.displayBold, fontSize: 22, color: D.ink, textAlign: 'center' }}>{tx(item.name)}</Text>
+              <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: D.soft, textAlign: 'center' }}>
+                {tx(gift.room ? '{} evine yerleşti' : '{} depoda seni bekliyor').replace('{}', tx(item.name))}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <Btn label={tx('Teşekkürler Moka!')} onPress={onClose} />
+                <Btn label={tx('Eve bak')} onPress={onHome} />
+              </View>
+            </View>
+          </Appear>
+        )}
+      </View>
+    </Modal>
+  );
+}

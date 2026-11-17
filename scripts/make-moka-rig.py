@@ -38,10 +38,14 @@ def esya():
         if name.startswith('el_'):
             bb = im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
             if bb:
-                k = 1.2; cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
+                cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
+                # Büyük kenar 512 ölçeğinde ~115 px olacak şekilde ölçekle (kamera, megafon taşmasın; küçükler okunsun)
+                k = min(1.7, max(0.5, 115 * W / 512 / max(bb[2] - bb[0], bb[3] - bb[1])))
                 big = im.resize((int(W * k), int(W * k)), Image.LANCZOS)
+                # Kutu merkezi kanadın alt-dış kısmına (tutuş noktası): 512 ölçeğinde (376, 347)
+                gx, gy = 376 * W / 512, 347 * W / 512
                 canvas = Image.new('RGBA', (W, W), (0, 0, 0, 0))
-                canvas.alpha_composite(big, (int(cx - cx * k), int(cy - cy * k)))
+                canvas.alpha_composite(big, (int(gx - cx * k), int(gy - cy * k)))
                 im = canvas
         save(im, f'{root}/assets/moka/esya/{name}.webp', 85); n += 1
     print('eşya', n)

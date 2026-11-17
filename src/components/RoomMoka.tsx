@@ -220,7 +220,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
 
   // Nefes: her nefes biraz farklı uzunlukta; arada derin iç çekiş. Uykuda daha yavaş ve derin.
   const sleepRef = useRef(sleeping);
-  sleepRef.current = sleeping;
+  useEffect(() => { sleepRef.current = sleeping; }, [sleeping]);
   useEffect(() => {
     if (!run) return;
     let dead = false;

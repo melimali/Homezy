@@ -27,6 +27,8 @@ const rig = (fur: string | null | undefined): Record<'govde' | 'kuyruk' | 'bas' 
   return f || BASE_RIG;
 };
 
+// Ayaklar kıyafetin önünde kalsın diye ayrı katman (gövdeden kopya, kahverengi: kürk tonundan etkilenmez).
+const AYAK: ImageSourcePropType = require('../../assets/moka/rig/ayak.webp');
 const BASE_RIG = {
   govde: require('../../assets/moka/rig/govde.webp'),
   kuyruk: require('../../assets/moka/rig/kuyruk.webp'),
@@ -100,6 +102,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
       <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
       <Layer src={L.govde} s={size} />
       {item('govde')}
+      <Layer src={AYAK} s={size} />
       <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
         <Layer src={L.bas} s={size} />
         <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}><Layer src={L.gozler} s={size} /></Pivot>

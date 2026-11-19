@@ -5,6 +5,7 @@ import { useReduceMotion } from '@/components/motion';
 import { ISIK, MOTION, ODA, ODA_H, ODA_W, PARCA, type Box, type OdaLayers, type OdaPart, type OdaPhase, type OdaTouch, type Pt } from '@/constants/oda';
 import { useActive } from '@/hooks/useActive';
 import type { SkyKind } from '@/lib/weather';
+import { clearNightCondition } from '@/domain/roomScene';
 
 /** Saate göre oda: 06:30-16:29 sabah, 16:30-19:29 akşam, 19:30-06:29 gece. */
 export function odaPhaseOf(d = new Date()): OdaPhase {
@@ -39,18 +40,20 @@ function loop(v: Animated.Value, ms: number, delay = 0): Stop {
 /** Gidiş ve dönüş süresi her turda biraz değişen salınım: bitki gibi doğal, mekanik durmaz. */
 function sway(v: Animated.Value, ms: number, delay = 0, jitter = 0.3): Stop {
   let dead = false;
+  let movement: Animated.CompositeAnimation | undefined;
   const go = () => {
     if (dead) return;
     const a = ms * (1 - jitter / 2 + Math.random() * jitter);
     const b = ms * (1.1 - jitter / 2 + Math.random() * jitter);
     const peak = 0.75 + Math.random() * 0.25;
-    Animated.sequence([
+    movement = Animated.sequence([
       Animated.timing(v, { toValue: 0.5 + peak / 2, duration: a, easing: sine, useNativeDriver: true }),
       Animated.timing(v, { toValue: 0.5 - peak / 2, duration: b, easing: sine, useNativeDriver: true }),
-    ]).start(go);
+    ]);
+    movement.start(({ finished }) => { if (finished) go(); });
   };
   const t = setTimeout(go, delay);
-  return { stop: () => { dead = true; clearTimeout(t); v.stopAnimation(); } };
+  return { stop: () => { dead = true; clearTimeout(t); movement?.stop(); } };
 }
 /** Kitaplar: 7-14 sn'de bir hafifçe yana yatıp yaylanarak yerine oturur. */
 function rock(v: Animated.Value, delay: number): Stop {
@@ -61,7 +64,7 @@ function rock(v: Animated.Value, delay: number): Stop {
     Animated.sequence([
       Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       Animated.spring(v, { toValue: 0.5, friction: 3, tension: 70, useNativeDriver: true }),
-    ]).start(() => { t = setTimeout(go, 7000 + Math.random() * 7000); });
+    ]).start(({ finished }) => { if (!dead && finished) t = setTimeout(go, 7000 + Math.random() * 7000); });
   };
   t = setTimeout(go, delay);
   return { stop: () => { dead = true; clearTimeout(t); v.stopAnimation(); } };
@@ -79,7 +82,7 @@ function every(v: Animated.Value, minMs: number, maxMs: number, play: (v: Animat
   const go = () => {
     if (dead) return;
     v.setValue(0);
-    play(v).start(() => { t = setTimeout(go, minMs + Math.random() * (maxMs - minMs)); });
+    play(v).start(({ finished }) => { if (!dead && finished) t = setTimeout(go, minMs + Math.random() * (maxMs - minMs)); });
   };
   t = setTimeout(go, first);
   return { stop: () => { dead = true; clearTimeout(t); v.stopAnimation(); } };
@@ -102,7 +105,7 @@ function breathe(v: Animated.Value): Stop {
 type Vals = {
   part: Record<OdaPart, Animated.Value>; nudge: Record<OdaPart, Animated.Value>;
   lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value; beam: Animated.Value; cloud: Animated.Value; halo: Animated.Value;
-  twinkle: Animated.Value[]; cup: Animated.Value[]; fest: Animated.Value; stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[];
+  twinkle: Animated.Value[]; cup: Animated.Value[]; chainLights: Animated.Value[]; chainSweep: Animated.Value; fest: Animated.Value; stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[];
   rain: Animated.Value[]; drops: Animated.Value[]; drift: Animated.Value; flash: Animated.Value; leaf: Animated.Value; boost: Animated.Value; pot: Animated.Value;
 };
 /** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
@@ -124,21 +127,31 @@ const chainPts = (L: OdaLayers) => Array.from({ length: 7 }, (_, i) => {
   const [a, b] = L.chain;
   return { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) + Math.sin(t * Math.PI) * 26 };
 });
-function Chain({ pts, lit, s, night }: { pts: Pt[]; lit: number; s: number; night: boolean }) {
+function Chain({ pts, lights, sweep, s, night }: { pts: Pt[]; lights: Animated.Value[]; sweep: Animated.Value; s: number; night: boolean }) {
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }}>
       {pts.slice(1).map((p, i) => {
         const q = pts[i]!;
         const len = Math.hypot(p.x - q.x, p.y - q.y);
-        return <View key={`w${i}`} style={{ position: 'absolute', left: ((p.x + q.x) / 2 - len / 2) * s, top: ((p.y + q.y) / 2) * s, width: len * s, height: Math.max(1, 1.6 * s), backgroundColor: '#3B2A20', opacity: 0.55, transform: [{ rotate: `${Math.atan2(p.y - q.y, p.x - q.x)}rad` }] }} />;
+        return <View key={'wire-' + i} style={{ position: 'absolute', left: ((p.x + q.x) / 2 - len / 2) * s, top: ((p.y + q.y) / 2) * s, width: len * s, height: Math.max(1, 1.6 * s), backgroundColor: '#3B2A20', opacity: 0.55, transform: [{ rotate: Math.atan2(p.y - q.y, p.x - q.x) + 'rad' }] }} />;
       })}
       {pts.map((p, i) => {
-        const on = i < lit;
+        const center = 0.14 + i * 0.115;
+        const glimmer = sweep.interpolate({
+          inputRange: [center - 0.14, center, center + 0.14],
+          outputRange: [0, night ? 0.65 : 0.42, 0], extrapolate: 'clamp',
+        });
+        const light = Animated.add(Animated.multiply(lights[i]!, 0.82), glimmer).interpolate({
+          inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp',
+        });
+        const glowOpacity = light.interpolate({ inputRange: [0, 1], outputRange: [0, night ? 0.85 : 0.55] });
         const r = 26;
         return (
-          <View key={i}>
-            {on && <Image source={ISIK} style={{ position: 'absolute', left: (p.x - r) * s, top: (p.y + 4 - r) * s, width: 2 * r * s, height: 2 * r * s, tintColor: '#FFC27A', opacity: night ? 0.85 : 0.55 }} />}
-            <View style={{ position: 'absolute', left: (p.x - 5) * s, top: (p.y - 1) * s, width: 10 * s, height: 13 * s, borderRadius: 5 * s, backgroundColor: on ? '#FFE3A3' : '#7A6656', borderWidth: Math.max(1, 1.2 * s), borderColor: '#3B2A20' }} />
+          <View key={'bulb-' + i}>
+            <Animated.Image source={ISIK} pointerEvents="none" style={{ position: 'absolute', left: (p.x - r) * s, top: (p.y + 4 - r) * s, width: 2 * r * s, height: 2 * r * s, tintColor: '#FFC27A', opacity: glowOpacity }} />
+            <View style={{ position: 'absolute', left: (p.x - 5) * s, top: (p.y - 1) * s, width: 10 * s, height: 13 * s, borderRadius: 5 * s, backgroundColor: '#75604D', borderWidth: Math.max(1, 1.2 * s), borderColor: '#3B2A20', overflow: 'hidden' }}>
+              <Animated.View style={{ position: 'absolute', left: Math.max(1, s), right: Math.max(1, s), top: Math.max(1, s), bottom: Math.max(1, s), borderRadius: 4 * s, backgroundColor: '#FFE3A3', opacity: light }} />
+            </View>
           </View>
         );
       })}
@@ -161,7 +174,7 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity }: { phase: OdaP
   const leafFrom = { x: asma.box.x + asma.box.w * 0.62, y: asma.box.y + asma.box.h * 0.82 };
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: ODA_W * s, height: ODA_H * s, opacity }}>
-      <Image source={L.taban} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
+      <Image source={L.taban} fadeDuration={0} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
 
       {/* Cam: havaya göre renk, içinde bulut, yağmur, kar, damlalar, şimşek. */}
       {glass && <Image source={L.cam.src} style={[box(L.cam.box), { tintColor: glass.tone, opacity: glass.op }]} />}
@@ -212,7 +225,7 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity }: { phase: OdaP
       {(glass || clouds || snow) && <Image source={L.onCam.src} style={box(L.onCam.box)} />}
 
       {/* Işık zinciri bitkilerin arkasında: seride her gün bir ampul yanar (7'de hepsi). */}
-      {chain >= 0 && <Chain pts={chainPts(L)} lit={chain} s={s} night={phase === 'gece'} />}
+      {chain >= 0 && <Chain pts={chainPts(L)} lights={vals.chainLights} sweep={vals.chainSweep} s={s} night={phase === 'gece'} />}
 
       {/* Hareketli parçalar: bitkiler salınır, kupalar sarkaç gibi, kitaplar arada bir sallanır. */}
       {PARTS.map(k => {
@@ -221,10 +234,19 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity }: { phase: OdaP
         const rot = Animated.add(vals.part[k], vals.nudge[k]).interpolate({ inputRange: [-1, 0, 0.5, 1, 2], outputRange: [`${-m.deg * 5}deg`, `${-m.deg}deg`, '0deg', `${m.deg}deg`, `${m.deg * 5}deg`] });
         return (
           <Animated.View key={k} style={{ position: 'absolute', left: P.pivot.x * s, top: P.pivot.y * s, width: 0, height: 0, transform: [...shift(m.tilt, m.tilt * 0.6), { rotate: rot }] }}>
-            <Image source={P.src} style={{ position: 'absolute', left: (P.box.x - P.pivot.x) * s, top: (P.box.y - P.pivot.y) * s, width: P.box.w * s, height: P.box.h * s }} accessibilityIgnoresInvertColors />
+            <Image source={P.src} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: (P.box.x - P.pivot.x) * s, top: (P.box.y - P.pivot.y) * s, width: P.box.w * s, height: P.box.h * s }} accessibilityIgnoresInvertColors />
           </Animated.View>
         );
       })}
+
+      {/* Pervazdaki gövde ve saksı sabit. Yapraklar saksının ağzından esner. */}
+      <Animated.View style={{ position: 'absolute', left: 158 * s, top: 951 * s, width: 0, height: 0, transform: [{
+        rotate: Animated.add(vals.part.pencerebitki, vals.nudge.pencerebitki).interpolate({
+          inputRange: [-1, 0.5, 2], outputRange: ['-1.9deg', '0deg', '1.9deg'], extrapolate: 'clamp',
+        }),
+      }] }}>
+        <Image source={L.sillLeaves} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: -124 * s, top: -126 * s, width: 237 * s, height: 143 * s }} />
+      </Animated.View>
 
       {/* Asma saksıdan arada bir bir yaprak süzülüp düşer. */}
       <Animated.Image
@@ -279,7 +301,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     nudge: Object.fromEntries(PARTS.map(k => [k, new Animated.Value(0)])) as Record<OdaPart, Animated.Value>,
     lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0),
     beam: new Animated.Value(0), cloud: new Animated.Value(0), halo: new Animated.Value(0), fest: new Animated.Value(0),
-    twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)),
+    twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)), chainSweep: new Animated.Value(0), chainLights: Array.from({ length: 7 }, () => new Animated.Value(0)),
     stars: Array.from({ length: 8 }, () => new Animated.Value(0.3)), dust: MOTES.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)),
     rain: Array.from({ length: RAIN_N }, () => new Animated.Value(0)), drops: [0, 1, 2].map(() => new Animated.Value(0)),
     drift: new Animated.Value(0), flash: new Animated.Value(0), leaf: new Animated.Value(0),
@@ -324,9 +346,34 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     return () => anims.forEach(a => a.stop());
   }, [run, vals, wet, rainy, sky, steam]);
 
+  // Seri ampulleri: mevcut yananlar korunur, yeni ampuller yavaşça sırayla açılır.
+  const chainLit = useRef(0);
+  useEffect(() => {
+    const count = Math.max(0, Math.min(vals.chainLights.length, Math.floor(chain)));
+    if (!run) {
+      vals.chainLights.forEach((light, index) => light.setValue(index < count ? 1 : 0));
+      chainLit.current = count;
+      return;
+    }
+    const alreadyLit = Math.min(chainLit.current, count);
+    vals.chainLights.forEach((light, index) => light.setValue(index < alreadyLit ? 1 : 0));
+    const pending = vals.chainLights.slice(alreadyLit, count);
+    chainLit.current = count;
+    if (!pending.length) return;
+    const animation = Animated.stagger(850, pending.map(light => Animated.timing(light, { toValue: 1, duration: 650, easing: Easing.out(Easing.quad), useNativeDriver: true })));
+    animation.start();
+    return () => animation.stop();
+  }, [chain, run, vals]);
+  const showChain = chain >= 0;
+  useEffect(() => {
+    vals.chainSweep.setValue(0);
+    if (!run || !showChain) return;
+    const wave = rise(vals.chainSweep, 10500, 1250);
+    return () => wave.stop();
+  }, [run, showChain, vals]);
   // Fokurdama: sürahi parlar, buhar bir an büyür.
   useEffect(() => {
-    if (!brew) return;
+    if (!brew || !run) return;
     vals.pot.setValue(0);
     const a = Animated.sequence([
       Animated.timing(vals.pot, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -335,7 +382,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     ]);
     a.start();
     return () => a.stop();
-  }, [brew, vals]);
+  }, [brew, run, vals]);
 
   // Kutlama: lamba parlar, sürahi parıldar, kupalar ve bitkiler bir sevinçle sallanır.
   const lastCheer = useRef(cheer);
@@ -344,23 +391,43 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     lastCheer.current = cheer;
     if (!cheer || !run) return;
     vals.fest.setValue(0);
-    Animated.parallel([
+    const celebration = Animated.parallel([
       Animated.sequence([Animated.timing(vals.boost, { toValue: 1, duration: 200, useNativeDriver: true }), Animated.delay(1400), Animated.timing(vals.boost, { toValue: 0, duration: 1100, useNativeDriver: true })]),
       Animated.sequence([Animated.timing(vals.pot, { toValue: 0.8, duration: 260, useNativeDriver: true }), Animated.delay(900), Animated.timing(vals.pot, { toValue: 0, duration: 1400, useNativeDriver: true })]),
       Animated.timing(vals.fest, { toValue: 1, duration: 2600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       ...(['kupa1', 'kupa2', 'kitapust'] as OdaPart[]).map((k, i) => Animated.sequence([Animated.delay(i * 120), Animated.timing(vals.nudge[k], { toValue: 1.2, duration: 150, useNativeDriver: true }), Animated.spring(vals.nudge[k], { toValue: 0, friction: 2.4, tension: 80, useNativeDriver: true })])),
-    ]).start();
+    ]);
+    celebration.start();
+    return () => celebration.stop();
   }, [cheer, run, vals]);
 
   /** Dokununca kısa tepki: lamba parlar, sürahi parlar, kupalar ya da bitki sallanır. */
   const kick = (k: OdaPart, amt = 1.4) => Animated.sequence([Animated.timing(vals.nudge[k], { toValue: amt, duration: 140, useNativeDriver: true }), Animated.spring(vals.nudge[k], { toValue: 0, friction: 2.2, tension: 90, useNativeDriver: true })]);
-  const react = (t: RoomTouch) => {
-    if (t === 'lamba') Animated.sequence([Animated.timing(vals.boost, { toValue: 1, duration: 160, useNativeDriver: true }), Animated.delay(1600), Animated.timing(vals.boost, { toValue: 0, duration: 900, useNativeDriver: true })]).start();
-    if (t === 'surahi') Animated.sequence([Animated.timing(vals.pot, { toValue: 0.7, duration: 180, useNativeDriver: true }), Animated.timing(vals.pot, { toValue: 0, duration: 1100, useNativeDriver: true })]).start();
-    if (t === 'kupa') Animated.stagger(110, [kick('kupa1', 1.8), kick('kupa2', -1.6)]).start();
-    if (t === 'bitki') kick('sehpabitki', 1.6).start();
-    if (t === 'pencere') Animated.parallel([kick('asma', 0.7), kick('pencerebitki', 1.2)]).start();
+  const [reaction] = useState(() => new Map<RoomTouch | OdaPart, Animated.CompositeAnimation>());
+  useEffect(() => {
+
+    return () => {
+      reaction.forEach(a => a.stop());
+      reaction.clear();
+      PARTS.forEach(k => { vals.nudge[k].setValue(0); vals.part[k].setValue(0.5); });
+      vals.boost.setValue(0);
+      vals.pot.setValue(0);
+      vals.fest.setValue(0);
+    };
+  }, [run, vals, reaction]);
+  const react = (t: RoomTouch, plant: OdaPart = 'sehpabitki') => {
     onTouch?.(t);
+    if (!run) return;
+    const target = t === 'bitki' ? plant : t;
+    const start = (animation: Animated.CompositeAnimation) => {
+      reaction.get(target)?.stop();
+      reaction.set(target, animation);
+      animation.start();
+    };
+    if (t === 'lamba') start(Animated.sequence([Animated.timing(vals.boost, { toValue: 1, duration: 160, useNativeDriver: true }), Animated.delay(1600), Animated.timing(vals.boost, { toValue: 0, duration: 900, useNativeDriver: true })]));
+    if (t === 'surahi') start(Animated.sequence([Animated.timing(vals.pot, { toValue: 0.7, duration: 180, useNativeDriver: true }), Animated.timing(vals.pot, { toValue: 0, duration: 1100, useNativeDriver: true })]));
+    if (t === 'kupa') start(Animated.stagger(110, [kick('kupa1', 1.8), kick('kupa2', -1.6)]));
+    if (t === 'bitki') start(kick(plant, plant === 'asma' ? 1.12 : 0.82));
   };
 
   const onLayout = (e: LayoutChangeEvent) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
@@ -386,7 +453,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
       return { x: c.x + c.w * (0.15 + ((i * 53) % 70) / 100), y: c.y + c.h * (0.1 + ((i * 37) % 45) / 100) };
     });
   }, [vals]);
-  const clearNight = night && (sky === 'clear' || sky === 'cloudy');
+  const clearNight = clearNightCondition(night, sky);
 
   return (
     <View onLayout={onLayout} style={[{ overflow: 'hidden' }, style]} pointerEvents="box-none">
@@ -510,6 +577,11 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
           {onTouch && (Object.keys(L.hit) as RoomTouch[]).map(k => (
             <Pressable key={k} onPress={() => react(k)} accessibilityLabel={k} style={box(L.hit[k])} />
           ))}
+          {onTouch && <>
+            <Pressable accessible={false} onPress={() => react('bitki', 'asma')} style={box({ x: 0, y: L.parts.asma.pivot.y + 85, w: 320, h: 308 })} />
+            <Pressable accessible={false} onPress={() => react('bitki', 'asma')} style={box({ x: 202, y: L.parts.asma.pivot.y + 393, w: 112, h: 245 })} />
+            <Pressable accessible={false} onPress={() => react('bitki', 'pencerebitki')} style={box({ x: 60, y: 855, w: 230, h: 232 })} />
+          </>}
         </View>
       )}
       {children}

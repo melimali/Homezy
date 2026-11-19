@@ -1,9 +1,9 @@
 import { useRouter } from '@/lib/nav';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Easing, I18nManager, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { Animated, BackHandler, Easing, I18nManager, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth, type AuthStatus } from '@/auth/AuthProvider';
 import { CoffeeSheet, PotIcon } from '@/components/CoffeeSheet';
 import { RoomMoka } from '@/components/RoomMoka';
 import { Fade } from '@/components/SceneImage';
@@ -40,6 +40,7 @@ import { useStore } from '@/store/AppStore';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { ForceScheme, fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
+import { activeMokaQuota, boundMokaMessages, createMokaSessionStore } from '@/lib/mokaSession';
 
 type Item = ChatMsg & {
   id: number;
@@ -86,13 +87,9 @@ function pickIdeas(late: number, shopEmpty: boolean, hour: number): string[] {
 }
 const IDEAS = ['Alışveriş listesine süt ve ekmek ekle', 'Bugün 2 bardak su içtim', 'Salona cam silmeyi ekle', 'Yarın için not al: kombi bakımı', 'Bugün ne yapmalıyım?', '25 dk ders çalışalım', 'Bugün günlük yazmak istiyorum', 'Biraz hareket edelim mi?', 'Dışarı çıkmaya ne dersin?', 'Evi toparlamak için küçük bir adım öner'];
 
-/** Oturum boyunca konuşma kalır; kapatınca silinir (mesajlar telefonda saklanmaz). */
-let memory: Item[] = [HELLO];
+/** Sohbet yalnızca geçerli hesap sahibinin açık uygulama oturumunda tutulur. */
+const sessionForOwner = createMokaSessionStore<Item[]>(() => [HELLO]);
 let nextId = 1;
-const resetMemory = () => (memory = [HELLO]);
-/** Premium olmayan kullanıcı bu oturumda kaç mesaj yazdı (ilk mesaja uzun tanıtım, sonrakilere kısa yönlendirme). */
-/** Kalan sohbet hakkı: oda kapanıp açılsa da gün boyu hatırlanır (yenilenme anına kadar). */
-let leftMem: { day: number; month: number; until: number } | null = null;
 /** Günlük hak dolunca Moka'nın vedası; {} yerine "yarın 00:00" gibi yenilenme zamanı gelir. */
 const BYE = [
   'Bugünlük çok konuştuk, ben de biraz yoruldum 😴 {} yine buradayım, konuşuruz 💛',
@@ -106,8 +103,6 @@ function resetLabel() {
   return tx(r.toDateString() === new Date().toDateString() ? 'bugün {}' : 'yarın {}').replace('{}', t);
 }
 const byeLine = () => tx(BYE[Math.floor(Math.random() * BYE.length)]).replace('{}', resetLabel());
-let freeAsked = 0;
-let cannedN = 0;
 /** Bugün "hepsi bitti" kutlaması gösterildi mi (oturumda bir kez). */
 let celebrated = '';
 const INTRO_LINE = { tap: 'introTap', hello: 'introHello', pot: 'introPot' } as const;
@@ -121,29 +116,42 @@ const rnd = (n: number) => Math.floor(Math.random() * n);
 
 /** Moka ile sohbet: tatlı bir muhabbet ve uygulamayı kontrol eden bir yapay zekâ (Haiku). Sunucuda çalışır, alan dışına çıkmaz. */
 export default function MokaChat() {
+  const { status, user } = useAuth();
+  const owner = user?.id ? `${status}:${user.id}` : status;
+  return <MokaChatSession key={owner} owner={owner} status={status} />;
+}
+
+function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus }) {
   const c = useColors();
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { state: S, update, get } = useStore();
   const { premium } = usePurchases();
-  const { status } = useAuth();
-  const [items, setItems] = useState<Item[]>(memory);
+  const [session] = useState(() => sessionForOwner(owner));
+  const [items, setItems] = useState<Item[]>(() => session.messages());
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const [left, setLeft0] = useState<{ day: number; month: number } | null>(() => (leftMem && Date.now() < leftMem.until ? leftMem : null));
-  const setLeft = (v: { day: number; month: number }) => {
-    leftMem = { ...v, until: chatResetAt().getTime() };
-    setLeft0(v);
-  };
+  const [left, setLeft0] = useState(() => activeMokaQuota(session.quota()));
+  const setLeft = useCallback((v: { day: number; month: number } | null) => {
+    const quota = v ? { ...v, until: chatResetAt().getTime() } : null;
+    session.saveQuota(quota);
+    setLeft0(quota);
+  }, [session]);
   const [notes, setNotes] = useState(false);
   const { width: winW } = useWindowDimensions();
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const logRef = useRef<ComponentRef<typeof ScrollView>>(null);
   // Ekrandan çıkınca bekleyen gecikmeli işlemler (yönlendirme, balon ekleme) iptal edilir.
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  const later = (fn: () => void, ms: number) => void timers.current.push(setTimeout(fn, ms));
+  const later = (fn: () => void, ms: number) => {
+    const timer = setTimeout(() => {
+      timers.current.delete(timer);
+      fn();
+    }, ms);
+    timers.current.add(timer);
+  };
   const [kb, setKb] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [kbH, setKbH] = useState(0);
@@ -154,6 +162,11 @@ export default function MokaChat() {
     return () => { sh.remove(); hd.remove(); };
   }, []);
   const [menu, setMenu] = useState(false);
+  useEffect(() => {
+    if (!menu) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setMenu(false); return true; });
+    return () => sub.remove();
+  }, [menu]);
   /** Az önce gönderilen mesaj: yazı çubuğunun üstünde kendi balonunda durur, Moka cevap verince bir süre sonra geçmişe karışır. */
   const [sent, setSent] = useState<{ id: number; text: string } | null>(null);
   const settle = (id: number, ms = 6000) => later(() => setSent(s => (s?.id === id ? null : s)), ms);
@@ -170,16 +183,30 @@ export default function MokaChat() {
   const [speaking, setSpeaking] = useState(false);
   const lastId = last?.id;
   useEffect(() => {
-    if (!lastId) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!lastId) {
+      // Sohbet temizlenince eski yazma zamanlayıcısı iptal olur; Moka'nın ağzı açık kalmasın.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSpeaking(false);
+      return;
+    }
     setSpeaking(true);
-    const t = setTimeout(() => setSpeaking(false), reduce || !fresh.has(lastId) ? 600 : typeMs(last?.content.length ?? 0));
-    return () => clearTimeout(t);
+    const t = setTimeout(() => {
+      fresh.delete(lastId);
+      setSpeaking(false);
+    }, reduce || !fresh.has(lastId) ? 600 : typeMs(last?.content.length ?? 0));
+    return () => {
+      clearTimeout(t);
+      fresh.delete(lastId);
+    };
   }, [lastId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const push = useCallback((fn: (prev: Item[]) => Item[]) => {
-    setItems(prev => (memory = fn(prev)));
-  }, []);
+    setItems(prev => {
+      const next = boundMokaMessages(fn(prev), 100);
+      session.saveMessages(next);
+      return next;
+    });
+  }, [session]);
 
   useEffect(() => {
     if (items.length <= 1 && !busy) return;
@@ -212,7 +239,7 @@ export default function MokaChat() {
     if (status !== 'account' || !premium.active) {
       const gate = status !== 'account'
         ? { content: tx(CHAT_ACCOUNT_NEEDED), cta: 'login' as const }
-        : { content: tx(freeAsked++ === 0 ? CHAT_PREMIUM_INTRO : CHAT_PREMIUM_NUDGE), cta: 'premium' as const };
+        : { content: tx(session.nextFreeAsked() ? CHAT_PREMIUM_INTRO : CHAT_PREMIUM_NUDGE), cta: 'premium' as const };
       sfx('tap');
       const gid = nextId++;
       fresh.add(gid);
@@ -232,7 +259,7 @@ export default function MokaChat() {
       return;
     }
     // Selam / teşekkür / hoşça kal: hazır cevap, sunucu çağrılmaz, hak düşmez.
-    const canned = cannedReply(msg, getUiLang(), ctx, cannedN++);
+    const canned = cannedReply(msg, getUiLang(), ctx, session.nextCanned());
     if (canned) {
       sfx('tap');
       const cid = nextId++;
@@ -250,6 +277,7 @@ export default function MokaChat() {
       // Beklenmeyen hata (ör. bozuk cevap): balon boş kalmasın.
       r = { ok: false, message: tx('Şu an cevap veremedim. Biraz sonra tekrar dene; hakkından düşmedi.') };
     }
+    if (!session.isActive()) return;
     setBusy(false);
     settle(mine.id);
     if (!r.ok && r.daily) {
@@ -322,7 +350,7 @@ export default function MokaChat() {
     if (!it?.undo || it.undone) return;
     update(D => void it.undo!.forEach(fn => fn(D)));
     push(p => p.map(i => (i.id === id ? { ...i, undone: true } : i)));
-    toast('Geri aldım ↩️');
+    toast(tx('Geri aldım ↩️'));
   };
 
   const confirmItem = (id: number, yes: boolean) => {
@@ -344,10 +372,10 @@ export default function MokaChat() {
   /** Google Play yapay zekâ içeriği kuralı: uygunsuz cevap uygulama içinden bildirilebilir. */
   const report = () => {
     const text = last && last.id !== 0 ? last.content : '';
-    if (!text) return toast('Bildirilecek bir cevap yok.');
-    appAlert('Cevabı bildir', 'Moka’nın son cevabı uygunsuz, yanlış ya da zararlı mıydı? Bize e-posta ile bildir; cevap metni mesaja eklenir.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Bildir', onPress: () => openLink(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Moka cevabı bildirimi')}&body=${encodeURIComponent(`Bildirdiğim cevap:\n\n${text}\n\nNeden:`)}`) },
+    if (!text) return toast(tx('Bildirilecek bir cevap yok.'));
+    appAlert(tx('Cevabı bildir'), tx('Moka’nın son cevabı uygunsuz, yanlış ya da zararlı mıydı? Bize e-posta ile bildir; cevap metni mesaja eklenir.'), [
+      { text: tx('Vazgeç'), style: 'cancel' },
+      { text: tx('Bildir'), onPress: () => openLink(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(tx('Moka cevabı bildirimi'))}&body=${encodeURIComponent(tx('Bildirdiğim cevap') + ':\n\n' + text + '\n\n' + tx('Neden:'))}`) },
     ]);
   };
 
@@ -366,9 +394,22 @@ export default function MokaChat() {
 
   const clear = () => {
     setSent(null);
-    setItems(resetMemory());
-    toast('Sohbet temizlendi 🧹');
+    session.saveMessages([HELLO]);
+    setItems(session.messages());
+    toast(tx('Sohbet temizlendi 🧹'));
   };
+
+  useEffect(() => {
+    if (!left) return;
+    const expire = () => setLeft(null);
+    const delay = left.until - Date.now();
+    if (delay <= 0) {
+      expire();
+      return;
+    }
+    const timer = setTimeout(expire, delay);
+    return () => clearTimeout(timer);
+  }, [left, setLeft]);
 
   // Oda: Moka yastığın üstünde. Yazarken küçülüp yukarı çıkar.
   const D = c.den;
@@ -391,11 +432,11 @@ export default function MokaChat() {
     a.start();
     return () => a.stop();
   }, [liftTo, reduce, lift]);
-  // Giriş: Moka alttaki tuştan yastığa uçar, balon biraz sonra belirir.
+  // Oda açılırken Moka yastık üzerinde hafifçe doğrulur.
   const [enter] = useState(() => new Animated.Value(reduce ? 1 : 0));
   useEffect(() => {
-    if (reduce) return;
-    const a = Animated.spring(enter, { toValue: 1, friction: 7, tension: 55, useNativeDriver: true });
+    if (reduce) { enter.setValue(1); return; }
+    const a = Animated.timing(enter, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true, isInteraction: false });
     a.start();
     return () => a.stop();
   }, [reduce, enter]);
@@ -620,8 +661,9 @@ export default function MokaChat() {
   // Balon: metne sarılır, kuyruğu Moka'nın gagasına bakar. Yazarken üst şeridin altına çıkar.
   const [bl, setBl] = useState({ x: 0, w: 0 });
   const tailX = Math.min(Math.max(26, mokaCx - 24 - bl.x), Math.max(26, bl.w - 26));
-  const bubbleBottom = winH - (mokaTop + mokaSize * 0.08);
-  const bubbleMax = Math.max(110, kb ? winH * 0.24 : mokaTop - (insets.top + 70));
+  const headClearance = S.play.mokaWorn?.bas ? mokaSize * 0.2 : 0;
+  const bubbleBottom = winH - (mokaTop + mokaSize * 0.08) + headClearance;
+  const bubbleMax = Math.max(110, kb ? winH * 0.24 : mokaTop - headClearance - (insets.top + 70));
   const paper = night ? D.paperNight : D.paper;
   const say0 = (t: string) => <Text maxFontSizeMultiplier={1.3} style={[st.say, { color: D.ink }]}>{tx(t)}</Text>;
   const bubbleBody = notes ? (
@@ -671,10 +713,11 @@ export default function MokaChat() {
   const hasText = !!text.trim();
   const [sendA] = useState(() => new Animated.Value(0));
   useEffect(() => {
+    if (reduce) { sendA.setValue(hasText ? 1 : 0); return; }
     const a = Animated.spring(sendA, { toValue: hasText ? 1 : 0, friction: 6, tension: 160, useNativeDriver: true });
     a.start();
     return () => a.stop();
-  }, [hasText, sendA]);
+  }, [hasText, reduce, sendA]);
   const toggleLog = () => { interact(); haptic('light'); setMenu(false); setLogOpen(o => !o); };
   const logNode = logOn && (
     <Animated.View
@@ -734,7 +777,6 @@ export default function MokaChat() {
   );
   const potCold = pot === 'cold' || pot === 'first';
   const menuRows: [IconName, string, () => void, string?][] = [
-    ['palette', "Moka'nı tasarla", () => router.push('/moka-tasarim' as Href)],
     ['note', 'Notlarım', () => setNotes(n => !n), S.play.notes.length ? String(S.play.notes.length) : undefined],
     ['history', 'Sohbet geçmişi', () => setLogOpen(true), talk.length ? String(talk.length) : undefined],
   ];
@@ -748,19 +790,17 @@ export default function MokaChat() {
         steam={potSteam(pot)} potGlow={pot === 'fresh'} brew={brew} chain={Math.min(7, shownStreak)} tilt={tilt}
         onTouch={touchObj} style={StyleSheet.absoluteFill}
       />
-      {/* Moka ve gölgesi: odadan biraz fazla kayar. */}
+      {/* Moka katmanı odadan biraz fazla kayar. */}
       <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { transform: shift(3, 2) }]}>
-        <Image source={ISIK} pointerEvents="none" style={{ position: 'absolute', left: mokaCx - mokaSize * 0.5, top: mokaBottom - mokaSize * 0.16, width: mokaSize, height: mokaSize * 0.26, tintColor: D.shade, opacity: 0.22 }} />
-        <View pointerEvents="none" style={{ position: 'absolute', left: mokaCx - mokaSize * 0.26, top: mokaBottom - mokaSize * 0.065, width: mokaSize * 0.52, height: mokaSize * 0.07, borderRadius: mokaSize, backgroundColor: D.shade, opacity: 0.3 }} />
-        <Pressable onPress={mokaTap} onLongPress={() => { haptic('light'); router.push('/moka-tasarim' as Href); }} delayLongPress={450} accessibilityHint={tx('Moka\'nı tasarla için basılı tut')} accessibilityLabel="Moka" style={{ position: 'absolute', left: mokaLeft, top: mokaTop, width: mokaSize, height: mokaSize }}>
+        <Pressable onPress={mokaTap} onLongPress={() => { haptic('light'); router.push('/moka-tasarim' as Href); }} delayLongPress={450} accessibilityHint={tx('Moka\'nı tasarla için basılı tut')} accessibilityLabel={tx('Moka')} style={{ position: 'absolute', left: mokaLeft, top: mokaTop, width: mokaSize, height: mokaSize }}>
           <Animated.View
             style={{
               width: mokaSize,
               height: mokaSize,
+              opacity: enter,
               transform: [
-                { translateX: enter.interpolate({ inputRange: [0, 1], outputRange: [winW / 2 - mokaCx, 0] }) },
-                { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [winH - 40 - (mokaBottom - mokaSize / 2), 0] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [mokaSize * 0.03, 0, -mokaSize * 0.1] })) },
-                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [1, 1, 1.02] })) },
+                { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [mokaSize * 0.035, 0] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [mokaSize * 0.03, 0, -mokaSize * 0.1] })) },
+                { scale: Animated.multiply(enter.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }), hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [1, 1, 1.02] })) },
                 { scaleX: hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [1.06, 1, 0.97] }) },
                 { scaleY: hop.interpolate({ inputRange: [-0.35, 0, 1], outputRange: [0.92, 1, 1.06] }) },
               ],
@@ -811,24 +851,31 @@ export default function MokaChat() {
       )}
 
       <KeyboardAvoidingView style={StyleSheet.absoluteFill} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} pointerEvents="box-none">
-        {/* Üst şerit: solda geri; sağda tek krem kapsül (kahve | menü). Hepsi aynı boy, aynı gölge. */}
+        {/* Üst şerit: dolap ayrı, sohbet araçları kendi yükseltilmiş menüsünde. */}
         <View style={[st.head2, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
           <Squish onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} accessibilityLabel={tx('Geri')} hitSlop={6} style={[st.topBtn, { backgroundColor: paper, shadowColor: D.shade, borderColor: D.cream }]}>
             <Chevron color={D.ink} size={20} />
           </Squish>
           <View style={{ flex: 1 }} pointerEvents="none" />
-          <View style={[st.toolbar, { backgroundColor: paper, shadowColor: D.shade, borderColor: D.cream }]}>
+          <View style={[st.toolbar, { backgroundColor: paper, borderColor: D.line, shadowColor: D.shade }]}>
             <Squish onPress={() => { interact(); setMenu(false); setCoffeeOpen(true); }} accessibilityLabel={tx('Kahve: {} gün taze').replace('{}', String(hp.streak))} hitSlop={4} style={[st.toolSeg, { opacity: pot === 'wait' ? 0.8 : 1 }]}>
               <PotIcon size={22} color={D.ink} cold={potCold} />
               {shownStreak > 0 && <Appear key={shownStreak}><Text maxFontSizeMultiplier={1.2} style={[st.pillN, { color: D.ink }]}>{shownStreak}</Text></Appear>}
               {pot === 'warm' && <Icon name="snow" color={D.soft} size={13} />}
             </Squish>
-            <View style={[st.toolDiv, { backgroundColor: D.line }]} />
-            <Squish onPress={() => { interact(); haptic('light'); setMenu(m => !m); }} accessibilityLabel={tx('Diğer')} accessibilityState={{ expanded: menu }} hitSlop={4} style={st.toolMore}>
-              <View style={[StyleSheet.absoluteFill, st.toolMoreBg, { backgroundColor: menu ? D.line : 'transparent' }]} />
-              <Animated.View style={{ transform: [{ rotate: menuA.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '90deg'] }) }] }}>
-                <Icon name="more" color={D.ink} size={20} />
-              </Animated.View>
+            <Squish onPress={() => { interact(); haptic('light'); setMenu(false); router.push('/moka-tasarim' as Href); }} accessibilityLabel={tx("Moka'nı tasarla")} hitSlop={4} style={[st.toolCustomize, { backgroundColor: '#DFE9DA' }]}>
+              <Icon name="hanger" color="#385342" size={19} />
+              <Text maxFontSizeMultiplier={1.1} style={{ fontFamily: fonts.bodyBold, fontSize: 13.5, color: '#314C3B' }}>{tx('Dolap')}</Text>
+            </Squish>
+            <Squish onPress={() => { interact(); haptic('light'); setMenu(m => !m); }} accessibilityLabel={tx('Sohbet araçları')} accessibilityState={{ expanded: menu }} hitSlop={4} style={[st.toolMore, { backgroundColor: D.ink }]}>
+              <View style={st.menuGlyph}>
+                <Animated.View style={[st.glyphLayer, { opacity: menuA.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ rotate: menuA.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '35deg'] }) }] }]}>
+                  <Icon name="grid" color={D.paper} size={17} />
+                </Animated.View>
+                <Animated.View style={[st.glyphLayer, { opacity: menuA, transform: [{ rotate: menuA.interpolate({ inputRange: [0, 1], outputRange: ['-35deg', '0deg'] }) }] }]}>
+                  <Icon name="close" color={D.paper} size={18} />
+                </Animated.View>
+              </View>
             </Squish>
           </View>
         </View>
@@ -884,8 +931,8 @@ export default function MokaChat() {
           </View>
         ) : (
           <View style={[st.row, { paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
-            <Squish onPress={chatPress} accessibilityLabel={tx("Moka'ya yaz")} scaleTo={0.97} style={[st.pillWrite, { backgroundColor: paper, shadowColor: D.shade, borderColor: D.cream }]}>
-              <View style={[st.writeIc, { backgroundColor: D.cream }]}><Icon name="chat" color={D.ink} size={20} /></View>
+            <Squish onPress={chatPress} accessibilityLabel={tx("Moka'ya yaz")} scaleTo={0.97} style={[st.pillWrite, { backgroundColor: paper, shadowColor: D.shade, borderColor: D.line }]}>
+              <View style={[st.writeIc, { backgroundColor: D.ink }]}><Icon name="chat" color={D.paper} size={20} /></View>
               {lock === 'tomorrow' ? (
                 <View style={{ flex: 1 }}>
                   <Text numberOfLines={1} maxFontSizeMultiplier={1.2} style={[st.pillWriteT, { color: D.ink, fontSize: 15, lineHeight: 19 }]}>{tx('Moka dinleniyor 😴')}</Text>
@@ -923,32 +970,41 @@ export default function MokaChat() {
           }]}
         >
           <Svg width={20} height={10} style={[st.menuCaret, RTL ? { left: 14 } : { right: 14 }]} pointerEvents="none"><Path d="M0 10C5 10 7 0 10 0S15 10 20 10Z" fill={paper} /></Svg>
-          <View style={[st.menuCard, { backgroundColor: paper, shadowColor: D.shade }]}>
-            {menuRows.map(([ic, label, fn, badge]) => (
-              <Pressable key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityRole="button" accessibilityLabel={tx(label)} style={({ pressed }) => [st.menuRow, pressed && { backgroundColor: D.cream }]}>
-                <View style={[st.menuIc, { backgroundColor: D.cream }]}><Icon name={ic} color={D.ink} size={18} /></View>
-                <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ flex: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: D.ink }}>{tx(label)}</Text>
-                {!!badge && <View style={[st.menuBadge, { backgroundColor: D.line }]}><Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: D.soft }}>{badge}</Text></View>}
-                <Chevron color={D.soft} size={14} dir="right" />
-              </Pressable>
-            ))}
-            <View style={[st.menuRule, { backgroundColor: D.line }]} />
-            <View style={st.menuMini}>
-              {([
-                ['flag', 'Bildir', report],
-                ['trash', 'Temizle', clear],
-              ] as const).map(([ic, label, fn]) => (
-                <Squish key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityLabel={tx(label === 'Bildir' ? 'Moka\'nın son cevabını bildir' : 'Sohbeti temizle')} scaleTo={0.96} style={[st.menuChip, { backgroundColor: D.cream }]}>
-                  <Icon name={ic} color={D.soft} size={15} />
-                  <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: D.soft }}>{tx(label)}</Text>
+          <View style={[st.menuFrame, { backgroundColor: D.line, shadowColor: D.shade }]}>
+            <View style={[st.menuCard, { backgroundColor: paper, borderColor: D.cream }]}>
+              <View style={st.menuHeading}>
+                <View style={[st.menuIc, { backgroundColor: D.glow }]}><Icon name="chat" color={D.ink} size={17} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20, color: D.ink }}>{tx('Sohbet araçları')}</Text>
+                </View>
+              </View>
+              <View style={[st.menuRule, { backgroundColor: D.line }]} />
+              {menuRows.map(([ic, label, fn, badge]) => (
+                <Squish key={label} onPress={() => { setMenu(false); interact(); fn(); }} scaleTo={0.98} accessibilityLabel={tx(label)} style={[st.menuRow, { backgroundColor: paper }]}>
+                  <View style={[st.menuIc, { backgroundColor: D.cream }]}><Icon name={ic} color={D.ink} size={18} /></View>
+                  <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ flex: 1, fontFamily: fonts.bodyBlack, fontSize: 15, color: D.ink }}>{tx(label)}</Text>
+                  {!!badge && <View style={[st.menuBadge, { backgroundColor: D.line }]}><Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: D.soft }}>{badge}</Text></View>}
+                  <Chevron color={D.soft} size={14} dir="right" />
                 </Squish>
               ))}
-            </View>
-            <View style={[st.menuNote, { backgroundColor: D.cream }]}>
-              <Icon name="info" color={D.soft} size={14} />
-              <Text maxFontSizeMultiplier={1.3} style={{ flex: 1, fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: D.soft }}>
-                {tx('Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.')}
-              </Text>
+              <View style={[st.menuRule, { backgroundColor: D.line }]} />
+              <View style={st.menuMini}>
+                {([
+                  ['flag', 'Bildir', report],
+                  ['trash', 'Temizle', clear],
+                ] as const).map(([ic, label, fn]) => (
+                  <Squish key={label} onPress={() => { setMenu(false); interact(); fn(); }} accessibilityLabel={tx(label === 'Bildir' ? 'Moka\'nın son cevabını bildir' : 'Sohbeti temizle')} scaleTo={0.96} style={[st.menuChip, { backgroundColor: D.cream, borderColor: D.line, shadowColor: D.shade }]}>
+                    <Icon name={ic} color={D.soft} size={15} />
+                    <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: D.soft }}>{tx(label)}</Text>
+                  </Squish>
+                ))}
+              </View>
+              <View style={[st.menuNote, { backgroundColor: D.cream, borderColor: D.line }]}>
+                <Icon name="info" color={D.soft} size={14} />
+                <Text maxFontSizeMultiplier={1.3} style={{ flex: 1, fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16, color: D.soft }}>
+                  {tx('Moka bir yapay zekâdır; cevapları hatalı olabilir, tıbbi ya da psikolojik tavsiye değildir. Acil durumda 112’yi ara.')}
+                </Text>
+              </View>
             </View>
           </View>
         </Animated.View>
@@ -1009,7 +1065,7 @@ function SentBubble({ text, read, color, ink, reduce }: { text: string; read: bo
 }
 
 /** Oda düğmelerindeki çizim ikonlar (emoji yerine; her yerde aynı kalınlık). */
-type IconName = 'broom' | 'plus' | 'send' | 'lock' | 'star' | 'moon' | 'more' | 'note' | 'flag' | 'trash' | 'close' | 'check' | 'chat' | 'snow' | 'palette' | 'history' | 'info' | 'retry';
+type IconName = 'broom' | 'plus' | 'send' | 'lock' | 'star' | 'moon' | 'more' | 'hanger' | 'grid' | 'note' | 'flag' | 'trash' | 'close' | 'check' | 'chat' | 'snow' | 'palette' | 'history' | 'info' | 'retry';
 function Icon({ name, color, size = 20 }: { name: IconName; color: string; size?: number }) {
   const p = { stroke: color, strokeWidth: 2.2, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
@@ -1021,6 +1077,8 @@ function Icon({ name, color, size = 20 }: { name: IconName; color: string; size?
       {name === 'star' && <Path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-3.9 5.6-.8z" {...p} />}
       {name === 'moon' && <Path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z" {...p} />}
       {name === 'more' && (<><Circle cx={5.5} cy={12} r={1.9} fill={color} /><Circle cx={12} cy={12} r={1.9} fill={color} /><Circle cx={18.5} cy={12} r={1.9} fill={color} /></>)}
+      {name === 'hanger' && <Path d="M9.7 7a2.4 2.4 0 1 1 3.6 2.1c-.9.5-1.3 1-1.3 2l8.1 5.1a1.2 1.2 0 0 1-.6 2.2h-15a1.2 1.2 0 0 1-.6-2.2L12 11" {...p} />}
+      {name === 'grid' && (<><Rect x={5} y={5} width={5.5} height={5.5} rx={1.8} fill={color} /><Rect x={13.5} y={5} width={5.5} height={5.5} rx={1.8} fill={color} /><Rect x={5} y={13.5} width={5.5} height={5.5} rx={1.8} fill={color} /><Rect x={13.5} y={13.5} width={5.5} height={5.5} rx={1.8} fill={color} /></>)}
       {name === 'note' && (<><Path d="M6 3.5h8.5l3.5 3.5v13.5H6z" {...p} /><Path d="M9 11h6M9 15h6" {...p} /></>)}
       {name === 'flag' && (<><Path d="M5.5 21V4" {...p} /><Path d="M5.5 4.5h11l-2.2 4 2.2 4h-11" {...p} /></>)}
       {name === 'trash' && (<><Path d="M4.5 7h15" {...p} /><Path d="M9.5 7V4.5h5V7" {...p} /><Path d="M6.5 7l1 13h9l1-13" {...p} /></>)}
@@ -1122,7 +1180,7 @@ function Bubble({ item, typed, room, onUndo, onConfirm, onRetry }: { item: Item;
         </Squish>
       )}
       {item.cta && (
-        <Btn small kind="primary" label={item.cta === 'login' ? 'Giriş yap / üye ol' : "Premium'a bak ⭐"} onPress={() => router.push(item.cta === 'login' ? '/giris' : '/premium')} />
+        <Btn small kind="primary" label={tx(item.cta === 'login' ? 'Giriş yap / üye ol' : "Premium'a bak ⭐")} onPress={() => router.push(item.cta === 'login' ? '/giris' : '/premium')} />
       )}
       {item.done?.map((d, i) => (
         <View key={i} style={[st.done, { backgroundColor: c.sageSoft }]}>
@@ -1130,8 +1188,8 @@ function Bubble({ item, typed, room, onUndo, onConfirm, onRetry }: { item: Item;
         </View>
       ))}
       {item.undo?.length && !item.undone ? (
-        <Squish onPress={() => onUndo(item.id)} accessibilityLabel="Geri al" style={[st.done, { backgroundColor: c.surface, borderColor: c.line, borderWidth: 1 }]}>
-          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>↩️ Geri al</Text>
+        <Squish onPress={() => onUndo(item.id)} accessibilityLabel={tx('↩️ Geri al')} style={[st.done, { backgroundColor: c.surface, borderColor: c.line, borderWidth: 1 }]}>
+          <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 12, color: c.ink }}>{tx('↩️ Geri al')}</Text>
         </Squish>
       ) : null}
       {item.confirm?.length && !item.confirmed ? (
@@ -1140,8 +1198,8 @@ function Bubble({ item, typed, room, onUndo, onConfirm, onRetry }: { item: Item;
             <Text key={i} style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: c.ink }}>{describeAction(S, a)}</Text>
           ))}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Btn small kind="primary" label="Evet, sil" onPress={() => onConfirm(item.id, true)} />
-            <Btn small kind="ghost" label="Vazgeç" onPress={() => onConfirm(item.id, false)} />
+            <Btn small kind="primary" label={tx('Evet, sil')} onPress={() => onConfirm(item.id, true)} />
+            <Btn small kind="ghost" label={tx('Vazgeç')} onPress={() => onConfirm(item.id, false)} />
           </View>
         </View>
       ) : null}
@@ -1153,7 +1211,7 @@ function NotesList() {
   const c = useColors();
   const { state: S, update } = useStore();
   const notes = [...S.play.notes].sort((a, b) => a.day.localeCompare(b.day) || a.at - b.at);
-  if (!notes.length) return <T v="small">Henüz not yok. Moka&apos;ya &quot;yarın için not al: …&quot; de.</T>;
+  if (!notes.length) return <T v="small">{tx('Henüz not yok. Moka\'ya "yarın için not al: …" de.')}</T>;
   return (
     <>
       {notes.map(n => (
@@ -1162,7 +1220,7 @@ function NotesList() {
             <T v="tiny">{noteDayLabel(n.day)}</T>
             <T>{n.text}</T>
           </View>
-          <Pressable onPress={() => update(D => void (D.play.notes = D.play.notes.filter(x => x.id !== n.id)))} accessibilityLabel="Notu sil" hitSlop={8}>
+          <Pressable onPress={() => update(D => void (D.play.notes = D.play.notes.filter(x => x.id !== n.id)))} accessibilityLabel={tx('Notu sil')} hitSlop={8}>
             <Text style={{ color: c.muted, lineHeight: 26, fontSize: 20 }}>×</Text>
           </Pressable>
         </View>
@@ -1176,25 +1234,28 @@ const raised = { shadowOpacity: 0.16, shadowRadius: 14, shadowOffset: { width: 0
 const st = StyleSheet.create({
   roomBubble: { maxWidth: '100%', backgroundColor: 'transparent', paddingHorizontal: 0, paddingVertical: 0, alignSelf: 'stretch' },
   // Üst şerit
-  head2: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, height: 50 },
+  head2: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingBottom: 2 },
   topBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, ...raised },
-  toolbar: { height: 44, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', borderWidth: 1, paddingLeft: 4, paddingRight: 3, ...raised },
-  toolSeg: { height: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 10, paddingRight: 10 },
-  toolDiv: { width: 1, height: 20, borderRadius: 1 },
-  toolMore: { width: 40, height: 38, marginLeft: 3, alignItems: 'center', justifyContent: 'center' },
-  toolMoreBg: { borderRadius: 19 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', gap: 2, padding: 3, borderRadius: 25, borderWidth: 1, ...raised },
+  toolSeg: { minWidth: 40, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, paddingHorizontal: 7 },
+  toolCustomize: { minHeight: 42, borderRadius: 21, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 10 },
+  toolMore: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  menuGlyph: { width: 22, height: 22 },
+  glyphLayer: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   pillN: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 20 },
   // Menü
-  menu: { position: 'absolute', zIndex: 10, width: 272 },
+  menu: { position: 'absolute', zIndex: 10, width: 292 },
   menuCaret: { position: 'absolute', top: -9, zIndex: 2 },
-  menuCard: { borderRadius: 24, padding: 6, shadowOpacity: 0.22, shadowRadius: 22, shadowOffset: { width: 0, height: 10 }, elevation: 12 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 8, borderRadius: 18 },
+  menuFrame: { borderRadius: 24, padding: 2, borderWidth: 1, borderColor: 'rgba(255,249,235,0.7)', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 16 },
+  menuCard: { borderRadius: 21, padding: 9, borderWidth: 1 },
+  menuHeading: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 5, paddingTop: 4, paddingBottom: 2 },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, paddingHorizontal: 8, borderRadius: 14 },
   menuIc: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   menuBadge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   menuRule: { height: StyleSheet.hairlineWidth, marginHorizontal: 10, marginVertical: 6 },
   menuMini: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
-  menuChip: { flex: 1, height: 38, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10 },
-  menuNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 16, padding: 10, margin: 4, marginTop: 8 },
+  menuChip: { flex: 1, height: 40, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10, borderWidth: 1, shadowOpacity: 0.08, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  menuNote: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 16, borderWidth: 1, padding: 10, margin: 4, marginTop: 8 },
   // Moka balonu
   say: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 25 },
   who: { fontFamily: fonts.bodyBlack, fontSize: 10.5, letterSpacing: 1.2, marginBottom: 2 },

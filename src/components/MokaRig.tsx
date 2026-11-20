@@ -242,7 +242,6 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
   const bodyItem = bodyId ? WORN_CLOTHES[bodyId] ?? COSMETIC_IMG[bodyId] : null;
   const headItem = headId ? COSMETIC_IMG[headId] : null;
-  const handItem = handId ? COSMETIC_IMG[handId] : null;
   const hold = handId ? HOLDS[handId] : undefined;
   const headFit = headId ? HEAD_FIT[headId] : undefined;
   const headTarget = headFit ? { x: HEAD_TARGET.x, y: headFit.targetY ?? HEAD_TARGET.y } : HEAD_TARGET;
@@ -252,7 +251,6 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const headTy = headFit ? ((headTarget.y - headFit.anchorY) * size) / 512 : 0;
   const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
   const clothSwing = cape ? 0.7 : 0.35;
-  const shoulder = hold?.support ? NECK : { x: 357 * W / 512, y: 264 * W / 512 };
   return (
     <>
       <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
@@ -276,15 +274,13 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
           </Pivot>
         )}
       </Pivot>
-      {!hold?.support && (
-        <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
-      )}
-      {handItem && hold ? (
-        <Pivot s={size} p={shoulder} rotate={deg(wing, 1.4)} rotate2={deg(handMotion, hold.motion)} ty={wingRise}>
-          <HeldItemModel size={size} pose={hold} item={handItem} wing={L.kanat_a} />
-        </Pivot>
+      {handId && hold ? (
+        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} />
       ) : (
-        <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}><Layer src={L.kanat_a} s={size} /></Pivot>
+        <>
+          <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
+          <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}><Layer src={L.kanat_a} s={size} /></Pivot>
+        </>
       )}
     </>
   );

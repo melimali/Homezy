@@ -89,7 +89,7 @@ export default function Bahce() {
 
   return (
     <View style={{ flex: 1 }}>
-    <Screen header={false} image={require('../../assets/bahce/bahce-arka.jpg')}>
+    <Screen header={false} image={require('../../assets/bahce/bahce-arka.webp')}>
       <BackLink />
       <Appear>
         <Glass scrim style={{ gap: 6 }}>

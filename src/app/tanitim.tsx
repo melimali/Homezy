@@ -48,9 +48,9 @@ const heroScene = (id: string): IntroScene => {
 };
 const SCENES: Record<string, IntroScene> = {
   hello: heroScene('salon-kanepe'),
-  draw: { background: require('../../assets/arkaplan/merdiven.jpg'), sticker: MOKA_ASSETS.handyman, x: 0.46, bottom: 0.9, size: 0.4 },
-  sweep: { background: require('../../assets/arkaplan/koridor.jpg'), sticker: MOKA_ASSETS.sweeping, x: 0.5, bottom: 0.9, size: 0.4 },
-  wow: { background: require('../../assets/arkaplan/salon_tv.jpg'), sticker: MOKA_ASSETS.amazed, x: 0.5, bottom: 0.9, size: 0.36 },
+  draw: { background: require('../../assets/arkaplan/merdiven.webp'), sticker: MOKA_ASSETS.handyman, x: 0.46, bottom: 0.9, size: 0.4 },
+  sweep: { background: require('../../assets/arkaplan/koridor.webp'), sticker: MOKA_ASSETS.sweeping, x: 0.5, bottom: 0.9, size: 0.4 },
+  wow: { background: require('../../assets/arkaplan/salon_tv.webp'), sticker: MOKA_ASSETS.amazed, x: 0.5, bottom: 0.9, size: 0.36 },
   garden: heroScene('bitki-kosesi'),
   read: heroScene('pencere-sedir'),
 };

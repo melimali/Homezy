@@ -39,7 +39,7 @@ function TabsNav({ bg }: { bg: string }) {
       <Tabs.Screen name="bugun" options={{ title: 'Bugün' }} />
       <Tabs.Screen name="gelisim" options={{ title: 'Gelişim' }} />
       <Tabs.Screen name="hesap" options={{ title: 'Ben' }} />
-      <Tabs.Screen name="odalar" options={{ title: 'Odalar', href: null }} />
+      <Tabs.Screen name="odalar" options={{ title: 'Odalar' }} />
     </Tabs>
   );
 }

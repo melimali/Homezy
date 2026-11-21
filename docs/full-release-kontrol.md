@@ -23,7 +23,7 @@ Kaynak: `integration/tum-pr` e820198 + bu dalın değişiklikleri. ✅ yapıldı
 |---|---|
 | `npx tsc --noEmit` | ✅ temiz (test dosyaları için `tsconfig` `types: [jest,node]` eklendi; önce 46 test-tipi hatası vardı) |
 | `jest` | ✅ 241 geçti, 1 atlandı |
-| `expo lint` | ✅ hata yok |
+| `expo lint` | ❓ çalıştırıldı ama bitmedi/çıktı alınamadı; eski notta 6 react-hooks kuralı uyarısı var (derlemeyi engellemez). Build öncesi tekrar çalıştır |
 | `expo-doctor` | ✅ `expo-asset` peer eksikti → eklendi (expo-audio çökme riski, **native**). ❓ Kalan: `@sentry/react-native` 8.33 (beklenen ~8.28), `react-native-safe-area-context` 5.10.1 (beklenen ~5.11.1), 20 paket patch farkı. Çökme nedeni değil; build öncesi `npx expo install --check` ile hizalamak istersen tek seferde yapılır |
 | `expo export` / prebuild | ❓ bu makinede çalıştırılmadı; build öncesi `npx expo export --platform android` önerilir |
 | Debug menüsü / dev kodu | ❓ `__DEV__` korumaları ve admin hediye aracı (`admin_grant_points`) sunucuda yalnızca sahip hesabına açık olmalı; build öncesi son gözden geçirme önerilir |

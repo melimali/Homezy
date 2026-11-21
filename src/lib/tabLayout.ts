@@ -7,7 +7,7 @@ import { prefs } from '@/lib/supabase';
  * `fixed` bloklar kaldırılamaz. Seçim telefona yazılır (prefs), sunucu yok.
  */
 export type TabId = 'ev' | 'bugun' | 'gelisim';
-export type BlockDef = { id: string; title: string; emoji: string; fixed?: boolean; off?: boolean };
+export type BlockDef = { id: string; title: string; emoji: string; fixed?: boolean; off?: boolean; /** Her zaman en sonda durur (kayıtlı düzen bunu bozamaz). */ last?: boolean };
 
 export const BLOCKS: Record<TabId, BlockDef[]> = {
   ev: [
@@ -46,7 +46,7 @@ export const BLOCKS: Record<TabId, BlockDef[]> = {
     { id: 'mokahafta', title: 'Moka haftalık raporu', emoji: '📝', off: true },
     { id: 'ruh', title: 'Ruh hali', emoji: '😊', off: true },
     { id: 'odabars', title: 'Oda puanları', emoji: '🏠', off: true },
-    { id: 'linkler', title: 'Haftam, Günüm, Sıralama', emoji: '🔗', off: true },
+    { id: 'linkler', title: 'Haftam, Günüm, Sıralama', emoji: '🔗', fixed: true, last: true },
   ],
 };
 
@@ -75,7 +75,9 @@ export function resolve(t: TabId, saved: Saved | null): Layout {
   const order = (saved?.order ?? []).filter(id => byId.has(id));
   const rest = defs.filter(d => !order.includes(d.id));
   // Kayıtta olmayan blokları varsayılan sıradaki komşularının yanına değil sona koy.
-  const ids = saved ? [...order, ...rest.map(d => d.id)] : defs.map(d => d.id);
+  const base = saved ? [...order, ...rest.map(d => d.id)] : defs.map(d => d.id);
+  // `last` bloklar (Haftam, Günüm, Sıralama) kayıtlı sıradan bağımsız her zaman en sona gelir.
+  const ids = [...base.filter(id => !byId.get(id)!.last), ...base.filter(id => byId.get(id)!.last)];
   const items = ids.map(id => {
     const d = byId.get(id)!;
     const visible = d.fixed || (saved ? saved.on.includes(id) || (!saved.order.includes(id) && !d.off) : !d.off);

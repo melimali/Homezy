@@ -3,6 +3,7 @@ import { Animated, Easing, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
 import { RigBody, useSpeechMouth } from '@/components/MokaRig';
+import { COSMETIC, cosmeticOwned } from '@/domain/kozmetik';
 import { useStore } from '@/store/AppStore';
 import { useActive } from '@/hooks/useActive';
 
@@ -36,7 +37,11 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   const faceOv = act === 'yawn' ? 'wow' : act === 'sip' ? 'happy' : act === 'stretch' ? 'cheer' : null;
   const shown: RoomMood = faceOv && base === 'neutral' ? faceOv : base;
   const { state } = useStore();
-  const worn = state.play.mokaWorn;
+  const equipped = state.play.mokaWorn;
+  const hand = equipped?.el ? COSMETIC[equipped.el] : undefined;
+  const worn = equipped?.el && (hand?.slot !== 'el' || !cosmeticOwned(state.play.owned, hand))
+    ? { ...equipped, el: undefined }
+    : equipped;
   const hasCup = worn?.el === 'el_fincan';
   const [eyeBase] = useState(() => new Animated.Value(sleeping ? 0 : 1));
   const [lag] = useState(() => new Animated.Value(0));

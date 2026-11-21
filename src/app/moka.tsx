@@ -7,6 +7,7 @@ import { useAuth, type AuthStatus } from '@/auth/AuthProvider';
 import { CoffeeSheet, PotIcon } from '@/components/CoffeeSheet';
 import { RoomMoka } from '@/components/RoomMoka';
 import { Fade } from '@/components/SceneImage';
+import { MOKA_ASSETS } from '@/constants/moka';
 import { ISIK } from '@/constants/oda';
 import { longestStreak } from '@/domain/achievements';
 import { giveCoffee } from '@/domain/bond';
@@ -37,7 +38,7 @@ import { nightMix, roomState } from '@/lib/roomState';
 import { useSky } from '@/lib/weather';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { ForceScheme, fonts, radius, useColors } from '@/theme';
 import { appAlert } from '@/components/AppAlert';
 import { activeMokaQuota, boundMokaMessages, createMokaSessionStore } from '@/lib/mokaSession';
@@ -176,6 +177,20 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   // Balonda gösterilen son Moka mesajı: hata cevapları da görünür (eskiden gizleniyordu, Moka "cevap vermiyor" gibi duruyordu).
   const lastSaid = [...items].reverse().find(i => i.role === 'assistant');
   const reduce = useReduceMotion();
+  const [roomReady, setRoomReady] = useState(false);
+  const [roomReveal] = useState(() => new Animated.Value(1));
+  const [roomOpeningAt] = useState(() => Date.now());
+  const [coverRoom, setCoverRoom] = useState(true);
+  const onRoomReady = useCallback(() => setRoomReady(true), []);
+  useEffect(() => {
+    if (!roomReady) return;
+    const reveal = Animated.timing(roomReveal, {
+      toValue: 0, delay: reduce ? 0 : Math.max(0, 420 - (Date.now() - roomOpeningAt)),
+      duration: reduce ? 0 : 260, easing: Easing.out(Easing.quad), useNativeDriver: true,
+    });
+    reveal.start(({ finished }) => { if (finished) setCoverRoom(false); });
+    return () => reveal.stop();
+  }, [reduce, roomOpeningAt, roomReady, roomReveal]);
   const lastMood = last && last.id !== 0 ? mimikOf(last.content) : 'happy';
   // Cevap beklerken kullanıcının son mesajı üzgünse Moka da üzgün dinler.
   const mine = [...items].reverse().find(i => i.role === 'user');
@@ -612,7 +627,7 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   const touchObj = (k: RoomTouch) => {
     interact();
     sfx('tap');
-    haptic('light');
+    if (k !== 'bitki') haptic('light');
     if (!woke) setWoke(true);
     if (k === 'lamba') {
       const off = !lampOff;
@@ -788,7 +803,7 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
       <RoomBackdrop
         cheer={burst} phase={phase} sky={sky.kind} warm={room.warm} dust={opening.sleeping ? (woke ? 0 : room.dust) : room.dust} lampOff={lampOff}
         steam={potSteam(pot)} potGlow={pot === 'fresh'} brew={brew} chain={Math.min(7, shownStreak)} tilt={tilt}
-        onTouch={touchObj} style={StyleSheet.absoluteFill}
+        onTouch={touchObj} onReady={onRoomReady} style={StyleSheet.absoluteFill}
       />
       {/* Moka katmanı odadan biraz fazla kayar. */}
       <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { transform: shift(3, 2) }]}>
@@ -1009,6 +1024,14 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
           </View>
         </Animated.View>
       )}
+      {coverRoom && (
+        <Animated.View
+          pointerEvents="auto"
+          style={[StyleSheet.absoluteFill, { backgroundColor: '#2F211F', zIndex: 100, opacity: roomReveal }]}
+        >
+          <RoomOpening reduce={reduce} />
+        </Animated.View>
+      )}
       <CoffeeSheet open={coffeeOpen} onClose={() => setCoffeeOpen(false)} P={S.play} now={now} streak={hp.streak} best={best} pot={pot} freezeLeft={freezeLeft} onGive={giveToMoka} />
       <GiftModal gift={gift} onClose={() => setGift(null)} onHome={() => { setGift(null); router.push('/dekor' as Href); }} />
     </View>
@@ -1096,6 +1119,64 @@ function Icon({ name, color, size = 20 }: { name: IconName; color: string; size?
 
 /** Kameraya yakın katman: iki büyük, bulanık ışık lekesi (en çok kayar) ve köşelerde hafif çerçeve. */
 const BOKEH = [{ x: 0.06, y: 0.22, r: 0.18 }, { x: 0.96, y: 0.7, r: 0.16 }];
+function RoomOpening({ reduce }: { reduce: boolean }) {
+  const [steam] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce) return;
+    const loop = Animated.loop(Animated.timing(steam, {
+      toValue: 1, duration: 1450, easing: Easing.linear, useNativeDriver: true, isInteraction: false,
+    }));
+    loop.start();
+    return () => loop.stop();
+  }, [reduce, steam]);
+  return (
+    <View style={StyleSheet.absoluteFill} accessible accessibilityRole="progressbar" accessibilityLabel={tx('Yükleniyor…')}>
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Defs>
+          <LinearGradient id="room-opening" x1="0%" y1="0%" x2="65%" y2="100%">
+            <Stop offset="0" stopColor="#593A2F" />
+            <Stop offset="0.54" stopColor="#352322" />
+            <Stop offset="1" stopColor="#211A20" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#room-opening)" />
+      </Svg>
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+        <View style={{ width: 238, height: 268, alignItems: 'center', justifyContent: 'center' }}>
+          <Image source={ISIK} tintColor="#F5BA75" style={{ position: 'absolute', width: 290, height: 290, opacity: 0.32 }} />
+          <View style={{ position: 'absolute', width: 207, height: 238, borderWidth: 1, borderColor: '#B57E52', borderTopLeftRadius: 108, borderTopRightRadius: 108, borderBottomLeftRadius: 31, borderBottomRightRadius: 31, backgroundColor: '#51382F' }} />
+          <View style={{ position: 'absolute', width: 187, height: 218, borderWidth: 1, borderColor: '#7A5640', borderTopLeftRadius: 98, borderTopRightRadius: 98, borderBottomLeftRadius: 23, borderBottomRightRadius: 23 }} />
+          <View style={{ position: 'absolute', bottom: 39, width: 156, height: 22, borderRadius: 90, backgroundColor: '#352222' }} />
+          <Animated.View style={{ transform: [{ translateY: reduce ? 0 : steam.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -5, 0] }) }] }}>
+            <Image source={MOKA_ASSETS.sipping} fadeDuration={0} style={{ width: 156, height: 156 }} resizeMode="contain" accessibilityIgnoresInvertColors />
+          </Animated.View>
+          {!reduce && [0, 1, 2].map(i => {
+            const offset = i / 3;
+            const phase = steam.interpolate(i === 0 ? {
+              inputRange: [0, 1], outputRange: [0, 1],
+            } : {
+              inputRange: [0, offset - 0.001, offset, 1], outputRange: [1 - offset, 1, 0, 1 - offset],
+            });
+            return <Animated.View key={i} style={{
+              position: 'absolute', left: 148 + i * 8, top: 102 - i * 7,
+              width: 6 + i * 3, height: 6 + i * 3, borderRadius: 10, backgroundColor: '#FFE2B4',
+              opacity: phase.interpolate({ inputRange: [0, 0.24, 1], outputRange: [0, 0.66, 0] }),
+              transform: [
+                { translateX: phase.interpolate({ inputRange: [0, 1], outputRange: [0, 13 + i * 4] }) },
+                { translateY: phase.interpolate({ inputRange: [0, 1], outputRange: [0, -32 - i * 7] }) },
+                { scale: phase.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.35] }) },
+              ],
+            }} />;
+          })}
+          {[{ left: 37, top: 67, size: 5 }, { left: 190, top: 65, size: 7 }, { left: 197, top: 187, size: 4 }].map(p => (
+            <View key={p.left} style={{ position: 'absolute', left: p.left, top: p.top, width: p.size, height: p.size, backgroundColor: '#DCAE78', transform: [{ rotate: '45deg' }] }} />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function FrontLayer({ tilt, w, h, night }: { tilt: Animated.ValueXY; w: number; h: number; night: number }) {
   const tone = night > 0.5 ? '#FFC98A' : '#FFF1D2';
   return (

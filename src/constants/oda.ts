@@ -19,6 +19,7 @@ export type OdaLayers = {
   cam: { src: ImageSourcePropType; box: Box };
   /** Pencerenin önündeki her şey (çerçeve, yapraklar): hava parçacıklarının üstüne çizilir, yağmur yaprağın önüne geçmez. */
   onCam: { src: ImageSourcePropType; box: Box };
+  sillLeaves: ImageSourcePropType;
   /** Cam gözleri: yağmur, kar, bulut bunların içinde kalır. */
   cells: Box[];
   parts: Record<OdaPart, { src: ImageSourcePropType; box: Box; pivot: Pt }>;
@@ -31,12 +32,13 @@ export type OdaLayers = {
 
 export const ODA: Record<OdaPhase, OdaLayers> = {
   sabah: {
+    sillLeaves: require('../assets/oda/sabah_sill.png'),
     taban: require('../../assets/oda/sabah_taban.webp'),
     onCam: { src: require('../../assets/oda/sabah_oncam.webp'), box: { x: 0, y: 304, w: 163, h: 682 } },
     cam: { src: require('../../assets/oda/sabah_cam.webp'), box: { x: 0, y: 308, w: 159, h: 674 } },
     cells: [{ x: 0, y: 407, w: 23, h: 165 }, { x: 52, y: 416, w: 107, h: 193 }, { x: 0, y: 602, w: 23, h: 159 }, { x: 52, y: 614, w: 107, h: 159 }, { x: 0, y: 792, w: 23, h: 190 }, { x: 52, y: 796, w: 107, h: 182 }],
     parts: {
-      asma: { src: require('../../assets/oda/sabah_asma.webp'), box: { x: 0, y: 152, w: 319, h: 592 }, pivot: { x: 118, y: 154 } },
+      asma: { src: require('../assets/oda/sabah_planter.png'), box: { x: -22, y: 110, w: 374, h: 665 }, pivot: { x: 118, y: 149 } },
       rafbitki: { src: require('../../assets/oda/sabah_rafbitki.webp'), box: { x: 610, y: 305, w: 242, h: 466 }, pivot: { x: 755, y: 389 } },
       pencerebitki: { src: require('../../assets/oda/sabah_pencerebitki.webp'), box: { x: 201, y: 1006, w: 80, h: 146 }, pivot: { x: 234, y: 1008 } },
       sehpabitki: { src: require('../../assets/oda/sabah_sehpabitki.webp'), box: { x: 565, y: 892, w: 113, h: 93 }, pivot: { x: 622, y: 985 } },
@@ -50,12 +52,13 @@ export const ODA: Record<OdaPhase, OdaLayers> = {
     hit: { lamba: { x: 690, y: 770, w: 162, h: 170 }, kupa: { x: 462, y: 610, w: 190, h: 135 }, surahi: { x: 405, y: 430, w: 115, h: 145 }, bitki: { x: 560, y: 880, w: 180, h: 170 }, pencere: { x: 0, y: 300, w: 215, h: 710 } },
   },
   aksam: {
+    sillLeaves: require('../assets/oda/aksam_sill.png'),
     taban: require('../../assets/oda/aksam_taban.webp'),
     onCam: { src: require('../../assets/oda/aksam_oncam.webp'), box: { x: 0, y: 306, w: 168, h: 678 } },
     cam: { src: require('../../assets/oda/aksam_cam.webp'), box: { x: 0, y: 310, w: 164, h: 670 } },
     cells: [{ x: 30, y: 377, w: 132, h: 216 }, { x: 0, y: 378, w: 18, h: 174 }, { x: 0, y: 590, w: 19, h: 158 }, { x: 55, y: 604, w: 107, h: 162 }, { x: 0, y: 784, w: 19, h: 196 }, { x: 55, y: 790, w: 108, h: 185 }],
     parts: {
-      asma: { src: require('../../assets/oda/aksam_asma.webp'), box: { x: 1, y: 91, w: 330, h: 648 }, pivot: { x: 138, y: 93 } },
+      asma: { src: require('../assets/oda/aksam_planter.png'), box: { x: -22, y: 65, w: 382, h: 712 }, pivot: { x: 139, y: 104 } },
       rafbitki: { src: require('../../assets/oda/aksam_rafbitki.webp'), box: { x: 630, y: 270, w: 220, h: 472 }, pivot: { x: 762, y: 355 } },
       pencerebitki: { src: require('../../assets/oda/aksam_pencerebitki.webp'), box: { x: 197, y: 1000, w: 104, h: 159 }, pivot: { x: 241, y: 1002 } },
       sehpabitki: { src: require('../../assets/oda/aksam_sehpabitki.webp'), box: { x: 552, y: 894, w: 125, h: 95 }, pivot: { x: 614, y: 989 } },
@@ -69,12 +72,13 @@ export const ODA: Record<OdaPhase, OdaLayers> = {
     hit: { lamba: { x: 685, y: 758, w: 159, h: 173 }, kupa: { x: 461, y: 596, w: 186, h: 137 }, surahi: { x: 406, y: 412, w: 112, h: 148 }, bitki: { x: 556, y: 870, w: 176, h: 173 }, pencere: { x: 7, y: 281, w: 207, h: 723 } },
   },
   gece: {
+    sillLeaves: require('../assets/oda/gece_sill.png'),
     taban: require('../../assets/oda/gece_taban.webp'),
     onCam: { src: require('../../assets/oda/gece_oncam.webp'), box: { x: 0, y: 292, w: 184, h: 695 } },
     cam: { src: require('../../assets/oda/gece_cam.webp'), box: { x: 0, y: 296, w: 180, h: 687 } },
     cells: [{ x: 25, y: 367, w: 144, h: 229 }, { x: 0, y: 379, w: 19, h: 174 }, { x: 0, y: 590, w: 36, h: 165 }, { x: 55, y: 605, w: 125, h: 164 }, { x: 0, y: 781, w: 35, h: 202 }, { x: 56, y: 790, w: 124, h: 186 }],
     parts: {
-      asma: { src: require('../../assets/oda/gece_asma.webp'), box: { x: 2, y: 92, w: 329, h: 648 }, pivot: { x: 138, y: 94 } },
+      asma: { src: require('../assets/oda/gece_planter.png'), box: { x: -22, y: 65, w: 382, h: 712 }, pivot: { x: 137, y: 105 } },
       rafbitki: { src: require('../../assets/oda/gece_rafbitki.webp'), box: { x: 629, y: 268, w: 218, h: 476 }, pivot: { x: 760, y: 354 } },
       pencerebitki: { src: require('../../assets/oda/gece_pencerebitki.webp'), box: { x: 68, y: 1000, w: 233, h: 159 }, pivot: { x: 199, y: 1002 } },
       sehpabitki: { src: require('../../assets/oda/gece_sehpabitki.webp'), box: { x: 551, y: 894, w: 124, h: 95 }, pivot: { x: 613, y: 989 } },
@@ -104,10 +108,10 @@ export const PARCA = {
  * rock: kitaplar arada bir hafifçe sallanıp yerine oturur. deg: en fazla açı, ms: yarım tur.
  */
 export const MOTION: Record<OdaPart, { kind: 'sway' | 'swing' | 'rock'; deg: number; ms: number; delay: number; tilt: number }> = {
-  asma: { kind: 'sway', deg: 1.3, ms: 5200, delay: 0, tilt: 5 },
-  rafbitki: { kind: 'sway', deg: 1.1, ms: 6400, delay: 900, tilt: 4 },
-  pencerebitki: { kind: 'sway', deg: 2.6, ms: 4200, delay: 400, tilt: 2 },
-  sehpabitki: { kind: 'sway', deg: 2.2, ms: 3800, delay: 1500, tilt: 1 },
+  asma: { kind: 'sway', deg: 0.48, ms: 4200, delay: 0, tilt: 0 },
+  rafbitki: { kind: 'sway', deg: 0.32, ms: 5900, delay: 900, tilt: 0 },
+  pencerebitki: { kind: 'sway', deg: 0.58, ms: 3700, delay: 400, tilt: 0 },
+  sehpabitki: { kind: 'sway', deg: 0.42, ms: 5400, delay: 1200, tilt: 0 },
   kupa1: { kind: 'swing', deg: 3.2, ms: 2300, delay: 300, tilt: 2 },
   kupa2: { kind: 'swing', deg: 3.2, ms: 2500, delay: 1400, tilt: 2 },
   kitapust: { kind: 'rock', deg: 1.4, ms: 9000, delay: 4000, tilt: 2 },

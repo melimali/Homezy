@@ -99,6 +99,16 @@ function freezeMissed(get: () => AppState, update: Update, premium: boolean): st
   return out;
 }
 
+/** Yöneticiden gelen puan hediyesi: bir kere "görüldü" yapılır, toast gösterilir (puan zaten bakiyede). */
+async function claimGifts(toast: (m: string) => void) {
+  if (!supabase) return;
+  const { data, error } = await supabase.rpc('play_claim_grants');
+  if (error || !data) return;
+  const g = data as { points: number; notes: string[] };
+  if (!g.points) return;
+  toast(`🎁 Melih'den ${g.points > 0 ? '+' : ''}${g.points} puan geldi!${g.notes[0] ? ' ' + g.notes[0] : ''}`);
+}
+
 /** Kök layout'ta bir kere çağrılır: girişte, uygulama öne gelince ve yeni puan sıraya girince eşler. */
 export function usePlaySync() {
   const { state, update, get } = useStore();
@@ -123,16 +133,16 @@ export function usePlaySync() {
   }, [ready, active, get, update, toast]);
 
   useEffect(() => {
-    if (uid) flush(get, update).catch(() => {});
-  }, [uid, pending, get, update]);
+    if (uid) flush(get, update).then(() => claimGifts(toast)).catch(() => {});
+  }, [uid, pending, get, update, toast]);
 
   useEffect(() => {
     if (!uid) return;
     const sub = RNAppState.addEventListener('change', s => {
-      if (s === 'active') flush(get, update).catch(() => {});
+      if (s === 'active') flush(get, update).then(() => claimGifts(toast)).catch(() => {});
     });
     return () => sub.remove();
-  }, [uid, get, update]);
+  }, [uid, get, update, toast]);
 }
 
 type BuyResult = { ok: true } | { ok: false; error: string };

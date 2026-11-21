@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 import type { AppState } from '@/domain/types';
 
 import { taskEmoji } from '@/domain/icons';
+import { setLang, tx } from '@/i18n/runtime';
+import { palettes } from '@/theme';
 
 import { widgetData } from './data';
 
@@ -31,24 +33,44 @@ function load(): StorageLib | null {
   return lib;
 }
 
-/** iOS ana ekran widget'ının verisini app group'a yazar ve widget'ı yeniler. */
+const pal = (c: typeof palettes.light) => ({
+  bg: c.surface,
+  ink: c.ink,
+  muted: c.muted,
+  late: c.late,
+  ok: c.ok,
+  today: c.today,
+  accent: c.accent,
+  accentSoft: c.accentSoft,
+});
+
+/**
+ * iOS ana ekran widget'ının verisini app group'a yazar ve widget'ı yeniler.
+ * İçerik Android widget'ıyla (TodayWidget.tsx) aynı: başlık, alt satır, seri, iş satırları, açık/koyu renk, dil.
+ */
 export async function refreshIosWidget(S: AppState, now = Date.now()) {
   const l = load();
   if (!l) return;
+  setLang(S.settings?.language);
   const d = widgetData(S, now);
+  const more = d.tasks.length - Math.min(4, d.tasks.length);
+  const title = d.vacation ? tx('Tatildesin') : d.left ? tx(`Bugün ${d.left} iş`) : tx('Her şey tamam');
+  const sub = more > 0 ? `+${more} ${tx('iş daha')}` : d.total ? tx(`${Math.min(d.done, d.total)}/${d.total} bitti`) : 'Homezy';
   const payload = {
+    v: 2,
+    title,
+    sub,
+    streak: d.streak,
+    empty: d.vacation ? tx('🏖️ Rutinler dondu, iyi dinlen.') : tx('🎉 Bugünlük tamam!'),
     tasks: d.tasks.slice(0, 4).map(t => ({
+      id: t.id,
       emoji: taskEmoji(t.name, t.emoji === '🪴'),
-      name: shortName(t.name),
-      room: t.room,
-      label: t.late ? 'Gecikti' : '',
+      name: shortName(tx(t.name)),
+      sub: tx(`${t.room} · ${t.label}`),
       late: t.late,
     })),
-    left: d.left,
-    done: d.done,
-    streak: d.streak,
-    tip: d.tip.text,
-    title: 'Bugün',
+    light: pal(palettes.light),
+    dark: pal(palettes.dark),
   };
   new l.ExtensionStorage(GROUP).set('widgetData', JSON.stringify(payload));
   l.ExtensionStorage.reloadWidget();

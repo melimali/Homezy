@@ -32,7 +32,11 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   const { data: auth } = await supabase.auth.getSession();
   if (!auth.session || auth.session.user.is_anonymous) return { ok: false, account: true, message: tx(CHAT_ACCOUNT_NEEDED) };
   const { data, error } = await supabase.functions.invoke('moka-chat', { body: { messages, ctx, lang: getUiLang() }, timeout: TIMEOUT });
-  if (!error) return { ok: true, reply: String(data.reply ?? ''), actions: Array.isArray(data.actions) ? data.actions : [], used: data.used, limit: data.limit, mused: data.mused, mlimit: data.mlimit, premium: !!data.premium };
+  if (!error) {
+    const d = (data ?? {}) as Record<string, any>;
+    const num = (v: unknown, def: number) => (typeof v === 'number' && Number.isFinite(v) ? v : def);
+    return { ok: true, reply: String(d.reply ?? ''), actions: Array.isArray(d.actions) ? d.actions : [], used: num(d.used, 0), limit: num(d.limit, 0), mused: d.mused == null ? undefined : num(d.mused, 0), mlimit: d.mlimit == null ? undefined : num(d.mlimit, 0), premium: !!d.premium };
+  }
 
   if (!(error instanceof FunctionsHttpError)) return { ok: false, message: tx('Bağlantıda bir sorun oldu. İnternetini kontrol edip tekrar dene.') };
   const status = error.context.status as number;

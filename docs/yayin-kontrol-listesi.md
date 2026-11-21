@@ -62,7 +62,7 @@ EAS bulut derlemesi `.env.local` dosyasını **görmez**. Takip edilen `.env` do
 | Webhook fonksiyonu `--no-verify-jwt` ile deploy edilmeli, secret yoksa her isteği reddeder | ✅ kodda, 🖐 deploy |
 | Kullanıcı kimliği: uygulama RevenueCat'e Supabase kullanıcı UUID'sini verir; anonim RC kimlikleri atlanır | ✅ |
 | Satın alımı geri yükle, abonelik yönetimi bağlantısı (Play / App Store) | ✅ |
-| Fiyatlar: USD 6,99 / 59,99; TR 149,99 / 1.564,99 TL | 🖐 Play Console'da elle girilir (paywall mağaza fiyatını gösterir, kodda sabit fiyat yok) |
+| Fiyatlar: USD 6,99 / 59,99; TR 149,99 / 1.559,99 TL | 🖐 Play Console'da elle girilir (paywall mağaza fiyatını gösterir, kodda sabit fiyat yok) |
 | Sandbox / lisans testi (Gmail'i ekle) | 🖐 |
 
 ## 5. Supabase (proje `gkccsimguzabfrsumjtv`, Frankfurt)

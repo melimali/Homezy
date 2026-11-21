@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
-import { RigBody } from '@/components/MokaRig';
+import { RigBody, useSpeechMouth } from '@/components/MokaRig';
+import { COSMETIC, cosmeticOwned } from '@/domain/kozmetik';
 import { useStore } from '@/store/AppStore';
 import { useActive } from '@/hooks/useActive';
 
@@ -10,25 +11,17 @@ const sine = Easing.inOut(Easing.sin);
 
 export type RoomMood = 'happy' | 'cheer' | 'wow' | 'sleepy' | 'neutral' | 'sad';
 
-/**
- * Odada yastıkta oturan tam boy Moka (ayakları dahil), sohbetteki animasyonlu yüzle:
- * 8 mimik (`seatedFor(fur)`) üst üste durur; ruh hali değişince yüz yumuşakça geçer, 3-6 sn'de bir göz kırpar,
- * konuşurken ağzı doğal ritimle açılıp kapanır. Gövde: nefes (alttan sabit esneme), konuşurken sekme,
- * düşünürken baş eğme, uykuda yavaş nefes + süzülen "z"ler.
- * Resim 800×800; gövdenin altı tuvalin %96'sında, ortası %50'de: `size` kenar, `bottom` ayakların bastığı yer.
- */
+/** Odadaki yastığa oturan Moka. Nefes, duruş, konuşma ve boşta hareketler ortak rigi sürer. */
 export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: { size: number; fur?: string | null; mood: RoomMood; talking: boolean; thinking: boolean; /** Her artışta kutlama: çift zıplama + yükselen kalpler. */ celebrate?: number }) {
   const reduceM = useReduceMotion();
   const active = useActive();
   const run = !reduceM && active;
   const sleeping = mood === 'sleepy';
   const [breath] = useState(() => new Animated.Value(0));
-  const [talk] = useState(() => new Animated.Value(0));
   const [tilt] = useState(() => new Animated.Value(0));
   const [look] = useState(() => new Animated.Value(0));
-  const [dim] = useState(() => new Animated.Value(0));
   const [zs] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)));
-  const [mouth] = useState(() => new Animated.Value(0));
+  const mouth = useSpeechMouth(run && talking);
   const [wink] = useState(() => new Animated.Value(0));
   // Boşta yaşam: esneme, yudumlama, gerinme, etrafa bakma. `act` sürerken yüz geçici değişir.
   const [act, setAct] = useState<'yawn' | 'sip' | 'stretch' | 'around' | null>(null);
@@ -44,15 +37,20 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   const faceOv = act === 'yawn' ? 'wow' : act === 'sip' ? 'happy' : act === 'stretch' ? 'cheer' : null;
   const shown: RoomMood = faceOv && base === 'neutral' ? faceOv : base;
   const { state } = useStore();
-  const worn = state.play.mokaWorn;
-  const [eyeBase] = useState(() => new Animated.Value(1));
+  const equipped = state.play.mokaWorn;
+  const hand = equipped?.el ? COSMETIC[equipped.el] : undefined;
+  const worn = equipped?.el && (hand?.slot !== 'el' || !cosmeticOwned(state.play.owned, hand))
+    ? { ...equipped, el: undefined }
+    : equipped;
+  const hasCup = worn?.el === 'el_fincan';
+  const [eyeBase] = useState(() => new Animated.Value(sleeping ? 0 : 1));
   const [lag] = useState(() => new Animated.Value(0));
   const [wingV] = useState(() => new Animated.Value(0));
   const [tailV] = useState(() => new Animated.Value(0));
 
-  // Gözler ruh haline göre: uykuda yarı kapalı, sevinçte kısık, şaşkınlıkta açık.
+  // Uyku ve sevinç kapalı kapak kullanır, şaşkınlık gözleri biraz büyütür.
   useEffect(() => {
-    const to = shown === 'sleepy' ? 0.22 : shown === 'happy' || shown === 'cheer' ? 0.92 : shown === 'wow' ? 1.06 : shown === 'sad' ? 0.78 : 1;
+    const to = shown === 'sleepy' ? 0 : shown === 'cheer' ? 0.07 : shown === 'happy' ? 0.94 : shown === 'wow' ? 1.06 : shown === 'sad' ? 0.78 : 1;
     const a = Animated.timing(eyeBase, { toValue: to, duration: reduceM ? 0 : 300, easing: sine, useNativeDriver: true });
     a.start();
     return () => a.stop();
@@ -76,58 +74,28 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     if (!run || talking || shown === 'sleepy' || shown === 'cheer') return;
     let t: ReturnType<typeof setTimeout>;
     let dead = false;
+    let gesture: Animated.CompositeAnimation | undefined;
     const blink = (slow: boolean) => Animated.sequence([
-      Animated.timing(wink, { toValue: 1, duration: slow ? 130 : 65, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      Animated.delay(slow ? 220 : 90),
-      Animated.timing(wink, { toValue: 0, duration: slow ? 170 : 95, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(wink, { toValue: 1, duration: slow ? 170 : 115, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.delay(slow ? 150 : 90),
+      Animated.timing(wink, { toValue: 0, duration: slow ? 260 : 190, easing: Easing.out(Easing.quad), useNativeDriver: true }),
     ]);
     const next = () => {
       if (dead) return;
       const r = Math.random();
-      t = setTimeout(() => (r < 0.18 ? Animated.sequence([blink(false), Animated.delay(110), blink(false)]) : blink(r > 0.85)).start(next), 2400 + Math.random() * 4600);
+      t = setTimeout(() => {
+        gesture = r < 0.18 ? Animated.sequence([blink(false), Animated.delay(110), blink(false)]) : blink(r > 0.85);
+        gesture.start(({ finished }) => { if (finished) next(); });
+      }, 2500 + Math.random() * 4600);
     };
     next();
     return () => {
       dead = true;
       clearTimeout(t);
-      wink.stopAnimation();
+      gesture?.stop();
       wink.setValue(0);
     };
   }, [run, talking, shown, wink]);
-
-  // Konuşurken ağız: heceler farklı açıklıkta (ince "i" ile geniş "a" arası), kelime aralarında kısa duraklama.
-  useEffect(() => {
-    if (!talking) {
-      mouth.stopAnimation();
-      mouth.setValue(0);
-      return;
-    }
-    let stop = false;
-    let t: ReturnType<typeof setTimeout>;
-    let n = 0;
-    const step = () => {
-      if (stop) return;
-      n += 1;
-      const open = 0.55 + Math.random() * 0.45;
-      const ms = 85 + Math.random() * 80;
-      Animated.sequence([
-        Animated.timing(mouth, { toValue: open, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.delay(20 + Math.random() * 50),
-        Animated.timing(mouth, { toValue: 0, duration: ms * 0.9, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      ]).start(() => {
-        if (stop) return;
-        // 2-4 hecede bir kelime sonu: biraz daha uzun kapalı kalır.
-        t = setTimeout(step, n % (2 + Math.floor(Math.random() * 3)) === 0 ? 140 + Math.random() * 120 : 25 + Math.random() * 90);
-      });
-    };
-    step();
-    return () => {
-      stop = true;
-      clearTimeout(t);
-      mouth.stopAnimation();
-    };
-  }, [talking, mouth]);
-
 
   // Boşta yaşam yönetmeni: 7-15 sn'de bir rastgele bir hareket.
   useEffect(() => {
@@ -150,7 +118,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
       if (dead) return;
       t = setTimeout(() => {
         const r = Math.random();
-        const kind = r < 0.28 ? 'yawn' : r < 0.55 ? 'sip' : r < 0.78 ? 'stretch' : 'around';
+        const kind = r < 0.28 ? 'yawn' : hasCup && r < 0.55 ? 'sip' : r < 0.78 ? 'stretch' : 'around';
         setAct(kind);
         cur = play(kind);
         cur.start(() => { if (dead) return; setAct(null); next(); });
@@ -164,7 +132,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
       setAct(null);
       [stretch, sip, shake].forEach(v => Animated.spring(v, { toValue: 0, friction: 7, tension: 50, useNativeDriver: true }).start());
     };
-  }, [run, talking, thinking, sleeping, mood, stretch, sip, shake, look]);
+  }, [run, talking, thinking, sleeping, mood, hasCup, stretch, sip, shake, look]);
 
   // Ağırlık kayması: çok yavaş sağa sola salınım (ikincil hareket).
   useEffect(() => {
@@ -243,42 +211,30 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
 
   // Boşta küçük baş çevirmeleri: 4-9 sn'de bir birkaç derece eğilir, yaylanarak geri gelir. Uykuda ve konuşurken durur.
   useEffect(() => {
-    if (!run || talking || thinking || sleeping) return;
+    if (act) return;
+    if (!run || talking || thinking || sleeping) { look.setValue(0); return; }
+    let current: Animated.CompositeAnimation | undefined;
     let dead = false;
     let t: ReturnType<typeof setTimeout>;
     const next = () => {
       if (dead) return;
       t = setTimeout(() => {
         const to = (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.5);
-        Animated.sequence([
+        current = Animated.sequence([
           Animated.spring(look, { toValue: to, friction: 7, tension: 40, useNativeDriver: true }),
           Animated.delay(900 + Math.random() * 1600),
           Animated.spring(look, { toValue: 0, friction: 6, tension: 35, useNativeDriver: true }),
-        ]).start(next);
+        ]);
+        current.start(({ finished }) => { if (finished) next(); });
       }, 4000 + Math.random() * 5000);
     };
     next();
     return () => {
       dead = true;
       clearTimeout(t);
-      Animated.spring(look, { toValue: 0, friction: 7, tension: 40, useNativeDriver: true }).start();
+      current?.stop();
     };
-  }, [run, talking, thinking, sleeping, look]);
-
-  // Konuşma: hafif ritmik sekme.
-  useEffect(() => {
-    if (!run || !talking) {
-      talk.setValue(0);
-      return;
-    }
-    const a = Animated.loop(Animated.sequence([
-      Animated.timing(talk, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.timing(talk, { toValue: 0, duration: 170, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      Animated.delay(60),
-    ]));
-    a.start();
-    return () => a.stop();
-  }, [run, talking, talk]);
+  }, [run, talking, thinking, sleeping, act, look]);
 
   // Düşünürken baş yana eğilir; şaşkınken diğer yana kısa eğilme.
   useEffect(() => {
@@ -287,13 +243,6 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     a.start();
     return () => a.stop();
   }, [thinking, mood, run, tilt]);
-
-  // Uykuda ve üzgünken biraz loş.
-  useEffect(() => {
-    const a = Animated.timing(dim, { toValue: sleeping ? 1 : mood === 'sad' ? 0.6 : 0, duration: 500, useNativeDriver: true });
-    a.start();
-    return () => a.stop();
-  }, [sleeping, mood, dim]);
 
   // Uykuda süzülen z'ler.
   useEffect(() => {
@@ -319,7 +268,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   );
   const ty = Animated.add(Animated.add(
     breath.interpolate({ inputRange: [0, 1], outputRange: [0, -(size * 0.92) * (sleeping ? 0.015 : 0.009)] }),
-    talk.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.022] }),
+    mouth.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.004] }),
   ), Animated.add(Animated.add(
     stretch.interpolate({ inputRange: [0, 1], outputRange: [0, -size * 0.022] }),
     sip.interpolate({ inputRange: [0, 1], outputRange: [0, size * 0.014] }),
@@ -346,7 +295,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
           sway={Animated.multiply(units.interpolate({ inputRange: [-3, 3], outputRange: [-1, 1] }), 0.4)} lag={lag}
           wing={wingV} tail={tailV}
           blink={Animated.multiply(eyeBase, wink.interpolate({ inputRange: [0, 1], outputRange: [1, 0.07] }))}
-          look={look} mouth={mouth} breath={breath}
+          look={look} mouth={act === 'yawn' ? Animated.multiply(stretch, 0.65) : mouth} breath={breath} sleeping={sleeping}
         />
       </Animated.View>
       {hearts.map((h, i) => (

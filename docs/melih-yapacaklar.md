@@ -40,7 +40,7 @@ Neden: yapay zekâ taraması ve Moka sohbet sunucuda çalışır; API anahtarı 
 5. İngilizce liste: Play EN "Homezy: Routine & Chores" (EN çeviri uygulama içinde hazır olmadan yurtdışı açma).
 
 ## G. Abonelik ürünleri
-1. Play Console > Para kazanma > Abonelikler: ürün `homezy_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $). ücretsiz deneme: her plana 3 gün giriş teklifi. Türkiye fiyatları: aylık 149,99 TL, yıllık 1.564,99 TL.
+1. Play Console > Para kazanma > Abonelikler: ürün `homezy_premium`, temel planlar `aylik` (6,99 $) ve `yillik` (59,99 $). ücretsiz deneme: her plana 3 gün giriş teklifi. Türkiye fiyatları: aylık 149,99 TL, yıllık 1.559,99 TL.
 2. Play Console > API erişimi > servis hesabı JSON'u oluştur, RevenueCat > Google uygulamasına yükle; Play'de bu hesaba "mali veriler + siparişleri yönet" izni ver.
 3. RevenueCat: Android uygulaması `com.meikai.homezy`, ürünleri içe aktar, `premium` yetkisine bağla, default offering'de `$rc_monthly` ve `$rc_annual`. Genel `goog_` anahtarı `.env`'de (`EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`) doğru mu bak.
 4. Lisans test hesapları: Play Console > Ayarlar > Lisans testi, kendi Gmail'ini ekle. Neden: gerçek para çekilmeden satın alma denenir.
@@ -91,7 +91,7 @@ Kodda sabit olanlar: yetki (entitlement) kimliği **`premium`**; paketler **`$rc
 8. **Webhook:** RevenueCat > Integrations > Webhooks > yeni: URL `https://gkccsimguzabfrsumjtv.supabase.co/functions/v1/revenuecat-webhook`, Authorization header değeri `Bearer <REVENUECAT_WEBHOOK_SECRET>`, ortam: hem sandbox hem production. "Send test event" → 200 dönmeli. Fonksiyon kullanıcıyı RevenueCat'ten tekrar okuyup `subscriptions` tablosuna yazar (`supabase/functions/_shared/subscription.ts`); uygulama da satın almadan sonra `subscription-sync` çağırır. İki fonksiyon da deploy edilmiş olmalı (bölüm C).
 9. **Sandbox / test:** Play lisans test hesabı (bölüm G.4) ile dahili test sürümünden satın al. Beklenen: uygulamada Premium açılır, RevenueCat > Customers'ta kullanıcı UUID'si görünür, Supabase `subscriptions` tablosunda `active = true`, `product_id = homezy_premium:aylik`. Test aboneliği hızlı yenilenir/biter; iptal edip Premium'un düştüğünü de dene. Geliştirici kimliğiyle emülatörde (Play'siz) satın alma denenemez.
 10. **iOS (sonra):** App Store Connect'te `homezy_premium_aylik` / `homezy_premium_yillik` ürünleri (bölüm İ), RevenueCat'e iOS app + App Store Connect API anahtarı, ürünleri `premium`'a ve aynı offering'e bağla (iOS ürünleri aynı Monthly/Annual paketlerine eklenir).
-11. **Fiyatlar:** 6,99 $ / 59,99 $; Türkiye 149,99 TL / 1.564,99 TL. RevenueCat fiyat tutmaz, mağazadaki fiyat geçerlidir; Play'de Türkiye fiyatını elle gir.
+11. **Fiyatlar:** 6,99 $ / 59,99 $; Türkiye 149,99 TL / 1.559,99 TL. RevenueCat fiyat tutmaz, mağazadaki fiyat geçerlidir; Play'de Türkiye fiyatını elle gir.
 
 ## L. İlk AAB: derle ve Play'e yükle (Windows, cmd, C:\lf-wt)
 Kural: tüm komutlar `npx.cmd` ile, OneDrive dışındaki klasörde (C:\lf-wt). Paket adı `com.meikai.homezy` ilk yüklemeden sonra değişmez.
@@ -139,7 +139,7 @@ Kural: tüm komutlar `npx.cmd` ile, OneDrive dışındaki klasörde (C:\lf-wt). 
 5. Yayın gözden geçirme birkaç saat-gün sürer; ilk kez hesap doğrulaması da bekletebilir.
 
 **7. İlk yüklemeden SONRA: abonelik ürünleri**
-1. Ürünler artık oluşturulabilir: Para kazanma > Ürünler > Abonelikler > Abonelik oluştur: kimlik `homezy_premium`, ad "Homezy Premium". Temel planlar: `aylik` (aylık yenilenen, 6,99 $), `yillik` (yıllık, 59,99 $); Türkiye fiyatlarını elle gir (149,99 TL / 1.564,99 TL). her plana 3 gün ücretsiz deneme teklifi (yeni müşteri). Hepsini **Etkinleştir**.
+1. Ürünler artık oluşturulabilir: Para kazanma > Ürünler > Abonelikler > Abonelik oluştur: kimlik `homezy_premium`, ad "Homezy Premium". Temel planlar: `aylik` (aylık yenilenen, 6,99 $), `yillik` (yıllık, 59,99 $); Türkiye fiyatlarını elle gir (149,99 TL / 1.559,99 TL). her plana 3 gün ücretsiz deneme teklifi (yeni müşteri). Hepsini **Etkinleştir**.
 2. Ödeme profili ve satıcı hesabı gerekir (Play Console > Ödeme profili; vergi/banka bilgisi). Eksikse abonelik oluşturma açılmaz.
 3. RevenueCat > Products > Import (bölüm K.3), `premium` entitlement'ına bağla, `default` offering'in Monthly/Annual paketlerine ata. Ekran görüntüsünde `default` offering'in paket listesi boş görünüyor: ürünleri içe aktarıp paketlere bağlamadan uygulamada fiyat çıkmaz.
 4. Ayarlar > Lisans testi'ne Gmail'ini ekle, dahili test sürümünden test satın alması yap.

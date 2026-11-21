@@ -52,7 +52,7 @@ Kaynak: `integration/tum-pr` e820198 + bu dalın değişiklikleri. ✅ yapıldı
 5. Entitlement `premium` iki platformun ürünlerine bağlı.
 6. Offering `default` **current**; paketler `$rc_monthly`, `$rc_annual`, her ikisinde iki platform ürünü.
 7. Webhook: `https://gkccsimguzabfrsumjtv.supabase.co/functions/v1/revenuecat-webhook`, Authorization `Bearer <REVENUECAT_WEBHOOK_SECRET>`; "Send test event" 200 dönmeli.
-8. Fiyatlar: USD 6,99 / 59,99; TR 149,99 / 1.559,99 (CLAUDE.md'de 1.564,99 yazıyor; **tutarsızlık**: hangisi doğruysa mağazada ve belgelerde aynı olsun).
+8. Fiyatlar: USD 6,99 / 59,99; TR 149,99 / 1.559,99 (tüm belgeler ve koddaki yedek fiyat 1.559,99 olarak birleştirildi; mağazada da aynı gir).
 
 ## E. iOS widget = Android widget (bu dalda yapıldı)
 
@@ -108,5 +108,5 @@ Kaynak: `integration/tum-pr` e820198 + bu dalın değişiklikleri. ✅ yapıldı
 4. Edge function'lar güncel koddan eski olabilir (11-14 deploy).
 5. Play kişisel hesap 14 gün kapalı test kuralı yayını geciktirebilir.
 6. 9 dil için mağaza metni yok (uygulama içi dil var).
-7. Fiyat tutarsızlığı (1.559,99 vs 1.564,99).
+7. TR yıllık fiyat 1.559,99 TL olarak birleştirildi; Play/App Store'a da aynısı girilmeli.
 8. Paket boyutu hâlâ büyük olabilir: sesler ve sahne jpg'leri.

@@ -72,7 +72,7 @@ const MARGIN = 0.28;
 const inCell = (i: number, cols: number): [number, number] => [Math.floor(i / cols) + rnd(MARGIN, 1 - MARGIN), (i % cols) + rnd(MARGIN, 1 - MARGIN)];
 
 export function MokaPet({
-  vb, roomCells, blocked, cols, project, reduce, celebrate, night, say,
+  vb, roomCells, blocked, cols, project, reduce, celebrate, night, say, fur,
 }: {
   vb: string;
   roomCells: number[];
@@ -85,6 +85,8 @@ export function MokaPet({
   night: boolean;
   /** Moka'nın ara sıra balonla söyleyeceği kısa cümleler. Boşsa konuşmaz. */
   say?: string[];
+  /** Seçili kürk rengi kimliği (orman, kahve, gri...). */
+  fur?: string | null;
 }) {
   const walk = useRef(walkable(roomCells, blocked));
   const key = roomCells.join(',') + '|' + blocked + '|' + cols;
@@ -251,7 +253,7 @@ export function MokaPet({
           style={{ position: 'absolute', left: 0, top: 0, width: (BW / vw) * lay.w, height: (BH / vh) * lay.h, transform: pos.getTranslateTransform() }}
         >
           <Svg width="100%" height="100%" viewBox={`${-BX} ${-BY} ${BW} ${BH}`}>
-            <MokaBody fr={frame} />
+            <MokaBody fr={frame} fur={fur} />
           </Svg>
         </Animated.View>
       )}
@@ -291,15 +293,25 @@ function Bubble({ text, x, y, vb }: { text: string; x: number; y: number; vb: st
   );
 }
 
-const OLIVE = '#8B9A55';
-const OLIVE_D = '#6F7F3F';
-const MOSS = '#A3AE62';
+/** Moka'nın kürk rengi: odadaki seçili kürk (Moka dolabı) evde dolaşan Moka'yı da boyar. [ana, gölge, açık] */
+const FUR_PAL: Record<string, [string, string, string]> = {
+  orman: ['#8B9A55', '#6F7F3F', '#A3AE62'],
+  kahve: ['#92684A', '#6F4B33', '#B08463'],
+  gri: ['#A6A29C', '#807C76', '#C4C1BB'],
+  mavi: ['#7FA0B8', '#5F8199', '#9FBCD0'],
+  mor: ['#A18DB6', '#7E6C93', '#BBABCC'],
+  pembe: ['#CFA2B0', '#AD7F8E', '#E3BDC9'],
+  turuncu: ['#BF7F55', '#9A5F3A', '#D69D77'],
+  kirmizi: ['#A5696C', '#834B4E', '#C08A8C'],
+};
+let OLIVE = FUR_PAL.orman![0], OLIVE_D = FUR_PAL.orman![1], MOSS = FUR_PAL.orman![2];
 const BELLY = '#D6C985';
 const FACE = '#EDD7A8';
 const BEAK = '#D8B49C';
 const INK = '#283044';
 
-function MokaBody({ fr }: { fr: Frame }) {
+function MokaBody({ fr, fur }: { fr: Frame; fur?: string | null }) {
+  [OLIVE, OLIVE_D, MOSS] = FUR_PAL[fur ?? 'orman'] ?? FUR_PAL.orman!;
   const { x, y, f, bob, lift, squash, rot, head, headX, wing, fluff, eye, happy, sit, sleep, step, zzz, cheer, t } = fr;
   const gy = -lift - bob + sit * 2.2; // gövde yüksekliği
   const sx = 1 + fluff * 0.1;

@@ -2290,7 +2290,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       {layer('twb', 0.55, [...life.twB, ...wings(false)])}
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
-      {sc > 0 && moka && <MokaPet vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} say={onPickCell ? undefined : mokaSays} />}
+      {sc > 0 && moka && <MokaPet fur={S.play.mokaFur} vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight} say={onPickCell ? undefined : mokaSays} />}
       {sc > 0 && !reduce && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-14} dx={6} ms={11000} restart fade reduce={reduce}>{motes}</Drift>}
       {/* Çatı ve dış görünüm en üstte: çatı kapanınca içerideki ışıklar, Moka ve evcil hayvanlar çatının altında kalır, havada asılı durmaz. */}
       {extEls.length > 0 && pinchZoom && (

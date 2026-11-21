@@ -67,7 +67,6 @@ export async function refreshWidgets(S: AppState, now = Date.now()) {
   if (Platform.OS === 'ios') return refreshIosWidget(S, now);
   if (!lib) return;
   setLang(S.settings?.language);
-  // (iOS yolu setLang'i kendi içinde çağırır.)
   const data = widgetData(S, now);
   await lib.W.requestWidgetUpdate({
     widgetName: lib.UI.WIDGET_NAME,

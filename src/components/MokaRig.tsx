@@ -1,9 +1,6 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, View, type ImageSourcePropType } from 'react-native';
-import Svg, { ClipPath, Defs, Ellipse, G, Image as Artwork, Path } from 'react-native-svg';
 
-import { WORN_CLOTHES } from '@/constants/wornClothes';
-import { HeldItemModel, HOLDS } from './MokaHeldItem';
 import { useReduceMotion } from '@/components/motion';
 import { COSMETIC_IMG } from '@/constants/kozmetik-img';
 import { COSMETIC, type SlotId } from '@/domain/kozmetik';
@@ -18,6 +15,7 @@ import { useActive } from '@/hooks/useActive';
 const W = 1254;
 // Pivotlar 1254 tuvalinde (x, y): boyun, göz ortası, omuzlar, kuyruk kökü.
 const NECK = { x: 627, y: 700 };
+const EYES = { x: 636, y: 343 };
 const SHOULDER_A = { x: 790, y: 650 }; // ekranın sağındaki kanat
 const SHOULDER_B = { x: 480, y: 650 }; // ekranın solundaki kanat
 const TAIL = { x: 250, y: 1030 };
@@ -58,7 +56,7 @@ const FUR_RIG: Record<string, ReturnType<typeof furSet>> = Object.fromEntries(Ob
 const sine = Easing.inOut(Easing.sin);
 
 /** Katmanı (w×w) bir noktası etrafında döndürür / ölçekler: RN merkezden döndürür, bu yüzden kaydır-döndür-geri kaydır. */
-function Pivot({ s, p, rotate, scale, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string> | string; scale?: number; scaleY?: Val | number; scaleX?: Val | number; tx?: Val | number; ty?: Val | number; children: ReactNode }) {
+function Pivot({ s, p, rotate, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string>; rotate2?: Animated.AnimatedInterpolation<string>; scaleY?: Val; scaleX?: Val; tx?: Val; ty?: Val; children: ReactNode }) {
   const px = ((p.x - W / 2) / W) * s;
   const py = ((p.y - W / 2) / W) * s;
   const tr: object[] = [];
@@ -66,7 +64,6 @@ function Pivot({ s, p, rotate, scale, scaleY, scaleX, tx, ty, children }: { s: n
   if (ty) tr.push({ translateY: ty });
   tr.push({ translateX: px }, { translateY: py });
   if (rotate) tr.push({ rotate });
-  if (scale && scale !== 1) tr.push({ scale });
   if (scaleX) tr.push({ scaleX });
   if (scaleY) tr.push({ scaleY });
   tr.push({ translateX: -px }, { translateY: -py });
@@ -74,257 +71,68 @@ function Pivot({ s, p, rotate, scale, scaleY, scaleX, tx, ty, children }: { s: n
 }
 
 const Layer = ({ src, s }: { src: ImageSourcePropType; s: number }) => <Image source={src} style={{ position: 'absolute', width: s, height: s }} resizeMode="contain" fadeDuration={0} />;
-
 type Val = Animated.Value | Animated.AnimatedInterpolation<number>;
 /** Hem Animated.Value hem interpolation/çarpım ile çalışır (hepsinde `interpolate` var). */
 const ip = <T extends number | string>(v: Val, inputRange: number[], outputRange: T[]) => (v as Animated.Value).interpolate({ inputRange, outputRange: outputRange as never }) as Animated.AnimatedInterpolation<T>;
 const deg = (v: Val, a: number) => ip(v, [-1, 1], [`${-a}deg`, `${a}deg`]);
 
-function cosmeticSeed(id: string) {
-  let value = 0;
-  for (let i = 0; i < id.length; i++) value = (value * 31 + id.charCodeAt(i)) >>> 0;
-  return value;
-}
+// Göz ve ağız konumları (1254 tuvalinde): göz merkezleri, gaga ucunun altı.
+const LID_A = { x: 504, y: 364 };
+const LID_B = { x: 796, y: 322 };
+const MOUTH = { x: 664, y: 484 };
+const HAT = { x: 627, y: 300 }; // şapkanın oturduğu yer (baş üstü): ikincil hareket pivotu
 
-function animateCosmetic(value: Animated.Value, id: string | undefined, reduce: boolean, active: boolean) {
-  value.stopAnimation();
-  if (!id || reduce || !active) {
-    value.setValue(0);
-    return;
-  }
-  const seed = cosmeticSeed(id);
-  const phase = ((seed >>> 5) % 51) / 100 - 0.25;
-  const half = 1000 + (seed % 800);
-  value.setValue(phase);
-  const loop = Animated.loop(Animated.sequence([
-    Animated.timing(value, { toValue: 1, duration: Math.round(half * (1 - phase)), easing: sine, useNativeDriver: true }),
-    Animated.timing(value, { toValue: -1, duration: half * 2, easing: sine, useNativeDriver: true }),
-    Animated.timing(value, { toValue: phase, duration: Math.round(half * (1 + phase)), easing: sine, useNativeDriver: true }),
-  ]));
-  loop.start();
-  return () => { loop.stop(); value.stopAnimation(); };
-}
-
-// Her baş eşyası, çizimdeki temas noktasından Moka'nın saç çizgisine oturur.
-const HEAD_TARGET = { x: 256, y: 88 };
-type HeadFit = { anchorX: number; anchorY: number; targetY?: number; scale: number; width?: number; height?: number; tilt: number; sway: number };
-const HEAD_FIT: Record<string, HeadFit> = {
-  bas_balkabagi: { anchorX: 256, anchorY: 138, scale: 0.92, tilt: 0, sway: 0.65 },
-  bas_kahve_cekirdegi_tac: { anchorX: 256, anchorY: 116, scale: 1.02, tilt: -1, sway: 0.6 },
-  bas_mantar: { anchorX: 256, anchorY: 112, targetY: 80, scale: 1.02, width: 1.15, tilt: 0, sway: 0.7 },
-  bas_kus_yuvasi: { anchorX: 256, anchorY: 124, scale: 0.9, tilt: -1, sway: 0.55 },
-  bas_cay_demligi: { anchorX: 256, anchorY: 129, targetY: 81, scale: 1.02, width: 1.18, tilt: 0, sway: 0.45 },
-  bas_kruvasan: { anchorX: 256, anchorY: 110, targetY: 76, scale: 1, tilt: 0, sway: 0.85 },
-  bas_uyku_takkesi: { anchorX: 256, anchorY: 118, targetY: 84, scale: 1.1, width: 1.03, tilt: 0, sway: 0.9 },
-  bas_cicek_saksi: { anchorX: 256, anchorY: 136, targetY: 83, scale: 1.08, width: 1.23, tilt: 0, sway: 0.55 },
-  bas_dondurma: { anchorX: 256, anchorY: 139, targetY: 88, scale: 1.15, width: 1.1, tilt: 0, sway: 0.6 },
-  bas_yagmur_bulutu: { anchorX: 256, anchorY: 109, targetY: 84, scale: 1.15, width: 1.06, tilt: 0, sway: 0.6 },
-  bas_hasir_sapka: { anchorX: 256, anchorY: 118, targetY: 86, scale: 1.1, width: 1, tilt: 0, sway: 0.55 },
-  bas_kedi_kulagi: { anchorX: 256, anchorY: 83, targetY: 60, scale: 1, tilt: 0, sway: 0.7 },
-  bas_asci_sapkasi: { anchorX: 256, anchorY: 140, targetY: 91, scale: 1.15, width: 1.08, tilt: 0, sway: 0.55 },
-  bas_tac: { anchorX: 251, anchorY: 100, targetY: 87, scale: 1.06, width: 1, tilt: -0.5, sway: 0.65 },
-  bas_kulaklik: { anchorX: 256, anchorY: 49, targetY: 53, scale: 1, height: 0.78, tilt: 0, sway: 0.5 },
-  bas_yilbasi: { anchorX: 256, anchorY: 130, targetY: 87, scale: 1.12, width: 1.03, tilt: 0, sway: 0.65 },
-  bas_buyucu: { anchorX: 256, anchorY: 151, targetY: 85, scale: 1.03, width: 1.19, tilt: 0, sway: 0.6 },
-  bas_korsan: { anchorX: 256, anchorY: 139, targetY: 80, scale: 1.05, width: 1, tilt: 0, sway: 0.6 },
-  bas_pamuk_seker: { anchorX: 256, anchorY: 108, targetY: 84, scale: 1.17, width: 1.16, tilt: 0, sway: 0.7 },
-  bas_kar_adam: { anchorX: 256, anchorY: 122, targetY: 83, scale: 1.04, width: 1.25, tilt: 0, sway: 0.5 },
-};
-
-const GARMENT_FRONT: Partial<Record<string, string>> = {
-  govde_kazak: 'M110 280 Q255 325 405 279 L435 465 H88Z',
-  govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
-  govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',
-  govde_pelerin: 'M142 250 Q256 300 378 250 L378 383 H142Z',
-  govde_yagmurluk: 'M88 274 Q170 249 211 273 Q257 291 298 271 Q349 251 426 272 L426 458 H88Z',
-};
-
-function Headphones({ src, size }: { src: ImageSourcePropType; size: number }) {
-  const id = 'pads-' + useId().replace(/[^a-z0-9]/gi, '');
-  const art = <Artwork href={src} width={512} height={512} />;
-  return (
-    <Svg width={size} height={size} viewBox="0 0 512 512" pointerEvents="none">
-      <Defs>
-        <ClipPath id={id + '-band'}><Path d="M0 0H512V104H0Z" /></ClipPath>
-        <ClipPath id={id + '-left'}><Path d="M0 99H256V222H0Z" /></ClipPath>
-        <ClipPath id={id + '-right'}><Path d="M256 99H512V222H256Z" /></ClipPath>
-      </Defs>
-      <G transform="translate(-49 0) scale(1.19 1)"><G clipPath={`url(#${id}-band)`}>{art}</G></G>
-      <G transform="translate(42 0) scale(0.56 1)"><G clipPath={`url(#${id}-left)`}>{art}</G></G>
-      <G transform="translate(196 0) scale(0.56 1)"><G clipPath={`url(#${id}-right)`}>{art}</G></G>
-    </Svg>
-  );
-}
-
-function FittedArtwork({ src, size, crown = false, contour }: {
-  src: ImageSourcePropType; size: number; crown?: boolean; contour: string;
-}) {
-  const clip = 'fitted-' + useId().replace(/[^a-z0-9]/gi, '');
-  const padding = crown ? 14 : 0;
-  return (
-    <Svg width={size} height={size * (512 + padding) / 512} viewBox={`0 ${-padding} 512 ${512 + padding}`} style={{ position: 'absolute', top: -size * padding / 512 }} pointerEvents="none">
-      <Defs><ClipPath id={clip}><Path d={contour} /></ClipPath></Defs>
-      <G clipPath={`url(#${clip})`}>
-        {crown && <Ellipse cx={251} cy={4} rx={13.8} ry={13.5} fill="#FAC860" stroke="#343343" strokeWidth={2.7} />}
-        <Artwork href={src} width={512} height={512} />
-      </G>
-    </Svg>
-  );
-}
-
-// Kaynak katmanlar 512 × 512. İki gözün merkezleri farklı yükseklikte.
-const EYE_CENTERS = [{ x: 207, y: 155 }, { x: 324, y: 138 }];
-const BEAK_HINGE = { x: 298 * W / 512, y: 166 * W / 512 };
-
-function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
-  size: number; eyes: ImageSourcePropType; beak: ImageSourcePropType;
-  blink: Val; look: Val; mouth: Val; sleeping: boolean;
-}) {
-  const unit = size / 512;
-  const gaze = ip(look, [-1, 1], [-3 * unit, 3 * unit]);
-  const visibility = (value: Val, range: number[], opacity: number[]) =>
-    (value as Animated.Value).interpolate({ inputRange: range, outputRange: opacity, extrapolate: 'clamp' });
-  const eyesVisible = visibility(blink, [0.17, 0.21], [0, 1]);
-  const lidsVisible = visibility(blink, [0.17, 0.21], [1, 0]);
-  const jawVisible = visibility(mouth, [0, 0.14], [0, 1]);
-  const closedLid = sleeping
-    ? 'M-20 -2 C-12 6 7 9 18 -3 C14 9 -9 15 -20 1 Q-22 -4 -20 -2Z'
-    : 'M-20 3 C-14 -9 4 -14 18 -4 Q20 -1 17 -2 C3 -8 -10 -5 -18 5 Q-21 7 -20 3Z';
-
-  return (
-    <>
-      {EYE_CENTERS.map(({ x, y }) => (
-        <Animated.View key={x} pointerEvents="none" style={{
-          position: 'absolute', left: (x - 66) * unit, top: (y - 60) * unit,
-          width: 132 * unit, height: 120 * unit, overflow: 'hidden',
-          opacity: eyesVisible, transform: [{ translateX: gaze }, { scaleY: blink }],
-        }}>
-          <Image source={eyes} resizeMode="contain" fadeDuration={0} style={{
-            position: 'absolute', left: (66 - x) * unit, top: (60 - y) * unit, width: size, height: size,
-          }} />
-        </Animated.View>
-      ))}
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: lidsVisible }}>
-        <Svg width={size} height={size} viewBox="0 0 512 512">
-          <Ellipse cx={189} cy={177} rx={12} ry={4.5} fill="#DC9781" opacity={0.32} />
-          <Ellipse cx={337} cy={160} rx={11} ry={4.3} fill="#DC9781" opacity={0.32} />
-          {EYE_CENTERS.map(({ x, y }) => (
-            <Path key={x} d={closedLid} translateX={x} translateY={y} fill="#4A3025" />
-          ))}
-        </Svg>
-      </Animated.View>
-      <Pivot s={size} p={BEAK_HINGE} rotate={ip(mouth, [0, 1], ['0deg', '-15deg'])}>
-        <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: jawVisible }}>
-          <Svg width={size} height={size} viewBox="0 0 512 512">
-            <Path d="M252 176Q271 183 296 166C300 179 292 197 282 201C270 203 257 189 252 176Z" fill="#C9834F" stroke="#593A2D" strokeWidth={2.3} strokeLinejoin="round" />
-            <Path d="M253 176Q272 180 295 168C294 182 287 194 280 197C272 197 259 187 253 176Z" fill="#61372E" />
-            <Path d="M266 190Q273 185 283 190Q285 193 282 196Q275 199 266 190Z" fill="#DF927C" />
-          </Svg>
-        </Animated.View>
-      </Pivot>
-      <Pivot s={size} p={BEAK_HINGE} rotate={ip(mouth, [0, 1], ['0deg', '2.4deg'])}>
-        <Svg width={size} height={size} viewBox="0 0 512 512" style={{ position: 'absolute' }}>
-          <Path d="M240 172Q253 180 261 177Q280 186 300 168Q295 191 282 196Q273 198 261 183Q250 192 240 181Z" fill="#DDA357" />
-        </Svg>
-        <Layer src={beak} s={size} />
-        <Svg width={size} height={size} viewBox="0 0 512 512" style={{ position: 'absolute' }}>
-          <Ellipse cx={256} cy={152} rx={1.9} ry={2.5} fill="#805637" opacity={0.72} />
-          <Ellipse cx={277} cy={147} rx={1.45} ry={1.9} fill="#805637" opacity={0.54} />
-        </Svg>
-      </Pivot>
-    </>
-  );
-}
-
-/** Bir sözcükte 2–4 hece, ilk hecede vurgu, sözcük sonunda kısa soluk. */
-export function useSpeechMouth(speaking: boolean) {
-  const [mouth] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!speaking) return;
-    let animation: Animated.CompositeAnimation;
-    let active = true;
-    const word = () => {
-      const count = 2 + Math.floor(Math.random() * 3);
-      const beats = Array.from({ length: count }, (_, index) => {
-        const open = index === 0 ? 0.72 + Math.random() * 0.20 : 0.36 + Math.random() * 0.34;
-        return Animated.sequence([
-          Animated.timing(mouth, { toValue: open, duration: 85 + open * 55, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(mouth, { toValue: index === count - 1 ? 0 : 0.1, duration: 95 + open * 40, easing: sine, useNativeDriver: true }),
-        ]);
-      });
-      animation = Animated.sequence([...beats, Animated.delay(145 + Math.random() * 180)]);
-      animation.start(({ finished }) => { if (active && finished) word(); });
-    };
-    word();
-    return () => { active = false; animation.stop(); mouth.setValue(0); };
-  }, [mouth, speaking]);
-  return mouth;
-}
-
-/** Oda ve dolap aynı çizimleri ve temas noktalarını kullanır. */
-export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, mouth, breath, sleeping = false }: {
+/**
+ * Katmanlar + hareket girdileri (zamanlayıcı yok). Sürücüler: `MokaRig` (kendi kendine) ve `RoomMoka` (odadaki Moka).
+ * Girdiler -1..1 (sway, wing, tail, look), blink = göz ölçeği y (1 açık), mouth 0..1, lag = şapkanın geç kalan eğilmesi.
+ */
+export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, mouth, breath }: {
   size: number; fur?: string | null; worn?: Partial<Record<SlotId, string | undefined>>;
-  sway: Val; lag: Val; wing: Val; tail: Val; blink: Val; look: Val; mouth: Val; breath: Val; sleeping?: boolean;
+  sway: Val; lag: Val; wing: Val; tail: Val; blink: Val; look: Val; mouth: Val; breath: Val;
 }) {
   const L = useMemo(() => rig(fur), [fur]);
-  const reduce = useReduceMotion();
-  const active = useActive();
-  const headId = worn?.bas && COSMETIC[worn.bas] && COSMETIC_IMG[worn.bas] ? worn.bas : undefined;
-  const bodyId = worn?.govde && COSMETIC[worn.govde] && COSMETIC_IMG[worn.govde] ? worn.govde : undefined;
-  const handId = worn?.el && COSMETIC[worn.el] && COSMETIC_IMG[worn.el] ? worn.el : undefined;
-  const [headMotion] = useState(() => new Animated.Value(0));
-  const [bodyMotion] = useState(() => new Animated.Value(0));
-  const [handMotion] = useState(() => new Animated.Value(0));
-  useEffect(() => animateCosmetic(headMotion, headId, reduce, active), [headId, reduce, active, headMotion]);
-  useEffect(() => animateCosmetic(bodyMotion, bodyId, reduce, active), [bodyId, reduce, active, bodyMotion]);
-  useEffect(() => animateCosmetic(handMotion, handId, reduce, active), [handId, reduce, active, handMotion]);
+  const k = size / W;
   const headLate = ip(breath, [0, 1], [0, -size * 0.004]);
   const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
-  const bodyItem = bodyId ? WORN_CLOTHES[bodyId] ?? COSMETIC_IMG[bodyId] : null;
-  const headItem = headId ? COSMETIC_IMG[headId] : null;
-  const hold = handId ? HOLDS[handId] : undefined;
-  const headFit = headId ? HEAD_FIT[headId] : undefined;
-  const headTarget = headFit ? { x: HEAD_TARGET.x, y: headFit.targetY ?? HEAD_TARGET.y } : HEAD_TARGET;
-  const headRoot = { x: (headTarget.x * W) / 512, y: (headTarget.y * W) / 512 };
-  const headPivot = headFit ? { x: (headFit.anchorX * W) / 512, y: (headFit.anchorY * W) / 512 } : headRoot;
-  const headTx = headFit ? ((headTarget.x - headFit.anchorX) * size) / 512 : 0;
-  const headTy = headFit ? ((headTarget.y - headFit.anchorY) * size) / 512 : 0;
-  const garmentFront = bodyId ? GARMENT_FRONT[bodyId] : undefined;
-  const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
-  const clothSwing = cape ? 0.7 : 0.35;
+  const eyeX = ip(look, [-1, 1], [-14 * k, 14 * k]);
+  const beakY = ip(mouth, [0, 1], [0, 5 * k]);
+  const clampIp = (v: Val, a: number[], b: number[]) => (v as Animated.Value).interpolate({ inputRange: a, outputRange: b, extrapolate: 'clamp' });
+  const eyeOpen = clampIp(blink, [0.1, 0.3], [0, 1]);
+  const lidOpen = clampIp(blink, [0.1, 0.3], [1, 0]);
+  const item = (slot: SlotId) => {
+    const id = worn?.[slot];
+    return id && COSMETIC[id] && COSMETIC_IMG[id] ? <Layer src={COSMETIC_IMG[id]} s={size} /> : null;
+  };
+  const hat = worn?.bas && COSMETIC[worn.bas] && COSMETIC_IMG[worn.bas] ? <Layer src={COSMETIC_IMG[worn.bas]} s={size} /> : null;
   return (
     <>
       <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
       <Layer src={L.govde} s={size} />
-      {bodyId && bodyItem && (
-        <Pivot s={size} p={NECK} rotate={deg(bodyMotion, clothSwing)}>
-          {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
-        </Pivot>
-      )}
+      {item('govde')}
       <Layer src={AYAK} s={size} />
       <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
         <Layer src={L.bas} s={size} />
-        <RigFace size={size} eyes={L.gozler} beak={L.gaga} blink={blink} look={look} mouth={mouth} sleeping={sleeping} />
-        {headItem && headFit && (
-          <Pivot s={size} p={headRoot} rotate={deg(lag, 0.8)}>
-            <Pivot s={size} p={headPivot} tx={headTx} ty={headTy} rotate={headFit.tilt + 'deg'} scale={headFit.scale} scaleX={headFit.width} scaleY={headFit.height}>
-              <Pivot s={size} p={headPivot} rotate={deg(headMotion, headFit.sway)} ty={ip(headMotion, [-1, 1], [-size * 0.0015, size * 0.0015])}>
-                {headId === 'bas_tac' ? (
-                  <FittedArtwork src={headItem} size={size} crown contour="M122 -14H385V98 L327 100 Q251 94 178 101 L122 101Z" />
-                ) : headId === 'bas_kulaklik' ? <Headphones src={headItem} size={size} /> : <Layer src={headItem} s={size} />}
-              </Pivot>
-            </Pivot>
-          </Pivot>
-        )}
+        <Pivot s={size} p={EYES} scaleY={blink} tx={eyeX}>
+          <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: eyeOpen }}><Layer src={L.gozler} s={size} /></Animated.View>
+        </Pivot>
+        {/* Kapalı gözler (uyku): yassılmış göz yerine iki yumuşak ark. */}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: lidOpen, transform: [{ translateX: eyeX }] }}>
+          {[LID_A, LID_B].map((p, i) => <View key={i} style={{ position: 'absolute', left: (p.x - 62) * k, top: (p.y - 34) * k, width: 124 * k, height: 62 * k, borderBottomLeftRadius: 62 * k, borderBottomRightRadius: 62 * k, borderBottomWidth: Math.max(2.5, 11 * k), borderColor: '#3B2A20' }} />)}
+        </Animated.View>
+        <Pivot s={size} p={EYES} ty={beakY}><Layer src={L.gaga} s={size} /></Pivot>
+        {/* Ağız içi: gaga aşağı inince görünür. */}
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: (MOUTH.x - 34) * k, top: (MOUTH.y - 12) * k, width: 68 * k, height: 48 * k, opacity: clampIp(mouth, [0, 0.06], [0, 1]), transform: [{ translateY: ip(mouth, [0, 1], [-4 * k, 6 * k]) }, { scaleY: clampIp(mouth, [0, 1], [0.2, 1]) }] }}>
+          <View style={{ flex: 1, backgroundColor: '#8E3B3B', borderRadius: 24 * k, borderWidth: Math.max(2, 6 * k), borderColor: '#3B2A20', overflow: 'hidden', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <View style={{ width: 36 * k, height: 16 * k, borderTopLeftRadius: 18 * k, borderTopRightRadius: 18 * k, backgroundColor: '#E58C8C' }} />
+          </View>
+        </Animated.View>
+        {hat && <Pivot s={size} p={HAT} rotate={deg(lag, 1.1)}>{hat}</Pivot>}
       </Pivot>
-      {handId && hold ? (
-        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} />
-      ) : (
-        <>
-          <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
-          <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}><Layer src={L.kanat_a} s={size} /></Pivot>
-        </>
-      )}
+      <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
+      <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}>
+        <Layer src={L.kanat_a} s={size} />
+        {item('el')}
+      </Pivot>
     </>
   );
 }
@@ -340,7 +148,7 @@ export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop 
   const [tail] = useState(() => new Animated.Value(0));
   const [blink] = useState(() => new Animated.Value(1)); // göz ölçeği y
   const [look] = useState(() => new Animated.Value(0));
-  const mouth = useSpeechMouth(run && talking);
+  const [mouth] = useState(() => new Animated.Value(0));
   const [hop] = useState(() => new Animated.Value(0));
 
   const loop = (v: Animated.Value, ms: number, from = 0, to = 1) => Animated.loop(Animated.sequence([
@@ -358,53 +166,63 @@ export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop 
   }, [run, breath, sway, lag, wing, tail]);
 
   // Göz kırpma: düzensiz aralık; uykuda yarı kapalı, sevinçte kısık.
-  const baseEye = mood === 'sleepy' ? 0.04 : mood === 'happy' ? 0.92 : mood === 'wow' ? 1.06 : 1;
+  const baseEye = mood === 'sleepy' ? 0.22 : mood === 'happy' ? 0.92 : mood === 'wow' ? 1.06 : 1;
   useEffect(() => {
-    const pose = Animated.timing(blink, { toValue: baseEye, duration: reduce ? 0 : 230, easing: sine, useNativeDriver: true });
-    pose.start();
-    return () => pose.stop();
+    Animated.timing(blink, { toValue: baseEye, duration: reduce ? 0 : 260, easing: sine, useNativeDriver: true }).start();
   }, [baseEye, blink, reduce]);
   useEffect(() => {
     if (!run || mood === 'sleepy') return;
-    let current: Animated.CompositeAnimation | undefined;
     let dead = false;
     let t: ReturnType<typeof setTimeout>;
     const next = () => {
       if (dead) return;
       t = setTimeout(() => {
         const one = Animated.sequence([
-          Animated.timing(blink, { toValue: 0.02, duration: 120, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.delay(85),
-          Animated.timing(blink, { toValue: baseEye, duration: 190, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(blink, { toValue: 0.06, duration: 70, useNativeDriver: true }),
+          Animated.delay(60),
+          Animated.timing(blink, { toValue: baseEye, duration: 110, useNativeDriver: true }),
         ]);
-        current = one;
-        current.start(({ finished }) => { if (finished) next(); });
+        (Math.random() < 0.2 ? Animated.sequence([one, Animated.delay(120), one]) : one).start(next);
       }, 2500 + Math.random() * 3800);
     };
     next();
-    return () => { dead = true; clearTimeout(t); current?.stop(); blink.setValue(baseEye); };
+    return () => { dead = true; clearTimeout(t); };
   }, [run, mood, baseEye, blink]);
 
   // Etrafa bakış: gözler hafifçe kayar.
   useEffect(() => {
     if (!run) return;
-    let current: Animated.CompositeAnimation | undefined;
     let dead = false;
     let t: ReturnType<typeof setTimeout>;
     const next = () => {
       if (dead) return;
       t = setTimeout(() => {
-        current = Animated.sequence([
+        Animated.sequence([
           Animated.timing(look, { toValue: Math.random() < 0.5 ? -1 : 1, duration: 260, easing: sine, useNativeDriver: true }),
           Animated.delay(900 + Math.random() * 900),
           Animated.timing(look, { toValue: 0, duration: 320, easing: sine, useNativeDriver: true }),
-        ]);
-        current.start(({ finished }) => { if (finished) next(); });
+        ]).start(next);
       }, 4000 + Math.random() * 5000);
     };
     next();
-    return () => { dead = true; clearTimeout(t); current?.stop(); look.setValue(0); };
+    return () => { dead = true; clearTimeout(t); };
   }, [run, look]);
+
+  // Konuşurken gaga: farklı açıklıkta heceler.
+  useEffect(() => {
+    if (!talking) { mouth.stopAnimation(); mouth.setValue(0); return; }
+    let stop = false;
+    const step = () => {
+      if (stop) return;
+      Animated.sequence([
+        Animated.timing(mouth, { toValue: 0.5 + Math.random() * 0.5, duration: 90 + Math.random() * 70, useNativeDriver: true }),
+        Animated.timing(mouth, { toValue: 0, duration: 80 + Math.random() * 60, useNativeDriver: true }),
+        Animated.delay(Math.random() < 0.3 ? 160 : 30),
+      ]).start(step);
+    };
+    step();
+    return () => { stop = true; mouth.stopAnimation(); };
+  }, [talking, mouth]);
 
   // Sevinç zıplaması: çömel, zıpla, otur.
   useEffect(() => {
@@ -423,7 +241,7 @@ export function MokaRig({ size, fur, worn, mood = 'happy', talking = false, pop 
   return (
     <View style={{ width: size, height: size }}>
       <Animated.View style={{ width: size, height: size, transform: [{ translateY: hopY }, { translateY: lift }, { scaleY: Animated.multiply(sBreath, hopS) }] }}>
-        <RigBody size={size} fur={fur} worn={worn} sway={sway} lag={lag} wing={wing} tail={tail} blink={blink} look={look} mouth={mouth} breath={breath} sleeping={mood === 'sleepy'} />
+        <RigBody size={size} fur={fur} worn={worn} sway={sway} lag={lag} wing={wing} tail={tail} blink={blink} look={look} mouth={mouth} breath={breath} />
       </Animated.View>
     </View>
   );

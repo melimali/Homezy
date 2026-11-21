@@ -129,7 +129,7 @@ Hazır cevaplar: `docs/yasal/magaza-formlari.md`.
 Önce uygulama oluşturulmuş olmalı; abonelik eklemek için ilk .aab'nin yüklenmesi gerekebilir (8. adımdan sonra geri dön).
 - [ ] Ürün kimliği `homezy_premium`, ad "Homezy Premium"
 - [ ] Temel plan **`aylik`** (otomatik yenilenen, aylık): ABD 6,99 $, **Türkiye 149,99 TL**; diğer ülkeler "fiyatları dönüştür" ile
-- [ ] Temel plan **`yillik`** (yıllık): 59,99 $, **Türkiye 1.559,99 TL**
+- [ ] Temel plan **`yillik`** (yıllık): 59,99 $, **Türkiye 1.564,99 TL**
 - [ ] Her plana (`aylik`, `yillik`) **3 gün ücretsiz deneme** teklifi: yeni müşteriler
 - [ ] Planları ve teklifi **etkinleştir**
 - [ ] Ayarlar > **Lisans testi**: kendi Gmail'ini ekle (para çekilmeden satın alma denemek için)

@@ -6,7 +6,7 @@ Varsayımlar (fiyatlar `docs/premium.md` ile aynı kaynak; Anthropic fiyat liste
 |---|---|---|---|
 | Aylık 6,99 $ | 6,99 $ | ≈ 5,94 $ (TR: 149,99 TL ≈ 4,95 $) | ≈ 1,49 $ (TR 1,49 $) |
 | Yıllık 59,99 $ / 12 | 5,00 $ | ≈ 4,25 $ | ≈ 1,27 $ |
-| Yıllık TR 1.559,99 TL / 12 | ≈ 3,10 $ | ≈ 2,64 $ | ≈ 0,79 $ |
+| Yıllık TR 1.564,99 TL / 12 | ≈ 3,10 $ | ≈ 2,64 $ | ≈ 0,79 $ |
 
 Kullanıcı başına aylık en kötü durum (Haiku):
 

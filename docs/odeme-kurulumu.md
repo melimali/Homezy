@@ -11,7 +11,7 @@ Kod tarafı hazır: ödeme ekranı (`src/components/PremiumChoice.tsx`), satın 
 | Aylık | **6,99 $** | |
 | Yıllık | **59,99 $** | Ekranda 12 aylık fiyata göre indirim oranı yazar (≈ %28), mağaza fiyatından hesaplanır. |
 
-**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.559,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim).
+**Türkiye:** aylık **149,99 TL** (Melih, 22 Ekim 2026; dönüştürülen fiyat yerine elle girilir). Yıllık **1.564,99 TL** (10,5 × 149 TL; 12 aylığa göre ≈ %13 indirim).
 
 Ekrandaki fiyatlar mağazadan okunur; Türkiye'deki kullanıcı mağazaya girilen TL fiyatını görür, kodda TL yazılı değil. Mağaza bağlanmadan önce yukarıdaki dolar fiyatları gösterilir.
 
@@ -41,7 +41,7 @@ Play Console → **Para kazanma → Ürünler → Abonelikler → Abonelik oluş
 1. Ürün kimliği: `homezy_premium`, ad: Homezy Premium.
 2. İki **temel plan**:
    - `aylik`: otomatik yenilenen, 1 ay, **geriye dönük uyumlu (backwards compatible)** olarak işaretli, **6,99 USD**. "Fiyatları dönüştür" ile diğer ülkelere dağıt, sonra listede **Türkiye**'yi bul ve fiyatı elle **149,99 TRY** yap.
-   - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**; Türkiye için elle **1.559,99 TRY**.
+   - `yillik`: otomatik yenilenen, 1 yıl, **59,99 USD**; Türkiye için elle **1.564,99 TRY**.
 3. Her plana (`aylik`, `yillik`) **teklif** ekle: uygunluk "Yeni müşteri edinme", aşama "Ücretsiz deneme", **3 gün**. Etkinleştir.
 4. Temel planları ve teklifi **etkinleştir**.
 
@@ -105,6 +105,6 @@ RevenueCat → **Integrations → Webhooks → + New**:
 ## iOS (sonra)
 
 1. Apple Developer Program (99 $/yıl).
-2. App Store Connect → uygulama → **Abonelikler**: grup "Homezy Premium", iki ürün `homezy_premium_aylik` (6,99 $; Türkiye için elle 149,99 TL) ve `homezy_premium_yillik` (59,99 $; Türkiye için elle 1.559,99 TL). Her iki ürüne **Giriş teklifi**: "Ücretsiz deneme", 3 gün.
+2. App Store Connect → uygulama → **Abonelikler**: grup "Homezy Premium", iki ürün `homezy_premium_aylik` (6,99 $; Türkiye için elle 149,99 TL) ve `homezy_premium_yillik` (59,99 $; Türkiye için elle 1.564,99 TL). Her iki ürüne **Giriş teklifi**: "Ücretsiz deneme", 3 gün.
 3. RevenueCat → App Store uygulaması ekle (App Store Connect API anahtarı ve "In-App Purchase Key"), ürünleri içe aktar, aynı `premium` entitlement'ına ve aynı offering'deki Monthly / Annual paketlerine bağla.
 4. iOS public anahtarı (`appl_...`) `.env`'e eklenir.

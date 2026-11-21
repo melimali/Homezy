@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -20,52 +20,31 @@ import { tx } from '@/i18n/runtime';
  */
 
 let reduceNow = false;
-const motionSubscribers = new Set<() => void>();
-let motionSubscription: ReturnType<typeof AccessibilityInfo.addEventListener> | undefined;
-let motionRevision = 0;
+AccessibilityInfo.isReduceMotionEnabled?.()
+  .then(v => (reduceNow = v))
+  .catch(() => {});
 
-function publishMotion(value: boolean) {
-  if (value === reduceNow) return;
-  reduceNow = value;
-  motionSubscribers.forEach(notify => notify());
-}
-
-function subscribeMotion(notify: () => void) {
-  motionSubscribers.add(notify);
-  if (motionSubscribers.size === 1) {
-    const initial = ++motionRevision;
-    motionSubscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', value => {
-      ++motionRevision;
-      publishMotion(value);
-    });
-    AccessibilityInfo.isReduceMotionEnabled?.().then(value => {
-      if (initial === motionRevision) publishMotion(value);
-    }).catch(() => {});
-  }
-  return () => {
-    motionSubscribers.delete(notify);
-    if (motionSubscribers.size === 0) {
-      ++motionRevision;
-      motionSubscription?.remove();
-    }
-  };
-}
-
-const getMotion = () => reduceNow;
 export function useReduceMotion() {
-  return useSyncExternalStore(subscribeMotion, getMotion, getMotion);
+  const [reduce, setReduce] = useState(reduceNow);
+  useEffect(() => {
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', v => {
+      reduceNow = v;
+      setReduce(v);
+    });
+    return () => sub?.remove();
+  }, []);
+  return reduce;
 }
 
 /** İlk göründüğünde aşağıdan yaylanarak gelir. `index` sırayla (kademeli) gelmesini sağlar. */
 export function Appear({ children, index = 0, style }: { children: ReactNode; index?: number; style?: StyleProp<ViewStyle> }) {
-  const reduce = useReduceMotion();
-  const [v] = useState(() => new Animated.Value(reduce ? 1 : 0));
+  const [v] = useState(() => new Animated.Value(reduceNow ? 1 : 0));
   useEffect(() => {
-    if (reduce) { v.setValue(1); return; }
+    if (reduceNow) return;
     const a = Animated.spring(v, { toValue: 1, delay: Math.min(index, 10) * 55, friction: 7, tension: 70, useNativeDriver: true });
     a.start();
     return () => a.stop();
-  }, [v, index, reduce]);
+  }, [v, index]);
   return (
     <Animated.View
       style={[
@@ -104,17 +83,11 @@ export function Squish({
   children, style, scaleTo = 0.94, quiet, sound = 'tap', dim = true, onPressIn, onPressOut, ...rest
 }: Omit<PressableProps, 'style' | 'children'> & { children: ReactNode; style?: StyleProp<ViewStyle>; scaleTo?: number; quiet?: boolean; sound?: Sfx; dim?: boolean }) {
   const [s] = useState(() => new Animated.Value(1));
-  const reduce = useReduceMotion();
-  useEffect(() => {
-    if (reduce) s.setValue(1);
-  }, [reduce, s]);
-  const to = (toValue: number, spring: boolean) => {
-    if (reduce) return;
-    const animation = spring
-      ? Animated.spring(s, { toValue, friction: 8, tension: 260, overshootClamping: true, isInteraction: false, useNativeDriver: true })
-      : Animated.timing(s, { toValue, duration: 80, easing: Easing.out(Easing.quad), isInteraction: false, useNativeDriver: true });
-    animation.start();
-  };
+  const to = (toValue: number, spring: boolean) =>
+    (spring
+      ? Animated.spring(s, { toValue, friction: 4, tension: 220, useNativeDriver: true })
+      : Animated.timing(s, { toValue, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true })
+    ).start();
   const [outer, inner] = split(style);
   // İç kutu sadece dış kutu esniyorsa onu doldurur. Her zaman flexGrow verilince Android'de kaydırılan
   // sayfada düğmeler ekran boyu uzuyor, yatay sekme şeridi de görünmez oluyordu.
@@ -133,7 +106,7 @@ export function Squish({
         to(1, true);
         onPressOut?.(e);
       }}
-      style={reduce ? ({ pressed }) => [outer, pressed && { opacity: 0.78 }] : outer}
+      style={outer}
     >
       <Animated.View style={[grow && { flexGrow: 1 }, inner, { transform: [{ scale: s }] }, dim && rest.disabled && { opacity: 0.55 }]}>{children}</Animated.View>
     </Pressable>

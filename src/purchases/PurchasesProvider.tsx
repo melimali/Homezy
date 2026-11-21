@@ -22,9 +22,7 @@ const rawKey = Platform.select({
   android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
 });
 // RevenueCat "Test Store" anahtarı (test_...) yayın sürümünde uygulamayı açılışta çökertir; yayında yok sayılır.
-// Mağaza anahtarı Android'de goog_, iOS'ta appl_ ile başlar; yanlış önekli anahtar SDK'yı açılışta hata verdirir.
-const keyOk = (k: string) => k.startsWith('test_') || (Platform.OS === 'android' ? k.startsWith('goog_') : Platform.OS === 'ios' ? k.startsWith('appl_') : true);
-const apiKey = rawKey && !rawKey.includes('xxxx') && keyOk(rawKey) && (__DEV__ || !rawKey.startsWith('test_')) ? rawKey : undefined;
+const apiKey = rawKey && !rawKey.includes('xxxx') && (__DEV__ || !rawKey.startsWith('test_')) ? rawKey : undefined;
 
 export const purchasesEnabled = Boolean(apiKey);
 
@@ -34,7 +32,7 @@ export type Plan = 'monthly' | 'annual';
 export const PREMIUM_PRICE: Record<Plan, string> = { monthly: '$6.99', annual: '$59.99' };
 
 /** Dil Türkçeyken mağaza TL fiyatı vermiyorsa (bölge farklı ya da okunamadı) gösterilen sabit TL fiyatlar. */
-const TL = { monthly: 149.99, annual: 1559.99 };
+const TL = { monthly: 149.99, annual: 1564.99 };
 const tl = (n: number) => `${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
 
 export type Premium = {

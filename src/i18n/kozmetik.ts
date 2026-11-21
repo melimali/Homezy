@@ -4,7 +4,6 @@
  */
 export const KOZMETIK_ROWS: [string, string, string, string, string, string, string, string, string][] = [
   ['Moka\'nın dolabı 🧣', 'Moka\'s wardrobe 🧣', 'Mokas Kleiderschrank 🧣', 'El armario de Moka 🧣', 'La garde-robe de Moka 🧣', 'O guarda-roupa da Moka 🧣', 'Mokaのクローゼット 🧣', 'Moka의 옷장 🧣', 'خزانة موكا 🧣'],
-  ['Moka\'nın dolabı', 'Moka\'s wardrobe', 'Mokas Kleiderschrank', 'El armario de Moka', 'La garde-robe de Moka', 'O guarda-roupa da Moka', 'Mokaのクローゼット', 'Moka의 옷장', 'خزانة موكا'],
   ['Kürk', 'Fur', 'Fell', 'Pelaje', 'Pelage', 'Pelagem', '毛色', '털', 'الفرو'],
   ['Baş', 'Head', 'Kopf', 'Cabeza', 'Tête', 'Cabeça', '頭', '머리', 'الرأس'],
   ['Gövde', 'Body', 'Körper', 'Cuerpo', 'Corps', 'Corpo', '体', '몸', 'الجسم'],

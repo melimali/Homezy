@@ -1,7 +1,7 @@
 import { useActive } from '@/hooks/useActive';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text as RNText, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Image as SvgImage, Line, LinearGradient, Path, Pattern, Polygon, Polyline, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { ROOM_EMOJI } from '@/domain/constants';
 import { type Mood } from '@/domain/garden';
@@ -10,6 +10,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
 import { RECIPES } from '@/domain/itemRecipes';
+import { ART, ART_SIZE, EV3D_ART, type ArtName } from '@/domain/ev3dArt';
 import { MokaPet } from '@/components/MokaPet';
 import { useNow } from '@/hooks/useNow';
 import { sfx, haptic } from '@/lib/sfx';
@@ -52,6 +53,26 @@ const P = (r: number, c: number, z = 0): Pt => {
   const worldC = dc * cos - dr * sin;
   return [(worldC - worldR) * A, (worldC + worldR) * B - z];
 };
+/** Resimli çıkartma: alt orta noktası (cx, by), yüksekliği h; genişlik oranından gelir. */
+function spr(key: string, name: ArtName, cx: number, by: number, h: number, opacity = 1, flip = false): ReactElement {
+  const [iw, ih] = ART_SIZE[name];
+  const w = (h * iw) / ih;
+  return (
+    <SvgImage key={key} href={ART[name]} x={cx - w / 2} y={by - h} width={w} height={h} opacity={opacity} preserveAspectRatio="xMidYMid meet"
+      {...(flip ? { transform: `translate(${2 * cx} 0) scale(-1 1)` } : null)} />
+  );
+}
+/**
+ * Duvar yüzüne yapışan resim (kapı, pencere). `t(s, z)`: duvar boyunca s (0-1), yükseklik z → ekran noktası.
+ * Duvar eğik bir paralelkenar olduğu için resim matrisle eğilir.
+ */
+function faceImg(key: string, name: ArtName, t: (s: number, z: number) => Pt, s0: number, s1: number, z0: number, z1: number): ReactElement {
+  const o = t(s0, z1), ex = t(s1, z1), ey = t(s0, z0);
+  return (
+    <SvgImage key={key} href={ART[name]} x={0} y={0} width={1} height={1} preserveAspectRatio="none"
+      transform={`matrix(${ex[0] - o[0]} ${ex[1] - o[1]} ${ey[0] - o[0]} ${ey[1] - o[1]} ${o[0]} ${o[1]})`} />
+  );
+}
 const pts = (ps: Pt[]) => ps.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 
 /** Rengi siyaha (amt < 0) ya da beyaza (amt > 0) doğru karıştırır. */
@@ -193,6 +214,16 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors,
       faces = [...b('h', 0.2, 0.22, 0.6, 0.56, 0, 1, '#BFA89E'), ...b('a', 0.14, 0.14, 0.18, 0.72, 0, 9, WOOD)];
       break;
   }
+  if (EV3D_ART) {
+    const SP: Partial<Record<RoomType, [ArtName, number]>> = { yatak: ['mobilya_yatak', 30], cocuk: ['mobilya_yatak', 26], salon: ['mobilya_koltuk', 24], mutfak: ['mobilya_buzdolabi', 34], banyo: ['mobilya_banyo', 22], calisma: ['mobilya_masa', 26], balkon: ['mobilya_bitki', 30] };
+    const sp = SP[type];
+    if (sp) {
+      const [cx, cy] = P(r + 0.5, c + 0.5, 0);
+      faces = [];
+      extra.length = 0;
+      extra.push(spr(k + 'spr', sp[0], cx, cy + 7, sp[1]));
+    }
+  }
   if (v > 0) {
     // 2., 3. ... aynı tür oda: standart eşyaya renk lekesi, halı, bitki ve lamba eklenir (sıraya göre sabit).
     const pal = [['#E58C7E', '#78A1BB'], ['#78A1BB', '#F2C46D'], ['#9CB9D0', '#E58C7E'], ['#F2C46D', '#7FB28A']][(v - 1) % 4];
@@ -225,6 +256,11 @@ function itemShape(id: string, r: number, c: number, k: string, turn = false): R
   };
   let faces: Face[] = [];
   const extra: ReactElement[] = [];
+  const ISP: Record<string, [ArtName, number]> = { saksi: ['mobilya_bitki', 24], kitaplik: ['mobilya_kitaplik', 34], kedi: ['mobilya_kedi', 14], kopek: ['mobilya_kopek', 20] };
+  if (EV3D_ART && ISP[id]) {
+    const [cx, cy] = P(r + 0.5, c + 0.5, 0);
+    return [spr(k + 'isp', ISP[id][0], cx, cy + 6, ISP[id][1], 1, turn)];
+  }
   switch (id) {
     case 'saksi':
       faces = b('p', 0.38, 0.38, 0.24, 0.24, 0, 7, POT);
@@ -388,6 +424,7 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
       <G key="gr">
         {sides}
         <Polygon points={pts(g)} fill={grass} />
+        {EV3D_ART && theme !== 'minimal' && <Polygon points={pts(g)} fill={`url(#${theme === 'kis' ? 'h3dTSnow' : theme === 'sonbahar' ? 'h3dTLeaf' : 'h3dTGrass'})`} fillOpacity={dark ? 0.25 : 0.55} />}
       </G>
     );
     out.push(...g.map(d));
@@ -495,7 +532,8 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   if (L >= 48) {
     const r = r1 + m / 2, c = c0 - m / 2;
     const [x, y] = P(r, c, 52);
-    back.push(
+    if (EV3D_ART) back.push(spr('birdhouse', 'kus_evi', x, y + 20, 28));
+    else back.push(
       <Polygon key="birdhouse" points={pts([[x - 8, y], [x, y - 7], [x + 8, y], [x + 7, y + 11], [x - 7, y + 11]])} fill="#E58C7E" stroke="#A9825F" strokeWidth={1.5} />,
       <Circle key="birdhole" cx={x} cy={y + 3} r={2.4} fill="#5B4A40" />,
       <Line key="birdpole" x1={x} y1={y + 10} x2={x} y2={y + 18} stroke={BEAM} strokeWidth={1.4} />,
@@ -505,7 +543,8 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   if (L >= 54) {
     const r = r1 + m * 0.5, c = midC;
     const [x, y] = P(r, c, 1);
-    front.push(
+    if (EV3D_ART) front.push(spr('pond', 'havuz', x, y + 11, 22));
+    else front.push(
       <Ellipse key="pond" cx={x} cy={y} rx={17} ry={8} fill="#82BDD2" stroke="#F5F1E9" strokeWidth={2} />,
       <Ellipse key="pondshine" cx={x - 4} cy={y - 1.5} rx={5} ry={1.3} fill="#E9FAFF" fillOpacity={0.85} />,
     );
@@ -524,7 +563,8 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   if (L >= 66) {
     const r = r1 + m * 0.85, c = c1 + m * 0.35;
     const [x1, y1] = P(r, c, 0), [x2, y2] = P(r - 0.5, c, 25), [x3, y3] = P(r - 1, c, 0);
-    front.push(
+    if (EV3D_ART) front.push(spr('arch', 'kemer', (x1 + x3) / 2, (y1 + y3) / 2 + 3, 34));
+    else front.push(
       <Polyline key="arch" points={pts([[x1, y1], [x2, y2], [x3, y3]])} fill="none" stroke="#7C9D72" strokeWidth={4} strokeLinecap="round" />,
       <Circle key="archflower1" cx={x2 - 2} cy={y2 + 3} r={3} fill="#F4A6C0" />,
       <Circle key="archflower2" cx={x2 + 3} cy={y2 + 1} r={2.5} fill={GOLD} />,
@@ -539,8 +579,11 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   }
   if (L >= 78) {
     const r = r1 + m * 0.72, c = c0 + 0.5;
-    box('bench', r, c, 0.16, 0.78, 3, 5, BEAM).forEach(f => front.push(<Polygon key={f.key} points={f.points} fill={f.fill} />));
-    for (const [i, v] of [0.08, 0.76].entries()) {
+    if (EV3D_ART) {
+      const [bx, by] = P(r + 0.1, c + 0.4, 0);
+      front.push(spr('bench', 'bank', bx, by + 4, 16));
+    } else box('bench', r, c, 0.16, 0.78, 3, 5, BEAM).forEach(f => front.push(<Polygon key={f.key} points={f.points} fill={f.fill} />));
+    if (!EV3D_ART) for (const [i, v] of [0.08, 0.76].entries()) {
       const [x, y] = P(r + 0.1, c + v, 2);
       front.push(<Line key={'benchleg' + i} x1={x} y1={y} x2={x} y2={y + 8} stroke="#795B43" strokeWidth={2} />);
     }
@@ -548,7 +591,8 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   if (L >= 84) {
     const r = r1 + m * 0.65, c = c0 - m * 0.5;
     const [x, y] = P(r, c, 38);
-    back.push(
+    if (EV3D_ART) back.push(spr('fruit', 'agac_meyve', x, y + 26, 38));
+    else back.push(
       <Line key="fruittrunk" x1={x} y1={y + 10} x2={x} y2={y + 24} stroke={BEAM} strokeWidth={3} />,
       <Circle key="fruitcrown1" cx={x} cy={y} r={11} fill="#6F9A64" />,
       <Circle key="fruitcrown2" cx={x - 7} cy={y + 5} r={7} fill="#83AE70" />,
@@ -560,7 +604,8 @@ function gardenParts(S: AppState, L: number, dark: boolean, theme: HouseTheme) {
   }
   if (L >= 90) {
     const [x, y] = P(r1 + m * 0.5, midC, 5);
-    front.push(
+    if (EV3D_ART) front.push(spr('fountain', 'cesme', x, y + 5, 30));
+    else front.push(
       <Ellipse key="fountainbasin" cx={x} cy={y} rx={10} ry={4.7} fill="#89BFD0" stroke="#F5F1E9" strokeWidth={1.4} />,
       <Line key="fountainjet" x1={x} y1={y - 1} x2={x} y2={y - 11} stroke="#9CC9E0" strokeWidth={2} strokeLinecap="round" />,
       <Circle key="fountaincap" cx={x} cy={y - 12} r={2.2} fill="#B8E1EF" />,
@@ -984,7 +1029,10 @@ function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: numbe
   const snow = theme === 'kis' || wx?.kind === 'snow';
   const overcast = !!wx && wx.kind !== 'clear';
   const cloudFill = night ? '#59637A' : rain || wx?.kind === 'fog' ? '#B8C2CE' : '#FFFFFF';
-  const cloud = (cx: number, cy: number, s: number, i: number) => (
+  const cloudArt: ArtName = wx?.kind === 'storm' ? 'bulut_firtina' : rain ? 'bulut_yagmur' : (['bulut_1', 'bulut_2', 'bulut_3', 'bulut_4'] as const)[0];
+  const cloud = (cx: number, cy: number, s: number, i: number) => EV3D_ART ? (
+    spr('cl' + i, rain ? cloudArt : (['bulut_1', 'bulut_2', 'bulut_3', 'bulut_4'] as const)[i % 4], cx, cy + 6 * s, 20 * s, night ? 0.45 : wx?.kind === 'fog' ? 0.6 : 0.95)
+  ) : (
     <G key={'cl' + i} opacity={rain ? 0.7 : 0.9}>
       <Ellipse cx={cx} cy={cy} rx={22 * s} ry={7 * s} fill={cloudFill} />
       <Ellipse cx={cx - 11 * s} cy={cy - 5 * s} rx={11 * s} ry={7 * s} fill={cloudFill} />
@@ -997,27 +1045,45 @@ function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: numbe
       return <Line key={'rd' + copy + i} x1={px} y1={py} x2={px - 3} y2={py + 9 + k * 4} stroke="#8FB4D0" strokeWidth={1.1} strokeLinecap="round" opacity={0.65} />;
     });
   const flakes = (copy: number) =>
-    scatter(40, 3).map(([u, v, k], i) => <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />);
+    scatter(40, 3).map(([u, v, k], i) => EV3D_ART
+      ? (i % 2 ? null : spr('fk' + copy + i, 'kar_tanesi', x + u * w, y + v * h - copy * h + 3 + k * 3, 5 + k * 5, 0.75 + k * 0.25))
+      : <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />).filter((e): e is ReactElement => !!e);
   return {
     clouds: night && !overcast ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1), ...(overcast ? [cloud(x + w * 0.45, y + h * 0.22, 1.1, 3)] : [])],
-    clouds2: night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])],
+    clouds2: [...(EV3D_ART && !overcast ? [spr('sunmoon', night ? 'ay' : 'gunes', x + w * 0.1, y + h * 0.05 + 24, 22, night ? 0.9 : 0.95)] : []), ...(night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])])],
     birds: !night && !rain && !snow && !overcast && L >= 7
       ? [0, 1].map(i => {
           const bx = x + w * (0.35 + i * 0.1), by = y + h * (0.14 + i * 0.04);
+          if (EV3D_ART) return spr('bd' + i, i ? 'kus_1' : 'kus_3', bx, by + 6, 11 - i * 2);
           return <Polyline key={'bd' + i} points={pts([[bx - 4, by - 2], [bx, by + 1], [bx + 4, by - 2]])} fill="none" stroke={dark ? '#C9D3DE' : '#4A4F63'} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />;
         })
       : [],
     rain: rain ? [...drops(0), ...drops(1)] : [],
     snow: snow ? [...flakes(0), ...flakes(1)] : [],
     smoke: chimney && L >= 7
-      ? [0, 1, 2].map(i => <Circle key={'sm' + i} cx={chimney[0] + (i - 1) * 3} cy={chimney[1] - i * 7} r={3 + i * 1.6} fill={night ? '#9AA3B5' : '#E9E4DC'} opacity={0.75 - i * 0.15} />)
+      ? [0, 1, 2].map(i => EV3D_ART
+        ? spr('sm' + i, (['duman_2', 'duman_3', 'duman_1'] as const)[i], chimney[0] + (i - 1) * 3, chimney[1] - i * 7 + 4, 8 + i * 4, night ? 0.5 : 0.85 - i * 0.2)
+        : <Circle key={'sm' + i} cx={chimney[0] + (i - 1) * 3} cy={chimney[1] - i * 7} r={3 + i * 1.6} fill={night ? '#9AA3B5' : '#E9E4DC'} opacity={0.75 - i * 0.15} />)
       : [],
   };
 }
 
 /** Işık geçişleri: lamba/pencere hâlesi, ışık huzmesi, oda glow'ları. */
+/** Doku bindirmeleri: çatı kiremiti, zemin, çim. Çokgenin düz rengi altta kalır, doku üstüne yarı saydam biner. */
+const texDefs = EV3D_ART
+  ? [
+      ['h3dTRoofK', 'cati_kiremit', 34], ['h3dTRoofG', 'cati_gri', 34], ['h3dTRoofY', 'cati_yosun', 34],
+      ['h3dTParke', 'zemin_parke', 44], ['h3dTFayans', 'zemin_fayans', 44],
+      ['h3dTGrass', 'cim_dokusu', 70], ['h3dTSnow', 'kar_cim', 70], ['h3dTLeaf', 'sonbahar_cim', 70],
+    ].map(([id, name, sz]) => (
+      <Pattern key={id as string} id={id as string} patternUnits="userSpaceOnUse" width={sz as number} height={sz as number}>
+        <SvgImage href={ART[name as ArtName]} x={0} y={0} width={sz as number} height={sz as number} />
+      </Pattern>
+    ))
+  : [];
 const lightDefs = (
   <Defs>
+    {texDefs}
     <RadialGradient id="h3dLamp" cx="50%" cy="50%" r="50%">
       <Stop offset="0" stopColor="#FFE082" stopOpacity={0.75} />
       <Stop offset="1" stopColor="#FFE082" stopOpacity={0} />
@@ -1506,6 +1572,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         seg(P(r + 0.5, col), P(r + 0.5, col + 1)); seg(P(r, col + 0.5), P(r + 1, col + 0.5));
         seg(P(r, col), P(r, col + 1)); seg(P(r, col), P(r + 1, col));
       }
+      if (EV3D_ART && (fid === 'parke' || fid === 'acik' || fid === 'koyu')) els.push(<Polygon key={k + 'tpk'} points={tile} fill="url(#h3dTParke)" fillOpacity={dark ? 0.12 : 0.2} />);
+      else if (EV3D_ART && (fid === 'fayans' || fid === 'mermer')) els.push(<Polygon key={k + 'tfy'} points={tile} fill="url(#h3dTFayans)" fillOpacity={0.3} />);
       if (tx) els.push(<Path key={k + 'tx'} d={tx} stroke={shade(base, -0.16)} strokeWidth={0.5} strokeOpacity={0.5} fill="none" />);
       const ao = (key: string, ps: Pt[], o: number) =>
         els.push(<Polygon key={key} points={pts(ps)} fill="#283044" fillOpacity={o} onPress={open} />);
@@ -1706,6 +1774,10 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const WIN_Z0 = WALL_H * 0.36, WIN_Z1 = WIN_Z0 + WALL_H * 0.35; // window height = 0.35 wall height
     const WIN_W = 0.3; // window width as a share of one tile
     const roofPick = roofOf(S)?.color;
+    const roofId = roofOf(S)?.id;
+    const roofTex = !EV3D_ART || theme === 'kis' ? null : roofId === 'gri' ? 'h3dTRoofG' : roofId === 'yesil' ? 'h3dTRoofY' : roofId === 'kiremit' || !roofId ? 'h3dTRoofK' : 'h3dTRoofG';
+    const roofTexOp = roofId === 'kiremit' || roofId === 'gri' || roofId === 'yesil' || !roofId ? 0.45 : 0.22;
+    if (EV3D_ART) roofEls.push(<Defs key="rtexdefs">{texDefs}</Defs>);
     const roofBase = roofPick ? (dark ? shade(roofPick, -0.25) : roofPick) : dark ? '#8A5C52' : '#C8826B';
     const snowy = theme === 'kis';
     const rc = snowy ? (dark ? '#B9C3CF' : '#F1F5F9') : roofBase;
@@ -1713,6 +1785,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     const G = (u: number, v: number, z: number): Pt => (alongC ? P(u, v, z) : P(v, u, z));
     const f1 = (p: Pt) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
     const quad = (a: Pt, b: Pt, c2: Pt, d: Pt) => `M${f1(a)}L${f1(b)}L${f1(c2)}L${f1(d)}Z`;
+    const doorArt: ReactElement[] = [];
     let glassD = '', frameD = '', shineD = '', sillD = '', doorD = '', knobD = '';
     const glass = isNight ? '#FFE9A0' : dark ? '#7FA2C2' : '#BFE1F2';
     const nbOf = (i: number, du: number, dv: number) => {
@@ -1767,10 +1840,14 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         roofEls.push(<Polygon key={`rb${i}${w.key}`} points={pts([A1, A2, t(1, 3), t(0, 3)])} fill={shade(sk, -0.1)} />);
         // Saçak gölgesi: çatının duvara düşürdüğü yumuşak koyuluk.
         roofEls.push(<Polygon key={`rw${i}${w.key}`} points={pts([t(0, WALL_H - 7), t(1, WALL_H - 7), t(1, WALL_H), t(0, WALL_H)])} fill="#283044" fillOpacity={0.13} />);
-        if (i === doorCell && w.key === 's') {
+        if (i === doorCell && w.key === 's' && EV3D_ART) {
+          doorArt.push(faceImg(`rdr${i}`, 'ev_kapi', t, 0.3, 0.7, 0, 25));
+        } else if (i === doorCell && w.key === 's') {
           doorD += quad(t(0.36, 0), t(0.64, 0), t(0.64, 21), t(0.36, 21));
           knobD += `M${f1(t(0.58, 10))}l0.01 0`;
           sillD += quad(t(0.3, 0), t(0.7, 0), t(0.7, 2), t(0.3, 2));
+        } else if ((r * 3 + col * 5 + (w.du !== 0 ? 1 : 0)) % 2 === 0 && EV3D_ART) {
+          doorArt.push(faceImg(`rwn${i}${w.key}`, isNight ? 'ev_pencere_gece' : 'ev_pencere', t, 0.28, 0.72, WIN_Z0 - 3, WIN_Z1 + 3));
         } else if ((r * 3 + col * 5 + (w.du !== 0 ? 1 : 0)) % 2 === 0) {
           const s0 = 0.5 - WIN_W / 2, s1 = 0.5 + WIN_W / 2;
           const q = [t(s0, WIN_Z0), t(s1, WIN_Z0), t(s1, WIN_Z1), t(s0, WIN_Z1)];
@@ -1803,6 +1880,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         const sun = mix(shade(tint, -0.1), mix(tint, '#FFFFFF', 0.12), hgt);
         const fill = zb > za + 0.01 ? (alongC ? shade(sun, -0.12) : mix(sun, '#FFFFFF', 0.08)) : zb < za - 0.01 ? (alongC ? sun : shade(sun, -0.17)) : mix(sun, '#FFFFFF', 0.05);
         roofEls.push(<Polygon key={`rs${i}_${j}`} points={pts([a0, a1, b1, b0])} fill={fill} stroke={fill} strokeWidth={0.6} strokeLinejoin="round" />);
+        if (roofTex) roofEls.push(<Polygon key={`rt${i}_${j}`} points={pts([a0, a1, b1, b0])} fill={`url(#${roofTex})`} fillOpacity={roofTexOp} />);
         if (Math.abs(zb - za) > 0.01) {
           // Kiremit sıraları ve şaşırtmalı ek yerleri (tek Path, blok başına).
           const N = Math.max(2, Math.round(Math.abs(ub - ua) * 5));
@@ -1829,6 +1907,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         roofEls.push(<Path key={`rv${i}`} d={`M${bp}`} stroke={edgeC} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" />, <Path key={`ru${i}`} d={`M${bp}`} stroke={trimC} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />);
       }
     }
+    roofEls.push(...doorArt);
     roofEls.push(
       <Path key="rsill" d={sillD} fill={dark ? '#E9E2D8' : '#FFFFFF'} fillOpacity={0.95} />,
       <Path key="rglass" d={glassD} fill={glass} />,
@@ -1840,9 +1919,14 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     if (L >= 7 && order.length) {
       const ci = order[0], cr = Math.floor(ci / cols), cc = ci % cols;
       const cz = zAt(ci, alongC ? cr + 0.33 : cc + 0.63) - 5;
+      if (EV3D_ART) {
+        const [bx, by] = P(cr + 0.33, cc + 0.63, cz);
+        roofEls.push(spr('rchimart', 'ev_baca', bx, by + 2, 24));
+      } else {
       box('rchim', cr + 0.24, cc + 0.54, 0.18, 0.18, cz, 19, BRICK, 0.4).forEach(f => roofEls.push(renderFace(f)));
       box('rchic', cr + 0.21, cc + 0.51, 0.24, 0.24, cz + 19, 2.6, shade(BRICK, -0.22), 0.3).forEach(f => roofEls.push(renderFace(f)));
       roofEls.push(<Polygon key="rchif" points={pts([P(cr + 0.27, cc + 0.57, cz + 21.7), P(cr + 0.27, cc + 0.69, cz + 21.7), P(cr + 0.39, cc + 0.69, cz + 21.7), P(cr + 0.39, cc + 0.57, cz + 21.7)])} fill="#4A3A36" />);
+      }
     }
   }
   // Dış görünüm, bahçe henüz küçükken: çit, ağaçlar ve yol (sonra gelen bahçe süsleri bunların yerini alır).
@@ -1865,6 +1949,10 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     extEls.push(<Polygon key="path" points={pts([P(rMax, mid - 0.25), P(rMax, mid + 0.25), P(rr, mid + 0.25), P(rr, mid - 0.25)])} fill="#D8C7AE" />);
     const tree = (key: string, a: number, b: number, s: number) => {
       const [x, y] = P(a, b, 0);
+      if (EV3D_ART) {
+        extEls.push(<Ellipse key={key + 'sh'} cx={x} cy={y + 1} rx={9 * s} ry={3.5 * s} fill="rgba(40,48,68,0.14)" />, spr(key, 'agac_yuvarlak', x, y + 2, 38 * s));
+        return;
+      }
       extEls.push(
         <G key={key}>
           <Ellipse cx={x} cy={y + 1} rx={9 * s} ry={3.5 * s} fill="rgba(40,48,68,0.14)" />

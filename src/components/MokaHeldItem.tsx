@@ -37,6 +37,8 @@ const DRAWN_HOLDS: Record<string, ImageSourcePropType> = {
 
 /** Kanat ile eli ayıran dikey çizgi (görselin genişliğine oranı). Eşya bu çizgiyi aşıyorsa kesilip aralanır; şemsiyenin tepesi ortadan geçtiği için çizgi kanat ile şemsiye arasına alındı. */
 const SEAM: Record<string, number | undefined> = { el_semsiye: 0.36 };
+/** Eşyayı tutan kanatlar çok yukarıdaysa tüm görseli aşağı indirir (görselin boyuna oranı). */
+const DROP: Record<string, number | undefined> = { el_fincan: 0.055 };
 
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],
@@ -78,7 +80,8 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
   if (!sprite) return null;
   if (drawn) {
     const effect = DRAWN_EFFECTS[id];
-    const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect;
+    const drop = DROP[id] ?? 0;
+    const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect && drop ? [effect[0], effect[1] + 512 * drop] : effect;
     const mirrored = id === 'el_kilic' || id === 'el_degnek';
     const seam = size * (0.07 + (SEAM[id] ?? 0.5) * 0.86);
     const oneWing = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
@@ -128,7 +131,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
         </> : <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
           style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} />}</Animated.View>) :
           <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
-            style={{ position: 'absolute', left: size * 0.07, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
+            style={{ position: 'absolute', left: size * 0.07, top: size * (0.025 + drop), width: size * 0.86, height: size * 0.86, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
         {animated && effectPoint && <HeldEffect key={'drawn-effect-' + id} id={id} size={size} point={effectPoint} />}
         {animated && id === 'el_sulama' && <View pointerEvents="none" style={{ position: 'absolute', left: size * 0.904, top: size * 0.59 }}>
           {[0, 1, 2].map(index => <Animated.View key={index} style={{

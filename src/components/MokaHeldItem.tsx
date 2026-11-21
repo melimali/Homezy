@@ -35,6 +35,9 @@ const DRAWN_HOLDS: Record<string, ImageSourcePropType> = {
   el_kamera: require('../../assets/moka/drawn-holds/kamera.png'),
 };
 
+/** Kanat ile eli ayıran dikey çizgi (görselin genişliğine oranı). Eşya bu çizgiyi aşıyorsa kesilip aralanır; şemsiyenin tepesi ortadan geçtiği için çizgi kanat ile şemsiye arasına alındı. */
+const SEAM: Record<string, number | undefined> = { el_semsiye: 0.36 };
+
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],
   el_kamera: [303, 274], el_telefon: [285, 289],
@@ -77,6 +80,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
     const effect = DRAWN_EFFECTS[id];
     const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect;
     const mirrored = id === 'el_kilic' || id === 'el_degnek';
+    const seam = size * (0.07 + (SEAM[id] ?? 0.5) * 0.86);
     const oneWing = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
     return (
       <Animated.View pointerEvents="none" style={{
@@ -84,10 +88,10 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
         transform: [{ translateX: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: [-size * 0.003, size * 0.003] }) : 0 }],
       }}>
         {oneWing ? [0, 1].map(side => <View key={side} pointerEvents="none" style={{
-          position: 'absolute', left: side * size / 2, width: size / 2, height: size, overflow: 'hidden',
+          position: 'absolute', left: side * seam, width: side === 0 ? seam : size - seam, height: size, overflow: 'hidden',
           transform: [{ translateX: size * (side === 0 ? -0.04 : 0.06) }],
         }}><Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
-          style={{ position: 'absolute', left: size * 0.07 - side * size / 2, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} /></View>) :
+          style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} /></View>) :
           <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
             style={{ position: 'absolute', left: size * 0.07, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
         {animated && effectPoint && <HeldEffect key={'drawn-effect-' + id} id={id} size={size} point={effectPoint} />}

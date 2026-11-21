@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, View, type ImageSourcePropType } from 'react-native';
-import Svg, { Ellipse, Path } from 'react-native-svg';
+import Svg, { ClipPath, Defs, Ellipse, G, Image as Artwork, Path } from 'react-native-svg';
 
 import { WORN_CLOTHES } from '@/constants/wornClothes';
 import { HeldItemModel, HOLDS } from './MokaHeldItem';
@@ -58,7 +58,7 @@ const FUR_RIG: Record<string, ReturnType<typeof furSet>> = Object.fromEntries(Ob
 const sine = Easing.inOut(Easing.sin);
 
 /** Katmanı (w×w) bir noktası etrafında döndürür / ölçekler: RN merkezden döndürür, bu yüzden kaydır-döndür-geri kaydır. */
-function Pivot({ s, p, rotate, rotate2, scale, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string> | string; rotate2?: Animated.AnimatedInterpolation<string> | string; scale?: number; scaleY?: Val; scaleX?: Val; tx?: Val | number; ty?: Val | number; children: ReactNode }) {
+function Pivot({ s, p, rotate, scale, scaleY, scaleX, tx, ty, children }: { s: number; p: { x: number; y: number }; rotate?: Animated.AnimatedInterpolation<string> | string; scale?: number; scaleY?: Val | number; scaleX?: Val | number; tx?: Val | number; ty?: Val | number; children: ReactNode }) {
   const px = ((p.x - W / 2) / W) * s;
   const py = ((p.y - W / 2) / W) * s;
   const tr: object[] = [];
@@ -66,7 +66,6 @@ function Pivot({ s, p, rotate, rotate2, scale, scaleY, scaleX, tx, ty, children 
   if (ty) tr.push({ translateY: ty });
   tr.push({ translateX: px }, { translateY: py });
   if (rotate) tr.push({ rotate });
-  if (rotate2) tr.push({ rotate: rotate2 });
   if (scale && scale !== 1) tr.push({ scale });
   if (scaleX) tr.push({ scaleX });
   if (scaleY) tr.push({ scaleY });
@@ -108,29 +107,70 @@ function animateCosmetic(value: Animated.Value, id: string | undefined, reduce: 
 
 // Her baş eşyası, çizimdeki temas noktasından Moka'nın saç çizgisine oturur.
 const HEAD_TARGET = { x: 256, y: 88 };
-type HeadFit = { anchorX: number; anchorY: number; targetY?: number; scale: number; tilt: number; sway: number };
+type HeadFit = { anchorX: number; anchorY: number; targetY?: number; scale: number; width?: number; height?: number; tilt: number; sway: number };
 const HEAD_FIT: Record<string, HeadFit> = {
   bas_balkabagi: { anchorX: 256, anchorY: 138, scale: 0.92, tilt: 0, sway: 0.65 },
   bas_kahve_cekirdegi_tac: { anchorX: 256, anchorY: 116, scale: 1.02, tilt: -1, sway: 0.6 },
-  bas_mantar: { anchorX: 256, anchorY: 112, targetY: 75, scale: 1, tilt: 0, sway: 0.7 },
+  bas_mantar: { anchorX: 256, anchorY: 112, targetY: 80, scale: 1.02, width: 1.15, tilt: 0, sway: 0.7 },
   bas_kus_yuvasi: { anchorX: 256, anchorY: 124, scale: 0.9, tilt: -1, sway: 0.55 },
-  bas_cay_demligi: { anchorX: 256, anchorY: 129, targetY: 77, scale: 1, tilt: 0, sway: 0.45 },
+  bas_cay_demligi: { anchorX: 256, anchorY: 129, targetY: 81, scale: 1.02, width: 1.18, tilt: 0, sway: 0.45 },
   bas_kruvasan: { anchorX: 256, anchorY: 110, targetY: 76, scale: 1, tilt: 0, sway: 0.85 },
-  bas_uyku_takkesi: { anchorX: 256, anchorY: 118, targetY: 76, scale: 1, tilt: 0, sway: 0.9 },
-  bas_cicek_saksi: { anchorX: 256, anchorY: 136, targetY: 71, scale: 1, tilt: 0, sway: 0.55 },
-  bas_dondurma: { anchorX: 256, anchorY: 139, targetY: 75, scale: 1, tilt: 0, sway: 0.6 },
-  bas_yagmur_bulutu: { anchorX: 256, anchorY: 109, targetY: 73, scale: 1, tilt: 0, sway: 0.6 },
-  bas_hasir_sapka: { anchorX: 256, anchorY: 118, targetY: 76, scale: 1, tilt: 0, sway: 0.55 },
+  bas_uyku_takkesi: { anchorX: 256, anchorY: 118, targetY: 84, scale: 1.1, width: 1.03, tilt: 0, sway: 0.9 },
+  bas_cicek_saksi: { anchorX: 256, anchorY: 136, targetY: 83, scale: 1.08, width: 1.23, tilt: 0, sway: 0.55 },
+  bas_dondurma: { anchorX: 256, anchorY: 139, targetY: 88, scale: 1.15, width: 1.1, tilt: 0, sway: 0.6 },
+  bas_yagmur_bulutu: { anchorX: 256, anchorY: 109, targetY: 84, scale: 1.15, width: 1.06, tilt: 0, sway: 0.6 },
+  bas_hasir_sapka: { anchorX: 256, anchorY: 118, targetY: 86, scale: 1.1, width: 1, tilt: 0, sway: 0.55 },
   bas_kedi_kulagi: { anchorX: 256, anchorY: 83, targetY: 60, scale: 1, tilt: 0, sway: 0.7 },
-  bas_asci_sapkasi: { anchorX: 256, anchorY: 140, targetY: 79, scale: 1, tilt: 0, sway: 0.55 },
-  bas_tac: { anchorX: 256, anchorY: 106, scale: 1.04, tilt: -0.5, sway: 0.65 },
-  bas_kulaklik: { anchorX: 256, anchorY: 49, targetY: 34, scale: 1, tilt: 0, sway: 0.5 },
-  bas_yilbasi: { anchorX: 256, anchorY: 130, targetY: 78, scale: 1, tilt: 0, sway: 0.65 },
-  bas_buyucu: { anchorX: 256, anchorY: 151, targetY: 79, scale: 1, tilt: 0, sway: 0.6 },
-  bas_korsan: { anchorX: 256, anchorY: 139, targetY: 76, scale: 1, tilt: 0, sway: 0.6 },
-  bas_pamuk_seker: { anchorX: 256, anchorY: 108, targetY: 71, scale: 1, tilt: 0, sway: 0.7 },
-  bas_kar_adam: { anchorX: 256, anchorY: 122, targetY: 68, scale: 1, tilt: 0, sway: 0.5 },
+  bas_asci_sapkasi: { anchorX: 256, anchorY: 140, targetY: 91, scale: 1.15, width: 1.08, tilt: 0, sway: 0.55 },
+  bas_tac: { anchorX: 251, anchorY: 100, targetY: 87, scale: 1.06, width: 1, tilt: -0.5, sway: 0.65 },
+  bas_kulaklik: { anchorX: 256, anchorY: 49, targetY: 53, scale: 1, height: 0.78, tilt: 0, sway: 0.5 },
+  bas_yilbasi: { anchorX: 256, anchorY: 130, targetY: 87, scale: 1.12, width: 1.03, tilt: 0, sway: 0.65 },
+  bas_buyucu: { anchorX: 256, anchorY: 151, targetY: 85, scale: 1.03, width: 1.19, tilt: 0, sway: 0.6 },
+  bas_korsan: { anchorX: 256, anchorY: 139, targetY: 80, scale: 1.05, width: 1, tilt: 0, sway: 0.6 },
+  bas_pamuk_seker: { anchorX: 256, anchorY: 108, targetY: 84, scale: 1.17, width: 1.16, tilt: 0, sway: 0.7 },
+  bas_kar_adam: { anchorX: 256, anchorY: 122, targetY: 83, scale: 1.04, width: 1.25, tilt: 0, sway: 0.5 },
 };
+
+const GARMENT_FRONT: Partial<Record<string, string>> = {
+  govde_kazak: 'M110 280 Q255 325 405 279 L435 465 H88Z',
+  govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
+  govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',
+  govde_pelerin: 'M142 250 Q256 300 378 250 L378 383 H142Z',
+  govde_yagmurluk: 'M88 274 Q170 249 211 273 Q257 291 298 271 Q349 251 426 272 L426 458 H88Z',
+};
+
+function Headphones({ src, size }: { src: ImageSourcePropType; size: number }) {
+  const id = 'pads-' + useId().replace(/[^a-z0-9]/gi, '');
+  const art = <Artwork href={src} width={512} height={512} />;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 512 512" pointerEvents="none">
+      <Defs>
+        <ClipPath id={id + '-band'}><Path d="M0 0H512V104H0Z" /></ClipPath>
+        <ClipPath id={id + '-left'}><Path d="M0 99H256V222H0Z" /></ClipPath>
+        <ClipPath id={id + '-right'}><Path d="M256 99H512V222H256Z" /></ClipPath>
+      </Defs>
+      <G transform="translate(-49 0) scale(1.19 1)"><G clipPath={`url(#${id}-band)`}>{art}</G></G>
+      <G transform="translate(42 0) scale(0.56 1)"><G clipPath={`url(#${id}-left)`}>{art}</G></G>
+      <G transform="translate(196 0) scale(0.56 1)"><G clipPath={`url(#${id}-right)`}>{art}</G></G>
+    </Svg>
+  );
+}
+
+function FittedArtwork({ src, size, crown = false, contour }: {
+  src: ImageSourcePropType; size: number; crown?: boolean; contour: string;
+}) {
+  const clip = 'fitted-' + useId().replace(/[^a-z0-9]/gi, '');
+  const padding = crown ? 14 : 0;
+  return (
+    <Svg width={size} height={size * (512 + padding) / 512} viewBox={`0 ${-padding} 512 ${512 + padding}`} style={{ position: 'absolute', top: -size * padding / 512 }} pointerEvents="none">
+      <Defs><ClipPath id={clip}><Path d={contour} /></ClipPath></Defs>
+      <G clipPath={`url(#${clip})`}>
+        {crown && <Ellipse cx={251} cy={4} rx={13.8} ry={13.5} fill="#FAC860" stroke="#343343" strokeWidth={2.7} />}
+        <Artwork href={src} width={512} height={512} />
+      </G>
+    </Svg>
+  );
+}
 
 // Kaynak katmanlar 512 × 512. İki gözün merkezleri farklı yükseklikte.
 const EYE_CENTERS = [{ x: 207, y: 155 }, { x: 324, y: 138 }];
@@ -249,6 +289,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const headPivot = headFit ? { x: (headFit.anchorX * W) / 512, y: (headFit.anchorY * W) / 512 } : headRoot;
   const headTx = headFit ? ((headTarget.x - headFit.anchorX) * size) / 512 : 0;
   const headTy = headFit ? ((headTarget.y - headFit.anchorY) * size) / 512 : 0;
+  const garmentFront = bodyId ? GARMENT_FRONT[bodyId] : undefined;
   const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
   const clothSwing = cape ? 0.7 : 0.35;
   return (
@@ -257,7 +298,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
       <Layer src={L.govde} s={size} />
       {bodyId && bodyItem && (
         <Pivot s={size} p={NECK} rotate={deg(bodyMotion, clothSwing)}>
-          <Layer src={bodyItem} s={size} />
+          {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
         </Pivot>
       )}
       <Layer src={AYAK} s={size} />
@@ -266,9 +307,11 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
         <RigFace size={size} eyes={L.gozler} beak={L.gaga} blink={blink} look={look} mouth={mouth} sleeping={sleeping} />
         {headItem && headFit && (
           <Pivot s={size} p={headRoot} rotate={deg(lag, 0.8)}>
-            <Pivot s={size} p={headPivot} tx={headTx} ty={headTy} rotate={headFit.tilt + 'deg'} scale={headFit.scale}>
+            <Pivot s={size} p={headPivot} tx={headTx} ty={headTy} rotate={headFit.tilt + 'deg'} scale={headFit.scale} scaleX={headFit.width} scaleY={headFit.height}>
               <Pivot s={size} p={headPivot} rotate={deg(headMotion, headFit.sway)} ty={ip(headMotion, [-1, 1], [-size * 0.0015, size * 0.0015])}>
-                <Layer src={headItem} s={size} />
+                {headId === 'bas_tac' ? (
+                  <FittedArtwork src={headItem} size={size} crown contour="M122 -14H385V98 L327 100 Q251 94 178 101 L122 101Z" />
+                ) : headId === 'bas_kulaklik' ? <Headphones src={headItem} size={size} /> : <Layer src={headItem} s={size} />}
               </Pivot>
             </Pivot>
           </Pivot>

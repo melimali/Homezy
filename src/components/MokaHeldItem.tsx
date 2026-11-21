@@ -40,7 +40,7 @@ const SEAM: Record<string, number | undefined> = { el_semsiye: 0.36 };
 
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],
-  el_kamera: [303, 274], el_telefon: [285, 289],
+  el_kamera: [303, 274],
 };
 
 function objectPoint(pose: Hold, p: Point): Point {
@@ -82,19 +82,62 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
     const mirrored = id === 'el_kilic' || id === 'el_degnek';
     const seam = size * (0.07 + (SEAM[id] ?? 0.5) * 0.86);
     const oneWing = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
+    const heldSide = mirrored || id === 'el_firca' ? 0 : 1;
     return (
       <Animated.View pointerEvents="none" style={{
         position: 'absolute', width: size, height: size,
-        transform: [{ translateX: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: [-size * 0.003, size * 0.003] }) : 0 }],
+        transform: [
+          { translateX: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: [-size * 0.003, size * 0.003] }) : 0 },
+          { translateY: animated && !oneWing ? motion.interpolate({ inputRange: [-1, 1], outputRange: [size * 0.002, -size * 0.002] }) : 0 },
+        ],
       }}>
-        {oneWing ? [0, 1].map(side => <View key={side} pointerEvents="none" style={{
+        {oneWing ? [0, 1].map(side => <Animated.View key={side} pointerEvents="none" style={{
           position: 'absolute', left: side * seam, width: side === 0 ? seam : size - seam, height: size, overflow: 'hidden',
-          transform: [{ translateX: size * (side === 0 ? -0.04 : 0.06) }],
-        }}><Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
-          style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} /></View>) :
+          transform: [
+            { translateX: size * (side === 0 ? -0.04 : 0.06) },
+            { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * 0.02 },
+            { rotate: animated && side === heldSide
+              ? motion.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] }) : '0deg' },
+            { translateY: -size * 0.02 }, { translateX: size * (side === 0 ? -0.12 : 0.12) },
+          ],
+        }}>{id === 'el_balon' && side === 1 && animated ? <>
+          <Animated.View style={{ position: 'absolute', width: size / 2, height: size * 0.438, overflow: 'hidden', transform: [
+            { translateX: -size * 0.065 }, { translateY: size * 0.219 },
+            { rotate: motion.interpolate({ inputRange: [-1, 1], outputRange: ['-1.5deg', '1.5deg'] }) },
+            { translateY: -size * 0.219 }, { translateX: size * 0.065 },
+          ] }}><Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
+            style={{ position: 'absolute', left: size * -0.43, top: size * 0.025, width: size * 0.86, height: size * 0.86 }} /></Animated.View>
+          <View style={{ position: 'absolute', top: size * 0.438, width: size / 2, height: size * 0.562, overflow: 'hidden' }}>
+            <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
+              style={{ position: 'absolute', left: size * -0.43, top: size * (0.025 - 0.438), width: size * 0.86, height: size * 0.86 }} />
+          </View>
+        </> : id === 'el_olta' && side === 1 && animated ? <>
+          <View style={{ position: 'absolute', width: size * 0.267, height: size, overflow: 'hidden' }}>
+            <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false} style={{ position: 'absolute', left: -size * 0.43, top: size * 0.025, width: size * 0.86, height: size * 0.86 }} />
+          </View>
+          <View style={{ position: 'absolute', left: size * 0.267, width: size * 0.233, height: size * 0.369, overflow: 'hidden' }}>
+            <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false} style={{ position: 'absolute', left: -size * 0.697, top: size * 0.025, width: size * 0.86, height: size * 0.86 }} />
+          </View>
+          <Animated.View style={{ position: 'absolute', left: size * 0.267, top: size * 0.369, width: size * 0.233, height: size * 0.631, overflow: 'hidden', transform: [
+            { translateX: size * 0.008 }, { translateY: -size * 0.3155 },
+            { rotate: motion.interpolate({ inputRange: [-1, 1], outputRange: ['-3deg', '3deg'] }) },
+            { translateY: size * 0.3155 }, { translateX: -size * 0.008 },
+          ] }}>
+            <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false} style={{ position: 'absolute', left: -size * 0.697, top: -size * 0.344, width: size * 0.86, height: size * 0.86 }} />
+          </Animated.View>
+        </> : <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
+          style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} />}</Animated.View>) :
           <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
             style={{ position: 'absolute', left: size * 0.07, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
         {animated && effectPoint && <HeldEffect key={'drawn-effect-' + id} id={id} size={size} point={effectPoint} />}
+        {animated && id === 'el_sulama' && <View pointerEvents="none" style={{ position: 'absolute', left: size * 0.904, top: size * 0.59 }}>
+          {[0, 1, 2].map(index => <Animated.View key={index} style={{
+            position: 'absolute', left: index * size * 0.008, width: size * 0.009, height: size * 0.014,
+            borderRadius: size * 0.006, backgroundColor: '#A8E0ED',
+            opacity: motion.interpolate({ inputRange: [-1, -0.3, 0.5, 1], outputRange: [0, 0.75, 0.6, 0] }),
+            transform: [{ translateY: motion.interpolate({ inputRange: [-1, 1], outputRange: [index * size * 0.009, size * (0.06 + index * 0.009)] }) }],
+          }} />)}
+        </View>}
         {animated && id === 'el_degnek' && <View pointerEvents="none" style={{ position: 'absolute', left: size * 0.20, top: size * 0.35 }}>
           {[-1, 0, 1].map((direction, index) => <Animated.View key={direction} style={{
             position: 'absolute', width: size * 0.014, height: size * 0.014, borderRadius: size * 0.007,

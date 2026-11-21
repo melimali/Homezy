@@ -204,9 +204,9 @@ Deno.serve(async req => {
     let reply = res.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join('').trim().slice(0, 2000);
     // Limit dolduysa yarım cümleyi at, son tam cümlede bitir.
     if (res.stop_reason === 'max_tokens' && reply) {
-      const cut = Math.max(reply.lastIndexOf('. '), reply.lastIndexOf('! '), reply.lastIndexOf('? '), reply.lastIndexOf('\n'));
-      if (cut > 40) reply = reply.slice(0, cut + 1).trim();
-      else if (!/[.!?…)]$/.test(reply)) reply += '…';
+      const cut = Math.max(reply.lastIndexOf('. '), reply.lastIndexOf('! '), reply.lastIndexOf('? '), reply.lastIndexOf('\n'), reply.lastIndexOf('。'), reply.lastIndexOf('！'), reply.lastIndexOf('？'), reply.lastIndexOf('؟'));
+      if (cut > 20) reply = reply.slice(0, cut + 1).trim();
+      else if (!/[.!?…)。！？؟]$/.test(reply)) reply += '…';
     }
     const actions: Action[] = [];
     for (const b of res.content) {
@@ -223,7 +223,7 @@ Deno.serve(async req => {
         await release();
         return json({ error: 'unreadable' }, 422);
       }
-      reply = 'Tamam! ☕';
+      reply = ''; // uygulama kendi dilinde "Tamam! ☕" yazar
     }
     return json({ reply, actions, used: slot.used, limit: slot.limit, mused: slot.mused, mlimit: slot.mlimit, premium: slot.premium });
   } catch (e) {

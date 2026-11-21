@@ -218,7 +218,9 @@ export function tx<T>(s: T): T {
   const tr0 = translate(s);
   // Yüzde: İngilizce/Korece/Japonca/Arapça "50%", diğerleri "50 %".
   const spaced = UI === 'fr' || UI === 'de' || UI === 'es' || UI === 'pt';
-  const r = tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, spaced ? '$1$2 %' : '$1$2%');
+  let r = tr0.replace(/(^|[^\w%])%(\d+(?:[.,]\d+)?)/g, spaced ? '$1$2 %' : '$1$2%');
+  // İngilizce çoğul: "1 small tasks" -> "1 small task".
+  if (UI === 'en') r = r.replace(/(?<![\d.,])1 ((?:[a-z-]+ )?)(tasks|chores|rooms|items|days|plants|pieces|products|reminders|minutes|hours|bills|routines|pets|photos|notes|entries|bags|cups|points|stars)\b/gi, (_m, adj: string, w: string) => `1 ${adj}${w.slice(0, -1)}`);
   if (cache.size > 4000) cache.clear();
   cache.set(s, r);
   return r as T;

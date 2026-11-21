@@ -230,7 +230,7 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   }, [items, busy]);
 
   const send = async (raw?: string, force = false) => {
-    const msg = (raw ?? text).trim().slice(0, 600);
+    const msg = (raw ?? text).trim().slice(0, 400);
     if (!msg || busy) return;
     // Günlük hak bitti: mesaj gitmez, Moka yarını hatırlatır.
     if (left && left.day <= 0 && status === 'account' && premium.active) {

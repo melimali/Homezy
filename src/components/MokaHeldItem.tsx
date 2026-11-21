@@ -39,6 +39,10 @@ const DRAWN_HOLDS: Record<string, ImageSourcePropType> = {
 const SEAM: Record<string, number | undefined> = { el_semsiye: 0.36 };
 /** Eşyayı tutan kanatlar çok yukarıdaysa tüm görseli aşağı indirir (görselin boyuna oranı). */
 const DROP: Record<string, number | undefined> = { el_fincan: 0.055 };
+/** Çiftli kanat görselini kendi merkezi etrafında büyütür (ukulele gibi küçük kalan eşyalar). */
+const GROW: Record<string, number | undefined> = { el_gitar: 1.22, el_telefon: 1.2 };
+/** Eşyayı tutan tek kanadı büyütür (olta tutan sağ kanat). */
+const WING_GROW: Record<string, number | undefined> = { el_olta: 1.12, el_kilic: 1.15, el_degnek: 1.15 };
 
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],
@@ -81,6 +85,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
   if (drawn) {
     const effect = DRAWN_EFFECTS[id];
     const drop = DROP[id] ?? 0;
+    const grow = GROW[id] ?? 1;
     const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect && drop ? [effect[0], effect[1] + 512 * drop] : effect;
     const mirrored = id === 'el_kilic' || id === 'el_degnek';
     const seam = size * (0.07 + (SEAM[id] ?? 0.5) * 0.86);
@@ -101,7 +106,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
             { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * 0.02 },
             { rotate: animated && side === heldSide
               ? motion.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] }) : '0deg' },
-            { translateY: -size * 0.02 }, { translateX: size * (side === 0 ? -0.12 : 0.12) },
+            { translateY: -size * 0.02 }, { translateX: size * (side === 0 ? -0.12 : 0.12) }, { scale: side === heldSide ? (WING_GROW[id] ?? 1) : 1 },
           ],
         }}>{id === 'el_balon' && side === 1 && animated ? <>
           <Animated.View style={{ position: 'absolute', width: size / 2, height: size * 0.438, overflow: 'hidden', transform: [
@@ -131,7 +136,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
         </> : <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
           style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} />}</Animated.View>) :
           <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
-            style={{ position: 'absolute', left: size * 0.07, top: size * (0.025 + drop), width: size * 0.86, height: size * 0.86, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
+            style={{ position: 'absolute', left: size * (0.5 - 0.43 * grow), top: size * (0.025 + drop + 0.43 * (1 - grow)), width: size * 0.86 * grow, height: size * 0.86 * grow, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
         {animated && effectPoint && <HeldEffect key={'drawn-effect-' + id} id={id} size={size} point={effectPoint} />}
         {animated && id === 'el_sulama' && <View pointerEvents="none" style={{ position: 'absolute', left: size * 0.904, top: size * 0.59 }}>
           {[0, 1, 2].map(index => <Animated.View key={index} style={{

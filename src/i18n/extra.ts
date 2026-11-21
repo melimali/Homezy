@@ -12,6 +12,8 @@ import { ROZET_ROWS } from './rozet';
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
+  ["Sadece kendi odam", "Just my own room", "Nur mein eigenes Zimmer", "Solo mi propia habitación", "Seulement ma chambre", "Só o meu quarto", "自分の部屋だけ", "내 방만", "غرفتي فقط"],
+  ["🎁 Melih'den {} puan geldi!", "🎁 {} points from Melih!", "🎁 {} Punkte von Melih!", "🎁 ¡{} puntos de Melih!", "🎁 {} points de Melih !", "🎁 {} pontos do Melih!", "🎁 Melihから{}ポイント！", "🎁 Melih님이 {}점을 보냈어요!", "🎁 {} نقطة من Melih!"],
   ["Sohbet araçları", "Chat tools", "Chat-Werkzeuge", "Herramientas del chat", "Outils du chat", "Ferramentas do chat", "チャットツール", "대화 도구", "أدوات المحادثة"],
   ['Moka cevabı bildirimi', 'Moka reply report', 'Moka-Antwort melden', 'Informe de respuesta de Moka', 'Signalement d’une réponse de Moka', 'Denúncia de resposta da Moka', 'Mokaの回答を報告', 'Moka 답변 신고', 'الإبلاغ عن رد موكا'],
   ['Bildirdiğim cevap', 'Reply I am reporting', 'Gemeldete Antwort', 'Respuesta que quiero reportar', 'Réponse que je signale', 'Resposta que estou denunciando', '報告する回答', '신고할 답변', 'الرد الذي أبلغ عنه'],

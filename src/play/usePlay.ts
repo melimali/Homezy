@@ -9,6 +9,7 @@ import { autoFreeze, awardLocal, awardToast, dayKey, pruneLog, type AwardResult 
 import { mokaLevel } from '@/domain/mokaLevel';
 import { limits } from '@/domain/premium';
 import type { AppState, DayKey, PlayKind } from '@/domain/types';
+import { tx } from '@/i18n/runtime';
 import { sfx } from '@/lib/sfx';
 import { reportError } from '@/lib/crash';
 import { track, trackActiveDay } from '@/lib/events';
@@ -106,7 +107,7 @@ async function claimGifts(toast: (m: string) => void) {
   if (error || !data) return;
   const g = data as { points: number; notes: string[] };
   if (!g.points) return;
-  toast(`🎁 Melih'den ${g.points > 0 ? '+' : ''}${g.points} puan geldi!${g.notes[0] ? ' ' + g.notes[0] : ''}`);
+  toast(tx("🎁 Melih'den {} puan geldi!").replace('{}', `${g.points > 0 ? '+' : ''}${g.points}`) + (g.notes[0] ? ' ' + g.notes[0] : ''));
 }
 
 /** Kök layout'ta bir kere çağrılır: girişte, uygulama öne gelince ve yeni puan sıraya girince eşler. */

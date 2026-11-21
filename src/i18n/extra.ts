@@ -12,6 +12,7 @@ import { ROZET_ROWS } from './rozet';
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
+  ["Sohbet araçları", "Chat tools", "Chat-Werkzeuge", "Herramientas del chat", "Outils du chat", "Ferramentas do chat", "チャットツール", "대화 도구", "أدوات المحادثة"],
   ['Moka cevabı bildirimi', 'Moka reply report', 'Moka-Antwort melden', 'Informe de respuesta de Moka', 'Signalement d’une réponse de Moka', 'Denúncia de resposta da Moka', 'Mokaの回答を報告', 'Moka 답변 신고', 'الإبلاغ عن رد موكا'],
   ['Bildirdiğim cevap', 'Reply I am reporting', 'Gemeldete Antwort', 'Respuesta que quiero reportar', 'Réponse que je signale', 'Resposta que estou denunciando', '報告する回答', '신고할 답변', 'الرد الذي أبلغ عنه'],
   ['Neden:', 'Reason:', 'Grund:', 'Motivo:', 'Motif :', 'Motivo:', '理由：', '이유:', 'السبب:'],

@@ -5,6 +5,7 @@ import { MOKA_ASSETS } from '@/constants/moka';
 import { achievements } from '@/domain/achievements';
 import { lastWeek, nextStage, progressOf, stageFor } from '@/domain/play';
 import type { AppState } from '@/domain/types';
+import { tx } from '@/i18n/runtime';
 import { brand, fonts, radius, useColors } from '@/theme';
 
 /** Paylaşılabilir "Evim" kartı: ev seviyesi, seri, rozet sayısı ve Moka. */
@@ -36,7 +37,7 @@ export function HouseShareCard({ state: S, now, ref }: { state: AppState; now: n
       </View>
       <View style={st.row}>
         <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>{`☕ ${hp.streak} gündür taze`}</Text>
-        <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>🏆 {got} rozet</Text>
+        <Text style={[st.pill, { color: c.ink, backgroundColor: c.surface }]}>🏆 {got} {tx('rozet')}</Text>
       </View>
       <Text style={[st.slogan, { color: c.muted }]}>Küçük işler, büyük huzur 🏡 homezy</Text>
     </View>

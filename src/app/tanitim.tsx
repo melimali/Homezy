@@ -226,7 +226,7 @@ function TanitimInner() {
 
   const last = page === PAGES.length - 1;
   // Logo ortada; soldaki dil seçici ve sağdaki Atla ile çakışmasın.
-  const logoW = Math.max(84, Math.min(156, w - 252));
+  const logoW = Math.max(76, Math.min(156, w - 285));
   const next = () => {
     if (last) finishIntro();
     else scroll.current?.scrollTo({ x: (page + 1) * w, animated: !reduce && Platform.OS !== 'ios' });

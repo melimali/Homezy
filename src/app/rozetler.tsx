@@ -6,6 +6,7 @@ import { BADGE_ART } from '@/constants/badges';
 import { ACH_TIERS, achievements } from '@/domain/achievements';
 import { useNow } from '@/hooks/useNow';
 import { useTranslation } from '@/i18n/i18n';
+import { tx } from '@/i18n/runtime';
 import { useStore } from '@/store/AppStore';
 import { radius, useColors } from '@/theme';
 
@@ -28,13 +29,13 @@ export default function Rozetler() {
             <SecHead title={`${g.emoji} ${t(g.title)}`} h="h3" right={`${items.filter(a => a.on).length}/${items.length}`} />
             <Appear index={gi} style={st.wrap}>
               {items.map(a => (
-                <View key={a.id} accessibilityLabel={`${t(a.name)}: ${a.on ? t('Kazanıldı ✓') : t(a.hint)}`} style={[st.badge, { backgroundColor: a.on ? c.sageSoft : c.surface2 }]}>
+                <View key={a.id} accessibilityLabel={`${tx(a.name)}: ${a.on ? t('Kazanıldı ✓') : tx(a.hint)}`} style={[st.badge, { backgroundColor: a.on ? c.sageSoft : c.surface2 }]}>
                   <View style={[st.icon, !a.on && { opacity: 0.35 }]}>
                     {a.art ? <Image source={BADGE_ART[a.art]} style={st.img} resizeMode="contain" accessibilityIgnoresInvertColors /> : <T style={{ lineHeight: 49, fontSize: 38 }}>{a.emoji}</T>}
                   </View>
-                  <T v="bold" style={[{ textAlign: 'center' }, !a.on && { opacity: 0.6 }]} numberOfLines={2}>{t(a.name)}</T>
+                  <T v="bold" style={[{ textAlign: 'center' }, !a.on && { opacity: 0.6 }]} numberOfLines={2}>{tx(a.name)}</T>
                   <T v="tiny" style={{ textAlign: 'center' }} numberOfLines={2}>
-                    {a.on ? t('Kazanıldı ✓') : a.prog ? `${t(a.hint)} (${Math.min(a.prog[0], a.prog[1])}/${a.prog[1]})` : t(a.hint)}
+                    {a.on ? t('Kazanıldı ✓') : a.prog ? `${tx(a.hint)} (${Math.min(a.prog[0], a.prog[1])}/${a.prog[1]})` : tx(a.hint)}
                   </T>
                 </View>
               ))}

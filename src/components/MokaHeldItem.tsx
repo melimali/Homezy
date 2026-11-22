@@ -38,7 +38,7 @@ const DRAWN_HOLDS: Record<string, ImageSourcePropType> = {
 /** Kanat ile eli ayıran dikey çizgi (görselin genişliğine oranı). Eşya bu çizgiyi aşıyorsa kesilip aralanır; şemsiyenin tepesi ortadan geçtiği için çizgi kanat ile şemsiye arasına alındı. */
 const SEAM: Record<string, number | undefined> = { el_semsiye: 0.36 };
 /** Eşyayı tutan kanatlar çok yukarıdaysa tüm görseli aşağı indirir (görselin boyuna oranı). */
-const DROP: Record<string, number | undefined> = { el_fincan: 0.055, el_kitap: 0.02, el_harita: 0.09, el_mum: 0.02, el_telefon: 0.01, el_hediye: -0.035, el_pasta: -0.03 };
+const DROP: Record<string, number | undefined> = { el_fincan: 0.055, el_kitap: 0.02, el_harita: 0.09, el_mum: 0.02, el_kamera: 0, el_telefon: 0.01, el_hediye: -0.035, el_pasta: -0.03 };
 /** Çiftli kanat görselini kendi merkezi etrafında büyütür (ukulele gibi küçük kalan eşyalar). */
 const GROW: Record<string, number | undefined> = { el_gitar: 1.22, el_telefon: 1.2, el_hediye: 1.3, el_pasta: 1.3 };
 /** Eşyayı tutan tek kanadı büyütür (olta tutan sağ kanat). */

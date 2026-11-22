@@ -139,7 +139,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
         </> : <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
           style={{ position: 'absolute', left: size * 0.07 - side * seam, top: size * 0.025, width: size * 0.86, height: size * 0.86, transform: [{ scaleX: mirrored ? -1 : 1 }] }} />}</Animated.View>) :
           <Image source={drawn} resizeMode="stretch" fadeDuration={0} accessible={false}
-            style={{ position: 'absolute', left: size * (0.5 - 0.43 * grow), top: size * (0.025 + drop + 0.43 * (1 - grow)), width: size * 0.86 * grow, height: size * 0.86 * grow, transform: [{ scaleX: id === 'el_kitap' ? 1.15 : 1 }] }} />}
+            style={{ position: 'absolute', left: size * (0.5 - 0.43 * grow), top: size * (0.025 + drop + 0.43 * (1 - grow)), width: size * 0.86 * grow, height: size * 0.86 * grow, transform: [{ scaleX: id === 'el_kitap' ? 1.25 : 1.1 }] }} />}
         {animated && effectPoint && <HeldEffect key={'drawn-effect-' + id} id={id} size={size} point={effectPoint} />}
         {animated && id === 'el_sulama' && <View pointerEvents="none" style={{ position: 'absolute', left: size * 0.904, top: size * 0.59 }}>
           {[0, 1, 2].map(index => <Animated.View key={index} style={{

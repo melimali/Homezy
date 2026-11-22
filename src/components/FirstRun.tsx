@@ -6,7 +6,7 @@ import { StepModal } from '@/components/StepModal';
 import { Btn, T } from '@/components/ui';
 import { progressOf } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
-import { flag, useStep } from '@/lib/firstRun';
+import { flag, useStep, withPermissionGate } from '@/lib/firstRun';
 import { getPermission, requestPermission, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { useStore } from '@/store/AppStore';
 import { prefs } from '@/lib/supabase';
@@ -72,7 +72,7 @@ export function NotifAsk() {
     }
     setDone(true);
     if (yes.current)
-      requestPermission()
+      withPermissionGate(() => requestPermission())
         .then(ok => (ok ? rescheduleMorningSummaries(S) : undefined))
         .catch(() => {});
   };

@@ -9,7 +9,7 @@ import { prefs } from '@/lib/supabase';
  */
 export const ORDER = ['welcome', 'welcomeBack', 'mood', 'choice', 'notif', 'celebrate', 'streak', 'levelUp', 'tour', 'tip'] as const;
 export type Step = (typeof ORDER)[number];
-export const GAP = 380;
+export const GAP = 650;
 
 export type Queue = ReturnType<typeof createQueue>;
 
@@ -55,6 +55,10 @@ export function createQueue(setT: typeof setTimeout = setTimeout, clearT: typeof
     get current() {
       return current;
     },
+    /** Bir pencere açık, sırada ya da bir kapı kapalı mı? */
+    get busy() {
+      return current != null || timer != null || wants.size > 0 || shut.size > 0;
+    },
     subscribe(f: () => void) {
       subs.add(f);
       return () => {
@@ -78,6 +82,20 @@ export function useStepGate(key: string, open: boolean) {
   useEffect(() => {
     queue.gate(key, open);
   }, [key, open]);
+}
+
+/**
+ * Sistem izin penceresi (konum, bildirim) açıkken uygulama penceresi açılmasın, uygulama penceresi açıkken de
+ * izin istenmesin: iOS'ta iki pencere üst üste gelince ekran dokunuşlara kapanıp donuyor.
+ */
+export const permissionBusy = () => queue.busy;
+export async function withPermissionGate<T>(fn: () => Promise<T>): Promise<T> {
+  queue.gate('perm', false);
+  try {
+    return await fn();
+  } finally {
+    setTimeout(() => queue.gate('perm', true), 700);
+  }
 }
 
 /** Pencere gösterilmek istiyorsa `wants` true ver; sıra ona gelince true döner. */

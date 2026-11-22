@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchWithTimeout } from '@/lib/net';
 
 import { locationOk } from '@/lib/consent';
+import { permissionBusy, withPermissionGate } from '@/lib/firstRun';
 
 /** Evin gökyüzü için sadeleştirilmiş hava durumu. */
 export type SkyKind = 'clear' | 'cloudy' | 'rain' | 'snow' | 'storm' | 'fog';
@@ -39,7 +40,11 @@ async function fetchSky(): Promise<Sky | null> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Loc = require('expo-location');
     let perm = await Loc.getForegroundPermissionsAsync();
-    if (perm.status !== 'granted' && perm.canAskAgain !== false) perm = await Loc.requestForegroundPermissionsAsync();
+    if (perm.status !== 'granted' && perm.canAskAgain !== false) {
+      // Açık bir pencere varken (karşılama, tanıtım...) izin istenmez; sistem izin kutusu üst üste gelince iOS donuyor. Sonraki yenilemede tekrar denenir.
+      if (permissionBusy()) return null;
+      perm = await withPermissionGate(() => Loc.requestForegroundPermissionsAsync());
+    }
     if (perm.status !== 'granted') {
       denied = true;
       return null;

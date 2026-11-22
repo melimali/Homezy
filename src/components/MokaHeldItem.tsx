@@ -87,7 +87,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
   if (drawn) {
     const effect = DRAWN_EFFECTS[id];
     const oneWingItem = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
-    const drop = DROP[id] ?? (oneWingItem ? 0 : 0.035);
+    const drop = DROP[id] ?? (oneWingItem ? 0 : 0.06);
     const grow = GROW[id] ?? 1;
     const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect && drop ? [effect[0], effect[1] + 512 * drop] : effect;
     const mirrored = id === 'el_kilic' || id === 'el_degnek';

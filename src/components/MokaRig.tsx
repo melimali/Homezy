@@ -132,11 +132,11 @@ const HEAD_FIT: Record<string, HeadFit> = {
 };
 
 const GARMENT_FRONT: Partial<Record<string, string>> = {
-  govde_kazak: 'M110 280 Q255 325 405 279 L435 465 H88Z',
+  govde_kazak: 'M128 298 Q255 325 388 297 L435 465 H88Z',
   govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
   govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',
   govde_pelerin: 'M142 250 Q256 300 378 250 L378 383 H142Z',
-  govde_yagmurluk: 'M88 274 Q170 249 211 273 Q257 291 298 271 Q349 251 426 272 L426 458 H88Z',
+  govde_yagmurluk: 'M104 292 Q170 255 211 273 Q257 291 298 271 Q349 255 410 291 L426 458 H88Z',
 };
 
 function Headphones({ src, size }: { src: ImageSourcePropType; size: number }) {

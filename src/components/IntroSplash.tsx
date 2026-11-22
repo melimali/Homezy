@@ -63,8 +63,11 @@ export function IntroSplash({ onDone, play = true }: { onDone: () => void; play?
         if (reduce) onDone();
         else anim.start(({ finished }) => finished && alive && onDone());
       });
+    // Güvenlik: animasyon (iOS'ta bazen) bitmezse perde dokunuşları sonsuza dek kapatmasın.
+    const failsafe = setTimeout(() => alive && onDone(), 5000);
     return () => {
       alive = false;
+      clearTimeout(failsafe);
       anim.stop();
     };
     // Sadece ilk açılışta, oynatma başlayınca bir kez.

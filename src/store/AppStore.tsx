@@ -99,7 +99,18 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
       // Okuma hatasında bir kez daha dene; yine olmazsa mevcut veriyi seed ile EZME.
       for (let i = 0; i < 2 && !S; i++) {
         try {
-          S = await loadState();
+          // Veritabanı ilk açılışta (iOS) takılırsa 8 sn sonra vazgeçilir; takılan okuma bitince veri yerine konur.
+          const slow = loadState();
+          const r = await Promise.race([slow, new Promise<'timeout'>(res => setTimeout(() => res('timeout'), 8000))]);
+          if (r === 'timeout') {
+            slow.then(late => {
+              if (!alive || !late) return;
+              current.current = late;
+              setState(late);
+            }).catch(() => {});
+            throw new Error('loadState zaman aşımı');
+          }
+          S = r;
           failed = false;
           break;
         } catch (e) {

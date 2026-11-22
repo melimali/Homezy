@@ -62,11 +62,18 @@ export default function RootLayout() {
 
   useEffect(() => trackOpen(), []);
 
+  // Yazı tipi yüklemesi takılırsa 4 sn sonra sistem yazı tipiyle açılır; ilk açılış asla boş ekranda kalmaz.
+  const [fontWait, setFontWait] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setFontWait(false), 4000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(c.bg).catch(() => {});
   }, [c.bg]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded && !fontError && fontWait) return null;
 
   return (
     <SafeAreaProvider>

@@ -88,7 +88,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
   if (drawn) {
     const effect = DRAWN_EFFECTS[id];
     const oneWingItem = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
-    const drop = DROP[id] ?? (oneWingItem ? 0 : 0.06);
+    const drop = DROP[id] ?? (oneWingItem ? 0 : 0.02);
     const grow = GROW[id] ?? 1;
     const effectPoint: Point | undefined = effect && id === 'el_fener' ? [effect[0] + 512 * 0.06, effect[1]] : effect && drop ? [effect[0], effect[1] + 512 * drop] : effect;
     const mirrored = id === 'el_kilic' || id === 'el_degnek';
@@ -107,7 +107,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
           position: 'absolute', left: side * seam, width: side === 0 ? seam : size - seam, height: size, overflow: 'hidden',
           transform: [
             { translateX: size * (side === 0 ? -0.04 : 0.06 + (SHIFT_X[id] ?? 0)) },
-            { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * (0.02 + (SHIFT_Y[id] ?? 0)) },
+            { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * (0.02 + (side === 1 ? (SHIFT_Y[id] ?? 0) : 0)) },
             { rotate: animated && side === heldSide
               ? motion.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] }) : '0deg' },
             { translateY: -size * 0.02 }, { translateX: size * (side === 0 ? -0.12 : 0.12) }, { scale: side === heldSide ? (WING_GROW[id] ?? 1) : 1 },

@@ -11,7 +11,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[2]
 RAW = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "docs/magaza/ham"
 FD = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "node_modules/@expo-google-fonts"
-OUT = ROOT / "docs/magaza"
+import os
+OUT = Path(os.environ["STORE_OUT"]) if os.environ.get("STORE_OUT") else ROOT / "docs/magaza"
 MOKA = ROOT / "assets-src/moka"
 
 NAVY, MUTED = (40, 48, 68), (92, 85, 104)
@@ -36,7 +37,7 @@ SLIDES = [
     ("07-sohbet", "coffee", "R", ("#FDE6E1", "#F6CBC3"), "#B0493F"),
     ("08-dolap", "sip", "L", ("#E1EEF2", "#C3DDE5"), "#2F7488"),
 ]
-SHOT = {"01-moka": "home", "02-plan": "tanisma", "03-bugun": "bugun", "04-yemek": "yemek",
+SHOT = {"01-moka": "home", "02-plan": "plan", "03-bugun": "bugun", "04-yemek": "yemek",
         "05-ev": "ev3d", "06-bahce": "bahce", "07-sohbet": "moka", "08-dolap": "dolap"}
 
 TEXT = {
@@ -63,7 +64,7 @@ TEXT = {
 }
 
 # (klasör, genişlik, yükseklik)
-SIZES = [("play", 1080, 1920), ("ios-6.7", 1290, 2796), ("ios-6.5", 1284, 2778), ("ios-5.5", 1242, 2208)]
+SIZES = [("ios-6.3", 1206, 2622), ("play", 1080, 1920), ("ios-6.7", 1290, 2796), ("ios-6.5", 1284, 2778), ("ios-5.5", 1242, 2208)]
 
 
 def gradient(w, h, top, bot):

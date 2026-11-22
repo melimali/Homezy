@@ -42,10 +42,10 @@ const DROP: Record<string, number | undefined> = { el_fincan: 0.055, el_kitap: 0
 /** Çiftli kanat görselini kendi merkezi etrafında büyütür (ukulele gibi küçük kalan eşyalar). */
 const GROW: Record<string, number | undefined> = { el_gitar: 1.22, el_telefon: 1.2, el_hediye: 1.3, el_pasta: 1.3 };
 /** Eşyayı tutan tek kanadı büyütür (olta tutan sağ kanat). */
-const WING_GROW: Record<string, number | undefined> = { el_olta: 1.12, el_kilic: 1.15, el_degnek: 1.15, el_balon: 1.3, el_semsiye: 1.25 };
+const WING_GROW: Record<string, number | undefined> = { el_olta: 1.12, el_kilic: 1.15, el_degnek: 1.15, el_balon: 1.3, el_semsiye: 1.0 };
 /** Eşyayı tutan tek kanadı yatayda kaydırır (görsel genişliğine oranı; + sağa). */
-const SHIFT_X: Record<string, number | undefined> = { el_semsiye: 0.05 };
-const SHIFT_Y: Record<string, number | undefined> = { el_semsiye: 0.09 };
+const SHIFT_X: Record<string, number | undefined> = { el_semsiye: 0.1 };
+const SHIFT_Y: Record<string, number | undefined> = { el_semsiye: 0.04 };
 
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],

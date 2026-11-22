@@ -108,7 +108,7 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
               current.current = late;
               setState(late);
             }).catch(() => {});
-            throw new Error('loadState zaman aşımı');
+            throw new Error('loadState timeout');
           }
           S = r;
           failed = false;

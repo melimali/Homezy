@@ -132,7 +132,7 @@ const HEAD_FIT: Record<string, HeadFit> = {
 };
 
 const GARMENT_FRONT: Partial<Record<string, string>> = {
-  govde_kazak: 'M128 298 Q255 325 388 297 L435 465 H88Z',
+  govde_kazak: 'M128 298 Q255 325 378 299 L422 465 H88Z',
   govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
   govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',
   govde_pelerin: 'M142 250 Q256 300 378 250 L378 383 H142Z',

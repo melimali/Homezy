@@ -44,7 +44,8 @@ const GROW: Record<string, number | undefined> = { el_gitar: 1.22, el_telefon: 1
 /** Eşyayı tutan tek kanadı büyütür (olta tutan sağ kanat). */
 const WING_GROW: Record<string, number | undefined> = { el_olta: 1.12, el_kilic: 1.15, el_degnek: 1.15, el_balon: 1.3, el_semsiye: 1.25 };
 /** Eşyayı tutan tek kanadı yatayda kaydırır (görsel genişliğine oranı; + sağa). */
-const SHIFT_X: Record<string, number | undefined> = { el_semsiye: 0.03 };
+const SHIFT_X: Record<string, number | undefined> = { el_semsiye: 0.05 };
+const SHIFT_Y: Record<string, number | undefined> = { el_semsiye: 0.09 };
 
 const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_fincan: [275, 220], el_fener: [361, 302], el_mum: [282, 201],
@@ -106,7 +107,7 @@ export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
           position: 'absolute', left: side * seam, width: side === 0 ? seam : size - seam, height: size, overflow: 'hidden',
           transform: [
             { translateX: size * (side === 0 ? -0.04 : 0.06 + (SHIFT_X[id] ?? 0)) },
-            { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * 0.02 },
+            { translateX: size * (side === 0 ? 0.12 : -0.12) }, { translateY: size * (0.02 + (SHIFT_Y[id] ?? 0)) },
             { rotate: animated && side === heldSide
               ? motion.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] }) : '0deg' },
             { translateY: -size * 0.02 }, { translateX: size * (side === 0 ? -0.12 : 0.12) }, { scale: side === heldSide ? (WING_GROW[id] ?? 1) : 1 },

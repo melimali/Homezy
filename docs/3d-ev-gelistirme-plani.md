@@ -16,6 +16,8 @@ Sadece plan; kod değişmedi. Kaynak: `src/components/House3D.tsx` (2513 satır,
 - Yapıldı: oda mobilyaları ve mağaza eşyaları SVG (sprite yok), `Orient` ile 4 duvara dönebilir (arka duvarlar öncelikli); tek ay/güneş; ağaçlar sadece arka kenarda, ayak izi dışında, gölgesiz.
 - Yapıldı: yerleşim kuralları `src/domain/houseLayout.ts` (saf, 4 jest testi); ev kutusuna ekran okuyucu özeti (Ac1).
 - Yapıldı: gerçek gün doğumu/batımı (W2), yeni eşya yerleşince yıldız saçılması (E2 ilk adım).
+- Yapıldı: gecikmiş oda rozeti kırmızı + "!N" (Ac3); seviye 14 posta kutusu, 80 ışıklı tabela (L1 ilk adım).
+- Bilerek yapılmadı: P1 imza memo (state çok alanı okuyor, bayat çizim riski; önce cihaz ölçümü), kuş/duman/pencere ışığı (görsel deneme gerek).
 - Sırada: P0 ölçüm (cihazda), P1/P2 yeniden çizim azaltma, E1/E2 görev ve satın alma geri bildirimi.
 
 ## 1. Hedef ve ilkeler

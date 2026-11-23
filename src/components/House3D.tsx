@@ -136,11 +136,22 @@ const WATER = '#9CC9E0';
 const LEAF = '#7FB28A';
 const POT = '#C8826B';
 
+/**
+ * Eşyanın yönü: sırtını verdiği duvar. 0 kuzey (r küçük), 1 batı (c küçük), 2 güney (r büyük), 3 doğu (c büyük).
+ * Eşyalar SVG kutulardan çizildiği için blok içinde aynalanarak dört duvara da yaslanabilir.
+ */
+type Orient = 0 | 1 | 2 | 3;
+const orientUV = (o: Orient, u: number, v: number, du = 0, dv = 0): [number, number, number, number] =>
+  o === 0 ? [u, v, du, dv] : o === 1 ? [v, u, dv, du] : o === 2 ? [1 - u - du, v, du, dv] : [u, 1 - v - dv, du, dv];
+
 /** Odanın türüne göre minik eşya. Koordinatlar blok içinde 0–1 arası. */
-function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0, wall = 2): ReactElement[] {
-  const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
-    box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
-  const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string) => {
+function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0, o: Orient = 0): ReactElement[] {
+  const b = (n: string, u0: number, v0: number, du0: number, dv0: number, z: number, h: number, color: string) => {
+    const [u, v, du, dv] = orientUV(o, u0, v0, du0, dv0);
+    return box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
+  };
+  const ball = (n: string, u0: number, v0: number, z: number, rad: number, fill: string) => {
+    const [u, v] = orientUV(o, u0, v0);
     const [x, y] = P(r + u, c + v, z);
     return (
       <G key={k + n}>
@@ -214,16 +225,6 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors,
       faces = [...b('h', 0.2, 0.22, 0.6, 0.56, 0, 1, '#BFA89E'), ...b('a', 0.14, 0.14, 0.18, 0.72, 0, 9, WOOD)];
       break;
   }
-  if (EV3D_ART) {
-    const SP: Partial<Record<RoomType, [ArtName, number]>> = { yatak: ['mobilya_yatak', 30], cocuk: ['mobilya_yatak', 26], salon: ['mobilya_koltuk', 24], mutfak: ['mobilya_buzdolabi', 34], banyo: ['mobilya_banyo', 22], calisma: ['mobilya_masa', 26], balkon: ['mobilya_bitki', 30] };
-    const sp = SP[type];
-    if (sp) {
-      const [cx, cy] = P(r + (wall === 0 ? 0.2 : 0.5), c + (wall === 1 ? 0.2 : 0.5), 0);
-      faces = [];
-      extra.length = 0;
-      extra.push(spr(k + 'spr', sp[0], cx, cy + 7, sp[1]));
-    }
-  }
   if (v > 0) {
     // 2., 3. ... aynı tür oda: standart eşyaya renk lekesi, halı, bitki ve lamba eklenir (sıraya göre sabit).
     const pal = [['#E58C7E', '#78A1BB'], ['#78A1BB', '#F2C46D'], ['#9CB9D0', '#E58C7E'], ['#F2C46D', '#7FB28A']][(v - 1) % 4];
@@ -246,22 +247,19 @@ const RUG: Partial<Record<RoomType, [string, string]>> = { salon: ['#C98A6B', '#
 const WIN_FRAME = '#B79377';
 
 /** Mağazadan alınan eşyalar (src/domain/items.ts). Koordinatlar blok içinde 0–1 arası. */
-function itemShape(id: string, r: number, c: number, k: string, turn = false): ReactElement[] {
-  // `turn`: blok içinde köşegenden ayna; kuzey duvarına yaslı eşya batı duvarına yaslanır.
-  const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
-    turn ? box(k + n, r + v, c + u, dv, du, z, h, color, 0.35) : box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
-  const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string, op = 1) => {
-    const [x, y] = turn ? P(r + v, c + u, z) : P(r + u, c + v, z);
+function itemShape(id: string, r: number, c: number, k: string, o: Orient = 0): ReactElement[] {
+  // `o`: eşyanın sırtını verdiği duvar (bkz. Orient); dört yöne de aynalanır.
+  const b = (n: string, u0: number, v0: number, du0: number, dv0: number, z: number, h: number, color: string) => {
+    const [u, v, du, dv] = orientUV(o, u0, v0, du0, dv0);
+    return box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
+  };
+  const ball = (n: string, u0: number, v0: number, z: number, rad: number, fill: string, op = 1) => {
+    const [u, v] = orientUV(o, u0, v0);
+    const [x, y] = P(r + u, c + v, z);
     return <Circle key={k + n} cx={x} cy={y} r={rad} fill={fill} fillOpacity={op} />;
   };
   let faces: Face[] = [];
   const extra: ReactElement[] = [];
-  const ISP: Record<string, [ArtName, number]> = { saksi: ['mobilya_bitki', 24], kitaplik: ['mobilya_kitaplik', 34], kedi: ['mobilya_kedi', 14], kopek: ['mobilya_kopek', 20] };
-  if (EV3D_ART && ISP[id]) {
-    const wl = id === 'kitaplik' ? 0.2 : 0.5;
-    const [cx, cy] = P(r + (turn ? 0.5 : wl), c + (turn ? wl : 0.5), 0);
-    return [spr(k + 'isp', ISP[id][0], cx, cy + 6, ISP[id][1], 1, turn)];
-  }
   switch (id) {
     case 'saksi':
       faces = b('p', 0.38, 0.38, 0.24, 0.24, 0, 7, POT);
@@ -377,14 +375,14 @@ function buildGroundRings(f: { r0: number; r1: number; c0: number; c1: number },
         );
       }
     }
-    // Ağaçlar: dış halkalarda seyrek, ev ayak izinin dışında; arkadan öne çizilir.
+    // Ağaçlar: sadece arka kenarlarda (kuzey ve batı), ev ve üst kat ayak izinin dışında, gölgesiz; arkadan öne çizilir.
     if (k >= 2) {
-      const spots = tiles.filter(() => rnd() < 0.11).sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
+      const spots = tiles.filter(([a, b]) => (a < f.r0 || b < f.c0) && rnd() < 0.16).sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
       spots.forEach(([a, b], j) => {
         const [x, y] = P(a + 0.3 + rnd() * 0.4, b + 0.3 + rnd() * 0.4, Z);
         const sz = 26 + rnd() * 12;
         if (EV3D_ART) {
-          els.push(<Ellipse key={'ts' + j} cx={x} cy={y + 1} rx={sz * 0.26} ry={sz * 0.1} fill="rgba(40,48,68,0.14)" />, spr('tr' + j, 'agac_yuvarlak', x, y + 2, sz));
+          els.push(spr('tr' + j, 'agac_yuvarlak', x, y + 2, sz));
         } else {
           els.push(
             <Polyline key={'tt' + j} points={pts([[x, y], [x, y - sz * 0.35]])} stroke="#8C5E45" strokeWidth={2.4} strokeLinecap="round" fill="none" />,
@@ -1067,7 +1065,7 @@ function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: numbe
       : <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />).filter((e): e is ReactElement => !!e);
   return {
     clouds: night && !overcast ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1), ...(overcast ? [cloud(x + w * 0.45, y + h * 0.22, 1.1, 3)] : [])],
-    clouds2: [...(EV3D_ART && !overcast ? [spr('sunmoon', night ? 'ay' : 'gunes', x + w * 0.1, y + h * 0.05 + 24, 22, night ? 0.9 : 0.95)] : []), ...(night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])])],
+    clouds2: [...(EV3D_ART && !overcast && !night && !(wx && wx.day && wx.kind === 'clear') ? [spr('sunmoon', 'gunes', x + w * 0.1, y + h * 0.05 + 24, 22, 0.95)] : []), ...(night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])])],
     birds: !night && !rain && !snow && !overcast && L >= 7
       ? [0, 1].map(i => {
           const bx = x + w * (0.35 + i * 0.1), by = y + h * (0.14 + i * 0.04);
@@ -1357,6 +1355,11 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const wallRank = (i: number) => {
     const r = Math.floor(i / cols), col = i % cols, id = cells[i];
     return at(r - 1, col) !== id ? 0 : at(r, col - 1) !== id ? 1 : 2;
+  };
+  /** Eşyanın sırtını vereceği duvar: önce arka duvarlar (kuzey, batı), yoksa ön (güney, doğu), hiçbiri yoksa kuzey. */
+  const sideOf = (i: number): Orient => {
+    const r = Math.floor(i / cols), col = i % cols, id = cells[i];
+    return at(r - 1, col) !== id ? 0 : at(r, col - 1) !== id ? 1 : at(r + 1, col) !== id ? 2 : at(r, col + 1) !== id ? 3 : 0;
   };
   for (const id of S.order) {
     const mine: number[] = [];
@@ -1736,7 +1739,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     }
 
     if (i === stairAt && L >= 4) stairs(k, r, col);
-    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0, wallRank(i))}</G>);
+    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0, sideOf(i))}</G>);
     for (const item of itemAt[i] ?? []) {
       if (item === 'kedi' || item === 'kopek') {
         // Gezilebilir bloklar: odanın, mobilya / etiket / merdiven / başka eşya olmayan blokları.
@@ -1760,7 +1763,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         });
         pets.push({ id: item, el: <G key={k + 'i' + item}>{itemShape(item, r, col, k + 'i' + item)}</G>, nodes, start: idxOf.get(i) ?? 0, home: P(r + 0.5, col + 0.5, 14) });
       }
-      else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item, !!S.play.turned?.[item])}</G>);
+      else els.push(<G key={k + 'i' + item} onPress={open}>{itemShape(item, r, col, k + 'i' + item, S.play.turned?.[item] ? 1 : sideOf(i))}</G>);
     }
 
     // 3. günden sonra: moloz.

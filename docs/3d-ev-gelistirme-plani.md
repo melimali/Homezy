@@ -11,6 +11,11 @@ Sadece plan; kod değişmedi. Kaynak: `src/components/House3D.tsx` (2513 satır,
 - Hareketi azalt: `AccessibilityInfo` + `useActive` (ekran odakta değilse döngüler durur). Güzel.
 - Test: House3D için otomatik test **yok**. Önizleme için bellekteki Node+Playwright yöntemi var (`house3d-preview`).
 
+## 0.1 Dalga 1 ilerleme (2026-11-23)
+
+- Yapıldı: oda mobilyaları ve mağaza eşyaları SVG (sprite yok), `Orient` ile 4 duvara dönebilir (arka duvarlar öncelikli); tek ay/güneş; ağaçlar sadece arka kenarda, ayak izi dışında, gölgesiz.
+- Sırada: P0 ölçüm, `placeProp()` birim test, erişilebilirlik özeti.
+
 ## 1. Hedef ve ilkeler
 
 Melih'in kalıcı tercihleri (gün içinde gözü yormayan, sakin, cozy):

@@ -758,6 +758,9 @@ type RoamNode = { x: number; y: number; nb: number[] };
 type RoamMode = 'walk' | 'sit' | 'sleep' | 'look';
 
 /** Evcil hayvan: odasındaki boş bloklarda gezer; yumuşak hızlanıp yavaşlar, yürürken zıplar, durur, bakar, oturur, uyur. */
+/** Odasında gezinen evcil hayvanlar (Moka gibi: yürür, oturur, bakınır, uyur). */
+const ROAMERS = new Set(['kedi', 'kopek', 'tavsan', 'hamster']);
+
 function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
   vb: string; scale: number; nodes: RoamNode[]; start: number; home: Pt; kind: 'kedi' | 'kopek'; reduce: boolean; children: ReactElement | ReactElement[];
 }) {
@@ -824,8 +827,8 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
       const ns = live.current.nodes;
       const r = Math.random();
       const canWalk = ns.length > 1;
-      if (canWalk && r < 0.5) return walk();
-      if (r < 0.7) { setMode('sit'); return wait(rnd(2500, 6000), next); }
+      if (canWalk && r < 0.62) return walk();
+      if (r < 0.78) { setMode('sit'); return wait(rnd(1800, 4500), next); }
       if (r < 0.88) {
         setMode('look');
         face(!live.current.flip);
@@ -885,7 +888,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
           if (dead || !finished) return;
           live.current.cur = to;
           setMode('sit');
-          wait(rnd(1500, 5000), next);
+          wait(rnd(900, 3500), next);
         });
       });
     };
@@ -1741,9 +1744,9 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     if (i === stairAt && L >= 4) stairs(k, r, col);
     if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0, sideOf(i))}</G>);
     for (const item of itemAt[i] ?? []) {
-      if (item === 'kedi' || item === 'kopek') {
-        // Gezilebilir bloklar: odanın, mobilya / etiket / merdiven / başka eşya olmayan blokları.
-        const walk = cells.map((x, j) => x === id && (j === i || (j !== anchors[id] && j !== props[id] && j !== stairAt && !(itemAt[j] ?? []).some(o => o !== 'kedi' && o !== 'kopek'))));
+      if (ROAMERS.has(item)) {
+        // Gezilebilir bloklar: odanın, mobilya / merdiven / başka eşya olmayan blokları (etiket bloğu da gezilir, Moka gibi).
+        const walk = cells.map((x, j) => x === id && (j === i || (j !== props[id] && j !== stairAt && !(itemAt[j] ?? []).some(o => !ROAMERS.has(o)))));
         const idxOf = new Map<number, number>();
         const nodes: RoamNode[] = [];
         const [ox, oy] = P(r + 0.5, col + 0.5, 0);
@@ -2407,7 +2410,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       {layer('breath', 0.8, life.breath)}
       {layer('twa', 0.75, [...life.twA, ...wings(true)])}
       {layer('twb', 0.55, [...life.twB, ...wings(false)])}
-      {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id as 'kedi' | 'kopek'} reduce={reduce}>{pt.el}</Roamer>)}
+      {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id === 'kopek' ? 'kopek' : 'kedi'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && moka && <MokaPet fur={S.play.mokaFur} vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight || sleepy} say={onPickCell ? undefined : mokaSays} />}
       {sc > 0 && !reduce && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-14} dx={6} ms={11000} restart fade reduce={reduce}>{motes}</Drift>}

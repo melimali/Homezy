@@ -135,7 +135,6 @@ function firstDue(every: number, i: number) {
 
 /** Her evde olan bakım işleri; ilk açılışta bir kere eklenir, sonra silinebilir. */
 export const baseCare = (): Task[] => [
-  { id: id(), name: 'Duman dedektörünü test et', every: 30, min: 2, last: null, tag: 'b:dedektor', snooze: firstDue(30, 1) },
   { id: id(), name: 'Sayaç fotoğrafı (elektrik, su, doğalgaz)', every: 30, min: 5, last: null, tag: 'b:sayac', photo: null, snooze: firstDue(30, 3) },
   { id: id(), name: 'Çamaşır makinesi kazan temizliği', every: 60, min: 5, last: null, tag: 'b:kazan', snooze: firstDue(60, 5) },
 ];

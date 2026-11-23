@@ -196,7 +196,7 @@ export default function Bildirimler() {
         </View>
         <T v="small">Ev animasyonları</T>
         <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Ev animasyonları">
-          {([['auto', '✨ Otomatik'], ['off', '🌈 Tam'], ['on', '🍃 Hafif']] as const).map(([k, label]) => (
+          {([['auto', 'Otomatik'], ['off', 'Tam'], ['on', 'Hafif']] as const).map(([k, label]) => (
             <Chip key={k} on={(s.houseLite ?? 'auto') === k} label={label} onPress={() => set('houseLite', k)} />
           ))}
         </View>

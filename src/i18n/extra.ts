@@ -12,6 +12,10 @@ import { ROZET_ROWS } from './rozet';
 type Row = [tr: string, en: string, de: string, es: string, fr: string, pt: string, ja: string, ko: string, ar: string];
 
 const ROWS: Row[] = [
+  ["Ev animasyonları", "Home animations", "Heim-Animationen", "Animaciones del hogar", "Animations de la maison", "Animações da casa", "おうちのアニメーション", "집 애니메이션", "حركات المنزل"],
+  ["Otomatik", "Auto", "Automatisch", "Automático", "Auto", "Automático", "自動", "자동", "تلقائي"],
+  ["Tam", "Full", "Voll", "Completo", "Complet", "Completo", "フル", "전체", "كامل"],
+  ["Hafif", "Light", "Leicht", "Ligero", "Léger", "Leve", "軽め", "가볍게", "خفيف"],
   ["Sadece kendi odam", "Just my own room", "Nur mein eigenes Zimmer", "Solo mi propia habitación", "Seulement ma chambre", "Só o meu quarto", "自分の部屋だけ", "내 방만", "غرفتي فقط"],
   ["🎁 Melih'den {} puan geldi!", "🎁 {} points from Melih!", "🎁 {} Punkte von Melih!", "🎁 ¡{} puntos de Melih!", "🎁 {} points de Melih !", "🎁 {} pontos do Melih!", "🎁 Melihから{}ポイント！", "🎁 Melih님이 {}점을 보냈어요!", "🎁 {} نقطة من Melih!"],
   ["Sohbet araçları", "Chat tools", "Chat-Werkzeuge", "Herramientas del chat", "Outils du chat", "Ferramentas do chat", "チャットツール", "대화 도구", "أدوات المحادثة"],

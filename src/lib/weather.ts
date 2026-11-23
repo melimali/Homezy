@@ -7,7 +7,7 @@ import { permissionBusy, withPermissionGate } from '@/lib/firstRun';
 /** Evin gökyüzü için sadeleştirilmiş hava durumu. */
 export type SkyKind = 'clear' | 'cloudy' | 'rain' | 'snow' | 'storm' | 'fog';
 /** `rise` / `set`: bugünün gün doğumu ve batımı, yerel saat (ondalık, örn. 7,5 = 07:30). Canlı veri yoksa yok. */
-export type Sky = { kind: SkyKind; day: boolean; live: boolean; rise?: number; set?: number };
+export type Sky = { kind: SkyKind; day: boolean; live: boolean; rise?: number; set?: number; wind?: number };
 
 /** Open-Meteo yerel zamanı ("2026-11-23T07:12") ondalık saate çevirir. */
 const hourOf = (iso: unknown): number | undefined => {
@@ -60,11 +60,11 @@ async function fetchSky(): Promise<Sky | null> {
       (await Loc.getLastKnownPositionAsync().catch(() => null)) ??
       (await Loc.getCurrentPositionAsync({ accuracy: Loc.Accuracy.Low }));
     const { latitude, longitude } = pos.coords;
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=weather_code,is_day,wind_speed_10m&daily=sunrise,sunset&timezone=auto&forecast_days=1`;
     const res = await fetchWithTimeout(6000)(url);
     if (!res.ok) return null;
     const j = await res.json();
-    return { kind: kindOf(Number(j.current.weather_code)), day: j.current.is_day === 1, live: true, rise: hourOf(j.daily?.sunrise?.[0]), set: hourOf(j.daily?.sunset?.[0]) };
+    return { kind: kindOf(Number(j.current.weather_code)), day: j.current.is_day === 1, live: true, rise: hourOf(j.daily?.sunrise?.[0]), set: hourOf(j.daily?.sunset?.[0]), wind: Number.isFinite(Number(j.current.wind_speed_10m)) ? Number(j.current.wind_speed_10m) : undefined };
   } catch {
     return null;
   }

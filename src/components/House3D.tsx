@@ -1197,6 +1197,14 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const [zoomed, setZoomed] = useState(false);
   const focusFn = useRef<(id: string | null, fit?: boolean) => void>(() => {});
   const zoomStepRef = useRef<(dir: 1 | -1) => void>(() => {});
+  // Yeni eşya yerleşince (satın alma ya da yerleştirme) evin ortasında küçük bir yıldız saçılması.
+  const placedKey = Object.entries(S.play?.placed ?? {}).filter(([id, rid]) => rid && S.play.owned.includes(id)).map(([id]) => id).sort().join(',');
+  const prevPlaced = useRef(placedKey);
+  useEffect(() => {
+    const before = new Set(prevPlaced.current.split(',').filter(Boolean));
+    prevPlaced.current = placedKey;
+    if (placedKey.split(',').filter(Boolean).some(id => !before.has(id)) && before.size > 0) setBurst(b => b + 1);
+  }, [placedKey]);
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);

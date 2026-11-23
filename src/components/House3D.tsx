@@ -2275,9 +2275,9 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         </SvgText>
         {nTask > 0 && (
           <G>
-            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={7.5} fill={c.warm} />
+            <Circle cx={cardX + w - 11} cy={cardY + TAG_H / 2} r={rc.late > 0 ? 8.5 : 7.5} fill={rc.late > 0 ? c.late : c.warm} />
             <SvgText x={cardX + w - 11} y={cardY + TAG_H / 2 + 3.5} fontSize={9.5} fontFamily={fonts.bodyBlack} fill={c.onBadge} textAnchor="middle">
-              {nTask}
+              {rc.late > 0 ? '!' + nTask : nTask}
             </SvgText>
           </G>
         )}

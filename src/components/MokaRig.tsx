@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, View, type ImageSourcePropType } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, Image as Artwork, Path } from 'react-native-svg';
 
@@ -205,27 +205,92 @@ function FaceAccent({ accent, size, opacity }: { accent?: RoomFaceAccent; size: 
 const EYE_CENTERS = [{ x: 207, y: 155 }, { x: 324, y: 138 }];
 const BEAK_HINGE = { x: 298 * W / 512, y: 166 * W / 512 };
 
+function AnimatedBrow({ size, side, brow }: { size: number; side: 'left' | 'right'; brow: Animated.Value }) {
+  const unit = size / 512;
+  const left = side === 'left';
+  const rotation = ip(brow, [-1, 1], left ? ['13deg', '-13deg'] : ['-13deg', '13deg']);
+  const offsetY = ip(brow, [-1, 1], [2 * unit, -2 * unit]);
+  const opacity = ip(brow, [-1, -0.02, 0.02, 1], [0.82, 0, 0, 0.82]);
+  return (
+    <Animated.View pointerEvents="none" style={{
+      position: 'absolute', left: (left ? 183 : 299) * unit, top: (left ? 108 : 92) * unit,
+      width: 48 * unit, height: 18 * unit, opacity,
+      transform: [{ translateY: offsetY }, { rotate: rotation }],
+    }}>
+      <Svg width={48 * unit} height={18 * unit} viewBox="0 0 48 18">
+        <Path d="M1 11Q24 1 47 10" fill="none" stroke="#56392E" strokeWidth={3.2} strokeLinecap="round" />
+      </Svg>
+    </Animated.View>
+  );
+}
+
 function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduceMotion, active }: {
   size: number; eyes: ImageSourcePropType; beak: ImageSourcePropType;
   blink: Val; look: Val; mouth: Val; sleeping: boolean; preset?: RoomFacePreset; reduceMotion: boolean; active: boolean;
 }) {
   const unit = size / 512;
-  const expressionEye = preset ? ip(blink, [0, 1], [0, preset.eyeOpen]) : blink;
-  const gazeBase = preset?.gaze ?? 0;
-  const gazeSpan = preset ? 0.18 : 1;
-  const gaze = ip(look, [-1, 1], [Math.max(-1, gazeBase - gazeSpan) * 3 * unit, Math.min(1, gazeBase + gazeSpan) * 3 * unit]);
-  const expressionMouth = preset ? ip(mouth, [0, 1], [preset.beakOpen, Math.min(1, preset.beakOpen + 0.78)]) : mouth;
-  const accent = preset?.accent;
-  const [accentOpacity] = useState(() => new Animated.Value(0));
+  const [eyeOpen] = useState(() => new Animated.Value(preset?.eyeOpen ?? 1));
+  const [gazeBase] = useState(() => new Animated.Value(preset?.gaze ?? 0));
+  const [gazeSpan] = useState(() => new Animated.Value(preset ? 0.18 : 1));
+  const [brow] = useState(() => new Animated.Value(preset?.brow ?? 0));
+  const [cheek] = useState(() => new Animated.Value(preset?.cheek ?? 0));
+  const [beakOpen] = useState(() => new Animated.Value(preset?.beakOpen ?? 0));
+  const [beakRange] = useState(() => new Animated.Value(preset ? Math.min(0.78, 1 - preset.beakOpen) : 1));
+  useEffect(() => {
+    const target = preset;
+    const values: [Animated.Value, number][] = [
+      [eyeOpen, target?.eyeOpen ?? 1],
+      [gazeBase, target?.gaze ?? 0],
+      [gazeSpan, target ? 0.18 : 1],
+      [brow, target?.brow ?? 0],
+      [cheek, target?.cheek ?? 0],
+      [beakOpen, target?.beakOpen ?? 0],
+      [beakRange, target ? Math.min(0.78, 1 - target.beakOpen) : 1],
+    ];
+    values.forEach(([value, to]) => value.stopAnimation());
+    if (reduceMotion || !active) {
+      values.forEach(([value, to]) => value.setValue(to));
+      return;
+    }
+    const transition = Animated.parallel(values.map(([value, to]) => Animated.timing(value, {
+      toValue: to, duration: 180, easing: sine, useNativeDriver: true, isInteraction: false,
+    })));
+    transition.start();
+    return () => transition.stop();
+  }, [active, preset, reduceMotion, eyeOpen, gazeBase, gazeSpan, brow, cheek, beakOpen, beakRange]);
+  const expressionEye = Animated.multiply(blink, eyeOpen);
+  const gaze = ip(Animated.add(gazeBase, Animated.multiply(look, gazeSpan)), [-1, 1], [-3 * unit, 3 * unit]);
+  const expressionMouth = Animated.add(beakOpen, Animated.multiply(mouth, beakRange));
+  const accent = preset?.accent === 'blush' ? undefined : preset?.accent;
+  const [shownAccent, setShownAccent] = useState(accent);
+  const shownAccentRef = useRef(accent);
+  const [accentOpacity] = useState(() => new Animated.Value(accent ? 1 : 0));
   useEffect(() => {
     accentOpacity.stopAnimation();
-    const target = accent && accent !== 'blush' ? 1 : 0;
-    if (reduceMotion || !active) { accentOpacity.setValue(target); return; }
-    if (target) accentOpacity.setValue(0);
-    const fade = Animated.timing(accentOpacity, { toValue: target, duration: 180, easing: sine, useNativeDriver: true, isInteraction: false });
-    fade.start();
-    return () => fade.stop();
+    if (reduceMotion || !active) {
+      shownAccentRef.current = accent;
+      accentOpacity.setValue(accent ? 1 : 0);
+      const sync = setTimeout(() => setShownAccent(accent), 0);
+      return () => clearTimeout(sync);
+    }
+    if (shownAccentRef.current === accent) return;
+    let fade: Animated.CompositeAnimation | undefined = Animated.timing(accentOpacity, {
+      toValue: 0, duration: 80, easing: sine, useNativeDriver: true, isInteraction: false,
+    });
+    fade.start(({ finished }) => {
+      if (!finished) return;
+      shownAccentRef.current = accent;
+      setShownAccent(accent);
+      if (!accent) return;
+      accentOpacity.setValue(0);
+      fade = Animated.timing(accentOpacity, {
+        toValue: 1, duration: 120, easing: sine, useNativeDriver: true, isInteraction: false,
+      });
+      fade.start();
+    });
+    return () => fade?.stop();
   }, [accent, accentOpacity, reduceMotion, active]);
+  const displayAccent = reduceMotion || !active ? accent : shownAccent;
 
   const visibility = (value: Val, range: number[], opacity: number[]) =>
     (value as Animated.Value).interpolate({ inputRange: range, outputRange: opacity, extrapolate: 'clamp' });
@@ -249,16 +314,14 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduc
           }} />
         </Animated.View>
       ))}
-      {preset && (
-        <Svg pointerEvents="none" style={{ position: 'absolute' }} width={size} height={size} viewBox="0 0 512 512">
-          <Ellipse cx={190} cy={185} rx={15} ry={6} fill="#E99691" opacity={preset.cheek * 0.34} />
-          <Ellipse cx={338} cy={168} rx={14} ry={5.5} fill="#E99691" opacity={preset.cheek * 0.34} />
-          {Math.abs(preset.brow) > 0.02 && <>
-            <Path d="M184 116Q205 108 228 116" transform={'translate(0 ' + (-preset.brow * 2) + ') rotate(' + (-preset.brow * 13) + ' 205 114)'} fill="none" stroke="#56392E" strokeWidth={3.2} strokeLinecap="round" opacity={Math.min(0.9, Math.abs(preset.brow) * 0.82)} />
-            <Path d="M300 100Q323 92 347 100" transform={'translate(0 ' + (-preset.brow * 2) + ') rotate(' + (preset.brow * 13) + ' 323 98)'} fill="none" stroke="#56392E" strokeWidth={3.2} strokeLinecap="round" opacity={Math.min(0.9, Math.abs(preset.brow) * 0.82)} />
-          </>}
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: ip(cheek, [0, 1], [0, 0.34]) }}>
+        <Svg width={size} height={size} viewBox="0 0 512 512">
+          <Ellipse cx={190} cy={185} rx={15} ry={6} fill="#E99691" />
+          <Ellipse cx={338} cy={168} rx={14} ry={5.5} fill="#E99691" />
         </Svg>
-      )}
+      </Animated.View>
+      <AnimatedBrow size={size} side="left" brow={brow} />
+      <AnimatedBrow size={size} side="right" brow={brow} />
       <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: lidsVisible }}>
         <Svg width={size} height={size} viewBox="0 0 512 512">
           <Ellipse cx={189} cy={177} rx={12} ry={4.5} fill="#DC9781" opacity={0.32} />
@@ -287,7 +350,7 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduc
           <Ellipse cx={277} cy={147} rx={1.45} ry={1.9} fill="#805637" opacity={0.54} />
         </Svg>
       </Pivot>
-      {preset && <FaceAccent accent={preset.accent} size={size} opacity={accentOpacity} />}
+      {displayAccent && <FaceAccent accent={displayAccent} size={size} opacity={accentOpacity} />}
     </>
   );
 }
@@ -340,9 +403,10 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
   const bodyItem = bodyId ? WORN_CLOTHES[bodyId] ?? COSMETIC_IMG[bodyId] : null;
   const hasBodyOutfit = Boolean(bodyId && bodyItem);
+  const hasRoomExpression = expression !== undefined;
   useEffect(() => {
     footTap.stopAnimation();
-    if (!hasBodyOutfit || !expression || reduce || !active) { footTap.setValue(0); return; }
+    if (!hasRoomExpression || reduce || !active) { footTap.setValue(0); return; }
     footTap.setValue(0);
     const idleTap = Animated.loop(Animated.sequence([
       Animated.delay(5200),
@@ -352,7 +416,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
     ]));
     idleTap.start();
     return () => { idleTap.stop(); footTap.stopAnimation(); footTap.setValue(0); };
-  }, [active, expression, footTap, hasBodyOutfit, reduce]);
+  }, [active, footTap, hasRoomExpression, reduce]);
   const headItem = headId ? COSMETIC_IMG[headId] : null;
   const hold = handId ? HOLDS[handId] : undefined;
   const headFit = headId ? HEAD_FIT[headId] : undefined;
@@ -387,12 +451,12 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
     <>
       <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
       <Layer src={L.govde} s={size} />
-      {hasBodyOutfit && wings}
       {bodyId && bodyItem && (
         <Pivot s={size} p={NECK} rotate={deg(bodyMotion, clothSwing)}>
           {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
         </Pivot>
       )}
+      {hasBodyOutfit && wings}
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, transform: [{ translateY: footLift }, { scaleY: footPress }] }}>
         <Layer src={AYAK} s={size} />
       </Animated.View>

@@ -40,6 +40,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, we
   const [wink] = useState(() => new Animated.Value(0));
   // Boşta yaşam: esneme, yudumlama, gerinme, etrafa bakma. `act` sürerken yüz geçici değişir.
   const [act, setAct] = useState<RoomAction | null>(null);
+  const [coffeeMood, setCoffeeMood] = useState<RoomExpression | null>(null);
   const [stretch] = useState(() => new Animated.Value(0));
   const [sip] = useState(() => new Animated.Value(0));
   const [giggle] = useState(() => new Animated.Value(0));
@@ -50,16 +51,21 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, we
   const [pop] = useState(() => new Animated.Value(0));
   const [jump] = useState(() => new Animated.Value(0));
   const [hearts] = useState(() => [0, 1, 2, 3, 4, 5].map(() => new Animated.Value(0)));
-  const actionRef = useRef<{ name: RoomAction; priority: number; token: number; animation?: Animated.CompositeAnimation } | null>(null);
+  const actionRef = useRef<{ name: RoomAction; priority: number; token: number; animation?: Animated.CompositeAnimation; timers?: ReturnType<typeof setTimeout>[] } | null>(null);
   const actionToken = useRef(0);
   const base: RoomExpression = thinking && mood !== 'sad' && mood !== 'sleepy' ? 'thinking' : mood;
+  const weatherMood: RoomExpression = weather === 'clear' ? 'wow'
+    : weather === 'rain' || weather === 'storm' || weather === 'snow' || weather === 'fog' ? 'cozy'
+      : 'curious';
   const faceOv: RoomExpression | null = act === 'yawn' ? 'wow'
-    : act === 'sip' || act === 'coffee' ? 'cozy'
+    : act === 'coffee' ? coffeeMood ?? 'cheer'
+      : act === 'sip' ? 'cozy'
       : act === 'stretch' ? 'cheer'
         : act === 'giggle' ? 'tickled'
           : act === 'shy' ? 'shy'
             : act === 'celebrate' ? 'proud'
-              : act === 'around' || act === 'weather' ? 'curious'
+              : act === 'weather' ? weatherMood
+                : act === 'around' ? 'curious'
                 : null;
   const shown: RoomExpression = faceOv && base !== 'sad' && base !== 'sleepy' ? faceOv : base;
   const { state } = useStore();
@@ -79,9 +85,11 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, we
     const current = actionRef.current;
     if (current && current.priority >= priority && !(name === 'giggle' && current.name === 'giggle')) return false;
     current?.animation?.stop();
+    current?.timers?.forEach(clearTimeout);
     [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
     const token = ++actionToken.current;
     setAct(name);
+    setCoffeeMood(name === 'coffee' ? 'cheer' : null);
     const T = (v: Animated.Value, to: number, ms: number, easing = sine) => Animated.timing(v, { toValue: to, duration: ms, easing, useNativeDriver: true });
     let animation: Animated.CompositeAnimation;
     if (name === 'yawn') {
@@ -95,13 +103,17 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, we
         Animated.delay(220), T(stretch, 0, 600),
       ]);
     } else if (name === 'around' || name === 'weather') {
-      const first = name === 'weather' ? (weather === 'rain' || weather === 'storm' || weather === 'fog' ? -0.8 : 0.8) : -1;
-      const second = -first;
-      animation = Animated.sequence([
-        Animated.spring(look, { toValue: first, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(name === 'weather' ? 700 : 900),
-        Animated.spring(look, { toValue: second, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(650),
-        Animated.spring(look, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
-      ]);
+      animation = name === 'weather'
+        ? Animated.sequence([
+          Animated.spring(look, { toValue: -0.8, friction: 7, tension: 45, useNativeDriver: true }),
+          Animated.delay(850),
+          Animated.spring(look, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
+        ])
+        : Animated.sequence([
+          Animated.spring(look, { toValue: -1, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(900),
+          Animated.spring(look, { toValue: 1, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(650),
+          Animated.spring(look, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
+        ]);
     } else if (name === 'giggle') {
       animation = Animated.sequence([
         Animated.parallel([T(giggle, 1, 110), T(shake, 1, 110)]),
@@ -131,27 +143,39 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, we
       const heartsUp = Animated.stagger(90, hearts.map(h => Animated.timing(h, { toValue: 1, duration: 1050, easing: Easing.out(Easing.quad), useNativeDriver: true })));
       animation = Animated.parallel([hops, heartsUp]);
     }
-    actionRef.current = { name, priority, token, animation };
+    const timers = name === 'coffee' ? [
+      setTimeout(() => { if (actionRef.current?.token === token) setCoffeeMood('cozy'); }, 520),
+      setTimeout(() => { if (actionRef.current?.token === token) setCoffeeMood('content'); }, 1540),
+    ] : [];
+    actionRef.current = { name, priority, token, animation, timers };
     animation.start(({ finished }) => {
       if (!finished || actionRef.current?.token !== token) return;
+      actionRef.current.timers?.forEach(clearTimeout);
       actionRef.current = null;
       setAct(null);
+      setCoffeeMood(null);
       [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
     });
     return true;
-  }, [run, talking, thinking, sleeping, mood, weather, stretch, sip, giggle, wingCover, shake, jump, hearts, look]);
+  }, [run, talking, thinking, sleeping, mood, stretch, sip, giggle, wingCover, shake, jump, hearts, look]);
 
   // Cut gestures short when motion is reduced or Moka falls asleep; never leave a pose stuck.
   useEffect(() => {
     const current = actionRef.current;
     if (!current || (run && (current.name === 'celebrate' || (!talking && !thinking && !engaged && !sleeping && mood !== 'sad')))) return;
     current.animation?.stop();
+    current.timers?.forEach(clearTimeout);
     actionRef.current = null;
     setAct(null);
+    setCoffeeMood(null);
     [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
   }, [run, talking, thinking, engaged, sleeping, mood, stretch, sip, giggle, wingCover, shake, jump, hearts]);
 
-  useEffect(() => () => { actionRef.current?.animation?.stop(); actionRef.current = null; }, []);
+  useEffect(() => () => {
+    actionRef.current?.animation?.stop();
+    actionRef.current?.timers?.forEach(clearTimeout);
+    actionRef.current = null;
+  }, []);
 
   const lastTaps = useRef(taps);
   const tapTimes = useRef<number[]>([]);

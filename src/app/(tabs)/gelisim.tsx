@@ -230,8 +230,8 @@ function LinkTile({ emoji, label, sub, tint, onPress }: { emoji: string; label: 
   return (
     <Squish onPress={onPress} accessibilityRole="link" accessibilityLabel={label} style={[st.link, { backgroundColor: tint }]}>
       <T style={{ lineHeight: 36, fontSize: 28 }}>{emoji}</T>
-      <T v="bold" numberOfLines={1}>{label}</T>
-      <T v="tiny" numberOfLines={1}>{sub}</T>
+      <T v="bold" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{label}</T>
+      <T v="tiny" numberOfLines={2}>{sub}</T>
     </Squish>
   );
 }
@@ -246,6 +246,6 @@ const st = StyleSheet.create({
   rings: { flexDirection: 'row', gap: 12 },
   ringCard: { flex: 1, alignItems: 'center', gap: 6, borderRadius: radius.card, paddingVertical: 16, ...elevation.md },
   pills: { flexDirection: 'row', gap: 10 },
-  links: { flexDirection: 'row', gap: 12 },
-  link: { flex: 1, borderRadius: radius.card, padding: 16, gap: 2, ...elevation.md },
+  links: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  link: { flexGrow: 1, flexBasis: '45%', borderRadius: radius.card, padding: 16, gap: 2, ...elevation.md },
 });

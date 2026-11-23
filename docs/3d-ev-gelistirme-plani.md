@@ -18,6 +18,7 @@ Sadece plan; kod değişmedi. Kaynak: `src/components/House3D.tsx` (2513 satır,
 - Yapıldı: gerçek gün doğumu/batımı (W2), yeni eşya yerleşince yıldız saçılması (E2 ilk adım).
 - Yapıldı: gecikmiş oda rozeti kırmızı + "!N" (Ac3); seviye 14 posta kutusu, 80 ışıklı tabela (L1 ilk adım).
 - Yapıldı: rüzgâra göre bulut hızı (W3, `wind_speed_10m`). L3 zaten var (hesap ekranı, paylaşım kartı).
+- Yapıldı (Melih'in "devam" onayıyla, koordinatör önerileri): E3 "uyuyan ev": 3+ gün iş yoksa pencere ışıkları söner, Moka uyur (ceza/çökme yok). Kararlar: ev sesi yok, ev dönüşü yok, seviye 7+ yeni parça yok (posta kutusu/tabela hariç, zaten eklendi).
 - Bilerek yapılmadı: P1 imza memo (state çok alanı okuyor, bayat çizim riski; önce cihaz ölçümü), kuş/duman/pencere ışığı (görsel deneme gerek).
 - Sırada: P0 ölçüm (cihazda), P1/P2 yeniden çizim azaltma, E1/E2 görev ve satın alma geri bildirimi.
 

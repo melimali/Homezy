@@ -964,7 +964,9 @@ function SkyBackdrop({ colors, w, h, bleed, night, sun, sunT, twA, twB, breath }
   const vb = `${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}`;
   const pos = { position: 'absolute' as const, left: -pad, top: -pad };
   const stars = useMemo(() => scatter(bleed ? 90 : 36, 7), [bleed]);
-  const sx = w * (0.14 + 0.72 * sunT), sy = h * (0.36 - 0.26 * Math.sin(Math.PI * sunT));
+  const sx = w * (0.14 + 0.72 * sunT);
+  // Güneş ve haresi çerçevenin üstünden taşmasın: en az hare yarıçapı kadar aşağıda dursun.
+  const sy = Math.max(h * (0.36 - 0.26 * Math.sin(Math.PI * sunT)), Math.min(w, h) * 0.16 + 3);
   const sunC = mix('#FFD25A', '#FF9E5A', (2 * sunT - 1) ** 2);
   const starEls = (parity: number) =>
     stars.filter((_, i) => i % 2 === parity).map(([u, v, k], i) => (
@@ -1072,7 +1074,10 @@ function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; phase: D
       ? (i % 2 ? null : spr('fk' + copy + i, 'kar_tanesi', x + u * w, y + v * h - copy * h + 3 + k * 3, 5 + k * 5, 0.75 + k * 0.25))
       : <Circle key={'fk' + copy + i} cx={x + u * w} cy={y + v * h - copy * h} r={1 + k * 1.8} fill="#FFFFFF" opacity={0.7 + k * 0.3} />).filter((e): e is ReactElement => !!e);
   return {
-    clouds: night && !overcast ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1), ...(overcast ? [cloud(x + w * 0.45, y + h * 0.22, 1.1, 3)] : [])],
+    clouds: night && !overcast ? [] : [cloud(x + w * 0.22, y + h * 0.1, 1, 0), cloud(x + w * 0.7, y + h * 0.17, 0.8, 1), cloud(x + w * 0.06, y + h * 0.27, 0.7, 6), cloud(x + w * 0.9, y + h * 0.3, 0.75, 7), ...(overcast ? [cloud(x + w * 0.45, y + h * 0.22, 1.1, 3)] : [])],
+    // Yavaşça beliren, kayan ve saydamlaşıp kaybolan ekstra bulutlar (iki katman, farklı hızda; hafif modda ve hareketi azaltta yok).
+    cloudsA: night || rain ? [] : [cloud(x + w * 0.3, y + h * 0.2, 0.9, 8), cloud(x + w * 0.78, y + h * 0.1, 0.7, 9)],
+    cloudsB: night || rain ? [] : [cloud(x + w * 0.52, y + h * 0.3, 0.8, 10), cloud(x + w * 0.12, y + h * 0.14, 0.65, 11)],
     clouds2: [...(EV3D_ART && !overcast && !night && !(wx && wx.day && wx.kind === 'clear') ? [spr('sunmoon', 'gunes', x + w * 0.1, y + h * 0.05 + 24, 22, 0.95)] : []), ...(night && !overcast ? [] : [cloud(x + w * 0.5, y + h * 0.06, 1.2, 2), ...(overcast ? [cloud(x + w * 0.1, y + h * 0.16, 1, 4), cloud(x + w * 0.85, y + h * 0.08, 1.3, 5)] : [])])],
     birds: !night && !rain && !snow && !overcast && L >= 7
       ? [0, 1].map(i => {
@@ -2443,6 +2448,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         </Animated.View>
       )}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={cloudMs(24000)} reduce={reduce}>{air.clouds}</Drift>}
+      {sc > 0 && !reduce && !lite && air.cloudsA.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.07} ms={19000} restart fade reduce={reduce}>{air.cloudsA}</Drift>}
+      {sc > 0 && !reduce && !lite && air.cloudsB.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.05} ms={27000} restart fade reduce={reduce}>{air.cloudsB}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={cloudMs(36000)} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && !lite && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
       {sc > 0 && !reduce && air.smoke.length > 0 && <Drift vb={vb} scale={sc} dy={-12} dx={4} ms={3200} restart fade reduce={reduce}>{air.smoke}</Drift>}

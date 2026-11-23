@@ -87,7 +87,7 @@ export default function Takvim() {
   );
 }
 
-const CELL = `${100 / 7}%` as const;
+const CELL = '14.28%' as const; // 100 / 7 yuvarlanınca 7. hücre alt satıra düşüyordu
 const st = StyleSheet.create({
   nav: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   row: { flexDirection: 'row' },

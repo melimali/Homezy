@@ -108,7 +108,7 @@ export const PARCA = {
  * rock: kitaplar arada bir hafifçe sallanıp yerine oturur. deg: en fazla açı, ms: yarım tur.
  */
 export const MOTION: Record<OdaPart, { kind: 'sway' | 'swing' | 'rock'; deg: number; ms: number; delay: number; tilt: number }> = {
-  asma: { kind: 'sway', deg: 0.48, ms: 4200, delay: 0, tilt: 0 },
+  asma: { kind: 'sway', deg: 0.88, ms: 4200, delay: 0, tilt: 0 },
   rafbitki: { kind: 'sway', deg: 0.32, ms: 5900, delay: 900, tilt: 0 },
   pencerebitki: { kind: 'sway', deg: 0.58, ms: 3700, delay: 400, tilt: 0 },
   sehpabitki: { kind: 'sway', deg: 0.42, ms: 5400, delay: 1200, tilt: 0 },

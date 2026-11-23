@@ -33,8 +33,8 @@ type Stop = { stop: () => void };
 function loop(v: Animated.Value, ms: number, delay = 0): Stop {
   const a = Animated.loop(Animated.sequence([
     Animated.delay(delay),
-    Animated.timing(v, { toValue: 1, duration: ms, easing: sine, useNativeDriver: true }),
-    Animated.timing(v, { toValue: 0, duration: ms, easing: sine, useNativeDriver: true }),
+    Animated.timing(v, { toValue: 1, duration: ms, easing: sine, useNativeDriver: true, isInteraction: false }),
+    Animated.timing(v, { toValue: 0, duration: ms, easing: sine, useNativeDriver: true, isInteraction: false }),
   ]));
   a.start();
   return a;
@@ -49,8 +49,8 @@ function sway(v: Animated.Value, ms: number, delay = 0, jitter = 0.3): Stop {
     const b = ms * (1.1 - jitter / 2 + Math.random() * jitter);
     const peak = 0.75 + Math.random() * 0.25;
     movement = Animated.sequence([
-      Animated.timing(v, { toValue: 0.5 + peak / 2, duration: a, easing: sine, useNativeDriver: true }),
-      Animated.timing(v, { toValue: 0.5 - peak / 2, duration: b, easing: sine, useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0.5 + peak / 2, duration: a, easing: sine, useNativeDriver: true, isInteraction: false }),
+      Animated.timing(v, { toValue: 0.5 - peak / 2, duration: b, easing: sine, useNativeDriver: true, isInteraction: false }),
     ]);
     movement.start(({ finished }) => { if (finished) go(); });
   };
@@ -64,8 +64,8 @@ function rock(v: Animated.Value, delay: number): Stop {
   const go = () => {
     if (dead) return;
     Animated.sequence([
-      Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(v, { toValue: 0.5, friction: 3, tension: 70, useNativeDriver: true }),
+      Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true, isInteraction: false }),
+      Animated.spring(v, { toValue: 0.5, friction: 3, tension: 70, useNativeDriver: true, isInteraction: false }),
     ]).start(({ finished }) => { if (!dead && finished) t = setTimeout(go, 7000 + Math.random() * 7000); });
   };
   t = setTimeout(go, delay);
@@ -73,7 +73,7 @@ function rock(v: Animated.Value, delay: number): Stop {
 }
 /** Değeri 0'dan 1'e akıtıp başa saran döngü (düşen ya da yükselen parçacık). */
 function rise(v: Animated.Value, ms: number, delay = 0, easing: (t: number) => number = Easing.linear): Stop {
-  const a = Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(v, { toValue: 1, duration: ms, easing, useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true })]));
+  const a = Animated.loop(Animated.sequence([Animated.delay(delay), Animated.timing(v, { toValue: 1, duration: ms, easing, useNativeDriver: true, isInteraction: false }), Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true, isInteraction: false })]));
   a.start();
   return a;
 }
@@ -81,23 +81,29 @@ function rise(v: Animated.Value, ms: number, delay = 0, easing: (t: number) => n
 function every(v: Animated.Value, minMs: number, maxMs: number, play: (v: Animated.Value) => Animated.CompositeAnimation, first = 3000): Stop {
   let dead = false;
   let t: ReturnType<typeof setTimeout>;
-  const go = () => {
+  let movement: Animated.CompositeAnimation | undefined;
+  const schedule = () => { if (!dead) t = setTimeout(start, minMs + Math.random() * (maxMs - minMs)); };
+  const start = () => {
     if (dead) return;
+    v.stopAnimation();
     v.setValue(0);
-    play(v).start(({ finished }) => { if (!dead && finished) t = setTimeout(go, minMs + Math.random() * (maxMs - minMs)); });
+    movement = play(v);
+    movement.start(({ finished }) => { if (finished) schedule(); });
   };
-  t = setTimeout(go, first);
-  return { stop: () => { dead = true; clearTimeout(t); v.stopAnimation(); } };
+  t = setTimeout(start, first);
+  return {
+    stop: () => { dead = true; clearTimeout(t); movement?.stop(); v.stopAnimation(); },
+  };
 }
 /** Lamba: yavaşça "nefes alır" (6 sn); arada minicik tek titreşim. */
 function breathe(v: Animated.Value): Stop {
   const flick = Animated.sequence([
-    Animated.timing(v, { toValue: 0.78, duration: 90, easing: Easing.linear, useNativeDriver: true }),
-    Animated.timing(v, { toValue: 0.97, duration: 140, easing: Easing.linear, useNativeDriver: true }),
+    Animated.timing(v, { toValue: 0.78, duration: 90, easing: Easing.linear, useNativeDriver: true, isInteraction: false }),
+    Animated.timing(v, { toValue: 0.97, duration: 140, easing: Easing.linear, useNativeDriver: true, isInteraction: false }),
   ]);
   const cycle = (n: number) => Array.from({ length: n }, () => [
-    Animated.timing(v, { toValue: 1, duration: 3000, easing: sine, useNativeDriver: true }),
-    Animated.timing(v, { toValue: 0.88, duration: 3000, easing: sine, useNativeDriver: true }),
+    Animated.timing(v, { toValue: 1, duration: 3000, easing: sine, useNativeDriver: true, isInteraction: false }),
+    Animated.timing(v, { toValue: 0.88, duration: 3000, easing: sine, useNativeDriver: true, isInteraction: false }),
   ]).flat();
   const a = Animated.loop(Animated.sequence([...cycle(7), flick, ...cycle(5 + Math.floor(Math.random() * 4)), flick]));
   a.start();
@@ -108,14 +114,20 @@ type Vals = {
   part: Record<OdaPart, Animated.Value>; nudge: Record<OdaPart, Animated.Value>;
   lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value; beam: Animated.Value; cloud: Animated.Value; halo: Animated.Value;
   twinkle: Animated.Value[]; cup: Animated.Value[]; chainLights: Animated.Value[]; chainSweep: Animated.Value; fest: Animated.Value; stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[];
-  rain: Animated.Value[]; drops: Animated.Value[]; drift: Animated.Value; flash: Animated.Value; leaf: Animated.Value; boost: Animated.Value; pot: Animated.Value; ivy: Animated.Value;
+  rain: Animated.Value[]; drops: Animated.Value[]; drift: Animated.Value; flash: Animated.Value; weather: Animated.Value; leaf: Animated.Value; tapLeaf: Animated.Value; boost: Animated.Value; pot: Animated.Value; ivy: Animated.Value;
 };
 /** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
 const VIGNETTE = [{ x: 0, y: 0, r: 700 }, { x: 852, y: 0, r: 700 }, { x: 0, y: 1846, r: 760 }, { x: 852, y: 1846, r: 760 }, { x: 0, y: 920, r: 420 }, { x: 852, y: 920, r: 420 }];
-const MOTES = [
-  { x: 690, y: 800, r: 3 }, { x: 740, y: 760, r: 2 }, { x: 800, y: 840, r: 3 }, { x: 640, y: 880, r: 2 }, { x: 560, y: 650, r: 2 }, { x: 330, y: 900, r: 3 },
-  { x: 380, y: 1010, r: 2 }, { x: 300, y: 760, r: 2 }, { x: 460, y: 840, r: 3 }, { x: 700, y: 950, r: 2 }, { x: 250, y: 1100, r: 2 }, { x: 600, y: 1100, r: 3 },
-];
+const MOTES = {
+  day: [
+    { x: 250, y: 790, r: 2 }, { x: 315, y: 860, r: 3 }, { x: 380, y: 920, r: 2 },
+    { x: 435, y: 980, r: 2 }, { x: 500, y: 1040, r: 3 }, { x: 565, y: 1100, r: 2 },
+  ],
+  night: [
+    { x: 650, y: 710, r: 2 }, { x: 700, y: 760, r: 3 }, { x: 755, y: 800, r: 2 },
+    { x: 815, y: 850, r: 2 }, { x: 690, y: 900, r: 3 }, { x: 770, y: 980, r: 2 },
+  ],
+} as const;
 /** Havaya göre camın rengi ve yoğunluğu. */
 const GLASS: Partial<Record<SkyKind, { tone: string; op: number }>> = {
   cloudy: { tone: '#8C97A8', op: 0.36 }, rain: { tone: '#55657A', op: 0.48 }, storm: { tone: '#1E2533', op: 0.6 },
@@ -218,7 +230,7 @@ function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: An
 }
 
 /** Bir saatin (sabah/akşam/gece) resmi: taban, cam havası, hareketli parçalar, düşen yaprak. */
-function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, onReady }: { phase: OdaPhase; s: number; vals: Vals; sky: SkyKind; chain: number; tilt?: Animated.ValueXY; opacity: Animated.Value | number; onReady?: () => void }) {
+function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity, onReady }: { phase: OdaPhase; s: number; vals: Vals; sky: SkyKind; chain: number; tilt?: Animated.ValueXY; opacity: Animated.Value | number; weatherOpacity: Animated.Value; onReady?: () => void }) {
   const L = ODA[phase];
   const box = (b: Box) => ({ position: 'absolute' as const, left: b.x * s, top: b.y * s, width: b.w * s, height: b.h * s });
   const shift = (x: number, y: number) => (tilt ? [{ translateX: tilt.x.interpolate({ inputRange: [-1, 1], outputRange: [x, -x] }) }, { translateY: tilt.y.interpolate({ inputRange: [-1, 1], outputRange: [y, -y] }) }] : []);
@@ -235,21 +247,21 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, onReady }: { ph
       <Image source={L.taban} fadeDuration={0} onLoad={onReady} onError={onReady} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
 
       {/* Cam: havaya göre renk, içinde bulut, yağmur, kar, damlalar, şimşek. */}
-      {glass && <Image source={L.cam.src} style={[box(L.cam.box), { tintColor: glass.tone, opacity: glass.op }]} />}
-      {sky === 'storm' && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: '#F4F7FF', opacity: vals.flash.interpolate({ inputRange: [0, 0.08, 0.16, 0.24, 1], outputRange: [0, 0.85, 0.1, 0.6, 0] }) }]} />}
+      {glass && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: glass.tone, opacity: Animated.multiply(weatherOpacity, glass.op) }]} />}
+      {sky === 'storm' && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: '#F4F7FF', opacity: Animated.multiply(weatherOpacity, vals.flash.interpolate({ inputRange: [0, 0.08, 0.16, 0.24, 1], outputRange: [0, 0.85, 0.1, 0.6, 0] })) }]} />}
       {(clouds || wet || snow) && L.cells.map((c, ci) => (
         <View key={ci} style={[box(c), { overflow: 'hidden' }]}>
           {clouds && c.w >= 60 && (
             <Animated.Image
               source={PARCA.bulut}
               style={{
-                position: 'absolute', top: (c.h * 0.12 + (ci % 2) * 24) * s, width: 150 * s, height: 112 * s, opacity: wet ? 0.45 : 0.6, tintColor: wet ? '#C9D1DC' : undefined,
+                position: 'absolute', top: (c.h * 0.12 + (ci % 2) * 24) * s, width: 150 * s, height: 112 * s, opacity: Animated.multiply(weatherOpacity, wet ? 0.45 : 0.6), tintColor: wet ? '#C9D1DC' : undefined,
                 transform: [{ translateX: vals.drift.interpolate({ inputRange: [0, 1], outputRange: [-150 * s - ci * 20 * s, (c.w + 40) * s] }) }],
               }}
             />
           )}
           {(wet || snow) && vals.rain.map((r, i) => {
-            if (snow && c.w < 60 && i % 3) return null;
+            if (i % L.cells.length !== ci || (snow && c.w < 60)) return null;
             const x = (2 + ((i * 37 + ci * 23) % 96)) / 100;
             const move = { translateY: r.interpolate({ inputRange: [0, 1], outputRange: [-(snow ? 14 : 30) * s, (c.h + 6) * s] }) };
             return snow ? (
@@ -257,30 +269,30 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, onReady }: { ph
                 key={i}
                 source={PARCA.kar}
                 style={{
-                  position: 'absolute', left: x * c.w * s, top: 0, width: (9 + (i % 3) * 3) * s, height: (8 + (i % 3) * 3) * s, opacity: 0.95,
+                  position: 'absolute', left: x * c.w * s, top: 0, width: (9 + (i % 3) * 3) * s, height: (8 + (i % 3) * 3) * s, opacity: Animated.multiply(weatherOpacity, 0.95),
                   transform: [move, { translateX: r.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, (i % 2 ? 9 : -9) * s, 0] }) }, { rotate: r.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${i % 2 ? 120 : -120}deg`] }) }],
                 }}
               />
             ) : (
-              <Animated.View key={i} style={{ position: 'absolute', left: x * c.w * s, top: 0, width: Math.max(1, 2 * s), height: (22 + (i % 4) * 6) * s, borderRadius: 2, backgroundColor: '#DCEBFA', opacity: ci < 2 ? 0.85 : 0.68, transform: [move, { rotate: '10deg' }] }} />
+              <Animated.View key={i} style={{ position: 'absolute', left: x * c.w * s, top: 0, width: Math.max(1, 2 * s), height: (22 + (i % 4) * 6) * s, borderRadius: 2, backgroundColor: '#DCEBFA', opacity: Animated.multiply(weatherOpacity, ci < 2 ? 0.85 : 0.68), transform: [move, { rotate: '10deg' }] }} />
             );
           })}
         </View>
       ))}
-      {wet && big.map((c, ci) => vals.drops.map((d, i) => (
+      {wet && big.map((c, ci) => vals.drops.map((d, i) => i !== ci ? null : (
         <Animated.Image
           key={`d${ci}-${i}`}
           source={PARCA.damla}
           style={{
             position: 'absolute', left: (c.x + c.w * (0.18 + ((i * 41 + ci * 17) % 64) / 100)) * s, top: (c.y + c.h * (0.08 + ((i * 29 + ci * 11) % 40) / 100)) * s,
-            width: 11 * s, height: 14 * s, opacity: d.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 0.85, 0.85, 0] }),
+            width: 11 * s, height: 14 * s, opacity: Animated.multiply(d.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 0.85, 0.85, 0] }), weatherOpacity),
             transform: [{ translateY: d.interpolate({ inputRange: [0, 0.3, 0.45, 1], outputRange: [0, 4 * s, 10 * s, c.h * 0.5 * s] }) }],
           }}
         />
       )))}
 
       {/* Pencerenin önündekiler (çerçeve, yapraklar) havanın üstünde kalır. */}
-      {(glass || clouds || snow) && <Image source={L.onCam.src} style={box(L.onCam.box)} />}
+      {(glass || clouds || snow) && <Animated.Image source={L.onCam.src} style={[box(L.onCam.box), { opacity: weatherOpacity }]} />}
 
       {/* Işık zinciri bitkilerin arkasında: seride her gün bir ampul yanar (7'de hepsi). */}
       {chain >= 0 && <Chain pts={chainPts(L)} lights={vals.chainLights} sweep={vals.chainSweep} s={s} night={phase === 'gece'} />}
@@ -308,19 +320,23 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, onReady }: { ph
         <Image source={L.sillLeaves} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: -124 * s, top: -126 * s, width: 237 * s, height: 143 * s }} />
       </Animated.View>
 
-      {/* Asma saksıdan arada bir bir yaprak süzülüp düşer. */}
-      <Animated.Image
-        source={L.yaprak.src}
-        style={{
-          position: 'absolute', left: leafFrom.x * s, top: leafFrom.y * s, width: L.yaprak.w * 0.7 * s, height: L.yaprak.h * 0.7 * s,
-          opacity: vals.leaf.interpolate({ inputRange: [0, 0.04, 0.85, 1], outputRange: [0, 1, 1, 0] }),
-          transform: [
-            { translateY: vals.leaf.interpolate({ inputRange: [0, 1], outputRange: [0, 520 * s] }) },
-            { translateX: vals.leaf.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: [0, 34 * s, -6 * s, 40 * s, 4 * s, 46 * s] }) },
-            { rotate: vals.leaf.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: ['0deg', '40deg', '-25deg', '45deg', '-15deg', '30deg'] }) },
-          ],
-        }}
-      />
+      {/* Asma saksıdan arada bir, dokununca da bir yaprak süzülüp düşer. */}
+      {[vals.leaf, vals.tapLeaf].map((leaf, i) => (
+        <Animated.Image
+          key={`falling-leaf-${i}`}
+          source={L.yaprak.src}
+          pointerEvents="none"
+          style={{
+            position: 'absolute', left: leafFrom.x * s, top: leafFrom.y * s, width: L.yaprak.w * 0.7 * s, height: L.yaprak.h * 0.7 * s,
+            opacity: leaf.interpolate({ inputRange: [0, 0.04, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+            transform: [
+              { translateY: leaf.interpolate({ inputRange: [0, 1], outputRange: [0, 520 * s] }) },
+              { translateX: leaf.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: [0, 34 * s, -6 * s, 40 * s, 4 * s, 46 * s] }) },
+              { rotate: leaf.interpolate({ inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1], outputRange: ['0deg', '40deg', '-25deg', '45deg', '-15deg', '30deg'] }) },
+            ],
+          }}
+        />
+      ))}
     </Animated.View>
   );
 }
@@ -362,12 +378,14 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0), ivy: new Animated.Value(0),
     beam: new Animated.Value(0), cloud: new Animated.Value(0), halo: new Animated.Value(0), fest: new Animated.Value(0),
     twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)), chainSweep: new Animated.Value(0), chainLights: Array.from({ length: 7 }, () => new Animated.Value(0)),
-    stars: Array.from({ length: 8 }, () => new Animated.Value(0.3)), dust: MOTES.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)),
+    stars: Array.from({ length: 8 }, () => new Animated.Value(0.3)), dust: MOTES.day.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)),
     rain: Array.from({ length: RAIN_N }, () => new Animated.Value(0)), drops: [0, 1, 2].map(() => new Animated.Value(0)),
-    drift: new Animated.Value(0), flash: new Animated.Value(0), leaf: new Animated.Value(0),
+    drift: new Animated.Value(0), flash: new Animated.Value(0), weather: new Animated.Value(1), leaf: new Animated.Value(0), tapLeaf: new Animated.Value(0),
   }), []);
   const wet = sky === 'rain' || sky === 'storm' || sky === 'snow';
   const rainy = sky === 'rain' || sky === 'storm';
+  const clearNight = clearNightCondition(night, sky);
+  const motes = night ? MOTES.night : MOTES.day;
 
   // Saat değişince yeni resim eskinin üstünde 1,6 sn'de belirir (hareketi azaltta hemen geçer).
   const [layers, setLayers] = useState<{ p: OdaPhase; a: Animated.Value }[]>(() => [{ p: phase, a: new Animated.Value(1) }]);
@@ -382,29 +400,64 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
   }, [layers]);
 
   useEffect(() => {
+    vals.weather.stopAnimation();
+    if (!run || sky === 'clear') {
+      vals.weather.setValue(1);
+      return;
+    }
+    vals.weather.setValue(0);
+    const transition = Animated.timing(vals.weather, { toValue: 1, duration: 1100, easing: sine, useNativeDriver: true, isInteraction: false });
+    transition.start();
+    return () => transition.stop();
+  }, [run, sky, vals]);
+
+  useEffect(() => {
     if (!run) return;
+    const leafFall = every(vals.leaf, 22000, 40000, v => Animated.timing(v, { toValue: 1, duration: 7000, easing: Easing.inOut(Easing.quad), useNativeDriver: true, isInteraction: false }), 6000);
     const anims: Stop[] = [
       ...PARTS.map(k => {
         const m = MOTION[k];
         const v = vals.part[k];
         return m.kind === 'rock' ? rock(v, m.delay) : m.kind === 'swing' ? sway(v, m.ms, m.delay, 0.12) : sway(v, m.ms, m.delay, 0.35);
       }),
-      breathe(vals.lamp), loop(vals.moon, 4200), loop(vals.sun, 7000), loop(vals.beam, 13000), loop(vals.halo, 4800, 600),
+      breathe(vals.lamp),
+      ...(night ? [loop(vals.moon, 4200)] : []),
+      ...(!night ? [loop(vals.sun, 7000)] : []),
+      loop(vals.beam, 13000),
+      loop(vals.halo, 4800, 600),
       // Bulut gölgesi: ışık huzmesi 30 sn'de bir kararıp geri gelir.
-      (() => { const a = Animated.loop(Animated.sequence([Animated.delay(14000), Animated.timing(vals.cloud, { toValue: 1, duration: 4200, easing: sine, useNativeDriver: true }), Animated.delay(1800), Animated.timing(vals.cloud, { toValue: 0, duration: 5200, easing: sine, useNativeDriver: true }), Animated.delay(5000)])); a.start(); return a; })(),
-      ...vals.twinkle.map((x, i) => { const a = Animated.loop(Animated.sequence([Animated.delay(i * 1300 + 600), Animated.timing(x, { toValue: 1, duration: 520, easing: Easing.out(Easing.quad), useNativeDriver: true }), Animated.timing(x, { toValue: 0, duration: 700, easing: Easing.in(Easing.quad), useNativeDriver: true }), Animated.delay(3600 + i * 700)])); a.start(); return a; }),
+      (() => { const a = Animated.loop(Animated.sequence([Animated.delay(14000), Animated.timing(vals.cloud, { toValue: 1, duration: 4200, easing: sine, useNativeDriver: true, isInteraction: false }), Animated.delay(1800), Animated.timing(vals.cloud, { toValue: 0, duration: 5200, easing: sine, useNativeDriver: true, isInteraction: false }), Animated.delay(5000)])); a.start(); return a; })(),
+      ...vals.twinkle.map((x, i) => { const a = Animated.loop(Animated.sequence([Animated.delay(i * 1300 + 600), Animated.timing(x, { toValue: 1, duration: 520, easing: Easing.out(Easing.quad), useNativeDriver: true, isInteraction: false }), Animated.timing(x, { toValue: 0, duration: 700, easing: Easing.in(Easing.quad), useNativeDriver: true, isInteraction: false }), Animated.delay(3600 + i * 700)])); a.start(); return a; }),
       ...vals.cup.map((x, i) => rise(x, 3000 + i * 600, i * 1400, Easing.out(Easing.quad))),
-      ...vals.stars.map((x, i) => sway(x, 900 + ((i * 677) % 1900), i * 430, 0.7)),
+      ...(night ? vals.stars.map((x, i) => sway(x, 900 + ((i * 677) % 1900), i * 430, 0.7)) : []),
       ...vals.dust.map((x, i) => rise(x, 5200 + ((i * 937) % 3600), (i * 1130) % 6000, Easing.inOut(Easing.sin))),
-      ...vals.steam.slice(0, steam).map((x, i) => rise(x, 3200 + i * 420, i * 1050 + i * i * 160, Easing.out(Easing.quad))),
+      leafFall,
+    ];
+    return () => {
+      anims.forEach(a => a.stop());
+    };
+  }, [run, vals, phase, night]);
+
+  useEffect(() => {
+    if (!run) return;
+    if (wet) vals.rain.forEach(v => v.setValue(0));
+    if (rainy) vals.drops.forEach(v => v.setValue(0));
+    if (sky === 'cloudy' || rainy) vals.drift.setValue(0);
+    if (sky === 'storm') vals.flash.setValue(0);
+    const anims: Stop[] = [
       ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 4200 + (i % 4) * 700 : 700 + (i % 3) * 160, i * (sky === 'snow' ? 330 : 30))) : []),
       ...(rainy ? vals.drops.map((x, i) => rise(x, 5200 + i * 1300, i * 2100, Easing.in(Easing.quad))) : []),
       ...(sky === 'cloudy' || rainy ? [rise(vals.drift, 38000)] : []),
-      ...(sky === 'storm' ? [every(vals.flash, 9000, 16000, v => Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true }), 4000)] : []),
-      every(vals.leaf, 22000, 40000, v => Animated.timing(v, { toValue: 1, duration: 7000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }), 6000),
+      ...(sky === 'storm' ? [every(vals.flash, 9000, 16000, v => Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true, isInteraction: false }), 4000)] : []),
     ];
     return () => anims.forEach(a => a.stop());
-  }, [run, vals, wet, rainy, sky, steam]);
+  }, [run, vals, sky, wet, rainy]);
+
+  useEffect(() => {
+    if (!run || !steam) return;
+    const anims = vals.steam.slice(0, steam).map((x, i) => rise(x, 3200 + i * 420, i * 1050 + i * i * 160, Easing.out(Easing.quad)));
+    return () => anims.forEach(a => a.stop());
+  }, [run, vals, steam]);
 
   // Seri ampulleri: mevcut yananlar korunur, yeni ampuller yavaşça sırayla açılır.
   const chainLit = useRef(0);
@@ -489,12 +542,18 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     if (t === 'surahi') start(Animated.sequence([Animated.timing(vals.pot, { toValue: 0.7, duration: 180, useNativeDriver: true }), Animated.timing(vals.pot, { toValue: 0, duration: 1100, useNativeDriver: true })]));
     if (t === 'kupa') start(Animated.stagger(110, [kick('kupa1', 1.8), kick('kupa2', -1.6)]));
     if (t === 'bitki' && plant === 'asma') {
+      vals.tapLeaf.stopAnimation();
+      vals.tapLeaf.setValue(0);
       start(Animated.parallel([
-        kick('asma', 0.68),
+        kick('asma', 1.35),
         Animated.sequence([
           Animated.delay(65),
           Animated.timing(vals.ivy, { toValue: 0.82, duration: 210, easing: Easing.out(Easing.quad), useNativeDriver: true }),
           Animated.spring(vals.ivy, { toValue: 0, friction: 3.1, tension: 43, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.delay(80),
+          Animated.timing(vals.tapLeaf, { toValue: 1, duration: 7000, easing: Easing.inOut(Easing.quad), useNativeDriver: true, isInteraction: false }),
         ]),
       ]));
     } else if (t === 'bitki') start(kick(plant, 0.65));
@@ -523,13 +582,11 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
       return { x: c.x + c.w * (0.15 + ((i * 53) % 70) / 100), y: c.y + c.h * (0.1 + ((i * 37) % 45) / 100) };
     });
   }, [vals]);
-  const clearNight = clearNightCondition(night, sky);
-
   return (
     <View onLayout={onLayout} style={[{ overflow: 'hidden' }, style]} pointerEvents="box-none">
       {s > 0 && (
         <View style={{ position: 'absolute', left: ox, top: oy, width: W, height: H }} pointerEvents="box-none">
-          {layers.map(l => <PhaseLayer key={l.p} phase={l.p} s={s} vals={vals} sky={sky} chain={chain} tilt={tilt} opacity={l.a} onReady={onReady} />)}
+          {layers.map(l => <PhaseLayer key={l.p} phase={l.p} s={s} vals={vals} sky={sky} chain={chain} tilt={tilt} opacity={l.a} weatherOpacity={vals.weather} onReady={onReady} />)}
 
           {L.moon && clearNight && glow(L.moon.x, L.moon.y, 70, '#FFF3C4', vals.moon.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.6] }))}
           {clearNight && starPts.map((p, i) => (
@@ -545,14 +602,14 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
               pointerEvents="none"
               style={{
                 position: 'absolute', left: (150 + k * 40) * s, top: (640 + k * 150) * s, width: 760 * s, height: 150 * s, tintColor: night ? '#B7CBFF' : dusk ? '#FFC27A' : '#FFE7B0',
-                opacity: Animated.multiply(Animated.multiply(vals.beam.interpolate({ inputRange: [0, 1], outputRange: k ? [0.08, 0.16] : [0.18, 0.1] }), vals.cloud.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] })), (night ? 0.5 : 1) * (wet || sky === 'cloudy' ? 0.45 : 1)),
+                opacity: Animated.multiply(Animated.multiply(Animated.multiply(vals.beam.interpolate({ inputRange: [0, 1], outputRange: k ? [0.08, 0.16] : [0.18, 0.1] }), vals.cloud.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] })), vals.weather), (night ? 0.5 : 1) * (wet || sky === 'cloudy' ? 0.45 : 1)),
                 transform: [{ translateX: vals.beam.interpolate({ inputRange: [0, 1], outputRange: [-18 * s * (k ? -1 : 1), 24 * s * (k ? -1 : 1)] }) }, { rotate: `${16 + k * 7}deg` }],
               }}
             />
           ))}
 
           {/* Toz zerreleri: lamba ve pencere ışığında */}
-          {MOTES.map((m, i) => (
+          {motes.map((m, i) => (
             <Animated.View
               key={i}
               pointerEvents="none"

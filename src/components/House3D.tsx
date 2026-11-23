@@ -2522,6 +2522,9 @@ const sameProps = (a: Props, b: Props) => {
   for (const k of new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof Props>) {
     if (k === 'build') {
       if (a.build?.level !== b.build?.level || a.build?.idle !== b.build?.idle || (a.build?.resting ?? 0) >= 3 !== ((b.build?.resting ?? 0) >= 3)) return false;
+    } else if (k === 'now') {
+      // Dakikalık saat tikleri evi baştan çizmesin: gün evresi ve iş durumu için 15 dakika yeter.
+      if (Math.floor((a.now ?? 0) / 900_000) !== Math.floor((b.now ?? 0) / 900_000)) return false;
     } else if (a[k] !== b[k]) return false;
   }
   return true;

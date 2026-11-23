@@ -64,6 +64,9 @@ async function fetchSky(): Promise<Sky | null> {
     const res = await fetchWithTimeout(6000)(url);
     if (!res.ok) return null;
     const j = await res.json();
+    // Konum, telefonun saat diliminden farklı bir yerdeyse (ör. emülatörün sahte konumu, VPN) oradaki gündüz/gece
+    // buradaki saatle çelişir: bu veri yok sayılır, gökyüzü telefonun saatine göre kalır.
+    if (typeof j.utc_offset_seconds === 'number' && j.utc_offset_seconds !== -new Date().getTimezoneOffset() * 60) return null;
     return { kind: kindOf(Number(j.current.weather_code)), day: j.current.is_day === 1, live: true, rise: hourOf(j.daily?.sunrise?.[0]), set: hourOf(j.daily?.sunset?.[0]), wind: Number.isFinite(Number(j.current.wind_speed_10m)) ? Number(j.current.wind_speed_10m) : undefined };
   } catch {
     return null;

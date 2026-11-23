@@ -1029,7 +1029,7 @@ function dayPhase(now: number, wx: Sky | null): DayPhase {
 function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null, phase: DayPhase = 'ogle'): [string, string] | null {
   if (wx) {
     if (phase === 'gece') return wx.kind === 'clear' ? ['#141B30', '#2B3556'] : ['#1B2336', '#3A445E'];
-    const deep = (cs: [string, string]): [string, string] => (dark ? [mix(cs[0], '#283044', 0.28), mix(cs[1], '#283044', 0.28)] : cs);
+    const deep = (cs: [string, string]): [string, string] => (dark ? [mix(cs[0], '#283044', 0.15), mix(cs[1], '#283044', 0.15)] : cs);
     const warm = (cs: [string, string]): [string, string] =>
       phase === 'sabah' ? [mix(cs[0], '#F6C9A6', 0.25), mix(cs[1], '#FCE3C6', 0.45)] : phase === 'aksam' ? [mix(cs[0], '#6A6FA8', 0.4), mix(cs[1], '#F5A97A', 0.5)] : cs;
     switch (wx.kind) {
@@ -1045,9 +1045,9 @@ function skyColors(theme: HouseTheme, dark: boolean, wx: Sky | null, phase: DayP
 }
 
 /** Hava: gündüz bulut ve kuş, yağmur ya da kar; ev bitince bacadan duman. */
-function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
+function ambient(o: { theme: HouseTheme; dark: boolean; wx: Sky | null; phase: DayPhase; L: number; box: { x: number; y: number; w: number; h: number }; chimney?: Pt }) {
   const { theme, dark, wx, L, box: { x, y, w, h }, chimney } = o;
-  const night = theme === 'gece' || (wx ? !wx.day : dark);
+  const night = theme === 'gece' || o.phase === 'gece';
   const rain = wx ? wx.kind === 'rain' || wx.kind === 'storm' : !night && theme === 'sonbahar';
   const snow = theme === 'kis' || wx?.kind === 'snow';
   const overcast = !!wx && wx.kind !== 'clear';
@@ -1466,7 +1466,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     onPressHouse?.();
   };
 
-  const isNight = theme === 'gece' || (wx ? phase === 'gece' : dark);
+  // Gece sadece gerçek saate (ya da Gece temasına) bağlı; uygulamanın koyu teması geceyi zorlamaz.
+  const isNight = theme === 'gece' || phase === 'gece';
   /** Bekleyen işi olan odalar: gecikme varsa true, sadece bugün varsa false. */
   const roomLate: Record<string, boolean> = {};
   for (const id of S.order) {
@@ -2131,7 +2132,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const vbW = maxX - minX, vbH = maxY - minY;
 
   const scene = themeParts(theme, dark, { x: minX, y: minY, w: vbW, h: vbH }, !reduce, !wx || (wx.kind === 'clear' && wx.day));
-  const air = ambient({ theme, dark, wx, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
+  const air = ambient({ theme, dark, wx, phase, L, box: { x: minX, y: minY, w: vbW, h: vbH }, chimney });
   // Gece ateş böcekleri (sırayla yanıp söner), gündüz ışıkta süzülen altın zerreler.
   const motes: ReactElement[] = [];
   if (L >= 5 && floor === 0) {

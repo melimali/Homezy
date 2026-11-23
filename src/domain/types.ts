@@ -93,6 +93,8 @@ export type Settings = {
   quizAdded?: string[];
   /** Görünüm: telefonu izle / açık / koyu. Yoksa telefonu izler. */
   appearance?: 'system' | 'light' | 'dark';
+  /** Ev animasyonları: auto yavaş cihazda ağır süsleri (kuş, yağmur/kar, ateş böceği, uzak zemin halkaları) kapatır; on hep hafif; off hep tam. */
+  houseLite?: 'auto' | 'on' | 'off';
   /** "HH:MM" */
   time: string;
   routine: boolean;

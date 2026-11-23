@@ -755,9 +755,14 @@ function Drift({ vb, scale, dx = 0, dy = 0, ms, restart, fade, reduce, children 
 }
 
 type RoamNode = { x: number; y: number; nb: number[] };
-type RoamMode = 'walk' | 'sit' | 'sleep' | 'look';
+type RoamMode = 'walk' | 'sit' | 'sleep' | 'look' | 'hop';
 
 /** Evcil hayvan: odasındaki boş bloklarda gezer; yumuşak hızlanıp yavaşlar, yürürken zıplar, durur, bakar, oturur, uyur. */
+/** Otomatik hafif mod: ev çizimi art arda yavaşsa (bu oturumda) ağır süsler kapanır. Ayar: settings.houseLite. */
+let autoLite = false;
+const SLOW_RENDER_MS = 220;
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
 /** Odasında gezinen evcil hayvanlar (Moka gibi: yürür, oturur, bakınır, uyur). */
 const ROAMERS = new Set(['kedi', 'kopek', 'tavsan', 'hamster']);
 
@@ -786,7 +791,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
   // Zıplama / nefes döngüsü kipe göre.
   useEffect(() => {
     if (reduce) return;
-    const period = mode === 'walk' ? (dog ? 170 : 240) : mode === 'sleep' ? 1500 : mode === 'sit' ? 1000 : 0;
+    const period = mode === 'walk' ? (dog ? 170 : 240) : mode === 'hop' ? 140 : mode === 'sleep' ? 1500 : mode === 'sit' ? 1000 : 0;
     bob.setValue(0);
     if (!period) return;
     const a = Animated.loop(Animated.sequence([
@@ -829,6 +834,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
       const canWalk = ns.length > 1;
       if (canWalk && r < 0.62) return walk();
       if (r < 0.78) { setMode('sit'); return wait(rnd(1800, 4500), next); }
+      if (r < 0.84) { setMode('hop'); return wait(rnd(900, 1500), () => { setMode('sit'); wait(rnd(600, 1200), next); }); }
       if (r < 0.88) {
         setMode('look');
         face(!live.current.flip);
@@ -897,7 +903,7 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
     return () => { dead = true; if (timer) clearTimeout(timer); anim?.stop(); };
   }, [x, y, dog, reduce]);
 
-  const amp = (mode === 'walk' ? (dog ? 2.6 : 1.8) : mode === 'sit' ? 0.5 : mode === 'sleep' ? 0.35 : 0) * scale;
+  const amp = (mode === 'hop' ? 3.4 : mode === 'walk' ? (dog ? 2.6 : 1.8) : mode === 'sit' ? 0.5 : mode === 'sleep' ? 0.35 : 0) * scale;
   const lie = mode === 'sleep' ? 2.5 * scale : 0;
   const [hx, hy] = home;
   return (
@@ -1168,6 +1174,7 @@ type Props = {
 };
 
 function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = false, pinchZoom = false, now: nowProp, build, theme = 'gunduz', labels: showLabels = true, mood = 'keyifli', floor: floorProp = 0, roomZoom = false, onPickCell, hiRoom, hiCell, placing, zoomRef, focusRoom: focusProp }: Props) {
+  const t0 = nowMs();
   const L = build?.level ?? MAX_LEVEL;
   const idle = L > 0 ? build?.idle ?? 0 : 0;
   // Uyuyan ev: 3+ gün iş yapılmadıysa pencere ışıkları sönük, Moka uyur. Ceza yok; bir iş yapılınca ev uyanır.
@@ -1210,6 +1217,13 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     prevPlaced.current = placedKey;
     if (placedKey.split(',').filter(Boolean).some(id => !before.has(id)) && before.size > 0) setBurst(b => b + 1);
   }, [placedKey]);
+  const liteMode = S.settings?.houseLite ?? 'auto';
+  const [autoOn, setAutoOn] = useState(autoLite);
+  const slowRuns = useRef(0);
+  const lite = liteMode === 'on' || (liteMode === 'auto' && autoOn);
+  useEffect(() => {
+    if (liteMode === 'auto' && !autoOn && slowRuns.current >= 2) { autoLite = true; setAutoOn(true); }
+  });
   const prevIdle = useRef(idle);
   useEffect(() => {
     if (prevIdle.current > 0 && idle === 0) setBurst(b => b + 1);
@@ -2233,7 +2247,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const extOp = pinch.interpolate({ inputRange: [ZMIN, 1, 1.8], outputRange: [1, 1, 0.2], extrapolate: 'clamp' });
 
   // Square ground rings: ring k fades and scales in once the zoom-out reaches step k (max 5 rings).
-  const ringLayers = rings.map(g => {
+  const ringLayers = (lite ? rings.slice(0, 3) : rings).map(g => {
     const k = g.k;
     const s0 = 1 - 0.06 * (k - 1), s1 = s0 - 0.06;
     const op = pinch.interpolate({ inputRange: [0, s1, s0, 1.01, 4], outputRange: [1, 1, 0, 0, 0], extrapolate: 'clamp' });
@@ -2413,7 +2427,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       {sc > 0 && pets.map((pt, i) => <Roamer key={'pet' + i + pt.id} vb={vb} scale={sc} nodes={pt.nodes} start={pt.start} home={pt.home} kind={pt.id === 'kopek' ? 'kopek' : 'kedi'} reduce={reduce}>{pt.el}</Roamer>)}
       {burst > 0 && !reduce && <Burst key={burst} vb={vb} cx={(minX + maxX) / 2} cy={minY + vbH * 0.5} spread={vbW * 0.28} />}
       {sc > 0 && moka && <MokaPet fur={S.play.mokaFur} vb={vb} roomCells={moka.cells} blocked={moka.blocked} cols={cols} project={P} reduce={reduce} celebrate={burst} night={isNight || sleepy} say={onPickCell ? undefined : mokaSays} />}
-      {sc > 0 && !reduce && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-14} dx={6} ms={11000} restart fade reduce={reduce}>{motes}</Drift>}
+      {sc > 0 && !reduce && !lite && motes.length > 0 && <Drift vb={vb} scale={sc} dy={-14} dx={6} ms={11000} restart fade reduce={reduce}>{motes}</Drift>}
       {/* Çatı ve dış görünüm en üstte: çatı kapanınca içerideki ışıklar, Moka ve evcil hayvanlar çatının altında kalır, havada asılı durmaz. */}
       {extEls.length > 0 && pinchZoom && (
         <Animated.View renderToHardwareTextureAndroid pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: extOp }]}>
@@ -2427,14 +2441,14 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       )}
       {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={cloudMs(24000)} reduce={reduce}>{air.clouds}</Drift>}
       {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={cloudMs(36000)} reduce={reduce}>{air.clouds2}</Drift>}
-      {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
+      {sc > 0 && !lite && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
       {sc > 0 && !reduce && air.smoke.length > 0 && <Drift vb={vb} scale={sc} dy={-12} dx={4} ms={3200} restart fade reduce={reduce}>{air.smoke}</Drift>}
-      {sc > 0 && !reduce && air.rain.length > 0 && (
+      {sc > 0 && !reduce && !lite && air.rain.length > 0 && (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
           <Drift vb={vb} scale={sc} dy={vbH} dx={-vbW * 0.02} ms={1400} restart reduce={reduce}>{air.rain}</Drift>
         </View>
       )}
-      {sc > 0 && !reduce && air.snow.length > 0 && (
+      {sc > 0 && !reduce && !lite && air.snow.length > 0 && (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
           <Drift vb={vb} scale={sc} dy={vbH} dx={vbW * 0.03} ms={9000} restart reduce={reduce}>{air.snow}</Drift>
         </View>
@@ -2476,6 +2490,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       </Pressable>
     </View>
   ) : null;
+  slowRuns.current = nowMs() - t0 > SLOW_RENDER_MS ? slowRuns.current + 1 : 0;
   const colors = skyColors(theme, dark, wx, phase);
   const dnow = new Date(now);
   const sunT = Math.min(1, Math.max(0, (dnow.getHours() + dnow.getMinutes() / 60 - 5.5) / 14.5));

@@ -194,6 +194,12 @@ export default function Bildirimler() {
             <Chip key={k} on={(s.appearance ?? 'system') === k} label={label} onPress={() => set('appearance', k)} />
           ))}
         </View>
+        <T v="small">Ev animasyonları</T>
+        <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Ev animasyonları">
+          {([['auto', '✨ Otomatik'], ['off', '🌈 Tam'], ['on', '🍃 Hafif']] as const).map(([k, label]) => (
+            <Chip key={k} on={(s.houseLite ?? 'auto') === k} label={label} onPress={() => set('houseLite', k)} />
+          ))}
+        </View>
         <Toggle label="Ses ve titreşim 🔔" sub="Dokunuşta, iş bitince ve kutlamada yumuşak bir ses" value={s.sound} onChange={v => set('sound', v)} />
         <Toggle label="Tertemiz oda kutlaması 🎉" sub="Bir odanın bütün işleri bitince kısa bir kutlama" value={s.celebrate} onChange={v => set('celebrate', v)} />
       </Card>

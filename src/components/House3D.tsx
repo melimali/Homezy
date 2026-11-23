@@ -2017,6 +2017,17 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         els.push(<Circle key={'fbf' + i} cx={x} cy={y} r={2} fill={['#E58C7E', '#F2C46D', '#F4A6C0'][i]} />);
       });
     }
+    // Posta kutusu (14) ve ışıklı ev tabelası (80): sade kutular, kapı önünü kapatmaz.
+    if (L >= 14) {
+      box('pk', fr + 0.9, fc + 0.62, 0.05, 0.05, 0, 9, BEAM).forEach(add);
+      box('pb', fr + 0.86, fc + 0.58, 0.13, 0.13, 9, 5, '#78A1BB').forEach(add);
+    }
+    if (L >= 80) {
+      box('tp', fr + 0.9, fc + 0.9, 0.04, 0.04, 0, 12, BEAM).forEach(add);
+      box('tb', fr + 0.84, fc + 0.8, 0.14, 0.24, 12, 6, GOLD).forEach(add);
+      const [gx, gy] = P(fr + 0.9, fc + 0.92, 15);
+      life.breath.push(<Circle key="sign_glow" cx={gx} cy={gy} r={isNight ? 12 : 6} fill="url(#h3dLamp)" />);
+    }
     if (L >= 50) {
       const [tx, ty] = P(fr + 0.5, fc + 0.5, 0);
       els.push(

@@ -202,7 +202,8 @@ export function usePlay() {
           return {
             ok: false,
             error: net ? offlineMsg()
-              : m.includes('unknown item') || error.code === 'PGRST202' ? 'Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
+              : m.includes('unknown item') ? 'Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
+              : error.code === 'PGRST202' ? 'Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.'
               : m.includes('not enough') ? 'Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.'
               : m.includes('premium') ? `${item.name} Premium üyelere özel ⭐`
               : 'Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.',

@@ -1529,6 +1529,7 @@ export const EN_A: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "Your points on the server aren't enough. Try again shortly.",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "Couldn't buy it. Something went wrong, please try again shortly.",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "This item isn't ready on the server yet. Try again shortly.",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "The store purchase service isn't ready on the server yet. Try again shortly.",
  "Bulunamadı.": "Not found.",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "Moka's garden needs an internet connection.",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "The garden isn't ready on the server yet. Try again shortly.",

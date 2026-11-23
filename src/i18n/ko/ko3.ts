@@ -625,6 +625,7 @@ export const KO_3: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "서버의 포인트가 부족해요. 잠시 후 다시 시도하세요.",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "구매하지 못했어요. 문제가 생겼어요, 잠시 후 다시 시도하세요.",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "이 아이템은 아직 서버에 준비되지 않았어요. 잠시 후 다시 시도하세요.",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "스토어 구매 서비스가 아직 서버에서 준비되지 않았어요. 잠시 후 다시 시도하세요.",
  "Bulunamadı.": "찾지 못했어요.",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "모카의 정원은 인터넷 연결이 필요해요.",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "정원이 아직 서버에 준비되지 않았어요. 잠시 후 다시 시도하세요.",

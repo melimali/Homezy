@@ -256,6 +256,7 @@ export const FR_A3: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "Tes points sur le serveur ne suffisent pas. Réessaie dans un instant.",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "Achat impossible. Un problème est survenu, réessaie dans un instant.",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "Cet objet n’est pas encore prêt sur le serveur. Réessaie dans un instant.",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "Le service d’achat de la boutique n’est pas encore prêt sur le serveur. Réessaie dans un instant.",
  "Bulunamadı.": "Introuvable.",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "Le jardin de Moka nécessite une connexion internet.",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "Le jardin n’est pas encore prêt sur le serveur. Réessaie dans un instant.",

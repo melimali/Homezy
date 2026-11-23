@@ -331,15 +331,6 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduc
           ))}
         </Svg>
       </Animated.View>
-      <Pivot s={size} p={BEAK_HINGE} rotate={ip(expressionMouth, [0, 1], ['0deg', '-15deg'])}>
-        <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: jawVisible }}>
-          <Svg width={size} height={size} viewBox="0 0 512 512">
-            <Path d="M252 176Q271 183 296 166C300 179 292 197 282 201C270 203 257 189 252 176Z" fill="#C9834F" stroke="#593A2D" strokeWidth={2.3} strokeLinejoin="round" />
-            <Path d="M253 176Q272 180 295 168C294 182 287 194 280 197C272 197 259 187 253 176Z" fill="#61372E" />
-            <Path d="M266 190Q273 185 283 190Q285 193 282 196Q275 199 266 190Z" fill="#DF927C" />
-          </Svg>
-        </Animated.View>
-      </Pivot>
       <Pivot s={size} p={BEAK_HINGE} rotate={ip(expressionMouth, [0, 1], ['0deg', '2.4deg'])}>
         <Svg width={size} height={size} viewBox="0 0 512 512" style={{ position: 'absolute' }}>
           <Path d="M240 172Q253 180 261 177Q280 186 300 168Q295 191 282 196Q273 198 261 183Q250 192 240 181Z" fill="#DDA357" />
@@ -349,6 +340,15 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduc
           <Ellipse cx={256} cy={152} rx={1.9} ry={2.5} fill="#805637" opacity={0.72} />
           <Ellipse cx={277} cy={147} rx={1.45} ry={1.9} fill="#805637" opacity={0.54} />
         </Svg>
+      </Pivot>
+      <Pivot s={size} p={BEAK_HINGE} rotate={ip(expressionMouth, [0, 1], ['0deg', '-15deg'])}>
+        <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: jawVisible }}>
+          <Svg width={size} height={size} viewBox="0 0 512 512">
+            <Path d="M252 176Q271 183 296 166C300 179 292 197 282 201C270 203 257 189 252 176Z" fill="#C9834F" stroke="#593A2D" strokeWidth={2.3} strokeLinejoin="round" />
+            <Path d="M253 176Q272 180 295 168C294 182 287 194 280 197C272 197 259 187 253 176Z" fill="#61372E" />
+            <Path d="M266 190Q273 185 283 190Q285 193 282 196Q275 199 266 190Z" fill="#DF927C" />
+          </Svg>
+        </Animated.View>
       </Pivot>
       {displayAccent && <FaceAccent accent={displayAccent} size={size} opacity={accentOpacity} />}
     </>

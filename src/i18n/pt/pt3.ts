@@ -624,6 +624,7 @@ export const PT_3: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "Seus pontos no servidor não são suficientes. Tente de novo daqui a pouco.",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "Não foi possível comprar. Algo deu errado, tente de novo daqui a pouco.",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "Este objeto ainda não está pronto no servidor. Tente de novo daqui a pouco.",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "O serviço de compra da loja ainda não está pronto no servidor. Tente de novo daqui a pouco.",
  "Bulunamadı.": "Não encontrado.",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "O jardim da Moka precisa de conexão com a internet.",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "O jardim ainda não está pronto no servidor. Tente de novo daqui a pouco.",

@@ -623,6 +623,7 @@ export const AR_P4: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "نقاطك على الخادم غير كافية. حاول مرة أخرى بعد قليل.",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "تعذّر الشراء. حدث خطأ ما، حاول مرة أخرى بعد قليل.",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "هذا العنصر ليس جاهزًا على الخادم بعد. حاول مرة أخرى بعد قليل.",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "خدمة الشراء في المتجر ليست جاهزة على الخادم بعد. حاول مرة أخرى بعد قليل.",
  "Bulunamadı.": "لم يُعثر عليه.",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "حديقة موكا تحتاج إلى اتصال بالإنترنت.",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "الحديقة ليست جاهزة على الخادم بعد. حاول مرة أخرى بعد قليل.",

@@ -203,6 +203,10 @@ const PLANTER = {
   },
 } as const;
 
+// Narrow, closed silhouettes for vine stems omitted by the leaf-only masks.
+// Keeping these separate from the opaque crop prevents the wall pixels moving.
+const TRAILING_STEMS = 'M313 342L316 342Q319 365 315 385L312 403L309 403L311 382Q315 359 313 342Z M306 449L310 450Q307 475 303 492L301 508L298 507L300 491Q304 473 306 449Z M299 540L302 542Q299 562 290 585L287 588L287 583Q296 562 299 540Z M287 373L290 375Q281 386 273 402L270 402Q277 385 287 373Z M250 430L253 431Q250 445 248 461L245 463Q246 444 250 430Z M257 493L260 493Q261 515 256 538L253 543Q256 516 257 493Z M148 371L151 371Q151 386 150 405L147 405Q148 387 148 371Z M151 433L154 434Q152 449 150 466L147 467Q149 449 151 433Z';
+
 function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: Animated.Value }) {
   const id = 'planter-' + useId().replace(/[^a-z0-9]/gi, '');
   const { box: scene, pivot, src } = ODA[phase].parts.asma;
@@ -221,7 +225,6 @@ function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: An
           <Path d={art.body} />
           <Path d={art.rope} />
         </ClipPath>
-        <ClipPath id={id + '-vines'}><Path d={art.vines} /></ClipPath>
         <ClipPath id={id + '-pot'}><Path d={art.pot} /></ClipPath>
       </Defs>
       <G clipPath={'url(#' + id + '-body)'}>{image}</G>
@@ -233,6 +236,12 @@ function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: An
       { translateX: -dx }, { translateY: -dy },
     ] }]}>
       <Svg width={frame.width} height={frame.height} viewBox={viewBox}>
+        <Defs>
+          <ClipPath id={id + '-vines'}>
+            <Path d={art.vines} />
+            <Path d={TRAILING_STEMS} />
+          </ClipPath>
+        </Defs>
         <G clipPath={'url(#' + id + '-vines)'}>{image}</G>
       </Svg>
     </Animated.View>

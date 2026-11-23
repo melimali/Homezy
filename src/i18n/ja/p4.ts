@@ -107,6 +107,7 @@ export const JA_P4: Record<string, string> = {
  "Sunucudaki puanın yetmiyor. Biraz sonra tekrar dene.": "サーバー上のポイントが足りません。しばらくしてからもう一度お試しください。",
  "Satın alınamadı. Bir sorun oldu, biraz sonra tekrar dene.": "購入できませんでした。問題が発生しました、しばらくしてからもう一度お試しください。",
  "Bu eşya sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "このアイテムはサーバーでまだ準備できていません。しばらくしてからもう一度お試しください。",
+ "Mağaza satın alma hizmeti sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "ショップの購入サービスはまだサーバーで準備できていません。しばらくしてからもう一度お試しください。",
  "Bulunamadı.": "見つかりませんでした。",
  "Moka'nın bahçesi için internet bağlantısı gerekiyor.": "モカの庭にはネット接続が必要です。",
  "Bahçe sunucuda henüz hazır değil. Biraz sonra tekrar dene.": "庭はサーバーでまだ準備できていません。しばらくしてからもう一度お試しください。",

@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
+import { clampCount, safeCount } from '@/domain/safeNum';
 import type { DayBar, DotMark, MoodPoint } from '@/domain/stats';
 import type { RoomType } from '@/domain/types';
 import { fonts, radius, useColors } from '@/theme';
@@ -29,18 +30,22 @@ const AnimatedRect = Animated.createAnimatedComponent(Rect);
 /** 0 → hedef sayan, yavaşlayarak oturan sayı (hareketi azalt açıksa hemen hedef). Hedef değişince kaldığı yerden devam eder. */
 export function useCountUp(target: number, delay = 0, duration = 900) {
   const reduce = useReduceMotion();
-  const [v] = useState(() => new Animated.Value(reduce ? target : 0));
-  const [n, setN] = useState(reduce ? target : 0);
+  const goal = safeCount(target);
+  const [v] = useState(() => new Animated.Value(reduce ? goal : 0));
+  const [n, setN] = useState(reduce ? goal : 0);
   useEffect(() => {
-    const id = v.addListener(({ value }) => setN(Math.round(value)));
+    // Animasyon saati bozulursa (ara değer taşar) sayı hedefin dışına çıkamaz.
+    const id = v.addListener(({ value }) => setN(clampCount(value, goal)));
     return () => v.removeListener(id);
-  }, [v]);
+  }, [v, goal]);
   useEffect(() => {
-    if (reduce) { v.setValue(target); return; }
-    const a = Animated.timing(v, { toValue: target, duration, delay, easing: Easing.out(Easing.cubic), useNativeDriver: false });
+    if (reduce) { v.setValue(goal); setN(goal); return; }
+    const a = Animated.timing(v, { toValue: goal, duration, delay, easing: Easing.out(Easing.cubic), useNativeDriver: false });
     a.start();
-    return () => a.stop();
-  }, [v, target, delay, duration, reduce]);
+    // Saat geriye gitse bile animasyon takılmasın: süre dolunca hedef gösterilir.
+    const done = setTimeout(() => { v.setValue(goal); setN(goal); }, delay + duration + 150);
+    return () => { a.stop(); clearTimeout(done); };
+  }, [v, goal, delay, duration, reduce]);
   return n;
 }
 

@@ -82,7 +82,7 @@ export type RoomDay = {
 /** Odaya girişte Moka'nın ilk cümlesi ve yüzü: gününe göre. */
 export function openingLine(d: RoomDay, seed = 0): { key: LineKey; text: string; mood: LineMood; sleeping?: boolean } {
   const pick = (key: LineKey, mood: LineMood, v?: number) => ({ key, text: line(key, seed, v), mood });
-  if (d.away >= 3) return { ...pick('sleeping', 'sleepy'), sleeping: true };
+  if (d.away >= 3) return (d.hour < 7 || d.hour >= 22) ? { ...pick('sleeping', 'sleepy'), sleeping: true } : pick('back', 'cheer');
   if (d.total === 0) return pick('noTasks', 'happy');
   if (d.done > 0 && d.due === 0) return pick('allDone', 'cheer');
   if (d.late >= 3) return pick('manyLate', 'neutral', d.late);

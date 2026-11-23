@@ -8,7 +8,9 @@ describe('Moka odası cümleleri', () => {
   it('gününe göre açılış', () => {
     expect(openingLine(base).key).toBe('morning');
     expect(openingLine(base).text).toContain('3');
-    expect(openingLine({ ...base, away: 4 }).sleeping).toBe(true);
+    expect(openingLine({ ...base, hour: 23, away: 4 }).sleeping).toBe(true);
+    expect(openingLine({ ...base, away: 4 }).sleeping).toBeFalsy();
+    expect(openingLine({ ...base, away: 4 }).key).toBe('back');
     expect(openingLine({ ...base, total: 0 }).key).toBe('noTasks');
     expect(openingLine({ ...base, done: 2, due: 0 }).key).toBe('allDone');
     expect(openingLine({ ...base, late: 5 }).key).toBe('manyLate');

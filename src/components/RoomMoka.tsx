@@ -1,18 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 
 import { useReduceMotion } from '@/components/motion';
 import { RigBody, useSpeechMouth } from '@/components/MokaRig';
+import type { RoomExpression } from '@/constants/room-expression';
 import { COSMETIC, cosmeticOwned } from '@/domain/kozmetik';
+import type { SkyKind } from '@/lib/weather';
 import { useStore } from '@/store/AppStore';
 import { useActive } from '@/hooks/useActive';
 
 const sine = Easing.inOut(Easing.sin);
-
-export type RoomMood = 'happy' | 'cheer' | 'wow' | 'sleepy' | 'neutral' | 'sad';
+type RoomAction = 'yawn' | 'sip' | 'stretch' | 'around' | 'giggle' | 'shy' | 'celebrate' | 'coffee' | 'weather';
+const ACTION_PRIORITY: Record<RoomAction, number> = {
+  yawn: 0, sip: 0, stretch: 0, around: 0, weather: 1, giggle: 1, shy: 2, coffee: 3, celebrate: 4,
+};
 
 /** Odadaki yastığa oturan Moka. Nefes, duruş, konuşma ve boşta hareketler ortak rigi sürer. */
-export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: { size: number; fur?: string | null; mood: RoomMood; talking: boolean; thinking: boolean; /** Her artışta kutlama: çift zıplama + yükselen kalpler. */ celebrate?: number }) {
+export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0, weather, brew = 0, engaged = false, taps = 0 }: {
+  size: number;
+  fur?: string | null;
+  mood: RoomExpression;
+  talking: boolean;
+  thinking: boolean;
+  /** Her artışta kutlama: gururlu çift zıplama + yükselen kalpler. */ celebrate?: number;
+  weather?: SkyKind;
+  brew?: number;
+  engaged?: boolean;
+  taps?: number;
+}) {
   const reduceM = useReduceMotion();
   const active = useActive();
   const run = !reduceM && active;
@@ -24,18 +39,29 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   const mouth = useSpeechMouth(run && talking);
   const [wink] = useState(() => new Animated.Value(0));
   // Boşta yaşam: esneme, yudumlama, gerinme, etrafa bakma. `act` sürerken yüz geçici değişir.
-  const [act, setAct] = useState<'yawn' | 'sip' | 'stretch' | 'around' | null>(null);
+  const [act, setAct] = useState<RoomAction | null>(null);
   const [stretch] = useState(() => new Animated.Value(0));
   const [sip] = useState(() => new Animated.Value(0));
+  const [giggle] = useState(() => new Animated.Value(0));
+  const [wingCover] = useState(() => new Animated.Value(0));
   const [shake] = useState(() => new Animated.Value(0));
   const [drift] = useState(() => new Animated.Value(0.5));
   const [nod] = useState(() => new Animated.Value(0));
   const [pop] = useState(() => new Animated.Value(0));
   const [jump] = useState(() => new Animated.Value(0));
   const [hearts] = useState(() => [0, 1, 2, 3, 4, 5].map(() => new Animated.Value(0)));
-  const base: RoomMood = thinking && mood !== 'sad' && mood !== 'sleepy' ? 'neutral' : mood;
-  const faceOv = act === 'yawn' ? 'wow' : act === 'sip' ? 'happy' : act === 'stretch' ? 'cheer' : null;
-  const shown: RoomMood = faceOv && base === 'neutral' ? faceOv : base;
+  const actionRef = useRef<{ name: RoomAction; priority: number; token: number; animation?: Animated.CompositeAnimation } | null>(null);
+  const actionToken = useRef(0);
+  const base: RoomExpression = thinking && mood !== 'sad' && mood !== 'sleepy' ? 'thinking' : mood;
+  const faceOv: RoomExpression | null = act === 'yawn' ? 'wow'
+    : act === 'sip' || act === 'coffee' ? 'cozy'
+      : act === 'stretch' ? 'cheer'
+        : act === 'giggle' ? 'tickled'
+          : act === 'shy' ? 'shy'
+            : act === 'celebrate' ? 'proud'
+              : act === 'around' || act === 'weather' ? 'curious'
+                : null;
+  const shown: RoomExpression = faceOv && base !== 'sad' && base !== 'sleepy' ? faceOv : base;
   const { state } = useStore();
   const equipped = state.play.mokaWorn;
   const hand = equipped?.el ? COSMETIC[equipped.el] : undefined;
@@ -43,18 +69,127 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     ? { ...equipped, el: undefined }
     : equipped;
   const hasCup = worn?.el === 'el_fincan';
-  const [eyeBase] = useState(() => new Animated.Value(sleeping ? 0 : 1));
   const [lag] = useState(() => new Animated.Value(0));
   const [wingV] = useState(() => new Animated.Value(0));
   const [tailV] = useState(() => new Animated.Value(0));
 
-  // Uyku ve sevinç kapalı kapak kullanır, şaşkınlık gözleri biraz büyütür.
+  const startAction = useCallback((name: RoomAction) => {
+    if (!run || (name !== 'celebrate' && (talking || thinking || sleeping || mood === 'sad'))) return false;
+    const priority = ACTION_PRIORITY[name];
+    const current = actionRef.current;
+    if (current && current.priority >= priority && !(name === 'giggle' && current.name === 'giggle')) return false;
+    current?.animation?.stop();
+    [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
+    const token = ++actionToken.current;
+    setAct(name);
+    const T = (v: Animated.Value, to: number, ms: number, easing = sine) => Animated.timing(v, { toValue: to, duration: ms, easing, useNativeDriver: true });
+    let animation: Animated.CompositeAnimation;
+    if (name === 'yawn') {
+      animation = Animated.sequence([T(stretch, 1, 1050), Animated.delay(650), T(stretch, 0, 700)]);
+    } else if (name === 'sip') {
+      animation = Animated.sequence([T(sip, 1, 500), Animated.delay(500), T(sip, 0, 460), Animated.delay(320), T(sip, 0.65, 380), Animated.delay(250), T(sip, 0, 460)]);
+    } else if (name === 'stretch') {
+      animation = Animated.sequence([
+        T(stretch, 1, 650, Easing.out(Easing.quad)),
+        Animated.sequence([T(shake, 1, 70), T(shake, -1, 100), T(shake, 1, 100), T(shake, -0.6, 90), T(shake, 0, 90)]),
+        Animated.delay(220), T(stretch, 0, 600),
+      ]);
+    } else if (name === 'around' || name === 'weather') {
+      const first = name === 'weather' ? (weather === 'rain' || weather === 'storm' || weather === 'fog' ? -0.8 : 0.8) : -1;
+      const second = -first;
+      animation = Animated.sequence([
+        Animated.spring(look, { toValue: first, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(name === 'weather' ? 700 : 900),
+        Animated.spring(look, { toValue: second, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(650),
+        Animated.spring(look, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
+      ]);
+    } else if (name === 'giggle') {
+      animation = Animated.sequence([
+        Animated.parallel([T(giggle, 1, 110), T(shake, 1, 110)]),
+        Animated.parallel([T(giggle, 0.25, 85), T(shake, -1, 95)]),
+        Animated.parallel([T(giggle, 1, 95), T(shake, 0.7, 90)]),
+        Animated.parallel([T(giggle, 0, 180), T(shake, 0, 150)]),
+      ]);
+    } else if (name === 'shy') {
+      animation = Animated.sequence([
+        Animated.parallel([Animated.spring(look, { toValue: -0.35, friction: 7, tension: 50, useNativeDriver: true }), T(stretch, 0.18, 250), T(wingCover, 1, 250)]),
+        Animated.delay(520),
+        Animated.parallel([Animated.spring(look, { toValue: 0, friction: 7, tension: 45, useNativeDriver: true }), T(stretch, 0, 280), T(wingCover, 0, 280)]),
+      ]);
+    } else if (name === 'coffee') {
+      animation = Animated.sequence([
+        T(stretch, 0.75, 520, Easing.out(Easing.quad)),
+        Animated.parallel([T(sip, 0.55, 420), Animated.spring(look, { toValue: 0.12, friction: 7, tension: 45, useNativeDriver: true })]),
+        T(sip, 1, 220), Animated.delay(380),
+        Animated.parallel([T(sip, 0, 500), T(stretch, 0, 520), Animated.spring(look, { toValue: 0, friction: 7, tension: 45, useNativeDriver: true })]),
+      ]);
+    } else {
+      const hops = Animated.sequence([
+        T(jump, 1, 220, Easing.out(Easing.quad)), T(jump, 0, 190, Easing.in(Easing.quad)),
+        T(jump, -0.4, 70), T(jump, 1, 210, Easing.out(Easing.quad)), T(jump, 0, 190, Easing.in(Easing.quad)),
+        Animated.spring(jump, { toValue: 0, friction: 4, tension: 160, useNativeDriver: true }),
+      ]);
+      const heartsUp = Animated.stagger(90, hearts.map(h => Animated.timing(h, { toValue: 1, duration: 1050, easing: Easing.out(Easing.quad), useNativeDriver: true })));
+      animation = Animated.parallel([hops, heartsUp]);
+    }
+    actionRef.current = { name, priority, token, animation };
+    animation.start(({ finished }) => {
+      if (!finished || actionRef.current?.token !== token) return;
+      actionRef.current = null;
+      setAct(null);
+      [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
+    });
+    return true;
+  }, [run, talking, thinking, sleeping, mood, weather, stretch, sip, giggle, wingCover, shake, jump, hearts, look]);
+
+  // Cut gestures short when motion is reduced or Moka falls asleep; never leave a pose stuck.
   useEffect(() => {
-    const to = shown === 'sleepy' ? 0 : shown === 'cheer' ? 0.07 : shown === 'happy' ? 0.94 : shown === 'wow' ? 1.06 : shown === 'sad' ? 0.78 : 1;
-    const a = Animated.timing(eyeBase, { toValue: to, duration: reduceM ? 0 : 300, easing: sine, useNativeDriver: true });
-    a.start();
-    return () => a.stop();
-  }, [shown, eyeBase, reduceM]);
+    const current = actionRef.current;
+    if (!current || (run && (current.name === 'celebrate' || (!talking && !thinking && !engaged && !sleeping && mood !== 'sad')))) return;
+    current.animation?.stop();
+    actionRef.current = null;
+    setAct(null);
+    [stretch, sip, giggle, wingCover, shake, jump, ...hearts].forEach(v => v.setValue(0));
+  }, [run, talking, thinking, engaged, sleeping, mood, stretch, sip, giggle, wingCover, shake, jump, hearts]);
+
+  useEffect(() => () => { actionRef.current?.animation?.stop(); actionRef.current = null; }, []);
+
+  const lastTaps = useRef(taps);
+  const tapTimes = useRef<number[]>([]);
+  useEffect(() => {
+    const count = Number.isFinite(taps) ? taps : 0;
+    const delta = count - lastTaps.current;
+    lastTaps.current = count;
+    if (delta <= 0) { if (delta < 0) tapTimes.current = []; return; }
+    const now = Date.now();
+    tapTimes.current = tapTimes.current.filter(t => now - t < 2500);
+    for (let i = 0; i < Math.min(delta, 5); i++) tapTimes.current.push(now);
+    if (tapTimes.current.length >= 5) {
+      tapTimes.current = [];
+      startAction('giggle');
+    }
+  }, [taps, startAction]);
+
+  const lastBrew = useRef(brew);
+  useEffect(() => {
+    const next = Number.isFinite(brew) ? brew : 0;
+    const previous = lastBrew.current;
+    lastBrew.current = next;
+    if (next > previous) startAction('coffee');
+  }, [brew, startAction]);
+
+  const wasShy = useRef(false);
+  useEffect(() => {
+    const previous = wasShy.current;
+    wasShy.current = mood === 'shy';
+    if (mood === 'shy' && !previous) startAction('shy');
+  }, [mood, startAction]);
+
+  const previousWeather = useRef(weather);
+  useEffect(() => {
+    const previous = previousWeather.current;
+    previousWeather.current = weather;
+    if (weather && previous !== weather && !engaged) startAction('weather');
+  }, [weather, engaged, startAction]);
 
   // Şapka başı biraz geriden izler; kanat ve kuyruk yavaş salınır.
   useEffect(() => {
@@ -71,7 +206,7 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
 
   // Göz kırpma: düzensiz aralık; hızlı, yavaş ya da çift. Konuşurken, uykuda ve sevinçte kırpmaz.
   useEffect(() => {
-    if (!run || talking || shown === 'sleepy' || shown === 'cheer') return;
+    if (!run || talking || shown === 'sleepy' || shown === 'cheer' || shown === 'proud') return;
     let t: ReturnType<typeof setTimeout>;
     let dead = false;
     let gesture: Animated.CompositeAnimation | undefined;
@@ -97,42 +232,27 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     };
   }, [run, talking, shown, wink]);
 
-  // Boşta yaşam yönetmeni: 7-15 sn'de bir rastgele bir hareket.
+  // Quiet idle gestures: one at a time, with longer pauses between them.
   useEffect(() => {
-    if (!run || talking || thinking || sleeping || mood === 'sad' || mood === 'cheer' || mood === 'wow') return;
+    if (!run || talking || thinking || engaged || sleeping || mood === 'sad' || mood === 'shy' || mood === 'cheer' || mood === 'wow') return;
     let dead = false;
     let t: ReturnType<typeof setTimeout>;
-    let cur: Animated.CompositeAnimation | null = null;
-    const T = (v: Animated.Value, to: number, ms: number, e = sine) => Animated.timing(v, { toValue: to, duration: ms, easing: e, useNativeDriver: true });
-    const play = (kind: 'yawn' | 'sip' | 'stretch' | 'around') => {
-      if (kind === 'yawn') return Animated.sequence([T(stretch, 1, 1100), Animated.delay(900), T(stretch, 0, 800)]);
-      if (kind === 'sip') return Animated.sequence([T(sip, 1, 650), Animated.delay(800), T(sip, 0, 600), Animated.delay(500), T(sip, 0.7, 450), Animated.delay(400), T(sip, 0, 600)]);
-      if (kind === 'stretch') return Animated.sequence([T(stretch, 1, 700, Easing.out(Easing.quad)), Animated.parallel([Animated.sequence([T(shake, 1, 70), T(shake, -1, 110), T(shake, 1, 110), T(shake, -0.6, 100), T(shake, 0, 90)])]), Animated.delay(250), T(stretch, 0, 700)]);
-      return Animated.sequence([
-        Animated.spring(look, { toValue: -1, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(900),
-        Animated.spring(look, { toValue: 1, friction: 7, tension: 45, useNativeDriver: true }), Animated.delay(1000),
-        Animated.spring(look, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
-      ]);
-    };
     const next = () => {
       if (dead) return;
       t = setTimeout(() => {
+        if (actionRef.current) { t = setTimeout(next, 1700); return; }
         const r = Math.random();
-        const kind = r < 0.28 ? 'yawn' : hasCup && r < 0.55 ? 'sip' : r < 0.78 ? 'stretch' : 'around';
-        setAct(kind);
-        cur = play(kind);
-        cur.start(() => { if (dead) return; setAct(null); next(); });
+        const kind: RoomAction = r < 0.25 ? 'yawn' : hasCup && r < 0.48 ? 'sip' : r < 0.72 ? 'stretch' : 'around';
+        startAction(kind);
+        next();
       }, 7000 + Math.random() * 8000);
     };
     next();
     return () => {
       dead = true;
       clearTimeout(t);
-      cur?.stop();
-      setAct(null);
-      [stretch, sip, shake].forEach(v => Animated.spring(v, { toValue: 0, friction: 7, tension: 50, useNativeDriver: true }).start());
     };
-  }, [run, talking, thinking, sleeping, mood, hasCup, stretch, sip, shake, look]);
+  }, [run, talking, thinking, engaged, sleeping, mood, hasCup, startAction]);
 
   // Ağırlık kayması: çok yavaş sağa sola salınım (ikincil hareket).
   useEffect(() => {
@@ -167,24 +287,18 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
   useEffect(() => {
     const was = prevShown.current;
     prevShown.current = shown;
-    if (!run || was === shown || act || (shown !== 'cheer' && shown !== 'wow' && shown !== 'happy')) return;
+    if (!run || was === shown || act || (shown !== 'cheer' && shown !== 'wow' && shown !== 'happy' && shown !== 'proud' && shown !== 'playful' && shown !== 'tickled')) return;
     pop.setValue(1);
     Animated.spring(pop, { toValue: 0, friction: 3, tension: 120, useNativeDriver: true }).start();
   }, [shown, run, act, pop]);
 
-  // Kutlama: çift zıplama (yere inince ezilir) + yükselen kalpler.
+  // Completion uses the same locked action path as other one-shots.
   const lastCel = useRef(celebrate);
   useEffect(() => {
     if (celebrate === lastCel.current) return;
     lastCel.current = celebrate;
-    if (!run || !celebrate) return;
-    const up = (ms: number) => Animated.timing(jump, { toValue: 1, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: true });
-    const down = (ms: number) => Animated.timing(jump, { toValue: 0, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true });
-    jump.setValue(0);
-    Animated.sequence([up(230), down(200), Animated.timing(jump, { toValue: -0.4, duration: 70, useNativeDriver: true }), up(210), down(190), Animated.spring(jump, { toValue: 0, friction: 4, tension: 160, useNativeDriver: true })]).start();
-    hearts.forEach(h => h.setValue(0));
-    Animated.stagger(110, hearts.map(h => Animated.timing(h, { toValue: 1, duration: 1700, easing: Easing.out(Easing.quad), useNativeDriver: true }))).start(() => hearts.forEach(h => h.setValue(0)));
-  }, [celebrate, run, jump, hearts]);
+    if (celebrate) startAction('celebrate');
+  }, [celebrate, startAction]);
 
   // Nefes: her nefes biraz farklı uzunlukta; arada derin iç çekiş. Uykuda daha yavaş ve derin.
   const sleepRef = useRef(sleeping);
@@ -238,11 +352,11 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
 
   // Düşünürken baş yana eğilir; şaşkınken diğer yana kısa eğilme.
   useEffect(() => {
-    const to = thinking ? 1 : mood === 'wow' ? -0.6 : 0;
+    const to = thinking ? 1 : shown === 'wow' ? -0.6 : shown === 'curious' ? -0.25 : 0;
     const a = Animated.spring(tilt, { toValue: run ? to : 0, friction: 6, tension: 60, useNativeDriver: true });
     a.start();
     return () => a.stop();
-  }, [thinking, mood, run, tilt]);
+  }, [thinking, shown, run, tilt]);
 
   // Uykuda süzülen z'ler.
   useEffect(() => {
@@ -291,11 +405,11 @@ export function RoomMoka({ size, fur, mood, talking, thinking, celebrate = 0 }: 
     <View style={{ width: size, height: size }} pointerEvents="none">
       <Animated.View style={{ width: size, height: size, transform: [{ translateY: size * 0.4 }, { rotate: rot }, { translateY: -size * 0.4 }, { translateX: lx }, { translateY: ty }, { scaleX: sx }, { scaleY: sy }] }}>
         <RigBody
-          size={size} fur={fur} worn={worn}
+          size={size} fur={fur} worn={worn} expression={shown} wingCover={wingCover}
           sway={Animated.multiply(units.interpolate({ inputRange: [-3, 3], outputRange: [-1, 1] }), 0.4)} lag={lag}
           wing={wingV} tail={tailV}
-          blink={Animated.multiply(eyeBase, wink.interpolate({ inputRange: [0, 1], outputRange: [1, 0.07] }))}
-          look={look} mouth={act === 'yawn' ? Animated.multiply(stretch, 0.65) : mouth} breath={breath} sleeping={sleeping}
+          blink={wink.interpolate({ inputRange: [0, 1], outputRange: [1, 0.07] })}
+          look={look} mouth={act === 'yawn' ? Animated.multiply(stretch, 0.65) : act === 'giggle' ? Animated.multiply(giggle, 0.32) : act === 'coffee' ? Animated.multiply(sip, 0.12) : mouth} breath={breath} sleeping={sleeping}
         />
       </Animated.View>
       {hearts.map((h, i) => (

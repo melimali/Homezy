@@ -1,8 +1,9 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, View, type ImageSourcePropType } from 'react-native';
-import Svg, { ClipPath, Defs, Ellipse, G, Image as Artwork, Path } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, Image as Artwork, Path } from 'react-native-svg';
 
 import { WORN_CLOTHES } from '@/constants/wornClothes';
+import { ROOM_FACE_PRESETS, type RoomExpression, type RoomFaceAccent, type RoomFacePreset } from '@/constants/room-expression';
 import { HeldItemModel, HOLDS } from './MokaHeldItem';
 import { useReduceMotion } from '@/components/motion';
 import { COSMETIC_IMG } from '@/constants/kozmetik-img';
@@ -20,6 +21,8 @@ const W = 1254;
 const NECK = { x: 627, y: 700 };
 const SHOULDER_A = { x: 790, y: 650 }; // ekranın sağındaki kanat
 const SHOULDER_B = { x: 480, y: 650 }; // ekranın solundaki kanat
+const GARMENT_SHOULDER_A = { x: 814, y: 686 }; // kıyafetin sağ omzu
+const GARMENT_SHOULDER_B = { x: 440, y: 686 }; // kıyafetin sol omzu
 const TAIL = { x: 250, y: 1030 };
 
 export type RigMood = 'neutral' | 'happy' | 'wow' | 'sleepy';
@@ -172,21 +175,63 @@ function FittedArtwork({ src, size, crown = false, contour }: {
   );
 }
 
+function FaceAccent({ accent, size, opacity }: { accent?: RoomFaceAccent; size: number; opacity: Animated.Value }) {
+  if (!accent || accent === 'blush') return null;
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity }}>
+      <Svg width={size} height={size} viewBox="0 0 512 512">
+        {accent === 'sparkle' && <>
+          <Path d="M0 -8L2 -2L8 0L2 2L0 8L-2 2L-8 0L-2 -2Z" transform="translate(145 111) scale(.72)" fill="#F7D47B" stroke="#9A7045" strokeWidth={1.2} />
+          <Path d="M0 -8L2 -2L8 0L2 2L0 8L-2 2L-8 0L-2 -2Z" transform="translate(377 116) scale(.5)" fill="#F7D47B" stroke="#9A7045" strokeWidth={1.2} />
+        </>}
+        {accent === 'question' && <>
+          <Path d="M357 108Q358 98 369 98Q380 98 380 107Q380 113 370 118L369 123" fill="none" stroke="#9A7045" strokeWidth={3.2} strokeLinecap="round" />
+          <Circle cx={369} cy={130} r={2.2} fill="#9A7045" />
+        </>}
+        {accent === 'heart' && <Path d="M367 197C360 190 351 193 352 201C353 208 367 216 367 216C367 216 382 207 382 200C382 193 374 190 367 197Z" fill="#E58E91" stroke="#A45E62" strokeWidth={1.7} />}
+        {accent === 'sweat' && <Path d="M373 103C370 110 364 116 365 121C366 130 380 130 381 121C382 116 376 109 373 103Z" fill="#A8D8EF" stroke="#6E9FB7" strokeWidth={1.7} />}
+        {accent === 'tear' && <Path d="M186 182C183 188 179 193 181 198C183 205 194 203 195 196C196 192 190 186 186 182Z" fill="#91CDE9" stroke="#679DB7" strokeWidth={1.5} />}
+        {accent === 'thought' && <>
+          <Circle cx={369} cy={108} r={3.6} fill="#F4D8AF" stroke="#9A7045" strokeWidth={1.2} />
+          <Circle cx={379} cy={98} r={5.2} fill="#F4D8AF" stroke="#9A7045" strokeWidth={1.2} />
+          <Circle cx={391} cy={87} r={7.1} fill="#F4D8AF" stroke="#9A7045" strokeWidth={1.2} />
+        </>}
+        {accent === 'warmth' && <Path d="M359 118Q354 111 359 104Q364 97 359 90M372 118Q367 111 372 104Q377 97 372 90" fill="none" stroke="#E8B45E" strokeWidth={2.8} strokeLinecap="round" />}
+      </Svg>
+    </Animated.View>
+  );
+}
 // Kaynak katmanlar 512 × 512. İki gözün merkezleri farklı yükseklikte.
 const EYE_CENTERS = [{ x: 207, y: 155 }, { x: 324, y: 138 }];
 const BEAK_HINGE = { x: 298 * W / 512, y: 166 * W / 512 };
 
-function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
+function RigFace({ size, eyes, beak, blink, look, mouth, sleeping, preset, reduceMotion, active }: {
   size: number; eyes: ImageSourcePropType; beak: ImageSourcePropType;
-  blink: Val; look: Val; mouth: Val; sleeping: boolean;
+  blink: Val; look: Val; mouth: Val; sleeping: boolean; preset?: RoomFacePreset; reduceMotion: boolean; active: boolean;
 }) {
   const unit = size / 512;
-  const gaze = ip(look, [-1, 1], [-3 * unit, 3 * unit]);
+  const expressionEye = preset ? ip(blink, [0, 1], [0, preset.eyeOpen]) : blink;
+  const gazeBase = preset?.gaze ?? 0;
+  const gazeSpan = preset ? 0.18 : 1;
+  const gaze = ip(look, [-1, 1], [Math.max(-1, gazeBase - gazeSpan) * 3 * unit, Math.min(1, gazeBase + gazeSpan) * 3 * unit]);
+  const expressionMouth = preset ? ip(mouth, [0, 1], [preset.beakOpen, Math.min(1, preset.beakOpen + 0.78)]) : mouth;
+  const accent = preset?.accent;
+  const [accentOpacity] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    accentOpacity.stopAnimation();
+    const target = accent && accent !== 'blush' ? 1 : 0;
+    if (reduceMotion || !active) { accentOpacity.setValue(target); return; }
+    if (target) accentOpacity.setValue(0);
+    const fade = Animated.timing(accentOpacity, { toValue: target, duration: 180, easing: sine, useNativeDriver: true, isInteraction: false });
+    fade.start();
+    return () => fade.stop();
+  }, [accent, accentOpacity, reduceMotion, active]);
+
   const visibility = (value: Val, range: number[], opacity: number[]) =>
     (value as Animated.Value).interpolate({ inputRange: range, outputRange: opacity, extrapolate: 'clamp' });
   const eyesVisible = visibility(blink, [0.17, 0.21], [0, 1]);
   const lidsVisible = visibility(blink, [0.17, 0.21], [1, 0]);
-  const jawVisible = visibility(mouth, [0, 0.14], [0, 1]);
+  const jawVisible = visibility(expressionMouth, [0, 0.14], [0, 1]);
   const closedLid = sleeping
     ? 'M-20 -2 C-12 6 7 9 18 -3 C14 9 -9 15 -20 1 Q-22 -4 -20 -2Z'
     : 'M-20 3 C-14 -9 4 -14 18 -4 Q20 -1 17 -2 C3 -8 -10 -5 -18 5 Q-21 7 -20 3Z';
@@ -197,13 +242,23 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
         <Animated.View key={x} pointerEvents="none" style={{
           position: 'absolute', left: (x - 66) * unit, top: (y - 60) * unit,
           width: 132 * unit, height: 120 * unit, overflow: 'hidden',
-          opacity: eyesVisible, transform: [{ translateX: gaze }, { scaleY: blink }],
+          opacity: eyesVisible, transform: [{ translateX: gaze }, { scaleY: expressionEye }],
         }}>
           <Image source={eyes} resizeMode="contain" fadeDuration={0} style={{
             position: 'absolute', left: (66 - x) * unit, top: (60 - y) * unit, width: size, height: size,
           }} />
         </Animated.View>
       ))}
+      {preset && (
+        <Svg pointerEvents="none" style={{ position: 'absolute' }} width={size} height={size} viewBox="0 0 512 512">
+          <Ellipse cx={190} cy={185} rx={15} ry={6} fill="#E99691" opacity={preset.cheek * 0.34} />
+          <Ellipse cx={338} cy={168} rx={14} ry={5.5} fill="#E99691" opacity={preset.cheek * 0.34} />
+          {Math.abs(preset.brow) > 0.02 && <>
+            <Path d="M184 116Q205 108 228 116" transform={'translate(0 ' + (-preset.brow * 2) + ') rotate(' + (-preset.brow * 13) + ' 205 114)'} fill="none" stroke="#56392E" strokeWidth={3.2} strokeLinecap="round" opacity={Math.min(0.9, Math.abs(preset.brow) * 0.82)} />
+            <Path d="M300 100Q323 92 347 100" transform={'translate(0 ' + (-preset.brow * 2) + ') rotate(' + (preset.brow * 13) + ' 323 98)'} fill="none" stroke="#56392E" strokeWidth={3.2} strokeLinecap="round" opacity={Math.min(0.9, Math.abs(preset.brow) * 0.82)} />
+          </>}
+        </Svg>
+      )}
       <Animated.View pointerEvents="none" style={{ position: 'absolute', width: size, height: size, opacity: lidsVisible }}>
         <Svg width={size} height={size} viewBox="0 0 512 512">
           <Ellipse cx={189} cy={177} rx={12} ry={4.5} fill="#DC9781" opacity={0.32} />
@@ -213,7 +268,7 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
           ))}
         </Svg>
       </Animated.View>
-      <Pivot s={size} p={BEAK_HINGE} rotate={ip(mouth, [0, 1], ['0deg', '-15deg'])}>
+      <Pivot s={size} p={BEAK_HINGE} rotate={ip(expressionMouth, [0, 1], ['0deg', '-15deg'])}>
         <Animated.View style={{ position: 'absolute', width: size, height: size, opacity: jawVisible }}>
           <Svg width={size} height={size} viewBox="0 0 512 512">
             <Path d="M252 176Q271 183 296 166C300 179 292 197 282 201C270 203 257 189 252 176Z" fill="#C9834F" stroke="#593A2D" strokeWidth={2.3} strokeLinejoin="round" />
@@ -222,7 +277,7 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
           </Svg>
         </Animated.View>
       </Pivot>
-      <Pivot s={size} p={BEAK_HINGE} rotate={ip(mouth, [0, 1], ['0deg', '2.4deg'])}>
+      <Pivot s={size} p={BEAK_HINGE} rotate={ip(expressionMouth, [0, 1], ['0deg', '2.4deg'])}>
         <Svg width={size} height={size} viewBox="0 0 512 512" style={{ position: 'absolute' }}>
           <Path d="M240 172Q253 180 261 177Q280 186 300 168Q295 191 282 196Q273 198 261 183Q250 192 240 181Z" fill="#DDA357" />
         </Svg>
@@ -232,6 +287,7 @@ function RigFace({ size, eyes, beak, blink, look, mouth, sleeping }: {
           <Ellipse cx={277} cy={147} rx={1.45} ry={1.9} fill="#805637" opacity={0.54} />
         </Svg>
       </Pivot>
+      {preset && <FaceAccent accent={preset.accent} size={size} opacity={accentOpacity} />}
     </>
   );
 }
@@ -262,25 +318,41 @@ export function useSpeechMouth(speaking: boolean) {
 }
 
 /** Oda ve dolap aynı çizimleri ve temas noktalarını kullanır. */
-export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, mouth, breath, sleeping = false }: {
-  size: number; fur?: string | null; worn?: Partial<Record<SlotId, string | undefined>>;
+export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, mouth, breath, sleeping = false, expression, wingCover }: {
+  size: number; fur?: string | null; worn?: Partial<Record<SlotId, string | undefined>>; expression?: RoomExpression; wingCover?: Val;
   sway: Val; lag: Val; wing: Val; tail: Val; blink: Val; look: Val; mouth: Val; breath: Val; sleeping?: boolean;
 }) {
   const L = useMemo(() => rig(fur), [fur]);
   const reduce = useReduceMotion();
   const active = useActive();
+  const preset = expression ? ROOM_FACE_PRESETS[expression] : undefined;
   const headId = worn?.bas && COSMETIC[worn.bas] && COSMETIC_IMG[worn.bas] ? worn.bas : undefined;
   const bodyId = worn?.govde && COSMETIC[worn.govde] && COSMETIC_IMG[worn.govde] ? worn.govde : undefined;
   const handId = worn?.el && COSMETIC[worn.el] && COSMETIC_IMG[worn.el] ? worn.el : undefined;
   const [headMotion] = useState(() => new Animated.Value(0));
   const [bodyMotion] = useState(() => new Animated.Value(0));
   const [handMotion] = useState(() => new Animated.Value(0));
+  const [footTap] = useState(() => new Animated.Value(0));
   useEffect(() => animateCosmetic(headMotion, headId, reduce, active), [headId, reduce, active, headMotion]);
   useEffect(() => animateCosmetic(bodyMotion, bodyId, reduce, active), [bodyId, reduce, active, bodyMotion]);
   useEffect(() => animateCosmetic(handMotion, handId, reduce, active), [handId, reduce, active, handMotion]);
   const headLate = ip(breath, [0, 1], [0, -size * 0.004]);
   const wingRise = ip(breath, [0, 1], [0, -size * 0.003]);
   const bodyItem = bodyId ? WORN_CLOTHES[bodyId] ?? COSMETIC_IMG[bodyId] : null;
+  const hasBodyOutfit = Boolean(bodyId && bodyItem);
+  useEffect(() => {
+    footTap.stopAnimation();
+    if (!hasBodyOutfit || !expression || reduce || !active) { footTap.setValue(0); return; }
+    footTap.setValue(0);
+    const idleTap = Animated.loop(Animated.sequence([
+      Animated.delay(5200),
+      Animated.timing(footTap, { toValue: 1, duration: 110, easing: Easing.out(Easing.quad), useNativeDriver: true, isInteraction: false }),
+      Animated.timing(footTap, { toValue: 0, duration: 360, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+      Animated.delay(2800),
+    ]));
+    idleTap.start();
+    return () => { idleTap.stop(); footTap.stopAnimation(); footTap.setValue(0); };
+  }, [active, expression, footTap, hasBodyOutfit, reduce]);
   const headItem = headId ? COSMETIC_IMG[headId] : null;
   const hold = handId ? HOLDS[handId] : undefined;
   const headFit = headId ? HEAD_FIT[headId] : undefined;
@@ -292,19 +364,41 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const garmentFront = bodyId ? GARMENT_FRONT[bodyId] : undefined;
   const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
   const clothSwing = cape ? 0.7 : 0.35;
+  const wingPivotA = hasBodyOutfit ? GARMENT_SHOULDER_A : SHOULDER_A;
+  const wingPivotB = hasBodyOutfit ? GARMENT_SHOULDER_B : SHOULDER_B;
+  const wingLayer = (side: 'left' | 'right') => {
+    const left = side === 'left';
+    const pivot = left ? wingPivotB : wingPivotA;
+    const src = left ? L.kanat_b : L.kanat_a;
+    const pose = <Pivot s={size} p={pivot} rotate={deg(wing, left ? -2.5 : 2.5)} ty={wingRise}><Layer src={src} s={size} /></Pivot>;
+    if (hasBodyOutfit || !wingCover) return pose;
+    return (
+      <Pivot s={size} p={pivot}
+        rotate={ip(wingCover, [0, 1], ['0deg', left ? '-16deg' : '16deg'])}
+        tx={ip(wingCover, [0, 1], [0, left ? size * 0.07 : -size * 0.07])}
+        ty={ip(wingCover, [0, 1], [0, -size * 0.22])}
+      >{pose}</Pivot>
+    );
+  };
+  const wings = handId && hold ? null : <>{wingLayer('left')}{wingLayer('right')}</>;
+  const footLift = ip(footTap, [0, 1], [0, -size * 0.004]);
+  const footPress = ip(footTap, [0, 1], [1, 1.006]);
   return (
     <>
       <Pivot s={size} p={TAIL} rotate={deg(tail, 3)}><Layer src={L.kuyruk} s={size} /></Pivot>
       <Layer src={L.govde} s={size} />
+      {hasBodyOutfit && wings}
       {bodyId && bodyItem && (
         <Pivot s={size} p={NECK} rotate={deg(bodyMotion, clothSwing)}>
           {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
         </Pivot>
       )}
-      <Layer src={AYAK} s={size} />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, transform: [{ translateY: footLift }, { scaleY: footPress }] }}>
+        <Layer src={AYAK} s={size} />
+      </Animated.View>
       <Pivot s={size} p={NECK} rotate={deg(sway, 2.2)} ty={headLate}>
         <Layer src={L.bas} s={size} />
-        <RigFace size={size} eyes={L.gozler} beak={L.gaga} blink={blink} look={look} mouth={mouth} sleeping={sleeping} />
+        <RigFace size={size} eyes={L.gozler} beak={L.gaga} blink={blink} look={look} mouth={mouth} sleeping={sleeping} preset={preset} reduceMotion={reduce} active={active} />
         {headItem && headFit && (
           <Pivot s={size} p={headRoot} rotate={deg(lag, 0.8)}>
             <Pivot s={size} p={headPivot} tx={headTx} ty={headTy} rotate={headFit.tilt + 'deg'} scale={headFit.scale} scaleX={headFit.width} scaleY={headFit.height}>
@@ -321,8 +415,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
         <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} />
       ) : (
         <>
-          <Pivot s={size} p={SHOULDER_B} rotate={deg(wing, -2.5)} ty={wingRise}><Layer src={L.kanat_b} s={size} /></Pivot>
-          <Pivot s={size} p={SHOULDER_A} rotate={deg(wing, 2.5)} ty={wingRise}><Layer src={L.kanat_a} s={size} /></Pivot>
+          {!hasBodyOutfit && wings}
         </>
       )}
     </>

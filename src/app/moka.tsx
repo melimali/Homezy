@@ -23,6 +23,7 @@ import { useToast } from '@/components/Toast';
 import { Btn, Chevron, T } from '@/components/ui';
 import type { Href } from 'expo-router';
 import { mimikFor, mimikOf } from '@/constants/mimik';
+import type { RoomExpression } from '@/constants/room-expression';
 import { CHAT_ACCOUNT_NEEDED, CHAT_PREMIUM_INTRO, CHAT_PREMIUM_NUDGE } from '@/domain/chatGate';
 import { applyChatAction, chatCtx, describeAction, needsConfirm, noteDayLabel, type ChatAction, type ChatMsg } from '@/domain/chat';
 import type { AppState } from '@/domain/types';
@@ -56,6 +57,8 @@ type Item = ChatMsg & {
   confirmed?: 'yes' | 'no';
   /** Hata cevabında: "Tekrar dene" ile yeniden gönderilecek mesaj. */
   retry?: string;
+  /** Sunucudan gelen, yalnızca odada kullanılan geçici mimik. */
+  mood?: RoomExpression;
   /** Günlük hak bitince Moka'nın vedası (modele gönderilmez). */
   bye?: boolean;
 };
@@ -191,10 +194,8 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
     reveal.start(({ finished }) => { if (finished) setCoverRoom(false); });
     return () => reveal.stop();
   }, [reduce, roomOpeningAt, roomReady, roomReveal]);
-  const lastMood = last && last.id !== 0 ? mimikOf(last.content) : 'happy';
-  // Cevap beklerken kullanıcının son mesajı üzgünse Moka da üzgün dinler.
-  const mine = [...items].reverse().find(i => i.role === 'user');
-  const mood = busy && mine && mimikOf(mine.content) === 'sad' ? 'sad' : lastMood;
+  const lastMood = last && last.id !== 0 ? last.mood ?? 'happy' : 'happy';
+  const mood: RoomExpression = busy ? 'thinking' : lastMood;
   const [speaking, setSpeaking] = useState(false);
   const lastId = last?.id;
   useEffect(() => {
@@ -331,10 +332,15 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
         }
       }
     });
-    if (done.length) sfx('done');
+    if (done.length) {
+      sfx('done');
+      setBurst(b => b + 1);
+      setMoodOv('proud');
+      later(() => setMoodOv(m => (m === 'proud' ? null : m)), 2200);
+    }
     const rid = nextId++;
     fresh.add(rid);
-    push(p => [...p, { id: rid, role: 'assistant', content: r.reply, done, ...(undo.length ? { undo } : {}), ...(confirm.length ? { confirm } : {}) }]);
+    push(p => [...p, { id: rid, role: 'assistant', content: r.reply, mood: r.mood ?? 'happy', done, ...(undo.length ? { undo } : {}), ...(confirm.length ? { confirm } : {}) }]);
     // Bu, günün son mesajıydı: cevabı yazıldıktan sonra Moka vedalaşır.
     if (r.limit != null && r.limit - r.used <= 0) sayBye(typeMs(r.reply.length) + 1800);
     const go = got.go;
@@ -509,7 +515,7 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   const [lampOff, setLampOff] = useState(false);
   const [quip, setQuip] = useState('');
   const [bump, setBump] = useState(0); // etkileşim sayacı: boşta sayacı sıfırlar
-  const [moodOv, setMoodOv] = useState<'cheer' | 'wow' | 'happy' | 'sleepy' | null>(null);
+  const [moodOv, setMoodOv] = useState<RoomExpression | null>(null);
   const [hop] = useState(() => new Animated.Value(0));
   const [burst, setBurst] = useState(0);
   const [composing, setComposing] = useState(false);
@@ -526,9 +532,11 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   const hide = (k: string) => setGone(g => (g.includes(k) ? g : [...g, k]));
   const unhide = (k: string) => setGone(g => g.filter(x => x !== k));
   const tapN = useRef(0);
+  const rapidTaps = useRef<number[]>([]);
+  const [mokaTapSignal, setMokaTapSignal] = useState(0);
   const interact = () => setBump(b => b + 1);
   /** Kısa süreli Moka repliği (balonda), süre bitince balon söner. */
-  const say = (s: string, mood: typeof moodOv = 'happy', ms = 3800) => {
+  const say = (s: string, mood: RoomExpression = 'happy', ms = 3800) => {
     setLockMsg(null);
     setQuip(s);
     unhide(`q:${s}`);
@@ -622,7 +630,15 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
     }
     // Moka'ya dokununca son cevabı geri gelir; yoksa tatlı bir tepki.
     if (!fresh0 && gone.includes(`m:${shownIt.id}`) && !quip) return unhide(`m:${shownIt.id}`);
-    say(line('tap', tapN.current++), tapN.current % 4 === 1 ? 'wow' : 'cheer', 2600);
+    const now = Date.now();
+    rapidTaps.current = rapidTaps.current.filter(t => now - t < 2500);
+    rapidTaps.current.push(now);
+    const quick = rapidTaps.current.length >= 5;
+    if (quick) rapidTaps.current = [];
+    const index = tapN.current++;
+    const tapMood: RoomExpression = quick ? 'tickled' : (['playful', 'curious', 'happy', 'cheer'][index % 4] as RoomExpression);
+    setMokaTapSignal(n => n + 1);
+    say(line('tap', index), tapMood, 2600);
   };
   // Gündüz (07–22) Moka uyanık karşılar: uyuma sadece gece ya da uzun aradan sonra, o da kısa sürer.
   useEffect(() => {
@@ -665,7 +681,8 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
     restingRef.current = resting;
     quietRef.current = busy || composing || resting;
   }, [resting, busy, composing]);
-  const baseMood = resting ? 'sleepy' : !fresh0 ? mood : !woke ? 'sleepy' : opening.mood;
+  const openingMood: RoomExpression = opening.mood === 'neutral' ? 'content' : opening.mood;
+  const baseMood: RoomExpression = resting ? 'sleepy' : !fresh0 ? mood : !woke ? 'sleepy' : openingMood;
   // Misafir ve ücretsiz üyede sohbet düğmesi kilitli: basınca Moka tek cümleyle anlatır. Premium'da hak bitince yarına kadar.
   const lock: 'login' | 'premium' | 'tomorrow' | null = status !== 'account' ? 'login' : !premium.active ? 'premium' : left && left.day <= 0 ? 'tomorrow' : null;
   const chatPress = () => {
@@ -839,7 +856,7 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
               ],
             }}
           >
-            <RoomMoka fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} celebrate={burst} />
+            <RoomMoka fur={fur} size={mokaSize} mood={moodOv ?? baseMood} talking={!busy && speaking} thinking={busy} celebrate={burst} weather={sky.kind} brew={brew} engaged={composing} taps={mokaTapSignal} />
           </Animated.View>
         </Pressable>
         <View pointerEvents="none" style={{ position: 'absolute', left: mokaCx, top: mokaTop + mokaSize * 0.4 }}>

@@ -2649,3 +2649,165 @@ end;
 $$;
 revoke all on function public.delete_me() from public, anon;
 grant execute on function public.delete_me() to authenticated;
+
+
+-- =====================================================================
+-- 20261110120000_magaza_eksik.sql
+-- =====================================================================
+-- Mağazada olup sunucu tablosunda eksik kalan eşyalar (src/domain/items.ts ile aynı).
+-- Eksikken satın alma 'unknown item' hatası veriyordu. SQL Editor'da bir kere çalıştır; tekrar çalıştırmak zararsız.
+insert into public.play_items (id, price, premium) values
+  ('kahve_makinesi', 70, false),
+  ('tv_unitesi', 110, false),
+  ('teleskop', 140, false),
+  ('avize', 170, true),
+  ('bilardo', 220, true),
+  ('orkide', 35, false),
+  ('kaktus', 35, false),
+  ('monstera', 45, false),
+  ('sukulent', 30, false),
+  ('komodin', 45, false),
+  ('calisma_masasi', 85, false),
+  ('berjer', 95, false),
+  ('duvar_saati', 55, false),
+  ('tablo', 75, false),
+  ('ayna', 65, false),
+  ('kulaklik', 60, false),
+  ('muzik_kutusu', 85, false),
+  ('hoparlor', 95, false),
+  ('retro_radyo', 100, false),
+  ('papagan', 130, false),
+  ('akilli_mama', 75, false),
+  ('kristal_kure', 160, true),
+  ('gramofon', 190, true),
+  ('sallanan_sandalye', 105, false),
+  ('bonsai', 115, true),
+  ('vazo', 50, false),
+  ('oyun_konsolu', 180, true),
+  ('fotograf_makinesi', 135, false),
+  ('bambu', 90, false),
+  ('duvar_rafi', 40, false),
+  ('masa_lambasi', 50, false),
+  ('koltuk_takimi', 140, false),
+  ('yemek_masasi', 120, false),
+  ('gardirop', 100, false),
+  ('sehpa', 55, false),
+  ('yatak_ranza', 90, false),
+  ('kitap_koltugu', 75, false),
+  ('sarkit_isik', 45, false),
+  ('lava_lambasi', 65, false),
+  ('zemin_lambasi', 80, false),
+  ('mum', 25, false),
+  ('fener', 40, false),
+  ('duvar_halisi', 60, false),
+  ('poster', 35, false),
+  ('boy_ayna', 70, false),
+  ('duvar_cicegi', 55, false),
+  ('neon_yazi', 120, true),
+  ('yucca', 50, false),
+  ('sarmasik', 40, false),
+  ('lavanta', 35, false),
+  ('aloe', 30, false),
+  ('limon_agaci', 130, true),
+  ('palmiye', 85, false),
+  ('kedi_yatagi', 45, false),
+  ('kopek_yatagi', 45, false),
+  ('tavsan', 110, false),
+  ('hamster', 90, false),
+  ('kus_yemligi', 60, false),
+  ('yilbasi_agaci', 140, false),
+  ('kar_adami', 90, false),
+  ('balkabagi', 40, false),
+  ('ramazan_feneri', 50, false),
+  ('plaj_semsiyesi', 70, false),
+  ('cicek_celengi', 60, false),
+  ('bilgisayar_masasi', 160, false),
+  ('spor_kosesi', 120, false),
+  ('yoga_mati', 45, false),
+  ('resim_sehpasi', 90, false),
+  ('dikis_makinesi', 100, false),
+  ('posta_kutusu', 40, false),
+  ('cit', 60, false),
+  ('bahce_lambasi', 55, false),
+  ('kus_evi', 70, false),
+  ('paspas', 25, false),
+  ('salincak', 110, true)
+on conflict (id) do update set price = excluded.price, premium = excluded.premium;
+
+
+-- =====================================================================
+-- 20261116120000_kurk.sql
+-- =====================================================================
+-- Moka'nın kürk renkleri puanla alınır (docs/moka-oda-usta-plan.md §3.6). Orman bedava, tabloda yok.
+-- Fiyatlar src/domain/items.ts FUR_PRICE ile aynı olmalı.
+insert into public.play_items (id, price, premium) values
+  ('kurk_kahve', 80, false), ('kurk_gri', 80, false),
+  ('kurk_mavi', 120, false), ('kurk_turuncu', 120, false), ('kurk_pembe', 120, false),
+  ('kurk_mor', 160, false), ('kurk_kirmizi', 160, false)
+on conflict (id) do update set price = excluded.price, premium = excluded.premium;
+
+
+-- =====================================================================
+-- 20261117100000_kozmetik.sql
+-- =====================================================================
+-- Moka kozmetikleri puanla alınır (docs/moka-kozmetik-plani.md). Fiyat 0 olanlar herkese açık, tabloda yok.
+-- Fiyatlar src/domain/kozmetik.ts ile aynı olmalı.
+insert into public.play_items (id, price, premium) values
+  ('esya_bas_balkabagi', 160, true),
+  ('esya_bas_kahve_cekirdegi_tac', 120, false),
+  ('esya_bas_mantar', 120, false),
+  ('esya_bas_kus_yuvasi', 120, false),
+  ('esya_bas_cay_demligi', 120, false),
+  ('esya_bas_kruvasan', 80, false),
+  ('esya_bas_uyku_takkesi', 80, false),
+  ('esya_bas_cicek_saksi', 80, false),
+  ('esya_bas_dondurma', 80, false),
+  ('esya_bas_yagmur_bulutu', 120, false),
+  ('esya_bas_kedi_kulagi', 80, false),
+  ('esya_bas_asci_sapkasi', 80, false),
+  ('esya_bas_tac', 160, true),
+  ('esya_bas_kulaklik', 80, false),
+  ('esya_bas_yilbasi', 80, false),
+  ('esya_bas_buyucu', 120, false),
+  ('esya_bas_korsan', 120, false),
+  ('esya_bas_pamuk_seker', 80, false),
+  ('esya_bas_kar_adam', 80, false),
+  ('esya_govde_onluk', 80, false),
+  ('esya_govde_pelerin', 80, false),
+  ('esya_govde_yelek', 80, false),
+  ('esya_govde_pijama', 80, false),
+  ('esya_govde_mont', 120, false),
+  ('esya_govde_kaplan', 160, true),
+  ('esya_govde_pizza', 120, false),
+  ('esya_govde_battaniye', 120, false),
+  ('esya_govde_yagmurluk', 80, false),
+  ('esya_govde_pilot', 120, false),
+  ('esya_govde_tisort_kahve', 80, false),
+  ('esya_govde_hirka', 80, false),
+  ('esya_govde_sef_ceketi', 120, false),
+  ('esya_govde_kimono', 160, true),
+  ('esya_govde_dev_cicek', 160, true),
+  ('esya_govde_tulum', 80, false),
+  ('esya_govde_sporcu', 80, false),
+  ('esya_govde_kral_pelerini', 200, true),
+  ('esya_govde_balikci_yelegi', 120, false),
+  ('esya_el_kitap', 40, false),
+  ('esya_el_cicek', 40, false),
+  ('esya_el_supurge', 40, false),
+  ('esya_el_balon', 40, false),
+  ('esya_el_telefon', 80, false),
+  ('esya_el_kilic', 80, false),
+  ('esya_el_degnek', 120, true),
+  ('esya_el_gitar', 120, false),
+  ('esya_el_olta', 80, false),
+  ('esya_el_firca', 80, false),
+  ('esya_el_semsiye', 80, false),
+  ('esya_el_hediye', 80, false),
+  ('esya_el_pasta', 80, false),
+  ('esya_el_fener', 80, false),
+  ('esya_el_harita', 120, false),
+  ('esya_el_megafon', 80, false),
+  ('esya_el_mum', 80, false),
+  ('esya_el_sulama', 40, false),
+  ('esya_el_kamera', 120, true)
+on conflict (id) do update set price = excluded.price, premium = excluded.premium;

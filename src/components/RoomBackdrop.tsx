@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, Pressable, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
-import Svg, { ClipPath, Defs, G, Image as Artwork, Path } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, Image as Artwork, Path, RadialGradient, Rect, Stop as SvgStop } from 'react-native-svg';
 
 import { useReduceMotion } from '@/components/motion';
 import { ISIK, MOTION, ODA, ODA_H, ODA_W, PARCA, type Box, type OdaLayers, type OdaPart, type OdaPhase, type OdaTouch, type Pt } from '@/constants/oda';
@@ -133,6 +133,11 @@ const GLASS: Partial<Record<SkyKind, { tone: string; op: number }>> = {
   cloudy: { tone: '#8C97A8', op: 0.36 }, rain: { tone: '#55657A', op: 0.48 }, storm: { tone: '#1E2533', op: 0.6 },
   snow: { tone: '#E6EDF5', op: 0.38 }, fog: { tone: '#EEF1F4', op: 0.58 },
 };
+const SHELF_WALL: Record<OdaPhase, { clip: string; cx: number; cy: number; r: number; color: string }> = {
+  sabah: { clip: 'M442 602H665V723H442Z', cx: 554, cy: 661, r: 122, color: '#F3D6B0' },
+  aksam: { clip: 'M430 596H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#BA7B55' },
+  gece: { clip: 'M430 595H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#50343A' },
+};
 const RAIN_N = 12;
 
 /** Zincirin 7 ampulü: iki uç arasında hafifçe sarkar. */
@@ -173,31 +178,33 @@ function Chain({ pts, lights, sweep, s, night }: { pts: Pt[]; lights: Animated.V
   );
 }
 
-// The old cutouts isolate the ropes and leaves. The pot was missed by that mask,
-// so its visible silhouette comes from the aligned PNG through a separate clip.
+// Leaf masks keep opaque wall/window pixels in the source crops stationary.
 const PLANTER = {
   sabah: {
     cutout: require('../../assets/oda/sabah_asma.webp'), box: [22, 42, 319, 592], joint: [236, 316],
-    split: 'M89 323H228L236 313H374V665H0V356Z',
-    crown: 'M0 0H374V316H237L228 328H89L0 357Z',
+    body: 'M244 153L259 153L270 157L285 170L294 184L292 186L275 185L270 193L259 197L250 192L237 190L227 177L225 169L235 156ZM116 154L135 160L142 168L144 185L138 196L128 197L124 200L105 197L99 192L99 188L75 177L72 173L75 169L97 158ZM195 164L205 164L210 169L215 185L226 204L223 207L215 207L206 211L199 211L193 208L185 211L176 204L165 206L163 204L163 198L165 197L163 194L164 189L173 183L175 177L183 168ZM216 168L223 172L224 179L231 187L226 193L222 191L218 182L216 172L214 171ZM70 182L77 182L87 186L95 195L96 209L85 220L99 220L109 227L109 236L117 259L108 267L101 270L86 271L68 282L64 277L60 247L66 234L80 222L58 221L55 218L44 218L35 221L33 215L40 202L50 191L59 185ZM190 183L189 185L197 184ZM186 184L180 188L188 185ZM147 188L150 190L151 195L151 201L148 205L141 199L142 194ZM236 194L257 200L266 209L270 219L266 221L259 217L250 217L243 211L235 208L231 201ZM102 200L108 200L114 204L114 209L107 221L97 215L99 203ZM128 200L140 200L149 208L154 206L163 207L168 212L169 227L166 234L157 242L132 252L124 259L118 251L114 240L111 221L116 210ZM175 207L183 212L184 217L174 222L172 220L172 211ZM221 209L223 211L230 209L242 213L248 220L240 228L251 219L262 220L274 228L280 241L280 262L276 276L272 280L258 264L251 262L248 264L245 261L241 261L233 253L224 279L220 283L206 269L195 263L187 262L181 257L176 249L174 236L178 226L187 218L197 220L197 217L201 214L212 214L221 218L228 225L231 232L239 229L234 229L219 214ZM296 212L310 216L323 229L330 251L330 259L328 261L313 256L297 258L294 253L287 251L281 245L281 236L277 229L283 226L283 221L287 217ZM40 256L49 257L59 264L62 283L53 291L39 292L26 299L24 297L24 275L28 265ZM250 267L256 267L260 270L264 274L262 280L264 279L267 283L273 282L278 278L282 284L281 294L274 304L253 318L249 316L247 309L239 301L236 293L240 276ZM109 276L121 278L125 282L125 290L114 300L108 299L98 308L95 305L96 291L100 284Z',
+    vines: 'M317 300L321 301L331 310L336 322L334 345L329 355L323 349L315 349L309 342L305 343L297 335L291 323L292 315L299 306L307 308L311 301ZM118 327L125 327L131 334L136 332L142 334L149 342L150 352L146 362L136 372L123 375L110 388L107 388L98 363L97 350L100 348L102 340L106 335ZM271 334L278 335L283 341L293 340L300 350L300 360L298 365L289 374L270 383L260 393L252 375L251 355L255 345L262 338ZM166 380L177 382L186 391L188 410L184 416L156 400L156 390ZM247 391L254 391L258 396L265 397L269 401L270 410L257 426L237 436L231 429L230 411L234 400L240 394ZM148 402L150 404L159 403L163 406L171 420L167 435L162 438L153 455L150 455L145 450L134 434L131 425L133 412L140 405L147 404ZM305 402L316 405L323 412L327 420L328 433L320 458L317 461L313 459L308 451L299 449L296 444L286 439L280 426L281 416L287 407L291 405L300 407ZM261 442L268 442L274 448L283 448L289 455L290 467L287 474L280 481L272 486L264 487L252 496L247 490L243 468L248 452ZM296 502L309 506L317 520L316 534L311 548L300 541L296 543L291 541L289 536L280 527L277 519L278 512L283 506L293 506ZM255 533L262 535L268 542L267 544L272 542L276 546L278 554L275 560L266 568L252 572L242 578L239 571L240 552ZM275 583L290 584L299 595L298 606L283 630L278 627L267 613L263 603L265 592Z',
+    rope: 'M138 39L142 39L92 169L87 167ZM140 39L144 39L198 170L193 172ZM139 39L143 39L144 188L140 188Z',
     pot: 'M61 274Q102 255 140 268Q187 262 224 288Q236 291 230 309Q221 341 208 345Q185 354 150 351L105 347Q87 341 79 325Q67 301 61 274Z',
   },
   aksam: {
     cutout: require('../../assets/oda/aksam_asma.webp'), box: [23, 26, 330, 648], joint: [246, 344],
-    split: 'M48 357H104L124 372H221L244 343H382V712H0V390Z',
-    crown: 'M0 0H382V349H245L223 378H122L104 363H48L0 396Z',
+    body: 'M258 173L272 173L286 177L305 189L317 202L315 204L301 204L282 216L273 219L260 220L247 216L244 217L256 221L278 220L288 229L289 234L286 237L296 234L310 234L322 239L332 248L342 263L348 284L348 288L345 291L332 286L311 286L295 280L287 274L286 267L281 258L264 246L246 244L235 251L229 245L214 237L224 246L228 255L231 252L237 253L243 248L258 246L272 252L283 266L286 276L284 284L276 277L265 274L261 275L263 279L267 279L281 288L285 296L275 323L276 326L270 328L265 325L266 348L263 355L255 356L252 352L244 355L240 351L240 339L247 313L251 310L251 307L243 301L237 300L226 288L224 280L227 276L223 277L219 297L213 300L206 292L202 291L201 287L189 281L178 267L179 272L177 273L176 282L183 280L195 289L201 300L202 318L196 335L193 338L189 338L186 335L185 340L176 353L175 359L172 362L167 360L167 357L154 338L161 313L154 316L147 324L145 322L146 317L143 315L143 308L140 309L138 307L138 302L144 290L154 281L168 281L167 262L171 256L174 257L173 251L161 267L144 274L139 273L133 278L129 278L123 286L115 283L106 296L82 308L82 318L80 320L81 337L75 342L73 352L66 357L65 362L59 367L54 367L51 364L50 356L53 353L51 352L50 344L53 332L58 320L62 316L67 318L66 316L70 312L71 300L65 301L62 298L62 280L67 267L61 276L60 292L55 297L57 300L55 302L53 300L47 302L27 317L23 315L23 279L31 264L45 252L60 250L75 257L86 248L82 246L78 253L73 254L71 248L74 243L71 239L64 239L60 235L44 240L36 238L41 224L56 201L72 191L89 189L109 197L125 216L120 204L117 184L120 181L140 180L150 183L161 192L162 205L175 192L183 189L192 189L197 190L202 196L203 204L201 206L216 206L228 212L230 209L228 201L234 187L243 179ZM144 217L144 219L150 221L155 226L155 230L161 228L157 228L151 220ZM240 217L234 219L233 222ZM184 237L182 241L188 241ZM198 238L191 243L194 243ZM110 241L105 246L108 250L109 261L111 261Z',
+    vines: 'M297 313L301 315L305 323L315 323L327 329L335 338L341 357L340 369L337 371L335 383L329 395L326 395L312 379L309 379L307 376L303 377L313 385L319 401L312 415L309 415L307 419L303 418L295 413L290 401L286 405L292 410L294 415L298 416L297 420L299 421L300 430L317 435L327 446L332 459L330 481L323 497L314 490L313 486L309 483L306 485L303 482L304 480L297 475L293 477L292 483L292 494L294 495L292 498L295 500L296 519L299 523L310 526L318 534L323 547L323 558L315 580L312 580L299 566L293 562L288 562L287 568L284 570L284 572L288 573L286 575L287 586L285 592L272 607L257 617L255 615L256 597L259 587L263 584L264 577L259 570L263 567L269 568L277 564L279 553L278 537L288 523L288 519L287 512L285 512L256 537L252 537L242 512L242 499L246 489L256 478L265 473L279 475L282 472L281 447L285 437L292 431L289 421L280 431L279 442L264 457L258 459L255 455L254 442L258 429L257 426L265 419L250 427L240 428L241 431L238 434L232 429L233 422L236 420L235 408L240 404L238 401L242 396L242 392L248 381L257 373L268 369L276 374L279 372L284 373L290 382L292 397L294 372L286 364L283 349L286 347L288 334L295 327L293 317ZM109 344L129 348L131 350L131 358L125 369L126 373L119 378L118 382L111 389L105 394L100 395L92 377L91 365L99 350ZM146 396L148 398L151 396L155 398L156 409L163 408L166 410L167 408L172 408L176 410L186 419L190 429L189 445L184 453L175 446L170 445L158 434L158 442L162 443L163 447L171 455L172 470L164 486L156 495L151 492L149 480L142 473L144 466L148 468L150 466L149 464L147 466L144 464L146 461L142 457L143 451L149 446L149 435L135 444L125 447L126 450L124 452L117 452L110 446L112 444L111 439L114 437L118 441L123 433L124 426L122 424L125 422L125 417L122 418L120 416L123 413L122 410L132 402L145 401L144 398ZM244 409L243 415L245 414ZM283 410L271 418L270 422ZM156 419L152 427L157 431L155 426ZM293 447L290 450L291 459L294 453ZM289 535L287 537L288 548L290 545ZM285 592L289 594L292 605L300 607L305 612L311 624L310 642L307 645L304 645L289 633L294 654L287 671L279 664L282 659L281 649L280 645L275 643L283 627L282 618L285 612L283 611L281 597Z',
+    rope: 'M138 43L142 43L88 187L83 185ZM140 43L144 43L209 193L204 195ZM139 43L143 43L144 194L140 194Z',
     pot: 'M78 300Q116 280 151 291Q201 291 219 308L229 337Q232 364 211 376Q172 388 124 374Q98 363 92 343Z',
   },
   gece: {
     cutout: require('../../assets/oda/gece_asma.webp'), box: [24, 27, 329, 648], joint: [246, 344],
-    split: 'M48 357H104L124 372H221L244 343H382V712H0V390Z',
-    crown: 'M0 0H382V349H245L223 378H122L104 363H48L0 396Z',
+    body: 'M263 173L277 174L293 180L305 188L317 202L315 204L298 205L286 214L269 220L259 220L243 215L233 219L233 222L240 218L248 218L257 222L276 220L288 229L287 238L305 234L322 240L334 251L343 266L348 281L348 290L346 292L332 286L314 287L293 279L287 273L280 257L264 246L246 244L235 251L223 241L213 237L226 250L230 266L229 274L226 278L223 277L222 287L216 299L212 299L204 289L191 283L184 276L175 260L175 250L173 250L171 256L159 268L146 274L140 273L121 283L115 283L111 291L104 298L80 310L82 313L80 314L79 337L64 361L60 364L56 362L54 359L56 351L54 343L56 341L53 338L53 334L58 320L62 316L69 320L66 317L67 313L63 305L61 285L64 274L71 262L68 263L61 275L60 293L54 299L32 312L27 318L24 316L24 278L31 265L40 256L49 251L63 251L75 258L88 247L63 238L49 238L41 241L36 239L45 216L55 203L76 191L95 191L110 198L118 206L120 213L125 216L125 221L145 219L154 225L155 230L159 230L155 223L148 218L135 217L128 219L126 217L117 187L120 181L138 180L147 182L161 194L161 219L163 226L164 203L175 193L184 189L197 190L203 197L203 204L194 210L213 206L222 208L229 214L229 200L235 187L246 178ZM185 237L181 239L181 242L188 241L193 244L199 239L211 238L200 237L192 242ZM111 240L105 246L95 246L104 248L108 252ZM247 247L260 247L272 253L280 261L286 279L286 284L283 286L274 277L260 275L263 279L268 279L283 289L285 297L276 324L272 328L265 325L265 353L257 358L252 352L244 356L239 347L247 313L251 310L251 307L238 301L227 289L231 275L229 255L231 253L238 253L241 249ZM109 253L108 262L112 262L109 258ZM172 258L183 274L180 279L176 279L176 282L184 281L188 283L195 289L200 298L202 319L194 338L190 340L187 334L185 342L177 351L174 359L170 361L156 342L160 314L145 329L137 320L137 311L139 310L138 303L142 294L151 284L159 280L168 281L168 262Z',
+    vines: 'M297 314L301 316L304 324L316 324L326 329L335 339L341 355L341 369L337 373L335 385L329 397L313 381L310 381L307 377L302 378L309 382L315 391L315 409L308 417L299 416L291 403L291 383L296 375L289 368L284 354L287 337L296 327L294 317ZM109 345L126 348L130 352L130 361L121 376L111 370L119 380L113 388L100 395L93 381L94 378L91 375L91 365L93 358L99 351L107 358L106 348ZM267 370L272 371L276 376L282 374L291 387L291 396L287 406L269 421L271 422L278 418L285 408L289 406L295 418L299 421L299 430L315 434L327 446L332 460L332 474L327 493L323 498L297 476L291 480L291 494L292 502L295 506L296 522L312 528L322 542L324 557L318 578L315 581L311 580L301 568L297 568L291 561L288 562L287 567L283 570L287 581L284 594L268 611L256 618L252 615L256 600L248 598L248 586L253 576L260 569L277 565L279 555L277 539L288 525L287 511L253 538L248 531L252 527L243 518L241 503L246 490L256 479L268 474L279 476L282 473L281 451L283 443L292 436L290 429L291 419L284 427L278 427L279 438L274 449L259 461L255 455L254 441L258 426L263 421L248 427L236 435L233 431L233 416L235 408L239 406L241 395L247 383L260 372ZM148 400L151 402L153 412L162 407L165 411L172 409L179 413L188 423L190 433L189 446L184 454L158 434L159 445L171 456L173 468L171 475L157 495L146 484L138 466L140 464L140 457L149 447L149 432L154 428L158 433L155 426L156 417L153 426L143 439L120 452L116 450L113 437L114 424L119 413L133 402L144 403ZM288 542L286 543L287 547ZM286 593L290 597L292 606L300 608L307 615L312 626L311 640L307 647L289 634L295 655L287 672L277 663L279 660L282 662L280 654L276 656L272 652L273 643L281 635L282 628L284 627L282 625L282 616L285 611L283 610L282 597ZM279 645L278 650L280 649Z',
+    rope: 'M138 43L142 43L88 187L83 185ZM140 43L144 43L209 193L204 195ZM139 43L143 43L144 194L140 194Z',
     pot: 'M78 300Q116 280 151 291Q201 291 219 308L229 337Q232 364 211 376Q172 388 124 374Q98 363 92 343Z',
   },
 } as const;
 
 function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: Animated.Value }) {
-  const id = 'ivy-' + useId().replace(/[^a-z0-9]/gi, '');
+  const id = 'planter-' + useId().replace(/[^a-z0-9]/gi, '');
   const { box: scene, pivot, src } = ODA[phase].parts.asma;
   const art = PLANTER[phase];
   const [x, y, width, height] = art.box;
@@ -208,36 +215,42 @@ function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: An
   const dy = (jy - scene.h / 2) * s;
   const frame = { position: 'absolute' as const, left: (scene.x - pivot.x) * s, top: (scene.y - pivot.y) * s, width: scene.w * s, height: scene.h * s };
   return <>
+    <Svg pointerEvents="none" style={frame} width={frame.width} height={frame.height} viewBox={viewBox}>
+      <Defs>
+        <ClipPath id={id + '-body'}>
+          <Path d={art.body} />
+          <Path d={art.rope} />
+        </ClipPath>
+        <ClipPath id={id + '-vines'}><Path d={art.vines} /></ClipPath>
+        <ClipPath id={id + '-pot'}><Path d={art.pot} /></ClipPath>
+      </Defs>
+      <G clipPath={'url(#' + id + '-body)'}>{image}</G>
+      <G clipPath={'url(#' + id + '-pot)'}><Artwork href={src} width={scene.w} height={scene.h} /></G>
+    </Svg>
     <Animated.View pointerEvents="none" style={[frame, { transform: [
       { translateX: dx }, { translateY: dy },
-      { rotate: ivy.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-4deg', '0deg', '4deg'] }) },
+      { rotate: ivy.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-0.8deg', '0deg', '0.8deg'] }) },
       { translateX: -dx }, { translateY: -dy },
     ] }]}>
       <Svg width={frame.width} height={frame.height} viewBox={viewBox}>
-        <Defs><ClipPath id={id + '-vine'}><Path d={art.split} /></ClipPath></Defs>
-        <G clipPath={`url(#${id}-vine)`}>{image}</G>
+        <G clipPath={'url(#' + id + '-vines)'}>{image}</G>
       </Svg>
     </Animated.View>
-    <Svg pointerEvents="none" style={frame} width={frame.width} height={frame.height} viewBox={viewBox}>
-      <Defs>
-        <ClipPath id={id + '-crown'}><Path d={art.crown} /></ClipPath>
-        <ClipPath id={id + '-pot'}><Path d={art.pot} /></ClipPath>
-      </Defs>
-      <G clipPath={`url(#${id}-pot)`}><Artwork href={src} width={scene.w} height={scene.h} /></G>
-      <G clipPath={`url(#${id}-crown)`}>{image}</G>
-    </Svg>
   </>;
 }
 
 /** Bir saatin (sabah/akşam/gece) resmi: taban, cam havası, hareketli parçalar, düşen yaprak. */
 function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity, onReady }: { phase: OdaPhase; s: number; vals: Vals; sky: SkyKind; chain: number; tilt?: Animated.ValueXY; opacity: Animated.Value | number; weatherOpacity: Animated.Value; onReady?: () => void }) {
+  const layerId = 'room-layer-' + useId().replace(/[^a-z0-9]/gi, '');
   const L = ODA[phase];
+  const shelfWall = SHELF_WALL[phase];
   const box = (b: Box) => ({ position: 'absolute' as const, left: b.x * s, top: b.y * s, width: b.w * s, height: b.h * s });
   const shift = (x: number, y: number) => (tilt ? [{ translateX: tilt.x.interpolate({ inputRange: [-1, 1], outputRange: [x, -x] }) }, { translateY: tilt.y.interpolate({ inputRange: [-1, 1], outputRange: [y, -y] }) }] : []);
   const glass = GLASS[sky];
   const wet = sky === 'rain' || sky === 'storm';
   const snow = sky === 'snow';
-  const clouds = sky === 'cloudy' || wet;
+  const clouds = true;
+  const cloudOpacity = sky === 'clear' ? 0.22 : sky === 'fog' ? 0.14 : wet ? 0.28 : 0.34;
   const big = L.cells.filter(c => c.w >= 60);
   const asma = L.parts.asma;
   // Yaprak asma saksının alt ucundan kopar.
@@ -245,6 +258,20 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: ODA_W * s, height: ODA_H * s, opacity }}>
       <Image source={L.taban} fadeDuration={0} onLoad={onReady} onError={onReady} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
+
+      {/* Soft, phase-matched wall correction ends above the shelf board. */}
+      <Svg pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }} width={ODA_W * s} height={ODA_H * s} viewBox={'0 0 ' + ODA_W + ' ' + ODA_H}>
+        <Defs>
+          <ClipPath id={layerId + '-shelf-clip'}><Path d={shelfWall.clip} /></ClipPath>
+          <RadialGradient id={layerId + '-shelf-gradient'} cx={shelfWall.cx} cy={shelfWall.cy} r={shelfWall.r} gradientUnits="userSpaceOnUse">
+            <SvgStop offset="0" stopColor={shelfWall.color} stopOpacity={0.82} />
+            <SvgStop offset="0.42" stopColor={shelfWall.color} stopOpacity={0.62} />
+            <SvgStop offset="0.78" stopColor={shelfWall.color} stopOpacity={0.14} />
+            <SvgStop offset="1" stopColor={shelfWall.color} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect x={442} y={595} width={236} height={133} fill={'url(#' + layerId + '-shelf-gradient)'} clipPath={'url(#' + layerId + '-shelf-clip)'} />
+      </Svg>
 
       {/* Cam: havaya göre renk, içinde bulut, yağmur, kar, damlalar, şimşek. */}
       {glass && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: glass.tone, opacity: Animated.multiply(weatherOpacity, glass.op) }]} />}
@@ -255,7 +282,7 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
             <Animated.Image
               source={PARCA.bulut}
               style={{
-                position: 'absolute', top: (c.h * 0.12 + (ci % 2) * 24) * s, width: 150 * s, height: 112 * s, opacity: Animated.multiply(weatherOpacity, wet ? 0.45 : 0.6), tintColor: wet ? '#C9D1DC' : undefined,
+                position: 'absolute', top: (c.h * 0.12 + (ci % 2) * 24) * s, width: 150 * s, height: 112 * s, opacity: Animated.multiply(weatherOpacity, cloudOpacity), tintColor: wet ? '#C9D1DC' : sky === 'fog' ? '#EDF1F5' : undefined,
                 transform: [{ translateX: vals.drift.interpolate({ inputRange: [0, 1], outputRange: [-150 * s - ci * 20 * s, (c.w + 40) * s] }) }],
               }}
             />
@@ -375,7 +402,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
   const vals = useMemo<Vals>(() => ({
     part: Object.fromEntries(PARTS.map(k => [k, new Animated.Value(0.5)])) as Record<OdaPart, Animated.Value>,
     nudge: Object.fromEntries(PARTS.map(k => [k, new Animated.Value(0)])) as Record<OdaPart, Animated.Value>,
-    lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0), ivy: new Animated.Value(0),
+    lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0), ivy: new Animated.Value(0.5),
     beam: new Animated.Value(0), cloud: new Animated.Value(0), halo: new Animated.Value(0), fest: new Animated.Value(0),
     twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)), chainSweep: new Animated.Value(0), chainLights: Array.from({ length: 7 }, () => new Animated.Value(0)),
     stars: Array.from({ length: 8 }, () => new Animated.Value(0.3)), dust: MOTES.day.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)),
@@ -420,6 +447,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
         const v = vals.part[k];
         return m.kind === 'rock' ? rock(v, m.delay) : m.kind === 'swing' ? sway(v, m.ms, m.delay, 0.12) : sway(v, m.ms, m.delay, 0.35);
       }),
+      sway(vals.ivy, 5400, 650, 0.2),
       breathe(vals.lamp),
       ...(night ? [loop(vals.moon, 4200)] : []),
       ...(!night ? [loop(vals.sun, 7000)] : []),
@@ -442,12 +470,12 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     if (!run) return;
     if (wet) vals.rain.forEach(v => v.setValue(0));
     if (rainy) vals.drops.forEach(v => v.setValue(0));
-    if (sky === 'cloudy' || rainy) vals.drift.setValue(0);
+    vals.drift.setValue(0);
     if (sky === 'storm') vals.flash.setValue(0);
     const anims: Stop[] = [
       ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 4200 + (i % 4) * 700 : 700 + (i % 3) * 160, i * (sky === 'snow' ? 330 : 30))) : []),
       ...(rainy ? vals.drops.map((x, i) => rise(x, 5200 + i * 1300, i * 2100, Easing.in(Easing.quad))) : []),
-      ...(sky === 'cloudy' || rainy ? [rise(vals.drift, 38000)] : []),
+      rise(vals.drift, 48000),
       ...(sky === 'storm' ? [every(vals.flash, 9000, 16000, v => Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true, isInteraction: false }), 4000)] : []),
     ];
     return () => anims.forEach(a => a.stop());
@@ -523,7 +551,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
       reaction.forEach(a => a.stop());
       reaction.clear();
       PARTS.forEach(k => { vals.nudge[k].setValue(0); vals.part[k].setValue(0.5); });
-      vals.ivy.setValue(0);
+      vals.ivy.setValue(0.5);
       vals.boost.setValue(0);
       vals.pot.setValue(0);
       vals.fest.setValue(0);
@@ -546,11 +574,6 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
       vals.tapLeaf.setValue(0);
       start(Animated.parallel([
         kick('asma', 1.35),
-        Animated.sequence([
-          Animated.delay(65),
-          Animated.timing(vals.ivy, { toValue: 0.82, duration: 210, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.spring(vals.ivy, { toValue: 0, friction: 3.1, tension: 43, useNativeDriver: true }),
-        ]),
         Animated.sequence([
           Animated.delay(80),
           Animated.timing(vals.tapLeaf, { toValue: 1, duration: 7000, easing: Easing.inOut(Easing.quad), useNativeDriver: true, isInteraction: false }),

@@ -2,6 +2,7 @@ import { getUiLang, tx } from '@/i18n/runtime';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import type { ChatAction, ChatCtx, ChatMsg } from '@/domain/chat';
+import { isRoomExpression, type RoomExpression } from '@/constants/room-expression';
 import { CHAT_ACCOUNT_NEEDED } from '@/domain/chatGate';
 import { ensureAiConsent } from '@/lib/consent';
 import { offlineMsg, online } from '@/lib/net';
@@ -11,7 +12,7 @@ import { supabase } from '@/lib/supabase';
  * Moka sohbeti. Mesajlar `moka-chat` sunucu fonksiyonuna gider (supabase/functions/moka-chat); API anahtarı
  * uygulamada yok. Sadece üyelik + Premium; sınır sunucuda (günde 25, ayda 750 mesaj, dakikada 6).
  */
-type Ok = { ok: true; reply: string; actions: ChatAction[]; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
+type Ok = { ok: true; reply: string; actions: ChatAction[]; mood?: RoomExpression; used: number; limit: number; mused?: number; mlimit?: number; premium: boolean };
 type Fail = { ok: false; message: string; limit?: boolean; account?: boolean; premium?: boolean; /** Günlük hak doldu: Moka vedalaşır, giriş yarına kadar kilitlenir. */ daily?: boolean };
 
 const TIMEOUT = 45_000;
@@ -35,7 +36,7 @@ export async function askMoka(messages: ChatMsg[], ctx: ChatCtx): Promise<Ok | F
   if (!error) {
     const d = (data ?? {}) as Record<string, any>;
     const num = (v: unknown, def: number) => (typeof v === 'number' && Number.isFinite(v) ? v : def);
-    return { ok: true, reply: String(d.reply ?? ''), actions: Array.isArray(d.actions) ? d.actions : [], used: num(d.used, 0), limit: num(d.limit, 0), mused: d.mused == null ? undefined : num(d.mused, 0), mlimit: d.mlimit == null ? undefined : num(d.mlimit, 0), premium: !!d.premium };
+    return { ok: true, reply: String(d.reply ?? ''), actions: Array.isArray(d.actions) ? d.actions : [], mood: isRoomExpression(d.mood) ? d.mood : undefined, used: num(d.used, 0), limit: num(d.limit, 0), mused: d.mused == null ? undefined : num(d.mused, 0), mlimit: d.mlimit == null ? undefined : num(d.mlimit, 0), premium: !!d.premium };
   }
 
   if (!(error instanceof FunctionsHttpError)) return { ok: false, message: tx('Bağlantıda bir sorun oldu. İnternetini kontrol edip tekrar dene.') };

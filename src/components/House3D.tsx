@@ -860,14 +860,16 @@ function Roamer({ vb, scale, nodes, start, home, kind, reduce, children }: {
       wait(need ? 220 : 80, () => {
         setMode('walk');
         const speed = (dog ? 24 : 15) * rnd(0.75, 1.3); // vb birimi / sn
+        // Blok merkezine tam basmasın: her durak biraz yana kayar (serbest, doğal yürüyüş).
+        const J = p.map(() => { const du = rnd(-0.18, 0.18), dv = rnd(-0.18, 0.18); return [(dv - du) * A, (dv + du) * B] as const; });
         const legs = p.map((idx, k) => {
           const a = k === 0 ? ns[from] : ns[p[k - 1]];
           const b = ns[idx];
           const ms = Math.max(350, (Math.hypot(b.x - a.x, b.y - a.y) / speed) * 1000);
           const easing = p.length === 1 ? Easing.inOut(Easing.quad) : k === 0 ? Easing.in(Easing.quad) : k === p.length - 1 ? Easing.out(Easing.quad) : Easing.linear;
           return Animated.parallel([
-            Animated.timing(x, { toValue: b.x * sc, duration: ms, easing, useNativeDriver: true }),
-            Animated.timing(y, { toValue: b.y * sc, duration: ms, easing, useNativeDriver: true }),
+            Animated.timing(x, { toValue: (b.x + J[k][0]) * sc, duration: ms, easing, useNativeDriver: true }),
+            Animated.timing(y, { toValue: (b.y + J[k][1]) * sc, duration: ms, easing, useNativeDriver: true }),
           ]);
         });
         anim = Animated.sequence(legs);

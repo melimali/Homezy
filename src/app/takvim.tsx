@@ -29,7 +29,10 @@ export default function Takvim() {
   });
   const title = new Date(ym.y, ym.m, 1).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
   // Pazartesi başlangıçlı hafta günleri (2024-01-01 pazartesi).
-  const heads = Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(dateLocale(), { weekday: 'short' }));
+  const dayName = (i: number, weekday: 'short' | 'narrow') => new Date(2024, 0, 1 + i).toLocaleDateString(dateLocale(), { weekday });
+  const shorts = Array.from({ length: 7 }, (_, i) => dayName(i, 'short'));
+  // Arapça gibi dillerde her günün ilk iki harfi aynı ("ال") olabilir: o zaman tek harflik kısa ad kullanılır.
+  const heads = new Set(shorts.map(h => h.slice(0, 2))).size < 7 ? Array.from({ length: 7 }, (_, i) => dayName(i, 'narrow')) : shorts;
   const list = items[sel] ?? [];
   const selDate = new Date(`${sel}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -44,7 +47,7 @@ export default function Takvim() {
           <Btn small kind="ghost" label="›" accessibilityLabel="Sonraki ay" onPress={() => step(1)} />
         </View>
         <View style={st.row}>
-          {heads.map(h => <Text key={h} style={[st.head, { color: c.muted }]} importantForAccessibility="no" maxFontSizeMultiplier={1.2}>{h.slice(0, 2)}</Text>)}
+          {heads.map((h, i) => <Text key={i} style={[st.head, { color: c.muted }]} importantForAccessibility="no" maxFontSizeMultiplier={1.2}>{h.slice(0, 2)}</Text>)}
         </View>
         <View style={st.gridWrap}>
           {grid.map((d, i) => {

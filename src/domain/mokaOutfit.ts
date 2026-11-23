@@ -10,7 +10,6 @@ export function mokaOutfit(sky: SkyKind | null, month: number, streak: number, h
   else if (month === 11 || month <= 1) gear = '🧣';
   else if (month >= 5 && month <= 7 && hour >= 8 && hour < 19) gear = '🕶️';
   else if (month >= 2 && month <= 4) gear = '🌸';
-  else if (month >= 9 && month <= 10) gear = '🍂';
   const crown = streak >= 30 ? '👑' : streak >= 7 ? '🎀' : null;
   return { gear, crown };
 }

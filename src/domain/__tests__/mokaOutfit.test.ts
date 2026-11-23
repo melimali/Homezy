@@ -8,7 +8,7 @@ it('hava mevsimden önce gelir', () => {
   expect(mokaOutfit('clear', 6, 0, 22).gear).toBeNull();
   expect(mokaOutfit('clear', 0, 0).gear).toBe('🧣');
   expect(mokaOutfit('clear', 3, 0).gear).toBe('🌸');
-  expect(mokaOutfit('clear', 9, 0).gear).toBe('🍂');
+  expect(mokaOutfit('clear', 9, 0).gear).toBeNull();
 });
 it('seriye göre taç', () => {
   expect(mokaOutfit(null, 8, 3).crown).toBeNull();

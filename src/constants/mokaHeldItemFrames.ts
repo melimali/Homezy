@@ -1,0 +1,23 @@
+/** Object-only frames mapped from held artwork into the arm-free clothing preview. */
+export const OUTFIT_HELD_OBJECT_BOUNDS = {
+  el_balon: [280, 0, 480, 388],
+  el_cicek: [330, 176, 444, 402],
+  el_degnek: [250, 164, 456, 398],
+  el_fener: [235, 198, 390, 410],
+  el_fincan: [196, 235, 349, 385],
+  el_firca: [34, 237, 250, 389],
+  el_gitar: [198, 226, 448, 433],
+  el_harita: [156, 247, 355, 404],
+  el_hediye: [176, 241, 348, 427],
+  el_kamera: [186, 288, 349, 402],
+  el_kilic: [321, 124, 479, 383],
+  el_kitap: [194, 270, 327, 410],
+  el_megafon: [315, 173, 478, 330],
+  el_mum: [206, 202, 400, 390],
+  el_olta: [265, 34, 485, 373],
+  el_pasta: [194, 237, 337, 385],
+  el_semsiye: [194, 0, 480, 363],
+  el_sulama: [312, 214, 477, 402],
+  el_supurge: [50, 181, 432, 460],
+  el_telefon: [246, 265, 367, 400],
+} as const;

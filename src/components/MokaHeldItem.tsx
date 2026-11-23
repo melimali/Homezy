@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, View, type ImageSourcePropType } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Image as Artwork, Path } from 'react-native-svg';
 
+import { cosmeticArtworkBounds } from '@/constants/cosmeticFrames';
+import { OUTFIT_HELD_OBJECT_BOUNDS } from '@/constants/mokaHeldItemFrames';
+import { COSMETIC_IMG } from '@/constants/kozmetik-img';
 import { HELD_POSES, HELD_SPRITES } from '@/constants/mokaHeldSprites';
 import { COLORED_DRAWN_HOLDS } from '@/constants/mokaColoredDrawnHolds';
 
@@ -52,6 +55,41 @@ const DRAWN_EFFECTS: Record<string, Point | undefined> = {
   el_kamera: [303, 274],
 };
 
+function OutfitHeldItem({ id, size, source, motion, animated }: {
+  id: string; size: number; source: ImageSourcePropType; motion: Animated.Value; animated: boolean;
+}) {
+  const target = OUTFIT_HELD_OBJECT_BOUNDS[id as keyof typeof OUTFIT_HELD_OBJECT_BOUNDS];
+  const [left, top, right, bottom] = cosmeticArtworkBounds(id);
+  const scale = size * 0.86 / 512;
+  const oneWingItem = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);
+  const drop = DROP[id] ?? (oneWingItem ? 0 : 0.02);
+  const effect = DRAWN_EFFECTS[id];
+  return (
+    <Animated.View pointerEvents="none" style={{
+      position: "absolute", width: size, height: size,
+      transform: [
+        { translateX: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: [-size * 0.003, size * 0.003] }) : 0 },
+        { translateY: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: [size * 0.002, -size * 0.002] }) : 0 },
+        { rotate: animated ? motion.interpolate({ inputRange: [-1, 1], outputRange: ['-1deg', '1deg'] }) : '0deg' },
+      ],
+    }}>
+      <Svg
+        width={(target[2] - target[0]) * scale}
+        height={(target[3] - target[1]) * scale}
+        viewBox={left + ' ' + top + ' ' + (right - left) + ' ' + (bottom - top)}
+        preserveAspectRatio="xMidYMid meet"
+        style={{
+          position: "absolute",
+          left: size * 0.07 + target[0] * scale,
+          top: size * (0.025 + drop) + target[1] * scale,
+        }}
+      >
+        <Artwork href={source} x={0} y={0} width={512} height={512} />
+      </Svg>
+      {animated && effect && <HeldEffect id={id} size={size} point={effect} />}
+    </Animated.View>
+  );
+}
 function objectPoint(pose: Hold, p: Point): Point {
   const angle = pose.angle * Math.PI / 180;
   const dx = (p[0] - pose.grip[0]) * pose.scale;
@@ -78,13 +116,16 @@ const EFFECT: Record<string, Point | undefined> = {
   el_fincan: [372, 324], el_telefon: [374, 334],
 };
 
-export function HeldItemModel({ id, size, pose, fur, motion, animated }: {
-  id: string; size: number; pose: Hold; fur?: string | null; motion: Animated.Value; animated: boolean;
+export function HeldItemModel({ id, size, pose, fur, motion, animated, armless = false }: {
+  id: string; size: number; pose: Hold; fur?: string | null; motion: Animated.Value; animated: boolean; armless?: boolean;
 }) {
   const sprite = HELD_SPRITES[id];
   const drawn = !fur || fur === 'orman' ? DRAWN_HOLDS[id] : COLORED_DRAWN_HOLDS[id]?.[fur];
   const frame = useFrame(motion, sprite?.frames ?? 1, animated && !drawn);
   if (!sprite) return null;
+  if (armless && COSMETIC_IMG[id] && OUTFIT_HELD_OBJECT_BOUNDS[id as keyof typeof OUTFIT_HELD_OBJECT_BOUNDS]) {
+    return <OutfitHeldItem id={id} size={size} source={COSMETIC_IMG[id]} motion={motion} animated={animated} />;
+  }
   if (drawn) {
     const effect = DRAWN_EFFECTS[id];
     const oneWingItem = ['el_cicek', 'el_balon', 'el_kilic', 'el_degnek', 'el_olta', 'el_firca', 'el_semsiye', 'el_fener', 'el_megafon', 'el_sulama'].includes(id);

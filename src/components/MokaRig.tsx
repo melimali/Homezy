@@ -21,8 +21,6 @@ const W = 1254;
 const NECK = { x: 627, y: 700 };
 const SHOULDER_A = { x: 790, y: 650 }; // ekranın sağındaki kanat
 const SHOULDER_B = { x: 480, y: 650 }; // ekranın solundaki kanat
-const GARMENT_SHOULDER_A = { x: 814, y: 686 }; // kıyafetin sağ omzu
-const GARMENT_SHOULDER_B = { x: 440, y: 686 }; // kıyafetin sol omzu
 const TAIL = { x: 250, y: 1030 };
 
 export type RigMood = 'neutral' | 'happy' | 'wow' | 'sleepy';
@@ -428,14 +426,12 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const garmentFront = bodyId ? GARMENT_FRONT[bodyId] : undefined;
   const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
   const clothSwing = cape ? 0.7 : 0.35;
-  const wingPivotA = hasBodyOutfit ? GARMENT_SHOULDER_A : SHOULDER_A;
-  const wingPivotB = hasBodyOutfit ? GARMENT_SHOULDER_B : SHOULDER_B;
   const wingLayer = (side: 'left' | 'right') => {
     const left = side === 'left';
-    const pivot = left ? wingPivotB : wingPivotA;
+    const pivot = left ? SHOULDER_B : SHOULDER_A;
     const src = left ? L.kanat_b : L.kanat_a;
     const pose = <Pivot s={size} p={pivot} rotate={deg(wing, left ? -2.5 : 2.5)} ty={wingRise}><Layer src={src} s={size} /></Pivot>;
-    if (hasBodyOutfit || !wingCover) return pose;
+    if (!wingCover) return pose;
     return (
       <Pivot s={size} p={pivot}
         rotate={ip(wingCover, [0, 1], ['0deg', left ? '-16deg' : '16deg'])}
@@ -456,7 +452,6 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
           {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
         </Pivot>
       )}
-      {hasBodyOutfit && wings}
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, transform: [{ translateY: footLift }, { scaleY: footPress }] }}>
         <Layer src={AYAK} s={size} />
       </Animated.View>
@@ -476,7 +471,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
         )}
       </Pivot>
       {handId && hold ? (
-        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} />
+        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} armless={hasBodyOutfit} />
       ) : (
         <>
           {!hasBodyOutfit && wings}

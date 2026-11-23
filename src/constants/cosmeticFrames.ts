@@ -64,6 +64,10 @@ const bounds: Record<string, readonly [number, number, number, number]> = {
 
 export const COSMETIC_TILE_SIZE = 62;
 
+export function cosmeticArtworkBounds(id: string): readonly [number, number, number, number] {
+  return bounds[id] ?? [0, 0, 512, 512];
+}
+
 export function cosmeticThumbnailFrame(id: string) {
   const [left, top, right, bottom] = bounds[id] ?? [0, 0, 512, 512];
   const scale = (COSMETIC_TILE_SIZE - 12) / Math.max(right - left, bottom - top);

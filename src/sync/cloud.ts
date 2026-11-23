@@ -6,6 +6,10 @@ import type { AppState } from '@/domain/types';
 import { prefs, supabase } from '@/lib/supabase';
 import { useStore } from '@/store/AppStore';
 import { appAlert } from '@/components/AppAlert';
+import { createLock } from './lock';
+
+/** Bulut yazmaları (pushHome, pushChecked) tek sırada çalışır; damga yarışı sahte çakışma üretmesin. */
+const writeLock = createLock();
 
 /**
  * Ev verisinin bulut yedeği: Supabase'deki `homes` tablosunda kullanıcı başına tek satır (JSON).
@@ -69,7 +73,11 @@ function utf8Bytes(str: string) {
   return n;
 }
 
-export async function pushHome(userId: string, S: AppState) {
+export function pushHome(userId: string, S: AppState) {
+  return writeLock(() => pushHomeRaw(userId, S));
+}
+
+async function pushHomeRaw(userId: string, S: AppState) {
   if (!supabase) return;
   const cloud = forCloud(S);
   if (utf8Bytes(JSON.stringify(cloud)) > HOME_MAX_BYTES) throw new HomeTooLargeError();
@@ -90,7 +98,11 @@ async function remoteStamp(userId: string): Promise<string | null> {
  * Başka bir telefon bizden sonra yazdıysa ezmemek için önce sürüme bakar.
  * 'conflict': bulutta bu telefonun görmediği bir sürüm var, yazılmadı.
  */
-async function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflict'> {
+function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflict'> {
+  return writeLock(() => pushCheckedRaw(userId, S));
+}
+
+async function pushCheckedRaw(userId: string, S: AppState): Promise<'ok' | 'conflict'> {
   const known = prefs.get(STAMP);
   const rs = await remoteStamp(userId);
   // Yerel damga yoksa (veri temizlendi, yeniden kurulum) bulutta satır varsa körlemesine ezme: kullanıcıya sor.
@@ -111,7 +123,7 @@ async function pushChecked(userId: string, S: AppState): Promise<'ok' | 'conflic
     const missing = error?.code === 'PGRST202' || error?.code === '42883' || /push_home/.test(error?.message ?? '');
     if (error && !missing) throw error;
   }
-  await pushHome(userId, S);
+  await pushHomeRaw(userId, S);
   return 'ok';
 }
 

@@ -137,7 +137,7 @@ const LEAF = '#7FB28A';
 const POT = '#C8826B';
 
 /** Odanın türüne göre minik eşya. Koordinatlar blok içinde 0–1 arası. */
-function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0): ReactElement[] {
+function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0, wall = 2): ReactElement[] {
   const b = (n: string, u: number, v: number, du: number, dv: number, z: number, h: number, color: string) =>
     box(k + n, r + u, c + v, du, dv, z, h, color, 0.35);
   const ball = (n: string, u: number, v: number, z: number, rad: number, fill: string) => {
@@ -218,7 +218,7 @@ function furniture(type: RoomType, r: number, c: number, k: string, col: Colors,
     const SP: Partial<Record<RoomType, [ArtName, number]>> = { yatak: ['mobilya_yatak', 30], cocuk: ['mobilya_yatak', 26], salon: ['mobilya_koltuk', 24], mutfak: ['mobilya_buzdolabi', 34], banyo: ['mobilya_banyo', 22], calisma: ['mobilya_masa', 26], balkon: ['mobilya_bitki', 30] };
     const sp = SP[type];
     if (sp) {
-      const [cx, cy] = P(r + 0.5, c + 0.5, 0);
+      const [cx, cy] = P(r + (wall === 0 ? 0.2 : 0.5), c + (wall === 1 ? 0.2 : 0.5), 0);
       faces = [];
       extra.length = 0;
       extra.push(spr(k + 'spr', sp[0], cx, cy + 7, sp[1]));
@@ -258,7 +258,8 @@ function itemShape(id: string, r: number, c: number, k: string, turn = false): R
   const extra: ReactElement[] = [];
   const ISP: Record<string, [ArtName, number]> = { saksi: ['mobilya_bitki', 24], kitaplik: ['mobilya_kitaplik', 34], kedi: ['mobilya_kedi', 14], kopek: ['mobilya_kopek', 20] };
   if (EV3D_ART && ISP[id]) {
-    const [cx, cy] = P(r + 0.5, c + 0.5, 0);
+    const wl = id === 'kitaplik' ? 0.2 : 0.5;
+    const [cx, cy] = P(r + (turn ? 0.5 : wl), c + (turn ? wl : 0.5), 0);
     return [spr(k + 'isp', ISP[id][0], cx, cy + 6, ISP[id][1], 1, turn)];
   }
   switch (id) {
@@ -376,8 +377,24 @@ function buildGroundRings(f: { r0: number; r1: number; c0: number; c1: number },
         );
       }
     }
+    // Ağaçlar: dış halkalarda seyrek, ev ayak izinin dışında; arkadan öne çizilir.
+    if (k >= 2) {
+      const spots = tiles.filter(() => rnd() < 0.11).sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
+      spots.forEach(([a, b], j) => {
+        const [x, y] = P(a + 0.3 + rnd() * 0.4, b + 0.3 + rnd() * 0.4, Z);
+        const sz = 26 + rnd() * 12;
+        if (EV3D_ART) {
+          els.push(<Ellipse key={'ts' + j} cx={x} cy={y + 1} rx={sz * 0.26} ry={sz * 0.1} fill="rgba(40,48,68,0.14)" />, spr('tr' + j, 'agac_yuvarlak', x, y + 2, sz));
+        } else {
+          els.push(
+            <Polyline key={'tt' + j} points={pts([[x, y], [x, y - sz * 0.35]])} stroke="#8C5E45" strokeWidth={2.4} strokeLinecap="round" fill="none" />,
+            <Circle key={'tc' + j} cx={x} cy={y - sz * 0.55} r={sz * 0.3} fill={shade(LEAF, j % 2 ? 0.12 : 0)} />,
+          );
+        }
+      });
+    }
     const cs = [P(f.r0 - k, f.c0 - k, Z), P(f.r0 - k, f.c1 + k, Z), P(f.r1 + k, f.c0 - k, Z), P(f.r1 + k, f.c1 + k, Z)];
-    out.push({ k, cx, cy, hw: Math.max(...cs.map(([x]) => Math.abs(x - cx))) + 2, hh: Math.max(...cs.map(([, y]) => Math.abs(y - cy))) + 2, els });
+    out.push({ k, cx, cy, hw: Math.max(...cs.map(([x]) => Math.abs(x - cx))) + 2, hh: Math.max(...cs.map(([, y]) => Math.abs(y - cy))) + 2 + 36, els });
   }
   return out;
 }
@@ -1353,7 +1370,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     anchors[id] = a;
     // Eşya bloğu: kapı önü olmayan, sırtı duvara dayalı, mümkünse etiketin arkasında kalan blok.
     const rest = mine.filter(i => i !== a);
-    const score = (i: number) => (doorBlock.has(i) ? 100 : 0) + wallRank(i) * 6 + (depth(i) < depth(a) ? 0 : 3) + d(i) * 0.5;
+    const score = (i: number) => (doorBlock.has(i) ? 100 : 0) + wallRank(i) * 12 + (depth(i) < depth(a) ? 0 : 3) + d(i) * 0.5;
     props[id] = rest.length ? rest.reduce((b, i) => (score(i) < score(b) ? i : b), rest[0]) : a;
   }
 
@@ -1719,7 +1736,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
     }
 
     if (i === stairAt && L >= 4) stairs(k, r, col);
-    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0)}</G>);
+    if (props[id] === i && L >= 6) els.push(<G key={k + 'e'} onPress={open}>{furniture(room.type, r, col, k + 'e', c, variantOf[id] ?? 0, wallRank(i))}</G>);
     for (const item of itemAt[i] ?? []) {
       if (item === 'kedi' || item === 'kopek') {
         // Gezilebilir bloklar: odanın, mobilya / etiket / merdiven / başka eşya olmayan blokları.
@@ -2211,8 +2228,6 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
       </Animated.View>
     );
   });
-  // Evin altındaki yumuşak gölge.
-  const shadow = <Ellipse key="sh" cx={(minX + maxX) / 2} cy={maxY - PAD - B * 1.5} rx={vbW * 0.42} ry={B * 1.8} fill={c.lift} />;
 
   const stacks = { tl: [] as number[], tr: [] as number[], bl: [] as number[], br: [] as number[] };
   const tags: { id: string; fx: number; fy: number; w: number; cardX: number; cardY: number; right: boolean }[] = [];
@@ -2366,7 +2381,7 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
         {lightDefs}
         {onPressHouse && <Rect x={minX} y={minY} width={vbW} height={vbH} fill="transparent" onPress={handlePressHouse} />}
         {scene.back}
-        {garden.ground ?? shadow}
+        {garden.ground}
         {garden.back}
         {els}
         {garden.front}

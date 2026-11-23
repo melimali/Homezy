@@ -624,6 +624,24 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
     if (!fresh0 && gone.includes(`m:${shownIt.id}`) && !quip) return unhide(`m:${shownIt.id}`);
     say(line('tap', tapN.current++), tapN.current % 4 === 1 ? 'wow' : 'cheer', 2600);
   };
+  // Gündüz (07–22) Moka uyanık karşılar: uyuma sadece gece ya da uzun aradan sonra, o da kısa sürer.
+  useEffect(() => {
+    if (woke) return;
+    const h = new Date().getHours();
+    if (h < 7 || h >= 22) return;
+    const t = setTimeout(() => {
+      if (intro === 'tap') {
+        setWoke(true);
+        setIntro('hello');
+        later(() => { setIntro(i => (i === 'hello' ? 'pot' : i)); setBrew(b => b + 1); }, 3800);
+        later(() => setIntro(i => { if (i === 'pot') update(D0 => void (D0.play.roomIntro = true)); return i === 'pot' ? null : i; }), 9500);
+      } else if (!intro) {
+        setWoke(true);
+        say(line('back', rnd(5)), 'cheer', 4500);
+      }
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const touchObj = (k: RoomTouch) => {
     interact();
     sfx('tap');

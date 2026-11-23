@@ -1008,6 +1008,10 @@ function dayPhase(now: number, wx: Sky | null): DayPhase {
   const byClock: DayPhase = h >= 5.5 && h < 9 ? 'sabah' : h >= 9 && h < 17 ? 'ogle' : h >= 17 && h < 20 ? 'aksam' : 'gece';
   if (!wx?.live) return byClock;
   if (!wx.day) return 'gece';
+  // Gerçek gün doğumu/batımı varsa evreler ona göre (yazın 20:30'da hâlâ gün batımı, kışın 17'de gece).
+  if (wx.rise != null && wx.set != null && wx.set > wx.rise + 4) {
+    return h < wx.rise + 2.5 ? 'sabah' : h < wx.set - 2 ? 'ogle' : 'aksam';
+  }
   return byClock === 'gece' ? (h < 12 ? 'sabah' : 'aksam') : byClock;
 }
 /** Gökyüzü gerçek saate göre: sabah pembe-sarı, öğle mavi, akşam turuncu, gece lacivert. Uygulamanın koyu teması geceyi zorlamaz, sadece tonu biraz derinleştirir. */

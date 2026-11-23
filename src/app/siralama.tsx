@@ -22,19 +22,22 @@ export default function Siralama() {
   const [board, setBoard] = useState<LbBoard>('ev');
   const [period, setPeriod] = useState<LbPeriod>('hafta');
   const [data, setData] = useState<LbData | null>(null);
-  const [loading, setLoading] = useState(true);
-  useBusy(loading);
+  const account = status === 'account';
+  const [loading, setLoading] = useState(account);
+  useBusy(account && loading);
   const [nick, setNick] = useState(nick0 ?? '');
   const [busy, setBusy] = useState(false);
   useBusy(!!busy);
-  const account = status === 'account';
 
   const [tick, setTick] = useState(0);
   const load = () => setTick(n => n + 1);
   useEffect(() => {
-    if (!account) return;
+    if (!account) { setLoading(false); return; }
     let off = false;
-    lbTop(period, board).then(d => { if (!off) { setData(d); setLoading(false); } });
+    setLoading(true);
+    // Hata, zaman aşımı ya da boş yanıt olsa da yükleme her koşulda kapanır.
+    const timeout = new Promise<null>(res => setTimeout(() => res(null), 12000));
+    Promise.race([lbTop(period, board).catch(() => null), timeout]).then(d => { if (!off) { setData(d); setLoading(false); } });
     return () => void (off = true);
   }, [account, period, board, tick]);
 
@@ -116,7 +119,12 @@ export default function Siralama() {
           <Btn kind="ghost" label={t('Sıralamadan çık')} block disabled={busy} onPress={leave} />
         </>
       )}
-      {account && !data && !loading && <Card><T v="small">{offlineMsg()}</T></Card>}
+      {account && !data && !loading && (
+        <Card>
+          <T v="small">{offlineMsg()}</T>
+          <Btn kind="ghost" label={t('Tekrar dene')} block onPress={load} />
+        </Card>
+      )}
     </Screen>
   );
 }

@@ -2302,6 +2302,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const twOpA = twinkle.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.4, 1] });
   const twOpB = twinkle.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.4, 1, 0.4] });
   const vb = `${minX} ${minY} ${vbW} ${vbH}`;
+  // Rüzgâr (km/s): bulutlar rüzgârlı havada daha hızlı kayar, en fazla 2,5 kat.
+  const cloudMs = (base: number) => Math.round(base / Math.min(2.5, 1 + Math.max(0, wx?.wind ?? 0) / 25));
   const layer = (key: string, opacity: number | Animated.AnimatedInterpolation<number> | Animated.Value, children: ReactElement[], scale?: Animated.AnimatedInterpolation<number>) =>
     children.length > 0 && (
       <Animated.View renderToHardwareTextureAndroid key={key} pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity, transform: scale ? [{ scale }] : [] }]}>
@@ -2418,8 +2420,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
           <Svg width="100%" height="100%" viewBox={vb}>{roofEls}</Svg>
         </Animated.View>
       )}
-      {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={24000} reduce={reduce}>{air.clouds}</Drift>}
-      {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={36000} reduce={reduce}>{air.clouds2}</Drift>}
+      {sc > 0 && air.clouds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.08} ms={cloudMs(24000)} reduce={reduce}>{air.clouds}</Drift>}
+      {sc > 0 && air.clouds2.length > 0 && <Drift vb={vb} scale={sc} dx={-vbW * 0.06} ms={cloudMs(36000)} reduce={reduce}>{air.clouds2}</Drift>}
       {sc > 0 && air.birds.length > 0 && <Drift vb={vb} scale={sc} dx={vbW * 0.3} dy={-vbH * 0.03} ms={14000} reduce={reduce}>{air.birds}</Drift>}
       {sc > 0 && !reduce && air.smoke.length > 0 && <Drift vb={vb} scale={sc} dy={-12} dx={4} ms={3200} restart fade reduce={reduce}>{air.smoke}</Drift>}
       {sc > 0 && !reduce && air.rain.length > 0 && (

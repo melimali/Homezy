@@ -10,6 +10,7 @@ import { roomClean, roomCounts } from '@/domain/logic';
 import type { Floor } from '@/domain/plan-templates';
 import { MAX_LEVEL } from '@/domain/play';
 import { RECIPES } from '@/domain/itemRecipes';
+import { orientUV, sideOfCell, wallRankOf, type Orient } from '@/domain/houseLayout';
 import { ART, ART_SIZE, EV3D_ART, type ArtName } from '@/domain/ev3dArt';
 import { MokaPet } from '@/components/MokaPet';
 import { useNow } from '@/hooks/useNow';
@@ -135,14 +136,6 @@ const WHITE = '#FAF8F4';
 const WATER = '#9CC9E0';
 const LEAF = '#7FB28A';
 const POT = '#C8826B';
-
-/**
- * Eşyanın yönü: sırtını verdiği duvar. 0 kuzey (r küçük), 1 batı (c küçük), 2 güney (r büyük), 3 doğu (c büyük).
- * Eşyalar SVG kutulardan çizildiği için blok içinde aynalanarak dört duvara da yaslanabilir.
- */
-type Orient = 0 | 1 | 2 | 3;
-const orientUV = (o: Orient, u: number, v: number, du = 0, dv = 0): [number, number, number, number] =>
-  o === 0 ? [u, v, du, dv] : o === 1 ? [v, u, dv, du] : o === 2 ? [1 - u - du, v, du, dv] : [u, 1 - v - dv, du, dv];
 
 /** Odanın türüne göre minik eşya. Koordinatlar blok içinde 0–1 arası. */
 function furniture(type: RoomType, r: number, c: number, k: string, col: Colors, v = 0, o: Orient = 0): ReactElement[] {
@@ -1352,15 +1345,8 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   }
   if (entrance) doorBlock.add(parseInt(entrance, 10));
   /** Bloğun sırtını verebileceği duvar: 0 kuzey duvarı (eşyalar buna göre çizilir), 1 batı duvarı, 2 duvar yok. */
-  const wallRank = (i: number) => {
-    const r = Math.floor(i / cols), col = i % cols, id = cells[i];
-    return at(r - 1, col) !== id ? 0 : at(r, col - 1) !== id ? 1 : 2;
-  };
-  /** Eşyanın sırtını vereceği duvar: önce arka duvarlar (kuzey, batı), yoksa ön (güney, doğu), hiçbiri yoksa kuzey. */
-  const sideOf = (i: number): Orient => {
-    const r = Math.floor(i / cols), col = i % cols, id = cells[i];
-    return at(r - 1, col) !== id ? 0 : at(r, col - 1) !== id ? 1 : at(r + 1, col) !== id ? 2 : at(r, col + 1) !== id ? 3 : 0;
-  };
+  const wallRank = (i: number) => wallRankOf(cells, cols, rows, i);
+  const sideOf = (i: number): Orient => sideOfCell(cells, cols, rows, i);
   for (const id of S.order) {
     const mine: number[] = [];
     cells.forEach((x, i) => x === id && mine.push(i));
@@ -2464,8 +2450,15 @@ function House3DInner({ state: S, onOpenRoom, onPressHouse, zoom = 1, bleed = fa
   const dnow = new Date(now);
   const sunT = Math.min(1, Math.max(0, (dnow.getHours() + dnow.getMinutes() / 60 - 5.5) / 14.5));
   const boxH = sc > 0 ? (boxW * vbH) / vbW : 0;
+  // Ekran okuyucu için tek cümlelik ev özeti (ev tek SVG olduğundan odalar ayrı okunmaz).
+  let lateRooms = 0, todayRooms = 0;
+  for (const rid of S.order) {
+    const rc = roomCounts(S, rid, now);
+    if (rc.late > 0) lateRooms++; else if (rc.today > 0) todayRooms++;
+  }
+  const houseSummary = `Evin ${S.order.length} odalı, ${lateRooms} odada gecikmiş iş, ${todayRooms} odada bugünün işleri var. Seviye ${L}. Evi yakından görüntülemek için dokun.`;
   const content = onPressHouse ? (
-    <Pressable accessibilityRole="button" accessibilityLabel="Evi yakından görüntüle" onPress={handlePressHouse} style={{ width: '100%' }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={houseSummary} onPress={handlePressHouse} style={{ width: '100%' }}>
       {model}
     </Pressable>
   ) : model;

@@ -90,17 +90,24 @@ export function useNotificationSync() {
         try {
           router.push(url as Href);
         } catch (e) {
-          console.warn('Homezy: bildirim yönlendirmesi başarısız', e);
+          console.warn('Homezy: bildirim yolu açılamadı', e);
         }
         N.clearLastNotificationResponse();
       }
     };
-    // Soğuk açılışta gezinme henüz hazır olmayabilir; bir an bekle.
-    const last = N.getLastNotificationResponse();
-    const t = last ? setTimeout(() => open(last), 400) : null;
-    const sub = N.addNotificationResponseReceivedListener(open);
+    const safe = (r: NotificationResponse | null | undefined) => {
+      if (!r?.notification?.request) return;
+      try {
+        open(r);
+      } catch (e) {
+        console.warn('Homezy: bildirim cevabı açılamadı', e);
+      }
+    };
+    // Soğuk açılışta ekranlar kurulmadan yönlendirme çökertmesin: bir an bekle.
+    const first = setTimeout(() => safe(N.getLastNotificationResponse()), 600);
+    const sub = N.addNotificationResponseReceivedListener(safe);
     return () => {
-      if (t) clearTimeout(t);
+      clearTimeout(first);
       sub.remove();
     };
   }, [router]);

@@ -26,7 +26,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       Animated.timing(opacity, { toValue: 1, duration: 160, useNativeDriver: true }).start();
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
-        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => setMsg(null));
+        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(({ finished }) => {
+          // Yeni bir toast solmayı yarıda kestiyse onu silme.
+          if (finished) setMsg(null);
+        });
       }, a ? 5500 : 2800);
     },
     [opacity],

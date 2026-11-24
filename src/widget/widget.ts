@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import type * as WidgetTypes from 'react-native-android-widget';
 
 import { loadState, saveState } from '@/data/db';
-import { DONE, applyTaskAction, type ActionOutcome, feedbackFor, liveStore } from '@/notifications/actions';
+import { DONE, applyTaskAction, serial, type ActionOutcome, feedbackFor, liveStore } from '@/notifications/actions';
 import { getNotifications, rescheduleMorningSummaries } from '@/notifications/schedule';
 import { limits } from '@/domain/premium';
 import type { AppState } from '@/domain/types';
@@ -83,11 +83,13 @@ export async function refreshWidgets(S: AppState, now = Date.now()) {
 async function mutate(fn: (D: AppState) => void): Promise<AppState | null> {
   const live = liveStore();
   if (live) return live.update(D => void fn(D));
-  const S = await loadState();
-  if (!S) return null;
-  fn(S);
-  await saveState(S);
-  return S;
+  return serial(async () => {
+    const S = await loadState();
+    if (!S) return null;
+    fn(S);
+    await saveState(S);
+    return S;
+  });
 }
 
 /** Su widget'ı: bardak ekler / çıkarır; hedef tutarsa günde bir kez puan verir. */
@@ -130,14 +132,16 @@ async function complete(tid: string): Promise<{ S: AppState | null; note: string
     if (o) live.onOutcome?.(o, DONE);
     return { S, note: o ? (feedbackFor(o)?.body ?? null) : null };
   }
-  const S = await loadState();
-  if (!S) return { S: null, note: null };
-  const o = applyTaskAction(S, tid, DONE, now, mult);
-  if (o && !o.already) {
-    await saveState(S);
-    if (getNotifications()) await rescheduleMorningSummaries(S, premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
-  }
-  return { S, note: o ? (feedbackFor(o)?.body ?? null) : null };
+  return serial(async () => {
+    const S = await loadState();
+    if (!S) return { S: null, note: null };
+    const o = applyTaskAction(S, tid, DONE, now, mult);
+    if (o && !o.already) {
+      await saveState(S);
+      if (getNotifications()) await rescheduleMorningSummaries(S, premium).catch(e => console.warn('Homezy: bildirim zamanlanamadı', e));
+    }
+    return { S, note: o ? (feedbackFor(o)?.body ?? null) : null };
+  });
 }
 
 if (lib) {

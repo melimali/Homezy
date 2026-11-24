@@ -254,7 +254,24 @@ const handled = new Set<string>();
  * Bir bildirim düğmesine basılınca çağrılır. Uygulama açıksa store üzerinden, değilse doğrudan
  * veritabanında değiştirir. Sonra bildirimi kaldırır ya da puanı gösteren sessiz bir bildirimle değiştirir.
  */
-export async function handleTaskAction(
+export function handleTaskAction(
+  N: NotificationsModule,
+  r: { id: string; action: string; date: number; content: ResponseContent | undefined },
+  reschedule: (S: AppState, premium: boolean) => Promise<void>,
+): Promise<boolean> {
+  // Arka plan görevi, widget ve dinleyici aynı anda gelebilir; oku-değiştir-yaz sırayla yapılsın (kayıp güncelleme olmasın).
+  return serial(() => handleTaskActionNow(N, r, reschedule));
+}
+
+/** Veritabanına yazan arka plan yolları (bildirim düğmesi, widget) sıraya girer. */
+let chain: Promise<unknown> = Promise.resolve();
+export function serial<T>(fn: () => Promise<T>): Promise<T> {
+  const run = chain.then(fn, fn);
+  chain = run.catch(() => {});
+  return run;
+}
+
+async function handleTaskActionNow(
   N: NotificationsModule,
   r: { id: string; action: string; date: number; content: ResponseContent | undefined },
   reschedule: (S: AppState, premium: boolean) => Promise<void>,

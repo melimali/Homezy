@@ -1,7 +1,7 @@
 import { useFocusEffect, type Href } from 'expo-router';
 import { useRouter } from '@/lib/nav';
-import { useCallback, useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { AppState, Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { BackLink, Btn, Card, Chip, EmptyMsg, Screen, SecHead, T } from '@/components/ui';
 import { notifs } from '@/domain/logic';
@@ -33,6 +33,14 @@ export default function Bildirimler() {
       getPermission().then(setPerm).catch(() => {});
     }, []),
   );
+
+  // Ayarlardan izin verip dönünce kart hemen güncellensin.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', st => {
+      if (st === 'active') getPermission().then(setPerm).catch(() => {});
+    });
+    return () => sub.remove();
+  }, []);
 
   const set = <K extends keyof Settings>(k: K, v: Settings[K]) => update(D => void (D.settings[k] = v));
 

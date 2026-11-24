@@ -28,6 +28,8 @@ if (N && TM) {
   TM.defineTask<NotificationResponse | Record<string, unknown>>(TASK, async ({ data }) => {
     if (!data || !('actionIdentifier' in data)) return;
     const r = data as NotificationResponse;
+    // Boş ya da bozuk yük (bazı cihazlarda eski cevap) görevi çökertmesin.
+    if (!r.notification?.request) return;
     const { request, date } = r.notification;
     await handleTaskAction(N, { id: request.identifier, action: r.actionIdentifier, date, content: request.content }, rescheduleMorningSummaries).catch(e =>
       console.warn('Homezy: bildirim cevabı işlenemedi', e),

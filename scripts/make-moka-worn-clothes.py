@@ -28,9 +28,10 @@ CUTS = {
     'govde_kaplan': {'regions': [2, 3]},
     'govde_kazak': {'seeds': [(125, 330, 18), (395, 330, 18)]},
     'govde_kimono': {'seeds': [(115, 330, 10), (407, 330, 10)]},
-    'govde_kral_pelerini': {'seeds': [(255, 270, 40)]},
+    # Pelerinler tam pelerin olarak giyilir: mağaza resminden (assets/moka/esya) üretilir.
+    'govde_kral_pelerini': {'from': 'assets/moka/esya', 'seeds': [(265, 290, 30), (265, 380, 30)]},
     'govde_mont': {'seeds': [(257, 262, 18), (120, 335, 18), (400, 335, 18)]},
-    'govde_pelerin': {'regions': [2]},
+    'govde_pelerin': {'from': 'assets/moka/esya', 'regions': [2, 11]},
     'govde_pijama': {'regions': [2, 5, 6]},
     'govde_pilot': {'regions': [5, 7]},
     'govde_pizza': {'regions': [1, 11, 12]},
@@ -82,7 +83,7 @@ def cut(a, spec):
 
 def main(src, dst):
     for name, spec in CUTS.items():
-        a = np.array(Image.open(os.path.join(src, name + '.webp')).convert('RGBA')).astype(float)
+        a = np.array(Image.open(os.path.join(spec.get('from', src), name + '.webp')).convert('RGBA')).astype(float)
         Image.fromarray(cut(a, spec).clip(0, 255).astype('uint8')).save(os.path.join(dst, name + '.webp'), quality=90, method=6, alpha_quality=100)
         print('ok', name)
 

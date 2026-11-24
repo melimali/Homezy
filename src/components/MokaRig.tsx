@@ -21,6 +21,8 @@ const W = 1254;
 const NECK = { x: 627, y: 700 };
 const SHOULDER_A = { x: 790, y: 650 }; // ekranın sağındaki kanat
 const SHOULDER_B = { x: 480, y: 650 }; // ekranın solundaki kanat
+const GARMENT_SHOULDER_A = { x: 814, y: 686 }; // kıyafetin sağ omzu
+const GARMENT_SHOULDER_B = { x: 440, y: 686 }; // kıyafetin sol omzu
 const TAIL = { x: 250, y: 1030 };
 
 export type RigMood = 'neutral' | 'happy' | 'wow' | 'sleepy';
@@ -132,7 +134,21 @@ const HEAD_FIT: Record<string, HeadFit> = {
   bas_kar_adam: { anchorX: 256, anchorY: 122, targetY: 83, scale: 1.04, width: 1.25, tilt: 0, sway: 0.5 },
 };
 
+// Gövde parçası kalır; ayrı çizilmiş kol uçları ve açıklıkları kanatların altından taşmaz.
+const SLEEVELESS_FRONT = 'M120 230 H392 V270 Q378 279 365 302 Q350 331 357 363 Q367 391 397 406 L418 464 H94 L115 406 Q145 391 155 363 Q162 331 147 302 Q134 279 120 270Z';
 const GARMENT_FRONT: Partial<Record<string, string>> = {
+  govde_dev_cicek: SLEEVELESS_FRONT,
+  govde_hirka: SLEEVELESS_FRONT,
+  govde_kaplan: SLEEVELESS_FRONT,
+  govde_kimono: SLEEVELESS_FRONT,
+  govde_mont: SLEEVELESS_FRONT,
+  govde_pijama: SLEEVELESS_FRONT,
+  govde_pilot: SLEEVELESS_FRONT,
+  govde_pizza: SLEEVELESS_FRONT,
+  govde_sef_ceketi: SLEEVELESS_FRONT,
+  govde_sporcu: SLEEVELESS_FRONT,
+  govde_tisort_kahve: SLEEVELESS_FRONT,
+  govde_yelek: SLEEVELESS_FRONT,
   govde_kazak: 'M128 298 Q255 325 378 299 L422 465 H88Z',
   govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
   govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',
@@ -426,12 +442,14 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
   const garmentFront = bodyId ? GARMENT_FRONT[bodyId] : undefined;
   const cape = bodyId === 'govde_pelerin' || bodyId === 'govde_kral_pelerini';
   const clothSwing = cape ? 0.7 : 0.35;
+  const wingPivotA = hasBodyOutfit ? GARMENT_SHOULDER_A : SHOULDER_A;
+  const wingPivotB = hasBodyOutfit ? GARMENT_SHOULDER_B : SHOULDER_B;
   const wingLayer = (side: 'left' | 'right') => {
     const left = side === 'left';
-    const pivot = left ? SHOULDER_B : SHOULDER_A;
+    const pivot = left ? wingPivotB : wingPivotA;
     const src = left ? L.kanat_b : L.kanat_a;
     const pose = <Pivot s={size} p={pivot} rotate={deg(wing, left ? -2.5 : 2.5)} ty={wingRise}><Layer src={src} s={size} /></Pivot>;
-    if (!wingCover) return pose;
+    if (hasBodyOutfit || !wingCover) return pose;
     return (
       <Pivot s={size} p={pivot}
         rotate={ip(wingCover, [0, 1], ['0deg', left ? '-16deg' : '16deg'])}
@@ -452,6 +470,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
           {garmentFront ? <FittedArtwork src={bodyItem} size={size} contour={garmentFront} /> : <Layer src={bodyItem} s={size} />}
         </Pivot>
       )}
+      {hasBodyOutfit && wings}
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, transform: [{ translateY: footLift }, { scaleY: footPress }] }}>
         <Layer src={AYAK} s={size} />
       </Animated.View>
@@ -471,7 +490,7 @@ export function RigBody({ size, fur, worn, sway, lag, wing, tail, blink, look, m
         )}
       </Pivot>
       {handId && hold ? (
-        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} armless={hasBodyOutfit} />
+        <HeldItemModel key={handId} size={size} pose={hold} id={handId} fur={fur} motion={handMotion} animated={active && !reduce} />
       ) : (
         <>
           {!hasBodyOutfit && wings}

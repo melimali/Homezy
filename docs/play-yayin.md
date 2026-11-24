@@ -13,12 +13,12 @@ Kod tarafı hazır. Aşağıdakiler Melih'in elle yapacakları, sırasıyla. Kim
 
 ## 1. Hesaplar (beklemede)
 
-- [ ] Meikai Digital için D-U-N-S numarası.
-- [ ] Play Console kuruluş hesabının onayı ve ödeme profili (banka, vergi).
+- [ ] Karar (Melih, 2026-10-31): hesap kişisel (Melih Tuğyan), D-U-N-S gerekmez. Play Console kişisel hesap onayı ve ödeme profili (banka, vergi).
+- [ ] Yeni kişisel hesaplarda 12 test kullanıcılı 14 günlük kapalı test şartı var mı, Play Console'da kontrol et.
 
 ## 2. Yasal sayfaları yayınla
 
-- [ ] `docs/yasal/gizlilik.html`, `kosullar.html`, `hesap-silme.html` içindeki `[iletisim@themeikai.com]` yerlerine gerçek e-postayı yaz (köşeli parantezleri sil).
+- [x] Yasal sayfalarda iletişim e-postası `info@themeikai.com` (köşeli parantez kalmadığını yayından önce yine kontrol et).
 - [ ] Sayfaları sitede `homezy/gizlilik/index.html`, `homezy/kosullar/index.html`, `homezy/hesap-silme/index.html` olarak yükle; üç adresi tarayıcıda aç.
 - [ ] Sitenin köküne `app-ads.txt`: AdMob > Uygulamalar > app-ads.txt'deki satır (`google.com, pub-…, DIRECT, f08c47fec0942fa0`).
 

@@ -60,7 +60,7 @@ export function RestGame() {
         </View>
       )}
       {!run && <Btn kind="primary" label={left <= 0 ? 'Tekrar oyna' : 'Moka yakala'} onPress={start} />}
-      {!run && <T v="tiny" style={{ textAlign: 'center' }}>Çıkan 🦜'ya dokun: 2 puan, diğerleri 1 puan.</T>}
+      {!run && <T v="tiny" style={{ textAlign: 'center' }}>Çıkan 🦜&apos;ya dokun: 2 puan, diğerleri 1 puan.</T>}
     </View>
   );
 }

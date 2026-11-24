@@ -58,7 +58,7 @@ export function WelcomeBack() {
           {!hp.today && S.settings.why && WHY_LINE[S.settings.why] && (
             <T v="small" style={{ textAlign: 'center' }}>{`${tx('Hatırla')}: ${tx(WHY_LINE[S.settings.why])}`}</T>
           )}
-          {!hp.today && S.settings.obstacle === 'yorulur' && <T v="tiny" style={{ textAlign: 'center' }}>Yorgunsan Bugün'den "Hafif gün" seçebilirsin.</T>}
+          {!hp.today && S.settings.obstacle === 'yorulur' && <T v="tiny" style={{ textAlign: 'center' }}>Yorgunsan Bugün&apos;den &quot;Hafif gün&quot; seçebilirsin.</T>}
           {!hp.today && pick && (
             <View style={{ alignSelf: 'stretch', gap: 6 }}>
               <T v="eyebrow" style={{ textAlign: 'center', marginBottom: 0 }}>Bugün sadece bunu yap</T>

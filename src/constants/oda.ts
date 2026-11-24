@@ -8,7 +8,7 @@ import type { ImageSourcePropType } from 'react-native';
  */
 export const ODA_W = 852;
 export const ODA_H = 1846;
-export type OdaPhase = 'sabah' | 'aksam' | 'gece';
+export type OdaPhase = 'sabah' | 'ogle' | 'aksam' | 'gece';
 export type Box = { x: number; y: number; w: number; h: number };
 export type Pt = { x: number; y: number };
 export type OdaPart = 'asma' | 'rafbitki' | 'pencerebitki' | 'sehpabitki' | 'kupa1' | 'kupa2' | 'kitapust';
@@ -30,7 +30,7 @@ export type OdaLayers = {
   hit: Record<OdaTouch, Box>;
 };
 
-export const ODA: Record<OdaPhase, OdaLayers> = {
+const CIZIM: Record<Exclude<OdaPhase, 'ogle'>, OdaLayers> = {
   sabah: {
     sillLeaves: require('../assets/oda/sabah_sill.png'),
     taban: require('../../assets/oda/sabah_taban.webp'),
@@ -66,7 +66,7 @@ export const ODA: Record<OdaPhase, OdaLayers> = {
       kupa2: { src: require('../../assets/oda/aksam_kupa2.webp'), box: { x: 549, y: 614, w: 105, h: 114 }, pivot: { x: 597, y: 616 } },
       kitapust: { src: require('../../assets/oda/aksam_kitapust.webp'), box: { x: 554, y: 404, w: 137, h: 155 }, pivot: { x: 562, y: 559 } },
     },
-    yaprak: { src: require('../../assets/oda/aksam_yaprak.webp'), w: 45, h: 48 },
+    yaprak: { src: require('../../assets/oda/sabah_yaprak.webp'), w: 44, h: 48 },
     seat: { x: 395, y: 1329 }, lamp: { x: 778, y: 839 }, chemex: { x: 466, y: 435 }, mug: { x: 551, y: 486 },
     chain: [{ x: 332, y: 374 }, { x: 652, y: 373 }],
     hit: { lamba: { x: 685, y: 758, w: 159, h: 173 }, kupa: { x: 461, y: 596, w: 186, h: 137 }, surahi: { x: 406, y: 412, w: 112, h: 148 }, bitki: { x: 556, y: 870, w: 176, h: 173 }, pencere: { x: 7, y: 281, w: 207, h: 723 } },
@@ -86,12 +86,14 @@ export const ODA: Record<OdaPhase, OdaLayers> = {
       kupa2: { src: require('../../assets/oda/gece_kupa2.webp'), box: { x: 548, y: 613, w: 104, h: 115 }, pivot: { x: 596, y: 615 } },
       kitapust: { src: require('../../assets/oda/gece_kitapust.webp'), box: { x: 552, y: 407, w: 137, h: 153 }, pivot: { x: 560, y: 560 } },
     },
-    yaprak: { src: require('../../assets/oda/gece_yaprak.webp'), w: 47, h: 48 },
+    yaprak: { src: require('../../assets/oda/sabah_yaprak.webp'), w: 44, h: 48 },
     seat: { x: 394, y: 1329 }, lamp: { x: 776, y: 840 }, chemex: { x: 465, y: 435 }, mug: { x: 550, y: 487 }, moon: { x: 99, y: 660 },
     chain: [{ x: 331, y: 374 }, { x: 650, y: 374 }],
     hit: { lamba: { x: 683, y: 759, w: 158, h: 172 }, kupa: { x: 460, y: 596, w: 186, h: 137 }, surahi: { x: 405, y: 413, w: 112, h: 147 }, bitki: { x: 554, y: 871, w: 176, h: 173 }, pencere: { x: 7, y: 281, w: 207, h: 723 } },
   },
 };
+/** Öğle, sabah resmini kullanır; ışığı, göğü ve lambası ayrıdır (RoomBackdrop). */
+export const ODA: Record<OdaPhase, OdaLayers> = { ...CIZIM, ogle: CIZIM.sabah };
 
 export const ISIK = require('../../assets/oda/isik.webp') as ImageSourcePropType;
 /** v6 parçacıkları (tek kare): buhar, kar, cam damlası, yıldız ışıltısı, bulut. */

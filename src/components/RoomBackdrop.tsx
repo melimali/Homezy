@@ -9,11 +9,11 @@ import { useActive } from '@/hooks/useActive';
 import type { SkyKind } from '@/lib/weather';
 import { clearNightCondition } from '@/domain/roomScene';
 
-/** Saate göre oda: 06:30-16:29 sabah, 16:30-19:29 akşam, 19:30-06:29 gece. */
+/** Saate göre oda: 06:30-10:59 sabah, 11:00-16:29 öğle, 16:30-19:29 akşam, 19:30-06:29 gece. */
 export function odaPhaseOf(d = new Date()): OdaPhase {
   const h = d.getHours() + d.getMinutes() / 60;
   if (h >= 19.5 || h < 6.5) return 'gece';
-  return h >= 16.5 ? 'aksam' : 'sabah';
+  return h >= 16.5 ? 'aksam' : h >= 11 ? 'ogle' : 'sabah';
 }
 /** Moka'nın oturduğu nokta (o saatin resminde yastığın ortası). */
 export const seatOf = (p: OdaPhase): Pt => ODA[p].seat;
@@ -131,14 +131,38 @@ const MOTES = {
 /** Havaya göre camın rengi ve yoğunluğu. */
 const GLASS: Partial<Record<SkyKind, { tone: string; op: number }>> = {
   cloudy: { tone: '#8C97A8', op: 0.36 }, rain: { tone: '#55657A', op: 0.48 }, storm: { tone: '#1E2533', op: 0.6 },
-  snow: { tone: '#E6EDF5', op: 0.38 }, fog: { tone: '#EEF1F4', op: 0.58 },
+  snow: { tone: '#BAC6D4', op: 0.62 }, fog: { tone: '#EEF1F4', op: 0.58 },
 };
 const SHELF_WALL: Record<OdaPhase, { clip: string; cx: number; cy: number; r: number; color: string }> = {
   sabah: { clip: 'M442 602H665V723H442Z', cx: 554, cy: 661, r: 122, color: '#D9A370' },
   aksam: { clip: 'M430 596H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#BA7B55' },
+  ogle: { clip: 'M442 602H665V723H442Z', cx: 554, cy: 661, r: 122, color: '#F3D6B0' },
   gece: { clip: 'M430 595H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#50343A' },
 };
-const RAIN_N = 12;
+/** Saatin gökyüzü rengi (cam): akşam gün batımı, öğle derin mavi, sabah hafif şeftali. Kapalı havada söner. */
+const SKY_TONE: Partial<Record<OdaPhase, { tone: string; op: number }>> = {
+  sabah: { tone: '#FFD9B0', op: 0.2 }, ogle: { tone: '#4FB3F0', op: 0.2 }, aksam: { tone: '#F2874F', op: 0.62 },
+};
+/** Kapalı havada odaya düşen serin loşluk. */
+const ROOM_WASH: Partial<Record<SkyKind, { tone: string; op: number }>> = {
+  cloudy: { tone: '#5A6472', op: 0.06 }, rain: { tone: '#3E4C5E', op: 0.14 }, storm: { tone: '#28323F', op: 0.24 },
+  snow: { tone: '#7F93AA', op: 0.1 }, fog: { tone: '#8B95A1', op: 0.08 },
+};
+/** Duvardaki ve yerdeki boyalı güneş lekelerini duvar rengine indiren katman (oda koordinatı). */
+const SUN_SHADE: Partial<Record<OdaPhase, number>> = {
+  sabah: require('../assets/oda/sabah_golge.png'),
+  ogle: require('../assets/oda/sabah_golge.png'),
+  aksam: require('../assets/oda/aksam_golge.png'),
+};
+/** Cam maskesinin, resimdeki eski yapraklar yüzünden boş kalan yerleri: hava rengi yaprak çevresinde hale bırakmasın. */
+const GLASS_FILL: Record<OdaPhase, number> = {
+  sabah: require('../assets/oda/sabah_cam_ek.png'),
+  ogle: require('../assets/oda/sabah_cam_ek.png'),
+  aksam: require('../assets/oda/aksam_cam_ek.png'),
+  gece: require('../assets/oda/gece_cam_ek.png'),
+};
+const SUN_SHADE_BOX: Box = { x: 0, y: 590, w: 480, h: 1090 };
+const RAIN_N = 42;
 
 /** Zincirin 7 ampulü: iki uç arasında hafifçe sarkar. */
 const chainPts = (L: OdaLayers) => Array.from({ length: 7 }, (_, i) => {
@@ -205,11 +229,13 @@ const TRAILING_STEMS = 'M313 342L316 342Q319 365 315 385L312 403L309 403L311 382
 const VINE_BACKGROUND_REPAIR = 'M292 290H330V600H292Z';
 const PLANT_SPRITE: Record<OdaPhase, number> = {
   sabah: require('../assets/oda/sabah_asma_detay.png'),
+  ogle: require('../assets/oda/sabah_asma_detay.png'),
   aksam: require('../assets/oda/aksam_asma_detay.png'),
   gece: require('../assets/oda/gece_asma_detay.png'),
 };
 const PLANT_BACKGROUND: Record<OdaPhase, number> = {
   sabah: require('../assets/oda/sabah_asma_zemin.png'),
+  ogle: require('../assets/oda/sabah_asma_zemin.png'),
   aksam: require('../assets/oda/aksam_asma_zemin.png'),
   gece: require('../assets/oda/gece_asma_zemin.png'),
 };
@@ -222,7 +248,7 @@ const HANGING_CUPS = {
 function PlanterBackdrop({ phase, s }: { phase: OdaPhase; s: number }) {
   const id = 'planter-background-' + useId().replace(/[^a-z0-9]/gi, '');
   const { box, src } = ODA[phase].parts.asma;
-  const art = PLANTER[phase];
+  const art = PLANTER[phase === 'ogle' ? 'sabah' : phase];
   return (
     <Svg pointerEvents="none" width={box.w * s} height={box.h * s}
       viewBox={`0 0 ${box.w} ${box.h}`}
@@ -265,9 +291,15 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
   const glass = GLASS[sky];
   const wet = sky === 'rain' || sky === 'storm';
   const snow = sky === 'snow';
+  const covered = sky !== 'clear';
+  const tone = SKY_TONE[phase];
+  const toneOp = !tone ? 0 : tone.op * (sky === 'clear' ? 1 : sky === 'cloudy' ? 0.6 : 0.3);
+  const shade = SUN_SHADE[phase];
   const clouds = true;
   const cloudOpacity = sky === 'clear' ? 0.22 : sky === 'fog' ? 0.14 : wet ? 0.28 : 0.34;
   const big = L.cells.filter(c => c.w >= 60);
+  // Kar geniş camlarda, yağmur bütün camlarda.
+  const fall = snow ? big : L.cells;
   const asma = L.parts.asma;
   // Yaprak asma saksının alt ucundan kopar.
   const leafFrom = { x: asma.box.x + asma.box.w * 0.62, y: asma.box.y + asma.box.h * 0.82 };
@@ -275,6 +307,7 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: ODA_W * s, height: ODA_H * s, opacity }}>
       <Image source={L.taban} fadeDuration={0} onLoad={onReady} onError={onReady} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
       <PlanterBackdrop phase={phase} s={s} />
+      {covered && shade !== undefined && <Animated.Image source={shade} fadeDuration={0} resizeMode="stretch" style={[box(SUN_SHADE_BOX), { opacity: Animated.multiply(weatherOpacity, sky === 'cloudy' ? 0.7 : 1) }]} />}
 
       {/* Soft, phase-matched wall correction ends above the shelf board. */}
       <Svg pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }} width={ODA_W * s} height={ODA_H * s} viewBox={'0 0 ' + ODA_W + ' ' + ODA_H}>
@@ -291,6 +324,8 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
       </Svg>
 
       {/* Cam: havaya göre renk, içinde bulut, yağmur, kar, damlalar, şimşek. */}
+      {tone && [L.cam.src, GLASS_FILL[phase]].map((src, i) => <Image key={'tone' + i} source={src} fadeDuration={0} style={[box(L.cam.box), { tintColor: tone.tone, opacity: toneOp }]} />)}
+      {glass && <Animated.Image source={GLASS_FILL[phase]} fadeDuration={0} style={[box(L.cam.box), { tintColor: glass.tone, opacity: Animated.multiply(weatherOpacity, glass.op) }]} />}
       {glass && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: glass.tone, opacity: Animated.multiply(weatherOpacity, glass.op) }]} />}
       {sky === 'storm' && <Animated.Image source={L.cam.src} style={[box(L.cam.box), { tintColor: '#F4F7FF', opacity: Animated.multiply(weatherOpacity, vals.flash.interpolate({ inputRange: [0, 0.08, 0.16, 0.24, 1], outputRange: [0, 0.85, 0.1, 0.6, 0] })) }]} />}
       {(clouds || wet || snow) && L.cells.map((c, ci) => (
@@ -305,23 +340,40 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
             />
           )}
           {(wet || snow) && vals.rain.map((r, i) => {
-            if (i % L.cells.length !== ci || (snow && c.w < 60)) return null;
-            const x = (2 + ((i * 37 + ci * 23) % 96)) / 100;
+            if (fall[i % fall.length] !== c || (sky === 'rain' && i >= 30)) return null;
+            const x = (2 + ((i * 7919 + ci * 5081 + (i % 5) * 1733) % 93)) / 100;
             const move = { translateY: r.interpolate({ inputRange: [0, 1], outputRange: [-(snow ? 14 : 30) * s, (c.h + 6) * s] }) };
             return snow ? (
               <Animated.Image
                 key={i}
                 source={PARCA.kar}
                 style={{
-                  position: 'absolute', left: x * c.w * s, top: 0, width: (9 + (i % 3) * 3) * s, height: (8 + (i % 3) * 3) * s, opacity: Animated.multiply(weatherOpacity, 0.95),
+                  position: 'absolute', left: x * c.w * s, top: 0, width: (8 + (i % 4) * 3) * s, height: (7 + (i % 4) * 3) * s, tintColor: '#FFFFFF', opacity: Animated.multiply(weatherOpacity, 0.7 + (i % 3) * 0.15),
                   transform: [move, { translateX: r.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, (i % 2 ? 9 : -9) * s, 0] }) }, { rotate: r.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${i % 2 ? 120 : -120}deg`] }) }],
                 }}
               />
             ) : (
-              <Animated.View key={i} style={{ position: 'absolute', left: x * c.w * s, top: 0, width: Math.max(1, 2 * s), height: (22 + (i % 4) * 6) * s, borderRadius: 2, backgroundColor: '#DCEBFA', opacity: Animated.multiply(weatherOpacity, ci < 2 ? 0.85 : 0.68), transform: [move, { rotate: '10deg' }] }} />
+              <Animated.View key={i} style={{ position: 'absolute', left: x * c.w * s, top: 0, width: Math.max(1, 2 * s), height: (22 + (i % 4) * 6) * s, borderRadius: 2, backgroundColor: '#E6F1FC', opacity: Animated.multiply(weatherOpacity, 0.55 + (i % 3) * 0.15), transform: [move, { rotate: sky === 'storm' ? '18deg' : '10deg' }] }} />
             );
           })}
+          {/* Karda bahçe beyazlar, cam çıtalarında kar birikir. */}
+          {snow && c.y > 740 && <Animated.View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: c.h * s, backgroundColor: '#F6FAFE', opacity: Animated.multiply(weatherOpacity, phase === 'gece' ? 0.12 : 0.26) }} />}
+          {snow && <Animated.View style={{ position: 'absolute', left: -6 * s, right: -6 * s, bottom: -8 * s, height: (c.y > 740 ? 46 : 20) * s, borderTopLeftRadius: 30 * s, borderTopRightRadius: 22 * s, backgroundColor: phase === 'gece' ? '#D5DFEC' : '#FBFDFF', opacity: weatherOpacity }} />}
         </View>
+      ))}
+      {/* Kapalı gecede ay bulutun arkasında kalır. */}
+      {L.moon && covered && [{ r: 62, o: 1 }, { r: 62, o: 1 }, { r: 84, o: 0.9 }].map((m, i) => (
+        <Animated.Image key={'mooncloud' + i} source={ISIK} style={{ position: 'absolute', left: (L.moon!.x - m.r) * s, top: (L.moon!.y - m.r) * s, width: 2 * m.r * s, height: 2 * m.r * s, tintColor: snow ? '#7E8FA7' : sky === 'fog' ? '#8F9CAE' : sky === 'storm' ? '#222C3C' : '#3C4F69', opacity: Animated.multiply(weatherOpacity, sky === 'cloudy' ? m.o * 0.5 : m.o) }} />
+      ))}
+      {L.moon && covered && sky !== 'cloudy' && (
+        <Animated.View style={{ position: 'absolute', left: (L.moon.x - 37) * s, top: (L.moon.y - 37) * s, width: 74 * s, height: 74 * s, borderRadius: 37 * s, backgroundColor: snow ? '#7E8FA7' : sky === 'fog' ? '#8F9CAE' : sky === 'storm' ? '#222C3C' : '#3C4F69', opacity: Animated.multiply(weatherOpacity, 0.92) }} />
+      )}
+      {sky === 'storm' && big.slice(0, 2).map((c, i) => (
+        <Animated.View key={'bolt' + i} style={[box(c), { overflow: 'hidden', opacity: Animated.multiply(weatherOpacity, vals.flash.interpolate({ inputRange: [0, 0.06, 0.2, 0.26, 0.5, 1], outputRange: [0, 1, i ? 0.2 : 0.7, 1, 0, 0] })) }]}>
+          <Svg width={c.w * s} height={c.h * s} viewBox="0 0 100 180" preserveAspectRatio="none">
+            <Path d={i ? 'M30 0L48 58L36 62L60 120L44 122L66 180' : 'M70 0L52 50L64 54L40 104L52 108L34 180'} fill="none" stroke="#FFF8D8" strokeWidth={5} strokeLinejoin="round" strokeLinecap="round" />
+          </Svg>
+        </Animated.View>
       ))}
       {wet && big.map((c, ci) => vals.drops.map((d, i) => i !== ci ? null : (
         <Animated.Image
@@ -378,7 +430,7 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
       {/* Pervazdaki gövde ve saksı sabit. Yapraklar saksının ağzından esner. */}
       <Animated.View style={{ position: 'absolute', left: 158 * s, top: 951 * s, width: 0, height: 0, transform: [{
         rotate: Animated.add(vals.part.pencerebitki, vals.nudge.pencerebitki).interpolate({
-          inputRange: [-1, 0.5, 2], outputRange: ['-1.9deg', '0deg', '1.9deg'], extrapolate: 'clamp',
+          inputRange: [-1, 0.5, 2], outputRange: ['-1deg', '0deg', '1deg'], extrapolate: 'clamp',
         }),
       }] }}>
         <Image source={L.sillLeaves} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: -124 * s, top: -126 * s, width: 237 * s, height: 143 * s }} />
@@ -432,6 +484,9 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
   const L = ODA[phase];
   const night = phase === 'gece' ? 1 : 0;
   const dusk = phase === 'aksam' ? 1 : 0;
+  const noon = phase === 'ogle';
+  const sunny = sky === 'clear' || sky === 'cloudy';
+  const wash = ROOM_WASH[sky];
   const reduceM = useReduceMotion();
   const active = useActive();
   const run = !reduceM && active;
@@ -509,10 +564,10 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
     vals.drift.setValue(0);
     if (sky === 'storm') vals.flash.setValue(0);
     const anims: Stop[] = [
-      ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 4200 + (i % 4) * 700 : 700 + (i % 3) * 160, i * (sky === 'snow' ? 330 : 30))) : []),
+      ...(wet ? vals.rain.map((x, i) => rise(x, sky === 'snow' ? 4200 + (i % 4) * 700 : (sky === 'storm' ? 520 : 700) + (i % 3) * 160, (i * (sky === 'snow' ? 2749 : 389)) % (sky === 'snow' ? 5200 : 900))) : []),
       ...(rainy ? vals.drops.map((x, i) => rise(x, 5200 + i * 1300, i * 2100, Easing.in(Easing.quad))) : []),
       rise(vals.drift, 48000),
-      ...(sky === 'storm' ? [every(vals.flash, 9000, 16000, v => Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true, isInteraction: false }), 4000)] : []),
+      ...(sky === 'storm' ? [every(vals.flash, 6000, 11000, v => Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true, isInteraction: false }), 4000)] : []),
     ];
     return () => anims.forEach(a => a.stop());
   }, [run, vals, sky, wet, rainy]);
@@ -650,21 +705,24 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
           {clearNight && starPts.map((p, i) => (
             <Animated.Image key={`st${i}`} source={PARCA.yildiz} pointerEvents="none" style={{ position: 'absolute', left: (p.x - 6) * s, top: (p.y - 6) * s, width: 12 * s, height: 12 * s, tintColor: '#FFFBE0', opacity: vals.stars[i]!.interpolate({ inputRange: [0, 1], outputRange: [0.05, 0.95] }), transform: [{ scale: vals.stars[i]!.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] }} />
           ))}
-          {!night && glow(300, 1000, 230, dusk ? '#FFB870' : '#FFD68A', vals.sun.interpolate({ inputRange: [0, 1], outputRange: [0.02, dusk ? 0.24 : 0.18] }))}
+          {!night && sunny && glow(300, 1000, 230, dusk ? '#FFB870' : '#FFD68A', vals.sun.interpolate({ inputRange: [0, 1], outputRange: [0.02, dusk ? 0.24 : 0.18] }))}
 
           {/* Pencere ışığı: sabah sıcak, akşam altın, gece soğuk bir huzme yerde yavaşça kayar; bulut geçince söner. */}
-          {sky !== 'storm' && [0, 1].map(k => (
+          {(night ? clearNight : sunny) && [0, 1].map(k => (
             <Animated.Image
               key={`beam${k}`}
               source={ISIK}
               pointerEvents="none"
               style={{
-                position: 'absolute', left: (150 + k * 40) * s, top: (640 + k * 150) * s, width: 760 * s, height: 150 * s, tintColor: night ? '#B7CBFF' : dusk ? '#FFC27A' : '#FFE7B0',
+                position: 'absolute', left: (150 + k * 40) * s, top: (640 + k * 150) * s, width: 760 * s, height: 150 * s, tintColor: night ? '#B7CBFF' : dusk ? '#FFC27A' : noon ? '#FFF6DC' : '#FFE7B0',
                 opacity: Animated.multiply(Animated.multiply(Animated.multiply(vals.beam.interpolate({ inputRange: [0, 1], outputRange: k ? [0.08, 0.16] : [0.18, 0.1] }), vals.cloud.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] })), vals.weather), (night ? 0.5 : 1) * (wet || sky === 'cloudy' ? 0.45 : 1)),
                 transform: [{ translateX: vals.beam.interpolate({ inputRange: [0, 1], outputRange: [-18 * s * (k ? -1 : 1), 24 * s * (k ? -1 : 1)] }) }, { rotate: `${16 + k * 7}deg` }],
               }}
             />
           ))}
+
+          {noon && sky === 'clear' && <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: '#FFFFFF', opacity: 0.07 }} />}
+          {wash && <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: wash.tone, opacity: Animated.multiply(vals.weather, wash.op * (night ? 0.5 : 1)) }} />}
 
           {/* Toz zerreleri: lamba ve pencere ışığında */}
           {motes.map((m, i) => (
@@ -745,7 +803,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
             <Animated.Image
               source={ISIK}
               pointerEvents="none"
-              style={{ position: 'absolute', left: (LAMP.x - 260) * s, top: (LAMP.y - 260) * s, width: 520 * s, height: 520 * s, tintColor: '#FFB44D', opacity: Animated.multiply(lampOp, 0.6 + 0.25 * dusk + 0.4 * night + warm * 0.4), transform: [{ scale: Animated.add(vals.halo.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.05] }), vals.boost.interpolate({ inputRange: [0, 1], outputRange: [0, 0.08] })) }] }}
+              style={{ position: 'absolute', left: (LAMP.x - 260) * s, top: (LAMP.y - 260) * s, width: 520 * s, height: 520 * s, tintColor: '#FFB44D', opacity: Animated.multiply(lampOp, (noon && sunny ? 0.25 : 0.6) + 0.25 * dusk + 0.4 * night + (sunny ? 0 : 0.2) + warm * 0.4), transform: [{ scale: Animated.add(vals.halo.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.05] }), vals.boost.interpolate({ inputRange: [0, 1], outputRange: [0, 0.08] })) }] }}
             />
           )}
           {lampOn && (

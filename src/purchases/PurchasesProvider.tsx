@@ -271,7 +271,7 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       const err = e as { userCancelled?: boolean; code?: string | number };
       if (err.userCancelled) return { ok: false, cancelled: true, error: '' };
-      if (String(err.code) === '8') return { ok: false, error: 'Ödeme onay bekliyor. Onaylanınca Premium otomatik açılır.' };
+      if (String(err.code) === '20') return { ok: false, error: 'Ödeme onay bekliyor. Onaylanınca Premium otomatik açılır.' };
       if (String(err.code) === '6') {
         try {
           const info = await Purchases.restorePurchases();

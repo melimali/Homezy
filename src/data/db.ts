@@ -66,6 +66,10 @@ function getDb() {
       await migrate(db);
       return db;
     })();
+    // Açılış hatası kalıcı olmasın (ör. iOS'ta kilitli telefonda arka plandan açılış): sonraki çağrı yeniden dener.
+    dbPromise.catch(() => {
+      dbPromise = null;
+    });
   }
   return dbPromise;
 }

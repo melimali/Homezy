@@ -504,7 +504,7 @@ export default function Hesap() {
       <Sheet open={langOpen} onClose={() => setLangOpen(false)}>
         <View style={{ gap: 12, paddingVertical: 10 }}>
           <T v="h2">{t('selectLanguage')}</T>
-          <Pressable onPress={() => void Linking.openURL('mailto:info@themeikai.com')} accessibilityRole="link" accessibilityLabel="info@themeikai.com" style={{ gap: 2 }}>
+          <Pressable onPress={() => Linking.openURL('mailto:info@themeikai.com').catch(() => {})} accessibilityRole="link" accessibilityLabel="info@themeikai.com" style={{ gap: 2 }}>
             <T v="small">{tx('Çeviri hatası mı gördün? Bize yaz, birlikte düzeltelim 💛')}</T>
             <Text style={{ fontFamily: fonts.bodyBlack, fontSize: 13.5, color: c.hi, textDecorationLine: 'underline' }}>info@themeikai.com</Text>
           </Pressable>

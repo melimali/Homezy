@@ -66,6 +66,9 @@ function createSaver(delay = 500) {
     blocked = true;
     pending = null;
   };
+  save.unblock = () => {
+    blocked = false;
+  };
   save.flush = () => {
     if (timer) clearTimeout(timer);
     timer = null;
@@ -106,6 +109,7 @@ export function AppStoreProvider({ children, fallback }: { children: ReactNode; 
             slow.then(late => {
               if (!alive || !late) return;
               current.current = late;
+              saver.unblock(); // geç gelen gerçek veri geldi: kayıt yeniden açılır
               setState(late);
             }).catch(() => {});
             throw new Error('loadState timeout');

@@ -86,7 +86,7 @@ export function Screen({
     if (!pullMoka || e.nativeEvent.contentOffset.y > -50) return;
     hop.setValue(0);
     Animated.sequence([
-      Animated.timing(hop, { toValue: -22, duration: 140, useNativeDriver: true }),
+      Animated.timing(hop, { toValue: -10, duration: 140, useNativeDriver: true }),
       Animated.spring(hop, { toValue: 0, friction: 3, tension: 140, useNativeDriver: true }),
     ]).start();
   }, [pullMoka, hop]);

@@ -6,7 +6,7 @@ const POSES: ImageSourcePropType[] = [
   require('../../assets/moka/pull/pull_3.webp'),
   require('../../assets/moka/pull/pull_4.webp'),
 ];
-const W = 210;
+const W = 120;
 const H = Math.round((W * 297) / 341);
 const MAX = 280;
 const STEP = 20;
@@ -23,16 +23,16 @@ export function PullMoka({ y, hop }: { y: Animated.Value; hop: Animated.Value })
     const k = Math.min(1, -v / 120);
     const i = (v + MAX) / STEP;
     pts.push(v);
-    shake.push((i % 2 ? 1 : -1) * 5 * k);
-    rot.push((i % 2 ? 1 : -1) * 4 * k);
-    pulse.push(i % 2 ? 1.25 : 0.9);
+    shake.push((i % 2 ? 1 : -1) * 1.5 * k);
+    rot.push((i % 2 ? 1 : -1) * 1 * k);
+    pulse.push(i % 2 ? 1.1 : 0.95);
   }
-  const ride = y.interpolate({ inputRange: [-600, 0, 600], outputRange: [600 - H + 4, -H + 4, -600 - H + 4] });
+  const ride = y.interpolate({ inputRange: [-600, 0, 600], outputRange: [600 - H + 8, -H + 8, -600 - H + 8] });
   const ty = Animated.add(ride, hop);
   const tx = y.interpolate({ inputRange: pts, outputRange: shake, extrapolate: 'clamp' });
   const rotate = y.interpolate({ inputRange: pts, outputRange: rot.map(r => `${r}deg`), extrapolate: 'clamp' });
   // Kollar uzar: alt kenar sabit kalır, gövde yukarı gerilir.
-  const sy = y.interpolate({ inputRange: [-MAX, -30, 0], outputRange: [1.3, 1.04, 1], extrapolate: 'clamp' });
+  const sy = y.interpolate({ inputRange: [-MAX, -30, 0], outputRange: [1.1, 1.02, 1], extrapolate: 'clamp' });
   const anchor = Animated.multiply(Animated.add(sy, -1), -H / 2);
   const op = (inp: number[], out: number[]) => y.interpolate({ inputRange: inp, outputRange: out, extrapolate: 'clamp' });
   const ops = [
@@ -68,5 +68,5 @@ const styles = StyleSheet.create({
   img: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   cheek: { position: 'absolute', top: '46%', width: '17%', height: '15%', borderRadius: 40, backgroundColor: '#E5574A' },
   anger: { position: 'absolute', top: -2, right: 6 },
-  angerTxt: { fontSize: 26 },
+  angerTxt: { fontSize: 18 },
 });

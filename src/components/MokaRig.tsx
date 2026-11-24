@@ -134,21 +134,7 @@ const HEAD_FIT: Record<string, HeadFit> = {
   bas_kar_adam: { anchorX: 256, anchorY: 122, targetY: 83, scale: 1.04, width: 1.25, tilt: 0, sway: 0.5 },
 };
 
-// Gövde parçası kalır; ayrı çizilmiş kol uçları ve açıklıkları kanatların altından taşmaz.
-const SLEEVELESS_FRONT = 'M120 230 H392 V270 Q378 279 365 302 Q350 331 357 363 Q367 391 397 406 L418 464 H94 L115 406 Q145 391 155 363 Q162 331 147 302 Q134 279 120 270Z';
 const GARMENT_FRONT: Partial<Record<string, string>> = {
-  govde_dev_cicek: SLEEVELESS_FRONT,
-  govde_hirka: SLEEVELESS_FRONT,
-  govde_kaplan: SLEEVELESS_FRONT,
-  govde_kimono: SLEEVELESS_FRONT,
-  govde_mont: SLEEVELESS_FRONT,
-  govde_pijama: SLEEVELESS_FRONT,
-  govde_pilot: SLEEVELESS_FRONT,
-  govde_pizza: SLEEVELESS_FRONT,
-  govde_sef_ceketi: SLEEVELESS_FRONT,
-  govde_sporcu: SLEEVELESS_FRONT,
-  govde_tisort_kahve: SLEEVELESS_FRONT,
-  govde_yelek: SLEEVELESS_FRONT,
   govde_kazak: 'M128 298 Q255 325 378 299 L422 465 H88Z',
   govde_battaniye: 'M90 268 Q165 260 197 282 Q250 301 303 279 Q355 256 425 268 L425 448 Q255 470 90 448Z',
   govde_kral_pelerini: 'M152 250 Q254 288 378 250 L383 359 Q348 410 343 455 H177 Q163 408 133 360Z',

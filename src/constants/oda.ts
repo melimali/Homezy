@@ -38,7 +38,7 @@ export const ODA: Record<OdaPhase, OdaLayers> = {
     cam: { src: require('../../assets/oda/sabah_cam.webp'), box: { x: 0, y: 308, w: 159, h: 674 } },
     cells: [{ x: 0, y: 407, w: 23, h: 165 }, { x: 52, y: 416, w: 107, h: 193 }, { x: 0, y: 602, w: 23, h: 159 }, { x: 52, y: 614, w: 107, h: 159 }, { x: 0, y: 792, w: 23, h: 190 }, { x: 52, y: 796, w: 107, h: 182 }],
     parts: {
-      asma: { src: require('../assets/oda/sabah_planter.png'), box: { x: -22, y: 110, w: 374, h: 665 }, pivot: { x: 118, y: 149 } },
+      asma: { src: require('../assets/oda/sabah_planter.png'), box: { x: -22, y: 110, w: 374, h: 665 }, pivot: { x: 138, y: 149 } },
       rafbitki: { src: require('../../assets/oda/sabah_rafbitki.webp'), box: { x: 610, y: 305, w: 242, h: 466 }, pivot: { x: 755, y: 389 } },
       pencerebitki: { src: require('../../assets/oda/sabah_pencerebitki.webp'), box: { x: 201, y: 1006, w: 80, h: 146 }, pivot: { x: 234, y: 1008 } },
       sehpabitki: { src: require('../../assets/oda/sabah_sehpabitki.webp'), box: { x: 565, y: 892, w: 113, h: 93 }, pivot: { x: 622, y: 985 } },
@@ -108,11 +108,11 @@ export const PARCA = {
  * rock: kitaplar arada bir hafifçe sallanıp yerine oturur. deg: en fazla açı, ms: yarım tur.
  */
 export const MOTION: Record<OdaPart, { kind: 'sway' | 'swing' | 'rock'; deg: number; ms: number; delay: number; tilt: number }> = {
-  asma: { kind: 'sway', deg: 1.35, ms: 4700, delay: 0, tilt: 0 },
-  rafbitki: { kind: 'sway', deg: 0.32, ms: 5900, delay: 900, tilt: 0 },
+  asma: { kind: 'sway', deg: 1.1, ms: 5300, delay: 0, tilt: 0 },
+  rafbitki: { kind: 'sway', deg: 0.22, ms: 6500, delay: 900, tilt: 0 },
   pencerebitki: { kind: 'sway', deg: 0.58, ms: 3700, delay: 400, tilt: 0 },
   sehpabitki: { kind: 'sway', deg: 0.42, ms: 5400, delay: 1200, tilt: 0 },
-  kupa1: { kind: 'swing', deg: 3.2, ms: 2300, delay: 300, tilt: 2 },
-  kupa2: { kind: 'swing', deg: 3.2, ms: 2500, delay: 1400, tilt: 2 },
-  kitapust: { kind: 'rock', deg: 1.4, ms: 9000, delay: 4000, tilt: 2 },
+  kupa1: { kind: 'swing', deg: 1.2, ms: 3600, delay: 300, tilt: 0 },
+  kupa2: { kind: 'swing', deg: 1.2, ms: 3900, delay: 1400, tilt: 0 },
+  kitapust: { kind: 'rock', deg: 0.8, ms: 9000, delay: 4000, tilt: 0 },
 };

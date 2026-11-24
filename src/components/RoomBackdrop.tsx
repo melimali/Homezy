@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, Pressable, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 
-import Svg, { ClipPath, Defs, G, Image as Artwork, Path, RadialGradient, Rect, Stop as SvgStop } from 'react-native-svg';
+import Svg, { ClipPath, Defs, G, Image as Artwork, Mask, Path, RadialGradient, Rect, Stop as SvgStop } from 'react-native-svg';
 
 import { useReduceMotion } from '@/components/motion';
 import { ISIK, MOTION, ODA, ODA_H, ODA_W, PARCA, type Box, type OdaLayers, type OdaPart, type OdaPhase, type OdaTouch, type Pt } from '@/constants/oda';
@@ -64,8 +64,8 @@ function rock(v: Animated.Value, delay: number): Stop {
   const go = () => {
     if (dead) return;
     Animated.sequence([
-      Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true, isInteraction: false }),
-      Animated.spring(v, { toValue: 0.5, friction: 3, tension: 70, useNativeDriver: true, isInteraction: false }),
+      Animated.timing(v, { toValue: 1, duration: 420, easing: Easing.inOut(Easing.sin), useNativeDriver: true, isInteraction: false }),
+      Animated.spring(v, { toValue: 0.5, friction: 7, tension: 55, useNativeDriver: true, isInteraction: false }),
     ]).start(({ finished }) => { if (!dead && finished) t = setTimeout(go, 7000 + Math.random() * 7000); });
   };
   t = setTimeout(go, delay);
@@ -114,7 +114,7 @@ type Vals = {
   part: Record<OdaPart, Animated.Value>; nudge: Record<OdaPart, Animated.Value>;
   lamp: Animated.Value; moon: Animated.Value; sun: Animated.Value; beam: Animated.Value; cloud: Animated.Value; halo: Animated.Value;
   twinkle: Animated.Value[]; cup: Animated.Value[]; chainLights: Animated.Value[]; chainSweep: Animated.Value; fest: Animated.Value; stars: Animated.Value[]; dust: Animated.Value[]; steam: Animated.Value[];
-  rain: Animated.Value[]; drops: Animated.Value[]; drift: Animated.Value; flash: Animated.Value; weather: Animated.Value; leaf: Animated.Value; tapLeaf: Animated.Value; boost: Animated.Value; pot: Animated.Value; ivy: Animated.Value;
+  rain: Animated.Value[]; drops: Animated.Value[]; drift: Animated.Value; flash: Animated.Value; weather: Animated.Value; leaf: Animated.Value; tapLeaf: Animated.Value; boost: Animated.Value; pot: Animated.Value;
 };
 /** Loşluk için köşelere konan koyu haleler (oda resmi koordinatı). */
 const VIGNETTE = [{ x: 0, y: 0, r: 700 }, { x: 852, y: 0, r: 700 }, { x: 0, y: 1846, r: 760 }, { x: 852, y: 1846, r: 760 }, { x: 0, y: 920, r: 420 }, { x: 852, y: 920, r: 420 }];
@@ -134,7 +134,7 @@ const GLASS: Partial<Record<SkyKind, { tone: string; op: number }>> = {
   snow: { tone: '#E6EDF5', op: 0.38 }, fog: { tone: '#EEF1F4', op: 0.58 },
 };
 const SHELF_WALL: Record<OdaPhase, { clip: string; cx: number; cy: number; r: number; color: string }> = {
-  sabah: { clip: 'M442 602H665V723H442Z', cx: 554, cy: 661, r: 122, color: '#F3D6B0' },
+  sabah: { clip: 'M442 602H665V723H442Z', cx: 554, cy: 661, r: 122, color: '#D9A370' },
   aksam: { clip: 'M430 596H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#BA7B55' },
   gece: { clip: 'M430 595H678V728H430Z', cx: 554, cy: 660, r: 128, color: '#50343A' },
 };
@@ -178,74 +178,81 @@ function Chain({ pts, lights, sweep, s, night }: { pts: Pt[]; lights: Animated.V
   );
 }
 
-// Leaf masks keep opaque wall/window pixels in the source crops stationary.
+// Original planter silhouettes define where the damaged background is repaired.
 const PLANTER = {
   sabah: {
-    cutout: require('../../assets/oda/sabah_asma.webp'), box: [22, 42, 319, 592], joint: [236, 316],
-    body: 'M244 153L259 153L270 157L285 170L294 184L292 186L275 185L270 193L259 197L250 192L237 190L227 177L225 169L235 156ZM116 154L135 160L142 168L144 185L138 196L128 197L124 200L105 197L99 192L99 188L75 177L72 173L75 169L97 158ZM195 164L205 164L210 169L215 185L226 204L223 207L215 207L206 211L199 211L193 208L185 211L176 204L165 206L163 204L163 198L165 197L163 194L164 189L173 183L175 177L183 168ZM216 168L223 172L224 179L231 187L226 193L222 191L218 182L216 172L214 171ZM70 182L77 182L87 186L95 195L96 209L85 220L99 220L109 227L109 236L117 259L108 267L101 270L86 271L68 282L64 277L60 247L66 234L80 222L58 221L55 218L44 218L35 221L33 215L40 202L50 191L59 185ZM190 183L189 185L197 184ZM186 184L180 188L188 185ZM147 188L150 190L151 195L151 201L148 205L141 199L142 194ZM236 194L257 200L266 209L270 219L266 221L259 217L250 217L243 211L235 208L231 201ZM102 200L108 200L114 204L114 209L107 221L97 215L99 203ZM128 200L140 200L149 208L154 206L163 207L168 212L169 227L166 234L157 242L132 252L124 259L118 251L114 240L111 221L116 210ZM175 207L183 212L184 217L174 222L172 220L172 211ZM221 209L223 211L230 209L242 213L248 220L240 228L251 219L262 220L274 228L280 241L280 262L276 276L272 280L258 264L251 262L248 264L245 261L241 261L233 253L224 279L220 283L206 269L195 263L187 262L181 257L176 249L174 236L178 226L187 218L197 220L197 217L201 214L212 214L221 218L228 225L231 232L239 229L234 229L219 214ZM296 212L310 216L323 229L330 251L330 259L328 261L313 256L297 258L294 253L287 251L281 245L281 236L277 229L283 226L283 221L287 217ZM40 256L49 257L59 264L62 283L53 291L39 292L26 299L24 297L24 275L28 265ZM250 267L256 267L260 270L264 274L262 280L264 279L267 283L273 282L278 278L282 284L281 294L274 304L253 318L249 316L247 309L239 301L236 293L240 276ZM109 276L121 278L125 282L125 290L114 300L108 299L98 308L95 305L96 291L100 284Z',
+    crown: 'M0 204 Q20 165 67 157 Q96 140 127 153 Q148 151 159 164 Q181 148 208 162 Q235 145 263 153 Q292 163 300 190 Q334 201 339 261 L320 282 Q312 307 286 315 L235 317 Q229 340 205 348 Q165 362 118 350 Q82 342 70 318 L52 298 L0 298Z',
+    stems: 'M280 239 C294 270 302 298 297 337 C297 377 287 404 281 438 C276 468 287 488 282 511 C279 534 274 550 279 587 M145 333 C146 352 145 370 150 392 L153 425',
     vines: 'M317 300L321 301L331 310L336 322L334 345L329 355L323 349L315 349L309 342L305 343L297 335L291 323L292 315L299 306L307 308L311 301ZM118 327L125 327L131 334L136 332L142 334L149 342L150 352L146 362L136 372L123 375L110 388L107 388L98 363L97 350L100 348L102 340L106 335ZM271 334L278 335L283 341L293 340L300 350L300 360L298 365L289 374L270 383L260 393L252 375L251 355L255 345L262 338ZM166 380L177 382L186 391L188 410L184 416L156 400L156 390ZM247 391L254 391L258 396L265 397L269 401L270 410L257 426L237 436L231 429L230 411L234 400L240 394ZM148 402L150 404L159 403L163 406L171 420L167 435L162 438L153 455L150 455L145 450L134 434L131 425L133 412L140 405L147 404ZM305 402L316 405L323 412L327 420L328 433L320 458L317 461L313 459L308 451L299 449L296 444L286 439L280 426L281 416L287 407L291 405L300 407ZM261 442L268 442L274 448L283 448L289 455L290 467L287 474L280 481L272 486L264 487L252 496L247 490L243 468L248 452ZM296 502L309 506L317 520L316 534L311 548L300 541L296 543L291 541L289 536L280 527L277 519L278 512L283 506L293 506ZM255 533L262 535L268 542L267 544L272 542L276 546L278 554L275 560L266 568L252 572L242 578L239 571L240 552ZM275 583L290 584L299 595L298 606L283 630L278 627L267 613L263 603L265 592Z',
-    rope: 'M138 39L142 39L92 169L87 167ZM140 39L144 39L198 170L193 172ZM139 39L143 39L144 188L140 188Z',
-    pot: 'M61 274Q102 255 140 268Q187 262 224 288Q236 291 230 309Q221 341 208 345Q185 354 150 351L105 347Q87 341 79 325Q67 301 61 274Z',
+    rope: 'M151 34H171L112 174L91 171ZM151 34H171L226 176L205 178ZM151 34H170V194H151Z',
   },
   aksam: {
-    cutout: require('../../assets/oda/aksam_asma.webp'), box: [23, 26, 330, 648], joint: [246, 344],
-    body: 'M258 173L272 173L286 177L305 189L317 202L315 204L301 204L282 216L273 219L260 220L247 216L244 217L256 221L278 220L288 229L289 234L286 237L296 234L310 234L322 239L332 248L342 263L348 284L348 288L345 291L332 286L311 286L295 280L287 274L286 267L281 258L264 246L246 244L235 251L229 245L214 237L224 246L228 255L231 252L237 253L243 248L258 246L272 252L283 266L286 276L284 284L276 277L265 274L261 275L263 279L267 279L281 288L285 296L275 323L276 326L270 328L265 325L266 348L263 355L255 356L252 352L244 355L240 351L240 339L247 313L251 310L251 307L243 301L237 300L226 288L224 280L227 276L223 277L219 297L213 300L206 292L202 291L201 287L189 281L178 267L179 272L177 273L176 282L183 280L195 289L201 300L202 318L196 335L193 338L189 338L186 335L185 340L176 353L175 359L172 362L167 360L167 357L154 338L161 313L154 316L147 324L145 322L146 317L143 315L143 308L140 309L138 307L138 302L144 290L154 281L168 281L167 262L171 256L174 257L173 251L161 267L144 274L139 273L133 278L129 278L123 286L115 283L106 296L82 308L82 318L80 320L81 337L75 342L73 352L66 357L65 362L59 367L54 367L51 364L50 356L53 353L51 352L50 344L53 332L58 320L62 316L67 318L66 316L70 312L71 300L65 301L62 298L62 280L67 267L61 276L60 292L55 297L57 300L55 302L53 300L47 302L27 317L23 315L23 279L31 264L45 252L60 250L75 257L86 248L82 246L78 253L73 254L71 248L74 243L71 239L64 239L60 235L44 240L36 238L41 224L56 201L72 191L89 189L109 197L125 216L120 204L117 184L120 181L140 180L150 183L161 192L162 205L175 192L183 189L192 189L197 190L202 196L203 204L201 206L216 206L228 212L230 209L228 201L234 187L243 179ZM144 217L144 219L150 221L155 226L155 230L161 228L157 228L151 220ZM240 217L234 219L233 222ZM184 237L182 241L188 241ZM198 238L191 243L194 243ZM110 241L105 246L108 250L109 261L111 261Z',
+    crown: 'M0 225 Q20 184 74 178 Q103 166 132 180 Q154 177 169 195 Q192 177 219 191 Q247 169 275 178 Q315 184 326 215 Q351 229 355 288 L337 306 Q319 330 291 329 L235 334 Q234 370 208 377 Q158 389 117 372 Q91 361 79 335 L52 322 L0 324Z',
+    stems: 'M282 270 C297 300 302 335 296 370 C293 400 289 428 286 456 C285 481 285 512 283 540 C282 568 280 595 280 631 M150 356 L150 455',
     vines: 'M297 313L301 315L305 323L315 323L327 329L335 338L341 357L340 369L337 371L335 383L329 395L326 395L312 379L309 379L307 376L303 377L313 385L319 401L312 415L309 415L307 419L303 418L295 413L290 401L286 405L292 410L294 415L298 416L297 420L299 421L300 430L317 435L327 446L332 459L330 481L323 497L314 490L313 486L309 483L306 485L303 482L304 480L297 475L293 477L292 483L292 494L294 495L292 498L295 500L296 519L299 523L310 526L318 534L323 547L323 558L315 580L312 580L299 566L293 562L288 562L287 568L284 570L284 572L288 573L286 575L287 586L285 592L272 607L257 617L255 615L256 597L259 587L263 584L264 577L259 570L263 567L269 568L277 564L279 553L278 537L288 523L288 519L287 512L285 512L256 537L252 537L242 512L242 499L246 489L256 478L265 473L279 475L282 472L281 447L285 437L292 431L289 421L280 431L279 442L264 457L258 459L255 455L254 442L258 429L257 426L265 419L250 427L240 428L241 431L238 434L232 429L233 422L236 420L235 408L240 404L238 401L242 396L242 392L248 381L257 373L268 369L276 374L279 372L284 373L290 382L292 397L294 372L286 364L283 349L286 347L288 334L295 327L293 317ZM109 344L129 348L131 350L131 358L125 369L126 373L119 378L118 382L111 389L105 394L100 395L92 377L91 365L99 350ZM146 396L148 398L151 396L155 398L156 409L163 408L166 410L167 408L172 408L176 410L186 419L190 429L189 445L184 453L175 446L170 445L158 434L158 442L162 443L163 447L171 455L172 470L164 486L156 495L151 492L149 480L142 473L144 466L148 468L150 466L149 464L147 466L144 464L146 461L142 457L143 451L149 446L149 435L135 444L125 447L126 450L124 452L117 452L110 446L112 444L111 439L114 437L118 441L123 433L124 426L122 424L125 422L125 417L122 418L120 416L123 413L122 410L132 402L145 401L144 398ZM244 409L243 415L245 414ZM283 410L271 418L270 422ZM156 419L152 427L157 431L155 426ZM293 447L290 450L291 459L294 453ZM289 535L287 537L288 548L290 545ZM285 592L289 594L292 605L300 607L305 612L311 624L310 642L307 645L304 645L289 633L294 654L287 671L279 664L282 659L281 649L280 645L275 643L283 627L282 618L285 612L283 611L281 597Z',
-    rope: 'M138 43L142 43L88 187L83 185ZM140 43L144 43L209 193L204 195ZM139 43L143 43L144 194L140 194Z',
-    pot: 'M78 300Q116 280 151 291Q201 291 219 308L229 337Q232 364 211 376Q172 388 124 374Q98 363 92 343Z',
+    rope: 'M150 34H171L108 194L88 192ZM150 34H172L238 202L218 204ZM151 34H170V205H151Z',
   },
   gece: {
-    cutout: require('../../assets/oda/gece_asma.webp'), box: [24, 27, 329, 648], joint: [246, 344],
-    body: 'M263 173L277 174L293 180L305 188L317 202L315 204L298 205L286 214L269 220L259 220L243 215L233 219L233 222L240 218L248 218L257 222L276 220L288 229L287 238L305 234L322 240L334 251L343 266L348 281L348 290L346 292L332 286L314 287L293 279L287 273L280 257L264 246L246 244L235 251L223 241L213 237L226 250L230 266L229 274L226 278L223 277L222 287L216 299L212 299L204 289L191 283L184 276L175 260L175 250L173 250L171 256L159 268L146 274L140 273L121 283L115 283L111 291L104 298L80 310L82 313L80 314L79 337L64 361L60 364L56 362L54 359L56 351L54 343L56 341L53 338L53 334L58 320L62 316L69 320L66 317L67 313L63 305L61 285L64 274L71 262L68 263L61 275L60 293L54 299L32 312L27 318L24 316L24 278L31 265L40 256L49 251L63 251L75 258L88 247L63 238L49 238L41 241L36 239L45 216L55 203L76 191L95 191L110 198L118 206L120 213L125 216L125 221L145 219L154 225L155 230L159 230L155 223L148 218L135 217L128 219L126 217L117 187L120 181L138 180L147 182L161 194L161 219L163 226L164 203L175 193L184 189L197 190L203 197L203 204L194 210L213 206L222 208L229 214L229 200L235 187L246 178ZM185 237L181 239L181 242L188 241L193 244L199 239L211 238L200 237L192 242ZM111 240L105 246L95 246L104 248L108 252ZM247 247L260 247L272 253L280 261L286 279L286 284L283 286L274 277L260 275L263 279L268 279L283 289L285 297L276 324L272 328L265 325L265 353L257 358L252 352L244 356L239 347L247 313L251 310L251 307L238 301L227 289L231 275L229 255L231 253L238 253L241 249ZM109 253L108 262L112 262L109 258ZM172 258L183 274L180 279L176 279L176 282L184 281L188 283L195 289L200 298L202 319L194 338L190 340L187 334L185 342L177 351L174 359L170 361L156 342L160 314L145 329L137 320L137 311L139 310L138 303L142 294L151 284L159 280L168 281L168 262Z',
+    crown: 'M0 225 Q20 184 74 178 Q103 166 132 180 Q154 177 169 195 Q192 177 219 191 Q247 169 275 178 Q315 184 326 215 Q351 229 355 288 L337 306 Q319 330 291 329 L235 334 Q234 370 208 377 Q158 389 117 372 Q91 361 79 335 L52 322 L0 324Z',
+    stems: 'M282 270 C297 300 302 335 296 370 C293 400 289 428 286 456 C285 481 285 512 283 540 C282 568 280 595 280 631 M150 356 L150 455',
     vines: 'M297 314L301 316L304 324L316 324L326 329L335 339L341 355L341 369L337 373L335 385L329 397L313 381L310 381L307 377L302 378L309 382L315 391L315 409L308 417L299 416L291 403L291 383L296 375L289 368L284 354L287 337L296 327L294 317ZM109 345L126 348L130 352L130 361L121 376L111 370L119 380L113 388L100 395L93 381L94 378L91 375L91 365L93 358L99 351L107 358L106 348ZM267 370L272 371L276 376L282 374L291 387L291 396L287 406L269 421L271 422L278 418L285 408L289 406L295 418L299 421L299 430L315 434L327 446L332 460L332 474L327 493L323 498L297 476L291 480L291 494L292 502L295 506L296 522L312 528L322 542L324 557L318 578L315 581L311 580L301 568L297 568L291 561L288 562L287 567L283 570L287 581L284 594L268 611L256 618L252 615L256 600L248 598L248 586L253 576L260 569L277 565L279 555L277 539L288 525L287 511L253 538L248 531L252 527L243 518L241 503L246 490L256 479L268 474L279 476L282 473L281 451L283 443L292 436L290 429L291 419L284 427L278 427L279 438L274 449L259 461L255 455L254 441L258 426L263 421L248 427L236 435L233 431L233 416L235 408L239 406L241 395L247 383L260 372ZM148 400L151 402L153 412L162 407L165 411L172 409L179 413L188 423L190 433L189 446L184 454L158 434L159 445L171 456L173 468L171 475L157 495L146 484L138 466L140 464L140 457L149 447L149 432L154 428L158 433L155 426L156 417L153 426L143 439L120 452L116 450L113 437L114 424L119 413L133 402L144 403ZM288 542L286 543L287 547ZM286 593L290 597L292 606L300 608L307 615L312 626L311 640L307 647L289 634L295 655L287 672L277 663L279 660L282 662L280 654L276 656L272 652L273 643L281 635L282 628L284 627L282 625L282 616L285 611L283 610L282 597ZM279 645L278 650L280 649Z',
-    rope: 'M138 43L142 43L88 187L83 185ZM140 43L144 43L209 193L204 195ZM139 43L143 43L144 194L140 194Z',
-    pot: 'M78 300Q116 280 151 291Q201 291 219 308L229 337Q232 364 211 376Q172 388 124 374Q98 363 92 343Z',
+    rope: 'M150 34H171L108 194L88 192ZM150 34H172L238 202L218 204ZM151 34H170V205H151Z',
   },
 } as const;
 
-// Narrow, closed silhouettes for vine stems omitted by the leaf-only masks.
-// Keeping these separate from the opaque crop prevents the wall pixels moving.
+// Include narrow stems when repairing the background so no dark fragments remain.
 const TRAILING_STEMS = 'M313 342L316 342Q319 365 315 385L312 403L309 403L311 382Q315 359 313 342Z M306 449L310 450Q307 475 303 492L301 508L298 507L300 491Q304 473 306 449Z M299 540L302 542Q299 562 290 585L287 588L287 583Q296 562 299 540Z M287 373L290 375Q281 386 273 402L270 402Q277 385 287 373Z M250 430L253 431Q250 445 248 461L245 463Q246 444 250 430Z M257 493L260 493Q261 515 256 538L253 543Q256 516 257 493Z M148 371L151 371Q151 386 150 405L147 405Q148 387 148 371Z M151 433L154 434Q152 449 150 466L147 467Q149 449 151 433Z';
+const VINE_BACKGROUND_REPAIR = 'M292 290H330V600H292Z';
+const PLANT_SPRITE: Record<OdaPhase, number> = {
+  sabah: require('../assets/oda/sabah_asma_detay.png'),
+  aksam: require('../assets/oda/aksam_asma_detay.png'),
+  gece: require('../assets/oda/gece_asma_detay.png'),
+};
+const PLANT_BACKGROUND: Record<OdaPhase, number> = {
+  sabah: require('../assets/oda/sabah_asma_zemin.png'),
+  aksam: require('../assets/oda/aksam_asma_zemin.png'),
+  gece: require('../assets/oda/gece_asma_zemin.png'),
+};
+const HANGING_CUPS = {
+  kupa1: { src: require('../assets/oda/fincan_kahve_v3.png'), x: 298, y: 436, w: 628, h: 543, imageW: 1209, imageH: 1301, hookX: 817 },
+  kupa2: { src: require('../assets/oda/fincan_pati_v3.png'), x: 303, y: 278, w: 719, h: 620, imageW: 1293, imageH: 1216, hookX: 910 },
+} as const;
 
-function HangingPlanter({ phase, s, ivy }: { phase: OdaPhase; s: number; ivy: Animated.Value }) {
-  const id = 'planter-' + useId().replace(/[^a-z0-9]/gi, '');
-  const { box: scene, pivot, src } = ODA[phase].parts.asma;
+/** Restore the original wall and window around the moving planter, without leaving a stationary copy of its leaves. */
+function PlanterBackdrop({ phase, s }: { phase: OdaPhase; s: number }) {
+  const id = 'planter-background-' + useId().replace(/[^a-z0-9]/gi, '');
+  const { box, src } = ODA[phase].parts.asma;
   const art = PLANTER[phase];
-  const [x, y, width, height] = art.box;
-  const [jx, jy] = art.joint;
-  const image = <Artwork href={art.cutout} x={x} y={y} width={width} height={height} />;
-  const viewBox = `0 0 ${scene.w} ${scene.h}`;
-  const dx = (jx - scene.w / 2) * s;
-  const dy = (jy - scene.h / 2) * s;
-  const frame = { position: 'absolute' as const, left: (scene.x - pivot.x) * s, top: (scene.y - pivot.y) * s, width: scene.w * s, height: scene.h * s };
-  return <>
-    <Svg pointerEvents="none" style={frame} width={frame.width} height={frame.height} viewBox={viewBox}>
+  return (
+    <Svg pointerEvents="none" width={box.w * s} height={box.h * s}
+      viewBox={`0 0 ${box.w} ${box.h}`}
+      style={{ position: 'absolute', left: box.x * s, top: box.y * s }}>
       <Defs>
-        <ClipPath id={id + '-body'}>
-          <Path d={art.body} />
-          <Path d={art.rope} />
-        </ClipPath>
-        <ClipPath id={id + '-pot'}><Path d={art.pot} /></ClipPath>
+        <Mask id={id} x={0} y={0} width={box.w} height={box.h} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+          <Rect x={0} y={0} width={box.w} height={box.h} fill="white" />
+          {[art.crown, art.vines, art.rope, TRAILING_STEMS, VINE_BACKGROUND_REPAIR].map((d, i) => (
+            <Path key={i} d={d} fill="black" stroke="black" strokeWidth={24} strokeLinejoin="round" strokeLinecap="round" />
+          ))}
+          <Path d={art.stems} fill="none" stroke="black" strokeWidth={24} strokeLinecap="round" />
+        </Mask>
+        <Mask id={id + '-repair'} x={0} y={0} width={box.w} height={box.h} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+          <Rect x={0} y={0} width={box.w} height={box.h} fill="black" />
+          {[art.crown, art.vines, art.rope, TRAILING_STEMS, VINE_BACKGROUND_REPAIR].map((d, i) => (
+            <Path key={i} d={d} fill="white" stroke="white" strokeWidth={24} strokeLinejoin="round" strokeLinecap="round" />
+          ))}
+          <Path d={art.stems} fill="none" stroke="white" strokeWidth={24} strokeLinecap="round" />
+        </Mask>
       </Defs>
-      <G clipPath={'url(#' + id + '-body)'}>{image}</G>
-      <G clipPath={'url(#' + id + '-pot)'}><Artwork href={src} width={scene.w} height={scene.h} /></G>
+      <Artwork href={PLANT_BACKGROUND[phase]} width={box.w} height={box.h} mask={'url(#' + id + '-repair)'} />
+      <Artwork href={src} width={box.w} height={box.h} mask={'url(#' + id + ')'} />
     </Svg>
-    <Animated.View pointerEvents="none" style={[frame, { transform: [
-      { translateX: dx }, { translateY: dy },
-      { rotate: ivy.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-0.8deg', '0deg', '0.8deg'] }) },
-      { translateX: -dx }, { translateY: -dy },
-    ] }]}>
-      <Svg width={frame.width} height={frame.height} viewBox={viewBox}>
-        <Defs>
-          <ClipPath id={id + '-vines'}>
-            <Path d={art.vines} />
-            <Path d={TRAILING_STEMS} />
-          </ClipPath>
-        </Defs>
-        <G clipPath={'url(#' + id + '-vines)'}>{image}</G>
-      </Svg>
-    </Animated.View>
-  </>;
+  );
+}
+
+function HangingPlanter({ phase, s }: { phase: OdaPhase; s: number }) {
+  const { box: scene, pivot } = ODA[phase].parts.asma;
+  const frame = { position: 'absolute' as const, left: (scene.x - pivot.x) * s, top: (scene.y - pivot.y) * s, width: scene.w * s, height: scene.h * s };
+  return <Image source={PLANT_SPRITE[phase]} resizeMode="stretch" fadeDuration={0} accessibilityIgnoresInvertColors style={frame} />;
 }
 
 /** Bir saatin (sabah/akşam/gece) resmi: taban, cam havası, hareketli parçalar, düşen yaprak. */
@@ -267,15 +274,16 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: ODA_W * s, height: ODA_H * s, opacity }}>
       <Image source={L.taban} fadeDuration={0} onLoad={onReady} onError={onReady} style={{ width: ODA_W * s, height: ODA_H * s }} resizeMode="stretch" accessibilityIgnoresInvertColors />
+      <PlanterBackdrop phase={phase} s={s} />
 
       {/* Soft, phase-matched wall correction ends above the shelf board. */}
       <Svg pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0 }} width={ODA_W * s} height={ODA_H * s} viewBox={'0 0 ' + ODA_W + ' ' + ODA_H}>
         <Defs>
           <ClipPath id={layerId + '-shelf-clip'}><Path d={shelfWall.clip} /></ClipPath>
           <RadialGradient id={layerId + '-shelf-gradient'} cx={shelfWall.cx} cy={shelfWall.cy} r={shelfWall.r} gradientUnits="userSpaceOnUse">
-            <SvgStop offset="0" stopColor={shelfWall.color} stopOpacity={0.82} />
-            <SvgStop offset="0.42" stopColor={shelfWall.color} stopOpacity={0.62} />
-            <SvgStop offset="0.78" stopColor={shelfWall.color} stopOpacity={0.14} />
+            <SvgStop offset="0" stopColor={shelfWall.color} stopOpacity={1} />
+            <SvgStop offset="0.42" stopColor={shelfWall.color} stopOpacity={0.98} />
+            <SvgStop offset="0.78" stopColor={shelfWall.color} stopOpacity={0.65} />
             <SvgStop offset="1" stopColor={shelfWall.color} stopOpacity={0} />
           </RadialGradient>
         </Defs>
@@ -337,11 +345,31 @@ function PhaseLayer({ phase, s, vals, sky, chain, tilt, opacity, weatherOpacity,
       {PARTS.map(k => {
         const P = L.parts[k];
         const m = MOTION[k];
+        const cup = k === 'kupa1' || k === 'kupa2' ? HANGING_CUPS[k] : undefined;
+        const hookX = cup ? ((cup.hookX - cup.x) / cup.w) * P.box.w : 0;
+        const hanger = cup ? 20 : 0;
+        const pivot = cup ? { x: P.box.x + hookX, y: P.box.y - hanger } : P.pivot;
+        const cupH = cup ? P.box.w * cup.h / cup.w : 0;
+        const cupTop = cup ? Math.max(0, P.box.h - cupH - 5) + hanger : 0;
+        const cupTransform = cup ? `translate(0 ${cupTop}) scale(${P.box.w / cup.w} ${cupH / cup.h}) translate(${-cup.x} ${-cup.y})` : '';
         const rot = Animated.add(vals.part[k], vals.nudge[k]).interpolate({ inputRange: [-1, 0, 0.5, 1, 2], outputRange: [`${-m.deg * 5}deg`, `${-m.deg}deg`, '0deg', `${m.deg}deg`, `${m.deg * 5}deg`] });
         return (
-          <Animated.View key={k} style={{ position: 'absolute', left: P.pivot.x * s, top: P.pivot.y * s, width: 0, height: 0, transform: [...shift(m.tilt, m.tilt * 0.6), { rotate: rot }] }}>
-            {k === 'asma' ? <HangingPlanter phase={phase} s={s} ivy={vals.ivy} /> : (
-              <Image source={P.src} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: (P.box.x - P.pivot.x) * s, top: (P.box.y - P.pivot.y) * s, width: P.box.w * s, height: P.box.h * s }} accessibilityIgnoresInvertColors />
+          <Animated.View key={k} style={{ position: 'absolute', left: pivot.x * s, top: pivot.y * s, width: 0, height: 0, transform: [...shift(m.tilt, m.tilt * 0.6), { rotate: rot }] }}>
+            {k === 'asma' ? <HangingPlanter phase={phase} s={s} /> : cup ? (
+              <Svg pointerEvents="none" width={P.box.w * s} height={(P.box.h + hanger) * s} viewBox={`0 0 ${P.box.w} ${P.box.h + hanger}`} style={{ position: 'absolute', left: (P.box.x - pivot.x) * s, top: 0 }}>
+                {phase !== 'sabah' && <Defs>
+                  <Mask id={`${layerId}-${k}-shade`} x={0} y={0} width={P.box.w} height={P.box.h + hanger} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" maskType="alpha">
+                    <G transform={cupTransform}><Artwork href={cup.src} width={cup.imageW} height={cup.imageH} /></G>
+                  </Mask>
+                </Defs>}
+                <Path d={`M${hookX} 1V${cupTop + 3}`} stroke={phase === 'gece' ? '#402820' : '#6D422A'} strokeWidth={3} strokeLinecap="round" />
+                <G transform={cupTransform}>
+                  <Artwork href={cup.src} width={cup.imageW} height={cup.imageH} />
+                </G>
+                {phase !== 'sabah' && <Rect x={0} y={0} width={P.box.w} height={P.box.h + hanger} fill="#793C22" opacity={phase === 'gece' ? 0.3 : 0.12} mask={`url(#${layerId}-${k}-shade)`} />}
+              </Svg>
+            ) : (
+              <Image source={P.src} resizeMode="stretch" fadeDuration={0} style={{ position: 'absolute', left: (P.box.x - pivot.x) * s, top: (P.box.y - pivot.y) * s, width: P.box.w * s, height: P.box.h * s }} accessibilityIgnoresInvertColors />
             )}
           </Animated.View>
         );
@@ -411,7 +439,7 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
   const vals = useMemo<Vals>(() => ({
     part: Object.fromEntries(PARTS.map(k => [k, new Animated.Value(0.5)])) as Record<OdaPart, Animated.Value>,
     nudge: Object.fromEntries(PARTS.map(k => [k, new Animated.Value(0)])) as Record<OdaPart, Animated.Value>,
-    lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0), ivy: new Animated.Value(0.5),
+    lamp: new Animated.Value(0.9), moon: new Animated.Value(0.3), sun: new Animated.Value(0), boost: new Animated.Value(0), pot: new Animated.Value(0),
     beam: new Animated.Value(0), cloud: new Animated.Value(0), halo: new Animated.Value(0), fest: new Animated.Value(0),
     twinkle: [0, 1, 2, 3].map(() => new Animated.Value(0)), cup: [0, 1].map(() => new Animated.Value(0)), chainSweep: new Animated.Value(0), chainLights: Array.from({ length: 7 }, () => new Animated.Value(0)),
     stars: Array.from({ length: 8 }, () => new Animated.Value(0.3)), dust: MOTES.day.map(() => new Animated.Value(0)), steam: [0, 1, 2].map(() => new Animated.Value(0)),
@@ -456,7 +484,6 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
         const v = vals.part[k];
         return m.kind === 'rock' ? rock(v, m.delay) : m.kind === 'swing' ? sway(v, m.ms, m.delay, 0.12) : sway(v, m.ms, m.delay, 0.35);
       }),
-      sway(vals.ivy, 5400, 650, 0.2),
       breathe(vals.lamp),
       ...(night ? [loop(vals.moon, 4200)] : []),
       ...(!night ? [loop(vals.sun, 7000)] : []),
@@ -560,7 +587,6 @@ export function RoomBackdrop({ cheer = 0, phase: phaseProp, mix, sky = 'clear', 
       reaction.forEach(a => a.stop());
       reaction.clear();
       PARTS.forEach(k => { vals.nudge[k].setValue(0); vals.part[k].setValue(0.5); });
-      vals.ivy.setValue(0.5);
       vals.boost.setValue(0);
       vals.pot.setValue(0);
       vals.fest.setValue(0);

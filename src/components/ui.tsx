@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentProps, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { useAdDockInset } from '@/ads/AdBanner';
 import {
   Animated,
@@ -619,6 +619,34 @@ export function useKeyboardHeight() {
   return h;
 }
 
+let lastModalClose = 0;
+/**
+ * iOS: bir Modal kapanırken (animasyon sürerken) başka bir Modal açılırsa ikincisi hiç gösterilmez ve
+ * `visible` true kaldığı için ekran kilitli gibi görünür. Son kapanıştan ~450 ms geçene kadar açılışı bekletir.
+ */
+export function useModalGate(open: boolean): boolean {
+  const [shown, setShown] = useState(false);
+  const prev = useRef(false);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      setShown(open);
+      return;
+    }
+    if (!open) {
+      if (prev.current) lastModalClose = Date.now();
+      prev.current = false;
+      setShown(false);
+      return;
+    }
+    prev.current = true;
+    const wait = Math.max(0, 450 - (Date.now() - lastModalClose));
+    if (!wait) return setShown(true);
+    const id = setTimeout(() => setShown(true), wait);
+    return () => clearTimeout(id);
+  }, [open]);
+  return Platform.OS === 'ios' ? shown && open : open;
+}
+
 export function Sheet({ open, onClose, children, pose = 'happy', scroll = false }: { open: boolean; onClose: () => void; children: ReactNode; pose?: MokaPose; scroll?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -626,8 +654,9 @@ export function Sheet({ open, onClose, children, pose = 'happy', scroll = false 
   const kb = useKeyboardHeight();
   // Klavye açıkken sayfa klavyenin üstüne çıkar, içerik sığmazsa kayar.
   const room = height - insets.top - 90 - kb;
+  const visible = useModalGate(open);
   return (
-    <Modal visible={open} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[styles.sheetBg, { backgroundColor: c.shadow }]} onPress={kb ? Keyboard.dismiss : onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
       <View style={[styles.sheet, { backgroundColor: c.surface, bottom: kb, paddingBottom: kb ? 16 : insets.bottom + 20, maxHeight: Math.max(200, scroll || kb ? room : height - insets.top - 20) }]}>
         <Image source={MOKA_ASSETS[pose]} style={styles.sheetMoka} resizeMode="contain" accessibilityIgnoresInvertColors />

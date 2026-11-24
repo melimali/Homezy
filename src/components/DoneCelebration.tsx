@@ -10,6 +10,7 @@ import { shareCard } from '@/lib/share';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
 import { HouseShareCard } from './HouseShareCard';
+import { useModalGate } from './ui';
 import { fonts, radius, useColors } from '@/theme';
 
 import { Appear, Float, Squish } from './motion';
@@ -20,6 +21,7 @@ import { Appear, Float, Squish } from './motion';
  */
 export function DoneCelebration({ open, text, points, quote, onClose }: { open: boolean; text: string; points: number; quote: string; onClose: () => void }) {
   const c = useColors();
+  const visible = useModalGate(open);
   const insets = useSafeAreaInsets();
   const now = useNow();
   const { state } = useStore();
@@ -34,7 +36,7 @@ export function DoneCelebration({ open, text, points, quote, onClose }: { open: 
     return () => clearTimeout(t);
   }, [open]);
   return (
-    <Modal visible={open} animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={visible} animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <ScrollView style={{ backgroundColor: c.night }} contentContainerStyle={[st.page, { paddingBottom: insets.bottom + 28 }]} bounces={false}>
         <View style={[st.hero, { paddingTop: insets.top }]}>
           <Float amp={5} dur={2200}>

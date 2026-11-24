@@ -217,6 +217,11 @@ async function doReschedule(S: AppState, premium = false) {
     stale.push(n.identifier);
   }
   await dismissStale(N, S).catch(() => {});
+  // iOS en çok 64 bekleyen bildirim tutar, fazlasını (en uzak tarihliyi) sessizce atar. Eskileri sonradan
+  // silersek yeniler sınırı aşıp düşebilir; bu yüzden iOS'ta önce eskiler iptal edilir.
+  if (Platform.OS === 'ios') {
+    for (const id of stale.splice(0)) await N.cancelScheduledNotificationAsync(id).catch(() => {});
+  }
 
   const [hh, mm] = S.settings.time.split(':').map(n => parseInt(n, 10));
   const now = Date.now();

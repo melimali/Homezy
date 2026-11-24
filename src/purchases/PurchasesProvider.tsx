@@ -83,8 +83,21 @@ const PurchasesContext = createContext<PurchasesCtx | null>(null);
 type Packages = Record<Plan, PurchasesPackage | null>;
 
 async function loadPackages(): Promise<Packages> {
-  const o = (await Purchases.getOfferings()).current;
-  return { monthly: o?.monthly ?? null, annual: o?.annual ?? null };
+  const all = await Purchases.getOfferings();
+  // `current` yoksa ya da paketler standart ($rc_monthly / $rc_annual) kimlikle açılmamışsa
+  // ürün kimliğinden / süreden bulunur; yoksa paywall gerçek fiyat yerine yedek fiyatı gösterirdi.
+  const offers = [all.current, ...Object.values(all.all ?? {})].filter((x): x is NonNullable<typeof x> => !!x);
+  const find = (std: 'monthly' | 'annual', ids: string[], period: string): PurchasesPackage | null => {
+    for (const o of offers) {
+      const hit =
+        o[std] ??
+        o.availablePackages.find(p => ids.some(i => p.product.identifier.toLowerCase().includes(i))) ??
+        o.availablePackages.find(p => p.product.subscriptionPeriod === period);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  return { monthly: find('monthly', ['aylik', 'monthly'], 'P1M'), annual: find('annual', ['yillik', 'annual', 'yearly'], 'P1Y') };
 }
 
 /**
@@ -150,7 +163,13 @@ export function PurchasesProvider({ children }: { children: ReactNode }) {
     if (!apiKey && !supabase) return;
     const sub = AppState.addEventListener('change', st => {
       if (st !== 'active') return;
-      if (apiKey && configured.current) withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).catch(() => {});
+      if (apiKey && configured.current) {
+        withTimeout(Purchases.getCustomerInfo().then(apply), 6000, undefined).catch(() => {});
+        // Fiyatlar açılışta okunamadıysa (ağ yoktu) uygulama öne gelince tekrar dene.
+        loadPackages().then(p => {
+          if (p.monthly || p.annual) setPkgs(cur => (cur.monthly || cur.annual ? cur : p));
+        }).catch(() => {});
+      }
       setTick(t => t + 1);
     });
     return () => sub.remove();

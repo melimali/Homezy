@@ -86,14 +86,22 @@ export function useNotificationSync() {
         return;
       }
       const url = request.content.data?.url;
-      if (typeof url === 'string') {
-        router.push(url as Href);
+      if (typeof url === 'string' && url.startsWith('/')) {
+        try {
+          router.push(url as Href);
+        } catch (e) {
+          console.warn('Homezy: bildirim yönlendirmesi başarısız', e);
+        }
         N.clearLastNotificationResponse();
       }
     };
+    // Soğuk açılışta gezinme henüz hazır olmayabilir; bir an bekle.
     const last = N.getLastNotificationResponse();
-    if (last) open(last);
+    const t = last ? setTimeout(() => open(last), 400) : null;
     const sub = N.addNotificationResponseReceivedListener(open);
-    return () => sub.remove();
+    return () => {
+      if (t) clearTimeout(t);
+      sub.remove();
+    };
   }, [router]);
 }

@@ -9,6 +9,7 @@ import { nextCoffee, potSteam, type PotState } from '@/domain/coffee';
 import { lastWeek, type DayMark } from '@/domain/play';
 import type { Play } from '@/domain/types';
 import { getUiLang, tx } from '@/i18n/runtime';
+import { useModalGate } from '@/components/ui';
 import { fonts, useColors } from '@/theme';
 
 /** Kahve sürahisi çizimi (cam gövde, ahşap bilezik, dolu kahve). Hep dolu; `cold` biraz soğuk tonda. */
@@ -84,6 +85,7 @@ function DayCup({ d, ink, soft }: { d: DayMark; ink: string; soft: string }) {
  */
 export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLeft, onGive }: { open: boolean; onClose: () => void; P: Play; now: number; streak: number; best: number; pot: PotState; freezeLeft: number; /** Kahveyi Moka'ya verir (sevinç + nadiren hediye). */ onGive?: () => void }) {
   const c = useColors();
+  const visible = useModalGate(open);
   const D = c.den;
   const insets = useSafeAreaInsets();
   const week = lastWeek(P, now);
@@ -94,7 +96,7 @@ export function CoffeeSheet({ open, onClose, P, now, streak, best, pot, freezeLe
   const fmt = new Intl.DateTimeFormat(getUiLang(), { weekday: 'narrow' });
   const label = pot === 'fresh' || pot === 'wait' || pot === 'warm' ? tx('gündür taze') : tx(pot === 'cold' ? 'Kahve soğumuş, yeniden demleyelim ☕' : 'İlk kahveyi birlikte demleyelim ☕');
   return (
-    <Modal visible={open} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(42,28,18,0.38)' }]} onPress={onClose} accessibilityRole="button" accessibilityLabel={tx('Kapat')} />
       <View style={[st.sheet, { backgroundColor: D.paper, paddingBottom: insets.bottom + 22, shadowColor: D.shade }]}>
         <View style={[st.grab, { backgroundColor: D.line }]} />

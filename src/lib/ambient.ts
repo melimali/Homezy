@@ -1,6 +1,8 @@
 import type { AudioPlayer } from 'expo-audio';
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
+import { allowSilentPlayback } from './sfx';
+
 /**
  * Plak çaların sürekli (loop) çalan parçaları: lofi ve ambiyans sesleri. Birden fazlası aynı anda açılıp
  * karıştırılabilir (ör. lofi + yağmur). Dosyalar assets/sounds/ altında. Yerel ses modülü yoksa hiçbir şey çalmaz.
@@ -63,6 +65,7 @@ function player(id: AmbientId) {
   try {
     if (!modeSet) {
       modeSet = true;
+      allowSilentPlayback();
       // Çalar kullanıcının isteğiyle açılır: sessiz modda da çalsın, ama arka planda sürmesin.
       A.setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'mixWithOthers', shouldPlayInBackground: false }).catch(() => {});
     }

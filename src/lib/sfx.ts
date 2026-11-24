@@ -30,6 +30,11 @@ export type Sfx = keyof typeof SOURCES;
 const VOLUME: Record<Sfx, number> = { tap: 0.25, done: 0.6, coin: 0.5, party: 0.6, levelup: 0.65, pop: 0.3 };
 
 let enabled = true;
+/** iOS: lofi çalar sessiz modda da çalsın diye açar; efektlerin sonradan yüklenip ses modunu geri çevirmesini önler. */
+let silentOk = false;
+export function allowSilentPlayback() {
+  silentOk = true;
+}
 let players: Partial<Record<Sfx, AudioPlayer>> | null = null;
 
 function load() {
@@ -38,7 +43,7 @@ function load() {
   if (!Audio) return players;
   try {
     // Başka bir uygulamanın müziğini durdurmasın; sessiz moda uysun.
-    Audio.setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers', shouldPlayInBackground: false }).catch(() => {});
+    Audio.setAudioModeAsync({ playsInSilentMode: silentOk, interruptionMode: 'mixWithOthers', shouldPlayInBackground: false }).catch(() => {});
     for (const k of Object.keys(SOURCES) as Sfx[]) {
       const p = Audio.createAudioPlayer(SOURCES[k]);
       p.volume = VOLUME[k];

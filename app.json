@@ -26,6 +26,7 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSUserTrackingUsageDescription": "Sana daha uygun reklamlar gösterebilmemiz için izin istiyoruz. İstemezsen reklamlar kişiselleştirilmeden gösterilir.",
         "CFBundleDevelopmentRegion": "tr",
         "CFBundleLocalizations": [
           "tr",

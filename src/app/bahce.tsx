@@ -9,12 +9,13 @@ import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
-import { GardenScene } from '@/components/GardenScene';
-import { Breathe, Flutter, GrowIn, Shower, Sway, Twinkle } from '@/components/gardenFx';
+import { GardenIsland } from '@/components/GardenIsland';
+import { GardenScene, phaseOf } from '@/components/GardenScene';
+import { Breathe, Flutter, Shower, Sway } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
-  FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, STAGE_NAMES, fedToday, gardenRank, growth,
+  FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, fedToday, gardenRank, growth,
   isPlotLovedToday, monthFlower, plantsWilted, stageOf, type Flower, type Plot,
 } from '@/domain/garden';
 import { DECOR, PERSONAS, type Extra } from '@/domain/items';
@@ -55,6 +56,7 @@ export default function Bahce() {
   const month = monthFlower(now);
   const sky = useSky();
   const hour = new Date(now).getHours();
+  const phase = phaseOf(hour, sky);
 
   const wilt = plantsWilted(houseProgress(P.days, now, P.frozen));
   const grown = G.plots.map(p => ({ p, f: FLOWER[p.flower], g: growth(P, p, now) }));
@@ -107,12 +109,50 @@ export default function Bahce() {
         </Glass>
       </Appear>
 
+      <Appear index={2}>
+      <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
+        <GardenScene hour={hour} sky={sky} blooms={blooms} />
+        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
+        <Flutter emoji="🦋" top="14%" dur={8500} />
+        <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
+        {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
+        <View style={styles.bedTop}>
+          <Breathe amp={0.03} dur={2600}>
+            <MokaMascot pose={pose} size="md" showBubble={false} />
+          </Breathe>
+          <Glass style={styles.bubble} intensity={30}>
+            <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
+          </Glass>
+        </View>
+        <GardenIsland
+          plots={grown}
+          garden={G}
+          now={now}
+          capacity={maxPlots}
+          selected={sel}
+          wilt={wilt}
+          dim={phase === 'night' ? 0.72 : phase === 'dusk' ? 0.88 : 1}
+          onSelect={id => setSel(current => current === id ? null : id)}
+          onEmpty={() => setTab('cicek')}
+        />
+        <View style={styles.decor} pointerEvents="none">
+          {P.owned.includes('sulama') && <Float amp={2} dur={2600}><Text style={styles.decorE}>🚿</Text></Float>}
+          {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={300}><Text style={styles.decorE}>🐞</Text></Float>}
+          {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
+          {albumTypesCount > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
+          <Float amp={2.5} dur={1900} delay={500}><Text style={styles.decorE}>✨</Text></Float>
+        </View>
+        <Burst fire={fire} />
+      </View>
+      </Appear>
+      {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
+
       {/* Plak Çalar */}
-      <Appear index={2} style={{ flexDirection: 'row', gap: 10 }}>
+      <Appear index={3} style={{ flexDirection: 'row', gap: 10 }}>
         <Btn small kind="soft" label="🎵 Pikap (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
       </Appear>
 
-      <Appear index={3}>
+      <Appear index={4}>
       <Glass scrim style={styles.statsCard}>
         <View style={styles.statsRow}>
           <View style={{ flex: 1 }}>
@@ -129,51 +169,6 @@ export default function Bahce() {
         </View>
       </Glass>
       </Appear>
-
-      <Appear index={4}>
-      <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
-        <GardenScene hour={hour} sky={sky} blooms={blooms} />
-        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
-        <Flutter emoji="🦋" top="14%" dur={8500} />
-        <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
-        {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
-        <View style={styles.bedTop}>
-          <Breathe amp={0.03} dur={2600}>
-            <MokaMascot pose={pose} size="md" showBubble={false} />
-          </Breathe>
-          <Glass style={styles.bubble} intensity={30}>
-            <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
-          </Glass>
-        </View>
-        <View style={styles.plots}>
-          {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
-            x ? (
-              <Appear key={x.p.id} index={i} style={styles.plotCell}>
-                <PlotCard wilt={wilt} plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
-              </Appear>
-            ) : (
-              <Appear key={'e' + i} index={i} style={styles.plotCell}>
-                <Squish onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
-                  <Breathe amp={0.06} dur={2000}>
-                    <View style={{ opacity: 0.55 }}><PlantArt stage={-1} size={54} /></View>
-                  </Breathe>
-                  <Text style={[styles.plotName, { color: c.muted }]}>Boş saksı</Text>
-                </Squish>
-              </Appear>
-            ),
-          )}
-        </View>
-        <View style={styles.decor} pointerEvents="none">
-          {P.owned.includes('sulama') && <Float amp={2} dur={2600}><Text style={styles.decorE}>🚿</Text></Float>}
-          {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={300}><Text style={styles.decorE}>🐞</Text></Float>}
-          {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
-          {albumTypesCount > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
-          <Float amp={2.5} dur={1900} delay={500}><Text style={styles.decorE}>✨</Text></Float>
-        </View>
-        <Burst fire={fire} />
-      </View>
-      </Appear>
-      {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
 
       <Tabs
         value={tab}
@@ -243,40 +238,6 @@ export default function Bahce() {
     </Screen>
     <GardenGate />
     </View>
-  );
-}
-
-function PlotCard({ plot, flower, g, on, onPress, wilt }: { wilt?: boolean; plot: Plot; flower?: Flower; g: number; on: boolean; onPress: () => void }) {
-  const c = useColors();
-  if (!flower) return null;
-  const stage = stageOf(g, flower.grow);
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${flower.name}, ${STAGE_NAMES[stage]}, ${g}/${flower.grow} büyüme`}
-      style={[styles.plot, on && { backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }]}
-    >
-      <Twinkle on={g} />
-      <Sway deg={stage >= 3 ? 4 : 2} dur={2200 + (flower.price % 7) * 260} delay={(flower.grow % 5) * 200}>
-        <GrowIn h={54} delay={150 + (flower.grow % 7) * 90} pop={stage}>
-          {plot.bloomed ? (
-            <Breathe amp={0.08} dur={1200}>
-              <Float amp={3} dur={1900}>
-                <PlantArt flower={flower} stage={stage} size={54} wilt={wilt} />
-              </Float>
-            </Breathe>
-          ) : (
-            <PlantArt flower={flower} stage={stage} size={54} wilt={wilt} />
-          )}
-        </GrowIn>
-      </Sway>
-      <Text style={[styles.plotName, { color: c.ink }]} numberOfLines={1}>{flower.name}</Text>
-      <View style={[styles.bar, { backgroundColor: c.surface2 }]}>
-        <View style={[styles.barFill, { width: `${(g / flower.grow) * 100}%`, backgroundColor: stage >= 5 ? c.warm : c.ok }]} />
-      </View>
-      <Text style={[styles.plotStage, { color: c.muted }]}>{STAGE_NAMES[stage]}</Text>
-    </Pressable>
   );
 }
 
@@ -562,9 +523,6 @@ const styles = StyleSheet.create({
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
-  plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
-  plotCell: { width: '31.5%' },
-  plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3, backgroundColor: 'rgba(255,255,255,0.28)' },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },
   plotStage: { fontFamily: fonts.bodyBold, fontSize: 12 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },

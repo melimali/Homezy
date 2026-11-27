@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { Animated, Easing, Image, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import Svg, { Circle, Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useReduceMotion } from '@/components/motion';
 import type { Sky } from '@/lib/weather';
@@ -32,13 +32,6 @@ const GREY: Record<Phase, [string, string]> = {
   dusk: ['#4D4968', '#B79A98'],
   night: ['#0E1430', '#2B3558'],
 };
-const HILL: Record<Phase, [string, string, string]> = {
-  dawn: ['#B7D8B0', '#8EC49A', '#6FAF82'],
-  day: ['#A8DCA0', '#7CC48C', '#5DAE74'],
-  dusk: ['#7D8F8C', '#5E7E80', '#456B6E'],
-  night: ['#2A4A57', '#1F3A4A', '#162E3D'],
-};
-
 /** Verilen aralıkta sonsuz döngülü 0→1 değer. */
 function useLoop(dur: number, delay = 0, reduce = false) {
   const [v] = useState(() => new Animated.Value(0));
@@ -200,7 +193,10 @@ export function GardenScene({ hour, sky, blooms, children, style }: { hour: numb
   const phase = phaseOf(hour, sky);
   const bad = sky.kind === 'rain' || sky.kind === 'storm' || sky.kind === 'fog' || sky.kind === 'snow';
   const [top, bottom] = bad ? GREY[phase] : SKY[phase];
-  const hills = HILL[phase];
+  const hillHeight = size.w * 5 / 9;
+  const middleTop = size.h * 0.44 - hillHeight * 0.35;
+  const groundTop = middleTop + hillHeight;
+  const ground = '#A5B16D';
   const night = phase === 'night';
   const cloudTone = night ? '#46527E' : bad ? '#9AA4AE' : phase === 'dusk' ? '#F8D6C4' : '#FFFFFF';
   const showClouds = sky.kind !== 'clear' || phase !== 'night';
@@ -237,11 +233,21 @@ export function GardenScene({ hour, sky, blooms, children, style }: { hour: numb
         />
       ))}
 
-      <Svg style={[styles.hills, { height: Math.max(120, size.h * 0.55) }]} width="100%" height="100%" viewBox="0 0 100 60" preserveAspectRatio="none" pointerEvents="none">
-        <Path d="M0 28 Q16 12 34 24 T70 18 T100 26 L100 60 L0 60 Z" fill={hills[0]} />
-        <Path d="M0 38 Q20 24 42 34 T82 30 T100 36 L100 60 L0 60 Z" fill={hills[1]} />
-        <Path d="M0 48 Q26 38 52 46 T100 44 L100 60 L0 60 Z" fill={hills[2]} />
-      </Svg>
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
+        <Image source={require('../../assets/bahce/sahne/tepe_uzak.webp')} resizeMode="stretch" style={[styles.hills, { top: middleTop - hillHeight * 0.30, height: hillHeight }]} />
+        <View style={[styles.hills, { top: groundTop - 1, bottom: 0, backgroundColor: ground }]} />
+        <Image source={require('../../assets/bahce/sahne/tepe_orta.webp')} resizeMode="stretch" style={[styles.hills, { top: middleTop, height: hillHeight }]} />
+        <Svg style={[styles.hills, { top: groundTop - 24 }]} width="100%" height={24}>
+          <Defs>
+            <LinearGradient id="garden-ground" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={ground} stopOpacity={0} />
+              <Stop offset="1" stopColor={ground} />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height={24} fill="url(#garden-ground)" />
+        </Svg>
+        <Image source={require('../../assets/bahce/sahne/on_plan.webp')} resizeMode="stretch" style={[styles.hills, { bottom: 0, height: size.w / 3 }]} />
+      </View>
 
       {(sky.kind === 'rain' || sky.kind === 'storm') && Array.from({ length: 16 }, (_, i) => (
         <Fall key={i} kind="rain" x={4 + i * 6} h={size.h} dur={700 + (i % 4) * 150} delay={i * 90} drift={-6} />
@@ -266,7 +272,7 @@ export function GardenScene({ hour, sky, blooms, children, style }: { hour: numb
 }
 
 const styles = StyleSheet.create({
-  hills: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  hills: { position: 'absolute', left: 0, right: 0, width: '100%' },
   drop: { position: 'absolute', top: 0, width: 1.6, height: 14, borderRadius: 2, backgroundColor: 'rgba(180,215,245,0.8)' },
   flake: { position: 'absolute', top: 0, width: 5, height: 5, borderRadius: 3, backgroundColor: '#FFFFFF' },
   petal: { position: 'absolute', top: 0, fontSize: 14 },

@@ -112,7 +112,7 @@ async function boughtItem(id: string): Promise<AppState | null> {
   });
 }
 
-/** İlaç karosu: dozu "alındı" işaretler ve bildirimleri yeniden zamanlar (vakti gelen hatırlatma susar). */
+/** Takviye karosu: vakti "alındı" işaretler ve bildirimleri yeniden zamanlar (vakti gelen hatırlatma susar). */
 async function takeDose(key: string): Promise<AppState | null> {
   const now = Date.now();
   const S = await mutate(D => markDose(D, dayKey(now), key, 'taken', now));
@@ -193,7 +193,7 @@ export async function pinTodayWidget(): Promise<boolean> {
   }
 }
 
-/** Ana ekrana "Mini" widget'ını (su, ilaç, market, görev) ekletir. Eklenemezse false. */
+/** Ana ekrana "Mini" widget'ını (su, takviye, market, görev) ekletir. Eklenemezse false. */
 export async function pinMiniWidget(): Promise<boolean> {
   if (!lib) return false;
   try {

@@ -87,7 +87,7 @@ Modül örnekleri (B1 → ne eklenir):
 - 💼 İş: derin çalışma bloğu, gün başı en önemli 3 iş, gün sonu kapanış (5 dk).
 - 📚 Ders: sınav tarihinden geriye plan, Pomodoro (`focusMin`), haftalık tekrar.
 - 🏋️ Spor: `workout.ts` şablonu (yer + deneyim), dinlenme günleri, antrenman hatırlatması.
-- 😴 Sağlık: uyku saatinden geriye "ekranı bırak" hatırlatması, su, ilaç (`meds.ts`).
+- 😴 Sağlık: uyku saatinden geriye "ekranı bırak" hatırlatması, su, takviye (`meds.ts`).
 - 🌱 Gelişim: `growth.ts` önerisi (okuma, dil, meditasyon).
 - 💰 Para: haftalık harcama gözden geçirme (ilk sürümde sadece hatırlatma).
 - 🧘 Ruh: günlük mood kaydı + 2 dk nefes.

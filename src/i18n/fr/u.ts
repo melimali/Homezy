@@ -23,7 +23,7 @@ export const FR_U: Record<string, string> = {
   "İyi dinlen, yarın yine buradayım 💛": "Repose-toi bien, je suis là demain 💛",
   "Hoşça kal! ☕": "Au revoir ! ☕",
   "🗑️ Listeden çıkardım: {}": "🗑️ Retiré de la liste : {}",
-  "💊 {}: {} hatırlatması": "💊 {} : rappel {}",
+  "🌿 {}: {} hatırlatması": "🌿 {} : rappel {}",
   "{} bugün için planlı değil": "{} n’est pas prévu aujourd’hui",
   "Sonra hatırlat": "Me le rappeler plus tard",
   "son şans": "dernière chance",

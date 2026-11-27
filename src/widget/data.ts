@@ -66,12 +66,12 @@ export function widgetData(S: AppState, now = Date.now()): WidgetData {
   };
 }
 
-/** Küçük çoklu widget'ın verisi: su, ilaç, market, aktif görev. */
+/** Küçük çoklu widget'ın verisi: su, takviye, market, aktif görev. */
 export type MiniData = {
   streak: number;
   mood: { emoji: string; line: string };
   water: { n: number; goal: number; pct: number; met: boolean };
-  /** Sıradaki ilaç dozu; `left` bugün işaretlenmemiş doz sayısı, `total` bugünkü doz. */
+  /** Sıradaki takviye vakti; `left` bugün işaretlenmemiş vakit sayısı, `total` bugünkü vakit sayısı. */
   med: { key: string; name: string; time: string; late: boolean; left: number; total: number } | null;
   shop: { id: string; name: string; more: number; total: number } | null;
   task: (WidgetTask & { more: number }) | null;

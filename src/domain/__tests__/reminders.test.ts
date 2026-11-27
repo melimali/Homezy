@@ -6,7 +6,7 @@ import { applyReminderAction, reminderDataOf } from '@/notifications/actions';
 import { seed } from '../logic';
 
 describe('bildirim düğmeleri', () => {
-  it('ilaç: Aldım dozu işaretler, tekrar basmak bir şeyi değiştirmez', () => {
+  it('takviye: Aldım vakti işaretler, tekrar basmak bir şeyi değiştirmez', () => {
     const S = seed();
     const now = new Date(2026, 10, 9, 9, 0).getTime();
     S.meds = [newMed('Vitamin', '1 tablet', ['09:00'], [], now - 864e5)];

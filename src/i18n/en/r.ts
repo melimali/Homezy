@@ -1,4 +1,4 @@
-/** Türkçe → İngilizce: mağaza eşyaları, ilaç, tanıtım ve birkaç küçük etiket (kusursuz İngilizce taraması). */
+/** Türkçe → İngilizce: mağaza eşyaları, takviye, tanıtım ve birkaç küçük etiket (kusursuz İngilizce taraması). */
 export const EN_R: Record<string, string> = {
   // Mağaza eşyaları
   'Koltuk takımı': 'Sofa set',
@@ -67,9 +67,9 @@ export const EN_R: Record<string, string> = {
   // Hikâye videosu
   'Bir gün ara verdim…\nev beni bekledi 😴': 'I took a day off…\nmy home waited for me 😴',
   'Dönmek en güzel adım!\nEvim büyüyor 🏡💪': 'Coming back is the best step!\nMy home is growing 🏡💪',
-  // İlaç
-  'İlaç ve takviye 💊': 'Medication & supplements 💊',
-  'Henüz ilaç eklemedin. İlk ilacını ya da takviyeni (vitamin, mineral…) ekleyince vaktinde hatırlatırım.': 'You haven\'t added any medication yet. Add your first medication or supplement (vitamin, mineral…) and I\'ll remind you on time.',
+  // Takviye
+  'Takviye takibi 🌿': 'Supplement tracking 🌿',
+  'Henüz takviye eklemedin. İlk takviyeni (vitamin, mineral…) ekleyince vaktinde hatırlatırım.': 'No supplements yet. Add your first one (vitamin, mineral…) and I\'ll remind you on time.',
   // Moka sohbeti
   'Bugün 2 bardak su içtim': 'I drank 2 glasses of water today',
   'Geri aldım ↩️': 'Undone ↩️',
@@ -94,7 +94,7 @@ export const EN_R: Record<string, string> = {
   'Planı düzenle': 'Edit plan',
   'Tüm ev': 'Whole home',
   'Evin diğer odalarını görmek istemezsen bir oda seç: işler, hatırlatmalar ve puan sadece o odaya göre olur. Kiralık, yurt ya da ailenle yaşıyorsan işine yarar.': 'Pick a room if you don\'t want to see the rest of the home: tasks, reminders and points will only follow that room. Handy if you rent, live in a dorm or share with family.',
-  '+ İlaç / takviye ekle': '+ Add medication / supplement',
+  '+ Takviye ekle': '+ Add supplement',
   'Alışveriş listesine süt ve ekmek ekle': 'Add milk and bread to the shopping list',
   'EV · RUTİN · SEN': 'HOME · ROUTINE · YOU',
   'Bugün iş kalmadı, biraz eğlenebiliriz 🎮': 'No tasks left today, we can have a little fun 🎮',

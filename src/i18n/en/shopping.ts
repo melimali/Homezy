@@ -57,7 +57,7 @@ export const EN_SHOP: Record<string, string> = {
   'Pil': 'Batteries',
   'Ampul': 'Light bulbs',
   'İlk yardım malzemesi (yara bandı)': 'First aid supplies (plasters)',
-  'Ağrı kesici': 'Painkillers',
+  'Yara bandı': 'Plasters',
   'Priz uzatma / çoklu priz': 'Power strip',
   'Koli bandı': 'Packing tape',
   'Buzdolabı poşeti / saklama kabı': 'Food storage bags',

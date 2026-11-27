@@ -1,6 +1,6 @@
 /** Kişisel gelişim (Kendini geliştir) ekranı: Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const FR_E: Record<string, string> = {
- "İlaç, alışkanlık, ruh hali": "Médicaments, habitudes, humeur",
+ "Takviye, alışkanlık, ruh hali": "Compléments, habitudes, humeur",
  "Kitap, film, öğrenme önerileri": "Idées de livres, films et apprentissage",
  "Plan, dolap, bakım": "Plan, garde-robe, entretien",
  "Sohbet, bahçe, mağaza": "Discussion, jardin, boutique",

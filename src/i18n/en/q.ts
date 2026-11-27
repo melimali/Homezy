@@ -49,7 +49,7 @@ export const EN_Q: Record<string, string> = {
   "Telefonu şarja takıp uzağa koy": "Plug in your phone, put it far away",
   "Kitap oku ya da esne": "Read or stretch",
   "Işıkları kıs": "Dim the lights",
-  "İlaç ve vitaminlerini kontrol et": "Check your meds and vitamins",
+  "Vitaminlerini ve takviyelerini kontrol et": "Check your vitamins and supplements",
   "Bitenleri not et": "Note what is running out",
   "Yarın için bir yere hazırla": "Set them out for tomorrow",
   "Bugünün en önemli işini yaz": "Write today's most important task",

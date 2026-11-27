@@ -14,7 +14,7 @@ export type Tip = {
 
 export const TIPS: readonly Tip[] = [
   { id: 'journal', emoji: '📔', title: 'Günlük tutmayı dene', text: 'Günlük tutmak ruhsal sağlığın için çok iyi olabilir. Günde bir cümle bile yeter.', cta: 'Günlüğü aç', href: '/gunluk' },
-  { id: 'meds', emoji: '💊', title: 'İlaç takibi ekle', text: 'İlaçlarını ekle, saati gelince hatırlatayım. Bildirimden tek dokunuşla "Aldım" diyebilirsin.', cta: 'İlaç ekle', href: '/ilac' },
+  { id: 'meds', emoji: '🌿', title: 'Takviye takibi ekle', text: 'Takviyelerini ekle, saati gelince hatırlatayım. Bildirimden tek dokunuşla "Aldım" diyebilirsin.', cta: 'Takviye ekle', href: '/ilac' },
   { id: 'sport', emoji: '🏃', title: 'Hareket vakti', text: 'Spor kaydı tut, antrenman planını gör. Küçük hareketler de puan kazandırır.', cta: 'Spora git', href: '/spor' },
   { id: 'garden', emoji: '🌷', title: "Moka'nın bahçesi", text: 'Çiçek ek, işlerini yaptıkça büyüsün. Albümünü doldur, evin bahçesi renklensin.', cta: 'Bahçeye git', href: '/bahce' },
   { id: 'house', emoji: '🏡', title: 'Evini süsle', text: 'Zemini, duvarı ve pencereyi değiştir; puanla aldığın eşyaları odalara yerleştir.', cta: 'Evi düzenle', href: '/dekor' },

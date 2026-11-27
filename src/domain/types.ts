@@ -124,7 +124,7 @@ export type Settings = {
   bills: boolean;
   /** Buzdolabındaki ürünlerin son kullanma tarihleri. */
   expiry: boolean;
-  /** İlaç hatırlatmaları (vakit ve nazik ikinci hatırlatma). */
+  /** Takviye hatırlatmaları (vakit ve nazik ikinci hatırlatma). */
   meds: boolean;
   /** Evcil hayvan bakım hatırlatmaları (mama, yıkama, aşı…). */
   pets: boolean;
@@ -340,12 +340,12 @@ export type HomeData = {
 /** Premium: şu an açık olmayan diğer evler (yazlık, iş yeri…). */
 export type SavedHome = HomeData & { id: string; name: string; setup: boolean };
 
-/** İlaç takibi: sadece telefonda tutulur, buluta yedeklenmez (sağlık verisi). `days`: boşsa her gün, değilse 0 pazar … 6 cumartesi. */
+/** Takviye takibi: sadece telefonda tutulur, buluta yedeklenmez. `days`: boşsa her gün, değilse 0 pazar … 6 cumartesi. */
 export type Med = { id: string; name: string; dose: string; times: string[]; days: number[]; start: number;
-  /** 'takviye': vitamin, mineral vb. Yoksa ilaç. */
+  /** Eski kayıtlarda kalan alan; artık hepsi takviye sayılır. */
   kind?: 'ilac' | 'takviye' };
 export type MedMark = { s: 'taken' | 'skipped'; at: number };
-/** Gün anahtarı → `ilacId@HH:MM` → işaret. */
+/** Gün anahtarı → `takviyeId@HH:MM` → işaret. */
 export type MedLog = Record<string, Record<string, MedMark>>;
 
 /** Evcil hayvan: kullanıcının eklediği bakım işleri (mama, yıkama, aşı…) ve son yapılma zamanları. */

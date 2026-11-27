@@ -29,7 +29,7 @@ export const EN_VIS: Record<string, string> = {
   'Usta Moka': 'Master Moka',
   'Bilge Moka': 'Wise Moka',
   'Efsane Moka': 'Legendary Moka',
-  'Merhaba, ben Moka ☕ Bana iş ekletebilir, alışveriş listene ürün yazdırabilir, yaptıklarını (su, spor, ilaç, hayvan bakımı) işaretletebilir, günlük ve takvim notu yazdırabilir ya da sadece sohbet edebilirsin!': "Hi, I'm Moka ☕ You can have me add tasks, put items on your shopping list, tick off what you've done (water, workout, meds, pet care), write journal and calendar notes, or just chat!",
+  'Merhaba, ben Moka ☕ Bana iş ekletebilir, alışveriş listene ürün yazdırabilir, yaptıklarını (su, spor, takviye, hayvan bakımı) işaretletebilir, günlük ve takvim notu yazdırabilir ya da sadece sohbet edebilirsin!': "Hi, I'm Moka ☕ You can have me add tasks, put items on your shopping list, tick off what you've done (water, workout, supplements, pet care), write journal and calendar notes, or just chat!",
   "Henüz not yok. Moka'ya \"yarın için not al: …\" de.": 'No notes yet. Tell Moka "take a note for tomorrow: …".',
   'zaman aşımı': 'timed out',
   'Doğrulamadan devam et': 'Continue without verifying',

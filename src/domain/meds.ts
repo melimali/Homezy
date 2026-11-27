@@ -3,18 +3,18 @@ import { medAgain, medNudge } from '@/domain/messages';
 import { addDays, dayKey, dayTs } from '@/domain/play';
 import type { AppState, Med, MedMark } from '@/domain/types';
 
-/** Vakit geçtikten bu kadar dakika sonra doz "unutuldu" sayılır ve Moka nazikçe hatırlatır. */
+/** Vakit geçtikten bu kadar dakika sonra vakit "unutuldu" sayılır ve Moka nazikçe hatırlatır. */
 export const MISSED_AFTER_MIN = 45;
-/** Aynı anda zamanlanacak en çok ilaç bildirimi (iOS 64 sınırı için, bkz. notifications/schedule.ts). */
+/** Aynı anda zamanlanacak en çok takviye bildirimi (iOS 64 sınırı için, bkz. notifications/schedule.ts). */
 export const MED_NOTIF_CAP = 16;
 const NOTIF_DAYS = 3;
 
-export const MED_DISCLAIMER = 'Homezy tıbbi tavsiye vermez. İlaç ve dozları doktorunun ya da eczacının söylediği gibi kullan; bu sadece kendi notlarını hatırlatır.';
+export const MED_DISCLAIMER = 'Bu sadece kendi notlarını hatırlatan basit bir hatırlatıcıdır.';
 
 export const doseKey = (id: string, time: string) => `${id}@${time}`;
 
-export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now(), kind: 'ilac' | 'takviye' = 'ilac'): Med => ({
-  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now, kind,
+export const newMed = (name: string, dose: string, times: string[], days: number[], now = Date.now()): Med => ({
+  id: uid(), name: name.trim(), dose: dose.trim(), times: [...times].sort(), days: [...days].sort(), start: now, kind: 'takviye',
 });
 
 export type Dose = { med: Med; time: string; key: string; mark?: MedMark };
@@ -25,7 +25,7 @@ const minutesOf = (t: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 
-/** O gün alınması gereken dozlar, saat sırasıyla. İlaç eklendiği günden önceki günler boş. */
+/** O gün alınması gereken vakitler, saat sırasıyla. Takviye eklendiği günden önceki günler boş. */
 export function dosesOn(S: Pick<AppState, 'meds' | 'medLog'>, day: string): Dose[] {
   const wd = new Date(dayTs(day)).getDay();
   const out: Dose[] = [];
@@ -40,7 +40,7 @@ export function dosesOn(S: Pick<AppState, 'meds' | 'medLog'>, day: string): Dose
   return out.sort((a, b) => minutesOf(a.time) - minutesOf(b.time) || a.med.name.localeCompare(b.med.name));
 }
 
-/** Bugünün bir dozunun durumu. */
+/** Bugünün bir vaktinin durumu. */
 export function doseState(d: Dose, now = Date.now()): DoseState {
   if (d.mark) return d.mark.s;
   const at = new Date(now);
@@ -50,11 +50,11 @@ export function doseState(d: Dose, now = Date.now()): DoseState {
   return cur >= t ? 'due' : 'later';
 }
 
-/** Bugün saati geçmiş ve işaretlenmemiş dozlar. */
+/** Bugün saati geçmiş ve işaretlenmemiş vakitler. */
 export const missedNow = (S: Pick<AppState, 'meds' | 'medLog'>, now = Date.now()) =>
   dosesOn(S, dayKey(now)).filter(d => doseState(d, now) === 'missed');
 
-/** Bir dozu işaretler; `null` işareti kaldırır. */
+/** Bir vakti işaretler; `null` işareti kaldırır. */
 export function markDose(D: Pick<AppState, 'medLog'>, day: string, key: string, s: 'taken' | 'skipped' | null, now = Date.now()) {
   if (!s) {
     if (D.medLog[day]) {
@@ -66,7 +66,7 @@ export function markDose(D: Pick<AppState, 'medLog'>, day: string, key: string, 
   (D.medLog[day] ||= {})[key] = { s, at: now };
 }
 
-/** Silinen ilacın kayıtlarını da temizler. */
+/** Silinen takviyenin kayıtlarını da temizler. */
 export function removeMed(D: Pick<AppState, 'meds' | 'medLog'>, id: string) {
   D.meds = D.meds.filter(m => m.id !== id);
   for (const day of Object.keys(D.medLog)) {
@@ -77,7 +77,7 @@ export function removeMed(D: Pick<AppState, 'meds' | 'medLog'>, id: string) {
 
 export type DayHist = { day: string; total: number; taken: number; skipped: number };
 
-/** Son `n` günün özeti (bugün dahil, eskiden yeniye). Bugünün henüz gelmemiş dozları "total"a girmez. */
+/** Son `n` günün özeti (bugün dahil, eskiden yeniye). Bugünün henüz gelmemiş vakitleri "total"a girmez. */
 export function history(S: Pick<AppState, 'meds' | 'medLog'>, n = 7, now = Date.now()): DayHist[] {
   const today = dayKey(now);
   const out: DayHist[] = [];
@@ -102,16 +102,16 @@ export function mokaMedLine(missed: Dose[], dueNow: Dose[], allDone: boolean): s
   if (missed.length) {
     const n = missed[0].med.name;
     return missed.length === 1
-      ? `☕ Moka usulca soruyor: ${n} vakti geçmiş gibi. Aldıysan işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`
-      : `☕ Moka usulca soruyor: ${missed.length} ilacın vakti geçmiş gibi. Aldıklarını işaretle; emin değilsen doktoruna ya da eczacına danışabilirsin.`;
+      ? `☕ Moka usulca soruyor: ${n} vakti geçmiş gibi. Aldıysan işaretleyebilirsin.`
+      : `☕ Moka usulca soruyor: ${missed.length} takviyenin vakti geçmiş gibi. Aldıklarını işaretle.`;
   }
-  if (dueNow.length) return `${dueNow[0].med.kind === 'takviye' ? '🌿' : '💊'} ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
-  if (allDone) return '🌟 Bugünkü ilaç ve takviyelerin tamam. Moka seninle gurur duyuyor!';
-  return '☕ Moka bugünkü ilaçlarını hatırlayacak.';
+  if (dueNow.length) return `🌿 ${dueNow[0].med.name} vakti geldi. Moka yanında, acele yok.`;
+  if (allDone) return '🌟 Bugünkü takviyelerin tamam. Moka seninle gurur duyuyor!';
+  return '☕ Moka bugünkü takviyelerini hatırlayacak.';
 }
 
 /**
- * Önümüzdeki günlerin ilaç bildirimleri: vakitte bir hatırlatma ve 45 dakika sonra tek nazik ikinci hatırlatma.
+ * Önümüzdeki günlerin takviye bildirimleri: vakitte bir hatırlatma ve 45 dakika sonra tek nazik ikinci hatırlatma.
  * İşaretlenmiş dozlar atlanır. En yakın `MED_NOTIF_CAP` tanesi alınır.
  */
 export function medNotifs(S: AppState, now = Date.now()) {

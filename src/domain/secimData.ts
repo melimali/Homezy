@@ -46,7 +46,7 @@ export const CTASKS: CTask[] = [
   {"id": "sg2", "cat": "saglik", "emoji": "🥗", "min": 5, "kinds": ["duzenli", "ebeveyn"], "title": "Bir öğüne sebze ekle", "how": ["Tabağın yarısını sebzeye ayır", "Yeşil ya da renkli bir şey seç"]},
   {"id": "sg3", "cat": "saglik", "emoji": "🛌", "min": 3, "kinds": ["ogrenci", "calisan"], "title": "Yatış saatini belirle", "how": ["Hep aynı saati seç", "Alarmı o saatten 30 dk öncesine kur"]},
   {"id": "sg4", "cat": "saglik", "emoji": "🌙", "min": 20, "after": "sg3", "kinds": ["ogrenci"], "title": "Yatmadan 20 dakika ekransız kal", "how": ["Telefonu şarja takıp uzağa koy", "Kitap oku ya da esne", "Işıkları kıs"]},
-  {"id": "sg5", "cat": "saglik", "emoji": "💊", "min": 2, "title": "İlaç ve vitaminlerini kontrol et", "how": ["Bitenleri not et", "Yarın için bir yere hazırla"]},
+  {"id": "sg5", "cat": "saglik", "emoji": "🌿", "min": 2, "title": "Vitaminlerini ve takviyelerini kontrol et", "how": ["Bitenleri not et", "Yarın için bir yere hazırla"]},
   {"id": "dr1", "cat": "ders", "emoji": "🎯", "min": 2, "kinds": ["calisan", "ertelemeci", "ogrenci"], "title": "Bugünün en önemli işini yaz", "how": ["Tek bir iş seç", "Kağıda ya da telefona yaz"]},
   {"id": "dr2", "cat": "ders", "emoji": "⏱️", "min": 15, "after": "dr1", "kinds": ["calisan", "ertelemeci"], "title": "O işe 15 dakika ver", "how": ["Telefonu başka odaya koy", "Sayacı kur, sadece o işi yap", "Zil çalınca bırakabilirsin"]},
   {"id": "dr3", "cat": "ders", "emoji": "📖", "min": 10, "kinds": ["ogrenci", "duzenli"], "title": "10 sayfa oku", "how": ["Elindeki kitabı al", "Rahat bir yere otur", "Sayfa sayısını say, 10 olunca dur"]},

@@ -1,6 +1,6 @@
 /** Kişisel gelişim (Kendini geliştir) ekranı: Türkçe metin → İngilizce. `{}` değişken yeridir. */
 export const EN_E: Record<string, string> = {
- "İlaç, alışkanlık, ruh hali": "Meds, habits, mood",
+ "Takviye, alışkanlık, ruh hali": "Supplements, habits, mood",
  "Kitap, film, öğrenme önerileri": "Books, films, learning ideas",
  "Plan, dolap, bakım": "Plan, wardrobe, care",
  "Sohbet, bahçe, mağaza": "Chat, garden, shop",

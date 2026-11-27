@@ -1,7 +1,7 @@
 export const FR_K: Record<string, string> = {
   '💧 Su': '💧 Eau',
   'Bir bardak ekle': 'Ajouter un verre',
-  '💊 İlaç': '💊 Médicaments',
+  '🌿 Takviye': '🌿 Complément',
   'Ekle': 'Ajouter',
   'Hatırlatıcı kur': 'Créer un rappel',
   'Vakti geçti': 'En retard',

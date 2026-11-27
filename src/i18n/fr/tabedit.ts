@@ -17,7 +17,7 @@ export const FR_TABEDIT: Record<string, string> = {
   "İlerleme ve sıradaki iş": "Progression et prochaine tâche",
   "Oda filtreleri": "Filtres de pièces",
   "Seçim ve bonus işler": "Choix et tâches bonus",
-  "İlaç ve evcil hayvan": "Médicaments et animaux",
+  "Takviye ve evcil hayvan": "Compléments et animaux",
   "Günlük hedefler": "Objectifs du jour",
   "Yemek, kendine zaman, büyüme": "Repas, moments pour soi, progrès",
   "Bu hafta": "Cette semaine",

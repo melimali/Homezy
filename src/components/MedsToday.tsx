@@ -9,8 +9,8 @@ import { useStore } from '@/store/AppStore';
 import { useColors } from '@/theme';
 
 /**
- * Bugün sekmesinde bugünün ilaçları: saat, doz, "Aldım" / "Atla" / "Geri al". Ayrıntı ve ilaç ekleme `/ilac` ekranında.
- * İlaç verisi sadece telefonda kalır (buluta ve Moka'ya gitmez, bkz. sync/cloud.ts forCloud).
+ * Bugün sekmesinde bugünün takviyeleri: saat, miktar, "Aldım" / "Atla" / "Geri al". Ayrıntı ve takviye ekleme `/ilac` ekranında.
+ * Takviye verisi sadece telefonda kalır (buluta ve Moka'ya gitmez, bkz. sync/cloud.ts forCloud).
  */
 export function MedsToday() {
   const c = useColors();
@@ -23,13 +23,13 @@ export function MedsToday() {
 
   const mark = (d: Dose, s: 'taken' | 'skipped' | null) => update(D => void markDose(D, today, d.key, s));
 
-  // İlaç hiç eklenmemişse küçük bir davet; eklenmiş ama bugün doz yoksa kart gizlenir.
+  // Takviye hiç eklenmemişse küçük bir davet; eklenmiş ama bugün vakit yoksa kart gizlenir.
   if (!S.meds.length) {
     return (
       <Card>
-        <SecHead title="💊 İlaçlarım" />
-        <T v="small">İlaçlarını ekle, vaktinde hatırlatayım. Bilgilerin sadece telefonunda kalır.</T>
-        <Btn kind="soft" label="+ İlaç ekle" onPress={() => router.push('/ilac?add=1' as never)} />
+        <SecHead title="🌿 Takviyelerim" />
+        <T v="small">Takviyelerini ekle, vaktinde hatırlatayım. Bilgilerin sadece telefonunda kalır.</T>
+        <Btn kind="soft" label="+ Takviye ekle" onPress={() => router.push('/ilac?add=1' as never)} />
       </Card>
     );
   }
@@ -37,14 +37,14 @@ export function MedsToday() {
 
   return (
     <Card>
-      <SecHead title="💊 İlaçlarım" right={`${taken}/${doses.length}`} />
+      <SecHead title="🌿 Takviyelerim" right={`${taken}/${doses.length}`} />
       <View style={{ gap: 10 }}>
         {doses.map(d => {
           const state = doseState(d, now);
           const bg = state === 'taken' ? c.okSoft : state === 'missed' ? c.todaySoft : c.surface2;
           return (
             <View key={d.key} style={[st.dose, { backgroundColor: bg }]}>
-              <Text style={{ lineHeight: 29, fontSize: 22 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '💊'}</Text>
+              <Text style={{ lineHeight: 29, fontSize: 22 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '🌿'}</Text>
               <View style={{ flex: 1 }}>
                 <T v="bold" style={{ fontSize: 15 }}>{d.med.name}</T>
                 <T v="small">
@@ -65,7 +65,7 @@ export function MedsToday() {
         })}
       </View>
       <View style={st.foot}>
-        <Btn small kind="soft" label="+ İlaç ekle" onPress={() => router.push('/ilac?add=1' as never)} />
+        <Btn small kind="soft" label="+ Takviye ekle" onPress={() => router.push('/ilac?add=1' as never)} />
         <Btn small kind="ghost" label="Tümü ›" onPress={() => router.push('/ilac' as never)} />
       </View>
     </Card>

@@ -118,7 +118,7 @@ export const FORGOT: { name: string; cat: ShopCat; emoji: string }[] = [
   { name: 'Pil', cat: 'ev', emoji: '🔋' },
   { name: 'Ampul', cat: 'ev', emoji: '💡' },
   { name: 'İlk yardım malzemesi (yara bandı)', cat: 'ev', emoji: '🩹' },
-  { name: 'Ağrı kesici', cat: 'ev', emoji: '💊' },
+  { name: 'Yara bandı', cat: 'ev', emoji: '🩹' },
   { name: 'Priz uzatma / çoklu priz', cat: 'ev', emoji: '🔌' },
   { name: 'Koli bandı', cat: 'ev', emoji: '📦' },
   { name: 'Buzdolabı poşeti / saklama kabı', cat: 'ev', emoji: '🥡' },

@@ -15,7 +15,7 @@ export const EN_REVIEW: Record<string, string> = {
   'Gün şeridi': 'Day strip',
   'İlerleme ve sıradaki iş': 'Progress and next task',
   'Seçim ve bonus işler': 'Choices and bonus tasks',
-  'İlaç ve evcil hayvan': 'Medication and pets',
+  'Takviye ve evcil hayvan': 'Supplements and pets',
   'Günlük hedefler': 'Daily goals',
   'Mod ve vaktim var': 'Mode and time available',
   'Bu hafta özeti': 'This week summary',

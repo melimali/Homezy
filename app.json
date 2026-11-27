@@ -239,7 +239,7 @@
             {
               "name": "Mini",
               "label": "Homezy · Mini",
-              "description": "Su, ilaç, market ve aktif görev tek küçük widget'ta. Dokunarak bardak ekle, ilacı ve işi tamamla.",
+              "description": "Su, takviye, market ve aktif görev tek küçük widget'ta. Dokunarak bardak ekle, takviyeyi ve işi tamamla.",
               "minWidth": "250dp",
               "minHeight": "110dp",
               "targetCellWidth": 4,

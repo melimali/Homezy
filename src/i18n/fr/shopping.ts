@@ -60,7 +60,7 @@ export const FR_SHOP: Record<string, string> = {
   "Pil": "Piles",
   "Ampul": "Ampoules",
   "İlk yardım malzemesi (yara bandı)": "Trousse de secours (pansements)",
-  "Ağrı kesici": "Antidouleur",
+  "Yara bandı": "Pansements",
   "Priz uzatma / çoklu priz": "Multiprise",
   "Koli bandı": "Ruban adhésif",
   "Buzdolabı poşeti / saklama kabı": "Sachets / boîtes de conservation",

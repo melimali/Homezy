@@ -31,7 +31,7 @@ const MEDS = 'ilac';
  * 7 özet + 7×3 iş + en çok 15 spor/seri/haftalık hatırlatma = 43.
  */
 const TASKS_PER_DAY = 3;
-/** iOS en çok 64 bildirim tutar; fazlası sessizce atılır. İlaç ve evcil hayvan bildirimlerine yer ayırıp kalanı bu sınıra kadar zamanlarız. */
+/** iOS en çok 64 bildirim tutar; fazlası sessizce atılır. Takviye ve evcil hayvan bildirimlerine yer ayırıp kalanı bu sınıra kadar zamanlarız. */
 const IOS_LIMIT = 60;
 
 /** `d` gün sonrası, aynı yerel saatle (yaz saati geçişinde `now + d * DAY` günü kaydırabilir). */
@@ -94,7 +94,7 @@ async function ensureChannel(N: NotificationsModule) {
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(MEDS, {
-      name: tx('İlaç hatırlatmaları'),
+      name: tx('Takviye hatırlatmaları'),
       importance: N.AndroidImportance.DEFAULT,
     });
     await N.setNotificationChannelAsync(FEEDBACK_CHANNEL, {
@@ -274,7 +274,7 @@ async function doReschedule(S: AppState, premium = false) {
       },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
-  // İlaç hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen doz atlanır.
+  // Takviye hatırlatmaları: vakitte ve 45 dk sonra tek nazik ikinci hatırlatma; işaretlenen vakit atlanır.
   for (const n of meds)
     await sched({
       identifier: n.id,
@@ -298,7 +298,7 @@ async function doReschedule(S: AppState, premium = false) {
       },
       trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: n.at, channelId: NUDGE },
     });
-  // Aynı kimlikle yeniden zamanlananlar (görev, ilaç, evcil) zaten üzerine yazıldı; onları iptal etme.
+  // Aynı kimlikle yeniden zamanlananlar (görev, takviye, evcil) zaten üzerine yazıldı; onları iptal etme.
   for (const id of stale) if (!fresh.has(id)) await N.cancelScheduledNotificationAsync(id).catch(() => {});
 }
 

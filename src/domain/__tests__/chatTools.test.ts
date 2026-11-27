@@ -12,7 +12,7 @@ const NOW = new Date(2026, 10, 9, 10, 0).getTime();
 
 function world() {
   const S = seed(NOW);
-  S.meds = [newMed('Vitamin D', '', ['09:00'], [], NOW - 864e5, 'takviye')];
+  S.meds = [newMed('Vitamin D', '', ['09:00'], [], NOW - 864e5)];
   const pet = newPet('Pamuk', 'kedi');
   pet.items.push(newPetItem('Mama', '🍽️', 12, NOW - 20 * 36e5));
   S.pets = [pet];
@@ -80,7 +80,7 @@ describe('uygulayıcı', () => {
     r.undo!(S);
     expect(S.play.habits.water[dayKey(NOW)] ?? 0).toBe(0);
   });
-  it('ilaç alındı ve hayvan bakımı', () => {
+  it('takviye alındı ve hayvan bakımı', () => {
     const S = world();
     expect(applyChatAction(S, { type: 'med_log', med_id: S.meds[0].id, status: 'taken' }, NOW).ok).toBe(true);
     expect(Object.values(S.medLog[dayKey(NOW)])[0].s).toBe('taken');

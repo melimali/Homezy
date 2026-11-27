@@ -1,4 +1,4 @@
-/** Türkçe → İngilizce: mağaza eşyaları, ilaç, tanıtım ve birkaç küçük etiket (kusursuz İngilizce taraması). */
+/** Türkçe → İngilizce: mağaza eşyaları, takviye, tanıtım ve birkaç küçük etiket (kusursuz İngilizce taraması). */
 export const FR_R: Record<string, string> = {
   "Koltuk takımı": "Ensemble de canapés",
   "Yemek masası": "Table à manger",
@@ -64,8 +64,8 @@ export const FR_R: Record<string, string> = {
   "Ayakkabıları sıraya koy": "Aligner les chaussures",
   "Bir gün ara verdim…\nev beni bekledi 😴": "J’ai fait une pause…\nma maison m’a attendu 😴",
   "Dönmek en güzel adım!\nEvim büyüyor 🏡💪": "Revenir, c’est le plus beau pas !\nMa maison grandit 🏡💪",
-  "İlaç ve takviye 💊": "Médicaments et compléments 💊",
-  "Henüz ilaç eklemedin. İlk ilacını ya da takviyeni (vitamin, mineral…) ekleyince vaktinde hatırlatırım.": "Tu n’as pas encore ajouté de médicament. Ajoute ton premier médicament ou complément (vitamine, minéral…) et je te le rappellerai à l’heure.",
+  "Takviye takibi 🌿": "Suivi des compléments 🌿",
+  "Henüz takviye eklemedin. İlk takviyeni (vitamin, mineral…) ekleyince vaktinde hatırlatırım.": "Aucun complément pour l’instant. Ajoute le premier (vitamine, minéral…) et je te le rappellerai à l’heure.",
   "Bugün 2 bardak su içtim": "J’ai bu 2 verres d’eau aujourd’hui",
   "Geri aldım ↩️": "Annulé ↩️",
   "Listede bulamadım": "Je ne l’ai pas trouvé dans la liste",
@@ -85,7 +85,7 @@ export const FR_R: Record<string, string> = {
   "Planı düzenle": "Modifier le plan",
   "Tüm ev": "Toute la maison",
   "Evin diğer odalarını görmek istemezsen bir oda seç: işler, hatırlatmalar ve puan sadece o odaya göre olur. Kiralık, yurt ya da ailenle yaşıyorsan işine yarar.": "Choisis une pièce si tu ne veux pas voir le reste de la maison : tâches, rappels et points ne suivront que cette pièce. Pratique si tu es en location, en résidence étudiante ou en famille.",
-  "+ İlaç / takviye ekle": "+ Ajouter un médicament / complément",
+  "+ Takviye ekle": "+ Ajouter un complément",
   "Alışveriş listesine süt ve ekmek ekle": "Ajoute du lait et du pain à la liste de courses",
   "EV · RUTİN · SEN": "MAISON · ROUTINE · TOI",
   "Bugün iş kalmadı, biraz eğlenebiliriz 🎮": "Plus de tâches aujourd’hui, on peut s’amuser un peu 🎮",

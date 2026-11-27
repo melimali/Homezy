@@ -3,7 +3,7 @@
 | Veri | Kaynak | Yer | Alıcı / işleyici | Süre | Silme |
 |---|---|---|---|---|---|
 | Ev verisi (AppState: plan, rutin, gardırop, stok, bitki, fatura, garanti, not, günlük, spor, ayarlar, puan) | Kullanıcı | Telefon (SQLite). Hesap varsa `homes` (jsonb) | Supabase (AB) | Hesap açık olduğu sürece | Hesap silme (`delete_me` → cascade); telefonda uygulamayı silme |
-| İlaç takibi (ilaç adı, doz, saatler, alındı/atlandı kaydı) | Kullanıcı | Sadece telefon (SQLite `meta`). Buluta (`homes`) yedeklenmez, aile paylaşımına girmez | - | Uygulama silinene kadar | Uygulamayı silmek ya da ilacı uygulamada silmek |
+| Takviye takibi (takviye adı, miktar, saatler, alındı/atlandı kaydı) | Kullanıcı | Sadece telefon (SQLite `meta`). Buluta (`homes`) yedeklenmez, aile paylaşımına girmez | - | Uygulama silinene kadar | Uygulamayı silmek ya da takviyeyi uygulamada silmek |
 | Evcil hayvan bakımı (hayvan adı, türü, bakım işleri, son yapılma zamanı) | Kullanıcı | Telefon (SQLite `meta`); hesaplı kullanıcıda ev yedeğiyle birlikte Supabase `homes` | - | Hesap silinene ya da uygulama silinene kadar | Hayvanı ya da işi uygulamada silmek |
 | Alışveriş listesi (ürün adları, kategori, alındı işareti, sık alınanlar) | Kullanıcı | Telefon (SQLite `meta`); hesaplı kullanıcıda ev yedeğiyle birlikte Supabase `homes` | - | Hesap silinene ya da uygulama silinene kadar | Ürünü uygulamada silmek |
 | Hesap (ad, e-posta, parola hash) | Kullanıcı | `auth.users`, `profiles` | Supabase | Hesap süresi | Hesap silme |
@@ -16,7 +16,7 @@
 | Tarama fotoğrafı (buzdolabı / kıyafet) | Kullanıcı | Sunucuda saklanmaz; istek süresince bellekte | Anthropic | Anthropic politikası | – |
 | Moka sohbet mesajları + ev bağlamı (oda/iş adı-durumu, seviye, seri, tarih; son 12 mesaj) | Kullanıcı | Sunucuda saklanmaz; telefonda sadece açık oturumda bellekte | Anthropic | Anthropic politikası | Sohbeti temizle düğmesi |
 | Sıralama (isteğe bağlı): takma ad, ev puanı, seviye, seri, temizlik %, Moka exp | Kullanıcı (katılırsa) | Supabase `lb_profiles`, `lb_daily` (herkese açık yalnız takma ad + puanlar) | Supabase (AB) | Sıralamada kaldığı sürece | Sıralamadan çık (`lb_leave`) ya da hesap silme (cascade) |
-| İlaç adı, doz, saat, "içtim" kayıtları (sağlık verisi) | Kullanıcı | Sadece telefon (expo-sqlite); bulut yedeğine, sohbete ve yapay zekâya gönderilmez (`src/sync/cloud.ts forCloud`) | – | Uygulamayı silene kadar | Uygulamayı silme / veri sıfırlama |
+| Takviye adı, miktar, saat, "aldım" kayıtları | Kullanıcı | Sadece telefon (expo-sqlite); bulut yedeğine, sohbete ve yapay zekâya gönderilmez (`src/sync/cloud.ts forCloud`) | – | Uygulamayı silene kadar | Uygulamayı silme / veri sıfırlama |
 | Yaklaşık konum (2 ondalık) | Cihaz | Saklanmaz | Open-Meteo | – | – |
 | Telefon eğimi (ivmeölçer, expo-sensors; sadece Moka'nın odası açıkken, sahneyi hafifçe eğmek için) | Cihaz | Saklanmaz, telefondan çıkmaz | – | – | – |
 | Yapay zekâ kötüye kullanım sayacı (IP'nin tek yönlü SHA-256 özeti + gün sayacı; ham IP saklanmaz) | Sunucu | Supabase `ai_counter` / `ai_rate`, 7 gün | Supabase | Supabase politikası | Hesap silme gerekmez (kimlikle bağlı değil) |

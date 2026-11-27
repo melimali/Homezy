@@ -189,10 +189,10 @@ export function waterNudge(key: string, now: number) {
   };
 }
 
-/** İlaç vakti: ilk hatırlatma ve nazik ikinci hatırlatma. */
+/** Takviye vakti: ilk hatırlatma ve nazik ikinci hatırlatma. */
 export function medNudge(label: string, key: string, now: number) {
   return {
-    title: pick(['💊 İlaç vakti', '☕ Moka hatırlatıyor', '🌿 Küçük bir hatırlatma'], key, now),
+    title: pick(['🌿 Takviye vakti', '☕ Moka hatırlatıyor', '🌿 Küçük bir hatırlatma'], key, now),
     body: pick([`${label} · vakti geldi`, `${label} için bir an ayıralım mı?`, `${label} seni bekliyor, acele yok 🤍`], key, now),
   };
 }

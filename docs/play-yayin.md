@@ -69,3 +69,7 @@ Kod tarafı hazır. Aşağıdakiler Melih'in elle yapacakları, sırasıyla. Kim
 - [ ] Eski `com.meikaidigital.layfapp` uygulamasını kaldır, `npx.cmd expo run:android` ile yeniden kur (paket değişti; eski veriler gelmez).
 - [ ] Dahili test bağlantısından gerçek telefona kur: açılış, ev çizme, iş tamamlama, bildirim, tarama, satın alma, hesap silme.
 - [ ] Sorun yoksa kapalı ya da açık teste, sonra üretime yükselt.
+
+## Takviye takibi, tıbbi kategori değil (2026-11-27)
+
+İlaç takibi kaldırıldı. Uygulamada artık sadece **takviye (vitamin, mineral vb.) hatırlatıcısı** var. Amaç: Google Play'in ilaç yönetimini "tıbbi" kategorisinde sayıp kurumsal hesap istemesinden kaçınmak (Melih bireysel hesap). Mağaza metinlerinde, ekran görüntülerinde ve formlarda "ilaç, doz, reçete, tedavi" kelimeleri geçmemeli. Sağlık beyanı formunda: sadece spor ve basit takviye hatırlatması, tıbbi işlev yok.

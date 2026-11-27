@@ -51,10 +51,10 @@ type Tgt = ComponentRef<typeof View>;
 const TOUR_KEY = 'tour.ben';
 const TOUR: TourStep[] = [
   { key: 'profil', pose: 'happy', text: 'Selam, ben Moka! Burası senin sayfan: seviyen, serin ve rozetlerin burada.' },
-  { key: 'ilac', pose: 'happy', text: 'İlaçlarını buradan takip edersin. Hatırlatma gelir, içince işaretlersin.' },
+  { key: 'ilac', pose: 'happy', text: 'Takviyelerini buradan takip edersin. Hatırlatma gelir, alınca işaretlersin.' },
   { key: 'gunluk', pose: 'reading', text: 'Günlük: bugün nasıldı? Birkaç satır yaz, ruh halini seç.' },
   { key: 'buyume', pose: 'laptop', text: 'Kendini geliştir: sana göre kitap, film ve öğrenme önerileri.' },
-  { key: 'saglik', pose: 'love', text: 'Sağlık: ilaç, alışkanlık, ruh hali ve spor hep burada.' },
+  { key: 'saglik', pose: 'love', text: 'Sağlık: takviye, alışkanlık, ruh hali ve spor hep burada.' },
   { key: 'plan', pose: 'cheers', text: 'Gelişim planın ve ev planın: evini çiz, odaları, dolabı ve bakımı yönet. Ev kartında.' },
   { key: 'hesap', pose: 'sipping', text: 'Hesap: yedekleme, Premium ve giriş işlemleri burada.' },
   { key: 'ayar', pose: 'wink', text: 'Ayarlar: bildirim saati, dil ve gizlilik. Bu turu burada tekrar açabilirsin. Hadi başlayalım!' },
@@ -291,8 +291,8 @@ export default function Hesap() {
   const lockedItem: Item = { emoji: '🔒', label: 'Odak, Spor, Hikâye', sub: '3. günden sonra açılır', tint: c.lavenderSoft, onPress: () => toast('Odak, Spor ve Evimin hikâyesi 3. günden sonra açılır 🌱') };
 
   const cats: { key: string; emoji: string; title: string; tint: string; sub: string; items: Item[] }[] = [
-    { key: 'saglik', emoji: '💚', title: 'Sağlık', tint: c.sageSoft, sub: 'İlaç, alışkanlık, ruh hali', items: [
-      { emoji: '💊', label: 'İlaçlarım', sub: 'Hatırlatma ve günlük kayıt', tint: c.sageSoft, href: '/ilac' as Href },
+    { key: 'saglik', emoji: '💚', title: 'Sağlık', tint: c.sageSoft, sub: 'Takviye, alışkanlık, ruh hali', items: [
+      { emoji: '🌿', label: 'Takviyelerim', sub: 'Hatırlatma ve günlük kayıt', tint: c.sageSoft, href: '/ilac' as Href },
       { emoji: '🌿', label: 'Alışkanlıklar', sub: 'Paketler, su, uyku', tint: c.sageSoft, href: '/aliskanlik' },
       { emoji: '😊', label: 'Ruh hali', sub: 'Bugün nasılsın?', tint: c.roseSoft, href: '/ruhhali' as Href },
       ...(extras ? [{ emoji: '🏃', label: 'Spor', sub: 'Hareket ve antrenman', tint: c.peachSoft, href: '/spor' as Href }] : [lockedItem]),
@@ -319,7 +319,7 @@ export default function Hesap() {
       { emoji: '🏘️', label: 'Evlerim', sub: `${1 + state.others.length} ev`, tint: c.sageSoft, href: '/evler' },
       { emoji: '👨‍👩‍👧', label: 'Aile evi', sub: 'Evini paylaş', tint: c.roseSoft, href: '/aile' },
       ...(widgetAvailable() ? [
-        { emoji: '📌', label: 'Mini widget', sub: 'Su, ilaç, market ve görev tek küçük kutuda', tint: c.sageSoft, onPress: () => { pinMiniWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Mini.')); } },
+        { emoji: '📌', label: 'Mini widget', sub: 'Su, takviye, market ve görev tek küçük kutuda', tint: c.sageSoft, onPress: () => { pinMiniWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Mini.')); } },
         { emoji: '📋', label: "Bugün widget'ı", sub: 'Bugünün işleri ana ekranında', tint: c.sageSoft, onPress: () => { pinTodayWidget().then(ok => toast(ok ? 'Ana ekrana eklemek için onay penceresine dokun.' : 'Eklenemedi. Ana ekranı basılı tut > Araçlar > Homezy · Bugün.')); } },
       ] : []),
     ] },
@@ -340,7 +340,7 @@ export default function Hesap() {
   const open = cats.find(x => x.key === cat);
   const pins: Item[] = [
     { emoji: '📔', label: 'Günlük', sub: '', tint: c.roseSoft, href: '/gunluk' },
-    { emoji: '💊', label: 'İlaçlarım', sub: '', tint: c.sageSoft, href: '/ilac' as Href },
+    { emoji: '🌿', label: 'Takviyelerim', sub: '', tint: c.sageSoft, href: '/ilac' as Href },
     { emoji: '📚', label: 'Kendini geliştir', sub: '', tint: c.lavenderSoft, href: '/buyume' as Href },
     { emoji: '🛍️', label: 'Mağaza', sub: '', tint: c.peachSoft, href: '/magaza' },
   ];
@@ -554,7 +554,7 @@ const SECTIONS = [
   { title: '🏡 Evim ve Moka', keys: ['ev', 'moka'] },
   { title: '🔑 Hesabım', keys: ['hesap', 'ayar'] },
 ];
-const PIN_KEY: Record<string, string> = { 'İlaçlarım': 'ilac', 'Günlük': 'gunluk', 'Kendini geliştir': 'buyume' };
+const PIN_KEY: Record<string, string> = { 'Takviyelerim': 'ilac', 'Günlük': 'gunluk', 'Kendini geliştir': 'buyume' };
 const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 'hesap', ayar: 'ayar' };
 
 const st = StyleSheet.create({

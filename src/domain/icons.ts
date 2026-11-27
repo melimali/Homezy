@@ -47,7 +47,7 @@ const ITEM_RULES: [RegExp, string][] = [
   [/meyve suyu|kola|gazoz|içecek/, '🧃'], [/bal|reçel/, '🍯'], [/çikolata/, '🍫'], [/yağ/, '🫗'],
   [/tuvalet kağıdı|peçete|kağıt havlu/, '🧻'], [/şampuan|sabun|duş jeli|krem|losyon/, '🧴'], [/diş/, '🪥'],
   [/deterjan|yumuşatıcı|çamaşır suyu|leke/, '🫧'], [/sünger/, '🧽'], [/çöp poşeti|poşet/, '🛍️'], [/pil/, '🔋'],
-  [/ilaç/, '💊'], [/bebek bezi|mendil/, '🍼'],
+  [/takviye|vitamin/, '🌿'], [/bebek bezi|mendil/, '🍼'],
 ];
 
 const CAT_EMOJI: Record<string, string> = {

@@ -104,7 +104,7 @@ export function normalize(S: AppState): AppState {
   // Eski kıyafetlerin eklenme tarihi bilinmiyor; bağış önerisi hemen çıkmasın diye bugünden say.
   const now = Date.now();
   for (const m of Object.values(S.mod || {})) for (const c of m.wardrobe || []) c.added ??= now;
-  // Sınırsız büyüyen kayıtlar (100+ gün kullanımda şişmesin): spor 400 kayıt, ilaç işaretleri 200 gün.
+  // Sınırsız büyüyen kayıtlar (100+ gün kullanımda şişmesin): spor 400 kayıt, takviye işaretleri 200 gün.
   if (Array.isArray(S.play.sport) && S.play.sport.length > 400) S.play.sport = S.play.sport.slice(0, 400);
   prunePending(S.play, now);
   const medMin = dayKey(now - 200 * DAY);

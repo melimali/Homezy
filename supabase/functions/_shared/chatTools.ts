@@ -49,9 +49,9 @@ export const TOOLS: Tool[] = [
   { name: 'shop_check', d: 'Alışveriş listesindeki ürünleri "alındı" yapar (listeden düşer).', f: { items: { t: 'list', max: 10, len: 40 } } },
   { name: 'shop_remove', d: 'Ürünleri alışveriş listesinden tamamen siler (onay sorulur).', destructive: true, f: { items: { t: 'list', max: 10, len: 40 } } },
   { name: 'journal_add', d: 'Bugünün günlüğüne yazı ekler.', f: { text: { t: 's', max: 400 }, mood: { t: 'e', vals: MOODS, opt: true } } },
-  { name: 'med_add', d: 'İlaç ya da takviye hatırlatması ekler. Doz önermez.', f: {
-    name: { t: 's', max: 40 }, dose: { t: 's', max: 30, opt: true }, times: { t: 'list', max: 4, len: 5, d: 'HH:MM saatleri' }, kind: { t: 'e', vals: ['ilac', 'takviye'], opt: true } } },
-  { name: 'med_log', d: 'Listedeki ilacın bugünkü dozunu alındı ya da atlandı işaretler.', f: {
+  { name: 'med_add', d: 'Takviye (vitamin, mineral vb.) hatırlatması ekler. Miktar önermez.', f: {
+    name: { t: 's', max: 40 }, dose: { t: 's', max: 30, opt: true }, times: { t: 'list', max: 4, len: 5, d: 'HH:MM saatleri' } } },
+  { name: 'med_log', d: 'Listedeki takviyenin bugünkü vaktini alındı ya da atlandı işaretler.', f: {
     med_id: { t: 'ref', of: 'med' }, status: { t: 'e', vals: ['taken', 'skipped'] }, time: { t: 'time', opt: true } } },
   { name: 'water_log', d: 'Bugünkü su bardağı sayısını artırır.', f: { glasses: { t: 'i', min: 1, max: 10 } } },
   { name: 'sport_log', d: 'Spor kaydı ekler.', f: { sport: { t: 'e', vals: SPORT_TYPES }, minutes: { t: 'i', min: 5, max: 300 } } },
@@ -134,7 +134,7 @@ export function validate(name: string, input: unknown, ctx: Ctx): Action | null 
         if (!Array.isArray(v)) return null;
         const list = [...new Set(v.map(x => str(x, f.len)).filter(Boolean))].slice(0, f.max);
         if (!list.length) return null;
-        // Saat listesi gibi biçimli listeler: ilaç saatleri HH:MM olmalı.
+        // Saat listesi gibi biçimli listeler: takviye saatleri HH:MM olmalı.
         if (name === 'med_add' && list.some(x => !TIME_RE.test(x))) return null;
         out[k] = list;
         break;
@@ -146,4 +146,4 @@ export function validate(name: string, input: unknown, ctx: Ctx): Action | null 
 }
 
 /** Araç gerektiren mesajları ayıran kaba süzgeç; sıradan sohbette araç şeması hiç gönderilmez. */
-export const ACTION_RE = /(ekle|eklesene|yaptım|yaptim|tamamla|bitti|bitirdim|ertele|yarına|yarina|\bnot\b|hatırlat|hatirlat|takvim|odak|pomodoro|başlat|baslat|\bsil|çıkar|cikar|kaldır|kaldir|liste|alışveriş|alisveris|market|aldım|aldim|günlük|gunluk|yaz\b|ilaç|ilac|vitamin|takviye|içtim|ictim|bardak|su\b|spor|yürüdüm|yurudum|koştum|kostum|mama|verdim|yıkadım|hissed|moral|modum|\baç\b|\bac\b|git\b|göster|goster|neler|durum|add|done|finished|complete|snooze|postpone|remind|note|calendar|focus|start|delete|remove|shopping|list\b|bought|journal|diary|medic|pill|water|glass|workout|walked|ran\b|fed\b|feel|mood|open|show|every|her \d|günde bir|gunde bir)/i;
+export const ACTION_RE = /(ekle|eklesene|yaptım|yaptim|tamamla|bitti|bitirdim|ertele|yarına|yarina|\bnot\b|hatırlat|hatirlat|takvim|odak|pomodoro|başlat|baslat|\bsil|çıkar|cikar|kaldır|kaldir|liste|alışveriş|alisveris|market|aldım|aldim|günlük|gunluk|yaz\b|vitamin|takviye|içtim|ictim|bardak|su\b|spor|yürüdüm|yurudum|koştum|kostum|mama|verdim|yıkadım|hissed|moral|modum|\baç\b|\bac\b|git\b|göster|goster|neler|durum|add|done|finished|complete|snooze|postpone|remind|note|calendar|focus|start|delete|remove|shopping|list\b|bought|journal|diary|medic|pill|water|glass|workout|walked|ran\b|fed\b|feel|mood|open|show|every|her \d|günde bir|gunde bir)/i;

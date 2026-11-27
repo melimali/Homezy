@@ -28,7 +28,7 @@ export const DONE = 'yaptim';
 export const SKIP = 'yapmadim';
 export const FEEDBACK_CHANNEL = 'geri-bildirim';
 
-/** İlaç, su ve spor hatırlatmaları: uygulamayı açmadan cevaplanır. */
+/** Takviye, su ve spor hatırlatmaları: uygulamayı açmadan cevaplanır. */
 export const MED_CATEGORY = 'ilac-cevap';
 export const WATER_CATEGORY = 'su-cevap';
 export const SPORT_CATEGORY = 'spor-cevap';
@@ -40,7 +40,7 @@ export const LATER = 'ertele';
 export const SNOOZE_MIN = { med: 10, water: 30, sport: 60, pet: 60 } as const;
 
 export type ReminderKind = keyof typeof SNOOZE_MIN;
-/** Hatırlatma bildirimine konan veri. `key`: ilaçta doz anahtarı. `snooze`: ertelenmiş kopya (yeniden zamanlamada silinmez). */
+/** Hatırlatma bildirimine konan veri. `key`: takviyede vakit anahtarı. `snooze`: ertelenmiş kopya (yeniden zamanlamada silinmez). */
 export type ReminderData = { url: string; kind: ReminderKind; key?: string; premium: boolean; snooze?: boolean };
 
 export type TaskAction = typeof DONE | typeof SKIP;
@@ -64,7 +64,7 @@ export async function ensureCategories(N: NotificationsModule) {
     { identifier: SKIP, buttonTitle: tx('🌙 Yarın'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(MED_CATEGORY, [
-    { identifier: TAKEN, buttonTitle: tx('💊 Aldım'), options: opts },
+    { identifier: TAKEN, buttonTitle: tx('🌿 Aldım'), options: opts },
     { identifier: LATER, buttonTitle: tx('⏰ 10 dk sonra hatırlat'), options: opts },
   ]);
   await N.setNotificationCategoryAsync(WATER_CATEGORY, [
@@ -100,13 +100,13 @@ export function reminderDataOf(content: { data?: unknown; dataString?: unknown }
 
 export type ReminderOutcome = { title: string; body: string } | null;
 
-/** İlaç aldım / su içtim / spor yaptım. Aynı cevap iki kez gelse de sonuç değişmez. */
+/** Takviye aldım / su içtim / spor yaptım. Aynı cevap iki kez gelse de sonuç değişmez. */
 export function applyReminderAction(D: AppState, d: ReminderData, now: number, mult = 1): ReminderOutcome {
   if (d.kind === 'med') {
     if (!d.key) return null;
     markDose(D, dayKey(now), d.key, 'taken', now);
     const med = D.meds.find(m => d.key!.startsWith(`${m.id}@`));
-    return { title: `✅ ${med?.name ?? 'İlaç'}`, body: 'Aldın olarak işaretlendi. Moka gurur duyuyor ☕' };
+    return { title: `✅ ${med?.name ?? 'Takviye'}`, body: 'Aldın olarak işaretlendi. Moka gurur duyuyor ☕' };
   }
   if (d.kind === 'pet') {
     const f = d.key ? markPetDone(D, ...(d.key.split('@') as [string, string]), now) : null;

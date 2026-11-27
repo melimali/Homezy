@@ -64,7 +64,7 @@ function Tile({ label, value, sub, subColor, route, action, bar, c, tall }: Tile
 
 type Props = { data: MiniData; height: number; note?: string | null; c: WColors };
 
-/** Küçük çoklu widget: 2×2 karo (su, ilaç, market, aktif görev); yüksekse üstte Moka başlığı. */
+/** Küçük çoklu widget: 2×2 karo (su, takviye, market, aktif görev); yüksekse üstte Moka başlığı. */
 export function MiniWidget({ data, height, note, c }: Props) {
   const tall = height >= 170;
   const { water, med, shop, task } = data;
@@ -82,20 +82,20 @@ export function MiniWidget({ data, height, note, c }: Props) {
   );
 
   const medTile = !med ? (
-    <Tile c={c} tall={tall} route="ilac" label={tx('💊 İlaç')} value={tx('Ekle')} sub={tx('Hatırlatıcı kur')} />
+    <Tile c={c} tall={tall} route="ilac" label={tx('🌿 Takviye')} value={tx('Ekle')} sub={tx('Hatırlatıcı kur')} />
   ) : med.name ? (
     <Tile
       c={c}
       tall={tall}
       route="ilac"
-      label={`${tx('💊 İlaç')} · ${med.time}`}
+      label={`${tx('🌿 Takviye')} · ${med.time}`}
       value={med.name}
       sub={med.late ? tx('Vakti geçti') : `${med.total - med.left}/${med.total} ${tx('alındı')}`}
       subColor={med.late ? c.late : c.muted}
       action={{ name: MINI_MED, data: { key: med.key }, text: '✓', label: `${med.name}: ${tx('Aldım')}` }}
     />
   ) : (
-    <Tile c={c} tall={tall} route="ilac" label={tx('💊 İlaç')} value={tx('Hepsi tamam ✓')} sub={`${med.total}/${med.total} ${tx('alındı')}`} />
+    <Tile c={c} tall={tall} route="ilac" label={tx('🌿 Takviye')} value={tx('Hepsi tamam ✓')} sub={`${med.total}/${med.total} ${tx('alındı')}`} />
   );
 
   const shopTile = shop ? (

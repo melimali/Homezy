@@ -148,7 +148,7 @@ const noPhotos = (mod: AppState['mod']) =>
 function forCloud(S: AppState): AppState {
   const noCarePhotos = (care: AppState['care']) => (care || []).map(t => ({ ...t, photo: null }));
   return {
-    // İlaç bilgisi sağlık verisi; sadece telefonda kalır.
+    // Takviye bilgisi sadece telefonda kalır.
     ...S, meds: [], medLog: {}, mod: noPhotos(S.mod), care: noCarePhotos(S.care),
     others: (S.others ?? []).map(h => ({ ...h, mod: noPhotos(h.mod), care: noCarePhotos(h.care) })),
   };

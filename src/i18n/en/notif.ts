@@ -1,13 +1,13 @@
 /** Bildirim düğmeleri ve çeşitlendirilmiş hatırlatma metinleri. `{}` değişken yeridir. */
 export const EN_NOTIF: Record<string, string> = {
-  '💊 Aldım': '💊 Taken',
+  '🌿 Aldım': '🌿 Taken',
   '⏰ 10 dk sonra hatırlat': '⏰ Remind me in 10 min',
   '💧 İçtim': '💧 Drank',
   '⏰ 30 dk sonra': '⏰ In 30 min',
   '✅ Yaptım': '✅ Done',
   '⏰ 1 saat sonra': '⏰ In 1 hour',
   'Aldın olarak işaretlendi. Moka gurur duyuyor ☕': 'Marked as taken. Moka is proud of you ☕',
-  'İlaç': 'Medication',
+  'Takviye': 'Supplement',
   '{}/{} bardak. Aferin sana!': '{}/{} glasses. Well done!',
   '💧 Su': '💧 Water',
   '🏃 Spor': '🏃 Workout',

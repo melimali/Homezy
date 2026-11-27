@@ -155,9 +155,9 @@ const EXEC: Record<string, Exec> = {
     const name = txt(a.name, 40);
     const times = list(a.times, 4, 5).filter(t => /^([01]\d|2[0-3]):[0-5]\d$/.test(t));
     if (!name || !times.length) return FAIL;
-    const med = newMed(name, txt(a.dose, 30), times, [], now, a.kind === 'takviye' ? 'takviye' : 'ilac');
+    const med = newMed(name, txt(a.dose, 30), times, [], now);
     D.meds.push(med);
-    return { ok: true, line: `💊 ${name}: ${times.join(', ')} hatırlatması`, undo: X => removeMed(X, med.id) };
+    return { ok: true, line: `🌿 ${name}: ${times.join(', ')} hatırlatması`, undo: X => removeMed(X, med.id) };
   },
   med_log(D, a, { now }) {
     const med = D.meds.find(m => m.id === txt(a.med_id, 40));

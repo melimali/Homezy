@@ -25,7 +25,7 @@ export const BLOCKS: Record<TabId, BlockDef[]> = {
     { id: 'filtre', title: 'Oda filtreleri', emoji: '🔎' },
     { id: 'liste', title: 'Bugünün işleri', emoji: '✅', fixed: true },
     { id: 'bonus', title: 'Seçim ve bonus işler', emoji: '🎁', off: true },
-    { id: 'ilac', title: 'İlaç ve evcil hayvan', emoji: '💊' },
+    { id: 'ilac', title: 'Takviye ve evcil hayvan', emoji: '🌿' },
     { id: 'hedef', title: 'Günlük hedefler', emoji: '⭐' },
     { id: 'daha', title: 'Yemek, kendine zaman, büyüme', emoji: '✨', off: true },
     { id: 'buhafta', title: 'Bu hafta', emoji: '🗓️' },

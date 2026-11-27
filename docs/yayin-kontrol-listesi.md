@@ -101,7 +101,7 @@ EAS bulut derlemesi `.env.local` dosyasını **görmez**. Takip edilen `.env` do
 | Reklam beyanı: Evet | 🖐 |
 | Hedef kitle: 13+ (çocuk uygulaması değil) | 🖐 |
 | Hesap silme web adresi (Play zorunlu) | 🖐 form alanına `…/hesap-silme` |
-| Sağlık uygulaması beyanı (spor/ilaç notları) | ❓ Play "Sağlık" formunda uygulama sağlık işlevi sayıyorsa "evet" demek gerekebilir; spor günlüğü basit, tıbbi iddia yok |
+| Sağlık uygulaması beyanı (spor ve takviye hatırlatmaları) | ❓ Play "Sağlık" formunda uygulama sağlık işlevi sayıyorsa "evet" demek gerekebilir; spor günlüğü basit, tıbbi iddia yok |
 | Avukat görüşü (KVKK/VERBİS, GDPR temsilci) | ❓ önerilir, yayını engellemez |
 
 ## 7. Mağaza içeriği

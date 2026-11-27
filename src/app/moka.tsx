@@ -510,6 +510,8 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
   const [opening] = useState(() => openingLine({ hour: new Date().getHours(), done: room.done, due: day.due, late: day.late, total: day.total, away: room.away }, Math.floor(Math.random() * 97)));
   // İlk ziyaret (3 adım): Moka uyur, dokununca uyanır, sonra sürahisini tanıtır.
   const [intro, setIntro] = useState<'tap' | 'hello' | 'pot' | null>(() => (S.play.roomIntro ? null : 'tap'));
+  const introRef = useRef(intro);
+  introRef.current = intro;
   const [woke, setWoke] = useState(() => !opening.sleeping && !!S.play.roomIntro);
   const fur = S.play.mokaFur ?? null;
   const [lampOff, setLampOff] = useState(false);
@@ -618,7 +620,11 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
       setWoke(true);
       setIntro('hello');
       later(() => { setIntro(i => (i === 'hello' ? 'pot' : i)); setBrew(b => b + 1); }, 3800);
-      later(() => setIntro(i => { if (i === 'pot') update(D0 => void (D0.play.roomIntro = true)); return i === 'pot' ? null : i; }), 9500);
+      later(() => {
+        if (introRef.current !== 'pot') return;
+        update(D0 => void (D0.play.roomIntro = true));
+        setIntro(null);
+      }, 9500);
       return;
     }
     if (intro) return;
@@ -650,7 +656,11 @@ function MokaChatSession({ owner, status }: { owner: string; status: AuthStatus 
         setWoke(true);
         setIntro('hello');
         later(() => { setIntro(i => (i === 'hello' ? 'pot' : i)); setBrew(b => b + 1); }, 3800);
-        later(() => setIntro(i => { if (i === 'pot') update(D0 => void (D0.play.roomIntro = true)); return i === 'pot' ? null : i; }), 9500);
+        later(() => {
+          if (introRef.current !== 'pot') return;
+          update(D0 => void (D0.play.roomIntro = true));
+          setIntro(null);
+        }, 9500);
       } else if (!intro) {
         setWoke(true);
         say(line('back', rnd(5)), 'cheer', 4500);

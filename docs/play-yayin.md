@@ -73,3 +73,16 @@ Kod tarafı hazır. Aşağıdakiler Melih'in elle yapacakları, sırasıyla. Kim
 ## Takviye takibi, tıbbi kategori değil (2026-11-27)
 
 İlaç takibi kaldırıldı. Uygulamada artık sadece **takviye (vitamin, mineral vb.) hatırlatıcısı** var. Amaç: Google Play'in ilaç yönetimini "tıbbi" kategorisinde sayıp kurumsal hesap istemesinden kaçınmak (Melih bireysel hesap). Mağaza metinlerinde, ekran görüntülerinde ve formlarda "ilaç, doz, reçete, tedavi" kelimeleri geçmemeli. Sağlık beyanı formunda: sadece spor ve basit takviye hatırlatması, tıbbi işlev yok.
+
+### Play Console elle adımlar (2026-11-27 tarama sonrası)
+
+Kod, çeviriler, mağaza metinleri, gizlilik/koşullar ve mağaza görselleri tarandı: ilaç/doz/reçete/tedavi/medication ifadesi kalmadı (v7 ve docs/magaza görselleri temiz, Bugün'de ilaç kartı yok).
+
+1. Uygulama içeriği > Sağlık uygulamaları: **Medical boş bırak.** Sadece Activity and fitness (spor kaydı) ve gerekirse Sleep/Stress seç; "Medical / ilaç yönetimi" işaretleme.
+2. Önceki reddedilen sürümü değil, yeni AAB'yi yükle (ilaç takibi kaldırılmış sürüm; AAB'yi onaylarsan yenisini derleriz). Eski AAB `app-release.aab` ilaç içerebilir, kullanma.
+3. Data safety: sağlık/fitness bilgisi "toplanmıyor" kalsın (takviye kayıtları sadece telefonda). Form `docs/yasal/magaza-formlari.md` ile aynı olmalı.
+4. Mağaza sayfası: açıklamada ilaç/tedavi/sağlık iddiası yok, `docs/magaza-metni.md` metnini kullan.
+5. Reklam beyanı: Evet. Gizlilik URL: https://themeikai.com/homezy/gizlilik. Hesap silme web adresi: formda doldur.
+6. İçerik derecelendirme anketini yeniden doldur (yapay zekâ sohbeti: evet).
+7. Hedef kitle 13+, Aile programı hayır. Trader durumu: Trader, 2027-02-01'e kadar beyan.
+8. Düzeltmeyi gönder, reddedilirse itirazda "ilaç takibi kaldırıldı, sadece takviye hatırlatıcısı" yaz.

@@ -1,5 +1,6 @@
 {
   "NSCameraUsageDescription": "O Homezy precisa da câmera para você fotografar sua geladeira e o seu dia.",
   "NSPhotoLibraryUsageDescription": "O Homezy precisa acessar suas fotos para você escolher imagens da geladeira e do diário na galeria.",
-  "NSLocationWhenInUseUsageDescription": "Sua localização é usada apenas para mostrar o céu e o clima sobre a sua casa. Ela não é armazenada."
+  "NSLocationWhenInUseUsageDescription": "Sua localização é usada apenas para mostrar o céu e o clima sobre a sua casa. Ela não é armazenada.",
+  "NSUserTrackingUsageDescription": "Pedimos para mostrar anúncios mais relevantes. Se você recusar, os anúncios serão exibidos sem personalização."
 }

@@ -131,7 +131,7 @@ export function Ring({ pct, size = 112, stroke = 13, color, label, emoji }: { pc
       <View style={[StyleSheet.absoluteFill, st.center]}>
         {emoji ? <Text style={{ fontSize: size * 0.16 }}>{emoji}</Text> : null}
         <Text style={[st.ringN, { color: c.ink, fontSize: size * 0.24 }]}>%{shown}</Text>
-        {label ? <Text style={[st.ringL, { color: c.muted }]}>{label}</Text> : null}
+        {label ? <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[st.ringL, { color: c.muted, maxWidth: size - stroke * 2 - 8, textAlign: 'center' }]}>{label}</Text> : null}
       </View>
     </View>
   );

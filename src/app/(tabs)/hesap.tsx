@@ -428,13 +428,13 @@ export default function Hesap() {
         {([
           { e: '☕', n: hp.streak, l: 'gün taze', tint: c.peachSoft },
           { e: '⭐', n: state.play.points, l: 'puan', tint: c.lavenderSoft },
-          { e: '✅', n: weekDone, l: 'bu hafta', tint: c.sageSoft },
+          { e: '✅', n: weekDone, l: 'Bu hafta', tint: c.sageSoft },
           { e: '🏆', n: earned, l: 'rozet', tint: c.roseSoft },
         ]).map(x => (
           <View key={x.l} style={[st.stat, { backgroundColor: x.tint }]}>
             <Text style={{ lineHeight: 29, fontSize: 22 }}>{x.e}</Text>
             <Text style={{ fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 26, color: c.ink }}>{x.n}</Text>
-            <T v="tiny" numberOfLines={2}>{x.l}</T>
+            <T v="tiny" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ textAlign: 'center', alignSelf: 'stretch' }}>{x.l}</T>
           </View>
         ))}
       </Appear>
@@ -560,7 +560,7 @@ const TILE_KEY: Record<string, string> = { saglik: 'saglik', ev: 'plan', hesap: 
 const st = StyleSheet.create({
   fld: { borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, fontFamily: fonts.body },
   stats: { flexDirection: 'row', gap: 8 },
-  stat: { flex: 1, borderRadius: radius.tile, paddingVertical: 14, alignItems: 'center', gap: 2, ...elevation.md },
+  stat: { flex: 1, minWidth: 0, borderRadius: radius.tile, paddingVertical: 14, paddingHorizontal: 4, alignItems: 'center', gap: 2, ...elevation.md },
   hero: { borderRadius: radius.card, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14, ...elevation.md },
   pinsCard: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 8, flexDirection: 'row', gap: 4 },
   sec: { paddingHorizontal: 4, paddingLeft: 6 },

@@ -9,7 +9,7 @@ import { adherence, dosesOn, doseState, history, markDose, MED_DISCLAIMER, misse
 import { dayKey, dayTs } from '@/domain/play';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { dateLocale } from '@/i18n/runtime';
+import { dateLocale, tx } from '@/i18n/runtime';
 import { fonts, radius, useColors } from '@/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -76,7 +76,7 @@ export default function Ilac() {
               return (
                 <View key={d.key} style={[st.dose, { backgroundColor: bg }]}>
                   <Text style={{ lineHeight: 31, fontSize: 24 }}>{state === 'taken' ? '✅' : state === 'skipped' ? '⏭️' : '🌿'}</Text>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flexGrow: 1, flexBasis: 130, flexShrink: 1 }}>
                     <T v="bold" style={{ fontSize: 15 }}>{d.med.name}</T>
                     <T v="small">
                       {d.time}{d.med.dose ? ` · ${d.med.dose}` : ''}
@@ -159,7 +159,7 @@ function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => voi
     <Sheet open={open} onClose={onClose} scroll pose="happy">
       <T v="h2">Yeni takviye</T>
       <View style={st.wrap}>
-        {['D vitamini', 'C vitamini', 'Omega-3', 'Magnezyum', 'Demir', 'Probiyotik'].map(n => <Chip key={n} label={n} on={name === n} onPress={() => setName(n)} />)}
+        {['D vitamini', 'C vitamini', 'Omega-3', 'Magnezyum', 'Demir', 'Probiyotik'].map(n => <Chip key={n} label={n} on={name === tx(n)} onPress={() => setName(tx(n))} />)}
       </View>
       <Field value={name} onChangeText={setName} placeholder="Takviye adı (ör. D vitamini)" maxLength={40} accessibilityLabel="Ad" />
       <Field value={dose} onChangeText={setDose} placeholder="Miktar (ör. 1 kapsül, 1 ölçek)" maxLength={30} accessibilityLabel="Miktar" />
@@ -194,7 +194,7 @@ function AddSheet({ open, onClose, onSave }: { open: boolean; onClose: () => voi
 const st = StyleSheet.create({
   moka: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   mokaImg: { width: 56, height: 56 },
-  dose: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: radius.tile, padding: 12 },
+  dose: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, borderRadius: radius.tile, padding: 12 },
   week: { flexDirection: 'row', gap: 6 },
   barBox: { width: '100%', height: 70, borderRadius: 12, justifyContent: 'flex-end', overflow: 'hidden' },
   bar: { width: '100%', borderRadius: 12 },

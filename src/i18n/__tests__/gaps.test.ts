@@ -17,7 +17,7 @@ function walk(d: string, out: string[] = []) {
 }
 
 (process.env.GAPS_OUT ? it : it.skip)('rapor: çevrilmemiş Türkçe metinler', () => {
-  setLang('en');
+  setLang(process.env.GAPS_LANG || 'en');
   const miss = new Map<string, string>();
   const re = /(['"`])((?:(?!\1)[^\\\n]|\\.){6,160})\1/g;
   for (const f of walk(path.join(__dirname, '../..'))) {

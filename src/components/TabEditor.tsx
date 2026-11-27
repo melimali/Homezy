@@ -14,8 +14,8 @@ export function EditTabBtn({ tab, wide }: { tab: TabId; wide?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Squish onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={tx('Sekmeyi düzenle')} style={[st.btn, { backgroundColor: c.surface2 }, wide && { maxWidth: undefined, paddingHorizontal: 18, paddingVertical: 9 }]}>
-        <Text style={[st.btnT, { color: c.ink }]}>✏️ {tx('Sekmeyi düzenle')}</Text>
+      <Squish onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={tx('Sekmeyi düzenle')} style={[st.btn, { backgroundColor: c.surface2 }, !wide && { paddingHorizontal: 12, paddingVertical: 8, minWidth: 40, minHeight: 36, justifyContent: 'center' }, wide && { maxWidth: undefined, paddingHorizontal: 18, paddingVertical: 9 }]}>
+        <Text numberOfLines={1} style={[st.btnT, { color: c.ink }, !wide && { fontSize: 16, lineHeight: 20 }]}>{wide ? `✏️ ${tx('Sekmeyi düzenle')}` : '✏️'}</Text>
       </Squish>
       {open && <TabEditor tab={tab} onClose={() => setOpen(false)} />}
     </>
@@ -72,7 +72,7 @@ function Arrow({ ch, label, off, onPress }: { ch: string; label: string; off: bo
 }
 
 const st = StyleSheet.create({
-  btn: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'center', maxWidth: 100 },
+  btn: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'center', maxWidth: 150, flexShrink: 1 },
   btnT: { fontFamily: fonts.bodyBlack, fontSize: 11, lineHeight: 13, textAlign: 'center' },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { maxHeight: '82%', borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card, padding: 20, gap: 6 },

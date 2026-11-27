@@ -7,6 +7,7 @@ import {
   Easing,
   Image,
   Keyboard,
+  I18nManager,
   Modal,
   Platform,
   Pressable,
@@ -189,7 +190,10 @@ export function AppHeader() {
 
 /** Sola bakan ok (geri). */
 export function Chevron({ color, size = 18, dir = 'left' }: { color: string; size?: number; dir?: 'left' | 'right' | 'down' }) {
-  const d = dir === 'left' ? 'M15 5l-7 7 7 7' : dir === 'right' ? 'M9 5l7 7-7 7' : 'M5 9l7 7 7-7';
+  // Sağdan sola dillerde (Arapça) ileri/geri okları aynalanır; swapLeftAndRightInRTL kapalı olduğu için elle.
+  const flip = I18nManager.isRTL && dir !== 'down';
+  const eff = flip ? (dir === 'left' ? 'right' : 'left') : dir;
+  const d = eff === 'left' ? 'M15 5l-7 7 7 7' : eff === 'right' ? 'M9 5l7 7-7 7' : 'M5 9l7 7 7-7';
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
       <Path d={d} stroke={color} strokeWidth={2.6} fill="none" strokeLinecap="round" strokeLinejoin="round" />

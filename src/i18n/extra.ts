@@ -3,6 +3,7 @@
  * Türkçe metin anahtardır; runtime.ts bunları ilgili dilin sözlüğünün üstüne bindirir.
  */
 import { KAHVE_ROWS } from './kahve';
+import { BAHCE_ROWS } from './bahce';
 import { NUDGE_ROWS } from './nudge';
 import { BOND_ROWS } from './bond';
 import { KOZMETIK_ROWS } from './kozmetik';
@@ -101,4 +102,4 @@ export type ExtraLang = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'ja' | 'ko' | 'ar';
 const ORDER: ExtraLang[] = ['en', 'de', 'es', 'fr', 'pt', 'ja', 'ko', 'ar'];
 
 export const EXTRA: Record<ExtraLang, Record<string, string>> = { en: {}, de: {}, es: {}, fr: {}, pt: {}, ja: {}, ko: {}, ar: {} };
-for (const row of [...ROWS, ...ROZET_ROWS, ...MOKA_ODA_ROWS, ...KAHVE_ROWS, ...NUDGE_ROWS, ...KOZMETIK_ROWS, ...BOND_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });
+for (const row of [...ROWS, ...ROZET_ROWS, ...MOKA_ODA_ROWS, ...KAHVE_ROWS, ...BAHCE_ROWS, ...NUDGE_ROWS, ...KOZMETIK_ROWS, ...BOND_ROWS]) ORDER.forEach((l, i) => { EXTRA[l][row[0]] = row[i + 1]!; });

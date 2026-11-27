@@ -1,13 +1,13 @@
 import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { seatedFor } from '@/constants/mimik';
 import { PlantArt } from '@/components/GardenArt';
 import { GardenGate } from '@/components/GardenGate';
 import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
-import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
 import { GardenIsland } from '@/components/GardenIsland';
 import { GardenScene, phaseOf } from '@/components/GardenScene';
@@ -20,7 +20,7 @@ import {
 } from '@/domain/garden';
 import { DECOR, PERSONAS, type Extra } from '@/domain/items';
 import { dayKey, houseProgress } from '@/domain/play';
-import type { MokaPose } from '@/constants/moka';
+import { tx } from '@/i18n/runtime';
 import { useNow } from '@/hooks/useNow';
 import { sfx } from '@/lib/sfx';
 import { useSky } from '@/lib/weather';
@@ -77,7 +77,6 @@ export default function Bahce() {
   const anyBloom = grown.some(x => x.p.bloomed);
   const growing = grown.filter(x => x.f && !x.p.bloomed);
   const hasHammock = P.owned.includes('hamak');
-  const pose: MokaPose = anyBloom ? 'party' : growing.length ? 'plants' : hasHammock ? 'rest' : 'cozy_plant';
   const message = wilt && G.plots.length
     ? 'Çiçekler susadı. Bir iş yap, hemen canlanırlar 🥀'
     : anyBloom
@@ -113,13 +112,11 @@ export default function Bahce() {
       <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
         <GardenScene hour={hour} sky={sky} blooms={blooms} />
         {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
-        <Flutter emoji="🦋" top="14%" dur={8500} />
+        <Flutter emoji="🦋" top="34%" dur={8500} />
         <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
         {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
         <View style={styles.bedTop}>
-          <Breathe amp={0.03} dur={2600}>
-            <MokaMascot pose={pose} size="md" showBubble={false} />
-          </Breathe>
+          <Image source={seatedFor(S.play.mokaFur ?? null)[wilt && G.plots.length ? 'sad' : anyBloom ? 'cheer' : 'happy']} style={{ width: 120, height: 120 }} resizeMode="contain" accessibilityLabel="Moka" accessibilityIgnoresInvertColors />
           <Glass style={styles.bubble} intensity={30}>
             <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
           </Glass>
@@ -352,7 +349,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
       <Squish onPress={() => onSelect(f)} accessibilityRole="button" accessibilityLabel={`${f.name} seç`} style={{ flex: 1, gap: 2 }}>
         <Text style={[styles.rowT, { color: month ? c.glowInk : c.ink }]}>{f.name}{f.premium ? ' 👑' : ''}</Text>
         <Text style={[styles.rowS, { color: month ? c.glowInk : c.muted }]}>
-          {month ? '🌟 Ayın çiçeği · ' : ''}{f.grow} büyümede açar
+          {month ? '🌟 ' + tx('Ayın çiçeği · {} büyümede açar').replace('{}', String(f.grow)) : tx('{} büyümede açar').replace('{}', String(f.grow))}
         </Text>
       </Squish>
       {locked ? (
@@ -520,7 +517,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
   glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
-  bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  bedTop: { zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },

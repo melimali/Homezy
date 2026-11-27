@@ -61,12 +61,12 @@ function textStyle(v: Variant, c: Colors): TextStyle {
     case 'h2': return { fontFamily: fonts.displayBold, fontSize: type.h2, lineHeight: 26, color: c.ink, letterSpacing: -0.2 };
     case 'h3': return { fontFamily: fonts.displayBold, fontSize: type.h3, lineHeight: 26, color: c.ink };
     case 'bold': return { fontFamily: fonts.bodyBlack, fontSize: type.bold, lineHeight: 22, color: c.ink };
-    case 'small': return { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19, color: c.muted };
+    case 'small': return { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 20, color: c.muted };
     case 'tiny': return { fontFamily: fonts.bodyBold, fontSize: type.tiny, lineHeight: 16, color: c.muted };
     case 'eyebrow':
       return { fontFamily: fonts.bodyBlack, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: c.warm, marginBottom: 4 };
     case 'lead': return { fontFamily: fonts.bodyBold, fontSize: type.lead, lineHeight: 22, color: c.muted, marginTop: 2 };
-    default: return { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 22, color: c.ink };
+    default: return { fontFamily: fonts.bodyBold, fontSize: 15.5, lineHeight: 23, color: c.ink };
   }
 }
 
@@ -470,6 +470,7 @@ export function Btn({
         block && { alignSelf: 'stretch' },
         { backgroundColor: bg },
         kind === 'ghost' && { borderWidth: 1.5, borderColor: c.line, ...elevation.none },
+        (kind === 'primary' || kind === 'danger') && { borderBottomWidth: 3, borderBottomColor: 'rgba(0,0,0,0.18)' },
         kind === 'primary' && !small && { shadowColor: c.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.28, shadowRadius: 12, elevation: 4 },
         off && { opacity: 0.5, ...elevation.none },
         style,
@@ -478,7 +479,7 @@ export function Btn({
       {loading ? <Dots color={fg} /> : (
         <>
           {typeof icon === 'string' ? <Text style={{ fontSize: small ? 15 : 18 }}>{icon}</Text> : icon}
-          <Text maxFontSizeMultiplier={type.maxScale} numberOfLines={2} style={{ flexShrink: 1, color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 14 : 16, letterSpacing: 0.2, textAlign: 'center' }}>{label}</Text>
+          <Text maxFontSizeMultiplier={type.maxScale} numberOfLines={2} style={{ flexShrink: 1, color: fg, fontFamily: fonts.bodyBlack, fontSize: small ? 14.5 : 17, lineHeight: small ? 19 : 22, letterSpacing: 0.2, textAlign: 'center' }}>{label}</Text>
         </>
       )}
     </Squish>

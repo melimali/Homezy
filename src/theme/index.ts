@@ -144,3 +144,9 @@ export const motion = {
   /** Beliriş. */
   enter: { friction: 8, tension: 70 },
 } as const;
+
+/** Switch düğmesi: koyu temada kart rengiyle aynı olup görünmez kalmasın. */
+export const useThumbColor = () => {
+  const c = useColors();
+  return useIsDark() ? c.ink : c.surface;
+};

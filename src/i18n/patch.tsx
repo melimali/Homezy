@@ -5,7 +5,7 @@
 import { createElement, forwardRef, type ComponentType, type ReactNode } from 'react';
 import type * as RNTypes from 'react-native';
 
-import { tx } from './runtime';
+import { dateLocale, tx } from './runtime';
 
 function translateChildren(children: unknown): unknown {
   if (typeof children === 'string') return tx(children);
@@ -32,15 +32,25 @@ export function installTranslationPatch() {
   const OrigText = RN.Text as unknown as ComponentType<Record<string, unknown>>;
   const OrigInput = RN.TextInput as unknown as ComponentType<Record<string, unknown>>;
 
-  const PText = ({ children, noTx, ...props }: Record<string, unknown>) =>
-    createElement(
+  // textTransform: 'uppercase' cihaz diline göre büyütür (Türkçe telefonda "i" → "İ"); uygulama diline göre elle büyüt.
+  const upper = (style: unknown, kids: unknown) => {
+    const flat = RN.StyleSheet.flatten(style as never) as { textTransform?: string } | undefined;
+    if (flat?.textTransform !== 'uppercase' || typeof kids !== 'string') return null;
+    return kids.toLocaleUpperCase(dateLocale());
+  };
+  const PText = ({ children, noTx, ...props }: Record<string, unknown>) => {
+    const kids = noTx ? children : translateChildren(children);
+    const up = upper(props.style, kids);
+    return createElement(
       OrigText,
       {
         ...props,
+        ...(up !== null ? { style: [props.style, { textTransform: 'none' }] } : null),
         ...(typeof props.accessibilityLabel === 'string' ? { accessibilityLabel: tx(props.accessibilityLabel) } : null),
       },
-      (noTx ? children : translateChildren(children)) as ReactNode,
+      (up !== null ? up : kids) as ReactNode,
     );
+  };
   const PInput = (props: Record<string, unknown>) =>
     createElement(OrigInput, {
       ...props,

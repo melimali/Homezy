@@ -9,7 +9,7 @@ import { BackLink, Btn, Card, Divider, ListRow, Screen, T } from '@/components/u
 import { aiConsent, locationOk } from '@/lib/consent';
 import { LEGAL, legalUrl, openLink } from '@/lib/links';
 import { useStore } from '@/store/AppStore';
-import { fonts, useColors } from '@/theme';
+import { fonts, useColors, useThumbColor } from '@/theme';
 
 /** Üçüncü taraf bileşenler ve lisansları. Yeni paket eklenince bu listeyi de güncelle (docs/yasal/README.md). */
 const CREDITS: { name: string; what: string; license: string }[] = [
@@ -125,13 +125,14 @@ export default function Yasal() {
 
 function Row({ label, sub, value, onChange }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
   const c = useColors();
+  const thumb = useThumbColor();
   return (
     <View style={st.row}>
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: c.ink }}>{label}</Text>
         <T v="tiny">{sub}</T>
       </View>
-      <Switch value={value} onValueChange={onChange} accessibilityLabel={label} trackColor={{ true: c.hi }} />
+      <Switch value={value} onValueChange={onChange} accessibilityLabel={label} trackColor={{ true: c.hi }} thumbColor={thumb} />
     </View>
   );
 }

@@ -12,7 +12,7 @@ import { useNow } from '@/hooks/useNow';
 import { usePlay } from '@/play/usePlay';
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, useThumbColor } from '@/theme';
 
 const SPORTS: [string, string][] = [
   ['🚶', 'Yürüyüş'], ['🏃', 'Koşu'], ['🚴', 'Bisiklet'], ['🏊', 'Yüzme'],
@@ -27,6 +27,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 /** Spor: bugün ne yaptın, bu hafta kaç gün, hatırlatma günleri ve saati. */
 export default function Spor() {
   const c = useColors();
+  const thumb = useThumbColor();
   const now = useNow();
   const { state: S, update } = useStore();
   const { award } = usePlay();
@@ -169,7 +170,7 @@ export default function Spor() {
             onValueChange={v => setS('sport', v)}
             accessibilityLabel="Spor hatırlatması"
             trackColor={{ true: c.hi, false: c.line }}
-            thumbColor={c.surface}
+            thumbColor={thumb}
             ios_backgroundColor={c.line}
           />
         </View>

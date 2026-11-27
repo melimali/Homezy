@@ -140,7 +140,7 @@ export const PAYWALL_COPY = {
     skip: 'Vorerst kostenlos weitermachen',
     unitY: 'Jahr', unitM: 'Monat',
     legal: (plan: string, price: string, unit: string, trial: number) =>
-      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Die ersten ${trial} Tage sind kostenlos; wenn du nicht vor Ende der Testphase kündigst, werden ${price}/${unit} berechnet. ` : ''}Die Zahlung wird bei Kaufbestätigung deinem Apple-ID- bzw. Google-Play-Konto belastet. Das Abo verlängert sich automatisch jeden ${unit}, es sei denn, es wird mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt. Verwaltung und Kündigung in den Abo-Einstellungen von App Store / Google Play. Deine Kartendaten erhalten wir nie. Mit dem Abschluss akzeptierst du die Nutzungsbedingungen (einschließlich Apples Standard-EULA) und die Datenschutzerklärung.`,
+      `Homezy Premium (${plan}): ${price}/${unit}. ${trial ? `Die ersten ${trial} Tage sind kostenlos; wenn du nicht vor Ende der Testphase kündigst, werden ${price}/${unit} berechnet. ` : ''}Die Zahlung wird bei Kaufbestätigung deinem Apple-ID- bzw. Google-Play-Konto belastet. Das Abo verlängert sich automatisch jeweils um die gewählte Laufzeit (${unit}), es sei denn, es wird mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt. Verwaltung und Kündigung in den Abo-Einstellungen von App Store / Google Play. Deine Kartendaten erhalten wir nie. Mit dem Abschluss akzeptierst du die Nutzungsbedingungen (einschließlich Apples Standard-EULA) und die Datenschutzerklärung.`,
     planY: 'Jährlich', planM: 'Monatlich',
   },
   ja: {

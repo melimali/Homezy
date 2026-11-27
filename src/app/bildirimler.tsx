@@ -11,7 +11,7 @@ import { fmtMinute, getPermission, notificationsAvailable, requestPermission, re
 import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useNow } from '@/hooks/useNow';
 import { useStore } from '@/store/AppStore';
-import { fonts, radius, useColors } from '@/theme';
+import { fonts, radius, useColors, useThumbColor } from '@/theme';
 import { tx } from '@/i18n/runtime';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -234,6 +234,7 @@ function Step({ label, a11y, onPress }: { label: string; a11y: string; onPress: 
 
 function Toggle({ label, sub, value, onChange, first }: { label: string; sub: string; value: boolean; onChange: (v: boolean) => void; first?: boolean }) {
   const c = useColors();
+  const thumb = useThumbColor();
   return (
     <View style={[styles.setRow, { borderTopColor: c.line }, first && { borderTopWidth: 0 }]}>
       <View style={{ flex: 1 }}>
@@ -245,10 +246,10 @@ function Toggle({ label, sub, value, onChange, first }: { label: string; sub: st
         onValueChange={onChange}
         accessibilityLabel={label}
         trackColor={{ true: c.hi, false: c.line }}
-        thumbColor={c.surface}
+        thumbColor={thumb}
         ios_backgroundColor={c.line}
         // react-native-web varsayılan olarak yeşil bir düğme çiziyor.
-        {...(Platform.OS === 'web' ? ({ activeThumbColor: c.surface } as object) : null)}
+        {...(Platform.OS === 'web' ? ({ activeThumbColor: thumb } as object) : null)}
       />
     </View>
   );

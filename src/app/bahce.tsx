@@ -8,7 +8,7 @@ import { Glass } from '@/components/Glass';
 import { LofiPlayerModal } from '@/components/LofiPlayerModal';
 import { MokaMascot } from '@/components/MokaMascot';
 import { useToast } from '@/components/Toast';
-import { Breathe, Flutter, Shower, Sway, Twinkle } from '@/components/gardenFx';
+import { Breathe, Shower, Sway, Twinkle } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
 import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
 import {
@@ -69,7 +69,7 @@ export default function Bahce() {
   const anyBloom = grown.some(x => x.p.bloomed);
   const growing = grown.filter(x => x.f && !x.p.bloomed);
   const hasHammock = P.owned.includes('hamak');
-  const pose: MokaPose = anyBloom ? 'party' : growing.length ? 'plants' : hasHammock ? 'rest' : 'cozy_plant';
+  const pose: MokaPose = anyBloom ? 'party' : growing.length ? 'watering' : hasHammock ? 'rest' : 'cozy_plant';
   const message = anyBloom
     ? 'Çiçek açtı! Albüme al, evinin bahçesine koyayım 🌸'
     : growing.length
@@ -86,96 +86,67 @@ export default function Bahce() {
       <Appear>
         <T v="eyebrow">Puanla bahçe</T>
         <T v="h1">Moka&apos;nın bahçesi 🌷</T>
-        <T v="lead">Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
       </Appear>
 
       <Appear index={1}>
-        <Glass style={styles.wallet}>
-          <Float amp={3} dur={1800}><Text style={{ fontSize: 26 }}>⭐</Text></Float>
-          <Pulse on={P.points}><Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text></Pulse>
-          <Text style={[styles.walletL, { color: c.warm }]}>puanın var</Text>
+        <Glass style={styles.statsCard}>
+          <View style={styles.statsRow}>
+            <View style={styles.wallet}>
+              <Text style={{ fontSize: 22 }}>⭐</Text>
+              <Pulse on={P.points}><Text style={[styles.walletN, { color: c.ink }]}>{P.points}</Text></Pulse>
+            </View>
+            <View style={{ alignItems: 'flex-end', flexShrink: 1 }}>
+              <T v="bold" style={{ color: c.ink, fontSize: 15 }} numberOfLines={1}>{rank.title}</T>
+              <T v="tiny" style={{ color: c.muted }}>{albumTypesCount} / {FLOWERS.length} çiçek</T>
+            </View>
+          </View>
+          <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2 }]}>
+            <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
+          </View>
         </Glass>
       </Appear>
 
-      {/* Plak Çalar */}
-      <Appear index={2} style={{ flexDirection: 'row', gap: 10 }}>
-        <Btn small kind="soft" label="🎵 Plak Çalar (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
-      </Appear>
-
-      <Appear index={3}>
-      <Glass style={styles.statsCard}>
-        <View style={styles.statsRow}>
-          <View style={{ flex: 1 }}>
-            <T v="tiny" style={{ color: c.muted }}>BAHÇE SEVİYESİ</T>
-            <T v="bold" style={{ color: c.ink, fontSize: 16 }}>{rank.title}</T>
+      <Appear index={2}>
+        <View style={[styles.bed, { backgroundColor: c.surface, borderColor: c.line }]}>
+          <View style={styles.bedTop}>
+            <Float amp={4} dur={2800}>
+              <MokaMascot pose={pose} size="md" showBubble={false} />
+            </Float>
+            <View style={[styles.bubble, { backgroundColor: c.surface2 }]}>
+              <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
+            </View>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <T v="tiny" style={{ color: c.muted }}>KOLEKSİYON</T>
-            <T v="bold" style={{ color: c.today, fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
+          <View style={[styles.soil, { backgroundColor: c.surface2 }]}>
+            {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.line }]} />}
+            <View style={styles.plots}>
+              {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
+                x ? (
+                  <Appear key={x.p.id} index={i} style={styles.plotCell}>
+                    <PlotCard plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
+                  </Appear>
+                ) : (
+                  <Appear key={'e' + i} index={i} style={styles.plotCell}>
+                    <Squish onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
+                      <View style={{ opacity: 0.4 }}><PlantArt stage={-1} size={48} /></View>
+                      <Text style={[styles.plotName, { color: c.muted }]}>Boş</Text>
+                    </Squish>
+                  </Appear>
+                ),
+              )}
+            </View>
           </View>
-        </View>
-        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: c.surface2, marginTop: 4 }]}>
-          <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
-        </View>
-      </Glass>
-      </Appear>
-
-      <Appear index={4}>
-      <View style={[styles.bed, { backgroundColor: c.room.balkon }]}>
-        <Float amp={6} dur={5200} style={[styles.blob, { top: -30, right: -20 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.blue }]} />
-        </Float>
-        <Float amp={5} dur={4400} delay={600} style={[styles.blob, { bottom: 40, left: -40 }]}>
-          <View pointerEvents="none" style={[styles.blobIn, { backgroundColor: brand.clay }]} />
-        </Float>
-        <View pointerEvents="none" style={[styles.sky, { backgroundColor: c.surface }]} />
-        <Float amp={3} dur={3800} style={styles.sun}><Text style={{ fontSize: 34 }}>☀️</Text></Float>
-        <Float amp={8} dur={9000} style={[styles.cloud, { top: 22, left: '38%' }]}><Text style={{ fontSize: 26, opacity: 0.85 }}>☁️</Text></Float>
-        <Float amp={6} dur={7000} delay={900} style={[styles.cloud, { top: 60, right: '12%' }]}><Text style={{ fontSize: 20, opacity: 0.7 }}>☁️</Text></Float>
-        <View pointerEvents="none" style={styles.grass}>
-          <Text style={styles.grassT}>🌿🌱🌾🌿🌱🌾🌿🌱🌾🌿🌱🌾</Text>
-        </View>
-        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: c.surface }]} />}
-        <Flutter emoji="🦋" top="14%" dur={8500} />
-        <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
-        {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
-        <View style={styles.bedTop}>
-          <Float amp={5} dur={2600}>
-            <MokaMascot pose={pose} size="md" showBubble={false} />
-          </Float>
-          <Glass style={styles.bubble} intensity={30}>
-            <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
-          </Glass>
-        </View>
-        <View style={styles.plots}>
-          {Array.from({ length: Math.max(maxPlots, grown.length) }, (_, i) => grown[i]).map((x, i) =>
-            x ? (
-              <Appear key={x.p.id} index={i} style={styles.plotCell}>
-                <PlotCard plot={x.p} flower={x.f} g={x.g} on={sel === x.p.id} onPress={() => setSel(sel === x.p.id ? null : x.p.id)} />
-              </Appear>
-            ) : (
-              <Appear key={'e' + i} index={i} style={styles.plotCell}>
-                <Squish onPress={() => setTab('cicek')} accessibilityRole="button" accessibilityLabel="Boş saksı, tohum ek" style={[styles.plot, { width: '100%' }]}>
-                  <Breathe amp={0.06} dur={2000}>
-                    <View style={{ opacity: 0.55 }}><PlantArt stage={-1} size={54} /></View>
-                  </Breathe>
-                  <Text style={[styles.plotName, { color: c.muted }]}>Boş saksı</Text>
-                </Squish>
-              </Appear>
-            ),
+          {(P.owned.includes('sulama') || P.owned.includes('ugurbocegi') || hasHammock) && (
+            <View style={styles.decor} pointerEvents="none">
+              {P.owned.includes('sulama') && <Text style={styles.decorE}>🚿</Text>}
+              {P.owned.includes('ugurbocegi') && <Text style={styles.decorE}>🐞</Text>}
+              {hasHammock && <Text style={styles.decorE}>🌴</Text>}
+            </View>
           )}
+          <Burst fire={fire} />
         </View>
-        <View style={styles.decor} pointerEvents="none">
-          {P.owned.includes('sulama') && <Float amp={2} dur={2600}><Text style={styles.decorE}>🚿</Text></Float>}
-          {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={300}><Text style={styles.decorE}>🐞</Text></Float>}
-          {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
-          {albumTypesCount > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
-          <Float amp={2.5} dur={1900} delay={500}><Text style={styles.decorE}>✨</Text></Float>
-        </View>
-        <Burst fire={fire} />
-      </View>
       </Appear>
       {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
+      <Btn small kind="soft" label="🎵 Plak Çalar" onPress={() => setLofiOpen(true)} style={{ alignSelf: 'center' }} />
 
       <Tabs
         value={tab}
@@ -549,32 +520,25 @@ function Album({ onSelect }: { onSelect: (f: Flower) => void }) {
 }
 
 const styles = StyleSheet.create({
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, justifyContent: 'center' },
-  walletN: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 32 },
-  walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  statsCard: { padding: 20, gap: 8 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 110, opacity: 0.35 },
-  sun: { position: 'absolute', top: 8, left: 12 },
-  cloud: { position: 'absolute' },
-  grass: { position: 'absolute', bottom: -4, left: 0, right: 0, alignItems: 'center', opacity: 0.7 },
-  grassT: { fontSize: 22, letterSpacing: 2 },
-  bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
-  blob: { position: 'absolute', width: 150, height: 150, opacity: 0.35 },
-  blobIn: { flex: 1, borderRadius: 75 },
-  glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
+  wallet: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  walletN: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 34 },
+  statsCard: { padding: 16, gap: 10 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  bed: { borderRadius: radius.card, padding: 14, gap: 12, overflow: 'hidden', borderWidth: 1 },
+  glass: { position: 'absolute', top: 4, left: 4, right: 4, bottom: 4, borderRadius: radius.tile, borderWidth: 2, opacity: 0.8 },
+  soil: { borderRadius: radius.tile, padding: 10 },
   bedTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
+  bubble: { flex: 1, padding: 12, borderRadius: radius.tile },
   bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
-  plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
+  plots: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 6 },
   plotCell: { width: '31.5%' },
   plot: { width: '100%', alignItems: 'center', paddingVertical: 8, borderRadius: radius.tile, gap: 3 },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12.5, textAlign: 'center' },
   plotStage: { fontFamily: fonts.bodyBold, fontSize: 11 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
-  decor: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', minHeight: 4 },
-  decorE: { fontSize: 24 },
+  decor: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16 },
+  decorE: { fontSize: 20 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 14 },
   rowT: { fontFamily: fonts.bodyBlack, fontSize: 15 },
   rowS: { fontFamily: fonts.bodyBold, fontSize: 12.5 },

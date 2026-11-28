@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 
+import { tx } from '@/i18n/runtime';
 import { Shower } from '@/components/gardenFx';
 import { useReduceMotion } from '@/components/motion';
 import { PlantArt } from '@/components/GardenArt';
 import { FERT_CAP, PLOTS, STAGE_NAMES, isPlotLovedToday, stageOf, type Flower, type Garden, type Plot } from '@/domain/garden';
+
+const fill = (key: string, ...v: (string | number)[]) => v.reduce<string>((out, x) => out.replace('{}', String(x)), tx(key));
 
 // The coordinates match the nine soil marks in ada_ilkbahar.webp.
 const TOP_MARGIN = 0.12;
@@ -129,7 +132,7 @@ export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim
     });
   }, [drag]);
   const labelOf = ({ f, g }: GrownPlot) =>
-    f ? `${f.name}, ${STAGE_NAMES[stageOf(g, f.grow)]}, ${g}/${f.grow} büyüme` : 'Bahçe yatağı';
+    f ? fill('{}, {}, {}/{} büyüme', tx(f.name), tx(STAGE_NAMES[stageOf(g, f.grow)]), g, f.grow) : tx('Bahçe yatağı');
 
   return (
     <>
@@ -168,7 +171,7 @@ export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim
               key={index}
               testID={`garden-bed-${index + 1}`}
               accessibilityRole="button"
-              accessibilityLabel={plot ? labelOf(plot) : `Boş yatak ${index + 1}, tohum ek`}
+              accessibilityLabel={plot ? labelOf(plot) : fill('Boş yatak {}, tohum ek', index + 1)}
               accessibilityState={{ selected: active }}
               onPress={plot ? () => onSelect(plot.p.id) : onEmpty}
               onLongPress={!plot ? onEmpty : undefined}

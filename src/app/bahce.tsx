@@ -428,7 +428,7 @@ function SeedRow({ f, month, full, onSelect }: { f: Flower; month: boolean; full
       {locked ? (
         <Btn small label="👑 Premium" onPress={() => router.push('/premium')} />
       ) : (
-        <Btn small kind={short > 0 ? 'soft' : 'primary'} label={busy ? '…' : `⭐ ${f.price}`} disabled={busy || short > 0} onPress={plant} />
+        <Btn small kind={short > 0 ? 'soft' : 'primary'} label={`⭐ ${f.price}`} loading={busy} disabled={short > 0} onPress={plant} />
       )}
     </View>
   );
@@ -448,6 +448,7 @@ function FertRow({ plot }: { plot: Plot }) {
   const g = growth(S.play, plot, now);
 
   const feed = async (id: string) => {
+    if (busy) return;
     const fert = FERTS.find(x => x.id === id)!;
     setBusy(id);
     const today = dayKey();
@@ -483,6 +484,7 @@ function FertRow({ plot }: { plot: Plot }) {
                   key={x.id}
                   small
                   kind={out || S.play.points < x.price ? 'soft' : 'primary'}
+                  loading={busy === x.id}
                   disabled={!!busy || out || S.play.points < x.price}
                   label={out ? `${x.emoji} yarın` : `${x.emoji} +${x.grow} · ⭐${x.price}`}
                   accessibilityLabel={`${x.name}, ${x.price} puan, artı ${x.grow} büyüme, bugün ${x.perDay - used} hak`}
@@ -537,7 +539,7 @@ function ExtraCard({ x, onOwned }: { x: Extra; onOwned?: { on: boolean; pick: ()
       ) : locked ? (
         <Btn small label="👑 Premium" onPress={() => router.push('/premium')} />
       ) : (
-        <Btn small kind={short > 0 ? 'soft' : 'primary'} label={busy ? '…' : `⭐ ${x.price}`} disabled={busy || short > 0} onPress={doBuy} />
+        <Btn small kind={short > 0 ? 'soft' : 'primary'} label={`⭐ ${x.price}`} loading={busy} disabled={short > 0} onPress={doBuy} />
       )}
     </Card>
   );

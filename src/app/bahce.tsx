@@ -523,7 +523,9 @@ function ExtraCard({ x, onOwned }: { x: Extra; onOwned?: { on: boolean; pick: ()
 
   return (
     <Card style={[styles.item, onOwned?.on && { backgroundColor: c.glow }]}>
-      <Text style={{ lineHeight: 47, fontSize: 36 }}>{x.emoji}</Text>
+      {x.id === 'sulama'
+        ? <Image source={require('../../assets/bahce/dekor/sulama_kabi.webp')} resizeMode="contain" style={{ width: 56, height: 47 }} />
+        : <Text style={{ lineHeight: 47, fontSize: 36 }}>{x.emoji}</Text>}
       <T v="bold" style={{ textAlign: 'center', fontSize: 14 }}>{x.name}</T>
       <T v="tiny" style={{ textAlign: 'center' }}>{x.about}</T>
       {owned ? (

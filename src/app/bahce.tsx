@@ -1,7 +1,7 @@
 import { useBusy } from '@/components/BusyOverlay';
 import { useRouter } from '@/lib/nav';
-import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { seatedFor } from '@/constants/mimik';
 import { PlantArt } from '@/components/GardenArt';
@@ -13,10 +13,10 @@ import { GardenIsland } from '@/components/GardenIsland';
 import { GardenScene, phaseOf } from '@/components/GardenScene';
 import { Breathe, Flutter, Shower, Sway } from '@/components/gardenFx';
 import { Appear, Burst, Float, Pulse, Squish } from '@/components/motion';
-import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, Tabs, T } from '@/components/ui';
+import { BackLink, Btn, Card, EmptyMsg, Screen, Sheet, T } from '@/components/ui';
 import {
   FERT_CAP, FERTS, FLOWER, FLOWERS, GROW_PER_DAY, PLOTS, fedToday, gardenRank, growth,
-  isPlotLovedToday, monthFlower, plantsWilted, stageOf, type Flower, type Plot,
+  isPlotLovedToday, monthFlower, plantsWilted, stageOf, waterPlot, type Flower, type Plot,
 } from '@/domain/garden';
 import { DECOR, PERSONAS, type Extra } from '@/domain/items';
 import { dayKey, houseProgress } from '@/domain/play';
@@ -29,7 +29,17 @@ import { usePurchases } from '@/purchases/PurchasesProvider';
 import { useStore } from '@/store/AppStore';
 import { brand, fonts, radius, useColors } from '@/theme';
 
-type Tab = 'cicek' | 'gubre' | 'sus' | 'kisilik' | 'album';
+type Tab = 'cicek' | 'gubre' | 'sus' | 'album';
+
+const GARDEN_TABS: { k: Tab; icon: string; label: string }[] = [
+  { k: 'cicek', icon: '🌱', label: 'Tohumlar' },
+  { k: 'gubre', icon: '🧺', label: 'Gübre' },
+  { k: 'sus', icon: '🐞', label: 'Süsler' },
+  { k: 'album', icon: '📖', label: 'Albüm' },
+];
+const gardenTree = require('../../assets/ev3d/bahce/agac_yuvarlak.webp');
+const gardenBush = require('../../assets/ev3d/bahce/cali_2.webp');
+const gardenShadow = require('../../assets/ev3d/bahce/ev_golge.webp');
 
 /**
  * Moka'nın bahçesi: puanları harcamanın ikinci yeri. Tohum al, saksıya ek, her gün iş yaptıkça büyüsün,
@@ -37,16 +47,55 @@ type Tab = 'cicek' | 'gubre' | 'sus' | 'kisilik' | 'album';
  */
 export default function Bahce() {
   const c = useColors();
+  const { height } = useWindowDimensions();
   const now = useNow();
   const toast = useToast();
   const { state: S, update } = useStore();
   const P = S.play;
   const G = P.garden;
   const { premium } = usePurchases();
-  const [tab, setTab] = useState<Tab>('cicek');
+  const [tab, setTab] = useState<Tab | null>(null);
+  const [mokaTalks, setMokaTalks] = useState(true);
+  const [watering, setWatering] = useState(false);
+  const [waterFx, setWaterFx] = useState({ id: '', count: 0 });
+  const lastTab = useRef<Tab>('cicek');
+  const screen = useRef<ComponentRef<typeof ScrollView>>(null);
+  const toolsY = useRef(0);
+  const [trayDrag] = useState(() => PanResponder.create({
+    onStartShouldSetPanResponderCapture: () => true,
+    onPanResponderGrant: () => setWatering(true),
+    onPanResponderRelease: (_, gesture) => {
+      setWatering(false);
+      if (gesture.dy < -16) {
+        setTab(lastTab.current);
+        screen.current?.scrollTo({ y: Math.max(0, toolsY.current - 20), animated: true });
+      } else if (gesture.dy > 16) {
+        setTab(null);
+        screen.current?.scrollTo({ y: 0, animated: true });
+      }
+    },
+    onPanResponderTerminate: () => setWatering(false),
+    onPanResponderTerminationRequest: () => false,
+  }));
+
+  const showSeeds = () => {
+    lastTab.current = 'cicek';
+    setTab('cicek');
+    setSel(null);
+    screen.current?.scrollTo({ y: Math.max(0, toolsY.current - 20), animated: true });
+  };
   const [sel, setSel] = useState<string | null>(null);
   const [detailFlower, setDetailFlower] = useState<Flower | null>(null);
   const [lofiOpen, setLofiOpen] = useState(false);
+
+  const waterBed = (id: string) => {
+    const result: { flower?: Flower } = {};
+    update(draft => { result.flower = waterPlot(draft.play, id); });
+    if (!result.flower) return;
+    sfx('party');
+    setWaterFx(effect => ({ id, count: effect.count + 1 }));
+    toast(`❤️ Moka ${result.flower.name} saksısına sevgi verdi! (+1 Büyüme)`);
+  };
 
   // Açan her çiçekte yıldız saçılsın: açılıştaki sayıdan fazlası (albüme almak sayıyı değiştirmez).
   const blooms = G.plots.filter(p => p.bloomed).length + Object.values(G.album).reduce((s, n) => s + n, 0);
@@ -58,7 +107,8 @@ export default function Bahce() {
   const hour = new Date(now).getHours();
   const phase = phaseOf(hour, sky);
 
-  const wilt = plantsWilted(houseProgress(P.days, now, P.frozen));
+  const progress = houseProgress(P.days, now, P.frozen);
+  const wilt = plantsWilted(progress);
   const grown = G.plots.map(p => ({ p, f: FLOWER[p.flower], g: growth(P, p, now) }));
 
   // Hedefe ulaşan saksı açar: bir kere kutlama.
@@ -90,94 +140,123 @@ export default function Bahce() {
 
   return (
     <View style={{ flex: 1 }}>
-    <Screen header={false} image={require('../../assets/bahce/bahce-arka.webp')}>
-      <BackLink />
+    <Screen header={false} tone="sage" scrollRef={screen} scrollEnabled={!watering}>
+      <BackLink label="" right={
+        <View style={styles.hud}>
+          <View style={[styles.hudPill, { backgroundColor: c.surface }]}>
+            <Pulse on={P.points}><T v="bold">⭐ {P.points}</T></Pulse>
+          </View>
+          <View style={[styles.hudPill, { backgroundColor: c.surface }]}>
+            <T v="bold">☕ {progress.streak} gün</T>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Pikap (ASMR)"
+            onPress={() => setLofiOpen(true)}
+            style={({ pressed }) => [styles.hudPill, { backgroundColor: c.surface, opacity: pressed ? 0.7 : 1 }]}
+          >
+            <T v="bold">♫</T>
+          </Pressable>
+        </View>
+      } />
+
       <Appear>
-        <Glass scrim style={{ gap: 6 }}>
-          <T v="eyebrow" style={{ color: '#E6C9BD', letterSpacing: 1.2 }}>PUANLA BAHÇE</T>
-          <T v="h1" style={{ color: '#EBF5EE' }}>Moka&apos;nın bahçesi 🌷</T>
-          <T v="lead" style={{ color: '#D5E3DA' }}>Tohum al, saksıya ek. Her gün iş yaptıkça büyür, açınca albümüne girer ve evinin bahçesini süsler.</T>
-        </Glass>
-      </Appear>
-
-      <Appear index={1}>
-        <Glass scrim style={styles.wallet}>
-          <Float amp={3} dur={1800}><Text style={{ lineHeight: 34, fontSize: 26 }}>⭐</Text></Float>
-          <Pulse on={P.points}><Text style={[styles.walletN, { color: '#FFFFFF' }]}>{P.points}</Text></Pulse>
-          <Text style={[styles.walletL, { color: '#E6C9BD' }]}>puanın var</Text>
-        </Glass>
-      </Appear>
-
-      <Appear index={2}>
-      <View style={[styles.bed, { backgroundColor: '#5DAE74' }]}>
-        <GardenScene hour={hour} sky={sky} blooms={blooms} />
-        {P.owned.includes('sera') && <View pointerEvents="none" style={[styles.glass, { borderColor: 'rgba(255,255,255,0.8)' }]} />}
-        <Flutter emoji="🦋" top="34%" dur={8500} />
-        <Flutter emoji="🦋" top="46%" dur={11000} delay={2500} size={16} />
-        {anyBloom && <Flutter emoji="🐝" top="72%" dur={7000} delay={1200} size={15} />}
-        <View style={styles.bedTop}>
-          <Image source={seatedFor(S.play.mokaFur ?? null)[wilt && G.plots.length ? 'sad' : anyBloom ? 'cheer' : 'happy']} style={{ width: 120, height: 120 }} resizeMode="contain" accessibilityLabel="Moka" accessibilityIgnoresInvertColors />
-          <Glass style={styles.bubble} intensity={30}>
-            <Text style={[styles.bubbleT, { color: c.ink }]}>{message}</Text>
-          </Glass>
-        </View>
-        <GardenIsland
-          plots={grown}
-          garden={G}
-          now={now}
-          capacity={maxPlots}
-          selected={sel}
-          wilt={wilt}
-          dim={phase === 'night' ? 0.72 : phase === 'dusk' ? 0.88 : 1}
-          onSelect={id => setSel(current => current === id ? null : id)}
-          onEmpty={() => setTab('cicek')}
-        />
-        <View style={styles.decor} pointerEvents="none">
-          {P.owned.includes('sulama') && <Float amp={2} dur={2600}><Text style={styles.decorE}>🚿</Text></Float>}
-          {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={300}><Text style={styles.decorE}>🐞</Text></Float>}
-          {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
-          {albumTypesCount > 0 && <Float amp={3} dur={2100} delay={150}><Text style={styles.decorE}>🦋</Text></Float>}
-          <Float amp={2.5} dur={1900} delay={500}><Text style={styles.decorE}>✨</Text></Float>
-        </View>
-        <Burst fire={fire} />
-      </View>
-      </Appear>
-      {sel && <PlotActions id={sel} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
-
-      {/* Plak Çalar */}
-      <Appear index={3} style={{ flexDirection: 'row', gap: 10 }}>
-        <Btn small kind="soft" label="🎵 Pikap (ASMR)" onPress={() => setLofiOpen(true)} style={{ flex: 1 }} />
-      </Appear>
-
-      <Appear index={4}>
-      <Glass scrim style={styles.statsCard}>
-        <View style={styles.statsRow}>
-          <View style={{ flex: 1 }}>
-            <T v="tiny" style={{ color: '#B9C7BF' }}>BAHÇE SEVİYESİ</T>
-            <T v="bold" style={{ color: '#FFFFFF', fontSize: 16 }}>{rank.title}</T>
+        <View style={[styles.bed, { minHeight: Math.min(650, height * 0.72) }]}>
+          <GardenScene hour={hour} sky={sky} blooms={blooms} />
+          <View style={styles.sceneHeading} pointerEvents="none">
+            <T v="h1" style={styles.sceneTitle}>Moka&apos;nın bahçesi</T>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <T v="tiny" style={{ color: '#B9C7BF' }}>KOLEKSİYON</T>
-            <T v="bold" style={{ color: '#E6C9BD', fontSize: 15 }}>{albumTypesCount} / {FLOWERS.length} Çiçek</T>
+          <View style={styles.messageRoom} pointerEvents="none">
+            {mokaTalks && (
+              <Glass scrim style={styles.bubble}>
+                <T v="small" style={styles.bubbleT}>{message}</T>
+              </Glass>
+            )}
           </View>
+          <Flutter emoji="🦋" top="31%" dur={8500} />
+          <Flutter emoji="🦋" top="43%" dur={11000} delay={2500} size={16} />
+          {anyBloom && <Flutter emoji="🐝" top="65%" dur={7000} delay={1200} size={15} />}
+          <View style={styles.islandStage}>
+            <View pointerEvents="none" style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Image source={gardenTree} style={[styles.tree, { opacity: phase === 'night' ? 0.65 : 1 }]} resizeMode="contain" />
+              <Image source={gardenShadow} style={styles.islandShadow} resizeMode="stretch" />
+              <Image source={gardenBush} style={styles.bush} resizeMode="contain" />
+            </View>
+            <GardenIsland
+              plots={grown}
+              garden={G}
+              now={now}
+              capacity={maxPlots}
+              selected={sel}
+              wilt={wilt}
+              dim={phase === 'night' ? 0.72 : phase === 'dusk' ? 0.88 : 1}
+              onSelect={id => setSel(current => current === id ? null : id)}
+              onEmpty={showSeeds}
+              onWater={waterBed}
+              onDragChange={setWatering}
+              waterFx={waterFx}
+              onWaterHint={() => toast('Sulama kabını bir yatağa sürükle.')}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Moka"
+              accessibilityState={{ expanded: mokaTalks }}
+              onPress={() => setMokaTalks(current => !current)}
+              style={({ pressed }) => [styles.moka, { opacity: pressed ? 0.8 : 1 }]}
+            >
+              <Image
+                source={seatedFor(P.mokaFur ?? null)[wilt && G.plots.length ? 'sad' : anyBloom ? 'cheer' : 'happy']}
+                style={styles.mokaArt}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
+            </Pressable>
+          </View>
+          {P.owned.includes('sera') && <View pointerEvents="none" style={styles.glass} />}
+          <View style={styles.decor} pointerEvents="none">
+            {P.owned.includes('ugurbocegi') && <Float amp={3} dur={1700} delay={250}><Text style={styles.decorE}>🐞</Text></Float>}
+            {hasHammock && <Text style={styles.decorE}>🌴🪢🌴</Text>}
+          </View>
+          <Burst fire={fire} />
         </View>
-        <View style={[styles.bar, { width: '100%', height: 8, backgroundColor: 'rgba(235,245,238,0.18)', marginTop: 4 }]}>
-          <View style={[styles.barFill, { width: `${(albumTypesCount / FLOWERS.length) * 100}%`, backgroundColor: brand.blue }]} />
-        </View>
-      </Glass>
       </Appear>
 
-      <Tabs
-        value={tab}
-        onChange={setTab}
-        items={[
-          { k: 'cicek', emoji: '🌱', label: 'Tohumlar' },
-          { k: 'gubre', emoji: '🧺', label: 'Gübre' },
-          { k: 'sus', emoji: '🐞', label: 'Süsler' },
-          { k: 'kisilik', emoji: '🏠', label: 'Ev kişiliği' },
-          { k: 'album', emoji: '📖', label: 'Albüm', badge: Object.values(G.album).reduce((s, n) => s + n, 0) || undefined },
-        ]}
-      />
+      {sel && <PlotActions id={sel} onWater={() => waterBed(sel)} onDone={() => setSel(null)} onOpenDetail={f => setDetailFlower(f)} />}
+
+      <View style={[styles.tray, { backgroundColor: c.surface }]} onLayout={event => { toolsY.current = event.nativeEvent.layout.y; }}>
+        <View collapsable={false} style={styles.trayHandleRegion} {...trayDrag.panHandlers}>
+          <Pressable
+            testID="garden-tray-handle"
+            accessibilityRole="button"
+            accessibilityLabel={tab ? 'Paneli kapat' : 'Paneli aç'}
+            accessibilityState={{ expanded: tab !== null }}
+            onPress={() => setTab(current => current === null ? lastTab.current : null)}
+            style={styles.trayHandle}
+          >
+            <View style={[styles.trayGrip, { backgroundColor: c.muted }]} />
+          </Pressable>
+        </View>
+        <View style={styles.trayTabs} accessibilityRole="tablist">
+          {GARDEN_TABS.map(({ k, icon, label }) => {
+            const open = tab === k;
+            return (
+              <Pressable
+                key={k}
+                accessibilityRole="tab"
+                accessibilityLabel={label}
+                accessibilityState={{ selected: open, expanded: open }}
+                onPress={() => { lastTab.current = k; setTab(current => current === k ? null : k); }}
+                style={({ pressed }) => [styles.trayTab, {
+                  backgroundColor: open ? c.accent : c.surface2,
+                  opacity: pressed ? 0.75 : 1,
+                }]}
+              >
+                <Text style={styles.trayIcon}>{icon}</Text>
+                <T v="tiny" style={{ textAlign: 'center', color: open ? c.onAccent : c.ink }}>{label}</T>
+              </Pressable>
+            );
+          })}
+        </View>
 
       {tab === 'cicek' && (
         <View style={{ gap: 10 }}>
@@ -202,8 +281,25 @@ export default function Bahce() {
           {[...DECOR].sort((a, b) => a.price - b.price).map(d => <ExtraCard key={d.id} x={d} />)}
         </View>
       )}
-      {tab === 'kisilik' && <Personas />}
-      {tab === 'album' && <Album onSelect={setDetailFlower} />}
+      {tab === 'sus' && (
+        <>
+          <T v="h3">Ev kişiliği</T>
+          <Personas />
+        </>
+      )}
+      {tab === 'album' && (
+        <>
+          <View style={[styles.collection, { backgroundColor: c.surface2 }]}>
+            <T v="bold" style={{ flex: 1 }}>{rank.title}</T>
+            <T v="bold">{albumTypesCount} / {FLOWERS.length}</T>
+            <View style={[styles.bar, { width: '100%', backgroundColor: c.surface }]}>
+              <View style={[styles.barFill, { width: `${albumTypesCount / FLOWERS.length * 100}%`, backgroundColor: brand.blue }]} />
+            </View>
+          </View>
+          <Album onSelect={setDetailFlower} />
+        </>
+      )}
+      </View>
 
       <LofiPlayerModal open={lofiOpen} onClose={() => setLofiOpen(false)} />
 
@@ -239,9 +335,8 @@ export default function Bahce() {
 }
 
 /** Seçili saksı: açtıysa albüme al, büyüyorsa durumunu söyle. */
-function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => void; onOpenDetail: (f: Flower) => void }) {
+function PlotActions({ id, onDone, onOpenDetail, onWater }: { id: string; onDone: () => void; onOpenDetail: (f: Flower) => void; onWater: () => void }) {
   const now = useNow();
-  const [hearts, setHearts] = useState(0);
   const toast = useToast();
   const { state: S, update } = useStore();
   const plot = S.play.garden.plots.find(p => p.id === id);
@@ -263,31 +358,9 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
     onDone();
   };
 
-  const giveLove = () => {
-    if (lovedToday || fertLeft <= 0) return;
-    const today = dayKey(now);
-    update(D => {
-      const G = D.play.garden;
-      if (!G.loved || G.loved.day !== today) {
-        G.loved = { day: today, plotIds: [] };
-      }
-      if (!G.loved.plotIds.includes(plot.id)) {
-        G.loved.plotIds.push(plot.id);
-      }
-      const p = G.plots.find(x => x.id === plot.id);
-      if (p) {
-        p.fert += 1;
-      }
-    });
-    sfx('party');
-    setHearts(h => h + 1);
-    toast(`❤️ Moka ${f.name} saksısına sevgi verdi! (+1 Büyüme)`);
-  };
-
   return (
     <Appear>
     <Glass style={{ gap: 10 }}>
-      <Shower fire={hearts} emoji="❤️" up />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <T v="h3">{f.emoji} {f.name}</T>
         <Btn small kind="soft" label="Detay ℹ️" onPress={() => onOpenDetail(f)} />
@@ -300,11 +373,11 @@ function PlotActions({ id, onDone, onOpenDetail }: { id: string; onDone: () => v
       ) : (
         <>
           <T v="small">
-            {`Açmasına ${left} büyüme kaldı: iş yaparak en az ${Math.ceil(Math.max(0, left - fertLeft) / GROW_PER_DAY)} gün.`}
-            {fertLeft > 0 ? ` Gübreyle ${fertLeft} büyüme daha hızlanabilir.` : ' Gübre sınırı doldu, gerisi işlerle.'}
+            {tx('Açmasına {} büyüme kaldı: iş yaparak en az {} gün.').replace('{}', String(left)).replace('{}', String(Math.ceil(Math.max(0, left - fertLeft) / GROW_PER_DAY)))}
+            {fertLeft > 0 ? tx(' Gübreyle {} büyüme daha hızlanabilir.').replace('{}', String(fertLeft)) : tx(' Gübre sınırı doldu, gerisi işlerle.')}
           </T>
           {!lovedToday && fertLeft > 0 && (
-            <Breathe amp={0.025} dur={1500}><Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={giveLove} block /></Breathe>
+            <Breathe amp={0.025} dur={1500}><Btn kind="soft" label="❤️ Bugün Sevgi Ver (+1 Büyüme)" onPress={onWater} block /></Breathe>
           )}
         </>
       )}
@@ -510,21 +583,34 @@ function Album({ onSelect }: { onSelect: (f: Flower) => void }) {
 }
 
 const styles = StyleSheet.create({
-  wallet: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, justifyContent: 'center' },
-  walletN: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 32 },
-  walletL: { fontFamily: fonts.bodyBlack, fontSize: 15 },
-  statsCard: { padding: 20, gap: 8 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bed: { borderRadius: radius.card, padding: 18, gap: 14, overflow: 'hidden' },
-  glass: { position: 'absolute', top: 6, left: 6, right: 6, bottom: 6, borderRadius: radius.card - 6, borderWidth: 3, opacity: 0.7 },
-  bedTop: { zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bubble: { flex: 1, padding: 14, borderRadius: radius.tile },
-  bubbleT: { fontFamily: fonts.bodyBold, fontSize: 13.5, lineHeight: 19 },
+  hud: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 },
+  hudPill: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  bed: { backgroundColor: '#ADC47A', borderRadius: 32, padding: 10, paddingBottom: 34, overflow: 'hidden' },
+  sceneHeading: { alignItems: 'flex-start', paddingTop: 18, paddingHorizontal: 12 },
+  sceneTitle: { color: '#FFF9EA', textShadowColor: '#283044', textShadowRadius: 7, textShadowOffset: { width: 0, height: 1 } },
+  messageRoom: { minHeight: 84, flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, zIndex: 2 },
+  bubble: { alignSelf: 'flex-start', maxWidth: '90%', padding: 10, borderRadius: 16 },
+  bubbleT: { color: '#FFF9EA', fontFamily: fonts.bodyBold, lineHeight: 18 },
+  glass: { position: 'absolute', top: 8, right: 8, bottom: 8, left: 8, borderRadius: 25, borderWidth: 2, borderColor: 'rgba(231,250,248,0.55)' },
+  islandStage: { position: 'relative', paddingBottom: 36 },
+  tree: { position: 'absolute', right: 1, top: '24%', width: 66, height: 82 },
+  bush: { position: 'absolute', left: 6, bottom: 28, width: 46, height: 33 },
+  islandShadow: { position: 'absolute', bottom: 34, left: '9%', width: '82%', height: 42, opacity: 0.35 },
+  moka: { position: 'absolute', left: 6, bottom: 1, width: 100, height: 100 },
+  mokaArt: { width: '100%', height: '100%' },
+  tray: { borderRadius: 24, gap: 12, padding: 10 },
+  trayHandleRegion: { marginTop: -10, marginBottom: -8, height: 44 },
+  trayHandle: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  trayGrip: { width: 38, height: 4, borderRadius: 4, opacity: 0.65 },
+  trayTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  trayTab: { minWidth: 62, minHeight: 56, flex: 1, borderRadius: 16, padding: 5, justifyContent: 'center', alignItems: 'center' },
+  trayIcon: { fontSize: 17, lineHeight: 24 },
+  collection: { borderRadius: 16, padding: 12, columnGap: 8, rowGap: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   plotName: { fontFamily: fonts.bodyBlack, fontSize: 12, textAlign: 'center' },
   plotStage: { fontFamily: fonts.bodyBold, fontSize: 12 },
   bar: { height: 6, width: '70%', borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
-  decor: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', minHeight: 4 },
+  decor: { position: 'absolute', right: 18, bottom: 23, flexDirection: 'row', alignItems: 'center', gap: 8 },
   decorE: { lineHeight: 31, fontSize: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.tile, paddingVertical: 8, paddingHorizontal: 14 },
   rowT: { fontFamily: fonts.bodyBlack, fontSize: 15 },

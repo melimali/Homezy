@@ -234,7 +234,7 @@ export function GardenScene({ hour, sky, blooms, children, style }: { hour: numb
       ))}
 
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-        <Image source={require('../../assets/bahce/sahne/tepe_uzak.webp')} resizeMode="stretch" style={[styles.hills, { top: middleTop - hillHeight * 0.30, height: hillHeight }]} />
+        <Image source={require('../../assets/bahce/sahne/tepe_uzak.webp')} resizeMode="stretch" style={[styles.hills, { top: middleTop - hillHeight * 0.30, height: hillHeight * 1.18 }]} />
         <View style={[styles.hills, { top: groundTop - 1, bottom: 0, backgroundColor: ground }]} />
         <Image source={require('../../assets/bahce/sahne/tepe_orta.webp')} resizeMode="stretch" style={[styles.hills, { top: middleTop, height: hillHeight }]} />
         <Svg style={[styles.hills, { top: groundTop - 24 }]} width="100%" height={24}>

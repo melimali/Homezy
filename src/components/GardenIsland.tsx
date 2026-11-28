@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 
+import { Shower } from '@/components/gardenFx';
+import { useReduceMotion } from '@/components/motion';
 import { PlantArt } from '@/components/GardenArt';
-import { PLOTS, STAGE_NAMES, isPlotLovedToday, stageOf, type Flower, type Garden, type Plot } from '@/domain/garden';
+import { FERT_CAP, PLOTS, STAGE_NAMES, isPlotLovedToday, stageOf, type Flower, type Garden, type Plot } from '@/domain/garden';
 
 // The coordinates match the nine soil marks in ada_ilkbahar.webp.
 const TOP_MARGIN = 0.12;
@@ -16,6 +18,7 @@ const SLOTS = [
 
 const island = require('../../assets/bahce/ada/ada_ilkbahar.webp');
 const dryBed = require('../../assets/bahce/ada/yatak.webp');
+const waterCan = require('../../assets/bahce/dekor/sulama_kabi.webp');
 const wetBed = require('../../assets/bahce/ada/yatak_islak.webp');
 const stages: readonly ImageSourcePropType[] = [
   require('../../assets/bahce/bitki/govde_0.webp'),
@@ -75,12 +78,56 @@ type Props = {
   dim: number;
   onSelect: (id: string) => void;
   onEmpty: () => void;
+  onWater: (id: string) => void;
+  onDragChange: (active: boolean) => void;
+  onWaterHint: () => void;
+  waterFx: { id: string; count: number };
 };
 
-export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim, onSelect, onEmpty }: Props) {
+export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim, onSelect, onEmpty, onWater, onDragChange, onWaterHint, waterFx }: Props) {
   const [width, setWidth] = useState(0);
+  const reduceMotion = useReduceMotion();
+  const [drag] = useState(() => new Animated.ValueXY());
+  const [dropTarget, setDropTarget] = useState<string>();
+  const canX = width - 27;
+  const canY = width * 0.74 - 26;
   const bedSize = width * 0.19;
   const targetSize = Math.max(44, bedSize * 0.80);
+  const dropInfo = useRef({ canX, canY, garden, now, onDragChange, onWater, onWaterHint, plots, targetSize, width });
+  useEffect(() => {
+    dropInfo.current = { canX, canY, garden, now, onDragChange, onWater, onWaterHint, plots, targetSize, width };
+  }, [canX, canY, garden, now, onDragChange, onWater, onWaterHint, plots, targetSize, width]);
+  const wateringPan = useMemo(() => {
+    const targetAt = (dx: number, dy: number) => {
+      const { canX, canY, garden, now, plots, targetSize, width } = dropInfo.current;
+      const index = SLOTS.findIndex(([x, y]) =>
+        Math.hypot(canX + dx - x * width, canY + dy - (y - TOP_MARGIN) * width) <= targetSize / 2);
+      const plot = plots[index];
+      return plot?.f && plot.g < plot.f.grow && plot.p.fert < FERT_CAP(plot.f) &&
+        !isPlotLovedToday(garden, plot.p.id, now) ? plot.p.id : undefined;
+    };
+    const reset = () => {
+      drag.setValue({ x: 0, y: 0 });
+      setDropTarget(undefined);
+      dropInfo.current.onDragChange(false);
+    };
+    return PanResponder.create({
+      onStartShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: () => dropInfo.current.onDragChange(true),
+      onPanResponderMove: (_, { dx, dy }) => {
+        drag.setValue({ x: dx, y: dy });
+        setDropTarget(targetAt(dx, dy));
+      },
+      onPanResponderRelease: (_, { dx, dy }) => {
+        const target = targetAt(dx, dy);
+        reset();
+        if (target) dropInfo.current.onWater(target);
+        else if (Math.hypot(dx, dy) < 5) dropInfo.current.onWaterHint();
+      },
+      onPanResponderTerminate: reset,
+      onPanResponderTerminationRequest: () => false,
+    });
+  }, [drag]);
   const labelOf = ({ f, g }: GrownPlot) =>
     f ? `${f.name}, ${STAGE_NAMES[stageOf(g, f.grow)]}, ${g}/${f.grow} büyüme` : 'Bahçe yatağı';
 
@@ -102,6 +149,11 @@ export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim
                   opacity: locked ? 0.55 : 1,
                 }]} resizeMode="contain" />
                 {plot?.f && <GardenPlant key={plot.p.id} flower={plot.f} stage={stageOf(plot.g, plot.f.grow)} size={bedSize} x={x} y={y} wilt={wilt} />}
+                {!reduceMotion && plot && waterFx.id === plot.p.id && (
+                  <View style={[styles.absolute, { left: x - targetSize / 2, top: y - 50, width: targetSize, height: 46 }]}>
+                    <Shower fire={waterFx.count} emoji="💧" />
+                  </View>
+                )}
                 {locked && <Text style={[styles.lock, { left: x - 10, top: y - 8 }]}>🔒</Text>}
               </View>
             );
@@ -119,13 +171,24 @@ export function GardenIsland({ plots, garden, now, capacity, selected, wilt, dim
               accessibilityLabel={plot ? labelOf(plot) : `Boş yatak ${index + 1}, tohum ek`}
               accessibilityState={{ selected: active }}
               onPress={plot ? () => onSelect(plot.p.id) : onEmpty}
+              onLongPress={!plot ? onEmpty : undefined}
               style={({ pressed }) => [styles.target, {
                 left: u * width - targetSize / 2, top: (v - TOP_MARGIN) * width - targetSize / 2,
                 width: targetSize, height: targetSize,
-              }, (active || pressed) && styles.active]}
+              }, (active || pressed) && styles.active, !!plot && dropTarget === plot.p.id && styles.dropTarget]}
             />
           );
         })}
+        {width > 0 && (
+          <Animated.View
+            {...wateringPan.panHandlers}
+            style={[styles.can, { left: canX - 26, top: canY - 26, transform: drag.getTranslateTransform() }]}
+          >
+            <Pressable testID="garden-watering-can" accessibilityRole="button" accessibilityLabel="Sulama kabı" onPress={onWaterHint} style={styles.canButton}>
+              <Image source={waterCan} resizeMode="contain" style={styles.canArt} />
+            </Pressable>
+          </Animated.View>
+        )}
       </View>
       {plots.slice(PLOTS.premium).map(plot => (
         <Pressable key={plot.p.id} accessibilityRole="button" onPress={() => onSelect(plot.p.id)} style={styles.extra}>
@@ -143,6 +206,10 @@ const styles = StyleSheet.create({
   lock: { position: 'absolute', width: 20, fontSize: 13, textAlign: 'center' },
   target: { position: 'absolute', borderRadius: 14 },
   active: { backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 2, borderColor: '#FFF6D9' },
+  dropTarget: { borderWidth: 2, borderColor: '#DFF7FF', backgroundColor: 'rgba(106,202,234,0.34)' },
+  can: { position: 'absolute', width: 52, height: 52, zIndex: 3 },
+  canButton: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  canArt: { width: 48, height: 48 },
   extra: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#FFF6D9' },
   extraLabel: { color: '#283044' },
 });

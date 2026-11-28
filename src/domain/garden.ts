@@ -123,6 +123,20 @@ export const fedToday = (G: Garden, id: string, now = Date.now()) => (G.fed.day 
 export const isPlotLovedToday = (G: Garden, plotId: string, now = Date.now()) =>
   G.loved?.day === dayKey(now) && (G.loved.plotIds ?? []).includes(plotId);
 
+export function waterPlot(play: Play, id: string, now = Date.now()): Flower | undefined {
+  const garden = play.garden;
+  const plot = garden.plots.find(entry => entry.id === id);
+  const flower = plot && FLOWER[plot.flower];
+  if (!plot || !flower || growth(play, plot, now) >= flower.grow ||
+    isPlotLovedToday(garden, id, now) || plot.fert >= FERT_CAP(flower)) return;
+
+  const today = dayKey(now);
+  if (garden.loved?.day !== today) garden.loved = { day: today, plotIds: [] };
+  garden.loved.plotIds.push(id);
+  plot.fert += 1;
+  return flower;
+}
+
 /** Bahçe seviyesi ve unvanı (albüme alınan farklı veya toplam çiçek sayısına göre). */
 export function gardenRank(album: Record<string, number>) {
   const totalTypes = Object.keys(album).length;
